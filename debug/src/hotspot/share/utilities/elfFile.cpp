@@ -34,7 +34,6 @@ NullDecoder::decoder_status ElfSection::load_section(FILE* const fd, const Elf_S
   memcpy((void*)&_section_hdr, (const void*)&shdr, sizeof(shdr));
 
   if (ElfFile::_do_not_cache_elf_section) {
-    log_debug(decoder)("Elf section cache is disabled");
     return NullDecoder::no_error;
   }
 
@@ -194,28 +193,6 @@ NullDecoder::decoder_status ElfFile::load_tables() {
       add_symbol_table(table);
     }
   }
-#if defined(PPC64) && !defined(ABI_ELFv2)
-  // Now read the .opd section wich contains the PPC64 function descriptor table.
-  // The .opd section is only available on PPC64 (see for example:
-  // http://refspecs.linuxfoundation.org/LSB_3.1.1/LSB-Core-PPC64/LSB-Core-PPC64/specialsections.html)
-  // so this code should do no harm on other platforms but because of performance reasons we only
-  // execute it on PPC64 platforms.
-  // Notice that we can only find the .opd section after we have successfully read in the string
-  // tables in the previous loop, because we need to query the name of each section which is
-  // contained in one of the string tables (i.e. the one with the index m_elfHdr.e_shstrndx).
-
-  // Reset the file pointer
-  int sect_index = section_by_name(".opd", shdr);
-
-  if (sect_index == -1) {
-    return NullDecoder::file_invalid;
-  }
-
-  _funcDesc_table = new (std::nothrow) ElfFuncDescTable(_file, shdr, sect_index);
-  if (_funcDesc_table == NULL) {
-      return NullDecoder::out_of_memory;
-  }
-#endif
   return NullDecoder::no_error;
 }
 

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1CollectionSet.hpp"
 #include "gc/g1/g1CollectorState.hpp"
@@ -246,9 +247,6 @@ double G1CollectionSet::finalize_young_part(double target_pause_time_ms, G1Survi
   double base_time_ms = _policy->predict_base_elapsed_time_ms(pending_cards);
   double time_remaining_ms = MAX2(target_pause_time_ms - base_time_ms, 0.0);
 
-  log_trace(gc, ergo, cset)("Start choosing CSet. pending cards: " SIZE_FORMAT " predicted base time: %1.2fms remaining time: %1.2fms target pause time: %1.2fms",
-                            pending_cards, base_time_ms, time_remaining_ms, target_pause_time_ms);
-
   // The young list is laid with the survivor regions from the previous
   // pause are appended to the RHS of the young list, i.e.
   //   [Newly Young Regions ++ Survivors from last pause].
@@ -264,9 +262,6 @@ double G1CollectionSet::finalize_young_part(double target_pause_time_ms, G1Survi
 
   _bytes_used_before = _inc_bytes_used_before;
   time_remaining_ms = MAX2(time_remaining_ms - _inc_predicted_elapsed_time_ms, 0.0);
-
-  log_trace(gc, ergo, cset)("Add young regions to CSet. eden: %u regions, survivors: %u regions, predicted young region time: %1.2fms, target pause time: %1.2fms",
-                            eden_region_length, survivor_region_length, _inc_predicted_elapsed_time_ms, target_pause_time_ms);
 
   // The number of recorded young regions is the incremental
   // collection set's current size
@@ -304,8 +299,6 @@ void G1CollectionSet::finalize_old_part(double time_remaining_ms) {
     while (hr != NULL) {
       if (old_region_length() >= max_old_cset_length) {
         // Added maximum number of old regions to the CSet.
-        log_debug(gc, ergo, cset)("Finish adding old regions to CSet (old CSet region num reached max). old %u regions, max %u regions",
-                                  old_region_length(), max_old_cset_length);
         break;
       }
 
@@ -318,7 +311,6 @@ void G1CollectionSet::finalize_old_part(double time_remaining_ms) {
         // We've added enough old regions that the amount of uncollected
         // reclaimable space is at or below the waste threshold. Stop
         // adding old regions to the CSet.
-        log_debug(gc, ergo, cset)("Finish adding old regions to CSet (reclaimable percentage not over threshold). old %u regions, max %u regions, reclaimable: " SIZE_FORMAT "B (%1.2f%%) threshold: " UINTX_FORMAT "%%", old_region_length(), max_old_cset_length, reclaimable_bytes, reclaimable_percent, G1HeapWastePercent);
         break;
       }
 
@@ -330,7 +322,6 @@ void G1CollectionSet::finalize_old_part(double time_remaining_ms) {
           if (old_region_length() >= min_old_cset_length) {
             // We have added the minimum number of old regions to the CSet,
             // we are done with this CSet.
-            log_debug(gc, ergo, cset)("Finish adding old regions to CSet (predicted time is too high). predicted time: %1.2fms, remaining time: %1.2fms old %u regions, min %u regions", predicted_time_ms, time_remaining_ms, old_region_length(), min_old_cset_length);
             break;
           }
 
@@ -343,7 +334,6 @@ void G1CollectionSet::finalize_old_part(double time_remaining_ms) {
           // In the non-auto-tuning case, we'll finish adding regions
           // to the CSet if we reach the minimum.
 
-          log_debug(gc, ergo, cset)("Finish adding old regions to CSet (old CSet region num reached min). old %u regions, min %u regions", old_region_length(), min_old_cset_length);
           break;
         }
       }
@@ -357,24 +347,11 @@ void G1CollectionSet::finalize_old_part(double time_remaining_ms) {
 
       hr = cset_chooser()->peek();
     }
-    if (hr == NULL) {
-      log_debug(gc, ergo, cset)("Finish adding old regions to CSet (candidate old regions not available)");
-    }
-
-    if (expensive_region_num > 0) {
-      // We print the information once here at the end, predicated on
-      // whether we added any apparently expensive regions or not, to
-      // avoid generating output per region.
-      log_debug(gc, ergo, cset)("Added expensive regions to CSet (old CSet region num not reached min). old: %u regions, expensive: %u regions, min: %u regions, remaining time: %1.2fms", old_region_length(), expensive_region_num, min_old_cset_length, time_remaining_ms);
-    }
 
     cset_chooser()->verify();
   }
 
   stop_incremental_building();
-
-  log_debug(gc, ergo, cset)("Finish choosing CSet. old: %u regions, predicted old region time: %1.2fms, time remaining: %1.2f",
-                            old_region_length(), predicted_old_time_ms, time_remaining_ms);
 
   double non_young_end_time_sec = os::elapsedTime();
   phase_times()->record_non_young_cset_choice_time_ms((non_young_end_time_sec - non_young_start_time_sec) * 1000.0);

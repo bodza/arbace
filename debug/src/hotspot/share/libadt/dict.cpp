@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "libadt/dict.hpp"
 
 // Dictionaries - An Abstract Data Type
@@ -30,8 +31,7 @@ public:
 // doubled in size; the total amount of EXTRA times all hash functions are
 // computed for the doubling is no more than the current size - thus the
 // doubling in size costs no more than a constant factor in speed.
-Dict::Dict(CmpKey initcmp, Hash inithash) : _hash(inithash), _cmp(initcmp),
-  _arena(Thread::current()->resource_area()) {
+Dict::Dict(CmpKey initcmp, Hash inithash) : _hash(inithash), _cmp(initcmp), _arena(Thread::current()->resource_area()) {
   int i;
 
   // Precompute table of null character hashes

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "prims/jniFastGetField.hpp"
 
 address JNI_FastGetField::speculative_load_pclist [LIST_CAPACITY];

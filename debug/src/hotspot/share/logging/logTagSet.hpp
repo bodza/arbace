@@ -87,7 +87,7 @@ class LogTagSet {
   bool has_output(const LogOutput* output);
 
   // The implementation of this function is put here to ensure
-  // that it is inline:able by the log_is_enabled(level, ...) macro.
+  // that it is inline:able by the false macro.
   bool is_level(LogLevelType level) const {
     return _output_list.is_level(level);
   }

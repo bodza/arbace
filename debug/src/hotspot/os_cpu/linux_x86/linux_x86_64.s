@@ -1,33 +1,9 @@
-# 
-# Copyright (c) 2004, 2013, Oracle and/or its affiliates. All rights reserved.
-# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-#
-# This code is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License version 2 only, as
-# published by the Free Software Foundation.
-#
-# This code is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-# version 2 for more details (a copy is included in the LICENSE file that
-# accompanied this code).
-#
-# You should have received a copy of the GNU General Public License version
-# 2 along with this work; if not, write to the Free Software Foundation,
-# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
-# or visit www.oracle.com if you need additional information or have any
-# questions.
-#
-
-
         # NOTE WELL!  The _Copy functions are called directly
 	# from server-compiler-generated code via CallLeafNoFP,
 	# which means that they *must* either not use floating
 	# point or use it in the same manner as does the server
 	# compiler.
-	
+
         .globl _Copy_arrayof_conjoint_bytes
 	.globl _Copy_arrayof_conjoint_jshorts
         .globl _Copy_conjoint_jshorts_atomic
@@ -63,7 +39,7 @@ _Copy_arrayof_conjoint_bytes:
         leaq     -1(%rdi,%r8,1),%rax  # from + bcount*1 - 1
         jbe      acb_CopyRight
         cmpq     %rax,%rsi
-        jbe      acb_CopyLeft 
+        jbe      acb_CopyLeft
 acb_CopyRight:
         leaq     -8(%rdi,%rdx,8),%rax # from + qcount*8 - 8
         leaq     -8(%rsi,%rdx,8),%rcx # to + qcount*8 - 8
@@ -167,7 +143,7 @@ _Copy_conjoint_jshorts_atomic:
         leaq     -2(%rdi,%r8,2),%rax  # from + wcount*2 - 2
         jbe      acs_CopyRight
         cmpq     %rax,%rsi
-        jbe      acs_CopyLeft 
+        jbe      acs_CopyLeft
 acs_CopyRight:
         leaq     -8(%rdi,%rdx,8),%rax # from + qcount*8 - 8
         leaq     -8(%rsi,%rdx,8),%rcx # to + qcount*8 - 8
@@ -257,7 +233,7 @@ _Copy_conjoint_jints_atomic:
         leaq     -4(%rdi,%r8,4),%rax  # from + dcount*4 - 4
         jbe      aci_CopyRight
         cmpq     %rax,%rsi
-        jbe      aci_CopyLeft 
+        jbe      aci_CopyLeft
 aci_CopyRight:
         leaq     -8(%rdi,%rdx,8),%rax # from + qcount*8 - 8
         leaq     -8(%rsi,%rdx,8),%rcx # to + qcount*8 - 8
@@ -334,7 +310,7 @@ _Copy_conjoint_jlongs_atomic:
         leaq     -8(%rdi,%rdx,8),%rax # from + count*8 - 8
         jbe      acl_CopyRight
         cmpq     %rax,%rsi
-        jbe      acl_CopyLeft 
+        jbe      acl_CopyLeft
 acl_CopyRight:
         leaq     -8(%rsi,%rdx,8),%rcx # to + count*8 - 8
         negq     %rdx

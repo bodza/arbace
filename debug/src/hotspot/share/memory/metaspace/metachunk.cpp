@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "memory/allocation.hpp"
 #include "memory/metaspace/metachunk.hpp"
 #include "memory/metaspace/occupancyMap.hpp"
@@ -26,8 +27,7 @@ size_t Metachunk::overhead() {
 
 // Metachunk methods
 
-Metachunk::Metachunk(ChunkIndex chunktype, bool is_class, size_t word_size,
-                     VirtualSpaceNode* container)
+Metachunk::Metachunk(ChunkIndex chunktype, bool is_class, size_t word_size, VirtualSpaceNode* container)
     : Metabase<Metachunk>(word_size),
     _chunk_type(chunktype),
     _is_class(is_class),
@@ -61,14 +61,10 @@ size_t Metachunk::free_word_size() const {
 }
 
 void Metachunk::print_on(outputStream* st) const {
-  st->print_cr("Metachunk:"
-               " bottom " PTR_FORMAT " top " PTR_FORMAT
-               " end " PTR_FORMAT " size " SIZE_FORMAT " (%s)",
-               p2i(bottom()), p2i(_top), p2i(end()), word_size(),
-               chunk_size_name(get_chunk_type()));
+  st->print_cr("Metachunk: bottom " PTR_FORMAT " top " PTR_FORMAT " end " PTR_FORMAT " size " SIZE_FORMAT " (%s)",
+               p2i(bottom()), p2i(_top), p2i(end()), word_size(), chunk_size_name(get_chunk_type()));
   if (Verbose) {
-    st->print_cr("    used " SIZE_FORMAT " free " SIZE_FORMAT,
-                 used_word_size(), free_word_size());
+    st->print_cr("    used " SIZE_FORMAT " free " SIZE_FORMAT, used_word_size(), free_word_size());
   }
 }
 

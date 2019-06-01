@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "ci/ciArrayKlass.hpp"
 #include "ci/ciEnv.hpp"
 #include "ci/ciKlass.hpp"
@@ -30,7 +31,6 @@ void Dependencies::initialize(ciEnv* env) {
   }
   _content_bytes = NULL;
   _size_in_bytes = (size_t)-1;
-
 }
 
 void Dependencies::assert_evol_method(ciMethod* m) {
@@ -101,7 +101,6 @@ Dependencies::Dependencies(Arena* arena, OopRecorder* oop_recorder, CompileLog* 
   }
   _content_bytes = NULL;
   _size_in_bytes = (size_t)-1;
-
 }
 
 void Dependencies::assert_evol_method(Method* m) {
@@ -596,8 +595,6 @@ Dependencies::DepType Dependencies::validate_dependencies(CompileTask* task, boo
     }
   }
 
-  if (klass_violations != 0) {
-  }
   return result;
 }
 
@@ -732,9 +729,7 @@ void Dependencies::write_dependency_to(xmlStream* xtty, DepType dept, GrowableAr
 void Dependencies::print_dependency(DepType dept, GrowableArray<DepArgument>* args, Klass* witness, outputStream* st) {
   ResourceMark rm;
   ttyLocker ttyl;   // keep the following output all in one block
-  st->print_cr("%s of type %s",
-                (witness == NULL)? "Dependency": "Failed dependency",
-                dep_name(dept));
+  st->print_cr("%s of type %s", (witness == NULL)? "Dependency": "Failed dependency", dep_name(dept));
   // print arguments
   int ctxkj = dep_context_arg(dept);  // -1 if no context arg
   for (int j = 0; j < args->length(); j++) {
@@ -768,9 +763,7 @@ void Dependencies::print_dependency(DepType dept, GrowableArray<DepArgument>* ar
   }
   if (witness != NULL) {
     bool put_star = !Dependencies::is_concrete_klass(witness);
-    st->print_cr("  witness = %s%s",
-                  (put_star? "*": ""),
-                  witness->external_name());
+    st->print_cr("  witness = %s%s", (put_star? "*": ""), witness->external_name());
   }
 }
 
@@ -1434,8 +1427,7 @@ int Dependencies::find_exclusive_concrete_subtypes(Klass* ctxk, int klen, Klass*
 
 // If a class (or interface) has a unique concrete method uniqm, return NULL.
 // Otherwise, return a class that contains an interfering method.
-Klass* Dependencies::check_unique_concrete_method(Klass* ctxk, Method* uniqm,
-                                                    KlassDepChange* changes) {
+Klass* Dependencies::check_unique_concrete_method(Klass* ctxk, Method* uniqm, KlassDepChange* changes) {
   // Here is a missing optimization:  If uniqm->is_final(),
   // we don't really need to search beneath it for overrides.
   // This is probably not important, since we don't use dependencies
@@ -1471,10 +1463,7 @@ Method* Dependencies::find_unique_concrete_method(Klass* ctxk, Method* m) {
   return fm;
 }
 
-Klass* Dependencies::check_exclusive_concrete_methods(Klass* ctxk,
-                                                        Method* m1,
-                                                        Method* m2,
-                                                        KlassDepChange* changes) {
+Klass* Dependencies::check_exclusive_concrete_methods(Klass* ctxk, Method* m1, Method* m2, KlassDepChange* changes) {
   ClassHierarchyWalker wf(m1);
   wf.add_participant(m1->method_holder());
   wf.add_participant(m2->method_holder());

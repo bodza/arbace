@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 
 #include "runtime/mutex.hpp"
@@ -12,11 +13,7 @@
 #include "utilities/defaultStream.hpp"
 #include "utilities/vmError.hpp"
 
-#ifdef SOLARIS
-  volatile bool NMT_stack_walkable = false;
-#else
-  volatile bool NMT_stack_walkable = true;
-#endif
+volatile bool NMT_stack_walkable = true;
 
 volatile NMT_TrackingLevel MemTracker::_tracking_level = NMT_unknown;
 NMT_TrackingLevel MemTracker::_cmdline_tracking_level = NMT_unknown;

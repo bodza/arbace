@@ -38,8 +38,7 @@ class RegisterImpl: public AbstractRegisterImpl {
   inline VMReg as_VMReg();
 
   // accessors
-  int   encoding() const                         {
-    return (intptr_t)this; }
+  int   encoding() const                         { return (intptr_t)this; }
   bool  is_valid() const                         { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   bool  has_byte_register() const                { return 0 <= (intptr_t)this && (intptr_t)this < number_of_byte_registers; }
   const char* name() const;
@@ -93,8 +92,7 @@ class FloatRegisterImpl: public AbstractRegisterImpl {
   FloatRegister successor() const                          { return as_FloatRegister(encoding() + 1); }
 
   // accessors
-  int   encoding() const                          {
-    return (intptr_t)this; }
+  int   encoding() const                          { return (intptr_t)this; }
   bool  is_valid() const                          { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   const char* name() const;
 };
@@ -139,8 +137,7 @@ class XMMRegisterImpl: public AbstractRegisterImpl {
   XMMRegister successor() const                          { return as_XMMRegister(encoding() + 1); }
 
   // accessors
-  int   encoding() const                          {
-    return (intptr_t)this; }
+  int   encoding() const                          { return (intptr_t)this; }
   bool  is_valid() const                          { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   const char* name() const;
   const char* sub_word_name(int offset) const;
@@ -223,8 +220,7 @@ public:
   KRegister successor() const                          { return as_KRegister(encoding() + 1); }
 
   // accessors
-  int   encoding() const                          {
-    return (intptr_t)this; }
+  int   encoding() const                          { return (intptr_t)this; }
   bool  is_valid() const                          { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   const char* name() const;
 };

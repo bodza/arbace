@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1HeapTransition.hpp"
 #include "gc/g1/g1Policy.hpp"
@@ -47,43 +48,11 @@ public:
     } else if (r->is_humongous()) {
       _usage._humongous_used += r->used();
       _usage._humongous_region_count++;
-    } else {
     }
     return false;
   }
 };
 
 void G1HeapTransition::print() {
-  Data after(_g1_heap);
-
-  size_t eden_capacity_length_after_gc = _g1_heap->g1_policy()->young_list_target_length() - after._survivor_length;
-  size_t survivor_capacity_length_after_gc = _g1_heap->g1_policy()->max_survivor_regions();
-
-  DetailedUsage usage;
-  if (log_is_enabled(Trace, gc, heap)) {
-    DetailedUsageClosure blk;
-    _g1_heap->heap_region_iterate(&blk);
-    usage = blk._usage;
-  }
-
-  log_info(gc, heap)("Eden regions: " SIZE_FORMAT "->" SIZE_FORMAT "("  SIZE_FORMAT ")",
-                     _before._eden_length, after._eden_length, eden_capacity_length_after_gc);
-  log_trace(gc, heap)(" Used: 0K, Waste: 0K");
-
-  log_info(gc, heap)("Survivor regions: " SIZE_FORMAT "->" SIZE_FORMAT "("  SIZE_FORMAT ")",
-                     _before._survivor_length, after._survivor_length, survivor_capacity_length_after_gc);
-  log_trace(gc, heap)(" Used: " SIZE_FORMAT "K, Waste: " SIZE_FORMAT "K",
-      usage._survivor_used / K, ((after._survivor_length * HeapRegion::GrainBytes) - usage._survivor_used) / K);
-
-  log_info(gc, heap)("Old regions: " SIZE_FORMAT "->" SIZE_FORMAT,
-                     _before._old_length, after._old_length);
-  log_trace(gc, heap)(" Used: " SIZE_FORMAT "K, Waste: " SIZE_FORMAT "K",
-      usage._old_used / K, ((after._old_length * HeapRegion::GrainBytes) - usage._old_used) / K);
-
-  log_info(gc, heap)("Humongous regions: " SIZE_FORMAT "->" SIZE_FORMAT,
-                     _before._humongous_length, after._humongous_length);
-  log_trace(gc, heap)(" Used: " SIZE_FORMAT "K, Waste: " SIZE_FORMAT "K",
-      usage._humongous_used / K, ((after._humongous_length * HeapRegion::GrainBytes) - usage._humongous_used) / K);
-
   MetaspaceUtils::print_metaspace_change(_before._metaspace_used_bytes);
 }

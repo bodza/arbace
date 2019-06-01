@@ -70,8 +70,7 @@ class LogOutputList {
    private:
     LogOutputNode*  _current;
     LogOutputList*  _list;
-    Iterator(LogOutputList* list, LogOutputNode* start) : _current(start), _list(list) {
-    }
+    Iterator(LogOutputList* list, LogOutputNode* start) : _current(start), _list(list) { }
 
    public:
     ~Iterator() {

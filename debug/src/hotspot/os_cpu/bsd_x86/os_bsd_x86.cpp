@@ -298,14 +298,12 @@ intptr_t* os::Bsd::ucontext_get_fp(const ucontext_t * uc) {
 // frames. Currently we don't do that on Bsd, so it's the same as
 // os::fetch_frame_from_context().
 // This method is also used for stack overflow signal handling.
-ExtendedPC os::Bsd::fetch_frame_from_ucontext(Thread* thread,
-  const ucontext_t* uc, intptr_t** ret_sp, intptr_t** ret_fp) {
+ExtendedPC os::Bsd::fetch_frame_from_ucontext(Thread* thread, const ucontext_t* uc, intptr_t** ret_sp, intptr_t** ret_fp) {
 
   return os::fetch_frame_from_context(uc, ret_sp, ret_fp);
 }
 
-ExtendedPC os::fetch_frame_from_context(const void* ucVoid,
-                    intptr_t** ret_sp, intptr_t** ret_fp) {
+ExtendedPC os::fetch_frame_from_context(const void* ucVoid, intptr_t** ret_sp, intptr_t** ret_fp) {
 
   ExtendedPC  epc;
   const ucontext_t* uc = (const ucontext_t*)ucVoid;
@@ -417,10 +415,7 @@ enum {
 };
 
 extern "C" JNIEXPORT int
-JVM_handle_bsd_signal(int sig,
-                        siginfo_t* info,
-                        void* ucVoid,
-                        int abort_if_unrecognized) {
+JVM_handle_bsd_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unrecognized) {
   ucontext_t* uc = (ucontext_t*) ucVoid;
 
   Thread* t = Thread::current_or_null_safe();
@@ -454,24 +449,15 @@ JVM_handle_bsd_signal(int sig,
     if (t != NULL ) {
       if (t->is_Java_thread()) {
         thread = (JavaThread*)t;
-      }
-      else if(t->is_VM_thread()) {
+      } else if(t->is_VM_thread()) {
         vmthread = (VMThread *)t;
       }
     }
   }
-/*
-  NOTE: does not seem to work on bsd.
-  if (info == NULL || info->si_code <= 0 || info->si_code == SI_NOINFO) {
-    // can't decode this kind of signal
-    info = NULL;
-  } else {
-  }
-*/
+
   // decide if this trap can be handled by a stub
   address stub = NULL;
-
-  address pc          = NULL;
+  address pc = NULL;
 
   //%note os_trap_1
   if (info != NULL && uc != NULL && thread != NULL) {
@@ -558,8 +544,7 @@ JVM_handle_bsd_signal(int sig,
           address next_pc = Assembler::locate_next_instruction(pc);
           stub = SharedRuntime::handle_unsafe_access(thread, next_pc);
         }
-      }
-      else
+      } else
 
 #ifdef AMD64
       if (sig == SIGFPE  && (info->si_code == FPE_INTDIV || info->si_code == FPE_FLTDIV)) {
@@ -669,10 +654,6 @@ JVM_handle_bsd_signal(int sig,
         address page_start = align_down(addr, page_size);
         bool res = os::protect_memory((char*) page_start, page_size, os::MEM_PROT_RWX);
 
-        log_debug(os)("Execution protection violation "
-                      "at " INTPTR_FORMAT
-                      ", unguarding " INTPTR_FORMAT ": %s, errno=%d", p2i(addr),
-                      p2i(page_start), (res ? "success" : "failed"), errno);
         stub = pc;
 
         // Set last_addr so if we fault again at the same address, we don't end

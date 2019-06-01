@@ -1,15 +1,9 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/barrierSet.hpp"
 #include "interpreter/interp_masm.hpp"
 #include "interpreter/templateTable.hpp"
 #include "runtime/timerTrace.hpp"
-
-#ifdef CC_INTERP
-
-void templateTable_init() {
-}
-
-#else
 
 //----------------------------------------------------------------------------------------------------
 // Implementation of Template
@@ -108,8 +102,7 @@ void TemplateTable::jsr() {
 //----------------------------------------------------------------------------------------------------
 // Implementation of TemplateTable: Debugging
 
-void TemplateTable::transition(TosState tos_in, TosState tos_out) {
-}
+void TemplateTable::transition(TosState tos_in, TosState tos_out) { }
 
 //----------------------------------------------------------------------------------------------------
 // Implementation of TemplateTable: Initialization
@@ -174,9 +167,6 @@ void TemplateTable::def(Bytecodes::Code code, int flags, TosState in, TosState o
 
 void TemplateTable::initialize() {
   if (_is_initialized) return;
-
-  // Initialize table
-  TraceTime timer("TemplateTable initialization", TRACETIME_LOG(Info, startuptime));
 
   _bs = BarrierSet::barrier_set();
 
@@ -481,4 +471,3 @@ void templateTable_init() {
 void TemplateTable::unimplemented_bc() {
   _masm->unimplemented( Bytecodes::name(_desc->bytecode()));
 }
-#endif

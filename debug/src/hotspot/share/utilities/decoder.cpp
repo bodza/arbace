@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "memory/allocation.inline.hpp"
 #include "runtime/os.hpp"
@@ -89,8 +90,7 @@ bool Decoder::demangle(const char* symbol, char* buf, int buflen) {
   return decoder->demangle(symbol, buf, buflen);
 }
 
-void Decoder::print_state_on(outputStream* st) {
-}
+void Decoder::print_state_on(outputStream* st) { }
 
 bool Decoder::get_source_info(address pc, char* buf, size_t buflen, int* line) {
   return false;

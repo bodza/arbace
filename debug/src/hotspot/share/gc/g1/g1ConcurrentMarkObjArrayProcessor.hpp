@@ -22,8 +22,7 @@ private:
 public:
   static bool should_be_sliced(oop obj);
 
-  G1CMObjArrayProcessor(G1CMTask* task) : _task(task) {
-  }
+  G1CMObjArrayProcessor(G1CMTask* task) : _task(task) { }
 
   // Process the given continuation. Returns the number of words scanned.
   size_t process_slice(HeapWord* slice);

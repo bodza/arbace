@@ -53,8 +53,7 @@ public:
     int entry_address() const  { return _entry_address; }
     int return_address() const { return _return_address; }
 
-    void print_on(outputStream* st) const {
-    }
+    void print_on(outputStream* st) const { }
   };
 
   // A JsrSet represents some set of JsrRecords.  This class
@@ -253,8 +252,7 @@ public:
     void      pop_int() {
       pop();
     }
-    void      check_int(Cell c) {
-    }
+    void      check_int(Cell c) { }
     void      push_double() {
       push(ciType::make(T_DOUBLE));
       push(double2_type());
@@ -500,10 +498,8 @@ public:
       _trap_index = trap_index;
     }
     bool has_trap()   const  { return _trap_bci != -1; }
-    int  trap_bci()   const  {
-        return _trap_bci; }
-    int  trap_index() const  {
-        return _trap_index; }
+    int  trap_bci()   const  { return _trap_bci; }
+    int  trap_index() const  { return _trap_index; }
 
     // accessors
     ciTypeFlow* outer() const { return state()->outer(); }
@@ -594,34 +590,29 @@ public:
     }
 
     // Work list manipulation
-    void   set_next(Block* block) { _next = block; }
-    Block* next() const           { return _next; }
+    void   set_next(Block* block)   { _next = block; }
+    Block* next() const             { return _next; }
 
     void   set_on_work_list(bool c) { _on_work_list = c; }
     bool   is_on_work_list() const  { return _on_work_list; }
 
-    bool   has_pre_order() const  { return _pre_order >= 0; }
-    void   set_pre_order(int po)  {
-        _pre_order = po; }
-    int    pre_order() const      {
-        return _pre_order; }
-    void   set_next_pre_order()   { set_pre_order(outer()->inc_next_pre_order()); }
-    bool   is_start() const       { return _pre_order == outer()->start_block_num(); }
+    bool   has_pre_order() const    { return _pre_order >= 0; }
+    void   set_pre_order(int po)    { _pre_order = po; }
+    int    pre_order() const        { return _pre_order; }
+    void   set_next_pre_order()     { set_pre_order(outer()->inc_next_pre_order()); }
+    bool   is_start() const         { return _pre_order == outer()->start_block_num(); }
 
     // Reverse post order
     void   df_init();
-    bool   has_post_order() const { return _post_order >= 0; }
-    void   set_post_order(int po) {
-        _post_order = po; }
-    void   reset_post_order(int o) { _post_order = o; }
-    int    post_order() const     {
-        return _post_order; }
+    bool   has_post_order() const   { return _post_order >= 0; }
+    void   set_post_order(int po)   { _post_order = po; }
+    void   reset_post_order(int o)  { _post_order = o; }
+    int    post_order() const       { return _post_order; }
 
-    bool   has_rpo() const        { return has_post_order() && outer()->have_block_count(); }
-    int    rpo() const            {
-        return outer()->block_count() - post_order() - 1; }
-    void   set_rpo_next(Block* b) { _rpo_next = b; }
-    Block* rpo_next()             { return _rpo_next; }
+    bool   has_rpo() const          { return has_post_order() && outer()->have_block_count(); }
+    int    rpo() const              { return outer()->block_count() - post_order() - 1; }
+    void   set_rpo_next(Block* b)   { _rpo_next = b; }
+    Block* rpo_next()               { return _rpo_next; }
 
     // Loops
     Loop*  loop() const                  { return _loop; }
@@ -784,14 +775,11 @@ public:
 
   // Return the block of a given pre-order number.
   int have_block_count() const      { return _block_map != NULL; }
-  int block_count() const           {
-                                      return _next_pre_order; }
-  Block* pre_order_at(int po) const {
-                                      return _block_map[po]; }
+  int block_count() const           { return _next_pre_order; }
+  Block* pre_order_at(int po) const { return _block_map[po]; }
   Block* start_block() const        { return pre_order_at(start_block_num()); }
   int start_block_num() const       { return 0; }
-  Block* rpo_at(int rpo) const      {
-                                      return _block_map[rpo]; }
+  Block* rpo_at(int rpo) const      { return _block_map[rpo]; }
   int next_pre_order()              { return _next_pre_order; }
   int inc_next_pre_order()          { return _next_pre_order++; }
 

@@ -1,8 +1,8 @@
 #include "precompiled.hpp"
+
 #include "runtime/timerTrace.hpp"
 
-TraceTime::TraceTime(const char* title,
-                     bool doit) {
+TraceTime::TraceTime(const char* title, bool doit) {
   _active   = doit;
   _verbose  = true;
   _title    = title;
@@ -14,10 +14,7 @@ TraceTime::TraceTime(const char* title,
   }
 }
 
-TraceTime::TraceTime(const char* title,
-                     elapsedTimer* accumulator,
-                     bool doit,
-                     bool verbose) {
+TraceTime::TraceTime(const char* title, elapsedTimer* accumulator, bool doit, bool verbose) {
   _active   = doit;
   _verbose  = verbose;
   _title    = title;
@@ -29,8 +26,7 @@ TraceTime::TraceTime(const char* title,
   }
 }
 
-TraceTime::TraceTime(const char* title,
-                     TraceTimerLogPrintFunc ttlpf) {
+TraceTime::TraceTime(const char* title, TraceTimerLogPrintFunc ttlpf) {
   _active   = ttlpf!= NULL;
   _verbose  = true;
   _title    = title;

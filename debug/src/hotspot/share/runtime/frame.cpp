@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "code/codeCache.hpp"
 #include "code/vmreg.inline.hpp"
 #include "compiler/abstractCompiler.hpp"
@@ -286,9 +287,7 @@ frame frame::profile_find_Java_sender_frame(JavaThread *thread) {
     // top frame is compiled frame or deoptimized frame
     first_java_frame = *this;
   } else if (safe_for_sender(thread)) {
-    for (frame sender_frame = sender(&map);
-      sender_frame.safe_for_sender(thread) && !sender_frame.is_first_frame();
-      sender_frame = sender_frame.sender(&map)) {
+    for (frame sender_frame = sender(&map); sender_frame.safe_for_sender(thread) && !sender_frame.is_first_frame(); sender_frame = sender_frame.sender(&map)) {
       if (sender_frame.is_java_frame()) {
         first_java_frame = sender_frame;
         break;
@@ -427,8 +426,7 @@ void frame::print_on(outputStream* st) const {
   }
 }
 
-void frame::interpreter_frame_print_on(outputStream* st) const {
-}
+void frame::interpreter_frame_print_on(outputStream* st) const { }
 
 // Print whether the frame is in the VM or OS indicating a HotSpot problem.
 // Otherwise, it's likely a bug in the native library that the Java code calls,
@@ -526,8 +524,7 @@ void frame::print_on_error(outputStream* st, char* buf, int buflen, bool verbose
             st->print("@%s", buf);
           }
         }
-        st->print(" (%d bytes) @ " PTR_FORMAT " [" PTR_FORMAT "+" INTPTR_FORMAT "]",
-                  m->code_size(), p2i(_pc), p2i(_cb->code_begin()), _pc - _cb->code_begin());
+        st->print(" (%d bytes) @ " PTR_FORMAT " [" PTR_FORMAT "+" INTPTR_FORMAT "]", m->code_size(), p2i(_pc), p2i(_cb->code_begin()), _pc - _cb->code_begin());
         if (cm->is_nmethod()) {
           nmethod* nm = cm->as_nmethod();
           char* jvmciName = nm->jvmci_installed_code_name(buf, buflen);

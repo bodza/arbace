@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/stringTable.hpp"
 #include "classfile/symbolTable.hpp"
 #include "gc/shared/jvmFlagConstraintsGC.hpp"

@@ -45,7 +45,6 @@ bool GenericTaskQueue<E, F, N>::push_slow(E t, uint dirty_n_elems) {
     // unused-value warning.  So, we cast the E& to void.
     (void)const_cast<E&>(_elems[localBot] = t);
     OrderAccess::release_store(&_bottom, increment_index(localBot));
-    TASKQUEUE_STATS_ONLY(stats.record_push());
     return true;
   }
   return false;
@@ -64,7 +63,6 @@ GenericTaskQueue<E, F, N>::push(E t) {
     // unused-value warning.  So, we cast the E& to void.
     (void) const_cast<E&>(_elems[localBot] = t);
     OrderAccess::release_store(&_bottom, increment_index(localBot));
-    TASKQUEUE_STATS_ONLY(stats.record_push());
     return true;
   } else {
     return push_slow(t, dirty_n_elems);
@@ -75,7 +73,6 @@ template <class E, MEMFLAGS F, unsigned int N>
 inline bool OverflowTaskQueue<E, F, N>::push(E t) {
   if (!taskqueue_t::push(t)) {
     overflow_stack()->push(t);
-    TASKQUEUE_STATS_ONLY(stats.record_overflow(overflow_stack()->size()));
   }
   return true;
 }
@@ -111,7 +108,6 @@ bool GenericTaskQueue<E, F, N>::pop_local_slow(uint localBot, Age oldAge) {
     Age tempAge = _age.cmpxchg(newAge, oldAge);
     if (tempAge == oldAge) {
       // We win.
-      TASKQUEUE_STATS_ONLY(stats.record_pop_slow());
       return true;
     }
   }
@@ -148,7 +144,6 @@ GenericTaskQueue<E, F, N>::pop_local(volatile E& t, uint threshold) {
   // a "pop_global" operation, and we're done.
   idx_t tp = _age.top();    // XXX
   if (size(localBot, tp) > 0) {
-    TASKQUEUE_STATS_ONLY(stats.record_pop());
     return true;
   } else {
     // Otherwise, the queue contained exactly one element; we take the slow
@@ -219,11 +214,9 @@ template<class T, MEMFLAGS F> bool
 GenericTaskQueueSet<T, F>::steal(uint queue_num, int* seed, E& t) {
   for (uint i = 0; i < 2 * _n; i++) {
     if (steal_best_of_2(queue_num, seed, t)) {
-      TASKQUEUE_STATS_ONLY(queue(queue_num)->stats.record_steal(true));
       return true;
     }
   }
-  TASKQUEUE_STATS_ONLY(queue(queue_num)->stats.record_steal(false));
   return false;
 }
 

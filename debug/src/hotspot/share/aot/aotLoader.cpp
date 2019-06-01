@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 
 #include "aot/aotCodeHeap.hpp"
@@ -83,16 +84,10 @@ void AOTLoader::metadata_do(void f(Metadata*)) {
  */
 static const char* modules[] = {
   "java.base",
-  "java.logging",
-  "jdk.compiler",
-  "jdk.scripting.nashorn",
-  "jdk.internal.vm.ci",
-  "jdk.internal.vm.compiler"
+  "jdk.internal.vm.ci"
 };
 
 void AOTLoader::initialize() {
-  TraceTime timer("AOT initialization", TRACETIME_LOG(Info, aot, startuptime));
-
   if (FLAG_IS_DEFAULT(UseAOT) && AOTLibrary != NULL) {
     // Don't need to set UseAOT on command line when AOTLibrary is specified
     FLAG_SET_DEFAULT(UseAOT, true);

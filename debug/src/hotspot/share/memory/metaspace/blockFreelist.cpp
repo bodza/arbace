@@ -23,10 +23,8 @@ void BlockFreelist::return_block(MetaWord* p, size_t word_size) {
   if (word_size < SmallBlocks::small_block_max_size()) {
     small_blocks()->return_block(free_chunk, word_size);
   } else {
-  dictionary()->return_chunk(free_chunk);
-}
-  log_trace(gc, metaspace, freelist, blocks)("returning block at " INTPTR_FORMAT " size = "
-            SIZE_FORMAT, p2i(free_chunk), word_size);
+    dictionary()->return_chunk(free_chunk);
+  }
 }
 
 MetaWord* BlockFreelist::get_block(size_t word_size) {
@@ -37,8 +35,6 @@ MetaWord* BlockFreelist::get_block(size_t word_size) {
     // this space manager.
     MetaWord* new_block = (MetaWord*) small_blocks()->get_block(word_size);
     if (new_block != NULL) {
-      log_trace(gc, metaspace, freelist, blocks)("getting block at " INTPTR_FORMAT " size = " SIZE_FORMAT,
-              p2i(new_block), word_size);
       return new_block;
     }
   }
@@ -65,8 +61,6 @@ MetaWord* BlockFreelist::get_block(size_t word_size) {
     return_block(new_block + word_size, unused);
   }
 
-  log_trace(gc, metaspace, freelist, blocks)("getting block at " INTPTR_FORMAT " size = " SIZE_FORMAT,
-            p2i(new_block), word_size);
   return new_block;
 }
 

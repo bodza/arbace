@@ -11,48 +11,12 @@
 class LogMessageBuffer;
 
 //
-// Logging macros
-//
-// Usage:
-//   log_<level>(<comma separated log tags>)(<printf-style log arguments>);
-// e.g.
-//   log_debug(logging)("message %d", i);
-//
-// Note that these macros will not evaluate the arguments unless the logging is enabled.
-//
-#define log_error(...)   (!log_is_enabled(Error, __VA_ARGS__))   ? (void)0 : LogImpl<LOG_TAGS(__VA_ARGS__)>::write<LogLevel::Error>
-#define log_warning(...) (!log_is_enabled(Warning, __VA_ARGS__)) ? (void)0 : LogImpl<LOG_TAGS(__VA_ARGS__)>::write<LogLevel::Warning>
-#define log_info(...)    (!log_is_enabled(Info, __VA_ARGS__))    ? (void)0 : LogImpl<LOG_TAGS(__VA_ARGS__)>::write<LogLevel::Info>
-#define log_debug(...)   (!log_is_enabled(Debug, __VA_ARGS__))   ? (void)0 : LogImpl<LOG_TAGS(__VA_ARGS__)>::write<LogLevel::Debug>
-#define log_trace(...)   (!log_is_enabled(Trace, __VA_ARGS__))   ? (void)0 : LogImpl<LOG_TAGS(__VA_ARGS__)>::write<LogLevel::Trace>
-
-// Macros for logging that should be excluded in product builds.
-// Available for levels Info, Debug and Trace. Includes test macro that
-// evaluates to false in product builds.
-#define DUMMY_ARGUMENT_CONSUMER(...)
-#define log_develop_info(...)  DUMMY_ARGUMENT_CONSUMER
-#define log_develop_debug(...) DUMMY_ARGUMENT_CONSUMER
-#define log_develop_trace(...) DUMMY_ARGUMENT_CONSUMER
-#define log_develop_is_enabled(...)  false
-
-// Convenience macro to test if the logging is enabled on the specified level for given tags.
-#define log_is_enabled(level, ...) (LogImpl<LOG_TAGS(__VA_ARGS__)>::is_level(LogLevel::level))
-
-//
 // Log class for more advanced logging scenarios.
 // Has printf-style member functions for each log level (trace(), debug(), etc).
 //
 // Also has outputStream compatible API for the different log-levels.
 // The streams are resource allocated when requested and are accessed through
 // calls to <level>_stream() functions (trace_stream(), debug_stream(), etc).
-//
-// Example usage:
-//   Log(logging) log;
-//   if (log.is_debug()) {
-//     ...
-//     log.debug("result = %d", result).trace(" tracing info");
-//     obj->print_on(log.debug_stream());
-//   }
 //
 #define Log(...)  LogImpl<LOG_TAGS(__VA_ARGS__)>
 
@@ -61,16 +25,6 @@ class LogMessageBuffer;
 //
 // The class provides a way to write the tags and log level once,
 // so that redundant specification of tags or levels can be avoided.
-//
-// Example usage:
-//   LogTarget(Debug, gc) out;
-//   if (out.is_enabled()) {
-//     ...
-//     out.print("Worker: %u", i);
-//     out.print(" data: %d", x);
-//     ...
-//     print_stats(out.stream());
-//   }
 //
 #define LogTarget(level, ...) LogTargetImpl<LogLevel::level, LOG_TAGS(__VA_ARGS__)>
 
@@ -90,8 +44,7 @@ class LogImpl {
 
   // Empty constructor to avoid warnings on MSVC about unused variables
   // when the log instance is only used for static functions.
-  LogImpl() {
-  }
+  LogImpl() { }
 
   static bool is_level(LogLevelType level) {
     return LogTagSetMapping<T0, T1, T2, T3, T4>::tagset().is_level(level);
@@ -152,8 +105,7 @@ class LogTargetImpl {
 public:
   // Empty constructor to avoid warnings on MSVC about unused variables
   // when the log instance is only used for static functions.
-  LogTargetImpl() {
-  }
+  LogTargetImpl() { }
 
   static bool is_enabled() {
     return LogImpl<T0, T1, T2, T3, T4, GuardTag>::is_level(level);

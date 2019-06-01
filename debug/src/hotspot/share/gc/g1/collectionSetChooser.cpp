@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/collectionSetChooser.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/heapRegionRemSet.hpp"
@@ -69,13 +70,6 @@ void CollectionSetChooser::sort_regions() {
     regions_trunc_to(_first_par_unreserved_idx);
   }
   _regions.sort(order_regions);
-  if (log_is_enabled(Trace, gc, liveness)) {
-    G1PrintRegionLivenessInfoClosure cl("Post-Sorting");
-    for (uint i = 0; i < _end; ++i) {
-      HeapRegion* r = regions_at(i);
-      cl.do_heap_region(r);
-    }
-  }
   verify();
 }
 
@@ -119,7 +113,6 @@ void CollectionSetChooser::update_totals(uint region_num, size_t reclaimable_byt
     MutexLockerEx x(ParGCRareEvent_lock, Mutex::_no_safepoint_check_flag);
     _end += region_num;
     _remaining_reclaimable_bytes += reclaimable_bytes;
-  } else {
   }
 }
 
@@ -145,8 +138,7 @@ class ParKnownGarbageHRClosure: public HeapRegionClosure {
   CSetChooserParUpdater _cset_updater;
 
 public:
-  ParKnownGarbageHRClosure(CollectionSetChooser* hrSorted,
-                           uint chunk_size) :
+  ParKnownGarbageHRClosure(CollectionSetChooser* hrSorted, uint chunk_size) :
     _g1h(G1CollectedHeap::heap()),
     _cset_updater(hrSorted, true /* parallel */, chunk_size) { }
 
@@ -160,7 +152,6 @@ public:
       // Keep remembered sets for humongous regions, otherwise clean out remembered
       // sets for old regions.
       r->rem_set()->clear(true /* only_cardset */);
-    } else {
     }
     return false;
   }

@@ -79,8 +79,7 @@ class InstanceKlass: public Klass {
   InstanceKlass(const ClassFileParser& parser, unsigned kind, KlassID id = ID);
 
  public:
-  InstanceKlass() {
-    }
+  InstanceKlass() { }
 
   // See "The Java Virtual Machine Specification" section 2.16.2-5 for a detailed description
   // of the class loading & initialization procedure, and the use of the states.
@@ -444,9 +443,7 @@ public:
 
  private:
   // Check prohibited package ("java/" only loadable by boot or platform loaders)
-  static void check_prohibited_package(Symbol* class_name,
-                                       ClassLoaderData* loader_data,
-                                       TRAPS);
+  static void check_prohibited_package(Symbol* class_name, ClassLoaderData* loader_data, TRAPS);
  public:
   // tell if two classes have the same enclosing class (at package level)
   bool is_same_package_member(const Klass* class2, TRAPS) const;
@@ -522,46 +519,23 @@ public:
 
   // find a local method (returns NULL if not found)
   Method* find_method(const Symbol* name, const Symbol* signature) const;
-  static Method* find_method(const Array<Method*>* methods,
-                             const Symbol* name,
-                             const Symbol* signature);
+  static Method* find_method(const Array<Method*>* methods, const Symbol* name, const Symbol* signature);
 
   // find a local method, but skip static methods
-  Method* find_instance_method(const Symbol* name, const Symbol* signature,
-                               PrivateLookupMode private_mode = find_private) const;
-  static Method* find_instance_method(const Array<Method*>* methods,
-                                      const Symbol* name,
-                                      const Symbol* signature,
-                                      PrivateLookupMode private_mode = find_private);
+  Method* find_instance_method(const Symbol* name, const Symbol* signature, PrivateLookupMode private_mode = find_private) const;
+  static Method* find_instance_method(const Array<Method*>* methods, const Symbol* name, const Symbol* signature, PrivateLookupMode private_mode = find_private);
 
   // find a local method (returns NULL if not found)
-  Method* find_local_method(const Symbol* name,
-                            const Symbol* signature,
-                            OverpassLookupMode overpass_mode,
-                            StaticLookupMode static_mode,
-                            PrivateLookupMode private_mode) const;
+  Method* find_local_method(const Symbol* name, const Symbol* signature, OverpassLookupMode overpass_mode, StaticLookupMode static_mode, PrivateLookupMode private_mode) const;
 
   // find a local method from given methods array (returns NULL if not found)
-  static Method* find_local_method(const Array<Method*>* methods,
-                                   const Symbol* name,
-                                   const Symbol* signature,
-                                   OverpassLookupMode overpass_mode,
-                                   StaticLookupMode static_mode,
-                                   PrivateLookupMode private_mode);
+  static Method* find_local_method(const Array<Method*>* methods, const Symbol* name, const Symbol* signature, OverpassLookupMode overpass_mode, StaticLookupMode static_mode, PrivateLookupMode private_mode);
 
   // find a local method index in methods or default_methods (returns -1 if not found)
-  static int find_method_index(const Array<Method*>* methods,
-                               const Symbol* name,
-                               const Symbol* signature,
-                               OverpassLookupMode overpass_mode,
-                               StaticLookupMode static_mode,
-                               PrivateLookupMode private_mode);
+  static int find_method_index(const Array<Method*>* methods, const Symbol* name, const Symbol* signature, OverpassLookupMode overpass_mode, StaticLookupMode static_mode, PrivateLookupMode private_mode);
 
   // lookup operation (returns NULL if not found)
-  Method* uncached_lookup_method(const Symbol* name,
-                                 const Symbol* signature,
-                                 OverpassLookupMode overpass_mode,
-                                 PrivateLookupMode private_mode = find_private) const;
+  Method* uncached_lookup_method(const Symbol* name, const Symbol* signature, OverpassLookupMode overpass_mode, PrivateLookupMode private_mode = find_private) const;
 
   // lookup a method in all the interfaces that this class implements
   // (returns NULL if not found)
@@ -576,8 +550,7 @@ public:
   // with the index of first non-name-matching method.  If no method is found
   // -1 is returned.
   int find_method_by_name(const Symbol* name, int* end) const;
-  static int find_method_by_name(const Array<Method*>* methods,
-                                 const Symbol* name, int* end);
+  static int find_method_by_name(const Array<Method*>* methods, const Symbol* name, int* end);
 
   // constant pool
   ConstantPool* constants() const        { return _constants; }
@@ -659,8 +632,7 @@ public:
 
   // symbol unloading support (refcount already added)
   Symbol* array_name()                     { return _array_name; }
-  void set_array_name(Symbol* name)        {
-    _array_name = name; }
+  void set_array_name(Symbol* name)        { _array_name = name; }
 
   // nonstatic oop-map blocks
   static int nonstatic_oop_map_size(unsigned int oop_map_count) {
@@ -777,8 +749,7 @@ public:
 
   // generics support
   Symbol* generic_signature() const                   {
-    return (_generic_signature_index == 0) ?
-      (Symbol*)NULL : _constants->symbol_at(_generic_signature_index);
+    return (_generic_signature_index == 0) ? (Symbol*)NULL : _constants->symbol_at(_generic_signature_index);
   }
   u2 generic_signature_index() const                  {
     return _generic_signature_index;
@@ -794,17 +765,12 @@ public:
   u2 enclosing_method_method_index() {
     return enclosing_method_data(enclosing_method_method_index_offset);
   }
-  void set_enclosing_method_indices(u2 class_index,
-                                    u2 method_index);
+  void set_enclosing_method_indices(u2 class_index, u2 method_index);
 
   // jmethodID support
   jmethodID get_jmethod_id(const methodHandle& method_h);
-  jmethodID get_jmethod_id_fetch_or_update(size_t idnum,
-                     jmethodID new_id, jmethodID* new_jmeths,
-                     jmethodID* to_dealloc_id_p,
-                     jmethodID** to_dealloc_jmeths_p);
-  static void get_jmethod_id_length_value(jmethodID* cache, size_t idnum,
-                size_t *length_p, jmethodID* id_p);
+  jmethodID get_jmethod_id_fetch_or_update(size_t idnum, jmethodID new_id, jmethodID* new_jmeths, jmethodID* to_dealloc_id_p, jmethodID** to_dealloc_jmeths_p);
+  static void get_jmethod_id_length_value(jmethodID* cache, size_t idnum, size_t *length_p, jmethodID* id_p);
   void ensure_space_for_methodids(int start_offset = 0);
   jmethodID jmethod_id_or_null(Method* method);
 
@@ -886,8 +852,7 @@ public:
 
   // virtual operations from Klass
   bool is_leaf_class() const               { return _subklass == NULL; }
-  GrowableArray<Klass*>* compute_secondary_supers(int num_extra_slots,
-                                                  Array<Klass*>* transitive_interfaces);
+  GrowableArray<Klass*>* compute_secondary_supers(int num_extra_slots, Array<Klass*>* transitive_interfaces);
   bool compute_is_subtype_of(Klass* k);
   bool can_be_primary_super_slow() const;
   int oop_size(oop obj)  const             { return size_helper(); }
@@ -928,12 +893,8 @@ public:
            (is_anonymous ? (int)sizeof(Klass*)/wordSize : 0) +
            (has_stored_fingerprint ? (int)sizeof(uint64_t*)/wordSize : 0));
   }
-  int size() const                    { return size(vtable_length(),
-                                               itable_length(),
-                                               nonstatic_oop_map_size(),
-                                               is_interface(),
-                                               is_anonymous(),
-                                               has_stored_fingerprint());
+  int size() const {
+    return size(vtable_length(), itable_length(), nonstatic_oop_map_size(), is_interface(), is_anonymous(), has_stored_fingerprint());
   }
 
   intptr_t* start_of_itable()   const { return (intptr_t*)start_of_vtable() + vtable_length(); }
@@ -1019,12 +980,8 @@ public:
   // For RedefineClasses and class file parsing errors, we need to deallocate
   // instanceKlasses and the metadata they point to.
   void deallocate_contents(ClassLoaderData* loader_data);
-  static void deallocate_methods(ClassLoaderData* loader_data,
-                                 Array<Method*>* methods);
-  void static deallocate_interfaces(ClassLoaderData* loader_data,
-                                    const Klass* super_klass,
-                                    Array<Klass*>* local_interfaces,
-                                    Array<Klass*>* transitive_interfaces);
+  static void deallocate_methods(ClassLoaderData* loader_data, Array<Method*>* methods);
+  void static deallocate_interfaces(ClassLoaderData* loader_data, const Klass* super_klass, Array<Klass*>* local_interfaces, Array<Klass*>* transitive_interfaces);
 
   // The constant pool is on stack if any of the methods are executing or
   // referenced by handles.
@@ -1037,9 +994,6 @@ public:
   // Naming
   const char* signature_name() const;
   static Symbol* package_from_name(const Symbol* name, TRAPS);
-
-  // GC specific object visitors
-  //
 
   // Oop fields (and metadata) iterators
   //
@@ -1121,13 +1075,13 @@ public:
 private:
   void fence_and_clear_init_lock();
 
-  bool link_class_impl                           (bool throw_verifyerror, TRAPS);
-  bool verify_code                               (bool throw_verifyerror, TRAPS);
-  void initialize_impl                           (TRAPS);
-  void initialize_super_interfaces               (TRAPS);
-  void eager_initialize_impl                     ();
+  bool link_class_impl(bool throw_verifyerror, TRAPS);
+  bool verify_code(bool throw_verifyerror, TRAPS);
+  void initialize_impl(TRAPS);
+  void initialize_super_interfaces(TRAPS);
+  void eager_initialize_impl();
   /* jni_id_for_impl for jfieldID only */
-  JNIid* jni_id_for_impl                         (int offset);
+  JNIid* jni_id_for_impl(int offset);
 
   // Returns the array class for the n'th dimension
   Klass* array_klass_impl(bool or_null, int n, TRAPS);
@@ -1136,18 +1090,9 @@ private:
   Klass* array_klass_impl(bool or_null, TRAPS);
 
   // find a local method (returns NULL if not found)
-  Method* find_method_impl(const Symbol* name,
-                           const Symbol* signature,
-                           OverpassLookupMode overpass_mode,
-                           StaticLookupMode static_mode,
-                           PrivateLookupMode private_mode) const;
+  Method* find_method_impl(const Symbol* name, const Symbol* signature, OverpassLookupMode overpass_mode, StaticLookupMode static_mode, PrivateLookupMode private_mode) const;
 
-  static Method* find_method_impl(const Array<Method*>* methods,
-                                  const Symbol* name,
-                                  const Symbol* signature,
-                                  OverpassLookupMode overpass_mode,
-                                  StaticLookupMode static_mode,
-                                  PrivateLookupMode private_mode);
+  static Method* find_method_impl(const Array<Method*>* methods, const Symbol* name, const Symbol* signature, OverpassLookupMode overpass_mode, StaticLookupMode static_mode, PrivateLookupMode private_mode);
 
   // Free CHeap allocated fields.
   void release_C_heap_structures();
@@ -1167,20 +1112,12 @@ public:
  public:
   // Printing
   void print_value_on(outputStream* st) const;
-
   void oop_print_value_on(oop obj, outputStream* st);
-
   const char* internal_name() const;
 
   // Verification
   void verify_on(outputStream* st);
-
   void oop_verify_on(oop obj, outputStream* st);
-
-  // Logging
-  void print_class_load_logging(ClassLoaderData* loader_data,
-                                const char* module_name,
-                                const ClassFileStream* cfs) const;
 };
 
 // for adding methods

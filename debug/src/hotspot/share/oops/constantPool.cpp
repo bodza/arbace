@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/classLoaderData.hpp"
 #include "classfile/javaClasses.inline.hpp"
@@ -43,7 +44,6 @@ ConstantPool* ConstantPool::allocate(ClassLoaderData* loader_data, int length, T
 ConstantPool::ConstantPool(Array<u1>* tags) :
   _tags(tags),
   _length(tags->length()) {
-
 }
 
 void ConstantPool::deallocate_contents(ClassLoaderData* loader_data) {
@@ -71,8 +71,6 @@ void ConstantPool::release_C_heap_structures() {
 }
 
 void ConstantPool::metaspace_pointers_do(MetaspaceClosure* it) {
-  log_trace(cds)("Iter(ConstantPool): %p", this);
-
   it->push(&_tags, MetaspaceClosure::_writable);
   it->push(&_cache);
   it->push(&_pool_holder);
@@ -264,37 +262,7 @@ void ConstantPool::string_at_put(int which, int obj_index, oop str) {
   resolved_references()->obj_at_put(obj_index, str);
 }
 
-void ConstantPool::trace_class_resolution(const constantPoolHandle& this_cp, Klass* k) {
-  ResourceMark rm;
-  int line_number = -1;
-  const char * source_file = NULL;
-  if (JavaThread::current()->has_last_Java_frame()) {
-    // try to identify the method which called this function.
-    vframeStream vfst(JavaThread::current());
-    if (!vfst.at_end()) {
-      line_number = vfst.method()->line_number_from_bci(vfst.bci());
-      Symbol* s = vfst.method()->method_holder()->source_file_name();
-      if (s != NULL) {
-        source_file = s->as_C_string();
-      }
-    }
-  }
-  if (k != this_cp->pool_holder()) {
-    // only print something if the classes are different
-    if (source_file != NULL) {
-      log_debug(class, resolve)("%s %s %s:%d",
-                 this_cp->pool_holder()->external_name(),
-                 k->external_name(), source_file, line_number);
-    } else {
-      log_debug(class, resolve)("%s %s",
-                 this_cp->pool_holder()->external_name(),
-                 k->external_name());
-    }
-  }
-}
-
-Klass* ConstantPool::klass_at_impl(const constantPoolHandle& this_cp, int which,
-                                   bool save_resolution_error, TRAPS) {
+Klass* ConstantPool::klass_at_impl(const constantPoolHandle& this_cp, int which, bool save_resolution_error, TRAPS) {
 
   // A resolved constantPool entry will contain a Klass*, otherwise a Symbol*.
   // It is not safe to rely on the tag bit's here, since we don't have a lock, and
@@ -349,10 +317,6 @@ Klass* ConstantPool::klass_at_impl(const constantPoolHandle& this_cp, int which,
     }
   }
 
-  // logging for class+resolve.
-  if (log_is_enabled(Debug, class, resolve)) {
-    trace_class_resolution(this_cp, k);
-  }
   Klass** adr = this_cp->resolved_klasses()->adr_at(resolved_klass_index);
   OrderAccess::release_store(adr, k);
   // The interpreter assumes when the tag is stored, the klass is resolved
@@ -399,13 +363,11 @@ Klass* ConstantPool::klass_at_if_loaded(const constantPoolHandle& this_cp, int w
   }
 }
 
-Method* ConstantPool::method_at_if_loaded(const constantPoolHandle& cpool,
-                                                   int which) {
+Method* ConstantPool::method_at_if_loaded(const constantPoolHandle& cpool, int which) {
   if (cpool->cache() == NULL)  return NULL;  // nothing to load yet
   int cache_index = decode_cpcache_index(which, true);
   if (!(cache_index >= 0 && cache_index < cpool->cache()->length())) {
-    // FIXME: should be an assert
-    log_debug(class, resolve)("bad operand %d in:", which); cpool->print();
+    cpool->print();
     return NULL;
   }
   ConstantPoolCacheEntry* e = cpool->cache()->entry_at(cache_index);
@@ -799,9 +761,6 @@ oop ConstantPool::resolve_constant_at_impl(const constantPoolHandle& this_cp, in
       Symbol*  signature = this_cp->method_handle_signature_ref_at(index);
       constantTag m_tag  = this_cp->tag_at(this_cp->method_handle_index_at(index));
       { ResourceMark rm(THREAD);
-        log_debug(class, resolve)("resolve JVM_CONSTANT_MethodHandle:%d [%d/%d/%d] %s.%s",
-                              ref_kind, index, this_cp->method_handle_index_at(index),
-                              callee_index, name->as_C_string(), signature->as_C_string());
       }
 
       Klass* callee = klass_at_impl(this_cp, callee_index, true, CHECK_NULL);
@@ -811,8 +770,7 @@ oop ConstantPool::resolve_constant_at_impl(const constantPoolHandle& this_cp, in
         ResourceMark rm(THREAD);
         char buf[400];
         jio_snprintf(buf, sizeof(buf),
-          "Inconsistent constant pool data in classfile for class %s. "
-          "Method %s%s at index %d is %s and should be %s",
+          "Inconsistent constant pool data in classfile for class %s. Method %s%s at index %d is %s and should be %s",
           callee->name()->as_C_string(), name->as_C_string(), signature->as_C_string(), index,
           callee->is_interface() ? "CONSTANT_MethodRef" : "CONSTANT_InterfaceMethodRef",
           callee->is_interface() ? "CONSTANT_InterfaceMethodRef" : "CONSTANT_MethodRef");
@@ -820,9 +778,7 @@ oop ConstantPool::resolve_constant_at_impl(const constantPoolHandle& this_cp, in
       }
 
       Klass* klass = this_cp->pool_holder();
-      Handle value = SystemDictionary::link_method_handle_constant(klass, ref_kind,
-                                                                   callee, name, signature,
-                                                                   THREAD);
+      Handle value = SystemDictionary::link_method_handle_constant(klass, ref_kind, callee, name, signature, THREAD);
       result_oop = value();
       if (HAS_PENDING_EXCEPTION) {
         save_and_throw_exception(this_cp, index, tag, CHECK_NULL);
@@ -834,9 +790,6 @@ oop ConstantPool::resolve_constant_at_impl(const constantPoolHandle& this_cp, in
     {
       Symbol*  signature = this_cp->method_type_signature_at(index);
       { ResourceMark rm(THREAD);
-        log_debug(class, resolve)("resolve JVM_CONSTANT_MethodType [%d/%d] %s",
-                              index, this_cp->method_type_index_at(index),
-                              signature->as_C_string());
       }
       Klass* klass = this_cp->pool_holder();
       Handle value = SystemDictionary::find_method_handle_type(signature, klass, THREAD);
@@ -1670,8 +1623,7 @@ jint ConstantPool::cpool_entry_size(jint idx) {
 // SymbolHashMap is used to find a constant pool index from a string.
 // This function fills in SymbolHashMaps, one for utf8s and one for
 // class names, returns size of the cpool raw bytes.
-jint ConstantPool::hash_entries_to(SymbolHashMap *symmap,
-                                          SymbolHashMap *classmap) {
+jint ConstantPool::hash_entries_to(SymbolHashMap *symmap, SymbolHashMap *classmap) {
   jint size = 0;
 
   for (u2 idx = 1; idx < length(); idx++) {

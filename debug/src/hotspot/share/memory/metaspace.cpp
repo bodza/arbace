@@ -164,8 +164,6 @@ bool MetaspaceGC::can_expand(size_t word_size, bool is_class) {
   if (is_class && Metaspace::using_class_space()) {
     size_t class_committed = MetaspaceUtils::committed_bytes(Metaspace::ClassType);
     if (class_committed + word_size * BytesPerWord > CompressedClassSpaceSize) {
-      log_trace(gc, metaspace, freelist)("Cannot expand %s metaspace by " SIZE_FORMAT " words (CompressedClassSpaceSize = " SIZE_FORMAT " words)",
-                (is_class ? "class" : "non-class"), word_size, CompressedClassSpaceSize / sizeof(MetaWord));
       return false;
     }
   }
@@ -173,8 +171,6 @@ bool MetaspaceGC::can_expand(size_t word_size, bool is_class) {
   // Check if the user has imposed a limit on the metaspace memory.
   size_t committed_bytes = MetaspaceUtils::committed_bytes();
   if (committed_bytes + word_size * BytesPerWord > MaxMetaspaceSize) {
-    log_trace(gc, metaspace, freelist)("Cannot expand %s metaspace by " SIZE_FORMAT " words (MaxMetaspaceSize = " SIZE_FORMAT " words)",
-              (is_class ? "class" : "non-class"), word_size, MaxMetaspaceSize / sizeof(MetaWord));
     return false;
   }
 
@@ -188,9 +184,6 @@ size_t MetaspaceGC::allowed_expansion() {
   size_t left_until_max  = MaxMetaspaceSize - committed_bytes;
   size_t left_until_GC = capacity_until_gc - committed_bytes;
   size_t left_to_commit = MIN2(left_until_GC, left_until_max);
-  log_trace(gc, metaspace, freelist)("allowed expansion words: " SIZE_FORMAT
-            " (left_until_max: " SIZE_FORMAT ", left_until_GC: " SIZE_FORMAT ".",
-            left_to_commit / BytesPerWord, left_until_max / BytesPerWord, left_until_GC / BytesPerWord);
 
   return left_to_commit / BytesPerWord;
 }
@@ -216,13 +209,7 @@ void MetaspaceGC::compute_new_size() {
   const double min_tmp = used_after_gc / maximum_used_percentage;
   size_t minimum_desired_capacity = (size_t)MIN2(min_tmp, double(MaxMetaspaceSize));
   // Don't shrink less than the initial generation size
-  minimum_desired_capacity = MAX2(minimum_desired_capacity,
-                                  MetaspaceSize);
-
-  log_trace(gc, metaspace)("MetaspaceGC::compute_new_size: ");
-  log_trace(gc, metaspace)("    minimum_free_percentage: %6.2f  maximum_used_percentage: %6.2f",
-                           minimum_free_percentage, maximum_used_percentage);
-  log_trace(gc, metaspace)("     used_after_gc       : %6.1fKB", used_after_gc / (double) K);
+  minimum_desired_capacity = MAX2(minimum_desired_capacity, MetaspaceSize);
 
   size_t shrink_bytes = 0;
   if (capacity_until_GC < minimum_desired_capacity) {
@@ -235,14 +222,7 @@ void MetaspaceGC::compute_new_size() {
       size_t new_capacity_until_GC = 0;
       bool succeeded = MetaspaceGC::inc_capacity_until_GC(expand_bytes, &new_capacity_until_GC);
 
-      Metaspace::tracer()->report_gc_threshold(capacity_until_GC,
-                                               new_capacity_until_GC,
-                                               MetaspaceGCThresholdUpdater::ComputeNewSize);
-      log_trace(gc, metaspace)("    expanding:  minimum_desired_capacity: %6.1fKB  expand_bytes: %6.1fKB  MinMetaspaceExpansion: %6.1fKB  new metaspace HWM:  %6.1fKB",
-                               minimum_desired_capacity / (double) K,
-                               expand_bytes / (double) K,
-                               MinMetaspaceExpansion / (double) K,
-                               new_capacity_until_GC / (double) K);
+      Metaspace::tracer()->report_gc_threshold(capacity_until_GC, new_capacity_until_GC, MetaspaceGCThresholdUpdater::ComputeNewSize);
     }
     return;
   }
@@ -255,12 +235,7 @@ void MetaspaceGC::compute_new_size() {
     const double minimum_used_percentage = 1.0 - maximum_free_percentage;
     const double max_tmp = used_after_gc / minimum_used_percentage;
     size_t maximum_desired_capacity = (size_t)MIN2(max_tmp, double(MaxMetaspaceSize));
-    maximum_desired_capacity = MAX2(maximum_desired_capacity,
-                                    MetaspaceSize);
-    log_trace(gc, metaspace)("    maximum_free_percentage: %6.2f  minimum_used_percentage: %6.2f",
-                             maximum_free_percentage, minimum_used_percentage);
-    log_trace(gc, metaspace)("    minimum_desired_capacity: %6.1fKB  maximum_desired_capacity: %6.1fKB",
-                             minimum_desired_capacity / (double) K, maximum_desired_capacity / (double) K);
+    maximum_desired_capacity = MAX2(maximum_desired_capacity, MetaspaceSize);
 
     if (capacity_until_GC > maximum_desired_capacity) {
       // Capacity too large, compute shrinking size
@@ -280,10 +255,6 @@ void MetaspaceGC::compute_new_size() {
       } else {
         _shrink_factor = MIN2(current_shrink_factor * 4, (uint) 100);
       }
-      log_trace(gc, metaspace)("    shrinking:  initThreshold: %.1fK  maximum_desired_capacity: %.1fK",
-                               MetaspaceSize / (double) K, maximum_desired_capacity / (double) K);
-      log_trace(gc, metaspace)("    shrink_bytes: %.1fK  current_shrink_factor: %d  new shrink factor: %d  MinMetaspaceExpansion: %.1fK",
-                               shrink_bytes / (double) K, current_shrink_factor, _shrink_factor, MinMetaspaceExpansion / (double) K);
     }
   }
 
@@ -405,35 +376,18 @@ MetaspaceChunkFreeListSummary MetaspaceUtils::chunk_free_list_summary(Metaspace:
   return cm->chunk_free_list_summary();
 }
 
-void MetaspaceUtils::print_metaspace_change(size_t prev_metadata_used) {
-  log_info(gc, metaspace)("Metaspace: "  SIZE_FORMAT "K->" SIZE_FORMAT "K("  SIZE_FORMAT "K)",
-                          prev_metadata_used/K, used_bytes()/K, reserved_bytes()/K);
-}
+void MetaspaceUtils::print_metaspace_change(size_t prev_metadata_used) { }
 
 void MetaspaceUtils::print_on(outputStream* out) {
   Metaspace::MetadataType nct = Metaspace::NonClassType;
 
-  out->print_cr(" Metaspace       "
-                "used "      SIZE_FORMAT "K, "
-                "capacity "  SIZE_FORMAT "K, "
-                "committed " SIZE_FORMAT "K, "
-                "reserved "  SIZE_FORMAT "K",
-                used_bytes()/K,
-                capacity_bytes()/K,
-                committed_bytes()/K,
-                reserved_bytes()/K);
+  out->print_cr(" Metaspace       used "      SIZE_FORMAT "K, capacity "  SIZE_FORMAT "K, committed " SIZE_FORMAT "K, reserved "  SIZE_FORMAT "K",
+                used_bytes()/K, capacity_bytes()/K, committed_bytes()/K, reserved_bytes()/K);
 
   if (Metaspace::using_class_space()) {
     Metaspace::MetadataType ct = Metaspace::ClassType;
-    out->print_cr("  class space    "
-                  "used "      SIZE_FORMAT "K, "
-                  "capacity "  SIZE_FORMAT "K, "
-                  "committed " SIZE_FORMAT "K, "
-                  "reserved "  SIZE_FORMAT "K",
-                  used_bytes(ct)/K,
-                  capacity_bytes(ct)/K,
-                  committed_bytes(ct)/K,
-                  reserved_bytes(ct)/K);
+    out->print_cr("  class space    used "      SIZE_FORMAT "K, capacity "  SIZE_FORMAT "K, committed " SIZE_FORMAT "K, reserved "  SIZE_FORMAT "K",
+                  used_bytes(ct)/K, capacity_bytes(ct)/K, committed_bytes(ct)/K, reserved_bytes(ct)/K);
   }
 }
 
@@ -573,8 +527,7 @@ void MetaspaceUtils::print_report(outputStream* out, size_t scale, int flags) {
     out->cr();
     out->print_cr("Usage per space type:");
     out->cr();
-    for (int space_type = (int)Metaspace::ZeroMetaspaceType;
-         space_type < (int)Metaspace::MetaspaceTypeCount; space_type ++)
+    for (int space_type = (int)Metaspace::ZeroMetaspaceType; space_type < (int)Metaspace::MetaspaceTypeCount; space_type ++)
     {
       uintx num = cl._num_loaders_by_spacetype[space_type];
       out->print("%s (" UINTX_FORMAT " loader%s)%c",
@@ -758,8 +711,7 @@ void MetaspaceUtils::verify_free_chunks() {
   }
 }
 
-void MetaspaceUtils::verify_metrics() {
-}
+void MetaspaceUtils::verify_metrics() { }
 
 // Utils to check if a pointer or range is part of a committed metaspace region.
 metaspace::VirtualSpaceNode* MetaspaceUtils::find_enclosing_virtual_space(const void* p) {
@@ -854,18 +806,13 @@ void Metaspace::allocate_metaspace_compressed_klass_ptrs(char* requested_addr, a
     // Aix: Search for a place where we can find memory. If we need to load
     // the base, 4G alignment is helpful, too.
     size_t increment = AARCH64_ONLY(4*)G;
-    for (char *a = align_up(requested_addr, increment);
-         a < (char*)(1024*G);
-         a += increment) {
+    for (char *a = align_up(requested_addr, increment); a < (char*)(1024*G); a += increment) {
       if (a == (char *)(32*G)) {
         // Go faster from here on. Zero-based is no longer possible.
         increment = 4*G;
       }
 
-      metaspace_rs = ReservedSpace(compressed_class_space_size(),
-                                   _reserve_alignment,
-                                   large_pages,
-                                   a);
+      metaspace_rs = ReservedSpace(compressed_class_space_size(), _reserve_alignment, large_pages, a);
       if (metaspace_rs.is_reserved())
         break;
     }
@@ -880,11 +827,9 @@ void Metaspace::allocate_metaspace_compressed_klass_ptrs(char* requested_addr, a
     // initialization has happened that depends on UseCompressedClassPointers.
     // So, UseCompressedClassPointers cannot be turned off at this point.
     if (!metaspace_rs.is_reserved()) {
-      metaspace_rs = ReservedSpace(compressed_class_space_size(),
-                                   _reserve_alignment, large_pages);
+      metaspace_rs = ReservedSpace(compressed_class_space_size(), _reserve_alignment, large_pages);
       if (!metaspace_rs.is_reserved()) {
-        vm_exit_during_initialization(err_msg("Could not allocate metaspace: " SIZE_FORMAT " bytes",
-                                              compressed_class_space_size()));
+        vm_exit_during_initialization(err_msg("Could not allocate metaspace: " SIZE_FORMAT " bytes", compressed_class_space_size()));
       }
     }
   }
@@ -892,8 +837,7 @@ void Metaspace::allocate_metaspace_compressed_klass_ptrs(char* requested_addr, a
   // If we got here then the metaspace got allocated.
   MemTracker::record_virtual_memory_type((address)metaspace_rs.base(), mtClass);
 
-  set_narrow_klass_base_and_shift((address)metaspace_rs.base(),
-                                  UseSharedSpaces ? (address)cds_base : 0);
+  set_narrow_klass_base_and_shift((address)metaspace_rs.base(), UseSharedSpaces ? (address)cds_base : 0);
 
   initialize_class_space(metaspace_rs);
 
@@ -906,12 +850,10 @@ void Metaspace::allocate_metaspace_compressed_klass_ptrs(char* requested_addr, a
 }
 
 void Metaspace::print_compressed_class_space(outputStream* st, const char* requested_addr) {
-  st->print_cr("Narrow klass base: " PTR_FORMAT ", Narrow klass shift: %d",
-               p2i(Universe::narrow_klass_base()), Universe::narrow_klass_shift());
+  st->print_cr("Narrow klass base: " PTR_FORMAT ", Narrow klass shift: %d", p2i(Universe::narrow_klass_base()), Universe::narrow_klass_shift());
   if (_class_space_list != NULL) {
     address base = (address)_class_space_list->current_virtual_space()->bottom();
-    st->print("Compressed class space size: " SIZE_FORMAT " Address: " PTR_FORMAT,
-                 compressed_class_space_size(), p2i(base));
+    st->print("Compressed class space size: " SIZE_FORMAT " Address: " PTR_FORMAT, compressed_class_space_size(), p2i(base));
     if (requested_addr != 0) {
       st->print(" Req Addr: " PTR_FORMAT, p2i(requested_addr));
     }
@@ -1034,8 +976,7 @@ size_t Metaspace::align_word_size_up(size_t word_size) {
   return ReservedSpace::allocation_align_size_up(byte_size) / wordSize;
 }
 
-MetaWord* Metaspace::allocate(ClassLoaderData* loader_data, size_t word_size,
-                              MetaspaceObj::Type type, TRAPS) {
+MetaWord* Metaspace::allocate(ClassLoaderData* loader_data, size_t word_size, MetaspaceObj::Type type, TRAPS) {
   if (HAS_PENDING_EXCEPTION) {
     ShouldNotReachHere();
     return NULL;  // caller does a CHECK_NULL too
@@ -1252,9 +1193,7 @@ MetaWord* ClassLoaderMetaspace::expand_and_allocate(size_t word_size, Metaspace:
   } while (!incremented && res == NULL && can_retry);
 
   if (incremented) {
-    Metaspace::tracer()->report_gc_threshold(before, after,
-                                  MetaspaceGCThresholdUpdater::ExpandAndAllocate);
-    log_trace(gc, metaspace)("Increase capacity to GC from " SIZE_FORMAT " to " SIZE_FORMAT, before, after);
+    Metaspace::tracer()->report_gc_threshold(before, after, MetaspaceGCThresholdUpdater::ExpandAndAllocate);
   }
 
   return res;

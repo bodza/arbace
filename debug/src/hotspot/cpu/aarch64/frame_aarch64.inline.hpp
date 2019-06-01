@@ -105,12 +105,10 @@ inline intptr_t* frame::id(void) const { return unextended_sp(); }
 
 // Relationals on frames based
 // Return true if the frame is younger (more recent activation) than the frame represented by id
-inline bool frame::is_younger(intptr_t* id) const {
-                                                    return this->id() < id ; }
+inline bool frame::is_younger(intptr_t* id) const { return this->id() < id ; }
 
 // Return true if the frame is older (less recent activation) than the frame represented by id
-inline bool frame::is_older(intptr_t* id) const {
-                                                    return this->id() > id ; }
+inline bool frame::is_older(intptr_t* id) const { return this->id() > id ; }
 
 inline intptr_t* frame::link() const { return (intptr_t*) *(intptr_t **)addr_at(link_offset); }
 

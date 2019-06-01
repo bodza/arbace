@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/epsilon/epsilonArguments.hpp"
 #include "gc/epsilon/epsilonHeap.hpp"
 #include "gc/epsilon/epsilonCollectorPolicy.hpp"

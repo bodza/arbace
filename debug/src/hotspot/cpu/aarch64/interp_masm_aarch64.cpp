@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.inline.hpp"
 #include "gc/shared/barrierSet.hpp"
 #include "gc/shared/barrierSetAssembler.hpp"
@@ -287,8 +288,7 @@ void InterpreterMacroAssembler::jump_from_interpreted(Register method, Register 
 
 // The following two routines provide a hook so that an implementation
 // can schedule the dispatch in two parts.  amd64 does not do this.
-void InterpreterMacroAssembler::dispatch_prolog(TosState state, int step) {
-}
+void InterpreterMacroAssembler::dispatch_prolog(TosState state, int step) { }
 
 void InterpreterMacroAssembler::dispatch_epilog(TosState state, int step) {
     dispatch_next(state, step);
@@ -617,7 +617,6 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg)
 //      rscratch1, rscratch2 (scratch regs)
 void InterpreterMacroAssembler::unlock_object(Register lock_reg)
 {
-
   if (UseHeavyMonitors) {
     call_VM(noreg,
             CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorexit),
@@ -691,8 +690,7 @@ void InterpreterMacroAssembler::set_method_data_pointer_for_bcp() {
   ldp(r0, r1, Address(post(sp, 2 * wordSize)));
 }
 
-void InterpreterMacroAssembler::verify_method_data_pointer() {
-}
+void InterpreterMacroAssembler::verify_method_data_pointer() { }
 
 void InterpreterMacroAssembler::set_mdp_data_at(Register mdp_in, int constant, Register value) {
   Address data(mdp_in, constant);
@@ -927,16 +925,14 @@ void InterpreterMacroAssembler::record_klass_in_profile_helper(Register receiver
   if (TypeProfileWidth == 0) {
     if (is_virtual_call) {
       increment_mdp_data_at(mdp, in_bytes(CounterData::count_offset()));
-    }
-    else if (EnableJVMCI) {
+    } else if (EnableJVMCI) {
       increment_mdp_data_at(mdp, in_bytes(ReceiverTypeData::nonprofiled_receiver_count_offset()));
     }
   } else {
     int non_profiled_offset = -1;
     if (is_virtual_call) {
       non_profiled_offset = in_bytes(CounterData::count_offset());
-    }
-    else if (EnableJVMCI) {
+    } else if (EnableJVMCI) {
       non_profiled_offset = in_bytes(ReceiverTypeData::nonprofiled_receiver_count_offset());
     }
 
@@ -1163,7 +1159,7 @@ void InterpreterMacroAssembler::verify_oop(Register reg, TosState state) {
   }
 }
 
-void InterpreterMacroAssembler::verify_FPU(int stack_depth, TosState state) { ; }
+void InterpreterMacroAssembler::verify_FPU(int stack_depth, TosState state) { }
 
 void InterpreterMacroAssembler::notify_method_entry() {
   {
@@ -1171,13 +1167,7 @@ void InterpreterMacroAssembler::notify_method_entry() {
     get_method(c_rarg1);
     call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_entry), rthread, c_rarg1);
   }
-
-  // RedefineClasses() tracing support for obsolete method entry
-  if (log_is_enabled(Trace, redefine, class, obsolete)) {
-    get_method(c_rarg1);
-    call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::rc_trace_method_entry), rthread, c_rarg1);
-  }
- }
+}
 
 void InterpreterMacroAssembler::notify_method_exit(TosState state, NotifyMethodExitMode mode) {
   {

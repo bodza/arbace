@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1Allocator.inline.hpp"
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
@@ -92,17 +93,13 @@ class G1VerifyCodeRootOopClosure: public OopClosure {
       // Verify that the strong code root list for this region
       // contains the nmethod
       if (!hrrs->strong_code_roots_list_contains(_nm)) {
-        log_error(gc, verify)("Code root location " PTR_FORMAT " "
-                              "from nmethod " PTR_FORMAT " not in strong "
-                              "code roots for region [" PTR_FORMAT "," PTR_FORMAT ")",
-                              p2i(p), p2i(_nm), p2i(hr->bottom()), p2i(hr->end()));
         _failures = true;
       }
     }
   }
 
 public:
-  G1VerifyCodeRootOopClosure(G1CollectedHeap* g1h, OopClosure* root_cl, VerifyOption vo):
+  G1VerifyCodeRootOopClosure(G1CollectedHeap* g1h, OopClosure* root_cl, VerifyOption vo) :
     _g1h(g1h), _root_cl(root_cl), _vo(vo), _nm(NULL), _failures(false) { }
 
   void do_oop(oop* p) { do_oop_work(p); }
@@ -116,7 +113,7 @@ class G1VerifyCodeRootBlobClosure: public CodeBlobClosure {
   G1VerifyCodeRootOopClosure* _oop_cl;
 
 public:
-  G1VerifyCodeRootBlobClosure(G1VerifyCodeRootOopClosure* oop_cl):
+  G1VerifyCodeRootBlobClosure(G1VerifyCodeRootOopClosure* oop_cl) :
     _oop_cl(oop_cl) { }
 
   void do_code_blob(CodeBlob* cb) {
@@ -160,9 +157,7 @@ class VerifyLivenessOopClosure: public BasicOopIterateClosure {
   G1CollectedHeap* _g1h;
   VerifyOption _vo;
 public:
-  VerifyLivenessOopClosure(G1CollectedHeap* g1h, VerifyOption vo):
-    _g1h(g1h), _vo(vo)
-  { }
+  VerifyLivenessOopClosure(G1CollectedHeap* g1h, VerifyOption vo) : _g1h(g1h), _vo(vo) { }
   void do_oop(narrowOop *p) { do_oop_work(p); }
   void do_oop(      oop *p) { do_oop_work(p); }
 
@@ -288,13 +283,6 @@ public:
     // one from the starts humongous region.
     if (r->is_continues_humongous()) {
       if (r->rem_set()->get_state_str() != r->humongous_start_region()->rem_set()->get_state_str()) {
-         log_error(gc, verify)("Remset states differ: Region %u (%s) remset %s with starts region %u (%s) remset %s",
-                               r->hrm_index(),
-                               r->get_short_type_str(),
-                               r->rem_set()->get_state_str(),
-                               r->humongous_start_region()->hrm_index(),
-                               r->humongous_start_region()->get_short_type_str(),
-                               r->humongous_start_region()->rem_set()->get_state_str());
          _failures = true;
       }
     }
@@ -318,8 +306,6 @@ public:
         r->object_iterate(&not_dead_yet_cl);
         if (_vo != VerifyOption_G1UseNextMarking) {
           if (r->max_live_bytes() < not_dead_yet_cl.live_bytes()) {
-            log_error(gc, verify)("[" PTR_FORMAT "," PTR_FORMAT "] max_live_bytes " SIZE_FORMAT " < calculated " SIZE_FORMAT,
-                                  p2i(r->bottom()), p2i(r->end()), r->max_live_bytes(), not_dead_yet_cl.live_bytes());
             _failures = true;
           }
         } else {
@@ -382,10 +368,8 @@ bool G1HeapVerifier::should_verify(G1VerifyType type) {
 
 void G1HeapVerifier::verify(VerifyOption vo) {
   if (!SafepointSynchronize::is_at_safepoint()) {
-    log_info(gc, verify)("Skipping verification. Not at safepoint.");
   }
 
-  log_debug(gc, verify)("Roots");
   VerifyRootsClosure rootsCl(vo);
   VerifyCLDClosure cldCl(_g1h, &rootsCl);
 
@@ -409,11 +393,9 @@ void G1HeapVerifier::verify(VerifyOption vo) {
     // will have been torn down at the start of the GC. Therefore
     // verifying the region sets will fail. So we only verify
     // the region sets when not in a full GC.
-    log_debug(gc, verify)("HeapRegionSets");
     verify_region_sets();
   }
 
-  log_debug(gc, verify)("HeapRegions");
   if (GCParallelVerificationEnabled && ParallelGCThreads > 1) {
 
     G1ParVerifyTask task(_g1h, vo);
@@ -431,12 +413,10 @@ void G1HeapVerifier::verify(VerifyOption vo) {
   }
 
   if (G1StringDedup::is_enabled()) {
-    log_debug(gc, verify)("StrDedup");
     G1StringDedup::verify();
   }
 
   if (failures) {
-    log_error(gc, verify)("Heap after failed verification (kind %d):", vo);
     // It helps to have the per-region information in the output to
     // help us track down what went wrong. This is why we call
     // print_extended_on() instead of print_on().

@@ -1,4 +1,5 @@
 #include "precompiled/precompiled.hpp"
+
 #include "semaphore_bsd.hpp"
 #include "utilities/debug.hpp"
 
@@ -28,7 +29,6 @@ OSXSemaphore::~OSXSemaphore() {
 void OSXSemaphore::signal(uint count) {
   for (uint i = 0; i < count; i++) {
     kern_return_t ret = semaphore_signal(_semaphore);
-
   }
 }
 

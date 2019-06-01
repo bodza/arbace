@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "runtime/globals.hpp"
 #include "runtime/globals_extension.hpp"
 #include "compiler/compilerDefinitions.hpp"

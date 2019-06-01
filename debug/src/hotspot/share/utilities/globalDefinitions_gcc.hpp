@@ -15,34 +15,14 @@
 #include <stdlib.h>
 #include <wchar.h>
 
-#ifdef SOLARIS
-#include <ieeefp.h>
-#endif
-
 #include <math.h>
 #include <time.h>
 #include <fcntl.h>
 #include <dlfcn.h>
 #include <pthread.h>
 
-#ifdef SOLARIS
-#include <thread.h>
-#endif
-
 #include <limits.h>
 #include <errno.h>
-
-#ifdef SOLARIS
-#include <sys/trap.h>
-#include <sys/regset.h>
-#include <sys/procset.h>
-#include <ucontext.h>
-#include <setjmp.h>
-#endif
-
-# ifdef SOLARIS_MUTATOR_LIBTHREAD
-# include <sys/procfs.h>
-# endif
 
 #if defined(LINUX) || defined(_ALLBSD_SOURCE)
 #include <inttypes.h>
@@ -98,51 +78,8 @@ typedef uint16_t jushort;
 typedef uint32_t juint;
 typedef uint64_t julong;
 
-#ifdef SOLARIS
-// ANSI C++ fixes
-// NOTE:In the ANSI committee's continuing attempt to make each version
-// of C++ incompatible with the previous version, you can no longer cast
-// pointers to functions without specifying linkage unless you want to get
-// warnings.
-//
-// This also means that pointers to functions can no longer be "hidden"
-// in opaque types like void * because at the invokation point warnings
-// will be generated. While this makes perfect sense from a type safety
-// point of view it causes a lot of warnings on old code using C header
-// files. Here are some typedefs to make the job of silencing warnings
-// a bit easier.
-//
-// The final kick in the teeth is that you can only have extern "C" linkage
-// specified at file scope. So these typedefs are here rather than in the
-// .hpp for the class (os:Solaris usually) that needs them.
-
-extern "C" {
-   typedef int (*int_fnP_thread_t_iP_uP_stack_tP_gregset_t)(thread_t, int*, unsigned *, stack_t*, gregset_t);
-   typedef int (*int_fnP_thread_t_i_gregset_t)(thread_t, int, gregset_t);
-   typedef int (*int_fnP_thread_t_i)(thread_t, int);
-   typedef int (*int_fnP_thread_t)(thread_t);
-
-   typedef int (*int_fnP_cond_tP_mutex_tP_timestruc_tP)(cond_t *cv, mutex_t *mx, timestruc_t *abst);
-   typedef int (*int_fnP_cond_tP_mutex_tP)(cond_t *cv, mutex_t *mx);
-
-   // typedef for missing API in libc
-   typedef int (*int_fnP_mutex_tP_i_vP)(mutex_t *, int, void *);
-   typedef int (*int_fnP_mutex_tP)(mutex_t *);
-   typedef int (*int_fnP_cond_tP_i_vP)(cond_t *cv, int scope, void *arg);
-   typedef int (*int_fnP_cond_tP)(cond_t *cv);
-};
-#endif
-
 // checking for nanness
-#ifdef SOLARIS
-#ifdef SPARC
-inline int g_isnan(float f) { return isnanf(f); }
-#else
-// isnanf() broken on Intel Solaris use isnand()
-inline int g_isnan(float f) { return isnand(f); }
-#endif
-inline int g_isnan(double f) { return isnand(f); }
-#elif defined(__APPLE__)
+#if defined(__APPLE__)
 inline int g_isnan(double f) { return isnan(f); }
 #elif defined(LINUX) || defined(_ALLBSD_SOURCE)
 inline int g_isnan(float f) { return isnanf(f); }

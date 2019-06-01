@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "logging/log.hpp"
 #include "runtime/globals.hpp"
 #include "runtime/os.hpp"
@@ -35,7 +36,6 @@ void SafepointMechanism::default_initialize() {
       os::protect_memory(bad_page,  page_size, os::MEM_PROT_NONE);
       os::protect_memory(good_page, page_size, os::MEM_PROT_READ);
 
-      log_info(os)("SafePoint Polling address, bad (protected) page:" INTPTR_FORMAT ", good (unprotected) page:" INTPTR_FORMAT, p2i(bad_page), p2i(good_page));
       os::set_polling_page((address)(bad_page));
 
       // Poll address values
@@ -53,7 +53,6 @@ void SafepointMechanism::default_initialize() {
     os::commit_memory_or_exit(polling_page, page_size, false, "Unable to commit Safepoint polling page");
     os::protect_memory(polling_page, page_size, os::MEM_PROT_READ);
 
-    log_info(os)("SafePoint Polling address: " INTPTR_FORMAT, p2i(polling_page));
     os::set_polling_page((address)(polling_page));
   }
 }
@@ -67,7 +66,6 @@ void SafepointMechanism::initialize_serialize_page() {
     const size_t page_size = os::vm_page_size();
     char* serialize_page = os::reserve_memory(page_size, NULL, page_size);
     os::commit_memory_or_exit(serialize_page, page_size, false, "Unable to commit memory serialization page");
-    log_info(os)("Memory Serialize Page address: " INTPTR_FORMAT, p2i(serialize_page));
     os::set_memory_serialize_page((address)(serialize_page));
   }
 }

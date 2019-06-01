@@ -370,8 +370,7 @@ class BitMap2D {
     return slot_index * _bits_per_slot + bit_within_slot_index;
   }
 
-  void verify_bit_within_slot_index(idx_t index) const {
-  }
+  void verify_bit_within_slot_index(idx_t index) const { }
 
  public:
   // Construction. bits_per_slot must be greater than 0.

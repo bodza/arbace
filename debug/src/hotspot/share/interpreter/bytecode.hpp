@@ -31,8 +31,7 @@ class Bytecode: public StackObj {
   int     get_native_u4_at   (int offset)        const     { return Bytes::get_native_u4(addr_at(offset)); }
 
  public:
-  Bytecode(Method* method, address bcp): _bcp(bcp), _code(Bytecodes::code_at(method, addr_at(0))) {
-  }
+  Bytecode(Method* method, address bcp): _bcp(bcp), _code(Bytecodes::code_at(method, addr_at(0))) { }
   // Defined in ciStreams.hpp
   inline Bytecode(const ciBytecodeStream* stream, address bcp = NULL);
 
@@ -238,8 +237,7 @@ class Bytecode_field: public Bytecode_member_ref {
 class Bytecode_checkcast: public Bytecode {
  public:
   Bytecode_checkcast(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const {
-    }
+  void verify() const { }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_checkcast); };
@@ -249,8 +247,7 @@ class Bytecode_checkcast: public Bytecode {
 class Bytecode_instanceof: public Bytecode {
  public:
   Bytecode_instanceof(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const {
-    }
+  void verify() const { }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_instanceof); };
@@ -259,8 +256,7 @@ class Bytecode_instanceof: public Bytecode {
 class Bytecode_new: public Bytecode {
  public:
   Bytecode_new(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const {
-    }
+  void verify() const { }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_new); };
@@ -269,8 +265,7 @@ class Bytecode_new: public Bytecode {
 class Bytecode_multianewarray: public Bytecode {
  public:
   Bytecode_multianewarray(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const {
-    }
+  void verify() const { }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_multianewarray); };
@@ -279,8 +274,7 @@ class Bytecode_multianewarray: public Bytecode {
 class Bytecode_anewarray: public Bytecode {
  public:
   Bytecode_anewarray(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const {
-    }
+  void verify() const { }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_anewarray); };

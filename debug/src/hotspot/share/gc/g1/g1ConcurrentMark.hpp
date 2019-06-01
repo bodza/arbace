@@ -19,12 +19,6 @@ class G1OldTracer;
 class G1RegionToSpaceMapper;
 class G1SurvivorRegions;
 
-#ifdef _MSC_VER
-#pragma warning(push)
-// warning C4522: multiple assignment operators specified
-#pragma warning(disable:4522)
-#endif
-
 // This is a container class for either an oop or a continuation address for
 // mark stack entries. Both are pushed onto the mark stack.
 class G1TaskQueueEntry {
@@ -33,8 +27,7 @@ private:
 
   static const uintptr_t ArraySliceBit = 1;
 
-  G1TaskQueueEntry(oop obj) : _holder(obj) {
-  }
+  G1TaskQueueEntry(oop obj) : _holder(obj) { }
   G1TaskQueueEntry(HeapWord* addr) : _holder((void*)((uintptr_t)addr | ArraySliceBit)) { }
 public:
   G1TaskQueueEntry(const G1TaskQueueEntry& other) { _holder = other._holder; }
@@ -65,10 +58,6 @@ public:
   bool is_array_slice() const { return ((uintptr_t)_holder & ArraySliceBit) != 0; }
   bool is_null() const { return _holder == NULL; }
 };
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 typedef GenericTaskQueue<G1TaskQueueEntry, mtGC> G1CMTaskQueue;
 typedef GenericTaskQueueSet<G1CMTaskQueue, mtGC> G1CMTaskQueueSet;
@@ -379,9 +368,6 @@ class G1ConcurrentMark : public CHeapObj<mtGC> {
   // mark or remark) and how many threads are currently active.
   void set_concurrency_and_phase(uint active_tasks, bool concurrent);
 
-  // Prints all gathered CM-related statistics
-  void print_stats();
-
   HeapWord*               finger()          { return _finger; }
   bool                    concurrent()      { return _concurrent; }
   uint                    active_tasks()    { return _num_active_tasks; }
@@ -560,8 +546,6 @@ public:
   inline bool do_yield_check();
 
   bool has_aborted()      { return _has_aborted; }
-
-  void print_summary_info();
 
   void print_worker_threads_on(outputStream* st) const;
   void threads_do(ThreadClosure* tc) const;
@@ -812,36 +796,6 @@ public:
   // Evict the whole statistics cache into the global statistics. Returns the
   // number of cache hits and misses so far.
   Pair<size_t, size_t> flush_mark_stats_cache();
-  // Prints statistics associated with this task
-  void print_stats();
-};
-
-// Class that's used to to print out per-region liveness
-// information. It's currently used at the end of marking and also
-// after we sort the old regions at the end of the cleanup operation.
-class G1PrintRegionLivenessInfoClosure : public HeapRegionClosure {
-  // Accumulators for these values.
-  size_t _total_used_bytes;
-  size_t _total_capacity_bytes;
-  size_t _total_prev_live_bytes;
-  size_t _total_next_live_bytes;
-
-  // Accumulator for the remembered set size
-  size_t _total_remset_bytes;
-
-  // Accumulator for strong code roots memory size
-  size_t _total_strong_code_roots_bytes;
-
-  static double bytes_to_mb(size_t val) {
-    return (double) val / (double) M;
-  }
-
-public:
-  // The header and footer are printed in the constructor and
-  // destructor respectively.
-  G1PrintRegionLivenessInfoClosure(const char* phase_name);
-  virtual bool do_heap_region(HeapRegion* r);
-  ~G1PrintRegionLivenessInfoClosure();
 };
 
 #endif

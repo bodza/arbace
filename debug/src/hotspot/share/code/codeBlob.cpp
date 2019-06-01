@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "code/codeBlob.hpp"
 #include "code/codeCache.hpp"
@@ -82,7 +83,6 @@ CodeBlob::CodeBlob(const char* name, CompilerType type, const CodeBlobLayout& la
   _content_begin(layout.content_begin()),
   _type(type)
 {
-
   set_oop_maps(oop_maps);
 }
 
@@ -154,9 +154,7 @@ void CodeBlob::print_code() {
 //----------------------------------------------------------------------------------------------------
 // Implementation of BufferBlob
 
-BufferBlob::BufferBlob(const char* name, int size)
-: RuntimeBlob(name, sizeof(BufferBlob), size, CodeOffsets::frame_never_safe, /*locs_size:*/ 0)
-{ }
+BufferBlob::BufferBlob(const char* name, int size) : RuntimeBlob(name, sizeof(BufferBlob), size, CodeOffsets::frame_never_safe, /*locs_size:*/ 0) { }
 
 BufferBlob* BufferBlob::create(const char* name, int buffer_size) {
   ThreadInVMfromUnknown __tiv;  // get to VM state in case we block on CodeCache_lock
@@ -176,9 +174,7 @@ BufferBlob* BufferBlob::create(const char* name, int buffer_size) {
   return blob;
 }
 
-BufferBlob::BufferBlob(const char* name, int size, CodeBuffer* cb)
-  : RuntimeBlob(name, cb, sizeof(BufferBlob), size, CodeOffsets::frame_never_safe, 0, NULL)
-{ }
+BufferBlob::BufferBlob(const char* name, int size, CodeBuffer* cb) : RuntimeBlob(name, cb, sizeof(BufferBlob), size, CodeOffsets::frame_never_safe, 0, NULL) { }
 
 BufferBlob* BufferBlob::create(const char* name, CodeBuffer* cb) {
   ThreadInVMfromUnknown __tiv;  // get to VM state in case we block on CodeCache_lock
@@ -295,12 +291,7 @@ RuntimeStub::RuntimeStub(
 {
 }
 
-RuntimeStub* RuntimeStub::new_runtime_stub(const char* stub_name,
-                                           CodeBuffer* cb,
-                                           int frame_complete,
-                                           int frame_size,
-                                           OopMapSet* oop_maps,
-                                           bool caller_must_gc_arguments)
+RuntimeStub* RuntimeStub::new_runtime_stub(const char* stub_name, CodeBuffer* cb, int frame_complete, int frame_size, OopMapSet* oop_maps, bool caller_must_gc_arguments)
 {
   RuntimeStub* stub = NULL;
   ThreadInVMfromUnknown __tiv;  // get to VM state in case we block on CodeCache_lock
@@ -376,27 +367,13 @@ DeoptimizationBlob* DeoptimizationBlob::create(
 }
 
 //----------------------------------------------------------------------------------------------------
-// Implementation of UncommonTrapBlob
-
-//----------------------------------------------------------------------------------------------------
-// Implementation of ExceptionBlob
-
-//----------------------------------------------------------------------------------------------------
 // Implementation of SafepointBlob
 
-SafepointBlob::SafepointBlob(
-  CodeBuffer* cb,
-  int         size,
-  OopMapSet*  oop_maps,
-  int         frame_size
-)
+SafepointBlob::SafepointBlob(CodeBuffer* cb, int size, OopMapSet* oop_maps, int frame_size)
 : SingletonBlob("SafepointBlob", cb, sizeof(SafepointBlob), size, frame_size, oop_maps)
 { }
 
-SafepointBlob* SafepointBlob::create(
-  CodeBuffer* cb,
-  OopMapSet*  oop_maps,
-  int         frame_size)
+SafepointBlob* SafepointBlob::create(CodeBuffer* cb, OopMapSet* oop_maps, int frame_size)
 {
   SafepointBlob* blob = NULL;
   ThreadInVMfromUnknown __tiv;  // get to VM state in case we block on CodeCache_lock

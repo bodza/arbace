@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "interpreter/bytecodes.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/rewriter.hpp"
@@ -43,8 +44,7 @@ void Rewriter::compute_index_maps() {
   // Record limits of resolved reference map for constant pool cache indices
   record_map_limits();
 
-  guarantee((int) _cp_cache_map.length() - 1 <= (int) ((u2)-1),
-            "all cp cache indexes fit in a u2");
+  guarantee((int) _cp_cache_map.length() - 1 <= (int) ((u2)-1), "all cp cache indexes fit in a u2");
 
   if (saw_mh_symbol) {
     _method_handle_invokers.at_grow(length, 0);
@@ -81,7 +81,6 @@ void Rewriter::make_constant_pool_cache(TRAPS) {
   if (HAS_PENDING_EXCEPTION) {
     MetadataFactory::free_metadata(loader_data, cache);
     _pool->set_cache(NULL);  // so the verifier isn't confused
-  } else {
   }
 }
 
@@ -339,17 +338,13 @@ void Rewriter::scan_method(Method* method, bool reverse, bool* invokespecial_err
 
     switch (c) {
       case Bytecodes::_lookupswitch   : {
-#ifndef CC_INTERP
         Bytecode_lookupswitch bc(method, bcp);
         (*bcp) = (bc.number_of_pairs() < BinarySwitchThreshold ? Bytecodes::_fast_linearswitch : Bytecodes::_fast_binaryswitch);
-#endif
         break;
       }
       case Bytecodes::_fast_linearswitch:
       case Bytecodes::_fast_binaryswitch: {
-#ifndef CC_INTERP
         (*bcp) = Bytecodes::_lookupswitch;
-#endif
         break;
       }
 
@@ -480,9 +475,7 @@ void Rewriter::rewrite_bytecodes(TRAPS) {
       // If you get an error here, there is no reversing bytecodes
       // This exception is stored for this class and no further attempt is
       // made at verifying or rewriting.
-      THROW_MSG(vmSymbols::java_lang_InternalError(),
-                "This classfile overflows invokespecial for interfaces "
-                "and cannot be loaded");
+      THROW_MSG(vmSymbols::java_lang_InternalError(), "This classfile overflows invokespecial for interfaces and cannot be loaded");
       return;
      }
   }
@@ -493,8 +486,6 @@ void Rewriter::rewrite_bytecodes(TRAPS) {
 }
 
 void Rewriter::rewrite(InstanceKlass* klass, TRAPS) {
-  if (!DumpSharedSpaces) {
-  }
   ResourceMark rm(THREAD);
   Rewriter     rw(klass, klass->constants(), klass->methods(), CHECK);
   // (That's all, folks.)
@@ -512,7 +503,6 @@ Rewriter::Rewriter(InstanceKlass* klass, const constantPoolHandle& cpool, Array<
     _method_handle_invokers(cpool->length()),
     _invokedynamic_cp_cache_map(cpool->length() / 4)
 {
-
   // Rewrite bytecodes - exception here exits.
   rewrite_bytecodes(CHECK);
 

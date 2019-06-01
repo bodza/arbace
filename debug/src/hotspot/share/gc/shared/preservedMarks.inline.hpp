@@ -30,8 +30,6 @@ inline void PreservedMarksSet::restore(RestorePreservedMarksTaskExecutor* execut
 
   executor->restore(this, &total_size);
   assert_empty();
-
-  log_trace(gc)("Restored " SIZE_FORMAT " marks", total_size);
 }
 
 inline PreservedMarks::PreservedMarks()

@@ -28,9 +28,7 @@ void DiscoveredList::clear() {
   set_length(0);
 }
 
-DiscoveredListIterator::DiscoveredListIterator(DiscoveredList&    refs_list,
-                                               OopClosure*        keep_alive,
-                                               BoolObjectClosure* is_alive):
+DiscoveredListIterator::DiscoveredListIterator(DiscoveredList& refs_list, OopClosure* keep_alive, BoolObjectClosure* is_alive) :
   _refs_list(refs_list),
   _prev_discovered_addr(refs_list.adr_head()),
   _prev_discovered(NULL),

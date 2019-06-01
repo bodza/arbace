@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/classLoader.inline.hpp"
 #include "classfile/classLoaderExt.hpp"
@@ -42,9 +43,7 @@ extern address JVM_FunctionAtEnd();
 
 static void fail(const char *msg, va_list ap) {
   // This occurs very early during initialization: tty is not initialized.
-  jio_fprintf(defaultStream::error_stream(),
-              "An error has occurred while processing the"
-              " shared archive file.\n");
+  jio_fprintf(defaultStream::error_stream(), "An error has occurred while processing the shared archive file.\n");
   jio_vfprintf(defaultStream::error_stream(), msg, ap);
   jio_fprintf(defaultStream::error_stream(), "\n");
   // Do not change the text of the below message because some tests check for it.
@@ -77,13 +76,6 @@ void FileMapInfo::fail_continue(const char *msg, ...) {
   } else {
     if (RequireSharedSpaces) {
       fail(msg, ap);
-    } else {
-      if (log_is_enabled(Info, cds)) {
-        ResourceMark rm;
-        LogStream ls(Log(cds)::info());
-        ls.print("UseSharedSpaces: ");
-        ls.vprint_cr(msg, ap);
-      }
     }
     UseSharedSpaces = false;
     current_info()->close();
@@ -220,7 +212,6 @@ bool SharedClassPathEntry::validate(bool is_class_path) {
   }
 
   bool ok = true;
-  log_info(class, path)("checking shared classpath entry: %s", name);
   if (os::stat(name, &st) != 0 && is_class_path) {
     // If the archived module path entry does not exist at runtime, it is not fatal
     // (no need to invalid the shared archive) because the shared runtime visibility check
@@ -272,7 +263,6 @@ void FileMapInfo::allocate_shared_path_table() {
   while (cpe != NULL) {
     bool is_jrt = (cpe == jrt);
     const char* type = (is_jrt ? "jrt" : (cpe->is_jar_file() ? "jar" : "dir"));
-    log_info(class, path)("add main shared path (%s) %s", type, cpe->name());
     SharedClassPathEntry* ent = shared_path(i);
     ent->init(cpe->name(), is_jrt, THREAD);
     if (!is_jrt) {    // No need to do the modules image.
@@ -286,7 +276,6 @@ void FileMapInfo::allocate_shared_path_table() {
   // 2. app class path
   ClassPathEntry *acpe = ClassLoader::app_classpath_entries();
   while (acpe != NULL) {
-    log_info(class, path)("add app shared path %s", acpe->name());
     SharedClassPathEntry* ent = shared_path(i);
     ent->init(acpe->name(), false, THREAD);
     EXCEPTION_MARK;
@@ -298,7 +287,6 @@ void FileMapInfo::allocate_shared_path_table() {
   // 3. module path
   ClassPathEntry *mpe = ClassLoader::module_path_entries();
   while (mpe != NULL) {
-    log_info(class, path)("add module path %s",mpe->name());
     SharedClassPathEntry* ent = shared_path(i);
     ent->init(mpe->name(), false, THREAD);
     EXCEPTION_MARK;
@@ -419,17 +407,14 @@ bool FileMapInfo::validate_shared_path_table() {
   // If the shared archive contain app or platform classes, validate all entries
   // in the shared path table. Otherwise, only validate the boot path entries (with
   // entry index < _app_class_paths_start_index).
-  int count = _header->has_platform_or_app_classes() ?
-              _shared_path_table_size : _header->_app_class_paths_start_index;
+  int count = _header->has_platform_or_app_classes() ? _shared_path_table_size : _header->_app_class_paths_start_index;
 
   for (int i=0; i<count; i++) {
     if (i < module_paths_start_index) {
       if (shared_path(i)->validate()) {
-        log_info(class, path)("ok");
       }
     } else if (i >= module_paths_start_index) {
       if (shared_path(i)->validate(false /* not a class path entry */)) {
-        log_info(class, path)("ok");
       }
     } else if (!PrintSharedArchiveAndExit) {
       _validating_shared_path_table = false;
@@ -494,8 +479,7 @@ bool FileMapInfo::open_for_read() {
       // Not locating the shared archive is ok.
       fail_continue("Specified shared archive not found.");
     } else {
-      fail_continue("Failed to open shared archive file (%s).",
-                    os::strerror(errno));
+      fail_continue("Failed to open shared archive file (%s).", os::strerror(errno));
     }
     return false;
   }
@@ -550,9 +534,6 @@ void FileMapInfo::write_region(int region, char* base, size_t size, bool read_on
 
   if (_file_open) {
     guarantee(si->_file_offset == _file_offset, "file offset mismatch.");
-    log_info(cds)("Shared file region %d: " SIZE_FORMAT_HEX_W(08)
-                  " bytes, addr " INTPTR_FORMAT " file offset " SIZE_FORMAT_HEX_W(08),
-                  region, size, p2i(base), _file_offset);
   } else {
     si->_file_offset = _file_offset;
   }
@@ -610,14 +591,11 @@ size_t FileMapInfo::write_archive_heap_regions(GrowableArray<MemRegion> *heap_me
 
   int arr_len = heap_mem == NULL ? 0 : heap_mem->length();
   if (arr_len > max_num_regions) {
-    fail_stop("Unable to write archive heap memory regions: "
-              "number of memory regions exceeds maximum due to fragmentation");
+    fail_stop("Unable to write archive heap memory regions: number of memory regions exceeds maximum due to fragmentation");
   }
 
   size_t total_size = 0;
-  for (int i = first_region_id, arr_idx = 0;
-           i < first_region_id + max_num_regions;
-           i++, arr_idx++) {
+  for (int i = first_region_id, arr_idx = 0; i < first_region_id + max_num_regions; i++, arr_idx++) {
     char* start = NULL;
     size_t size = 0;
     if (arr_idx < arr_len) {
@@ -626,8 +604,6 @@ size_t FileMapInfo::write_archive_heap_regions(GrowableArray<MemRegion> *heap_me
       total_size += size;
     }
 
-    log_info(cds)("Archive heap region %d " INTPTR_FORMAT " - " INTPTR_FORMAT " = " SIZE_FORMAT_W(8) " bytes",
-                  i, p2i(start), p2i(start + size), size);
     write_region(i, start, size, false, false);
   }
   return total_size;
@@ -740,8 +716,7 @@ ReservedSpace FileMapInfo::reserve_shared_memory() {
 }
 
 // Memory map a region in the address space.
-static const char* shared_region_name[] = { "MiscData", "ReadWrite", "ReadOnly", "MiscCode", "OptionalData",
-                                            "String1", "String2", "OpenArchive1", "OpenArchive2" };
+static const char* shared_region_name[] = { "MiscData", "ReadWrite", "ReadOnly", "MiscCode", "OptionalData", "String1", "String2", "OpenArchive1", "OpenArchive2" };
 
 char* FileMapInfo::map_region(int i, char** top_ret) {
   struct FileMapInfo::FileMapHeader::space_info* si = &_header->_space[i];
@@ -894,21 +869,16 @@ bool FileMapInfo::FileMapHeader::validate() {
   char header_version[JVM_IDENT_MAX];
   get_header_version(header_version);
   if (strncmp(_jvm_ident, header_version, JVM_IDENT_MAX-1) != 0) {
-    log_info(class, path)("expected: %s", header_version);
-    log_info(class, path)("actual:   %s", _jvm_ident);
-    FileMapInfo::fail_continue("The shared archive file was created by a different"
-                  " version or build of HotSpot");
+    FileMapInfo::fail_continue("The shared archive file was created by a different version or build of HotSpot");
     return false;
   }
   if (_obj_alignment != ObjectAlignmentInBytes) {
-    FileMapInfo::fail_continue("The shared archive file's ObjectAlignmentInBytes of %d"
-                  " does not equal the current ObjectAlignmentInBytes of " INTX_FORMAT ".",
+    FileMapInfo::fail_continue("The shared archive file's ObjectAlignmentInBytes of %d does not equal the current ObjectAlignmentInBytes of " INTX_FORMAT ".",
                   _obj_alignment, ObjectAlignmentInBytes);
     return false;
   }
   if (_compact_strings != CompactStrings) {
-    FileMapInfo::fail_continue("The shared archive file's CompactStrings setting (%s)"
-                  " does not equal the current CompactStrings setting (%s).",
+    FileMapInfo::fail_continue("The shared archive file's CompactStrings setting (%s) does not equal the current CompactStrings setting (%s).",
                   _compact_strings ? "enabled" : "disabled",
                   CompactStrings   ? "enabled" : "disabled");
     return false;
@@ -918,8 +888,7 @@ bool FileMapInfo::FileMapHeader::validate() {
   // header data
   const char* prop = Arguments::get_property("java.system.class.loader");
   if (prop != NULL) {
-    warning("Archived non-system classes are disabled because the "
-            "java.system.class.loader property is specified (value = \"%s\"). "
+    warning("Archived non-system classes are disabled because the java.system.class.loader property is specified (value = \"%s\"). "
             "To use archived non-system classes, this property must be not be set", prop);
     _has_platform_or_app_classes = false;
   }
@@ -927,8 +896,7 @@ bool FileMapInfo::FileMapHeader::validate() {
   // For backwards compatibility, we don't check the verification setting
   // if the archive only contains system classes.
   if (_has_platform_or_app_classes && ((!_verify_local && BytecodeVerificationLocal) || (!_verify_remote && BytecodeVerificationRemote))) {
-    FileMapInfo::fail_continue("The shared archive file was created with less restrictive "
-                  "verification setting than the current setting.");
+    FileMapInfo::fail_continue("The shared archive file was created with less restrictive verification setting than the current setting.");
     return false;
   }
 

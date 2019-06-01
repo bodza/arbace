@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/classFileParser.hpp"
 #include "classfile/classFileStream.hpp"
 #include "classfile/classLoader.hpp"
@@ -17,13 +18,7 @@ InstanceKlass* KlassFactory::check_shared_class_file_load_hook(InstanceKlass* ik
   return NULL;
 }
 
-InstanceKlass* KlassFactory::create_from_stream(ClassFileStream* stream,
-                                                Symbol* name,
-                                                ClassLoaderData* loader_data,
-                                                Handle protection_domain,
-                                                const InstanceKlass* host_klass,
-                                                GrowableArray<Handle>* cp_patches,
-                                                TRAPS) {
+InstanceKlass* KlassFactory::create_from_stream(ClassFileStream* stream, Symbol* name, ClassLoaderData* loader_data, Handle protection_domain, const InstanceKlass* host_klass, GrowableArray<Handle>* cp_patches, TRAPS) {
 
   ResourceMark rm;
   HandleMark hm;

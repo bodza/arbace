@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/stringTable.hpp"
 #include "classfile/symbolTable.hpp"
 #include "code/icBuffer.hpp"
@@ -129,11 +130,7 @@ void exit_globals() {
   if (!destructorsCalled) {
     destructorsCalled = true;
     perfMemory_exit();
-    if (PrintSafepointStatistics) {
-      // Print the collected safepoint statistics.
-      SafepointSynchronize::print_stat_on_exit();
-    }
-    if (PrintStringTableStatistics) {
+    if (false) {
       SymbolTable::dump(tty);
       StringTable::dump(tty);
     }

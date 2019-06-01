@@ -28,8 +28,7 @@ class MonitorChunk: public CHeapObj<mtInternal> {
   int number_of_monitors() const { return _number_of_monitors; }
 
   // Returns the index'th monitor
-  BasicObjectLock* at(int index)            {
-    return &monitors()[index]; }
+  BasicObjectLock* at(int index)            { return &monitors()[index]; }
 
   // Memory management
   void oops_do(OopClosure* f);

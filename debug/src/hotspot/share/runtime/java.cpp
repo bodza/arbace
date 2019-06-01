@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "aot/aotLoader.hpp"
 #include "classfile/classLoader.hpp"
@@ -8,8 +9,6 @@
 #include "compiler/compileBroker.hpp"
 #include "compiler/compilerOracle.hpp"
 #include "interpreter/bytecodeHistogram.hpp"
-// #include "jfr/jfrEvents.hpp"
-// #include "jfr/support/jfrThreadId.hpp"
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #include "logging/log.hpp"
@@ -96,46 +95,6 @@ void print_method_profiling_data() {
       tty->print_cr("Total MDO size: %d bytes", total_size);
     }
   }
-}
-
-void print_statistics() {
-
-  if (PrintMethodData) {
-    print_method_profiling_data();
-  }
-
-  if (CITime) {
-    CompileBroker::print_times();
-  }
-
-  if (PrintCodeCache) {
-    MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-    CodeCache::print();
-  }
-
-  // CodeHeap State Analytics.
-  // Does also call NMethodSweeper::print(tty)
-  LogTarget(Trace, codecache) lt;
-  if (lt.is_enabled()) {
-    CompileBroker::print_heapinfo(NULL, "all", "4096"); // details
-  } else if (PrintMethodFlushingStatistics) {
-    NMethodSweeper::print(tty);
-  }
-
-  if (PrintBiasedLockingStatistics) {
-    BiasedLocking::print_counters();
-  }
-
-  // Native memory tracking data
-  if (PrintNMTStatistics) {
-    MemTracker::final_report(tty);
-  }
-
-  if (LogTouchedMethods && PrintTouchedMethodsAtExit) {
-    Method::print_touched_methods(tty);
-  }
-
-  ThreadsSMRSupport::log_statistics();
 }
 
 // Note: before_exit() can be executed only once, if more than one threads
@@ -226,9 +185,6 @@ void before_exit(JavaThread* thread) {
   // Note: we don't wait until it actually dies.
   os::terminate_signal_thread();
 
-  print_statistics();
-  Universe::heap()->print_tracing_info();
-
   { MutexLocker ml(BeforeExit_lock);
     _before_exit_status = BEFORE_EXIT_DONE;
     BeforeExit_lock->notify_all();
@@ -297,8 +253,7 @@ void vm_perform_shutdown_actions() {
   notify_vm_shutdown();
 }
 
-void vm_shutdown()
-{
+void vm_shutdown() {
   vm_perform_shutdown_actions();
   os::wait_for_keypress_at_exit();
   os::shutdown();
@@ -322,8 +277,7 @@ void vm_notify_during_shutdown(const char* error, const char* message) {
     tty->print("%s", error);
     if (message != NULL) {
       tty->print_cr(": %s", message);
-    }
-    else {
+    } else {
       tty->cr();
     }
   }

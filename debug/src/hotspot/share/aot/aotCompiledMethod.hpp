@@ -74,9 +74,8 @@ public:
         code_end, // content_end
         code_end, // data_end
         relocation_begin, // relocation_begin
-        relocation_end
-        ) {
-    }
+        relocation_end)
+    { }
 };
 
 class AOTCompiledMethod : public CompiledMethod, public CHeapObj<mtCode> {
@@ -270,7 +269,6 @@ public:
   virtual void set_destination_mt_safe(address dest) { _call->set_destination_mt_safe(dest); }
   virtual void set_to_interpreted(const methodHandle& method, CompiledICInfo& info);
   virtual void verify() const { _call->verify(); }
-  virtual void verify_resolve_call(address dest) const;
 
   virtual bool is_call_to_interpreted(address dest) const { return (dest == _call->plt_c2i_stub()); }
   // TODO: assume for now that patching of aot code (got cell) is safe.

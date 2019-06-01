@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "interpreter/interp_masm.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
@@ -272,11 +273,7 @@ class SlowSignatureHandler
   }
 };
 
-IRT_ENTRY(address,
-          InterpreterRuntime::slow_signature_handler(JavaThread* thread,
-                                                     Method* method,
-                                                     intptr_t* from,
-                                                     intptr_t* to))
+IRT_ENTRY(address, InterpreterRuntime::slow_signature_handler(JavaThread* thread, Method* method, intptr_t* from, intptr_t* to))
   methodHandle m(thread, (Method*)method);
 
   // handle arguments

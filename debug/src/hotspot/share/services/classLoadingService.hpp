@@ -31,8 +31,6 @@ private:
 public:
   static void init();
 
-  static bool get_verbose() { return log_is_enabled(Info, class, load); }
-  static bool set_verbose(bool verbose);
   static void reset_trace_class_unloading() { };
 
   static jlong loaded_class_count() {
@@ -80,12 +78,10 @@ public:
     return (UsePerfData ? _class_methods_size->get_value() : -1);
   }
 
-  static void notify_class_loaded(InstanceKlass* k, bool shared_class)
-      { };
+  static void notify_class_loaded(InstanceKlass* k, bool shared_class) { };
   // All unloaded classes are non-shared
   static void notify_class_unloaded(InstanceKlass* k) { };
-  static void add_class_method_size(int size) {
-  }
+  static void add_class_method_size(int size) { }
 };
 
 #endif

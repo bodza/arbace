@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "code/compressedStream.hpp"
 #include "utilities/ostream.hpp"
 

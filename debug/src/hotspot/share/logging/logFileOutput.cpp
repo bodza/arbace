@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "logging/log.hpp"
 #include "logging/logConfiguration.hpp"
@@ -39,8 +40,7 @@ void LogFileOutput::set_file_name_parameters(jlong vm_start_time) {
 LogFileOutput::~LogFileOutput() {
   if (_stream != NULL) {
     if (fclose(_stream) != 0) {
-      jio_fprintf(defaultStream::error_stream(), "Could not close log file '%s' (%s).\n",
-                  _file_name, os::strerror(errno));
+      jio_fprintf(defaultStream::error_stream(), "Could not close log file '%s' (%s).\n", _file_name, os::strerror(errno));
     }
   }
   os::free(_archive_name);
@@ -77,10 +77,7 @@ static bool is_regular_file(const char* filename) {
 
 // Try to find the next number that should be used for file rotation.
 // Return UINT_MAX on error.
-static uint next_file_number(const char* filename,
-                             uint number_of_digits,
-                             uint filecount,
-                             outputStream* errstream) {
+static uint next_file_number(const char* filename, uint number_of_digits, uint filecount, outputStream* errstream) {
   bool found = false;
   uint next_num = 0;
 
@@ -90,8 +87,7 @@ static uint next_file_number(const char* filename,
   char* oldest_name = NEW_C_HEAP_ARRAY(char, len, mtLogging);
 
   for (uint i = 0; i < filecount; i++) {
-    int ret = jio_snprintf(archive_name, len, "%s.%0*u",
-                           filename, number_of_digits, i);
+    int ret = jio_snprintf(archive_name, len, "%s.%0*u", filename, number_of_digits, i);
 
     if (file_exists(archive_name) && !is_regular_file(archive_name)) {
       // We've encountered something that's not a regular file among the
@@ -150,9 +146,7 @@ bool LogFileOutput::parse_options(const char* options, outputStream* errstream) 
     if (strcmp(FileCountOptionKey, key) == 0) {
       size_t value = parse_value(value_str);
       if (value > MaxRotationFileCount) {
-        errstream->print_cr("Invalid option: %s must be in range [0, %u]",
-                            FileCountOptionKey,
-                            MaxRotationFileCount);
+        errstream->print_cr("Invalid option: %s must be in range [0, %u]", FileCountOptionKey, MaxRotationFileCount);
         success = false;
         break;
       }
@@ -191,8 +185,6 @@ bool LogFileOutput::initialize(const char* options, outputStream* errstream) {
     _archive_name = NEW_C_HEAP_ARRAY(char, _archive_name_len, mtLogging);
   }
 
-  log_trace(logging)("Initializing logging to file '%s' (filecount: %u, filesize: " SIZE_FORMAT " KiB).", _file_name, _file_count, _rotate_size / K);
-
   if (_file_count > 0 && file_exists(_file_name)) {
     if (!is_regular_file(_file_name)) {
       errstream->print_cr("Unable to log to file %s with log file rotation: %s is not a regular file", _file_name, _file_name);
@@ -202,7 +194,6 @@ bool LogFileOutput::initialize(const char* options, outputStream* errstream) {
     if (_current_file == UINT_MAX) {
       return false;
     }
-    log_trace(logging)("Existing log file found, saving it as '%s.%0*u'", _file_name, _file_count_max_digits, _current_file);
     archive();
     increment_file_count();
   }
@@ -214,7 +205,6 @@ bool LogFileOutput::initialize(const char* options, outputStream* errstream) {
   }
 
   if (_file_count == 0 && is_regular_file(_file_name)) {
-    log_trace(logging)("Truncating log file");
     os::ftruncate(os::get_fileno(_stream), 0);
   }
 
@@ -258,8 +248,7 @@ int LogFileOutput::write(LogMessageBuffer::Iterator msg_iterator) {
 }
 
 void LogFileOutput::archive() {
-  int ret = jio_snprintf(_archive_name, _archive_name_len, "%s.%0*u",
-                         _file_name, _file_count_max_digits, _current_file);
+  int ret = jio_snprintf(_archive_name, _archive_name_len, "%s.%0*u", _file_name, _file_count_max_digits, _current_file);
 
   // Attempt to remove possibly existing archived log file before we rename.
   // Don't care if it fails, we really only care about the rename that follows.
@@ -267,8 +256,7 @@ void LogFileOutput::archive() {
 
   // Rename the file from ex hotspot.log to hotspot.log.2
   if (rename(_file_name, _archive_name) == -1) {
-    jio_fprintf(defaultStream::error_stream(), "Could not rename log file '%s' to '%s' (%s).\n",
-                _file_name, _archive_name, os::strerror(errno));
+    jio_fprintf(defaultStream::error_stream(), "Could not rename log file '%s' to '%s' (%s).\n", _file_name, _archive_name, os::strerror(errno));
   }
 }
 
@@ -285,8 +273,7 @@ void LogFileOutput::force_rotate() {
 void LogFileOutput::rotate() {
 
   if (fclose(_stream)) {
-    jio_fprintf(defaultStream::error_stream(), "Error closing file '%s' during log rotation (%s).\n",
-                _file_name, os::strerror(errno));
+    jio_fprintf(defaultStream::error_stream(), "Error closing file '%s' during log rotation (%s).\n", _file_name, os::strerror(errno));
   }
 
   // Archive the current log file
@@ -295,8 +282,7 @@ void LogFileOutput::rotate() {
   // Open the active log file using the same stream as before
   _stream = os::fopen(_file_name, FileOpenMode);
   if (_stream == NULL) {
-    jio_fprintf(defaultStream::error_stream(), "Could not reopen file '%s' during log rotation (%s).\n",
-                _file_name, os::strerror(errno));
+    jio_fprintf(defaultStream::error_stream(), "Could not reopen file '%s' during log rotation (%s).\n", _file_name, os::strerror(errno));
     return;
   }
 

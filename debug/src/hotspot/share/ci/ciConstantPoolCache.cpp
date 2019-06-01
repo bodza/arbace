@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "ci/ciConstantPoolCache.hpp"
 #include "ci/ciUtilities.inline.hpp"
 #include "memory/allocation.hpp"

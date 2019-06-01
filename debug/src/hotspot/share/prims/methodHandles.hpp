@@ -7,11 +7,6 @@
 #include "runtime/globals.hpp"
 #include "utilities/macros.hpp"
 
-#ifdef ZERO
-# include "entry_zero.hpp"
-# include "interpreter/interpreter.hpp"
-#endif
-
 class MacroAssembler;
 class Label;
 

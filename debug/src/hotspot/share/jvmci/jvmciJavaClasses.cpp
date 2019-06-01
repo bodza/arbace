@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/symbolTable.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
 #include "memory/resourceArea.hpp"

@@ -11,15 +11,9 @@ class MethodLivenessResult : public ResourceBitMap {
   bool _is_valid;
 
  public:
-  MethodLivenessResult()
-    : ResourceBitMap()
-    , _is_valid(false)
-  { }
+  MethodLivenessResult() : ResourceBitMap() , _is_valid(false) { }
 
-  MethodLivenessResult(idx_t size_in_bits)
-    : ResourceBitMap(size_in_bits)
-    , _is_valid(false)
-  { }
+  MethodLivenessResult(idx_t size_in_bits) : ResourceBitMap(size_in_bits) , _is_valid(false) { }
 
   void set_is_valid() { _is_valid = true; }
   bool is_valid() { return _is_valid; }

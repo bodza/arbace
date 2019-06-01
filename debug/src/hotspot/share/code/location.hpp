@@ -76,13 +76,10 @@ class Location {
   bool is_register() const    { return where() == in_register; }
   bool is_stack() const       { return where() == on_stack; }
 
-  int stack_offset() const    {
-    return offset()<<LogBytesPerInt; }
-  int register_number() const {
-    return offset()   ; }
+  int stack_offset() const    { return offset()<<LogBytesPerInt; }
+  int register_number() const { return offset(); }
 
-  VMReg reg() const {
-    return VMRegImpl::as_VMReg(offset())   ; }
+  VMReg reg() const { return VMRegImpl::as_VMReg(offset()); }
 
   // Printing
   void print_on(outputStream* st) const;

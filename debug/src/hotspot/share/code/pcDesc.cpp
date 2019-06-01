@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "code/debugInfoRec.hpp"
 #include "code/nmethod.hpp"
 #include "code/pcDesc.hpp"
@@ -16,8 +17,7 @@ address PcDesc::real_pc(const CompiledMethod* code) const {
   return code->code_begin() + pc_offset();
 }
 
-void PcDesc::print(CompiledMethod* code) {
-}
+void PcDesc::print(CompiledMethod* code) { }
 
 bool PcDesc::verify(CompiledMethod* code) {
   //Unimplemented();

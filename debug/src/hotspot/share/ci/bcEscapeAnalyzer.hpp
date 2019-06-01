@@ -88,29 +88,20 @@ class BCEscapeAnalyzer : public ResourceObj {
   // retrieval of interprocedural escape information
 
   // The given argument does not escape the callee.
-  bool is_arg_local(int i) const {
-    return !_conservative && _arg_local.test(i);
-  }
+  bool is_arg_local(int i) const { return !_conservative && _arg_local.test(i); }
 
   // The given argument escapes the callee, but does not become globally
   // reachable.
-  bool is_arg_stack(int i) const {
-    return !_conservative && _arg_stack.test(i);
-  }
+  bool is_arg_stack(int i) const { return !_conservative && _arg_stack.test(i); }
 
   // The given argument does not escape globally, and may be returned.
-  bool is_arg_returned(int i) const {
-    return !_conservative && _arg_returned.test(i); }
+  bool is_arg_returned(int i) const { return !_conservative && _arg_returned.test(i); }
 
   // True iff only input arguments are returned.
-  bool is_return_local() const {
-    return !_conservative && _return_local;
-  }
+  bool is_return_local() const { return !_conservative && _return_local; }
 
   // True iff only newly allocated unescaped objects are returned.
-  bool is_return_allocated() const {
-    return !_conservative && _return_allocated && !_allocated_escapes;
-  }
+  bool is_return_allocated() const { return !_conservative && _return_allocated && !_allocated_escapes; }
 
   // Tracking of argument modification
 

@@ -130,8 +130,6 @@ private:
   sigjmp_buf _jmpbuf;
 };
 
-#ifndef SOLARIS
-
 /*
  * This is the platform-specific implementation underpinning
  * the ParkEvent class, which itself underpins Java-level monitor
@@ -190,7 +188,5 @@ class PlatformParker : public CHeapObj<mtInternal> {
  public:
   PlatformParker();
 };
-
-#endif
 
 #endif

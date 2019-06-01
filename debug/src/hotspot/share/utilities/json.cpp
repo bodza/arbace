@@ -8,6 +8,7 @@
  */
 
 #include "precompiled.hpp"
+
 #include "utilities/json.hpp"
 #include "utilities/ostream.hpp"
 #include <math.h>
@@ -365,7 +366,6 @@ void JSON::mark_pos() {
       column = 0;
     }
   }
-
 }
 
 u_char JSON::next() {

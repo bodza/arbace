@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/classFileStream.hpp"
 #include "classfile/classLoader.hpp"
 #include "classfile/dictionary.hpp"
@@ -12,10 +13,7 @@ void ClassFileStream::truncated_file_error(TRAPS) const {
   THROW_MSG(vmSymbols::java_lang_ClassFormatError(), "Truncated class file");
 }
 
-ClassFileStream::ClassFileStream(const u1* buffer,
-                                 int length,
-                                 const char* source,
-                                 bool verify_stream) :
+ClassFileStream::ClassFileStream(const u1* buffer, int length, const char* source, bool verify_stream) :
   _buffer_start(buffer),
   _buffer_end(buffer + length),
   _current(buffer),
@@ -52,7 +50,6 @@ const ClassFileStream* ClassFileStream::clone() const {
 u1 ClassFileStream::get_u1(TRAPS) const {
   if (_need_verify) {
     guarantee_more(1, CHECK_0);
-  } else {
   }
   return *_current++;
 }
@@ -60,7 +57,6 @@ u1 ClassFileStream::get_u1(TRAPS) const {
 u2 ClassFileStream::get_u2(TRAPS) const {
   if (_need_verify) {
     guarantee_more(2, CHECK_0);
-  } else {
   }
   const u1* tmp = _current;
   _current += 2;
@@ -70,7 +66,6 @@ u2 ClassFileStream::get_u2(TRAPS) const {
 u4 ClassFileStream::get_u4(TRAPS) const {
   if (_need_verify) {
     guarantee_more(4, CHECK_0);
-  } else {
   }
   const u1* tmp = _current;
   _current += 4;
@@ -80,7 +75,6 @@ u4 ClassFileStream::get_u4(TRAPS) const {
 u8 ClassFileStream::get_u8(TRAPS) const {
   if (_need_verify) {
     guarantee_more(8, CHECK_0);
-  } else {
   }
   const u1* tmp = _current;
   _current += 8;

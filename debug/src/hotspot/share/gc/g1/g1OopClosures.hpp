@@ -55,8 +55,7 @@ public:
 // Used during the Scan RS phase to scan cards from the remembered set during garbage collection.
 class G1ScanObjsDuringScanRSClosure : public G1ScanClosureBase {
 public:
-  G1ScanObjsDuringScanRSClosure(G1CollectedHeap* g1h,
-                                G1ParScanThreadState* par_scan_state):
+  G1ScanObjsDuringScanRSClosure(G1CollectedHeap* g1h, G1ParScanThreadState* par_scan_state) :
     G1ScanClosureBase(g1h, par_scan_state) { }
 
   template <class T> void do_oop_work(T* p);
@@ -189,8 +188,7 @@ class G1RebuildRemSetClosure : public BasicOopIterateClosure {
   G1CollectedHeap* _g1h;
   uint _worker_id;
 public:
-  G1RebuildRemSetClosure(G1CollectedHeap* g1h, uint worker_id) : _g1h(g1h), _worker_id(worker_id) {
-  }
+  G1RebuildRemSetClosure(G1CollectedHeap* g1h, uint worker_id) : _g1h(g1h), _worker_id(worker_id) { }
 
   template <class T> void do_oop_work(T* p);
   virtual void do_oop(oop* p)       { do_oop_work(p); }

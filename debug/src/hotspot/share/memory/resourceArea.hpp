@@ -12,11 +12,9 @@ class ResourceArea: public Arena {
   friend class VMStructs;
 
 public:
-  ResourceArea(MEMFLAGS flags = mtThread) : Arena(flags) {
-  }
+  ResourceArea(MEMFLAGS flags = mtThread) : Arena(flags) { }
 
-  ResourceArea(size_t init_size, MEMFLAGS flags = mtThread) : Arena(flags, init_size) {
-  }
+  ResourceArea(size_t init_size, MEMFLAGS flags = mtThread) : Arena(flags, init_size) { }
 
   char* allocate_bytes(size_t size, AllocFailType alloc_failmode = AllocFailStrategy::EXIT_OOM);
 
@@ -61,7 +59,6 @@ protected:
     if (_chunk->next()) {       // Delete later chunks
       _area->set_size_in_bytes(size_in_bytes());
       _chunk->next_chop();
-    } else {
     }
     _area->_chunk = _chunk;     // Roll back arena to saved chunk
     _area->_hwm = _hwm;
@@ -143,7 +140,6 @@ protected:
     if (_chunk->next()) {        // Delete later chunks
       _area->set_size_in_bytes(size_in_bytes());
       _chunk->next_chop();
-    } else {
     }
     _area->_chunk = _chunk;     // Roll back arena to saved chunk
     _area->_hwm = _hwm;

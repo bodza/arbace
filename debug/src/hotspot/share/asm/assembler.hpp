@@ -128,8 +128,7 @@ class Label {
     init();
   }
 
-  ~Label() {
-  }
+  ~Label() { }
 
   void reset() {
     init(); //leave _patch_overflow because it points to CodeBuffer.
@@ -156,10 +155,8 @@ class RegisterOrConstant {
   RegisterOrConstant(Register r): _r(r), _c(0) { }
   RegisterOrConstant(intptr_t c): _r(noreg), _c(c) { }
 
-  Register as_register() const {
-    return _r; }
-  intptr_t as_constant() const {
-    return _c; }
+  Register as_register() const { return _r; }
+  intptr_t as_constant() const { return _c; }
 
   Register register_or_noreg() const { return _r; }
   intptr_t constant_or_zero() const  { return _c; }

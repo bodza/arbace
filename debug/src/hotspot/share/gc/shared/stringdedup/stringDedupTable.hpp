@@ -217,7 +217,6 @@ public:
 
   static void unlink_or_oops_do(StringDedupUnlinkOrOopsDoClosure* cl, uint worker_id);
 
-  static void print_statistics();
   static void verify();
 
   // If the table entry cache has grown too large, delete overflowed entries.

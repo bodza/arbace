@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "logging/log.hpp"
 #include "logging/logFileStreamOutput.hpp"
@@ -300,7 +301,6 @@ void LogOutput::update_config_string(const size_t on_level[LogLevel::Count]) {
     for (size_t d = 0; d < n_deviates; d++) {
       add_selections(&selections, &n_selections, &selections_cap, *deviates[d], deviates[d]->level_for(this));
     }
-
   }
   FREE_C_HEAP_ARRAY(LogTagSet*, deviates);
   FREE_C_HEAP_ARRAY(Selection, selections);

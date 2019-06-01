@@ -144,8 +144,7 @@ class ConstantPool : public Metadata {
   }
 
   ConstantPool(Array<u1>* tags);
-  ConstantPool() {
-    }
+  ConstantPool() { }
  public:
   static ConstantPool* allocate(ClassLoaderData* loader_data, int length, TRAPS);
 
@@ -207,10 +206,8 @@ class ConstantPool : public Metadata {
   // The main reason is that byte swapping is sometimes done on normal indexes.
   // Finally, it is helpful for debugging to tell the two apart.
   static bool is_invokedynamic_index(int i) { return (i < 0); }
-  static int  decode_invokedynamic_index(int i) {
-    return ~i; }
-  static int  encode_invokedynamic_index(int i) {
-    return ~i; }
+  static int  decode_invokedynamic_index(int i) { return ~i; }
+  static int  encode_invokedynamic_index(int i) { return ~i; }
 
   // The invokedynamic points at a CP cache entry.  This entry points back
   // at the original CP entry (CONSTANT_InvokeDynamic) and also (via f2) at an entry
@@ -758,8 +755,6 @@ class ConstantPool : public Metadata {
   static Klass* klass_at_impl(const constantPoolHandle& this_cp, int which,
                               bool save_resolution_error, TRAPS);
   static oop string_at_impl(const constantPoolHandle& this_cp, int which, int obj_index, TRAPS);
-
-  static void trace_class_resolution(const constantPoolHandle& this_cp, Klass* k);
 
   // Resolve string constants (to prevent allocation during compilation)
   static void resolve_string_constants_impl(const constantPoolHandle& this_cp, TRAPS);

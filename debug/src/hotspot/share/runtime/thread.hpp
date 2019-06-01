@@ -24,9 +24,6 @@
 #include "utilities/align.hpp"
 #include "utilities/exceptions.hpp"
 #include "utilities/macros.hpp"
-#ifdef ZERO
-# include "stack_zero.hpp"
-#endif
 
 class SafeThreadsListPtr;
 class ThreadSafepointState;
@@ -140,8 +137,7 @@ class Thread: public ThreadShadow {
 
  public:
   void* operator new(size_t size) throw() { return allocate(size, true); }
-  void* operator new(size_t size, const std::nothrow_t& nothrow_constant) throw() {
-    return allocate(size, false); }
+  void* operator new(size_t size, const std::nothrow_t& nothrow_constant) throw() { return allocate(size, false); }
   void  operator delete(void* p);
 
  protected:
@@ -538,8 +534,7 @@ protected:
 
  public:
   // Stack overflow support
-  address stack_base() const           {
-    return _stack_base; }
+  address stack_base() const           { return _stack_base; }
   void    set_stack_base(address base) { _stack_base = base; }
   size_t  stack_size() const           { return _stack_size; }
   void    set_stack_size(size_t size)  { _stack_size = size; }
@@ -1004,7 +999,7 @@ class JavaThread: public Thread {
   address last_Java_pc(void)                     { return _anchor.last_Java_pc(); }
 
   // Safepoint support
-#if !(defined(PPC64) || defined(AARCH64))
+#if !defined(AARCH64)
   JavaThreadState thread_state() const           { return _thread_state; }
   void set_thread_state(JavaThreadState s)       { _thread_state = s; }
 #else
@@ -1261,10 +1256,8 @@ class JavaThread: public Thread {
   void set_pending_deoptimization(int reason)     { _pending_deoptimization = reason; }
   void set_pending_failed_speculation(long failed_speculation) { _pending_failed_speculation = failed_speculation; }
   void set_pending_transfer_to_interpreter(bool b) { _pending_transfer_to_interpreter = b; }
-  void set_jvmci_alternate_call_target(address a) {
-    _jvmci._alternate_call_target = a; }
-  void set_jvmci_implicit_exception_pc(address a) {
-    _jvmci._implicit_exception_pc = a; }
+  void set_jvmci_alternate_call_target(address a) { _jvmci._alternate_call_target = a; }
+  void set_jvmci_implicit_exception_pc(address a) { _jvmci._implicit_exception_pc = a; }
 
   // Exception handling for compiled methods
   oop      exception_oop() const                 { return _exception_oop; }
@@ -1657,13 +1650,6 @@ class JavaThread: public Thread {
   bool has_pending_popframe()                         { return (popframe_condition() & popframe_pending_bit) != 0; }
   bool popframe_forcing_deopt_reexecution()           { return (popframe_condition() & popframe_force_deopt_reexecution_bit) != 0; }
   void clear_popframe_forcing_deopt_reexecution()     { _popframe_condition &= ~popframe_force_deopt_reexecution_bit; }
-#ifdef CC_INTERP
-  bool pop_frame_pending(void)                        { return ((_popframe_condition & popframe_pending_bit) != 0); }
-  void clr_pop_frame_pending(void)                    { _popframe_condition = popframe_inactive; }
-  bool pop_frame_in_process(void)                     { return ((_popframe_condition & popframe_processing_bit) != 0); }
-  void set_pop_frame_in_process(void)                 { _popframe_condition |= popframe_processing_bit; }
-  void clr_pop_frame_in_process(void)                 { _popframe_condition &= ~popframe_processing_bit; }
-#endif
 
   int frames_to_pop_failed_realloc() const            { return _frames_to_pop_failed_realloc; }
   void set_frames_to_pop_failed_realloc(int nb)       { _frames_to_pop_failed_realloc = nb; }
@@ -1905,7 +1891,6 @@ class Threads: AllStatic {
   // never set the global parity to 0.
   static int thread_claim_parity() { return _thread_claim_parity; }
   static void change_thread_claim_parity();
-  static void assert_all_threads_claimed() { };
 
   // Apply "f->do_oop" to all root oops in all threads.
   // This version may only be called by sequential code.

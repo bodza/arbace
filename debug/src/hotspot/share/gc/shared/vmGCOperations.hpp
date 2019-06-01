@@ -146,11 +146,8 @@ class VM_GenCollectForAllocation : public VM_CollectForAllocation {
  private:
   bool        _tlab;                       // alloc is of a tlab.
  public:
-  VM_GenCollectForAllocation(size_t word_size,
-                             bool tlab,
-                             uint gc_count_before)
-    : VM_CollectForAllocation(word_size, gc_count_before, GCCause::_allocation_failure),
-      _tlab(tlab) {
+  VM_GenCollectForAllocation(size_t word_size, bool tlab, uint gc_count_before)
+    : VM_CollectForAllocation(word_size, gc_count_before, GCCause::_allocation_failure), _tlab(tlab) {
   }
   ~VM_GenCollectForAllocation()  { }
   virtual VMOp_Type type() const { return VMOp_GenCollectForAllocation; }

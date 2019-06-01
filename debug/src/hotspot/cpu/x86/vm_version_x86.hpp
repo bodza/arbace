@@ -661,10 +661,6 @@ public:
   // Override Abstract_VM_Version implementation
   static bool use_biased_locking();
 
-  // Asserts
-  static void assert_is_initialized() {
-  }
-
   //
   // Processor family:
   //       3   -  386
@@ -682,9 +678,9 @@ public:
   //
   static int  cpu_family()        { return _cpu; }
   static bool is_P6()             { return cpu_family() >= 6; }
-  static bool is_amd()            { assert_is_initialized(); return _cpuid_info.std_vendor_name_0 == 0x68747541; } // 'htuA'
-  static bool is_intel()          { assert_is_initialized(); return _cpuid_info.std_vendor_name_0 == 0x756e6547; } // 'uneG'
-  static bool is_zx()             { assert_is_initialized(); return (_cpuid_info.std_vendor_name_0 == 0x746e6543) || (_cpuid_info.std_vendor_name_0 == 0x68532020); } // 'tneC'||'hS  '
+  static bool is_amd()            { return _cpuid_info.std_vendor_name_0 == 0x68747541; } // 'htuA'
+  static bool is_intel()          { return _cpuid_info.std_vendor_name_0 == 0x756e6547; } // 'uneG'
+  static bool is_zx()             { return (_cpuid_info.std_vendor_name_0 == 0x746e6543) || (_cpuid_info.std_vendor_name_0 == 0x68532020); } // 'tneC'||'hS  '
   static bool is_atom_family()    { return ((cpu_family() == 0x06) && ((extended_cpu_model() == 0x36) || (extended_cpu_model() == 0x37) || (extended_cpu_model() == 0x4D))); } //Silvermont and Centerton
   static bool is_knights_family() { return ((cpu_family() == 0x06) && ((extended_cpu_model() == 0x57) || (extended_cpu_model() == 0x85))); } // Xeon Phi 3200/5200/7200 and Future Xeon Phi
 
@@ -695,7 +691,7 @@ public:
            (((_cpuid_info.tpl_cpuidB0_eax & 0x1f) | _cpuid_info.tpl_cpuidB0_ebx.bits.logical_cpus) != 0);
   }
 
-  static uint cores_per_cpu()  {
+  static uint cores_per_cpu() {
     uint result = 1;
     if (is_intel()) {
       bool supports_topology = supports_processor_topology();
@@ -721,7 +717,7 @@ public:
     return result;
   }
 
-  static uint threads_per_core()  {
+  static uint threads_per_core() {
     uint result = 1;
     if (is_intel() && supports_processor_topology()) {
       result = _cpuid_info.tpl_cpuidB0_ebx.bits.logical_cpus;
@@ -737,7 +733,7 @@ public:
     return (result == 0 ? 1 : result);
   }
 
-  static intx L1_line_size()  {
+  static intx L1_line_size() {
     intx result = 0;
     if (is_intel()) {
       result = (_cpuid_info.dcp_cpuid4_ebx.bits.L1_line_size + 1);
@@ -751,7 +747,7 @@ public:
     return result;
   }
 
-  static intx prefetch_data_size()  {
+  static intx prefetch_data_size() {
     return L1_line_size();
   }
 
@@ -805,7 +801,7 @@ public:
   // Intel features
   static bool is_intel_family_core() { return is_intel() && extended_cpu_family() == CPU_FAMILY_INTEL_CORE; }
 
-  static bool is_intel_tsc_synched_at_init()  {
+  static bool is_intel_tsc_synched_at_init() {
     if (is_intel_family_core()) {
       uint32_t ext_model = extended_cpu_model();
       if (ext_model == CPU_MODEL_NEHALEM_EP     ||

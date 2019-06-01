@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1Allocator.inline.hpp"
 #include "gc/g1/g1AllocRegion.inline.hpp"
 #include "gc/g1/g1EvacStats.inline.hpp"
@@ -120,17 +121,13 @@ size_t G1Allocator::used_in_alloc_regions() {
   return mutator_alloc_region()->used_in_alloc_regions();
 }
 
-HeapWord* G1Allocator::par_allocate_during_gc(InCSetState dest,
-                                              size_t word_size) {
+HeapWord* G1Allocator::par_allocate_during_gc(InCSetState dest, size_t word_size) {
   size_t temp = 0;
   HeapWord* result = par_allocate_during_gc(dest, word_size, word_size, &temp);
   return result;
 }
 
-HeapWord* G1Allocator::par_allocate_during_gc(InCSetState dest,
-                                              size_t min_word_size,
-                                              size_t desired_word_size,
-                                              size_t* actual_word_size) {
+HeapWord* G1Allocator::par_allocate_during_gc(InCSetState dest, size_t min_word_size, size_t desired_word_size, size_t* actual_word_size) {
   switch (dest.value()) {
     case InCSetState::Young:
       return survivor_attempt_allocation(min_word_size, desired_word_size, actual_word_size);
@@ -142,9 +139,7 @@ HeapWord* G1Allocator::par_allocate_during_gc(InCSetState dest,
   }
 }
 
-HeapWord* G1Allocator::survivor_attempt_allocation(size_t min_word_size,
-                                                   size_t desired_word_size,
-                                                   size_t* actual_word_size) {
+HeapWord* G1Allocator::survivor_attempt_allocation(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size) {
 
   HeapWord* result = survivor_gc_alloc_region()->attempt_allocation(min_word_size,
                                                                     desired_word_size,
@@ -164,9 +159,7 @@ HeapWord* G1Allocator::survivor_attempt_allocation(size_t min_word_size,
   return result;
 }
 
-HeapWord* G1Allocator::old_attempt_allocation(size_t min_word_size,
-                                              size_t desired_word_size,
-                                              size_t* actual_word_size) {
+HeapWord* G1Allocator::old_attempt_allocation(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size) {
 
   HeapWord* result = old_gc_alloc_region()->attempt_allocation(min_word_size,
                                                                desired_word_size,
@@ -211,9 +204,7 @@ bool G1PLABAllocator::may_throw_away_buffer(size_t const allocation_word_sz, siz
   return (allocation_word_sz * 100 < buffer_size * ParallelGCBufferWastePct);
 }
 
-HeapWord* G1PLABAllocator::allocate_direct_or_new_plab(InCSetState dest,
-                                                       size_t word_sz,
-                                                       bool* plab_refill_failed) {
+HeapWord* G1PLABAllocator::allocate_direct_or_new_plab(InCSetState dest, size_t word_sz, bool* plab_refill_failed) {
   size_t plab_word_size = _g1h->desired_plab_sz(dest);
   size_t required_in_plab = PLAB::size_required_for_allocation(word_sz);
 

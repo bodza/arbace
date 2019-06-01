@@ -43,8 +43,7 @@ class LogMessageImpl : public LogMessageBuffer {
   bool _has_content;
 
  public:
-  LogMessageImpl() : _has_content(false) {
-  }
+  LogMessageImpl() : _has_content(false) { }
 
   ~LogMessageImpl() {
     if (_has_content) {

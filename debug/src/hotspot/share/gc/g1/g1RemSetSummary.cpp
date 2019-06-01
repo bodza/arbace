@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1ConcurrentRefine.hpp"
 #include "gc/g1/g1ConcurrentRefineThread.hpp"
@@ -16,8 +17,7 @@ private:
   uint _counter;
 
 public:
-  GetRSThreadVTimeClosure(G1RemSetSummary * summary) : ThreadClosure(), _summary(summary), _counter(0) {
-  }
+  GetRSThreadVTimeClosure(G1RemSetSummary * summary) : ThreadClosure(), _summary(summary), _counter(0) { }
 
   virtual void do_thread(Thread* t) {
     G1ConcurrentRefineThread* crt = (G1ConcurrentRefineThread*) t;
@@ -258,8 +258,7 @@ public:
     RegionTypeCounter* counters[] = { &_young, &_humongous, &_free, &_old, NULL };
 
     out->print_cr(" Current rem set statistics");
-    out->print_cr("  Total per region rem sets sizes = " SIZE_FORMAT "%s."
-                  " Max = " SIZE_FORMAT "%s.",
+    out->print_cr("  Total per region rem sets sizes = " SIZE_FORMAT "%s. Max = " SIZE_FORMAT "%s.",
                   byte_size_in_proper_unit(total_rs_mem_sz()),
                   proper_unit_for_byte_size(total_rs_mem_sz()),
                   byte_size_in_proper_unit(max_rs_mem_sz()),
@@ -268,23 +267,20 @@ public:
       (*current)->print_rs_mem_info_on(out, total_rs_mem_sz());
     }
 
-    out->print_cr("   Static structures = " SIZE_FORMAT "%s,"
-                  " free_lists = " SIZE_FORMAT "%s.",
+    out->print_cr("   Static structures = " SIZE_FORMAT "%s, free_lists = " SIZE_FORMAT "%s.",
                   byte_size_in_proper_unit(HeapRegionRemSet::static_mem_size()),
                   proper_unit_for_byte_size(HeapRegionRemSet::static_mem_size()),
                   byte_size_in_proper_unit(HeapRegionRemSet::fl_mem_size()),
                   proper_unit_for_byte_size(HeapRegionRemSet::fl_mem_size()));
 
-    out->print_cr("    " SIZE_FORMAT " occupied cards represented.",
-                  total_cards_occupied());
+    out->print_cr("    " SIZE_FORMAT " occupied cards represented.", total_cards_occupied());
     for (RegionTypeCounter** current = &counters[0]; *current != NULL; current++) {
       (*current)->print_cards_occupied_info_on(out, total_cards_occupied());
     }
 
     // Largest sized rem set region statistics
     HeapRegionRemSet* rem_set = max_rs_mem_sz_region()->rem_set();
-    out->print_cr("    Region with largest rem set = " HR_FORMAT ", "
-                  "size = " SIZE_FORMAT "%s, occupied = " SIZE_FORMAT "%s.",
+    out->print_cr("    Region with largest rem set = " HR_FORMAT ", size = " SIZE_FORMAT "%s, occupied = " SIZE_FORMAT "%s.",
                   HR_FORMAT_PARAMS(max_rs_mem_sz_region()),
                   byte_size_in_proper_unit(rem_set->mem_size()),
                   proper_unit_for_byte_size(rem_set->mem_size()),
@@ -292,8 +288,7 @@ public:
                   proper_unit_for_byte_size(rem_set->occupied()));
     // Strong code root statistics
     HeapRegionRemSet* max_code_root_rem_set = max_code_root_mem_sz_region()->rem_set();
-    out->print_cr("  Total heap region code root sets sizes = " SIZE_FORMAT "%s."
-                  "  Max = " SIZE_FORMAT "%s.",
+    out->print_cr("  Total heap region code root sets sizes = " SIZE_FORMAT "%s.  Max = " SIZE_FORMAT "%s.",
                   byte_size_in_proper_unit(total_code_root_mem_sz()),
                   proper_unit_for_byte_size(total_code_root_mem_sz()),
                   byte_size_in_proper_unit(max_code_root_rem_set->strong_code_roots_mem_size()),
@@ -302,14 +297,12 @@ public:
       (*current)->print_code_root_mem_info_on(out, total_code_root_mem_sz());
     }
 
-    out->print_cr("    " SIZE_FORMAT " code roots represented.",
-                  total_code_root_elems());
+    out->print_cr("    " SIZE_FORMAT " code roots represented.", total_code_root_elems());
     for (RegionTypeCounter** current = &counters[0]; *current != NULL; current++) {
       (*current)->print_code_root_elems_info_on(out, total_code_root_elems());
     }
 
-    out->print_cr("    Region with largest amount of code roots = " HR_FORMAT ", "
-                  "size = " SIZE_FORMAT "%s, num_elems = " SIZE_FORMAT ".",
+    out->print_cr("    Region with largest amount of code roots = " HR_FORMAT ", size = " SIZE_FORMAT "%s, num_elems = " SIZE_FORMAT ".",
                   HR_FORMAT_PARAMS(max_code_root_mem_sz_region()),
                   byte_size_in_proper_unit(max_code_root_rem_set->strong_code_roots_mem_size()),
                   proper_unit_for_byte_size(max_code_root_rem_set->strong_code_roots_mem_size()),

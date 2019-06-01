@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "aot/aotLoader.hpp"
 #include "code/compiledMethod.inline.hpp"
@@ -16,7 +17,6 @@
 #include "gc/shared/gcLocker.inline.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
-// #include "jfr/jfrEvents.hpp"
 #include "logging/log.hpp"
 #include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
@@ -235,7 +235,7 @@ double SharedRuntime::dabs(double f) {
 
 #endif
 
-#if defined(__SOFTFP__) || defined(PPC)
+#if defined(__SOFTFP__)
 double SharedRuntime::dsqrt(double f) {
   return sqrt(f);
 }
@@ -368,10 +368,6 @@ address SharedRuntime::get_poll_stub(address pc) {
   } else {
     stub = SharedRuntime::polling_page_safepoint_handler_blob()->entry_point();
   }
-  log_debug(safepoint)("... found polling page %s exception at pc = "
-                       INTPTR_FORMAT ", stub =" INTPTR_FORMAT,
-                       at_poll_return ? "return" : "loop",
-                       (intptr_t)pc, (intptr_t)stub);
   return stub;
 }
 
@@ -401,7 +397,6 @@ JRT_LEAF(int, SharedRuntime::rc_trace_method_entry(JavaThread* thread, Method* m
     // an error. Our method could have been redefined just after we
     // fetched the Method* from the constant pool.
     ResourceMark rm;
-    log_trace(redefine, class, obsolete)("calling obsolete method '%s'", method->name_and_sig_as_C_string());
   }
   return 0;
 JRT_END
@@ -457,8 +452,7 @@ address SharedRuntime::compute_compiled_exc_handler(CompiledMethod* cm, address 
           handler_bci = -1;
           skip_scope_increment = true;
         }
-      }
-      else {
+      } else {
         recursive_exception = false;
       }
       if (!top_frame_only && handler_bci < 0 && !skip_scope_increment) {
@@ -563,24 +557,16 @@ address SharedRuntime::deoptimize_for_implicit_exception(JavaThread* thread, add
   return (SharedRuntime::deopt_blob()->implicit_exception_uncommon_trap());
 }
 
-address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread,
-                                                           address pc,
-                                                           SharedRuntime::ImplicitExceptionKind exception_kind)
-{
+address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread, address pc, SharedRuntime::ImplicitExceptionKind exception_kind) {
   address target_pc = NULL;
 
   if (Interpreter::contains(pc)) {
-#ifdef CC_INTERP
-    // C++ interpreter doesn't throw implicit exceptions
-    ShouldNotReachHere();
-#else
     switch (exception_kind) {
       case IMPLICIT_NULL:           return Interpreter::throw_NullPointerException_entry();
       case IMPLICIT_DIVIDE_BY_ZERO: return Interpreter::throw_ArithmeticException_entry();
       case STACK_OVERFLOW:          return Interpreter::throw_StackOverflowError_entry();
       default:                      ShouldNotReachHere();
     }
-#endif
   } else {
     switch (exception_kind) {
       case STACK_OVERFLOW: {
@@ -715,8 +701,7 @@ address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread,
  * caught and forwarded on the return from NativeLookup::lookup() call
  * before the call to the native function.  This might change in the future.
  */
-JNI_ENTRY(void*, throw_unsatisfied_link_error(JNIEnv* env, ...))
-{
+JNI_ENTRY(void*, throw_unsatisfied_link_error(JNIEnv* env, ...)) {
   // We return a bad value here to make sure that the exception is
   // forwarded before we look at the return value.
   THROW_(vmSymbols::java_lang_UnsatisfiedLinkError(), (void*)badAddress);
@@ -815,10 +800,7 @@ methodHandle SharedRuntime::extract_attached_method(vframeStream& vfst) {
 // Finds receiver, CallInfo (i.e. receiver method), and calling bytecode
 // for a call current in progress, i.e., arguments has been pushed on stack
 // but callee has not been invoked yet.  Caller frame must be compiled.
-Handle SharedRuntime::find_callee_info_helper(JavaThread* thread,
-                                              vframeStream& vfst,
-                                              Bytecodes::Code& bc,
-                                              CallInfo& callinfo, TRAPS) {
+Handle SharedRuntime::find_callee_info_helper(JavaThread* thread, vframeStream& vfst, Bytecodes::Code& bc, CallInfo& callinfo, TRAPS) {
   Handle receiver;
   Handle nullHandle;  //create a handy null handle for exception returns
 
@@ -984,9 +966,6 @@ methodHandle SharedRuntime::resolve_sub_helper(JavaThread *thread,
   // Make sure the callee nmethod does not get deoptimized and removed before
   // we are done patching the code.
   CompiledMethod* callee = callee_method->code();
-
-  if (callee != NULL) {
-  }
 
   if (callee != NULL && !callee->is_in_use()) {
     // Patch call site to C2I adapter if callee nmethod is deoptimized or unloaded.
@@ -1309,9 +1288,7 @@ methodHandle SharedRuntime::reresolve_call_site(JavaThread *thread, TRAPS) {
       if (ret) {
         if (iter.type() == relocInfo::static_call_type) {
           is_static_call = true;
-        } else {
         }
-      } else {
       }
 
       // Cleaning the inline cache will force a new resolve. This is more robust
@@ -1458,10 +1435,7 @@ IRT_LEAF(void, SharedRuntime::fixup_callers_callsite(Method* method, address cal
 IRT_END
 
 // same as JVM_Arraycopy, but called directly from compiled code
-JRT_ENTRY(void, SharedRuntime::slow_arraycopy_C(oopDesc* src,  jint src_pos,
-                                                oopDesc* dest, jint dest_pos,
-                                                jint length,
-                                                JavaThread* thread)) {
+JRT_ENTRY(void, SharedRuntime::slow_arraycopy_C(oopDesc* src,  jint src_pos, oopDesc* dest, jint dest_pos, jint length, JavaThread* thread)) {
   // Check if we have null pointers
   if (src == NULL || dest == NULL) {
     THROW(vmSymbols::java_lang_NullPointerException());
@@ -1521,15 +1495,7 @@ char* SharedRuntime::generate_class_cast_message(Klass* caster_klass, Klass* tar
     // Shouldn't happen, but don't cause even more problems if it does
     message = const_cast<char*>(caster_klass->external_name());
   } else {
-    jio_snprintf(message,
-                 msglen,
-                 "class %s cannot be cast to class %s (%s%s%s)",
-                 caster_name,
-                 target_name,
-                 caster_klass_description,
-                 klass_separator,
-                 target_klass_description
-                 );
+    jio_snprintf(message, msglen, "class %s cannot be cast to class %s (%s%s%s)", caster_name, target_name, caster_klass_description, klass_separator, target_klass_description);
   }
   return message;
 }
@@ -2215,9 +2181,7 @@ JRT_LEAF(intptr_t*, SharedRuntime::OSR_migration_begin( JavaThread *thread))
 
   // Figure out how many monitors are active.
   int active_monitor_count = 0;
-  for (BasicObjectLock *kptr = fr.interpreter_frame_monitor_end();
-       kptr < fr.interpreter_frame_monitor_begin();
-       kptr = fr.next_monitor_in_interpreter_frame(kptr)) {
+  for (BasicObjectLock *kptr = fr.interpreter_frame_monitor_end(); kptr < fr.interpreter_frame_monitor_begin(); kptr = fr.next_monitor_in_interpreter_frame(kptr)) {
     if (kptr->obj() != NULL) active_monitor_count++;
   }
 
@@ -2236,9 +2200,7 @@ JRT_LEAF(intptr_t*, SharedRuntime::OSR_migration_begin( JavaThread *thread))
 
   // Inflate locks.  Copy the displaced headers.  Be careful, there can be holes.
   int i = max_locals;
-  for (BasicObjectLock *kptr2 = fr.interpreter_frame_monitor_end();
-       kptr2 < fr.interpreter_frame_monitor_begin();
-       kptr2 = fr.next_monitor_in_interpreter_frame(kptr2)) {
+  for (BasicObjectLock *kptr2 = fr.interpreter_frame_monitor_end(); kptr2 < fr.interpreter_frame_monitor_begin(); kptr2 = fr.next_monitor_in_interpreter_frame(kptr2)) {
     if (kptr2->obj() != NULL) {         // Avoid 'holes' in the monitor array
       BasicLock *lock = kptr2->lock();
       // Inflate so the displaced header becomes position-independent
@@ -2323,9 +2285,7 @@ frame SharedRuntime::look_for_reserved_stack_annotated_method(JavaThread* thread
     }
     if (found) {
       activation = fr;
-      warning("Potentially dangerous stack overflow in "
-              "ReservedStackAccess annotated method %s [%d]",
-              method->name_and_sig_as_C_string(), count++);
+      warning("Potentially dangerous stack overflow in ReservedStackAccess annotated method %s [%d]", method->name_and_sig_as_C_string(), count++);
       EventReservedStackActivation event;
       if (event.should_commit()) {
         event.set_method(method);

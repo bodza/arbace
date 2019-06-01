@@ -1,10 +1,11 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/dirtyCardQueue.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1HotCardCache.hpp"
 #include "runtime/atomic.hpp"
 
-G1HotCardCache::G1HotCardCache(G1CollectedHeap *g1h):
+G1HotCardCache::G1HotCardCache(G1CollectedHeap *g1h) :
   _g1h(g1h), _hot_cache(NULL), _use_cache(false), _card_counts(g1h) { }
 
 void G1HotCardCache::initialize(G1RegionToSpaceMapper* card_counts_storage) {

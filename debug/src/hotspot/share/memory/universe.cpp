@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "aot/aotLoader.hpp"
 #include "classfile/classLoader.hpp"
 #include "classfile/classLoaderData.hpp"
@@ -426,9 +427,7 @@ void Universe::reinitialize_vtable_of(Klass* ko, TRAPS) {
   // init vtable of k and all subclasses
   ko->vtable().initialize_vtable(false, CHECK);
   if (ko->is_instance_klass()) {
-    for (Klass* sk = ko->subklass();
-         sk != NULL;
-         sk = sk->next_sibling()) {
+    for (Klass* sk = ko->subklass(); sk != NULL; sk = sk->next_sibling()) {
       reinitialize_vtable_of(sk, CHECK);
     }
   }
@@ -517,13 +516,9 @@ void* Universe::non_oop_word() {
 }
 
 jint universe_init() {
-  guarantee(1 << LogHeapWordSize == sizeof(HeapWord),
-         "LogHeapWordSize is incorrect.");
+  guarantee(1 << LogHeapWordSize == sizeof(HeapWord), "LogHeapWordSize is incorrect.");
   guarantee(sizeof(oop) >= sizeof(HeapWord), "HeapWord larger than oop?");
-  guarantee(sizeof(oop) % sizeof(HeapWord) == 0,
-            "oop size is not not a multiple of HeapWord size");
-
-  TraceTime timer("Genesis", TRACETIME_LOG(Info, startuptime));
+  guarantee(sizeof(oop) % sizeof(HeapWord) == 0, "oop size is not not a multiple of HeapWord size");
 
   JavaClasses::compute_hard_coded_offsets();
 
@@ -590,7 +585,6 @@ jint Universe::initialize_heap() {
   if (status != JNI_OK) {
     return status;
   }
-  log_info(gc)("Using %s", _collectedHeap->name());
 
   ThreadLocalAllocBuffer::set_max_size(Universe::heap()->max_tlab_size());
 
@@ -672,9 +666,6 @@ ReservedSpace Universe::reserve_heap(size_t heap_size, size_t alignment) {
       Universe::set_narrow_oop_base((address)total_rs.compressed_oop_base());
     }
 
-    if (AllocateHeapAt != NULL) {
-      log_info(gc,heap)("Successfully allocated Java heap at location %s", AllocateHeapAt);
-    }
     return total_rs;
   }
 
@@ -732,41 +723,25 @@ void initialize_known_method(LatestMethodCache* method_cache, InstanceKlass* ik,
     ResourceMark rm(THREAD);
     // NoSuchMethodException doesn't actually work because it tries to run the
     // <init> function before java_lang_Class is linked. Print error and exit.
-    vm_exit_during_initialization(err_msg("Unable to link/verify %s.%s method",
-                                 ik->name()->as_C_string(), method));
+    vm_exit_during_initialization(err_msg("Unable to link/verify %s.%s method", ik->name()->as_C_string(), method));
   }
   method_cache->init(ik, m);
 }
 
 void Universe::initialize_known_methods(TRAPS) {
   // Set up static method for registering finalizers
-  initialize_known_method(_finalizer_register_cache,
-                          SystemDictionary::Finalizer_klass(),
-                          "register",
-                          vmSymbols::object_void_signature(), true, CHECK);
+  initialize_known_method(_finalizer_register_cache, SystemDictionary::Finalizer_klass(), "register", vmSymbols::object_void_signature(), true, CHECK);
 
-  initialize_known_method(_throw_illegal_access_error_cache,
-                          SystemDictionary::internal_Unsafe_klass(),
-                          "throwIllegalAccessError",
-                          vmSymbols::void_method_signature(), true, CHECK);
+  initialize_known_method(_throw_illegal_access_error_cache, SystemDictionary::internal_Unsafe_klass(), "throwIllegalAccessError", vmSymbols::void_method_signature(), true, CHECK);
 
   // Set up method for registering loaded classes in class loader vector
-  initialize_known_method(_loader_addClass_cache,
-                          SystemDictionary::ClassLoader_klass(),
-                          "addClass",
-                          vmSymbols::class_void_signature(), false, CHECK);
+  initialize_known_method(_loader_addClass_cache, SystemDictionary::ClassLoader_klass(), "addClass", vmSymbols::class_void_signature(), false, CHECK);
 
   // Set up method for checking protection domain
-  initialize_known_method(_pd_implies_cache,
-                          SystemDictionary::ProtectionDomain_klass(),
-                          "impliesCreateAccessControlContext",
-                          vmSymbols::void_boolean_signature(), false, CHECK);
+  initialize_known_method(_pd_implies_cache, SystemDictionary::ProtectionDomain_klass(), "impliesCreateAccessControlContext", vmSymbols::void_boolean_signature(), false, CHECK);
 
   // Set up method for stack walking
-  initialize_known_method(_do_stack_walk_cache,
-                          SystemDictionary::AbstractStackWalker_klass(),
-                          "doStackWalk",
-                          vmSymbols::doStackWalk_signature(), false, CHECK);
+  initialize_known_method(_do_stack_walk_cache, SystemDictionary::AbstractStackWalker_klass(), "doStackWalk", vmSymbols::doStackWalk_signature(), false, CHECK);
 }
 
 void universe2_init() {
@@ -979,42 +954,33 @@ void Universe::verify(VerifyOption option, const char* prefix) {
   FormatBuffer<> title("Verifying %s", prefix);
   GCTraceTime(Info, gc, verify) tm(title.buffer());
   if (should_verify_subset(Verify_Threads)) {
-    log_debug(gc, verify)("Threads");
     Threads::verify();
   }
   if (should_verify_subset(Verify_Heap)) {
-    log_debug(gc, verify)("Heap");
     heap()->verify(option);
   }
   if (should_verify_subset(Verify_SymbolTable)) {
-    log_debug(gc, verify)("SymbolTable");
     SymbolTable::verify();
   }
   if (should_verify_subset(Verify_StringTable)) {
-    log_debug(gc, verify)("StringTable");
     StringTable::verify();
   }
   if (should_verify_subset(Verify_CodeCache)) {
   {
     MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-    log_debug(gc, verify)("CodeCache");
     CodeCache::verify();
   }
   }
   if (should_verify_subset(Verify_SystemDictionary)) {
-    log_debug(gc, verify)("SystemDictionary");
     SystemDictionary::verify();
   }
   if (should_verify_subset(Verify_MetaspaceUtils)) {
-    log_debug(gc, verify)("MetaspaceUtils");
     MetaspaceUtils::verify_free_chunks();
   }
   if (should_verify_subset(Verify_JNIHandles)) {
-    log_debug(gc, verify)("JNIHandles");
     JNIHandles::verify();
   }
   if (should_verify_subset(Verify_CodeCacheOops)) {
-    log_debug(gc, verify)("CodeCache Oops");
     CodeCache::verify_oops();
   }
 

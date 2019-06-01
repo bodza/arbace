@@ -59,8 +59,7 @@ class LogOutput : public CHeapObj<mtLogging> {
     return _config_string;
   }
 
-  LogOutput() : _reconfigured(false), _config_string(NULL), _config_string_buffer_size(0) {
-  }
+  LogOutput() : _reconfigured(false), _config_string(NULL), _config_string_buffer_size(0) { }
 
   virtual ~LogOutput();
 

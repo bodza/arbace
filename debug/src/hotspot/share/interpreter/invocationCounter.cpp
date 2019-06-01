@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "interpreter/invocationCounter.hpp"
 #include "runtime/frame.hpp"
 #include "runtime/handles.inline.hpp"
@@ -37,10 +38,7 @@ void InvocationCounter::set_state(State state) {
 }
 
 void InvocationCounter::print() {
-  tty->print_cr("invocation count: up = %d, limit = %d, carry = %s, state = %s",
-                                   count(), limit(),
-                                   carry() ? "true" : "false",
-                                   state_as_string(state()));
+  tty->print_cr("invocation count: up = %d, limit = %d, carry = %s, state = %s", count(), limit(), carry() ? "true" : "false", state_as_string(state()));
 }
 
 void InvocationCounter::print_short() {
@@ -122,7 +120,6 @@ void InvocationCounter::reinitialize(bool delay_overflow) {
   } else {
     InterpreterBackwardBranchLimit = ((CompileThreshold * OnStackReplacePercentage) / 100) << number_of_noncount_bits;
   }
-
 }
 
 void invocationCounter_init() {

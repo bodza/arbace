@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "alloca.h"
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
@@ -121,8 +122,6 @@ OopMap* RegisterSaver::save_live_registers(MacroAssembler* masm, int additional_
   int num_xmm_regs = XMMRegisterImpl::number_of_registers;
   if (UseAVX < 3) {
     num_xmm_regs = num_xmm_regs/2;
-  }
-  if (save_vectors) {
   }
 
   // Always make the frame size 16-byte aligned, both vector and non vector stacks are always allocated
@@ -284,9 +283,6 @@ void RegisterSaver::restore_live_registers(MacroAssembler* masm, bool restore_ve
   if (frame::arg_reg_save_area_bytes != 0) {
     // Pop arg register save area
     __ addptr(rsp, frame::arg_reg_save_area_bytes);
-  }
-
-  if (restore_vectors) {
   }
 
   __ vzeroupper();
@@ -779,8 +775,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed,
         // are accessed as negative so LSW is at LOW address
 
         // ld_off is MSW so get LSW
-        const int offset = (sig_bt[i]==T_LONG||sig_bt[i]==T_DOUBLE)?
-                           next_off : ld_off;
+        const int offset = (sig_bt[i] == T_LONG || sig_bt[i] == T_DOUBLE) ? next_off : ld_off;
         __ movq(r13, Address(saved_sp, offset));
         // st_off is LSW (i.e. reg.first())
         __ movq(Address(rsp, st_off), r13);
@@ -793,8 +788,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed,
         // the interpreter allocates two slots but only uses one for thr T_LONG or T_DOUBLE case
         // So we must adjust where to pick up the data to match the interpreter.
 
-        const int offset = (sig_bt[i]==T_LONG||sig_bt[i]==T_DOUBLE)?
-                           next_off : ld_off;
+        const int offset = (sig_bt[i] == T_LONG || sig_bt[i] == T_DOUBLE) ? next_off : ld_off;
 
         // this can be a misaligned move
         __ movq(r, Address(saved_sp, offset));
@@ -831,12 +825,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed,
 }
 
 // ---------------------------------------------------------------
-AdapterHandlerEntry* SharedRuntime::generate_i2c2i_adapters(MacroAssembler *masm,
-                                                            int total_args_passed,
-                                                            int comp_args_on_stack,
-                                                            const BasicType *sig_bt,
-                                                            const VMRegPair *regs,
-                                                            AdapterFingerPrint* fingerprint) {
+AdapterHandlerEntry* SharedRuntime::generate_i2c2i_adapters(MacroAssembler *masm, int total_args_passed, int comp_args_on_stack, const BasicType *sig_bt, const VMRegPair *regs, AdapterFingerPrint* fingerprint) {
   address i2c_entry = __ pc();
 
   gen_i2c_adapter(masm, total_args_passed, comp_args_on_stack, sig_bt, regs);
@@ -1386,7 +1375,7 @@ class ComputeMoveOrder: public StackObj {
     }
 
    public:
-    MoveOperation(int src_index, VMRegPair src, int dst_index, VMRegPair dst):
+    MoveOperation(int src_index, VMRegPair src, int dst_index, VMRegPair dst) :
       _src(src)
     , _src_index(src_index)
     , _dst(dst)
@@ -2059,15 +2048,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     save_args(masm, total_c_args, c_arg, out_regs);
     __ mov_metadata(c_rarg1, method());
     __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_entry), r15_thread, c_rarg1);
-    restore_args(masm, total_c_args, c_arg, out_regs);
-  }
-
-  // RedefineClasses() tracing support for obsolete method entry
-  if (log_is_enabled(Trace, redefine, class, obsolete)) {
-    // protect the args we've loaded
-    save_args(masm, total_c_args, c_arg, out_regs);
-    __ mov_metadata(c_rarg1, method());
-    __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::rc_trace_method_entry), r15_thread, c_rarg1);
     restore_args(masm, total_c_args, c_arg, out_regs);
   }
 

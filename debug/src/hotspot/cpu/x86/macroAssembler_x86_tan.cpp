@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/assembler.hpp"
 #include "asm/assembler.inline.hpp"
 #include "macroAssembler_x86.hpp"
@@ -824,8 +825,7 @@ void MacroAssembler::fast_tan(XMMRegister xmm0, XMMRegister xmm1, XMMRegister xm
   movdqu(xmm1, ExternalAddress(PI32INV));    //0x6dc9c883UL, 0x3fe45f30UL, 0x6dc9c883UL, 0x40245f30UL
   if (VM_Version::supports_sse3()) {
     movddup(xmm0, xmm0);
-  }
-  else {
+  } else {
     movlhps(xmm0, xmm0);
   }
   movdqu(xmm4, ExternalAddress(sign_mask));    //0x00000000UL, 0x80000000UL, 0x00000000UL, 0x80000000UL
@@ -833,8 +833,7 @@ void MacroAssembler::fast_tan(XMMRegister xmm0, XMMRegister xmm1, XMMRegister xm
   mulpd(xmm1, xmm0);
   if (VM_Version::supports_sse3()) {
     movddup(xmm7, xmm7);
-  }
-  else {
+  } else {
     movlhps(xmm7, xmm7);
   }
   movdqu(xmm5, ExternalAddress(ONEHALF));    //0x00000000UL, 0x3fe00000UL, 0x00000000UL, 0x3fe00000UL

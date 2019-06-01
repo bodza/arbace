@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/altHashing.hpp"
 #include "classfile/compactHashtable.inline.hpp"
 #include "classfile/javaClasses.hpp"
@@ -62,9 +63,7 @@ void SymbolTable::symbols_do(SymbolClosure *cl) {
   // all symbols from the dynamic table
   const int n = the_table()->table_size();
   for (int i = 0; i < n; i++) {
-    for (HashtableEntry<Symbol*, mtSymbol>* p = the_table()->bucket(i);
-         p != NULL;
-         p = p->next()) {
+    for (HashtableEntry<Symbol*, mtSymbol>* p = the_table()->bucket(i); p != NULL; p = p->next()) {
       cl->do_symbol(p->literal_addr());
     }
   }
@@ -73,9 +72,7 @@ void SymbolTable::symbols_do(SymbolClosure *cl) {
 void SymbolTable::metaspace_pointers_do(MetaspaceClosure* it) {
   const int n = the_table()->table_size();
   for (int i = 0; i < n; i++) {
-    for (HashtableEntry<Symbol*, mtSymbol>* p = the_table()->bucket(i);
-         p != NULL;
-         p = p->next()) {
+    for (HashtableEntry<Symbol*, mtSymbol>* p = the_table()->bucket(i); p != NULL; p = p->next()) {
       it->push(p->literal_addr());
     }
   }
@@ -175,8 +172,7 @@ void SymbolTable::rehash_table() {
 
 // Lookup a symbol in a bucket.
 
-Symbol* SymbolTable::lookup_dynamic(int index, const char* name,
-                                    int len, unsigned int hash) {
+Symbol* SymbolTable::lookup_dynamic(int index, const char* name, int len, unsigned int hash) {
   int count = 0;
   for (HashtableEntry<Symbol*, mtSymbol>* e = bucket(index); e != NULL; e = e->next()) {
     count++;  // count all entries in this bucket, not just ones with same hash
@@ -196,8 +192,7 @@ Symbol* SymbolTable::lookup_dynamic(int index, const char* name,
   return NULL;
 }
 
-Symbol* SymbolTable::lookup_shared(const char* name,
-                                   int len, unsigned int hash) {
+Symbol* SymbolTable::lookup_shared(const char* name, int len, unsigned int hash) {
   if (use_alternate_hashcode()) {
     // hash_code parameter may use alternate hashing algorithm but the shared table
     // always uses the same original hash code.
@@ -206,8 +201,7 @@ Symbol* SymbolTable::lookup_shared(const char* name,
   return _shared_table.lookup(name, hash, len);
 }
 
-Symbol* SymbolTable::lookup(int index, const char* name,
-                            int len, unsigned int hash) {
+Symbol* SymbolTable::lookup(int index, const char* name, int len, unsigned int hash) {
   Symbol* sym;
   if (_lookup_shared_first) {
     sym = lookup_shared(name, len, hash);
@@ -313,8 +307,7 @@ Symbol* SymbolTable::lookup(const Symbol* sym, int begin, int end, TRAPS) {
   return the_table()->basic_add(index, (u1*)buffer, len, hashValue, true, THREAD);
 }
 
-Symbol* SymbolTable::lookup_only(const char* name, int len,
-                                   unsigned int& hash) {
+Symbol* SymbolTable::lookup_only(const char* name, int len, unsigned int& hash) {
   hash = hash_symbol(name, len);
   int index = the_table()->hash_to_index(hash);
 
@@ -358,8 +351,7 @@ Symbol* SymbolTable::lookup_unicode(const jchar* name, int utf16_length, TRAPS) 
   }
 }
 
-Symbol* SymbolTable::lookup_only_unicode(const jchar* name, int utf16_length,
-                                           unsigned int& hash) {
+Symbol* SymbolTable::lookup_only_unicode(const jchar* name, int utf16_length, unsigned int& hash) {
   int utf8_length = UNICODE::utf8_length((jchar*) name, utf16_length);
   char stack_buf[128];
   if (utf8_length < (int) sizeof(stack_buf)) {
@@ -406,8 +398,7 @@ Symbol* SymbolTable::new_permanent_symbol(const char* name, TRAPS) {
   return table->basic_add(index, (u1*)name, (int)strlen(name), hash, false, THREAD);
 }
 
-Symbol* SymbolTable::basic_add(int index_arg, u1 *name, int len,
-                               unsigned int hashValue_arg, bool c_heap, TRAPS) {
+Symbol* SymbolTable::basic_add(int index_arg, u1 *name, int len, unsigned int hashValue_arg, bool c_heap, TRAPS) {
 
   // Don't allow symbols to be created which cannot fit in a Symbol*.
   if (len > Symbol::max_length()) {
@@ -521,11 +512,9 @@ void SymbolTable::dump(outputStream* st, bool verbose) {
   }
 }
 
-void SymbolTable::write_to_archive() {
-}
+void SymbolTable::write_to_archive() { }
 
-void SymbolTable::serialize(SerializeClosure* soc) {
-}
+void SymbolTable::serialize(SerializeClosure* soc) { }
 
 // Utility for dumping symbols
 SymboltableDCmd::SymboltableDCmd(outputStream* output, bool heap) :

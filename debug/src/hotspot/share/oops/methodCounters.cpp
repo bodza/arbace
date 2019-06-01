@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "memory/metaspaceClosure.hpp"
 #include "oops/methodCounters.hpp"
 #include "runtime/handles.inline.hpp"
@@ -20,19 +21,15 @@ int MethodCounters::highest_comp_level() const {
   return CompLevel_none;
 }
 
-void MethodCounters::set_highest_comp_level(int level) {
-}
+void MethodCounters::set_highest_comp_level(int level) { }
 
 int MethodCounters::highest_osr_comp_level() const {
   return CompLevel_none;
 }
 
-void MethodCounters::set_highest_osr_comp_level(int level) {
-}
+void MethodCounters::set_highest_osr_comp_level(int level) { }
 
-void MethodCounters::metaspace_pointers_do(MetaspaceClosure* it) {
-  log_trace(cds)("Iter(MethodCounters): %p", this);
-}
+void MethodCounters::metaspace_pointers_do(MetaspaceClosure* it) { }
 
 void MethodCounters::print_value_on(outputStream* st) const {
   st->print("method counters");

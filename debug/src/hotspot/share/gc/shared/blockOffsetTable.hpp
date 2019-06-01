@@ -64,7 +64,7 @@ protected:
 public:
   // Initialize the table to cover the given space.
   // The contents of the initial table are undefined.
-  BlockOffsetTable(HeapWord* bottom, HeapWord* end):
+  BlockOffsetTable(HeapWord* bottom, HeapWord* end) :
     _bottom(bottom), _end(end) {
   }
 
@@ -162,8 +162,7 @@ class BlockOffsetSharedArray: public CHeapObj<mtGC> {
     fill_range(left, num_cards, offset);
   }
 
-  void check_offset_array(size_t index, HeapWord* high, HeapWord* low) const {
-  }
+  void check_offset_array(size_t index, HeapWord* high, HeapWord* low) const { }
 
   bool is_card_boundary(HeapWord* p) const;
 
@@ -341,7 +340,7 @@ class BlockOffsetArrayNonContigSpace: public BlockOffsetArray {
   HeapWord* _unallocated_block;
 
  public:
-  BlockOffsetArrayNonContigSpace(BlockOffsetSharedArray* array, MemRegion mr):
+  BlockOffsetArrayNonContigSpace(BlockOffsetSharedArray* array, MemRegion mr) :
     BlockOffsetArray(array, mr, false),
     _unallocated_block(_bottom) { }
 
@@ -442,7 +441,7 @@ class BlockOffsetArrayContigSpace: public BlockOffsetArray {
   void alloc_block_work(HeapWord* blk_start, HeapWord* blk_end);
 
  public:
-  BlockOffsetArrayContigSpace(BlockOffsetSharedArray* array, MemRegion mr):
+  BlockOffsetArrayContigSpace(BlockOffsetSharedArray* array, MemRegion mr) :
     BlockOffsetArray(array, mr, true) {
     _next_offset_threshold = NULL;
     _next_offset_index = 0;

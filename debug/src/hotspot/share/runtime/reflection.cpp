@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/javaClasses.hpp"
 #include "classfile/moduleEntry.hpp"
@@ -24,40 +25,6 @@
 #include "runtime/reflectionUtils.hpp"
 #include "runtime/signature.hpp"
 #include "runtime/vframe.inline.hpp"
-
-static void trace_class_resolution(const Klass* to_class) {
-  ResourceMark rm;
-  int line_number = -1;
-  const char * source_file = NULL;
-  Klass* caller = NULL;
-  JavaThread* jthread = JavaThread::current();
-  if (jthread->has_last_Java_frame()) {
-    vframeStream vfst(jthread);
-    // skip over any frames belonging to java.lang.Class
-    while (!vfst.at_end() && vfst.method()->method_holder()->name() == vmSymbols::java_lang_Class()) {
-      vfst.next();
-    }
-    if (!vfst.at_end()) {
-      // this frame is a likely suspect
-      caller = vfst.method()->method_holder();
-      line_number = vfst.method()->line_number_from_bci(vfst.bci());
-      Symbol* s = vfst.method()->method_holder()->source_file_name();
-      if (s != NULL) {
-        source_file = s->as_C_string();
-      }
-    }
-  }
-  if (caller != NULL) {
-    const char * from = caller->external_name();
-    const char * to = to_class->external_name();
-    // print in a single call to reduce interleaving between threads
-    if (source_file != NULL) {
-      log_debug(class, resolve)("%s %s %s:%d (reflection)", from, to, source_file, line_number);
-    } else {
-      log_debug(class, resolve)("%s %s (reflection)", from, to);
-    }
-  }
-}
 
 oop Reflection::box(jvalue* value, BasicType type, TRAPS) {
   if (type == T_VOID) {
@@ -284,8 +251,7 @@ static Klass* basic_type_mirror_to_arrayklass(oop basic_type_mirror, TRAPS) {
   BasicType type = java_lang_Class::primitive_type(basic_type_mirror);
   if (type == T_VOID) {
     THROW_0(vmSymbols::java_lang_IllegalArgumentException());
-  }
-  else {
+  } else {
     return Universe::typeArrayKlassObj(type);
   }
 }
@@ -679,32 +645,20 @@ void Reflection::check_for_inner_class(const InstanceKlass* outer, const Instanc
 }
 
 // Utility method converting a single SignatureStream element into java.lang.Class instance
-static oop get_mirror_from_signature(const methodHandle& method,
-                                     SignatureStream* ss,
-                                     TRAPS) {
+static oop get_mirror_from_signature(const methodHandle& method, SignatureStream* ss, TRAPS) {
 
   if (T_OBJECT == ss->type() || T_ARRAY == ss->type()) {
     Symbol* name = ss->as_symbol(CHECK_NULL);
     oop loader = method->method_holder()->class_loader();
     oop protection_domain = method->method_holder()->protection_domain();
-    const Klass* k = SystemDictionary::resolve_or_fail(name,
-                                                       Handle(THREAD, loader),
-                                                       Handle(THREAD, protection_domain),
-                                                       true,
-                                                       CHECK_NULL);
-    if (log_is_enabled(Debug, class, resolve)) {
-      trace_class_resolution(k);
-    }
+    const Klass* k = SystemDictionary::resolve_or_fail(name, Handle(THREAD, loader), Handle(THREAD, protection_domain), true, CHECK_NULL);
     return k->java_mirror();
   }
 
   return java_lang_Class::primitive_mirror(ss->type());
 }
 
-static objArrayHandle get_parameter_types(const methodHandle& method,
-                                          int parameter_count,
-                                          oop* return_type,
-                                          TRAPS) {
+static objArrayHandle get_parameter_types(const methodHandle& method, int parameter_count, oop* return_type, TRAPS) {
   // Allocate array holding parameter types (java.lang.Class instances)
   objArrayOop m = oopFactory::new_objArray(SystemDictionary::Class_klass(), parameter_count, CHECK_(objArrayHandle()));
   objArrayHandle mirrors(THREAD, m);
@@ -737,10 +691,6 @@ static Handle new_type(Symbol* signature, Klass* k, TRAPS) {
   }
 
   Klass* result = SystemDictionary::resolve_or_fail(signature, Handle(THREAD, k->class_loader()), Handle(THREAD, k->protection_domain()), true, CHECK_(Handle()));
-
-  if (log_is_enabled(Debug, class, resolve)) {
-    trace_class_resolution(result);
-  }
 
   oop nt = result->java_mirror();
   return Handle(THREAD, nt);

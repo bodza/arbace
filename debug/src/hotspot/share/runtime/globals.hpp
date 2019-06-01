@@ -145,7 +145,7 @@
   notproduct(bool, CheckCompressedOops, true, \
           "Generate checks in encoding/decoding code in debug VM") \
  \
-  product(uintx, HeapSearchSteps, 3 PPC64_ONLY(+17), \
+  product(uintx, HeapSearchSteps, 3, \
           "Heap allocation steps through preferred address regions to find" \
           " where it can allocate the heap. Number of steps to take per " \
           "region.") \
@@ -1065,19 +1065,6 @@
           "null (+offset) will not raise a SIGSEGV, i.e.," \
           "ImplicitNullChecks don't work (PPC64).") \
  \
-  product(bool, PrintSafepointStatistics, false, \
-          "(Deprecated) Print statistics about safepoint synchronization") \
- \
-  product(intx, PrintSafepointStatisticsCount, 300, \
-          "(Deprecated) Total number of safepoint statistics collected " \
-          "before printing them out") \
-          range(1, max_intx) \
- \
-  product(intx, PrintSafepointStatisticsTimeout,  -1, \
-          "(Deprecated) Print safepoint statistics only when safepoint takes " \
-          "more than PrintSafepointSatisticsTimeout in millis") \
-  range(-1, max_intx/MICROUNITS) \
- \
   diagnostic(bool, EnableThreadSMRExtraValidityChecks, true, \
              "Enable Thread SMR extra validity checks") \
  \
@@ -1116,9 +1103,6 @@
  \
   develop(bool, PrintMethodFlushing, false, \
           "Print the nmethods being flushed") \
- \
-  diagnostic(bool, PrintMethodFlushingStatistics, false, \
-          "print statistics about method flushing") \
  \
   diagnostic(intx, HotMethodDetectionLimit, 100000, \
           "Number of compiled code invocations after which " \
@@ -1195,14 +1179,8 @@
   product(bool, UseHeavyMonitors, false, \
           "use heavyweight instead of lightweight Java monitors") \
  \
-  product(bool, PrintStringTableStatistics, false, \
-          "print statistics about the StringTable and SymbolTable") \
- \
   diagnostic(bool, VerifyStringTableAtExit, false, \
           "verify StringTable contents at exit") \
- \
-  notproduct(bool, PrintSymbolTableSizeHistogram, false, \
-          "print histogram of the symbol table") \
  \
   notproduct(bool, ExitVMOnVerifyError, false, \
           "standard exit from VM if bytecode verify error " \
@@ -1215,15 +1193,6 @@
   diagnostic(ccstr, AbortVMOnExceptionMessage, NULL, \
           "Call fatal if the exception pointed by AbortVMOnException " \
           "has this message") \
- \
-  develop(bool, DebugVtables, false, \
-          "add debugging code to vtable dispatch") \
- \
-  notproduct(bool, PrintVtableStats, false, \
-          "print vtables stats at end of run") \
- \
-  develop(bool, TraceCreateZombies, false, \
-          "trace creation of zombie nmethods") \
  \
   notproduct(bool, IgnoreLockingAssertions, false, \
           "disable locking assertions (for speed)") \
@@ -2478,7 +2447,7 @@
           "Extra classlist for building the CDS archive file") \
  \
   experimental(size_t, ArrayAllocatorMallocLimit, \
-          SOLARIS_ONLY(64*K) NOT_SOLARIS((size_t)-1), \
+          (size_t)-1, \
           "Allocation less than this value will be allocated " \
           "using malloc. Larger allocations will use mmap.") \
  \

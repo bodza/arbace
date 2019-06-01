@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/gcId.hpp"
 #include "gc/shared/workgroup.hpp"
 #include "gc/shared/workerManager.hpp"
@@ -14,7 +15,6 @@
 // The current implementation will exit if the allocation
 // of any worker fails.
 void AbstractWorkGang::initialize_workers() {
-  log_develop_trace(gc, workgang)("Constructing work gang %s with %u threads", name(), total_workers());
   _workers = NEW_C_HEAP_ARRAY(AbstractGangWorker*, total_workers(), mtInternal);
   if (_workers == NULL) {
     vm_exit_out_of_memory(0, OOM_MALLOC_ERROR, "Cannot create GangWorker array.");
@@ -262,7 +262,6 @@ void AbstractGangWorker::run() {
 void AbstractGangWorker::initialize() {
   this->initialize_named_thread();
   os::set_priority(this, NearMaxPriority);
-  log_develop_trace(gc, workgang)("Running gang worker for gang %s id %u", gang()->name(), id());
   // The VM thread should not execute here because MutexLocker's are used
   // as (opposed to MutexLockerEx's).
 }
@@ -291,12 +290,8 @@ void GangWorker::signal_task_done() {
 
 void GangWorker::run_task(WorkData data) {
   GCIdMark gc_id_mark(data._task->gc_id());
-  log_develop_trace(gc, workgang)("Running work gang: %s task: %s worker: %u", name(), data._task->name(), data._worker_id);
 
   data._task->work(data._worker_id);
-
-  log_develop_trace(gc, workgang)("Finished work gang: %s task: %s worker: %u thread: " PTR_FORMAT,
-                                  name(), data._task->name(), data._worker_id, p2i(Thread::current()));
 }
 
 void GangWorker::loop() {
@@ -312,14 +307,11 @@ void GangWorker::loop() {
 // *** WorkGangBarrierSync
 
 WorkGangBarrierSync::WorkGangBarrierSync()
-  : _monitor(Mutex::safepoint, "work gang barrier sync", true,
-             Monitor::_safepoint_check_never),
-    _n_workers(0), _n_completed(0), _should_reset(false), _aborted(false) {
+  : _monitor(Mutex::safepoint, "work gang barrier sync", true, Monitor::_safepoint_check_never), _n_workers(0), _n_completed(0), _should_reset(false), _aborted(false) {
 }
 
 WorkGangBarrierSync::WorkGangBarrierSync(uint n_workers, const char* name)
-  : _monitor(Mutex::safepoint, name, true, Monitor::_safepoint_check_never),
-    _n_workers(n_workers), _n_completed(0), _should_reset(false), _aborted(false) {
+  : _monitor(Mutex::safepoint, name, true, Monitor::_safepoint_check_never), _n_workers(n_workers), _n_completed(0), _should_reset(false), _aborted(false) {
 }
 
 void WorkGangBarrierSync::set_n_workers(uint n_workers) {

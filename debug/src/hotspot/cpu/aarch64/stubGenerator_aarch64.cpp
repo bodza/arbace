@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
 #include "gc/shared/barrierSet.hpp"
@@ -1137,8 +1138,7 @@ class StubGenerator: public StubCodeGenerator {
     __ bind(finish);
   }
 
-  void clobber_registers() {
-  }
+  void clobber_registers() { }
 
   // Scan over array at a for count oops, verifying each one.
   // Preserves a and count, clobbers rscratch1 and rscratch2.
@@ -1673,8 +1673,7 @@ class StubGenerator: public StubCodeGenerator {
   // These stubs get called from some dumb test routine.
   // I'll write them properly when they're called from
   // something that's actually doing something.
-  static void fake_arraycopy_stub(address src, address dst, int count) {
-  }
+  static void fake_arraycopy_stub(address src, address dst, int count) { }
 
   //
   //  Generate 'unsafe' array copy stub

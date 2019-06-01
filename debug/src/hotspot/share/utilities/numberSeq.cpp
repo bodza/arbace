@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "memory/allocation.inline.hpp"
 #include "utilities/debug.hpp"
 #include "utilities/globalDefinitions.hpp"
@@ -105,7 +106,7 @@ void NumberSeq::add(double val) {
   ++_num;
 }
 
-TruncatedSeq::TruncatedSeq(int length, double alpha):
+TruncatedSeq::TruncatedSeq(int length, double alpha) :
   AbsSeq(alpha), _length(length), _next(0) {
   _sequence = NEW_C_HEAP_ARRAY(double, _length, mtInternal);
   for (int i = 0; i < _length; ++i)
@@ -210,10 +211,8 @@ double TruncatedSeq::predict_next() const {
 void AbsSeq::dump() { dump_on(tty); }
 
 void AbsSeq::dump_on(outputStream* s) {
-  s->print_cr("\t _num = %d, _sum = %7.3f, _sum_of_squares = %7.3f",
-                  _num,      _sum,         _sum_of_squares);
-  s->print_cr("\t _davg = %7.3f, _dvariance = %7.3f, _alpha = %7.3f",
-                  _davg,         _dvariance,         _alpha);
+  s->print_cr("\t _num = %d, _sum = %7.3f, _sum_of_squares = %7.3f", _num,      _sum,         _sum_of_squares);
+  s->print_cr("\t _davg = %7.3f, _dvariance = %7.3f, _alpha = %7.3f", _davg,         _dvariance,         _alpha);
 }
 
 void NumberSeq::dump_on(outputStream* s) {

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_IR.hpp"
 #include "c1/c1_Instruction.hpp"
 #include "c1/c1_InstructionPrinter.hpp"
@@ -234,8 +235,7 @@ void BlockBegin::state_values_do(ValueVisitor* f) {
 
 // Implementation of Invoke
 
-Invoke::Invoke(Bytecodes::Code code, ValueType* result_type, Value recv, Values* args,
-               int vtable_index, ciMethod* target, ValueStack* state_before)
+Invoke::Invoke(Bytecodes::Code code, ValueType* result_type, Value recv, Values* args, int vtable_index, ciMethod* target, ValueStack* state_before)
   : StateSplit(result_type, state_before)
   , _code(code)
   , _recv(recv)
@@ -802,8 +802,7 @@ int Phi::operand_count() const {
   }
 }
 
-void RangeCheckPredicate::check_state() {
-}
+void RangeCheckPredicate::check_state() { }
 
 void ProfileInvoke::state_values_do(ValueVisitor* f) {
   if (state() != NULL) state()->values_do(f);

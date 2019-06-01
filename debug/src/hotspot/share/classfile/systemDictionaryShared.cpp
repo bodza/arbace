@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/classFileStream.hpp"
 #include "classfile/classListParser.hpp"
 #include "classfile/classLoader.hpp"
@@ -157,8 +158,7 @@ void SystemDictionaryShared::define_shared_package(Symbol* class_name, Handle cl
 }
 
 // Get the ProtectionDomain associated with the CodeSource from the classloader.
-Handle SystemDictionaryShared::get_protection_domain_from_classloader(Handle class_loader,
-                                                                      Handle url, TRAPS) {
+Handle SystemDictionaryShared::get_protection_domain_from_classloader(Handle class_loader, Handle url, TRAPS) {
   // CodeSource cs = new CodeSource(url, null);
   Handle cs = JavaCalls::construct_new_instance(SystemDictionary::CodeSource_klass(),
                   vmSymbols::url_code_signer_array_void_signature(),
@@ -175,10 +175,7 @@ Handle SystemDictionaryShared::get_protection_domain_from_classloader(Handle cla
 }
 
 // Returns the ProtectionDomain associated with the JAR file identified by the url.
-Handle SystemDictionaryShared::get_shared_protection_domain(Handle class_loader,
-                                                            int shared_path_index,
-                                                            Handle url,
-                                                            TRAPS) {
+Handle SystemDictionaryShared::get_shared_protection_domain(Handle class_loader, int shared_path_index, Handle url, TRAPS) {
   Handle protection_domain;
   if (shared_protection_domain(shared_path_index) == NULL) {
     Handle pd = get_protection_domain_from_classloader(class_loader, url, THREAD);
@@ -193,8 +190,7 @@ Handle SystemDictionaryShared::get_shared_protection_domain(Handle class_loader,
 }
 
 // Returns the ProtectionDomain associated with the moduleEntry.
-Handle SystemDictionaryShared::get_shared_protection_domain(Handle class_loader,
-                                                            ModuleEntry* mod, TRAPS) {
+Handle SystemDictionaryShared::get_shared_protection_domain(Handle class_loader, ModuleEntry* mod, TRAPS) {
   ClassLoaderData *loader_data = mod->loader_data();
   if (mod->shared_protection_domain() == NULL) {
     Symbol* location = mod->location();
@@ -364,7 +360,6 @@ bool SystemDictionaryShared::is_shared_class_visible_for_classloader(InstanceKla
               (strcmp(ent->name(), ClassLoader::skip_uri_protocol(mod_entry->location()->as_C_string())) == 0)) {
             // shared module class from module path
             return true;
-          } else {
           }
         }
       }
@@ -501,11 +496,7 @@ void SystemDictionaryShared::allocate_shared_data_arrays(int size, TRAPS) {
 }
 
 // This function is called for loading only UNREGISTERED classes
-InstanceKlass* SystemDictionaryShared::lookup_from_stream(const Symbol* class_name,
-                                                          Handle class_loader,
-                                                          Handle protection_domain,
-                                                          const ClassFileStream* cfs,
-                                                          TRAPS) {
+InstanceKlass* SystemDictionaryShared::lookup_from_stream(const Symbol* class_name, Handle class_loader, Handle protection_domain, const ClassFileStream* cfs, TRAPS) {
   if (shared_dictionary() == NULL) {
     return NULL;
   }
@@ -699,9 +690,7 @@ SharedDictionaryEntry* SharedDictionary::find_entry_for(Klass* klass) {
   unsigned int hash = compute_hash(class_name);
   int index = hash_to_index(hash);
 
-  for (SharedDictionaryEntry* entry = bucket(index);
-                              entry != NULL;
-                              entry = entry->next()) {
+  for (SharedDictionaryEntry* entry = bucket(index); entry != NULL; entry = entry->next()) {
     if (entry->hash() == hash && entry->literal() == klass) {
       return entry;
     }
@@ -713,22 +702,13 @@ SharedDictionaryEntry* SharedDictionary::find_entry_for(Klass* klass) {
 void SharedDictionary::finalize_verification_constraints() {
   int bytes = 0, count = 0;
   for (int index = 0; index < table_size(); index++) {
-    for (SharedDictionaryEntry *probe = bucket(index);
-                                probe != NULL;
-                               probe = probe->next()) {
+    for (SharedDictionaryEntry *probe = bucket(index); probe != NULL; probe = probe->next()) {
       int n = probe->finalize_verification_constraints();
       if (n > 0) {
         bytes += n;
         count ++;
       }
     }
-  }
-  if (log_is_enabled(Info, cds, verification)) {
-    double avg = 0;
-    if (count > 0) {
-      avg = double(bytes) / double(count);
-    }
-    log_info(cds, verification)("Recorded verification constraints for %d classes = %d bytes (avg = %.2f bytes) ", count, bytes, avg);
   }
 }
 
@@ -754,13 +734,6 @@ void SharedDictionaryEntry::add_verification_constraint(Symbol* name, Symbol* fr
   c |= from_is_array           ? FROM_IS_ARRAY           : 0;
   c |= from_is_object          ? FROM_IS_OBJECT          : 0;
   vcflags_array->append(c);
-
-  if (log_is_enabled(Trace, cds, verification)) {
-    ResourceMark rm;
-    log_trace(cds, verification)("add_verification_constraint: %s: %s must be subclass of %s",
-                                 instance_klass()->external_name(), from_name->as_klass_external_name(),
-                                 name->as_klass_external_name());
-  }
 }
 
 int SharedDictionaryEntry::finalize_verification_constraints() {
@@ -770,14 +743,7 @@ int SharedDictionaryEntry::finalize_verification_constraints() {
   GrowableArray<char>* vcflags_array = (GrowableArray<char>*)_verifier_constraint_flags;
 
   if (vc_array != NULL) {
-    if (log_is_enabled(Trace, cds, verification)) {
-      ResourceMark rm;
-      log_trace(cds, verification)("finalize_verification_constraint: %s",
-                                   literal()->external_name());
-    }
-
-    // Copy the constraints from C_HEAP-alloced GrowableArrays to Metaspace-alloced
-    // Arrays
+    // Copy the constraints from C_HEAP-alloced GrowableArrays to Metaspace-alloced Arrays
     int size = 0;
     {
       // FIXME: change this to be done after relocation, so we can use symbol offset??
@@ -830,8 +796,7 @@ void SharedDictionaryEntry::check_verification_constraints(InstanceKlass* klass,
         ss.print_cr("Bad type on operand stack");
         ss.print_cr("Exception Details:");
         ss.print_cr("  Location:\n    %s", klass->name()->as_C_string());
-        ss.print_cr("  Reason:\n    Type '%s' is not assignable to '%s'",
-                    from_name->as_quoted_ascii(), name->as_quoted_ascii());
+        ss.print_cr("  Reason:\n    Type '%s' is not assignable to '%s'", from_name->as_quoted_ascii(), name->as_quoted_ascii());
         THROW_MSG(vmSymbols::java_lang_VerifyError(), ss.as_string());
       }
     }
@@ -852,9 +817,7 @@ bool SharedDictionary::add_non_builtin_klass(const Symbol* class_name, ClassLoad
   unsigned int hash = compute_hash(class_name);
   int index = hash_to_index(hash);
 
-  for (SharedDictionaryEntry* entry = bucket(index);
-                              entry != NULL;
-                              entry = entry->next()) {
+  for (SharedDictionaryEntry* entry = bucket(index); entry != NULL; entry = entry->next()) {
     if (entry->hash() == hash) {
       Klass* klass = (Klass*)entry->literal();
       if (klass->name() == class_name && klass->class_loader_data() == loader_data) {
@@ -879,13 +842,9 @@ Klass* SharedDictionary::find_class_for_builtin_loader(const Symbol* name) const
   return entry != NULL ? entry->instance_klass() : (Klass*)NULL;
 }
 
-Klass* SharedDictionary::find_class_for_unregistered_loader(const Symbol* name,
-                                                            int clsfile_size,
-                                                            int clsfile_crc32) const {
+Klass* SharedDictionary::find_class_for_unregistered_loader(const Symbol* name, int clsfile_size, int clsfile_crc32) const {
 
-  const SharedDictionaryEntry* entry = get_entry_for_unregistered_loader(name,
-                                                                         clsfile_size,
-                                                                         clsfile_crc32);
+  const SharedDictionaryEntry* entry = get_entry_for_unregistered_loader(name, clsfile_size, clsfile_crc32);
   return entry != NULL ? entry->instance_klass() : (Klass*)NULL;
 }
 
@@ -894,9 +853,7 @@ void SharedDictionary::update_entry(Klass* klass, int id) {
   unsigned int hash = compute_hash(class_name);
   int index = hash_to_index(hash);
 
-  for (SharedDictionaryEntry* entry = bucket(index);
-                              entry != NULL;
-                              entry = entry->next()) {
+  for (SharedDictionaryEntry* entry = bucket(index); entry != NULL; entry = entry->next()) {
     if (entry->hash() == hash && entry->literal() == klass) {
       entry->_id = id;
       return;
@@ -910,9 +867,7 @@ SharedDictionaryEntry* SharedDictionary::get_entry_for_builtin_loader(const Symb
   unsigned int hash = compute_hash(class_name);
   const int index = hash_to_index(hash);
 
-  for (SharedDictionaryEntry* entry = bucket(index);
-                              entry != NULL;
-                              entry = entry->next()) {
+  for (SharedDictionaryEntry* entry = bucket(index); entry != NULL; entry = entry->next()) {
     if (entry->hash() == hash && entry->equals(class_name)) {
       if (entry->is_builtin()) {
         return entry;
@@ -922,15 +877,11 @@ SharedDictionaryEntry* SharedDictionary::get_entry_for_builtin_loader(const Symb
   return NULL;
 }
 
-SharedDictionaryEntry* SharedDictionary::get_entry_for_unregistered_loader(const Symbol* class_name,
-                                                                           int clsfile_size,
-                                                                           int clsfile_crc32) const {
+SharedDictionaryEntry* SharedDictionary::get_entry_for_unregistered_loader(const Symbol* class_name, int clsfile_size, int clsfile_crc32) const {
   unsigned int hash = compute_hash(class_name);
   int index = hash_to_index(hash);
 
-  for (SharedDictionaryEntry* entry = bucket(index);
-                              entry != NULL;
-                              entry = entry->next()) {
+  for (SharedDictionaryEntry* entry = bucket(index); entry != NULL; entry = entry->next()) {
     if (entry->hash() == hash && entry->equals(class_name)) {
       if (entry->is_unregistered()) {
         if (clsfile_size == -1) {

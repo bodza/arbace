@@ -23,6 +23,7 @@
 // the singleton class the_null_class_loader_data().
 
 #include "precompiled.hpp"
+
 #include "classfile/classLoaderData.hpp"
 #include "classfile/classLoaderData.inline.hpp"
 #include "classfile/dictionary.hpp"
@@ -311,9 +312,7 @@ void ClassLoaderData::modules_do(void f(ModuleEntry*)) {
   }
   if (_modules != NULL) {
     for (int i = 0; i < _modules->table_size(); i++) {
-      for (ModuleEntry* entry = _modules->bucket(i);
-           entry != NULL;
-           entry = entry->next()) {
+      for (ModuleEntry* entry = _modules->bucket(i); entry != NULL; entry = entry->next()) {
         f(entry);
       }
     }
@@ -323,9 +322,7 @@ void ClassLoaderData::modules_do(void f(ModuleEntry*)) {
 void ClassLoaderData::packages_do(void f(PackageEntry*)) {
   if (_packages != NULL) {
     for (int i = 0; i < _packages->table_size(); i++) {
-      for (PackageEntry* entry = _packages->bucket(i);
-           entry != NULL;
-           entry = entry->next()) {
+      for (PackageEntry* entry = _packages->bucket(i); entry != NULL; entry = entry->next()) {
         f(entry);
       }
     }
@@ -1266,8 +1263,6 @@ bool ClassLoaderDataGraph::do_unloading(bool clean_previous_versions) {
       data = data->next();
     }
   }
-
-  log_debug(class, loader, data)("do_unloading: loaders processed %u, loaders removed %u", loaders_processed, loaders_removed);
 
   return seen_dead_loader;
 }

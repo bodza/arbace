@@ -15,8 +15,7 @@ class ciInstance : public ciObject {
   friend class ciField;
 
 protected:
-  ciInstance(instanceHandle h_i) : ciObject(h_i) {
-  }
+  ciInstance(instanceHandle h_i) : ciObject(h_i) { }
 
   ciInstance(ciKlass* klass) : ciObject(klass) { }
 

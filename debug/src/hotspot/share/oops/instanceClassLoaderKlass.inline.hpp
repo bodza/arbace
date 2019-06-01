@@ -26,7 +26,6 @@ inline void InstanceClassLoaderKlass::oop_oop_iterate(oop obj, OopClosureType* c
 template <typename T, class OopClosureType>
 inline void InstanceClassLoaderKlass::oop_oop_iterate_reverse(oop obj, OopClosureType* closure) {
   InstanceKlass::oop_oop_iterate_reverse<T>(obj, closure);
-
 }
 
 template <typename T, class OopClosureType>

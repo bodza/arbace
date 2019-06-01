@@ -186,8 +186,7 @@ protected:
     BasicHashtableEntry<F>* _removed_head;
     BasicHashtableEntry<F>* _removed_tail;
 
-    BucketUnlinkContext() : _num_processed(0), _num_removed(0), _removed_head(NULL), _removed_tail(NULL) {
-    }
+    BucketUnlinkContext() : _num_processed(0), _num_removed(0), _removed_head(NULL), _removed_tail(NULL) { }
 
     void free_entry(BasicHashtableEntry<F>* entry);
   };

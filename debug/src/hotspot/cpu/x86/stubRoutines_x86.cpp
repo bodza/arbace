@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "runtime/deoptimization.hpp"
 #include "runtime/frame.inline.hpp"
 #include "runtime/stubRoutines.hpp"
@@ -170,8 +171,7 @@ uint32_t crc32c_multiply(uint32_t a, uint32_t b) {
       // If degree of (b_pow_x_table[k] * x) is D, then
       // degree of (b_pow_x_table[k] * x - P) is less than D.
       b_pow_x_table[k + 1] = (b_pow_x_table[k] >> 1) ^ P;
-    }
-    else {
+    } else {
       b_pow_x_table[k + 1] = b_pow_x_table[k] >> 1;
     }
   }

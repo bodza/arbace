@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/oopStorage.inline.hpp"
 #include "gc/shared/oopStorageParState.inline.hpp"
 #include "logging/log.hpp"
@@ -23,13 +24,11 @@
 
 OopStorage::AllocateEntry::AllocateEntry() : _prev(NULL), _next(NULL) { }
 
-OopStorage::AllocateEntry::~AllocateEntry() {
-}
+OopStorage::AllocateEntry::~AllocateEntry() { }
 
 OopStorage::AllocateList::AllocateList() : _head(NULL), _tail(NULL) { }
 
-OopStorage::AllocateList::~AllocateList() {
-}
+OopStorage::AllocateList::~AllocateList() { }
 
 void OopStorage::AllocateList::push_front(const Block& block) {
   const Block* old = _head;
@@ -79,8 +78,7 @@ OopStorage::ActiveArray::ActiveArray(size_t size) :
   _refcount(0)
 { }
 
-OopStorage::ActiveArray::~ActiveArray() {
-}
+OopStorage::ActiveArray::~ActiveArray() { }
 
 OopStorage::ActiveArray* OopStorage::ActiveArray::create(size_t size, AllocFailType alloc_fail) {
   size_t size_in_bytes = blocks_offset() + sizeof(Block*) * size;
@@ -375,20 +373,15 @@ oop* OopStorage::allocate() {
           // Failed to make new block, no other thread made a block
           // available while the mutex was released, and didn't get
           // one from a deferred update either, so return failure.
-          log_info(oopstorage, ref)("%s: failed block allocation", name());
           return NULL;
         }
       }
     } else {
-      // Add new block to storage.
-      log_info(oopstorage, blocks)("%s: new block " PTR_FORMAT, name(), p2i(block));
-
       // Add new block to the _active_array, growing if needed.
       if (!_active_array->push(block)) {
         if (expand_active_array()) {
           guarantee(_active_array->push(block), "push failed after expansion");
         } else {
-          log_info(oopstorage, blocks)("%s: failed active array expand", name());
           Block::delete_block(*block);
           return NULL;
         }
@@ -403,18 +396,14 @@ oop* OopStorage::allocate() {
   }
   // Allocate from first block.
   if (block->is_empty()) {
-    // Transitioning from empty to not empty.
-    log_debug(oopstorage, blocks)("%s: block not empty " PTR_FORMAT, name(), p2i(block));
   }
   oop* result = block->allocate();
   Atomic::inc(&_allocation_count); // release updates outside lock.
   if (block->is_full()) {
     // Transitioning from not full to full.
     // Remove full blocks from consideration by future allocates.
-    log_debug(oopstorage, blocks)("%s: block full " PTR_FORMAT, name(), p2i(block));
     _allocate_list.unlink(*block);
   }
-  log_info(oopstorage, ref)("%s: allocated " PTR_FORMAT, name(), p2i(result));
   return result;
 }
 
@@ -425,7 +414,6 @@ oop* OopStorage::allocate() {
 bool OopStorage::expand_active_array() {
   ActiveArray* old_array = _active_array;
   size_t new_size = 2 * old_array->size();
-  log_info(oopstorage, blocks)("%s: expand active array " SIZE_FORMAT, name(), new_size);
   ActiveArray* new_array = ActiveArray::create(new_size, AllocFailStrategy::RETURN_NULL);
   if (new_array == NULL) return false;
   new_array->copy_from(old_array);
@@ -570,10 +558,6 @@ void OopStorage::Block::release_entries(uintx releasing, Block* volatile* deferr
   // block and _allocate_list.  This deferral avoids list updates and the
   // associated locking here.
   if ((releasing == old_allocated) || is_full_bitmask(old_allocated)) {
-    // Log transitions.  Both transitions are possible in a single update.
-    if (log_is_enabled(Debug, oopstorage, blocks)) {
-      log_release_transitions(releasing, old_allocated, _owner, this);
-    }
     // Attempt to claim responsibility for adding this block to the deferred
     // list, by setting the link to non-NULL by self-looping.  If this fails,
     // then someone else has made such a claim and the deferred update has not
@@ -588,8 +572,6 @@ void OopStorage::Block::release_entries(uintx releasing, Block* volatile* deferr
         if (fetched == head) break; // Successful update.
         head = fetched;             // Retry with updated head.
       }
-      log_debug(oopstorage, blocks)("%s: deferred update " PTR_FORMAT,
-                                    _owner->name(), p2i(this));
     }
   }
   // Release hold on empty block deletion.
@@ -634,18 +616,14 @@ bool OopStorage::reduce_deferred_updates() {
     _allocate_list.push_back(*block);
   }
 
-  log_debug(oopstorage, blocks)("%s: processed deferred update " PTR_FORMAT,
-                                name(), p2i(block));
   return true;              // Processed one pending update.
 }
 
-inline void check_release_entry(const oop* entry) {
-}
+inline void check_release_entry(const oop* entry) { }
 
 void OopStorage::release(const oop* ptr) {
   check_release_entry(ptr);
   Block* block = find_block_or_null(ptr);
-  log_info(oopstorage, ref)("%s: released " PTR_FORMAT, name(), p2i(ptr));
   block->release_entries(block->bitmask_for_entry(ptr), &_deferred_updates);
   Atomic::dec(&_allocation_count);
 }
@@ -655,7 +633,6 @@ void OopStorage::release(const oop* const* ptrs, size_t size) {
   while (i < size) {
     check_release_entry(ptrs[i]);
     Block* block = find_block_or_null(ptrs[i]);
-    log_info(oopstorage, ref)("%s: released " PTR_FORMAT, name(), p2i(ptrs[i]));
     size_t count = 0;
     uintx releasing = 0;
     for ( ; i < size; ++i) {
@@ -664,7 +641,6 @@ void OopStorage::release(const oop* const* ptrs, size_t size) {
       // If entry not in block, finish block and resume outer loop with entry.
       if (!block->contains(entry)) break;
       // Add entry to releasing bitmap.
-      log_info(oopstorage, ref)("%s: released " PTR_FORMAT, name(), p2i(entry));
       uintx entry_bitmask = block->bitmask_for_entry(entry);
       releasing |= entry_bitmask;
       ++count;
@@ -683,9 +659,7 @@ const char* dup_name(const char* name) {
 
 const size_t initial_active_array_size = 8;
 
-OopStorage::OopStorage(const char* name,
-                       Mutex* allocate_mutex,
-                       Mutex* active_mutex) :
+OopStorage::OopStorage(const char* name, Mutex* allocate_mutex, Mutex* active_mutex) :
   _name(dup_name(name)),
   _active_array(ActiveArray::create(initial_active_array_size)),
   _allocate_list(),
@@ -699,7 +673,6 @@ OopStorage::OopStorage(const char* name,
 }
 
 void OopStorage::delete_empty_block(const Block& block) {
-  log_info(oopstorage, blocks)("%s: delete empty block " PTR_FORMAT, name(), p2i(&block));
   Block::delete_block(block);
 }
 
@@ -728,9 +701,7 @@ void OopStorage::delete_empty_blocks_safepoint() {
   // Don't interfere with a concurrent iteration.
   if (_concurrent_iteration_active) return;
   // Delete empty (and otherwise deletable) blocks from end of _allocate_list.
-  for (Block* block = _allocate_list.tail();
-       (block != NULL) && block->is_deletable();
-       block = _allocate_list.tail()) {
+  for (Block* block = _allocate_list.tail(); (block != NULL) && block->is_deletable(); block = _allocate_list.tail()) {
     _active_array->remove(block);
     _allocate_list.unlink(*block);
     delete_empty_block(*block);
@@ -883,11 +854,6 @@ bool OopStorage::BasicParState::claim_next_segment(IterationData* data) {
 }
 
 bool OopStorage::BasicParState::finish_iteration(const IterationData* data) const {
-  log_debug(oopstorage, blocks, stats)
-           ("Parallel iteration on %s: blocks = " SIZE_FORMAT
-            ", processed = " SIZE_FORMAT " (%2.f%%)",
-            _storage->name(), _block_count, data->_processed,
-            percent_of(data->_processed, _block_count));
   return false;
 }
 

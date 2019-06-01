@@ -57,8 +57,7 @@ protected:
     return length;
   }
 
-  explicit Array(int length) : _length(length) {
-  }
+  explicit Array(int length) : _length(length) { }
 
   Array(int length, T init) : _length(length) {
     for (int i = 0; i < length; i++) {
@@ -83,12 +82,9 @@ protected:
   // sort the array.
   bool contains(const T& x) const      { return index_of(x) >= 0; }
 
-  T    at(int i) const                 {
-    return _data[i]; }
-  void at_put(const int i, const T& x) {
-    _data[i] = x; }
-  T*   adr_at(const int i)             {
-    return &_data[i]; }
+  T    at(int i) const                 { return _data[i]; }
+  void at_put(const int i, const T& x) { _data[i] = x; }
+  T*   adr_at(const int i)             { return &_data[i]; }
   int  find(const T& x)                { return index_of(x); }
 
   T at_acquire(const int which);

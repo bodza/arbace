@@ -322,7 +322,6 @@ public:
   virtual void print_on(outputStream* st) const;
   virtual void print_gc_threads_on(outputStream* st) const;
   virtual void gc_threads_do(ThreadClosure* tc) const;
-  virtual void print_tracing_info() const;
 
   void print_heap_change(size_t young_prev_used, size_t old_prev_used) const;
 

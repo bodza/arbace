@@ -87,7 +87,6 @@ protected:
   bool                _caller_must_gc_arguments;
   CodeStrings         _strings;
   const char*         _name;
-  S390_ONLY(int       _ctable_offset;)
 
   CodeBlob(const char* name, CompilerType type, const CodeBlobLayout& layout, int frame_complete_offset, int frame_size, ImmutableOopMapSet* oop_maps, bool caller_must_gc_arguments);
   CodeBlob(const char* name, CompilerType type, const CodeBlobLayout& layout, CodeBuffer* cb, int frame_complete_offset, int frame_size, OopMapSet* oop_maps, bool caller_must_gc_arguments);
@@ -120,11 +119,9 @@ public:
 
   // Casting
   nmethod* as_nmethod_or_null()                { return is_nmethod() ? (nmethod*) this : NULL; }
-  nmethod* as_nmethod()                        {
-    return (nmethod*) this; }
+  nmethod* as_nmethod()                        { return (nmethod*) this; }
   CompiledMethod* as_compiled_method_or_null() { return is_compiled() ? (CompiledMethod*) this : NULL; }
-  CompiledMethod* as_compiled_method()         {
-    return (CompiledMethod*) this; }
+  CompiledMethod* as_compiled_method()         { return (CompiledMethod*) this; }
   CodeBlob* as_codeblob_or_null() const        { return (CodeBlob*) this; }
 
   // Boundaries
@@ -140,8 +137,7 @@ public:
   // This field holds the beginning of the const section in the old code buffer.
   // It is needed to fix relocations of pc-relative loads when resizing the
   // the constant pool or moving it.
-  S390_ONLY(address ctable_begin() const { return header_begin() + _ctable_offset; })
-  void set_ctable_begin(address ctable) { S390_ONLY(_ctable_offset = ctable - header_begin();) }
+  void set_ctable_begin(address ctable) { }
 
   // Sizes
   int size() const                               { return _size; }
@@ -262,7 +258,6 @@ public:
     _code_offset(_content_offset),
     _data_offset(data_offset)
   {
-
     _code_begin = (address) start + _code_offset;
     _code_end = (address) start + _data_offset;
 
@@ -282,7 +277,6 @@ public:
     _code_offset(_content_offset + cb->total_offset_of(cb->insts())),
     _data_offset(_content_offset + align_up(cb->total_content_size(), oopSize))
   {
-
     _code_begin = (address) start + _code_offset;
     _code_end = (address) start + _data_offset;
 
@@ -592,20 +586,11 @@ class SafepointBlob: public SingletonBlob {
   friend class VMStructs;
  private:
   // Creation support
-  SafepointBlob(
-    CodeBuffer* cb,
-    int         size,
-    OopMapSet*  oop_maps,
-    int         frame_size
-  );
+  SafepointBlob(CodeBuffer* cb, int         size, OopMapSet*  oop_maps, int         frame_size);
 
  public:
   // Creation
-  static SafepointBlob* create(
-    CodeBuffer* cb,
-    OopMapSet*  oop_maps,
-    int         frame_size
-  );
+  static SafepointBlob* create(CodeBuffer* cb, OopMapSet*  oop_maps, int         frame_size);
 
   // GC for args
   void preserve_callee_argument_oops(frame fr, const RegisterMap* reg_map, OopClosure* f)  { /* nothing to do */ }

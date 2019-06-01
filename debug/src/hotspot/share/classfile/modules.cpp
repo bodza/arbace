@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/classFileParser.hpp"
 #include "classfile/classLoader.hpp"
@@ -46,9 +47,7 @@ static char* get_module_name(oop module, TRAPS) {
   }
   char* module_name = java_lang_String::as_utf8_string(name_oop);
   if (!verify_module_name(module_name)) {
-    THROW_MSG_NULL(vmSymbols::java_lang_IllegalArgumentException(),
-                   err_msg("Invalid module name: %s",
-                           module_name != NULL ? module_name : "NULL"));
+    THROW_MSG_NULL(vmSymbols::java_lang_IllegalArgumentException(), err_msg("Invalid module name: %s", module_name != NULL ? module_name : "NULL"));
   }
   return module_name;
 }
@@ -195,22 +194,6 @@ static void define_javabase_module(jobject module, jstring version,
 
   // Patch any previously loaded class's module field with java.base's java.lang.Module.
   ModuleEntryTable::patch_javabase_entries(module_handle);
-
-  log_info(module, load)(JAVA_BASE_NAME " location: %s",
-                         module_location != NULL ? module_location : "NULL");
-  log_debug(module)("define_javabase_module(): Definition of module: "
-                    JAVA_BASE_NAME ", version: %s, location: %s, package #: %d",
-                    module_version != NULL ? module_version : "NULL",
-                    module_location != NULL ? module_location : "NULL",
-                    pkg_list->length());
-
-  // packages defined to java.base
-  if (log_is_enabled(Trace, module)) {
-    for (int x = 0; x < pkg_list->length(); x++) {
-      log_trace(module)("define_javabase_module(): creation of package %s for module " JAVA_BASE_NAME,
-                        (pkg_list->at(x))->as_C_string());
-    }
-  }
 }
 
 // Caller needs ResourceMark.
@@ -218,12 +201,10 @@ void throw_dup_pkg_exception(const char* module_name, PackageEntry* package, TRA
   const char* package_name = package->name()->as_C_string();
   if (package->module()->is_named()) {
     THROW_MSG(vmSymbols::java_lang_IllegalStateException(),
-      err_msg("Package %s for module %s is already in another module, %s, defined to the class loader",
-              package_name, module_name, package->module()->name()->as_C_string()));
+      err_msg("Package %s for module %s is already in another module, %s, defined to the class loader", package_name, module_name, package->module()->name()->as_C_string()));
   } else {
     THROW_MSG(vmSymbols::java_lang_IllegalStateException(),
-      err_msg("Package %s for module %s is already in the unnamed module defined to the class loader",
-              package_name, module_name));
+      err_msg("Package %s for module %s is already in the unnamed module defined to the class loader", package_name, module_name));
   }
 }
 
@@ -276,9 +257,7 @@ void Modules::define_module(jobject module, jboolean is_open, jstring version, j
   for (int x = 0; x < num_packages; x++) {
     const char* package_name = packages[x];
     if (!verify_package_name(package_name)) {
-      THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-                err_msg("Invalid package name: %s for module: %s",
-                        package_name, module_name));
+      THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), err_msg("Invalid package name: %s for module: %s", package_name, module_name));
     }
 
     // Only modules defined to either the boot or platform class loader, can define a "java/" package.
@@ -385,8 +364,6 @@ void Modules::define_module(jobject module, jboolean is_open, jstring version, j
       throw_dup_pkg_exception(module_name, existing_pkg, CHECK);
   }
 
-  log_info(module, load)("%s location: %s", module_name,
-                         module_location != NULL ? module_location : "NULL");
   LogTarget(Debug, module) lt;
   if (lt.is_enabled()) {
     LogStream ls(lt);
@@ -395,10 +372,6 @@ void Modules::define_module(jobject module, jboolean is_open, jstring version, j
                  module_location != NULL ? module_location : "NULL");
     loader_data->print_value_on(&ls);
     ls.print_cr(", package #: %d", pkg_list->length());
-    for (int y = 0; y < pkg_list->length(); y++) {
-      log_trace(module)("define_module(): creation of package %s for module %s",
-                        (pkg_list->at(y))->as_C_string(), module_name);
-    }
   }
 
   // If the module is defined to the boot loader and an exploded build is being
@@ -431,8 +404,6 @@ void Modules::set_bootloader_unnamed_module(jobject module, TRAPS) {
     THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Class loader must be the boot class loader");
   }
   Handle h_loader(THREAD, loader);
-
-  log_debug(module)("set_bootloader_unnamed_module(): recording unnamed module for boot loader");
 
   // Set java.lang.Module for the boot loader's unnamed module
   ClassLoaderData* boot_loader_data = ClassLoaderData::the_null_class_loader_data();
@@ -470,10 +441,7 @@ void Modules::add_module_exports(jobject from_module, const char* package_name, 
   PackageEntry *package_entry = get_package_entry(from_module_entry, package_name, CHECK);
   ResourceMark rm(THREAD);
   if (package_entry == NULL) {
-    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-              err_msg("Package %s not found in from_module %s",
-                      package_name != NULL ? package_name : "",
-                      from_module_entry->name()->as_C_string()));
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), err_msg("Package %s not found in from_module %s", package_name != NULL ? package_name : "", from_module_entry->name()->as_C_string()));
   }
   if (package_entry->module() != from_module_entry) {
     THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
@@ -482,13 +450,6 @@ void Modules::add_module_exports(jobject from_module, const char* package_name, 
                       package_entry->module()->name()->as_C_string(),
                       from_module_entry->name()->as_C_string()));
   }
-
-  log_debug(module)("add_module_exports(): package %s in module %s is exported to module %s",
-                    package_entry->name()->as_C_string(),
-                    from_module_entry->name()->as_C_string(),
-                    to_module_entry == NULL ? "NULL" :
-                      to_module_entry->is_named() ?
-                        to_module_entry->name()->as_C_string() : UNNAMED_MODULE);
 
   // Do nothing if modules are the same.
   if (from_module_entry != to_module_entry) {
@@ -524,12 +485,6 @@ void Modules::add_reads_module(jobject from_module, jobject to_module, TRAPS) {
   }
 
   ResourceMark rm(THREAD);
-  log_debug(module)("add_reads_module(): Adding read from module %s to module %s",
-                    from_module_entry->is_named() ?
-                    from_module_entry->name()->as_C_string() : UNNAMED_MODULE,
-                    to_module_entry == NULL ? "all unnamed" :
-                      (to_module_entry->is_named() ?
-                       to_module_entry->name()->as_C_string() : UNNAMED_MODULE));
 
   // if modules are the same or if from_module is unnamed then no need to add the read.
   if (from_module_entry != to_module_entry && from_module_entry->is_named()) {
@@ -545,7 +500,6 @@ jobject Modules::get_module(jclass clazz, TRAPS) {
   }
   oop mirror = JNIHandles::resolve_non_null(clazz);
   if (mirror == NULL) {
-    log_debug(module)("get_module(): no mirror, returning NULL");
     return NULL;
   }
   if (!java_lang_Class::is_instance(mirror)) {
@@ -632,8 +586,6 @@ void Modules::add_module_exports_to_all_unnamed(jobject module, const char* pack
                         package_entry->module()->name()->as_C_string(),
                         module_entry->name()->as_C_string()));
     }
-
-    log_debug(module)("add_module_exports_to_all_unnamed(): package %s in module %s is exported to all unnamed modules", package_entry->name()->as_C_string(), module_entry->name()->as_C_string());
 
     // Mark package as exported to all unnamed modules.
     package_entry->set_is_exported_allUnnamed();

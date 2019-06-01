@@ -27,8 +27,7 @@ class FreeList {
  protected:
 
   // Asserts false if the protecting lock (if any) is not held.
-  void assert_proper_lock_protection() const {
-  }
+  void assert_proper_lock_protection() const { }
 
   void increment_count()    {
     _count++;

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/symbolTable.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -1381,16 +1382,10 @@ class VM_HeapDumper : public VM_GC_Operation {
   int _num_threads;
 
   // accessors and setters
-  static VM_HeapDumper* dumper()         {
-  return _global_dumper; }
-  static DumpWriter* writer()            {
-  return _global_writer; }
-  void set_global_dumper() {
-    _global_dumper = this;
-  }
-  void set_global_writer() {
-    _global_writer = _local_writer;
-  }
+  static VM_HeapDumper* dumper()         { return _global_dumper; }
+  static DumpWriter* writer()            { return _global_writer; }
+  void set_global_dumper() { _global_dumper = this; }
+  void set_global_writer() { _global_writer = _local_writer; }
   void clear_global_dumper() { _global_dumper = NULL; }
   void clear_global_writer() { _global_writer = NULL; }
 
@@ -1886,8 +1881,7 @@ int HeapDumper::dump(const char* path) {
   if (print_to_tty()) {
     timer()->stop();
     if (error() == NULL) {
-      tty->print_cr("Heap dump file created [" JULONG_FORMAT " bytes in %3.3f secs]",
-                    writer.bytes_written(), timer()->seconds());
+      tty->print_cr("Heap dump file created [" JULONG_FORMAT " bytes in %3.3f secs]", writer.bytes_written(), timer()->seconds());
     } else {
       tty->print_cr("Dump file is incomplete: %s", writer.error());
     }
@@ -1989,8 +1983,7 @@ void HeapDumper::dump_heap(bool oome) {
     // If HeapDumpPath wasn't a file name then we append the default name
     if (use_default_filename) {
       const size_t dlen = strlen(base_path);  // if heap dump dir specified
-      jio_snprintf(&base_path[dlen], sizeof(base_path)-dlen, "%s%d%s",
-                   dump_file_name, os::current_process_id(), dump_file_ext);
+      jio_snprintf(&base_path[dlen], sizeof(base_path)-dlen, "%s%d%s", dump_file_name, os::current_process_id(), dump_file_ext);
     }
     const size_t len = strlen(base_path) + 1;
     my_path = (char*)os::malloc(len, mtInternal);

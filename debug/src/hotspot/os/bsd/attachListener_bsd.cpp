@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "logging/log.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
 #include "runtime/os.inline.hpp"
@@ -121,7 +122,7 @@ class ArgumentIterator : public StackObj {
     }
     char* res = _pos;
     char* next_pos = strchr(_pos, '\0');
-    if (next_pos < _end)  {
+    if (next_pos < _end) {
       next_pos++;
     }
     _pos = next_pos;
@@ -323,13 +324,11 @@ BsdAttachOperation* BsdAttachListener::dequeue() {
     uid_t puid;
     gid_t pgid;
     if (::getpeereid(s, &puid, &pgid) != 0) {
-      log_debug(attach)("Failed to get peer id");
       ::close(s);
       continue;
     }
 
     if (!os::Posix::matches_effective_uid_and_gid_or_root(puid, pgid)) {
-      log_debug(attach)("euid/egid check failed (%d/%d vs %d/%d)", puid, pgid, geteuid(), getegid());
       ::close(s);
       continue;
     }
@@ -424,15 +423,11 @@ void AttachListener::vm_start() {
   struct stat st;
   int ret;
 
-  int n = snprintf(fn, UNIX_PATH_MAX, "%s/.java_pid%d",
-           os::get_temp_directory(), os::current_process_id());
+  int n = snprintf(fn, UNIX_PATH_MAX, "%s/.java_pid%d", os::get_temp_directory(), os::current_process_id());
 
   RESTARTABLE(::stat(fn, &st), ret);
   if (ret == 0) {
     ret = ::unlink(fn);
-    if (ret == -1) {
-      log_debug(attach)("Failed to remove stale attach pid file at %s", fn);
-    }
   }
 }
 
@@ -471,21 +466,14 @@ bool AttachListener::is_init_trigger() {
   char fn[PATH_MAX + 1];
   int ret;
   struct stat st;
-  snprintf(fn, PATH_MAX + 1, "%s/.attach_pid%d",
-           os::get_temp_directory(), os::current_process_id());
+  snprintf(fn, PATH_MAX + 1, "%s/.attach_pid%d", os::get_temp_directory(), os::current_process_id());
   RESTARTABLE(::stat(fn, &st), ret);
-  if (ret == -1) {
-    log_debug(attach)("Failed to find attach file: %s", fn);
-  }
   if (ret == 0) {
     // simple check to avoid starting the attach mechanism when
     // a bogus non-root user creates the file
     if (os::Posix::matches_effective_uid_or_root(st.st_uid)) {
       init();
-      log_trace(attach)("Attach triggered by %s", fn);
       return true;
-    } else {
-      log_debug(attach)("File %s has wrong user id %d (vs %d). Attach is not triggered", fn, st.st_uid, geteuid());
     }
   }
   return false;

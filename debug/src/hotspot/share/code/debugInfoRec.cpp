@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "code/debugInfoRec.hpp"
 #include "code/scopeDesc.hpp"
 
@@ -111,13 +112,11 @@ void DebugInformationRecorder::add_safepoint(int pc_offset, OopMap* map) {
   add_oopmap(pc_offset, map);
 
   add_new_pc_offset(pc_offset);
-
 }
 
 void DebugInformationRecorder::add_non_safepoint(int pc_offset) {
 
   add_new_pc_offset(pc_offset);
-
 }
 
 void DebugInformationRecorder::add_new_pc_offset(int pc_offset) {

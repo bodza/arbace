@@ -48,8 +48,7 @@ class CompiledICInfo : public StackObj {
   bool    _release_icholder;
  public:
   address entry() const        { return _entry; }
-  Metadata*    cached_metadata() const         {
-    return (Metadata*)_cached_value; }
+  Metadata*    cached_metadata() const         { return (Metadata*)_cached_value; }
   CompiledICHolder*    claim_cached_icholder() {
     _release_icholder = false;
     CompiledICHolder* icholder = (CompiledICHolder*)_cached_value;
@@ -124,7 +123,6 @@ public:
   virtual void set_destination_mt_safe(address dest) = 0;
   virtual void set_to_interpreted(const methodHandle& method, CompiledICInfo& info) = 0;
   virtual void verify() const = 0;
-  virtual void verify_resolve_call(address dest) const = 0;
 
   virtual bool is_call_to_interpreted(address dest) const = 0;
   virtual bool is_safe_for_patching() const = 0;

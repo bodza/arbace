@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.inline.hpp"
 #include "c1/c1_CodeStubs.hpp"
 #include "c1/c1_FrameMap.hpp"
@@ -189,8 +190,7 @@ void MonitorExitStub::emit_code(LIR_Assembler* ce) {
 
 int PatchingStub::_patch_info_offset = -NativeGeneralJump::instruction_size;
 
-void PatchingStub::align_patch_site(MacroAssembler* masm) {
-}
+void PatchingStub::align_patch_site(MacroAssembler* masm) { }
 
 void PatchingStub::emit_code(LIR_Assembler* ce) {
   ShouldNotReachHere();
@@ -257,7 +257,6 @@ void ArrayCopyStub::emit_code(LIR_Assembler* ce) {
     if (r_1->is_stack()) {
       int st_off = r_1->reg2stack() * wordSize;
       __ str (r[i], Address(sp, st_off));
-    } else {
     }
   }
 

@@ -118,14 +118,12 @@ intptr_t* os::Linux::ucontext_get_fp(const ucontext_t * uc) {
 // os::Solaris::fetch_frame_from_ucontext() tries to skip nested signal
 // frames. Currently we don't do that on Linux, so it's the same as
 // os::fetch_frame_from_context().
-ExtendedPC os::Linux::fetch_frame_from_ucontext(Thread* thread,
-  const ucontext_t* uc, intptr_t** ret_sp, intptr_t** ret_fp) {
+ExtendedPC os::Linux::fetch_frame_from_ucontext(Thread* thread, const ucontext_t* uc, intptr_t** ret_sp, intptr_t** ret_fp) {
 
   return os::fetch_frame_from_context(uc, ret_sp, ret_fp);
 }
 
-ExtendedPC os::fetch_frame_from_context(const void* ucVoid,
-                    intptr_t** ret_sp, intptr_t** ret_fp) {
+ExtendedPC os::fetch_frame_from_context(const void* ucVoid, intptr_t** ret_sp, intptr_t** ret_fp) {
 
   ExtendedPC  epc;
   const ucontext_t* uc = (const ucontext_t*)ucVoid;
@@ -237,10 +235,7 @@ extern "C" void FetchNResume();
 #endif
 
 extern "C" JNIEXPORT int
-JVM_handle_linux_signal(int sig,
-                        siginfo_t* info,
-                        void* ucVoid,
-                        int abort_if_unrecognized) {
+JVM_handle_linux_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unrecognized) {
   ucontext_t* uc = (ucontext_t*) ucVoid;
 
   Thread* t = Thread::current_or_null_safe();
@@ -281,24 +276,15 @@ JVM_handle_linux_signal(int sig,
     if (t != NULL ) {
       if (t->is_Java_thread()) {
         thread = (JavaThread*)t;
-      }
-      else if(t->is_VM_thread()) {
+      } else if(t->is_VM_thread()) {
         vmthread = (VMThread *)t;
       }
     }
   }
-/*
-  NOTE: does not seem to work on linux.
-  if (info == NULL || info->si_code <= 0 || info->si_code == SI_NOINFO) {
-    // can't decode this kind of signal
-    info = NULL;
-  } else {
-  }
-*/
+
   // decide if this trap can be handled by a stub
   address stub = NULL;
-
-  address pc          = NULL;
+  address pc = NULL;
 
   //%note os_trap_1
   if (info != NULL && uc != NULL && thread != NULL) {
@@ -360,8 +346,7 @@ JVM_handle_linux_signal(int sig,
 
           // This is a likely cause, but hard to verify. Let's just print
           // it as a hint.
-          tty->print_raw_cr("Please check if any of your loaded .so files has "
-                            "enabled executable stack (see man page execstack(8))");
+          tty->print_raw_cr("Please check if any of your loaded .so files has enabled executable stack (see man page execstack(8))");
         } else {
           // Accessing stack address below sp may cause SEGV if current
           // thread has MAP_GROWSDOWN stack. This should only happen when
@@ -403,10 +388,7 @@ JVM_handle_linux_signal(int sig,
           address next_pc = pc + NativeCall::instruction_size;
           stub = SharedRuntime::handle_unsafe_access(thread, next_pc);
         }
-      }
-      else
-
-      if (sig == SIGFPE  && (info->si_code == FPE_INTDIV || info->si_code == FPE_FLTDIV)) {
+      } else if (sig == SIGFPE  && (info->si_code == FPE_INTDIV || info->si_code == FPE_FLTDIV)) {
         stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime::IMPLICIT_DIVIDE_BY_ZERO);
       } else if (sig == SIGSEGV && !MacroAssembler::needs_explicit_null_check((intptr_t)info->si_addr)) {
           // Determination of interpreter/vtable stub/compiled code null exception
@@ -473,15 +455,13 @@ JVM_handle_linux_signal(int sig,
   return true; // Mute compiler
 }
 
-void os::Linux::init_thread_fpu_state(void) {
-}
+void os::Linux::init_thread_fpu_state(void) { }
 
 int os::Linux::get_fpu_control_word(void) {
   return 0;
 }
 
-void os::Linux::set_fpu_control_word(int fpu_control) {
-}
+void os::Linux::set_fpu_control_word(int fpu_control) { }
 
 // Check that the linux kernel version is 2.4 or higher since earlier
 // versions do not support SSE without patches.
@@ -604,8 +584,7 @@ void os::print_register_info(outputStream *st, const void *context) {
   st->cr();
 }
 
-void os::setup_fpu() {
-}
+void os::setup_fpu() { }
 
 int os::extra_bang_size_in_bytes() {
   // AArch64 does not require the additional stack bang.
@@ -622,8 +601,7 @@ extern "C" {
       jshort *end = from + count;
       while (from < end)
         *(to++) = *(from++);
-    }
-    else if (from < to) {
+    } else if (from < to) {
       jshort *end = from;
       from += count - 1;
       to   += count - 1;
@@ -636,8 +614,7 @@ extern "C" {
       jint *end = from + count;
       while (from < end)
         *(to++) = *(from++);
-    }
-    else if (from < to) {
+    } else if (from < to) {
       jint *end = from;
       from += count - 1;
       to   += count - 1;
@@ -650,8 +627,7 @@ extern "C" {
       jlong *end = from + count;
       while (from < end)
         os::atomic_copy64(from++, to++);
-    }
-    else if (from < to) {
+    } else if (from < to) {
       jlong *end = from;
       from += count - 1;
       to   += count - 1;

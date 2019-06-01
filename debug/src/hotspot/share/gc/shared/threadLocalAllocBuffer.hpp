@@ -71,12 +71,9 @@ private:
   // Resize based on amount of allocation, etc.
   void resize();
 
-  void invariants() const {
-    }
+  void invariants() const { }
 
   void initialize(HeapWord* start, HeapWord* top, HeapWord* end);
-
-  void print_stats(const char* tag);
 
   Thread* myThread();
 
@@ -97,8 +94,7 @@ public:
   }
 
   static size_t min_size()                       { return align_object_size(MinTLABSize / HeapWordSize) + alignment_reserve(); }
-  static size_t max_size()                       {
-    return _max_size; }
+  static size_t max_size()                       { return _max_size; }
   static size_t max_size_in_bytes()              { return max_size() * BytesPerWord; }
   static void set_max_size(size_t max_size)      { _max_size = max_size; }
 

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "compiler/compileBroker.hpp"
 #include "compiler/directivesParser.hpp"
 #include "memory/allocation.inline.hpp"
@@ -111,8 +112,7 @@ DirectivesParser::DirectivesParser(const char* text, outputStream* st, bool sile
   parse();
 }
 
-DirectivesParser::~DirectivesParser() {
-}
+DirectivesParser::~DirectivesParser() { }
 
 const DirectivesParser::key DirectivesParser::keys[] = {
     // name, keytype, allow_array, allowed_mask, set_function

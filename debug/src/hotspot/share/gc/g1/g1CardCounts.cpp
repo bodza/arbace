@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1CardCounts.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/shared/cardTableBarrierSet.hpp"
@@ -30,7 +31,7 @@ void G1CardCounts::clear_range(size_t from_card_num, size_t to_card_num) {
   }
 }
 
-G1CardCounts::G1CardCounts(G1CollectedHeap *g1h):
+G1CardCounts::G1CardCounts(G1CollectedHeap *g1h) :
   _listener(), _g1h(g1h), _card_counts(NULL), _reserved_max_card_num(0) {
   _listener.set_cardcounts(this);
 }

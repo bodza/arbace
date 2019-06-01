@@ -277,8 +277,7 @@ inline const OopStorage::AllocateEntry& OopStorage::Block::allocate_entry() cons
   return _allocate_entry;
 }
 
-inline void OopStorage::Block::check_index(unsigned index) const {
-}
+inline void OopStorage::Block::check_index(unsigned index) const { }
 
 inline oop* OopStorage::Block::get_pointer(unsigned index) {
   check_index(index);

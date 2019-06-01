@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/blockOffsetTable.inline.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "gc/shared/space.inline.hpp"
@@ -29,11 +30,6 @@ BlockOffsetSharedArray::BlockOffsetSharedArray(MemRegion reserved, size_t init_w
   }
   _offset_array = (u_char*)_vs.low_boundary();
   resize(init_word_size);
-  log_trace(gc, bot)("BlockOffsetSharedArray::BlockOffsetSharedArray: ");
-  log_trace(gc, bot)("   rs.base(): " INTPTR_FORMAT " rs.size(): " INTPTR_FORMAT " rs end(): " INTPTR_FORMAT,
-                     p2i(rs.base()), rs.size(), p2i(rs.base() + rs.size()));
-  log_trace(gc, bot)("   _vs.low_boundary(): " INTPTR_FORMAT "  _vs.high_boundary(): " INTPTR_FORMAT,
-                     p2i(_vs.low_boundary()), p2i(_vs.high_boundary()));
 }
 
 void BlockOffsetSharedArray::resize(size_t new_word_size) {
@@ -194,9 +190,7 @@ BlockOffsetArray::alloc_block(HeapWord* blk_start, HeapWord* blk_end) {
 // Action_single - udpate the BOT for an allocation.
 // Action_verify - BOT verification.
 void
-BlockOffsetArray::do_block_internal(HeapWord* blk_start,
-                                    HeapWord* blk_end,
-                                    Action action, bool reducing) {
+BlockOffsetArray::do_block_internal(HeapWord* blk_start, HeapWord* blk_end, Action action, bool reducing) {
   // This is optimized to make the test fast, assuming we only rarely
   // cross boundaries.
   uintptr_t end_ui = (uintptr_t)(blk_end - 1);
@@ -254,8 +248,7 @@ BlockOffsetArray::do_block_internal(HeapWord* blk_start,
 // information; Right-open interval: [blk_start, blk_end)
 // NOTE: this method does _not_ adjust _unallocated_block.
 void
-BlockOffsetArray::single_block(HeapWord* blk_start,
-                               HeapWord* blk_end) {
+BlockOffsetArray::single_block(HeapWord* blk_start, HeapWord* blk_end) {
   do_block_internal(blk_start, blk_end, Action_single);
 }
 
@@ -305,8 +298,7 @@ void BlockOffsetArray::verify() const {
 // (when init_to_zero()) mark_block() wherever possible.
 // right-open interval: [blk_start, blk_end)
 void
-BlockOffsetArrayNonContigSpace::alloc_block(HeapWord* blk_start,
-                                            HeapWord* blk_end) {
+BlockOffsetArrayNonContigSpace::alloc_block(HeapWord* blk_start, HeapWord* blk_end) {
   single_block(blk_start, blk_end);
   allocated(blk_start, blk_end);
 }
@@ -440,8 +432,7 @@ void BlockOffsetArrayNonContigSpace::split_block(HeapWord* blk, size_t blk_size,
 // NOTE: this method does _not_ adjust _unallocated_block or
 // any cards subsequent to the first one.
 void
-BlockOffsetArrayNonContigSpace::mark_block(HeapWord* blk_start,
-                                           HeapWord* blk_end, bool reducing) {
+BlockOffsetArrayNonContigSpace::mark_block(HeapWord* blk_start, HeapWord* blk_end, bool reducing) {
   do_block_internal(blk_start, blk_end, Action_mark, reducing);
 }
 

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/vmSymbols.hpp"
 #include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
@@ -86,8 +87,7 @@ static void save_memory_to_file(char* addr, size_t size) {
       RESTARTABLE(::write(fd, addr, remaining), result);
       if (result == OS_ERR) {
         if (PrintMiscellaneous && Verbose) {
-          warning("Could not write Perfdata save file: %s: %s\n",
-                  destfile, os::strerror(errno));
+          warning("Could not write Perfdata save file: %s: %s\n", destfile, os::strerror(errno));
         }
         break;
       }
@@ -437,10 +437,8 @@ static char* get_user_name(uid_t uid) {
   if (result != 0 || p == NULL || p->pw_name == NULL || *(p->pw_name) == '\0') {
     if (PrintMiscellaneous && Verbose) {
       if (result != 0) {
-        warning("Could not retrieve passwd entry: %s\n",
-                os::strerror(result));
-      }
-      else if (p == NULL) {
+        warning("Could not retrieve passwd entry: %s\n", os::strerror(result));
+      } else if (p == NULL) {
         // this check is added to protect against an observed problem
         // with getpwuid_r() on RedHat 9 where getpwuid_r returns 0,
         // indicating success, but has p == NULL. This was observed when
@@ -451,13 +449,9 @@ static char* get_user_name(uid_t uid) {
         // message may result in an erroneous message.
         // Bug Id 89052 was opened with RedHat.
         //
-        warning("Could not retrieve passwd entry: %s\n",
-                os::strerror(errno));
-      }
-      else {
-        warning("Could not determine user name: %s\n",
-                p->pw_name == NULL ? "pw_name = NULL" :
-                                     "pw_name zero length");
+        warning("Could not retrieve passwd entry: %s\n", os::strerror(errno));
+      } else {
+        warning("Could not determine user name: %s\n", p->pw_name == NULL ? "pw_name = NULL" : "pw_name zero length");
       }
     }
     FREE_C_HEAP_ARRAY(char, pwbuf);
@@ -487,10 +481,8 @@ static char* get_user_name_slow(int vmid, int nspid, TRAPS) {
   // short circuit the directory search if the process doesn't even exist.
   if (kill(vmid, 0) == OS_ERR) {
     if (errno == ESRCH) {
-      THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(),
-                  "Process not found");
-    }
-    else /* EPERM */ {
+      THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(), "Process not found");
+    } else /* EPERM */ {
       THROW_MSG_0(vmSymbols::java_io_IOException(), os::strerror(errno));
     }
   }
@@ -696,8 +688,7 @@ static void remove_file(const char* path) {
   RESTARTABLE(::unlink(path), result);
   if (PrintMiscellaneous && Verbose && result == OS_ERR) {
     if (errno != ENOENT) {
-      warning("Could not unlink shared memory backing"
-              " store file %s : %s\n", path, os::strerror(errno));
+      warning("Could not unlink shared memory backing store file %s : %s\n", path, os::strerror(errno));
     }
   }
 }
@@ -796,14 +787,12 @@ static bool make_user_tmp_dir(const char* dirname) {
         }
         return false;
       }
-    }
-    else {
+    } else {
       // we encountered some other failure while attempting
       // to create the directory
       //
       if (PrintMiscellaneous && Verbose) {
-        warning("could not create directory %s: %s\n",
-                dirname, os::strerror(errno));
+        warning("could not create directory %s: %s\n", dirname, os::strerror(errno));
       }
       return false;
     }
@@ -921,11 +910,9 @@ static int open_sharedmem_file(const char* filename, int oflags, TRAPS) {
   if (result == OS_ERR) {
     if (errno == ENOENT) {
       THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(), "Process not found", OS_ERR);
-    }
-    else if (errno == EACCES) {
+    } else if (errno == EACCES) {
       THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(), "Permission denied", OS_ERR);
-    }
-    else {
+    } else {
       THROW_MSG_(vmSymbols::java_io_IOException(), os::strerror(errno), OS_ERR);
     }
   }
@@ -1090,19 +1077,15 @@ static void mmap_attach_shared(const char* user, int vmid, PerfMemory::PerfMemor
   if (mode == PerfMemory::PERF_MODE_RO) {
     mmap_prot = PROT_READ;
     file_flags = O_RDONLY | O_NOFOLLOW;
-  }
-  else if (mode == PerfMemory::PERF_MODE_RW) {
+  } else if (mode == PerfMemory::PERF_MODE_RW) {
 #ifdef LATER
     mmap_prot = PROT_READ | PROT_WRITE;
     file_flags = O_RDWR | O_NOFOLLOW;
 #else
-    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-              "Unsupported access mode");
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Unsupported access mode");
 #endif
-  }
-  else {
-    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-              "Illegal access mode");
+  } else {
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Illegal access mode");
   }
 
   // determine if vmid is for a containerized process
@@ -1110,14 +1093,12 @@ static void mmap_attach_shared(const char* user, int vmid, PerfMemory::PerfMemor
 
   if (user == NULL || strlen(user) == 0) {
     luser = get_user_name(vmid, &nspid, CHECK);
-  }
-  else {
+  } else {
     luser = user;
   }
 
   if (luser == NULL) {
-    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-              "Could not map vmid to user Name");
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "Could not map vmid to user Name");
   }
 
   char* dirname = get_user_tmp_dir(luser, vmid, nspid);
@@ -1182,9 +1163,6 @@ static void mmap_attach_shared(const char* user, int vmid, PerfMemory::PerfMemor
 
   *addr = mapAddress;
   *sizep = size;
-
-  log_debug(perf, memops)("mapped " SIZE_FORMAT " bytes for vmid %d at "
-                          INTPTR_FORMAT, size, vmid, p2i((void*)mapAddress));
 }
 
 // create the PerfData memory region
@@ -1198,8 +1176,7 @@ void PerfMemory::create_memory_region(size_t size) {
   if (PerfDisableSharedMem) {
     // do not share the memory for the performance data.
     _start = create_standard_memory(size);
-  }
-  else {
+  } else {
     _start = create_shared_memory(size);
     if (_start == NULL) {
 
@@ -1235,8 +1212,7 @@ void PerfMemory::delete_memory_region() {
 
   if (PerfDisableSharedMem) {
     delete_standard_memory(start(), capacity());
-  }
-  else {
+  } else {
     delete_shared_memory(start(), capacity());
   }
 }

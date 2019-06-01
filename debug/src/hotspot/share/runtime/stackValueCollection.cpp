@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "runtime/stackValueCollection.hpp"
 
 jint StackValueCollection::int_at(int slot) const {

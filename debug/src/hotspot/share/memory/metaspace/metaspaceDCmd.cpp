@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "memory/metaspace.hpp"
 #include "memory/metaspace/metaspaceDCmd.hpp"
 #include "memory/resourceArea.hpp"
@@ -16,9 +17,7 @@ MetaspaceDCmd::MetaspaceDCmd(outputStream* output, bool heap)
   , _by_spacetype("by-spacetype", "Break down numbers by loader type.", "BOOLEAN", false, "false")
   , _show_vslist("vslist", "Shows details about the underlying virtual space.", "BOOLEAN", false, "false")
   , _show_vsmap("vsmap", "Shows chunk composition of the underlying virtual spaces", "BOOLEAN", false, "false")
-  , _scale("scale", "Memory usage in which to scale. Valid values are: 1, KB, MB or GB (fixed scale) "
-           "or \"dynamic\" for a dynamically choosen scale.",
-     "STRING", false, "dynamic")
+  , _scale("scale", "Memory usage in which to scale. Valid values are: 1, KB, MB or GB (fixed scale) or \"dynamic\" for a dynamically choosen scale.", "STRING", false, "dynamic")
 {
   _dcmdparser.add_dcmd_option(&_basic);
   _dcmdparser.add_dcmd_option(&_show_loaders);

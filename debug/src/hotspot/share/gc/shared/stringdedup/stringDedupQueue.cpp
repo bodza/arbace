@@ -19,13 +19,7 @@ void StringDedupQueue::unlink_or_oops_do(StringDedupUnlinkOrOopsDoClosure* cl) {
   }
 }
 
-void StringDedupQueue::print_statistics() {
-  queue()->print_statistics_impl();
-}
-
-void StringDedupQueue::verify() {
-  queue()->verify_impl();
-}
+void StringDedupQueue::verify() { }
 
 StringDedupQueue* const StringDedupQueue::queue() {
   return _queue;
@@ -35,5 +29,4 @@ void StringDedupQueue::gc_prologue() {
   _claimed_index = 0;
 }
 
-void StringDedupQueue::gc_epilogue() {
-}
+void StringDedupQueue::gc_epilogue() { }

@@ -55,9 +55,6 @@ protected:
   }
 
   void unlink_or_oops_do_impl(StringDedupUnlinkOrOopsDoClosure* cl, size_t queue);
-
-  void print_statistics_impl();
-  void verify_impl();
 };
 
 #endif

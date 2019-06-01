@@ -76,26 +76,6 @@ inline int g_isfinite(jdouble f) { return _finite(f); }
 
 // Miscellaneous
 
-// Visual Studio 2005 deprecates POSIX names - use ISO C++ names instead
-#if _MSC_VER >= 1400
-#define open _open
-#define close _close
-#define read  _read
-#define write _write
-#define lseek _lseek
-#define unlink _unlink
-#define strdup _strdup
-#endif
-
-#if _MSC_VER < 1800
-// Visual Studio 2013 introduced strtoull(); before, one has to use _strtoui64() instead.
-#define strtoull _strtoui64
-// Visual Studio prior to 2013 had no va_copy, but could safely copy va_list by assignement
-#define va_copy(dest, src) dest = src
-// Fixes some wrong warnings about 'this' : used in base member initializer list
-#pragma warning( disable : 4355 )
-#endif
-
 #pragma warning( disable : 4100 ) // unreferenced formal parameter
 #pragma warning( disable : 4127 ) // conditional expression is constant
 #pragma warning( disable : 4514 ) // unreferenced inline function has been removed
@@ -108,9 +88,6 @@ inline int g_isfinite(jdouble f) { return _finite(f); }
 #ifdef CHECK_UNHANDLED_OOPS
 #pragma warning( disable : 4521 ) // class has multiple copy ctors of a single type
 #pragma warning( disable : 4522 ) // class has multiple assignment operators of a single type
-#endif
-#if _MSC_VER >= 1400
-#pragma warning( disable : 4996 ) // unsafe string functions. Same as define _CRT_SECURE_NO_WARNINGS/_CRT_SECURE_NO_DEPRICATE
 #endif
 
 // Portability macros

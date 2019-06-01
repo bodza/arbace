@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/codeBuffer.hpp"
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
@@ -18,7 +19,7 @@ AbstractAssembler::AbstractAssembler(CodeBuffer* code) {
   if (code == NULL)  return;
   CodeSection* cs = code->insts();
   cs->clear_mark();   // new assembler kills old mark
-  if (cs->start() == NULL)  {
+  if (cs->start() == NULL) {
     vm_exit_out_of_memory(0, OOM_MMAP_ERROR, "CodeCache: no room for %s", code->name());
   }
   _code_section = cs;
@@ -181,8 +182,7 @@ DelayedConstant DelayedConstant::delayed_constants[DC_LIMIT];
 // Default C structure initialization rules have the following effect here:
 // = { { (BasicType)0, (intptr_t)NULL }, ... };
 
-DelayedConstant* DelayedConstant::add(BasicType type,
-                                      DelayedConstant::value_fn_t cfn) {
+DelayedConstant* DelayedConstant::add(BasicType type, DelayedConstant::value_fn_t cfn) {
   for (int i = 0; i < DC_LIMIT; i++) {
     DelayedConstant* dcon = &delayed_constants[i];
     if (dcon->match(type, cfn))

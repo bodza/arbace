@@ -171,8 +171,7 @@ class GraphBuilder {
   ScopeData*        scope_data() const           { return _scope_data; }
   Compilation*      compilation() const          { return _compilation; }
   BlockList*        bci2block() const            { return scope_data()->bci2block(); }
-  ValueMap*         vmap() const                 {
-    return _vmap; }
+  ValueMap*         vmap() const                 { return _vmap; }
   bool              has_handler() const          { return scope_data()->has_handler(); }
 
   BlockBegin*       block() const                { return _block; }

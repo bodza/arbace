@@ -312,16 +312,12 @@ class ConstantPoolCacheEntry {
   // of _f1 must be ordered with the loads performed by
   // cache->main_entry_index().
   bool      is_f1_null() const;  // classifies a CPC entry as unbound
-  int       f2_as_index() const                  {
-    return (int) _f2; }
-  Method*   f2_as_vfinal_method() const          {
-    return (Method*)_f2; }
+  int       f2_as_index() const                  { return (int) _f2; }
+  Method*   f2_as_vfinal_method() const          { return (Method*)_f2; }
   Method*   f2_as_interface_method() const;
   intx flags_ord() const;
-  int  field_index() const                       {
-    return (_flags & field_index_mask); }
-  int  parameter_size() const                    {
-    return (_flags & parameter_size_mask); }
+  int  field_index() const                       { return (_flags & field_index_mask); }
+  int  parameter_size() const                    { return (_flags & parameter_size_mask); }
   bool is_volatile() const                       { return (_flags & (1 << is_volatile_shift))       != 0; }
   bool is_final() const                          { return (_flags & (1 << is_final_shift))          != 0; }
   bool is_forced_virtual() const                 { return (_flags & (1 << is_forced_virtual_shift)) != 0; }
@@ -333,8 +329,7 @@ class ConstantPoolCacheEntry {
   bool is_field_entry() const                    { return (_flags & (1 << is_field_entry_shift))    != 0; }
   bool is_long() const                           { return flag_state() == ltos; }
   bool is_double() const                         { return flag_state() == dtos; }
-  TosState flag_state() const                    {
-                                                   return (TosState)((_flags >> tos_state_shift) & tos_state_mask); }
+  TosState flag_state() const                    { return (TosState)((_flags >> tos_state_shift) & tos_state_mask); }
   void set_indy_resolution_failed();
 
   // Code generation support
@@ -351,8 +346,7 @@ class ConstantPoolCacheEntry {
   void print (outputStream* st, int index) const;
   void verify(outputStream* st) const;
 
-  static void verify_tos_state_shift() {
-  }
+  static void verify_tos_state_shift() { }
 
   void verify_just_initialized(bool f2_used);
   void reinitialize(bool f2_used);

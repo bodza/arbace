@@ -97,12 +97,6 @@ public:
   // Returns whether the card has been scanned.
   bool refine_card_during_gc(jbyte* card_ptr, G1ScanObjsDuringUpdateRSClosure* update_rs_cl);
 
-  // Print accumulated summary info from the start of the VM.
-  void print_summary_info();
-
-  // Print accumulated summary info from the last time called.
-  void print_periodic_summary_info(const char* header, uint period_count);
-
   size_t num_conc_refined_cards() const { return _num_conc_refined_cards; }
 
   // Rebuilds the remembered set by scanning from bottom to TARS for all regions

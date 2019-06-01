@@ -107,8 +107,7 @@ class AbstractInterpreter: AllStatic {
 
   // Method activation
   static MethodKind method_kind(const methodHandle& m);
-  static address    entry_for_kind(MethodKind k)                {
-    return _entry_table[k]; }
+  static address    entry_for_kind(MethodKind k)                { return _entry_table[k]; }
   static address    entry_for_method(const methodHandle& m)     { return entry_for_kind(method_kind(m)); }
 
   static address entry_for_cds_method(const methodHandle& m) {
@@ -216,18 +215,14 @@ class AbstractInterpreter: AllStatic {
   }
 
   static int expr_offset_in_bytes(int i) {
-#if !defined(ZERO) && (defined(PPC) || defined(S390) || defined(SPARC))
-    return stackElementSize * i + wordSize;  // both point to one word past TOS
-#else
     return stackElementSize * i;
-#endif
   }
 
   static int local_index_at(int i) {
     return stackElementWords * i;
   }
 
-#if !defined(ZERO) && (defined(IA32) || defined(AMD64))
+#if (defined(IA32) || defined(AMD64))
   static Address::ScaleFactor stackElementScale() {
     return Address::times_8;
   }

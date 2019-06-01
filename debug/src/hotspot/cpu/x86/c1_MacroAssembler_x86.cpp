@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_MacroAssembler.hpp"
 #include "c1/c1_Runtime1.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -133,8 +134,7 @@ void C1_MacroAssembler::initialize_header(Register obj, Register klass, Register
 
   if (len->is_valid()) {
     movl(Address(obj, arrayOopDesc::length_offset_in_bytes()), len);
-  }
-  else if (UseCompressedClassPointers) {
+  } else if (UseCompressedClassPointers) {
     xorptr(t1, t1);
     store_klass_gap(obj, t1);
   }

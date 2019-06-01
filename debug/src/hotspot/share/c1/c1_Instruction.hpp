@@ -411,8 +411,7 @@ class Instruction: public CompilationResourceObj {
   void pin(PinReason reason)                     { _pin_state |= reason; }
   void pin()                                     { _pin_state |= PinUnknown; }
   // DANGEROUS: only used by EliminateStores
-  void unpin(PinReason reason)                   {
-    _pin_state &= ~reason; }
+  void unpin(PinReason reason)                   { _pin_state &= ~reason; }
 
   Instruction* set_next(Instruction* next) {
 
@@ -448,16 +447,13 @@ class Instruction: public CompilationResourceObj {
     return insert_after(i);
   }
 
-  void set_subst(Instruction* subst)             {
-    _subst = subst;
-  }
+  void set_subst(Instruction* subst)             { _subst = subst; }
   void set_exception_handlers(XHandlers *xhandlers) { _exception_handlers = xhandlers; }
   void set_exception_state(ValueStack* s)        { check_state(s); _exception_state = s; }
   void set_state_before(ValueStack* s)           { check_state(s); _state_before = s; }
 
   // machine-specifics
-  void set_operand(LIR_Opr operand)              {
-    _operand = operand; }
+  void set_operand(LIR_Opr operand)              { _operand = operand; }
   void clear_operand()                           { _operand = LIR_OprFact::illegalOpr; }
 
   // generic
@@ -587,10 +583,8 @@ LEAF(Phi, Instruction)
   // accessors
   bool  is_local() const          { return _index >= 0; }
   bool  is_on_stack() const       { return !is_local(); }
-  int   local_index() const       {
-    return _index; }
-  int   stack_index() const       {
-    return -(_index+1); }
+  int   local_index() const       { return _index; }
+  int   stack_index() const       { return -(_index+1); }
 
   Value operand_at(int i) const;
   int   operand_count() const;
@@ -611,8 +605,7 @@ LEAF(Phi, Instruction)
   }
 
   // generic
-  virtual void input_values_do(ValueVisitor* f) {
-  }
+  virtual void input_values_do(ValueVisitor* f) { }
 };
 
 // A local is a placeholder for an incoming argument to a function call.
@@ -644,12 +637,12 @@ LEAF(Local, Instruction)
 LEAF(Constant, Instruction)
  public:
   // creation
-  Constant(ValueType* type):
+  Constant(ValueType* type) :
       Instruction(type, NULL, /*type_is_constant*/ true)
   {
   }
 
-  Constant(ValueType* type, ValueStack* state_before):
+  Constant(ValueType* type, ValueStack* state_before) :
     Instruction(type, state_before, /*type_is_constant*/ true)
   {
     // since it's patching it needs to be pinned
@@ -740,8 +733,7 @@ BASE(AccessField, Instruction)
 LEAF(LoadField, AccessField)
  public:
   // creation
-  LoadField(Value obj, int offset, ciField* field, bool is_static,
-            ValueStack* state_before, bool needs_patching)
+  LoadField(Value obj, int offset, ciField* field, bool is_static, ValueStack* state_before, bool needs_patching)
   : AccessField(obj, offset, field, is_static, state_before, needs_patching)
   { }
 
@@ -1127,8 +1119,7 @@ BASE(StateSplit, Instruction)
   IRScope* scope() const;                        // the state's scope
 
   // manipulation
-  void set_state(ValueStack* state)              {
-    check_state(state); _state = state; }
+  void set_state(ValueStack* state)              { check_state(state); _state = state; }
 
   // generic
   virtual void input_values_do(ValueVisitor* f)   { /* no values */ }
@@ -1191,8 +1182,7 @@ LEAF(NewInstance, StateSplit)
  public:
   // creation
   NewInstance(ciInstanceKlass* klass, ValueStack* state_before, bool is_unresolved)
-  : StateSplit(instanceType, state_before)
-  , _klass(klass), _is_unresolved(is_unresolved)
+  : StateSplit(instanceType, state_before), _klass(klass), _is_unresolved(is_unresolved)
   { }
 
   // accessors
@@ -1240,8 +1230,7 @@ LEAF(NewTypeArray, NewArray)
  public:
   // creation
   NewTypeArray(Value length, BasicType elt_type, ValueStack* state_before)
-  : NewArray(length, state_before)
-  , _elt_type(elt_type)
+  : NewArray(length, state_before), _elt_type(elt_type)
   { }
 
   // accessors
@@ -1458,8 +1447,7 @@ LEAF(Intrinsic, StateSplit)
   Value argument_at(int i) const                 { return _args->at(i); }
 
   bool has_receiver() const                      { return (_recv != NULL); }
-  Value receiver() const                         {
-    return _recv; }
+  Value receiver() const                         { return _recv; }
   bool preserves_state() const                   { return check_flag(PreservesStateFlag); }
 
   bool arg_needs_null_check(int i) const {
@@ -1645,10 +1633,8 @@ LEAF(BlockBegin, StateSplit)
   BlockBegin* exception_handler_at(int i) const  { return _exception_handlers.at(i); }
 
   // states of the instructions that have an edge to this exception handler
-  int number_of_exception_states()               {
-    return _exception_states == NULL ? 0 : _exception_states->length(); }
-  ValueStack* exception_state_at(int idx) const  {
-    return _exception_states->at(idx); }
+  int number_of_exception_states()               { return _exception_states == NULL ? 0 : _exception_states->length(); }
+  ValueStack* exception_state_at(int idx) const  { return _exception_states->at(idx); }
   int add_exception_state(ValueStack* state);
 
   // flags
@@ -2311,7 +2297,7 @@ LEAF(ProfileCall, Instruction)
     _nonnull_state.set_arg_needs_null_check(i, check);
   }
 
-  virtual void input_values_do(ValueVisitor* f)   {
+  virtual void input_values_do(ValueVisitor* f) {
     if (_recv != NULL) {
       f->visit(&_recv);
     }
@@ -2346,7 +2332,7 @@ LEAF(ProfileReturnType, Instruction)
   int bci_of_invoke()            const { return _bci_of_invoke; }
   Value ret()                    const { return _ret; }
 
-  virtual void input_values_do(ValueVisitor* f)   {
+  virtual void input_values_do(ValueVisitor* f) {
     if (_ret != NULL) {
       f->visit(&_ret);
     }
@@ -2379,7 +2365,7 @@ LEAF(RuntimeCall, Instruction)
   Value argument_at(int i) const  { return _args->at(i); }
   bool pass_thread() const        { return _pass_thread; }
 
-  virtual void input_values_do(ValueVisitor* f)   {
+  virtual void input_values_do(ValueVisitor* f) {
     for (int i = 0; i < _args->length(); i++) f->visit(_args->adr_at(i));
   }
 };

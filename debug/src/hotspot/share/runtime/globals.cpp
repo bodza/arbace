@@ -1,5 +1,5 @@
 #include "precompiled.hpp"
-// #include "jfr/jfrEvents.hpp"
+
 #include "jvm.h"
 #include "memory/allocation.inline.hpp"
 #include "oops/oop.inline.hpp"

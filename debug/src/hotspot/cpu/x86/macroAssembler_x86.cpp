@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "asm/assembler.hpp"
 #include "asm/assembler.inline.hpp"
@@ -1826,8 +1827,7 @@ void MacroAssembler::vmovdqu(XMMRegister dst, XMMRegister src) {
 void MacroAssembler::vmovdqu(XMMRegister dst, AddressLiteral src) {
   if (reachable(src)) {
     vmovdqu(dst, as_Address(src));
-  }
-  else {
+  } else {
     lea(rscratch1, src);
     vmovdqu(dst, Address(rscratch1, 0));
   }
@@ -2178,8 +2178,7 @@ void MacroAssembler::xorpd(XMMRegister dst, AddressLiteral src) {
 void MacroAssembler::xorpd(XMMRegister dst, XMMRegister src) {
   if (UseAVX > 2 && !VM_Version::supports_avx512dq() && (dst->encoding() == src->encoding())) {
     Assembler::vpxor(dst, dst, src, Assembler::AVX_512bit);
-  }
-  else {
+  } else {
     Assembler::xorpd(dst, src);
   }
 }
@@ -2462,8 +2461,7 @@ void MacroAssembler::resolve_jobject(Register value, Register thread, Register t
   testptr(value, JNIHandles::weak_tag_mask); // Test for jweak tag.
   jcc(Assembler::zero, not_weak);
   // Resolve jweak.
-  access_load_at(T_OBJECT, IN_NATIVE | ON_PHANTOM_OOP_REF,
-                 value, Address(value, -JNIHandles::weak_tag_value), tmp, thread);
+  access_load_at(T_OBJECT, IN_NATIVE | ON_PHANTOM_OOP_REF, value, Address(value, -JNIHandles::weak_tag_value), tmp, thread);
   verify_oop(value);
   jmp(done);
   bind(not_weak);
@@ -2890,8 +2888,7 @@ void MacroAssembler::verify_oop_addr(Address addr, const char* s) {
   // Caller pops the arguments (addr, message) and restores rax, r10.
 }
 
-void MacroAssembler::verify_tlab() {
-}
+void MacroAssembler::verify_tlab() { }
 
 class ControlWord {
  public:
@@ -3386,7 +3383,6 @@ void MacroAssembler::decode_heap_oop_not_null(Register r) {
     if (Universe::narrow_oop_base() != NULL) {
       addq(r, r12_heapbase);
     }
-  } else {
   }
 }
 
@@ -4792,8 +4788,7 @@ void MacroAssembler::lshift_by_1(Register x, Register len, Register z, Register 
      rclq(value, 1);
      rorxq(value, value, 32);
      movq(Address(z, zidx, Address::times_4,  0), value);  // Store back in big endian form
-  }
-  else {
+  } else {
     // clear new_carry
     xorl(new_carry, new_carry);
 
@@ -4863,8 +4858,7 @@ void MacroAssembler::square_to_len(Register x, Register len, Register z, Registe
     op2 = rdxReg;
     movq(op2, Address(x, len, Address::times_4,  0));
     rorxq(op2, op2, 32);
-  }
-  else {
+  } else {
     movq(op2, Address(x, len, Address::times_4,  0));
     rorq(op2, 32);
   }
@@ -4885,8 +4879,7 @@ void MacroAssembler::square_to_len(Register x, Register len, Register z, Registe
   // Multiply 64 bit by 64 bit and add 64 bits lower half and upper 64 bits as carry.
   if (UseBMI2Instructions) {
     multiply_add_64_bmi2(sum, op1, op2, carry, tmp2);
-  }
-  else {
+  } else {
     multiply_add_64(sum, op1, op2, carry, rdxReg, raxReg);
   }
 
@@ -4972,8 +4965,7 @@ void MacroAssembler::mul_add_128_x_32_loop(Register out, Register in, Register o
   rorq(sum, 32);
   if (UseBMI2Instructions) {
     multiply_add_64_bmi2(sum, op1, op2, carry, raxReg);
-  }
-  else {
+  } else {
     multiply_add_64(sum, op1, op2, carry, rdxReg, raxReg);
   }
   // Store back in big endian from little endian
@@ -4986,8 +4978,7 @@ void MacroAssembler::mul_add_128_x_32_loop(Register out, Register in, Register o
   rorq(sum, 32);
   if (UseBMI2Instructions) {
     multiply_add_64_bmi2(sum, op1, op2, carry, raxReg);
-  }
-  else {
+  } else {
     multiply_add_64(sum, op1, op2, carry, rdxReg, raxReg);
   }
   // Store back in big endian from little endian
@@ -5039,8 +5030,7 @@ void MacroAssembler::mul_add(Register out, Register in, Register offs, Register 
   if (UseBMI2Instructions) {
     op2 = rdxReg;
     movl(op2, k);
-  }
-  else {
+  } else {
     movl(op2, k);
   }
 
@@ -5067,8 +5057,7 @@ void MacroAssembler::mul_add(Register out, Register in, Register offs, Register 
 
   if (UseBMI2Instructions) {
     multiply_add_64_bmi2(sum, op1, op2, carry, raxReg);
-  }
-  else {
+  } else {
     multiply_add_64(sum, op1, op2, carry, rdxReg, raxReg);
   }
 

@@ -52,10 +52,8 @@ class XHandler: public CompilationResourceObj {
   BlockBegin* entry_block() const                { return _entry_block; }
   LIR_List*   entry_code() const                 { return _entry_code; }
   int         entry_pco() const                  { return _entry_pco; }
-  int         phi_operand() const                {
-    return _phi_operand; }
-  int         scope_count() const                {
-    return _scope_count; }
+  int         phi_operand() const                { return _phi_operand; }
+  int         scope_count() const                { return _scope_count; }
 
   void set_entry_block(BlockBegin* entry_block) {
     _entry_block = entry_block;
@@ -175,7 +173,7 @@ class IRScopeDebugInfo: public CompilationResourceObj {
                    GrowableArray<ScopeValue*>*   locals,
                    GrowableArray<ScopeValue*>*   expressions,
                    GrowableArray<MonitorValue*>* monitors,
-                   IRScopeDebugInfo*             caller):
+                   IRScopeDebugInfo*             caller) :
       _scope(scope)
     , _locals(locals)
     , _bci(bci)
@@ -282,8 +280,7 @@ class IR: public CompilationResourceObj {
 
   // The linear-scan order and the code emission order are equal, but
   // this may change in future
-  BlockList* linear_scan_order() {
-    return _code; }
+  BlockList* linear_scan_order() { return _code; }
 
   // iteration
   void iterate_preorder   (BlockClosure* closure);

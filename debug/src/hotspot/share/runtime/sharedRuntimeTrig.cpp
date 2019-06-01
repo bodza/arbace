@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jni.h"
 #include "runtime/interfaceSupport.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
@@ -475,8 +476,7 @@ S4  =  2.75573137070700676789e-06, /* 0x3EC71DE3, 0x57B1FE7D */
 S5  = -2.50507602534068634195e-08, /* 0xBE5AE5E6, 0x8A2B9CEB */
 S6  =  1.58969099521155010221e-10; /* 0x3DE5D93A, 0x5ACFD57C */
 
-static double __kernel_sin(double x, double y, int iy)
-{
+static double __kernel_sin(double x, double y, int iy) {
         double z,r,v;
         int ix;
         ix = high(x)&0x7fffffff;                /* high word of x */
@@ -532,8 +532,7 @@ C4  = -2.75573143513906633035e-07, /* 0xBE927E4F, 0x809C52AD */
 C5  =  2.08757232129817482790e-09, /* 0x3E21EE9E, 0xBDB4B1C4 */
 C6  = -1.13596475577881948265e-11; /* 0xBDA8FAE9, 0xBE8838D4 */
 
-static double __kernel_cos(double x, double y)
-{
+static double __kernel_cos(double x, double y) {
   double a,h,z,r,qx=0;
   int ix;
   ix = high(x)&0x7fffffff;              /* ix = |x|'s high word*/
@@ -610,8 +609,7 @@ T[] =  {
   2.59073051863633712884e-05, /* 0x3EFB2A70, 0x74BF7AD4 */
 };
 
-static double __kernel_tan(double x, double y, int iy)
-{
+static double __kernel_tan(double x, double y, int iy) {
   double z,r,v,w,s;
   int ix,hx;
   hx = high(x);           /* high word of x */

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1Arguments.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1CollectorPolicy.hpp"
@@ -41,8 +42,6 @@ void G1Arguments::parse_verification_type(const char* type) {
     G1HeapVerifier::enable_verification_type(G1HeapVerifier::G1VerifyCleanup);
   } else if (strcmp(type, "full") == 0) {
     G1HeapVerifier::enable_verification_type(G1HeapVerifier::G1VerifyFull);
-  } else {
-    log_warning(gc, verify)("VerifyGCType: '%s' is unknown. Available types are: young-normal, concurrent-start, mixed, remark, cleanup and full", type);
   }
 }
 
@@ -97,8 +96,6 @@ void G1Arguments::initialize() {
   if (FLAG_IS_DEFAULT(ParallelRefProcEnabled) && ParallelGCThreads > 1) {
     FLAG_SET_DEFAULT(ParallelRefProcEnabled, true);
   }
-
-  log_trace(gc)("MarkStackSize: %uk  MarkStackSizeMax: %uk", (unsigned int) (MarkStackSize / K), (uint) (MarkStackSizeMax / K));
 
   // By default do not let the target stack size to be more than 1/4 of the entries
   if (FLAG_IS_DEFAULT(GCDrainStackTargetSize)) {

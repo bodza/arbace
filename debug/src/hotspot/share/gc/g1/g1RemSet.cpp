@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/dirtyCardQueue.hpp"
 #include "gc/g1/g1BarrierSet.hpp"
 #include "gc/g1/g1BlockOffsetTable.inline.hpp"
@@ -48,7 +49,6 @@ private:
       _num_dirty_regions(num_dirty_regions),
       _chunk_length(chunk_length),
       _cur_dirty_regions(0) {
-
     }
 
     static size_t chunk_size() { return M; }
@@ -238,14 +238,11 @@ public:
     // Iterate over the dirty cards region list.
     G1ClearCardTableTask cl(G1CollectedHeap::heap(), _dirty_region_buffer, _cur_dirty_region, chunk_length);
 
-    log_debug(gc, ergo)("Running %s using %u workers for " SIZE_FORMAT " units of work for " SIZE_FORMAT " regions.", cl.name(), num_workers, num_chunks, _cur_dirty_region);
     workers->run_task(&cl, num_workers);
   }
 };
 
-G1RemSet::G1RemSet(G1CollectedHeap* g1h,
-                   G1CardTable* ct,
-                   G1HotCardCache* hot_card_cache) :
+G1RemSet::G1RemSet(G1CollectedHeap* g1h, G1CardTable* ct, G1HotCardCache* hot_card_cache) :
   _g1h(g1h),
   _scan_state(new G1RemSetScanState()),
   _num_conc_refined_cards(0),
@@ -270,10 +267,7 @@ void G1RemSet::initialize(size_t capacity, uint max_regions) {
   _scan_state->initialize(max_regions);
 }
 
-G1ScanRSForRegionClosure::G1ScanRSForRegionClosure(G1RemSetScanState* scan_state,
-                                                   G1ScanObjsDuringScanRSClosure* scan_obj_on_card,
-                                                   G1ParScanThreadState* pss,
-                                                   uint worker_i) :
+G1ScanRSForRegionClosure::G1ScanRSForRegionClosure(G1RemSetScanState* scan_state, G1ScanObjsDuringScanRSClosure* scan_obj_on_card, G1ParScanThreadState* pss, uint worker_i) :
   _g1h(G1CollectedHeap::heap()),
   _ct(_g1h->card_table()),
   _pss(pss),
@@ -482,8 +476,7 @@ void G1RemSet::cleanup_after_oops_into_collection_set_do() {
   phase_times->record_clear_ct_time((os::elapsedTime() - start) * 1000.0);
 }
 
-inline void check_card_ptr(jbyte* card_ptr, G1CardTable* ct) {
-}
+inline void check_card_ptr(jbyte* card_ptr, G1CardTable* ct) { }
 
 void G1RemSet::refine_card_concurrently(jbyte* card_ptr, uint worker_i) {
 
@@ -647,33 +640,6 @@ bool G1RemSet::refine_card_during_gc(jbyte* card_ptr, G1ScanObjsDuringUpdateRSCl
   update_rs_cl->set_region(card_region);
   bool card_processed = card_region->oops_on_card_seq_iterate_careful<true>(dirty_region, update_rs_cl);
   return true;
-}
-
-void G1RemSet::print_periodic_summary_info(const char* header, uint period_count) {
-  if ((G1SummarizeRSetStatsPeriod > 0) && log_is_enabled(Trace, gc, remset) && (period_count % G1SummarizeRSetStatsPeriod == 0)) {
-
-    G1RemSetSummary current(this);
-    _prev_period_summary.subtract_from(&current);
-
-    Log(gc, remset) log;
-    log.trace("%s", header);
-    ResourceMark rm;
-    LogStream ls(log.trace());
-    _prev_period_summary.print_on(&ls);
-
-    _prev_period_summary.set(&current);
-  }
-}
-
-void G1RemSet::print_summary_info() {
-  Log(gc, remset, exit) log;
-  if (log.is_trace()) {
-    log.trace(" Cumulative RS summary");
-    G1RemSetSummary current(this);
-    ResourceMark rm;
-    LogStream ls(log.trace());
-    current.print_on(&ls);
-  }
 }
 
 class G1RebuildRemSetTask: public AbstractGangTask {
@@ -847,21 +813,6 @@ public:
                                                         next_chunk);
         Tickspan time = Ticks::now() - start;
 
-        log_trace(gc, remset, tracking)("Rebuilt region %u "
-                                        "live " SIZE_FORMAT " "
-                                        "time %.3fms "
-                                        "marked bytes " SIZE_FORMAT " "
-                                        "bot " PTR_FORMAT " "
-                                        "TAMS " PTR_FORMAT " "
-                                        "TARS " PTR_FORMAT,
-                                        region_idx,
-                                        _cm->liveness(region_idx) * HeapWordSize,
-                                        time.seconds() * 1000.0,
-                                        marked_bytes,
-                                        p2i(hr->bottom()),
-                                        p2i(top_at_mark_start),
-                                        p2i(top_at_rebuild_start));
-
         if (marked_bytes > 0) {
           total_marked_bytes += marked_bytes;
         }
@@ -885,9 +836,7 @@ public:
 
   uint _worker_id_offset;
 public:
-  G1RebuildRemSetTask(G1ConcurrentMark* cm,
-                      uint n_workers,
-                      uint worker_id_offset) :
+  G1RebuildRemSetTask(G1ConcurrentMark* cm, uint n_workers, uint worker_id_offset) :
       AbstractGangTask("G1 Rebuild Remembered Set"),
       _cm(cm),
       _hr_claimer(n_workers),

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_CFGPrinter.hpp"
 #include "c1/c1_Compilation.hpp"
 #include "c1/c1_IR.hpp"
@@ -105,8 +106,7 @@ void Compilation::build_hir() {
   // setup ir
   CompileLog* log = this->log();
   if (log != NULL) {
-    log->begin_head("parse method='%d' ",
-                    log->identify(_method));
+    log->begin_head("parse method='%d' ", log->identify(_method));
     log->stamp();
     log->end_head();
   }
@@ -431,8 +431,7 @@ void Compilation::generate_exception_handler_table() {
   }
 }
 
-Compilation::Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* method,
-                         int osr_bci, BufferBlob* buffer_blob, DirectiveSet* directive)
+Compilation::Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* method, int osr_bci, BufferBlob* buffer_blob, DirectiveSet* directive)
 : _compiler(compiler)
 , _env(env)
 , _directive(directive)

@@ -43,8 +43,7 @@ class Handle {
 
  protected:
   oop     obj() const                            { return _handle == NULL ? (oop)NULL : *_handle; }
-  oop     non_null_obj() const                   {
-    return *_handle; }
+  oop     non_null_obj() const                   { return *_handle; }
 
  public:
   // Constructors

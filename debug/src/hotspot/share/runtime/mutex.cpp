@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "runtime/atomic.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
 #include "runtime/mutex.hpp"
@@ -1022,8 +1023,7 @@ bool Monitor::wait(bool no_safepoint_check, long timeout, bool as_suspend_equiva
   return wait_status != 0;          // return true IFF timeout
 }
 
-Monitor::~Monitor() {
-}
+Monitor::~Monitor() { }
 
 void Monitor::ClearMonitor(Monitor * m, const char *name) {
   m->_owner             = NULL;
@@ -1043,13 +1043,11 @@ void Monitor::ClearMonitor(Monitor * m, const char *name) {
 
 Monitor::Monitor() { ClearMonitor(this); }
 
-Monitor::Monitor(int Rank, const char * name, bool allow_vm_block,
-                 SafepointCheckRequired safepoint_check_required) {
+Monitor::Monitor(int Rank, const char * name, bool allow_vm_block, SafepointCheckRequired safepoint_check_required) {
   ClearMonitor(this, name);
 }
 
-Mutex::Mutex(int Rank, const char * name, bool allow_vm_block,
-             SafepointCheckRequired safepoint_check_required) {
+Mutex::Mutex(int Rank, const char * name, bool allow_vm_block, SafepointCheckRequired safepoint_check_required) {
   ClearMonitor((Monitor *) this, name);
 }
 

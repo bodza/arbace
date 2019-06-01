@@ -1,6 +1,6 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
-// #include "jimage.hpp"
 #include "classfile/classFileStream.hpp"
 #include "classfile/classLoader.inline.hpp"
 #include "classfile/classLoaderData.inline.hpp"
@@ -119,8 +119,7 @@ bool string_starts_with(const char* str, const char* str_to_find) {
 static const char* get_jimage_version_string() {
   static char version_string[10] = "";
   if (version_string[0] == '\0') {
-    jio_snprintf(version_string, sizeof(version_string), "%d.%d",
-                 Abstract_VM_Version::vm_major_version(), Abstract_VM_Version::vm_minor_version());
+    jio_snprintf(version_string, sizeof(version_string), "%d.%d", Abstract_VM_Version::vm_major_version(), Abstract_VM_Version::vm_minor_version());
   }
   return (const char*)version_string;
 }
@@ -528,14 +527,11 @@ void ClassLoader::add_to_exploded_build_list(Symbol* module_sym, TRAPS) {
         MutexLocker ml(Module_lock, THREAD);
         _exploded_entries->push(module_cpl);
       }
-      log_info(class, load)("path: %s", path);
     }
   }
 }
 
-ClassPathEntry* ClassLoader::create_class_path_entry(const char *path, const struct stat* st,
-                                                     bool throw_exception,
-                                                     bool is_boot_append, TRAPS) {
+ClassPathEntry* ClassLoader::create_class_path_entry(const char *path, const struct stat* st, bool throw_exception, bool is_boot_append, TRAPS) {
   JavaThread* thread = JavaThread::current();
   ClassPathEntry* new_entry = NULL;
   if ((st->st_mode & S_IFMT) == S_IFREG) {
@@ -580,12 +576,9 @@ ClassPathEntry* ClassLoader::create_class_path_entry(const char *path, const str
         }
       }
     }
-    log_info(class, path)("opened: %s", path);
-    log_info(class, load)("opened: %s", path);
   } else {
     // Directory
     new_entry = new ClassPathDirEntry(path);
-    log_info(class, load)("path: %s", path);
   }
   return new_entry;
 }
@@ -648,8 +641,7 @@ void ClassLoader::add_to_boot_append_entries(ClassPathEntry *new_entry) {
 // Note that at dump time, ClassLoader::_app_classpath_entries are NOT used for
 // loading app classes. Instead, the app class are loaded by the
 // jdk/internal/loader/ClassLoaders$AppClassLoader instance.
-void ClassLoader::add_to_app_classpath_entries(const char* path, ClassPathEntry* entry, bool check_for_duplicates) {
-}
+void ClassLoader::add_to_app_classpath_entries(const char* path, ClassPathEntry* entry, bool check_for_duplicates) { }
 
 // Returns true IFF the file/dir exists and the entry was successfully created.
 bool ClassLoader::update_class_path_entry_list(const char *path, bool check_for_duplicates, bool is_boot_append, bool throw_exception) {
@@ -831,9 +823,7 @@ objArrayOop ClassLoader::get_system_packages(TRAPS) {
 
     // Collect the packages that have at least one loaded class.
     for (int x = 0; x < pe_table->table_size(); x++) {
-      for (PackageEntry* package_entry = pe_table->bucket(x);
-           package_entry != NULL;
-           package_entry = package_entry->next()) {
+      for (PackageEntry* package_entry = pe_table->bucket(x); package_entry != NULL; package_entry = package_entry->next()) {
         if (package_entry->has_loaded_class()) {
           loaded_class_pkgs->append(package_entry);
         }
@@ -867,8 +857,7 @@ const char* ClassLoader::file_name_for_class_name(const char* class_name,
   return file_name;
 }
 
-ClassPathEntry* find_first_module_cpe(ModuleEntry* mod_entry,
-                                      const GrowableArray<ModuleClassPathList*>* const module_list) {
+ClassPathEntry* find_first_module_cpe(ModuleEntry* mod_entry, const GrowableArray<ModuleClassPathList*>* const module_list) {
   int num_of_entries = module_list->length();
   const Symbol* class_module_name = mod_entry->name();
 
@@ -886,10 +875,7 @@ ClassPathEntry* find_first_module_cpe(ModuleEntry* mod_entry,
 }
 
 // Search either the patch-module or exploded build entries for class.
-ClassFileStream* ClassLoader::search_module_entries(const GrowableArray<ModuleClassPathList*>* const module_list,
-                                                    const char* const class_name,
-                                                    const char* const file_name,
-                                                    TRAPS) {
+ClassFileStream* ClassLoader::search_module_entries(const GrowableArray<ModuleClassPathList*>* const module_list, const char* const class_name, const char* const file_name, TRAPS) {
   ClassFileStream* stream = NULL;
 
   // Find the class' defining module in the boot loader's module entry table

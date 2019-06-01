@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/moduleEntry.hpp"
 #include "classfile/packageEntry.hpp"
 #include "classfile/symbolTable.hpp"
@@ -28,8 +29,7 @@ ObjArrayKlass* ObjArrayKlass::allocate(ClassLoaderData* loader_data, int n, Klas
   return new (loader_data, size, THREAD) ObjArrayKlass(n, k, name);
 }
 
-Klass* ObjArrayKlass::allocate_objArray_klass(ClassLoaderData* loader_data,
-                                                int n, Klass* element_klass, TRAPS) {
+Klass* ObjArrayKlass::allocate_objArray_klass(ClassLoaderData* loader_data, int n, Klass* element_klass, TRAPS) {
 
   // Eagerly allocate the direct array supertype.
   Klass* super_klass = NULL;
@@ -202,8 +202,7 @@ void ObjArrayKlass::do_copy(arrayOop s, size_t src_offset, arrayOop d, size_t ds
         ResourceMark rm(THREAD);
         stringStream ss;
         if (!bound->is_subtype_of(stype)) {
-          ss.print("arraycopy: type mismatch: can not copy %s[] into %s[]",
-                   stype->external_name(), bound->external_name());
+          ss.print("arraycopy: type mismatch: can not copy %s[] into %s[]", stype->external_name(), bound->external_name());
         } else {
           // oop_arraycopy should return the index in the source array that
           // contains the problematic oop.
@@ -221,8 +220,7 @@ void ObjArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos,
     ResourceMark rm(THREAD);
     stringStream ss;
     if (d->is_typeArray()) {
-      ss.print("arraycopy: type mismatch: can not copy object array[] into %s[]",
-               type2name_tab[ArrayKlass::cast(d->klass())->element_type()]);
+      ss.print("arraycopy: type mismatch: can not copy object array[] into %s[]", type2name_tab[ArrayKlass::cast(d->klass())->element_type()]);
     } else {
       ss.print("arraycopy: destination type %s is not an array", d->klass()->external_name());
     }
@@ -235,11 +233,9 @@ void ObjArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos,
     ResourceMark rm(THREAD);
     stringStream ss;
     if (src_pos < 0) {
-      ss.print("arraycopy: source index %d out of bounds for object array[%d]",
-               src_pos, s->length());
+      ss.print("arraycopy: source index %d out of bounds for object array[%d]", src_pos, s->length());
     } else if (dst_pos < 0) {
-      ss.print("arraycopy: destination index %d out of bounds for object array[%d]",
-               dst_pos, d->length());
+      ss.print("arraycopy: destination index %d out of bounds for object array[%d]", dst_pos, d->length());
     } else {
       ss.print("arraycopy: length %d is negative", length);
     }
@@ -252,11 +248,9 @@ void ObjArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos,
     ResourceMark rm(THREAD);
     stringStream ss;
     if (((unsigned int) length + (unsigned int) src_pos) > (unsigned int) s->length()) {
-      ss.print("arraycopy: last source index %u out of bounds for object array[%d]",
-               (unsigned int) length + (unsigned int) src_pos, s->length());
+      ss.print("arraycopy: last source index %u out of bounds for object array[%d]", (unsigned int) length + (unsigned int) src_pos, s->length());
     } else {
-      ss.print("arraycopy: last destination index %u out of bounds for object array[%d]",
-               (unsigned int) length + (unsigned int) dst_pos, d->length());
+      ss.print("arraycopy: last destination index %u out of bounds for object array[%d]", (unsigned int) length + (unsigned int) dst_pos, d->length());
     }
     THROW_MSG(vmSymbols::java_lang_ArrayIndexOutOfBoundsException(), ss.as_string());
   }
@@ -329,8 +323,7 @@ bool ObjArrayKlass::can_be_primary_super_slow() const {
     return Klass::can_be_primary_super_slow();
 }
 
-GrowableArray<Klass*>* ObjArrayKlass::compute_secondary_supers(int num_extra_slots,
-                                                               Array<Klass*>* transitive_interfaces) {
+GrowableArray<Klass*>* ObjArrayKlass::compute_secondary_supers(int num_extra_slots, Array<Klass*>* transitive_interfaces) {
   // interfaces = { cloneable_klass, serializable_klass, elemSuper[], ... };
   Array<Klass*>* elem_supers = element_klass()->secondary_supers();
   int num_elem_supers = elem_supers == NULL ? 0 : elem_supers->length();
@@ -395,8 +388,7 @@ PackageEntry* ObjArrayKlass::package() const {
 
 // Printing
 
-void ObjArrayKlass::print_on(outputStream* st) const {
-}
+void ObjArrayKlass::print_on(outputStream* st) const { }
 
 void ObjArrayKlass::print_value_on(outputStream* st) const {
 

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "asm/macroAssembler.hpp"
 #include "classfile/javaClasses.inline.hpp"
@@ -119,7 +120,6 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
                         Address(rdx_argp, ConstMethod::size_of_parameters_offset()),
                         sizeof(u2), /*is_signed*/ false);
     rdx_first_arg_addr = __ argument_address(rdx_argp, -1);
-  } else {
   }
 
   if (!is_signature_polymorphic_static(iid)) {

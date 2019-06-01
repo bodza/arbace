@@ -344,8 +344,7 @@ class Method : public Metadata {
   int  vtable_index() const                      { return _vtable_index; }
   void set_vtable_index(int index);
   bool has_itable_index() const                  { return _vtable_index <= itable_index_max; }
-  int  itable_index() const                      {
-                                                   return itable_index_max - _vtable_index; }
+  int  itable_index() const                      { return itable_index_max - _vtable_index; }
   void set_itable_index(int index);
 
   // interpreter entry
@@ -826,8 +825,7 @@ class Method : public Metadata {
  private:
 
   // Inlined elements
-  address* native_function_addr() const          {
-    return (address*) (this+1); }
+  address* native_function_addr() const          { return (address*) (this+1); }
   address* signature_handler_addr() const        { return native_function_addr() + 1; }
 };
 
@@ -865,16 +863,7 @@ class CompressedLineNumberWriteStream: public CompressedWriteStream {
     write_pair_regular(bci_delta, line_delta);
   }
 
-// Windows AMD64 + Apr 2005 PSDK with /O2 generates bad code for write_pair.
-// Disabling optimization doesn't work for methods in header files
-// so we force it to call through the non-optimized version in the .cpp.
-// It's gross, but it's the only way we can ensure that all callers are
-// fixed.  _MSC_VER is defined by the windows compiler
-#if defined(_M_AMD64) && _MSC_VER >= 1400
-  void write_pair(int bci, int line);
-#else
   void write_pair(int bci, int line) { write_pair_inline(bci, line); }
-#endif
 
   // Write end-of-stream marker
   void write_terminator()                        { write_byte(0); }

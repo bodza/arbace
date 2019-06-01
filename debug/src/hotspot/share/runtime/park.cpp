@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "memory/allocation.inline.hpp"
 #include "runtime/thread.hpp"
 

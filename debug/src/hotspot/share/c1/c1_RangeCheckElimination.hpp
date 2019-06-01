@@ -202,7 +202,6 @@ public:
   void process_access_indexed(BlockBegin *loop_header, BlockBegin *block, AccessIndexed *ai);                // process indexed access
 
   void dump_condition_stack(BlockBegin *cur_block);
-  static void print_statistics();
 };
 
 #endif

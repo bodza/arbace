@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_CFGPrinter.hpp"
 #include "c1/c1_CodeStubs.hpp"
 #include "c1/c1_Compilation.hpp"
@@ -376,7 +377,6 @@ void LinearScan::eliminate_spill_moves() {
       block->lir()->append(&insertion_buffer);
     }
   }
-
 }
 
 // ********** Phase 1: number all instructions in all blocks
@@ -844,7 +844,7 @@ IntervalUseKind LinearScan::use_kind_of_input_operand(LIR_Op* op, LIR_Opr opr) {
     }
   }
 
-#if defined(X86) || defined(S390)
+#if defined(X86)
   if (op->code() == lir_cmove) {
     // conditional moves can handle stack operands
     return shouldHaveRegister;
@@ -854,7 +854,7 @@ IntervalUseKind LinearScan::use_kind_of_input_operand(LIR_Op* op, LIR_Opr opr) {
   // this operand is allowed to be on the stack in some cases
   BasicType opr_type = opr->type_register();
   if (opr_type == T_FLOAT || opr_type == T_DOUBLE) {
-    if ((UseSSE == 1 && opr_type == T_FLOAT) || UseSSE >= 2 S390_ONLY(|| true)) {
+    if ((UseSSE == 1 && opr_type == T_FLOAT) || UseSSE >= 2) {
       // SSE float instruction (T_DOUBLE only supported with SSE2)
       switch (op->code()) {
         case lir_cmp:
@@ -1186,7 +1186,6 @@ void LinearScan::create_unhandled_lists(Interval** list1, Interval** list2, bool
 
   if (list1_prev != NULL) list1_prev->set_next(Interval::end());
   if (list2_prev != NULL) list2_prev->set_next(Interval::end());
-
 }
 
 void LinearScan::sort_intervals_before_allocation() {
@@ -1485,7 +1484,6 @@ void LinearScan::resolve_exception_entry(BlockBegin* block, int reg_num, MoveRes
       move_resolver.add_mapping(spilled_part, interval);
     }
     assign_spill_slot(spilled_part);
-
   }
 }
 
@@ -1711,9 +1709,7 @@ LIR_Opr LinearScan::calc_operand_for_interval(const Interval* interval) {
         }
 #endif
 
-#ifdef SPARC
-        LIR_Opr result = LIR_OprFact::double_fpu(interval->assigned_regHi() - pd_first_fpu_reg, assigned_reg - pd_first_fpu_reg);
-#elif defined(ARM32)
+#if defined(ARM32)
         LIR_Opr result = LIR_OprFact::double_fpu(assigned_reg - pd_first_fpu_reg, interval->assigned_regHi() - pd_first_fpu_reg);
 #else
         LIR_Opr result = LIR_OprFact::double_fpu(assigned_reg - pd_first_fpu_reg);
@@ -1994,11 +1990,6 @@ int LinearScan::append_scope_value_for_operand(LIR_Opr opr, GrowableArray<ScopeV
     VMReg rname = frame_map()->fpu_regname(opr->fpu_regnr());
 #ifndef __SOFTFP__
 #ifndef VM_LITTLE_ENDIAN
-    // On S390 a (single precision) float value occupies only the high
-    // word of the full double register. So when the double register is
-    // stored to memory (e.g. by the RegisterSaver), then the float value
-    // is found at offset 0. I.e. the code below is not needed on S390.
-#ifndef S390
     if (! float_saved_as_double) {
       // On big endian system, we may have an issue if float registers use only
       // the low half of the (same) double registers.
@@ -2012,7 +2003,6 @@ int LinearScan::append_scope_value_for_operand(LIR_Opr opr, GrowableArray<ScopeV
         rname = next; // VMReg for the low bits, e.g. the real VMReg for the float
       }
     }
-#endif
 #endif
 #endif
     LocationValue* sv = new LocationValue(Location::new_reg_loc(loc_type, rname));
@@ -2062,12 +2052,6 @@ int LinearScan::append_scope_value_for_operand(LIR_Opr opr, GrowableArray<ScopeV
       // must be present
       opr = _fpu_stack_allocator->to_fpu_stack(opr);
 
-#endif
-#ifdef SPARC
-#endif
-#ifdef ARM32
-#endif
-#ifdef PPC32
 #endif
 
 #ifdef VM_LITTLE_ENDIAN
@@ -2172,7 +2156,6 @@ IRScopeDebugInfo* LinearScan::compute_debug_info_for_scope(int op_id, IRScope* c
 
       Value local = cur_state->local_at(pos);
       pos += append_scope_value(op_id, local, locals);
-
     }
   } else if (cur_scope->method()->max_locals() > 0) {
     nof_locals = cur_scope->method()->max_locals();
@@ -2191,7 +2174,6 @@ IRScopeDebugInfo* LinearScan::compute_debug_info_for_scope(int op_id, IRScope* c
     while (pos < nof_stack) {
       Value expression = cur_state->stack_at_inc(pos);
       append_scope_value(op_id, expression, expressions);
-
     }
   }
 
@@ -2217,7 +2199,6 @@ void LinearScan::compute_debug_info(CodeEmitInfo* info, int op_id) {
   if (info->_scope_debug_info == NULL) {
     // compute debug information
     info->_scope_debug_info = compute_debug_info_for_scope(op_id, innermost_scope, innermost_state, innermost_state);
-  } else {
   }
 }
 
@@ -2259,7 +2240,6 @@ void LinearScan::assign_reg_num(LIR_OpList* instructions, IntervalWalker* iw) {
             assign_reg_num(handler->entry_code()->instructions_list(), NULL);
           }
         }
-      } else {
       }
 
       // compute oop map
@@ -3067,7 +3047,6 @@ void IntervalWalker::remove_from_list(Interval* i) {
   } else {
     deleted = remove_from_list(inactive_first_addr(anyKind), i);
   }
-
 }
 
 void IntervalWalker::walk_to(IntervalState state, int from) {
@@ -3168,8 +3147,7 @@ void IntervalWalker::walk_to(int lir_op_id) {
   }
 }
 
-void IntervalWalker::interval_moved(Interval* interval, IntervalKind kind, IntervalState from, IntervalState to) {
-}
+void IntervalWalker::interval_moved(Interval* interval, IntervalKind kind, IntervalState from, IntervalState to) { }
 
 // **** Implementation of LinearScanWalker **************************
 
@@ -3307,7 +3285,6 @@ void LinearScanWalker::spill_block_inactive_fixed(Interval* cur) {
   while (list != Interval::end()) {
     if (cur->to() > list->current_from()) {
       set_block_pos(list, list->current_intersects_at(cur));
-    } else {
     }
 
     list = list->next();
@@ -3934,7 +3911,6 @@ void LinearScanWalker::init_vars_for_alloc(Interval* cur) {
     _first_reg = pd_first_cpu_reg;
     _last_reg = FrameMap::last_cpu_reg();
   }
-
 }
 
 bool LinearScanWalker::is_move(LIR_Op* op, Interval* from, Interval* to) {
@@ -4307,9 +4283,7 @@ void ControlFlowOptimizer::reorder_short_loop(BlockList* code, BlockBegin* heade
     if (end_block->number_of_sux() == 1 && end_block->sux_at(0) == header_block) {
       // short loop from header_idx to end_idx found -> reorder blocks such that
       // the header_block is the last block instead of the first block of the loop
-      TRACE_LINEAR_SCAN(1, tty->print_cr("Reordering short loop: length %d, header B%d, end B%d",
-                                         end_idx - header_idx + 1,
-                                         header_block->block_id(), end_block->block_id()));
+      TRACE_LINEAR_SCAN(1, tty->print_cr("Reordering short loop: length %d, header B%d, end B%d", end_idx - header_idx + 1, header_block->block_id(), end_block->block_id()));
 
       for (int j = header_idx; j < end_idx; j++) {
         code->at_put(j, code->at(j + 1));

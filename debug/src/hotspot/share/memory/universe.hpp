@@ -504,8 +504,7 @@ class DeferredObjAllocEvent : public CHeapObj<mtInternal> {
       _arena_id = id;
     }
 
-    ~DeferredObjAllocEvent() {
-    }
+    ~DeferredObjAllocEvent() { }
 
     jint   arena_id() { return _arena_id; }
     size_t bytesize() { return _bytesize; }

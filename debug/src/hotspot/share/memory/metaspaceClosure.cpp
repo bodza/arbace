@@ -1,10 +1,9 @@
 #include "precompiled.hpp"
+
 #include "memory/metaspaceClosure.hpp"
 
 // Update the reference to point to new_loc.
 void MetaspaceClosure::Ref::update(address new_loc) const {
-  log_trace(cds)("Ref: [" PTR_FORMAT "] -> " PTR_FORMAT " => " PTR_FORMAT,
-                 p2i(mpp()), p2i(obj()), p2i(new_loc));
   uintx p = (uintx)new_loc;
   p |= flag_bits(); // Make sure the flag bits are copied to the new pointer.
   *(address*)mpp() = (address)p;

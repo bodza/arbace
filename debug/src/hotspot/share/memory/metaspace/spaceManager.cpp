@@ -134,17 +134,6 @@ void SpaceManager::track_metaspace_memory_usage() {
 MetaWord* SpaceManager::grow_and_allocate(size_t word_size) {
   MutexLockerEx cl(MetaspaceExpand_lock, Mutex::_no_safepoint_check_flag);
 
-  if (log_is_enabled(Trace, gc, metaspace, freelist)) {
-    size_t words_left = 0;
-    size_t words_used = 0;
-    if (current_chunk() != NULL) {
-      words_left = current_chunk()->free_word_size();
-      words_used = current_chunk()->used_word_size();
-    }
-    log_trace(gc, metaspace, freelist)("SpaceManager::grow_and_allocate for " SIZE_FORMAT " words " SIZE_FORMAT " words used " SIZE_FORMAT " words left",
-                                       word_size, words_used, words_left);
-  }
-
   // Get another chunk
   size_t chunk_word_size = calc_chunk_size(word_size);
   Metachunk* next = get_new_chunk(chunk_word_size);
@@ -179,9 +168,7 @@ void SpaceManager::print_on(outputStream* st) const {
   stat.print_on(st, 1*K, false);
 }
 
-SpaceManager::SpaceManager(Metaspace::MetadataType mdtype,
-                           Metaspace::MetaspaceType space_type,//
-                           Mutex* lock) :
+SpaceManager::SpaceManager(Metaspace::MetadataType mdtype, Metaspace::MetaspaceType space_type, Mutex* lock) :
   _mdtype(mdtype),
   _space_type(space_type),
   _capacity_words(0),
@@ -194,7 +181,6 @@ SpaceManager::SpaceManager(Metaspace::MetadataType mdtype,
 {
   Metadebug::init_allocation_fail_alot_count();
   memset(_num_chunks_by_type, 0, sizeof(_num_chunks_by_type));
-  log_trace(gc, metaspace, freelist)("SpaceManager(): " PTR_FORMAT, p2i(this));
 }
 
 void SpaceManager::account_for_new_chunk(const Metachunk* new_chunk) {

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaClasses.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "gc/shared/vmGCOperations.hpp"
@@ -97,7 +98,6 @@ static jint get_agent_properties(AttachOperation* op, outputStream* out) {
 static jint data_dump(AttachOperation* op, outputStream* out) {
   if (!ReduceSignalUsage) {
     AttachListener::pd_data_dump();
-  } else {
   }
   return JNI_OK;
 }
@@ -383,8 +383,7 @@ void AttachListener::init() {
 
     // Check that thread and osthread were created
     if (listener_thread == NULL || listener_thread->osthread() == NULL) {
-      vm_exit_during_initialization("java.lang.OutOfMemoryError",
-                                    os::native_thread_creation_failed_msg());
+      vm_exit_during_initialization("java.lang.OutOfMemoryError", os::native_thread_creation_failed_msg());
     }
 
     java_lang_Thread::set_thread(thread_oop(), listener_thread);

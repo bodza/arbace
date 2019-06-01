@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/gcConfig.hpp"
 #include "runtime/globals_extension.hpp"
 #include "runtime/java.hpp"
@@ -52,7 +53,6 @@ void GCConfig::fail_if_unsupported_gc_is_selected() {
 void GCConfig::select_gc_ergonomically() {
   if (os::is_server_class_machine()) {
     FLAG_SET_ERGO_IF_DEFAULT(bool, UseG1GC, true);
-  } else {
   }
 }
 

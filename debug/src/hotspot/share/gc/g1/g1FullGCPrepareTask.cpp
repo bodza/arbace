@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1ConcurrentMarkBitMap.inline.hpp"
 #include "gc/g1/g1FullCollector.hpp"
@@ -68,8 +69,7 @@ void G1FullGCPrepareTask::work(uint worker_id) {
   log_task("Prepare compaction task", worker_id, start);
 }
 
-G1FullGCPrepareTask::G1CalculatePointersClosure::G1CalculatePointersClosure(G1CMBitMap* bitmap,
-                                                                            G1FullGCCompactionPoint* cp) :
+G1FullGCPrepareTask::G1CalculatePointersClosure::G1CalculatePointersClosure(G1CMBitMap* bitmap, G1FullGCCompactionPoint* cp) :
     _g1h(G1CollectedHeap::heap()),
     _bitmap(bitmap),
     _cp(cp),

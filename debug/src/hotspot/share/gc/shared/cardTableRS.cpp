@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/cardTableRS.hpp"
 #include "gc/shared/genCollectedHeap.hpp"
 #include "gc/shared/genOopClosures.hpp"
@@ -53,9 +54,7 @@ void CLDRemSet::clear_mod_union() {
 }
 
 jbyte CardTableRS::find_unused_youngergenP_card_value() {
-  for (jbyte v = youngergenP1_card;
-       v < cur_youngergen_and_prev_nonclean_card;
-       v++) {
+  for (jbyte v = youngergenP1_card; v < cur_youngergen_and_prev_nonclean_card; v++) {
     bool seen = false;
     for (int g = 0; g < _regions_to_iterate; g++) {
       if (_last_cur_val_in_gen[g] == v) {
@@ -109,7 +108,6 @@ inline bool ClearNoncleanCardWrapper::clear_card_parallel(jbyte* entry) {
       jbyte res = Atomic::cmpxchg(CardTableRS::clean_card_val(), entry, entry_val);
       if (res == entry_val) {
         break;
-      } else {
       }
     } else if (entry_val == CardTableRS::cur_youngergen_and_prev_nonclean_card) {
       // Parallelism shouldn't matter in this case.  Only the thread

@@ -30,7 +30,7 @@ class SafepointMechanism : public AllStatic {
   static void default_initialize();
   static void initialize_serialize_page();
 
-  static void pd_initialize() NOT_AIX({ default_initialize(); });
+  static void pd_initialize() { default_initialize(); };
 
   // By adding 8 to the base address of the protected polling page we can differentiate
   // between the armed and disarmed value by masking out this bit.

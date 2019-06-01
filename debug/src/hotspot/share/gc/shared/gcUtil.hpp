@@ -61,7 +61,7 @@ class AdaptiveWeightedAverage : public CHeapObj<mtGC> {
   }
 
   // Useful for modifying static structures after startup.
-  void  modify(size_t avg, unsigned wt, bool force = false)  {
+  void  modify(size_t avg, unsigned wt, bool force = false) {
     _average = (float)avg;
     _weight  = wt;
   }

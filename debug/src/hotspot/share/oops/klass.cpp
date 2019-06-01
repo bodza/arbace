@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/classLoaderData.inline.hpp"
 #include "classfile/dictionary.hpp"
 #include "classfile/javaClasses.hpp"
@@ -130,9 +131,7 @@ Klass* Klass::find_field(Symbol* name, Symbol* sig, fieldDescriptor* fd) const {
   return NULL;
 }
 
-Method* Klass::uncached_lookup_method(const Symbol* name, const Symbol* signature,
-                                      OverpassLookupMode overpass_mode,
-                                      PrivateLookupMode private_mode) const {
+Method* Klass::uncached_lookup_method(const Symbol* name, const Symbol* signature, OverpassLookupMode overpass_mode, PrivateLookupMode private_mode) const {
   ShouldNotReachHere();
   return NULL;
 }
@@ -147,10 +146,7 @@ void* Klass::operator new(size_t size, ClassLoaderData* loader_data, size_t word
 // which doesn't zero out the memory before calling the constructor.
 // Need to set the _java_mirror field explicitly to not hit an assert that the field
 // should be NULL before setting it.
-Klass::Klass(KlassID id) : _id(id),
-                           _prototype_header(markOopDesc::prototype()),
-                           _shared_class_path_index(-1),
-                           _java_mirror(NULL) {
+Klass::Klass(KlassID id) : _id(id), _prototype_header(markOopDesc::prototype()), _shared_class_path_index(-1), _java_mirror(NULL) {
   _primary_supers[0] = this;
   set_super_check_offset(in_bytes(primary_supers_offset()));
 }
@@ -262,8 +258,7 @@ void Klass::initialize_supers(Klass* k, Array<Klass*>* transitive_interfaces, TR
   }
 }
 
-GrowableArray<Klass*>* Klass::compute_secondary_supers(int num_extra_slots,
-                                                       Array<Klass*>* transitive_interfaces) {
+GrowableArray<Klass*>* Klass::compute_secondary_supers(int num_extra_slots, Array<Klass*>* transitive_interfaces) {
   set_secondary_supers(Universe::the_empty_klass_array());
   return NULL;
 }
@@ -323,10 +318,6 @@ void Klass::clean_weak_klass_links(bool unloading_occurred, bool clean_alive_kla
     // Find and set the first alive sibling
     Klass* sibling = current->next_sibling();
     while (sibling != NULL && !sibling->is_loader_alive()) {
-      if (log_is_enabled(Trace, class, unload)) {
-        ResourceMark rm;
-        log_trace(class, unload)("[Unlinking class (sibling) %s]", sibling->external_name());
-      }
       sibling = sibling->next_sibling();
     }
     current->set_next_sibling(sibling);
@@ -349,10 +340,6 @@ void Klass::clean_weak_klass_links(bool unloading_occurred, bool clean_alive_kla
 }
 
 void Klass::metaspace_pointers_do(MetaspaceClosure* it) {
-  if (log_is_enabled(Trace, cds)) {
-    ResourceMark rm;
-    log_trace(cds)("Iter(Klass): %p (%s)", this, external_name());
-  }
 
   it->push(&_name);
   it->push(&_secondary_super_cache);
@@ -372,10 +359,6 @@ void Klass::metaspace_pointers_do(MetaspaceClosure* it) {
 }
 
 void Klass::remove_unshareable_info() {
-  if (log_is_enabled(Trace, cds, unshareable)) {
-    ResourceMark rm;
-    log_trace(cds, unshareable)("remove: %s", external_name());
-  }
 
   set_subklass(NULL);
   set_next_sibling(NULL);
@@ -387,19 +370,11 @@ void Klass::remove_unshareable_info() {
 }
 
 void Klass::remove_java_mirror() {
-  if (log_is_enabled(Trace, cds, unshareable)) {
-    ResourceMark rm;
-    log_trace(cds, unshareable)("remove java_mirror: %s", external_name());
-  }
   // Just null out the mirror.  The class_loader_data() no longer exists.
   _java_mirror = NULL;
 }
 
 void Klass::restore_unshareable_info(ClassLoaderData* loader_data, Handle protection_domain, TRAPS) {
-  if (log_is_enabled(Trace, cds, unshareable)) {
-    ResourceMark rm;
-    log_trace(cds, unshareable)("restore: %s", external_name());
-  }
 
   // If an exception happened during CDS restore, some of these fields may already be
   // set.  We leave the class on the CLD list, even if incomplete so that we don't
@@ -431,18 +406,14 @@ void Klass::restore_unshareable_info(ClassLoaderData* loader_data, Handle protec
 
   if (this->has_raw_archived_mirror()) {
     ResourceMark rm;
-    log_debug(cds, mirror)("%s has raw archived mirror", external_name());
     if (MetaspaceShared::open_archive_heap_region_mapped()) {
-      bool present = java_lang_Class::restore_archived_mirror(this, loader, module_handle,
-                                                              protection_domain,
-                                                              CHECK);
+      bool present = java_lang_Class::restore_archived_mirror(this, loader, module_handle, protection_domain, CHECK);
       if (present) {
         return;
       }
     }
 
     // No archived mirror data
-    log_debug(cds, mirror)("No archived mirror data for %s", external_name());
     _java_mirror = NULL;
     this->clear_has_raw_archived_mirror();
   }
@@ -450,7 +421,6 @@ void Klass::restore_unshareable_info(ClassLoaderData* loader_data, Handle protec
   // Only recreate it if not present.  A previous attempt to restore may have
   // gotten an OOM later but keep the mirror if it was created.
   if (java_mirror() == NULL) {
-    log_trace(cds, mirror)("Recreate mirror for %s", external_name());
     java_lang_Class::create_mirror(this, loader, module_handle, protection_domain, CHECK);
   }
 }
@@ -640,9 +610,7 @@ const char* Klass::joint_in_module_of_loader(const Klass* class2, bool include_p
     return class1_name;
   }
 
-  jio_snprintf(joint_description, len, "%s and %s",
-               class1_name,
-               class2_description);
+  jio_snprintf(joint_description, len, "%s and %s", class1_name, class2_description);
 
   return joint_description;
 }

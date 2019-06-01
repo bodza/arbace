@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaClasses.hpp"
 #include "classfile/javaClasses.inline.hpp"
 #include "classfile/vmSymbols.hpp"
@@ -49,8 +50,7 @@ void JavaFrameStream::next() { _vfst.next(); }
 //  frames_array   User-supplied buffers.  The 0th element is reserved
 //                 for this BaseFrameStream to use
 //
-BaseFrameStream* BaseFrameStream::from_current(JavaThread* thread, jlong magic,
-                                               objArrayHandle frames_array)
+BaseFrameStream* BaseFrameStream::from_current(JavaThread* thread, jlong magic, objArrayHandle frames_array)
 {
   oop m1 = frames_array->obj_at(magic_pos);
   if (!oopDesc::equals(m1, thread->threadObj())) return NULL;
@@ -80,9 +80,6 @@ BaseFrameStream* BaseFrameStream::from_current(JavaThread* thread, jlong magic,
 // Returns the number of frames whose information was transferred into the buffers.
 //
 int StackWalk::fill_in_frames(jlong mode, BaseFrameStream& stream, int max_nframes, int start_index, objArrayHandle frames_array, int& end_index, TRAPS) {
-  log_debug(stackwalk)("fill_in_frames limit=%d start=%d frames length=%d",
-                       max_nframes, start_index, frames_array->length());
-
   int frames_decoded = 0;
   for (; !stream.at_end(); stream.next()) {
     Method* method = stream.method();
@@ -117,9 +114,7 @@ int StackWalk::fill_in_frames(jlong mode, BaseFrameStream& stream, int max_nfram
 
     if (!need_method_info(mode) && get_caller_class(mode) && index == start_index && method->caller_sensitive()) {
       ResourceMark rm(THREAD);
-      THROW_MSG_0(vmSymbols::java_lang_UnsupportedOperationException(),
-        err_msg("StackWalker::getCallerClass called from @CallerSensitive %s method",
-                method->name_and_sig_as_C_string()));
+      THROW_MSG_0(vmSymbols::java_lang_UnsupportedOperationException(), err_msg("StackWalker::getCallerClass called from @CallerSensitive %s method", method->name_and_sig_as_C_string()));
     }
     // fill in StackFrameInfo and initialize MemberName
     stream.fill_frame(index, frames_array, method, CHECK_0);
@@ -290,8 +285,6 @@ oop StackWalk::walk(Handle stackStream, jlong mode,
                     TRAPS) {
   ResourceMark rm(THREAD);
   JavaThread* jt = (JavaThread*)THREAD;
-  log_debug(stackwalk)("Start walking: mode " JLONG_FORMAT " skip %d frames batch size %d",
-                       mode, skip_frames, frame_count);
 
   if (frames_array.is_null()) {
     THROW_MSG_(vmSymbols::java_lang_NullPointerException(), "frames_array is NULL", NULL);
@@ -402,10 +395,7 @@ oop StackWalk::fetchFirstBatch(BaseFrameStream& stream, Handle stackStream,
 //
 // Returns the end index of frame filled in the buffer.
 //
-jint StackWalk::fetchNextBatch(Handle stackStream, jlong mode, jlong magic,
-                               int frame_count, int start_index,
-                               objArrayHandle frames_array,
-                               TRAPS)
+jint StackWalk::fetchNextBatch(Handle stackStream, jlong mode, jlong magic, int frame_count, int start_index, objArrayHandle frames_array, TRAPS)
 {
   JavaThread* jt = (JavaThread*)THREAD;
   BaseFrameStream* existing_stream = BaseFrameStream::from_current(jt, magic, frames_array);
@@ -417,9 +407,6 @@ jint StackWalk::fetchNextBatch(Handle stackStream, jlong mode, jlong magic,
     THROW_MSG_(vmSymbols::java_lang_NullPointerException(), "frames_array is NULL", 0L);
   }
 
-  log_debug(stackwalk)("StackWalk::fetchNextBatch frame_count %d existing_stream "
-                       PTR_FORMAT " start %d frames %d",
-                       frame_count, p2i(existing_stream), start_index, frames_array->length());
   int end_index = start_index;
   if (frame_count <= 0) {
     return end_index;        // No operation.
@@ -431,8 +418,7 @@ jint StackWalk::fetchNextBatch(Handle stackStream, jlong mode, jlong magic,
   if (!stream.at_end()) {
     stream.next(); // advance past the last frame decoded in previous batch
     if (!stream.at_end()) {
-      int n = fill_in_frames(mode, stream, frame_count, start_index,
-                             frames_array, end_index, CHECK_0);
+      int n = fill_in_frames(mode, stream, frame_count, start_index, frames_array, end_index, CHECK_0);
       if (n < 1) {
         THROW_MSG_(vmSymbols::java_lang_InternalError(), "doStackWalk: later decode failed", 0L);
       }

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.inline.hpp"
 #include "c1/c1_Compilation.hpp"
 #include "c1/c1_FrameMap.hpp"
@@ -599,8 +600,7 @@ void LIRGenerator::do_LogicOp(LogicOp* x) {
   left.load_item();
 
   rlock_result(x);
-  if (right.is_constant() && ((right.type()->tag() == intTag && Assembler::operand_valid_for_logical_immediate(true, right.get_jint_constant()))
-          || (right.type()->tag() == longTag && Assembler::operand_valid_for_logical_immediate(false, right.get_jlong_constant()))))  {
+  if (right.is_constant() && ((right.type()->tag() == intTag && Assembler::operand_valid_for_logical_immediate(true, right.get_jint_constant())) || (right.type()->tag() == longTag && Assembler::operand_valid_for_logical_immediate(false, right.get_jlong_constant())))) {
     right.dont_load_item();
   } else {
     right.load_item();
@@ -1234,7 +1234,7 @@ void LIRGenerator::do_If(If* x) {
       yin->load_item();
     }
   } else if (tag == intTag) {
-    if (yin->is_constant() && Assembler::operand_valid_for_add_sub_immediate(yin->get_jint_constant()))  {
+    if (yin->is_constant() && Assembler::operand_valid_for_add_sub_immediate(yin->get_jint_constant())) {
       yin->dont_load_item();
     } else {
       yin->load_item();

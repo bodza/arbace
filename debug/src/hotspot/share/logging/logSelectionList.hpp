@@ -23,8 +23,7 @@ class LogSelectionList : public StackObj {
   LogSelection _selections[MaxSelections];
 
  public:
-  LogSelectionList() : _nselections(0) {
-  }
+  LogSelectionList() : _nselections(0) { }
 
   LogSelectionList(const LogSelection& selection) : _nselections(1) {
     _selections[0] = selection;

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaClasses.inline.hpp"
 #include "interpreter/bytecodeHistogram.hpp"
 #include "interpreter/bytecodeTracer.hpp"
@@ -468,8 +469,7 @@ void BytecodePrinter::print_attributes(int bci, outputStream* st) {
         for (int i = 0; i < len; i++) {
           dest[i] = bci + get_int();
         }
-        st->print(" %d " INT32_FORMAT " " INT32_FORMAT " ",
-                      default_dest, lo, hi);
+        st->print(" %d " INT32_FORMAT " " INT32_FORMAT " ", default_dest, lo, hi);
         const char *comma = "";
         for (int ll = lo; ll <= hi; ll++) {
           int idx = ll - lo;

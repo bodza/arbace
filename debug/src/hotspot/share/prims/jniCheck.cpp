@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jni.h"
 #include "jvm.h"
 #include "classfile/javaClasses.inline.hpp"
@@ -422,8 +423,7 @@ void jniCheck::validate_class_descriptor(JavaThread* thr, const char* name) {
       name[0] == JVM_SIGNATURE_CLASS &&            // 'L'
       name[len-1] == JVM_SIGNATURE_ENDCLASS ) {    // ';'
     char msg[JVM_MAXPATHLEN];
-    jio_snprintf(msg, JVM_MAXPATHLEN, "%s%s%s",
-                 warn_bad_class_descriptor1, name, warn_bad_class_descriptor2);
+    jio_snprintf(msg, JVM_MAXPATHLEN, "%s%s%s", warn_bad_class_descriptor1, name, warn_bad_class_descriptor2);
     ReportJNIWarning(thr, msg);
   }
 }
@@ -612,8 +612,7 @@ JNI_ENTRY_CHECKED(void,
 JNI_END
 
 JNI_ENTRY_CHECKED(void,
-  checked_jni_FatalError(JNIEnv *env,
-                         const char *msg))
+  checked_jni_FatalError(JNIEnv *env, const char *msg))
     thr->clear_pending_jni_exception_check();
     functionEnter(thr);
     UNCHECKED()->FatalError(env, msg);
@@ -621,8 +620,7 @@ JNI_ENTRY_CHECKED(void,
 JNI_END
 
 JNI_ENTRY_CHECKED(jint,
-  checked_jni_PushLocalFrame(JNIEnv *env,
-                             jint capacity))
+  checked_jni_PushLocalFrame(JNIEnv *env, jint capacity))
     functionEnterExceptionAllowed(thr);
     if (capacity < 0)
       NativeReportJNIFatalError(thr, "negative capacity");
@@ -635,8 +633,7 @@ JNI_ENTRY_CHECKED(jint,
 JNI_END
 
 JNI_ENTRY_CHECKED(jobject,
-  checked_jni_PopLocalFrame(JNIEnv *env,
-                            jobject result))
+  checked_jni_PopLocalFrame(JNIEnv *env, jobject result))
     functionEnterExceptionAllowed(thr);
     jobject res = UNCHECKED()->PopLocalFrame(env, result);
     functionExit(thr);
@@ -715,8 +712,7 @@ JNI_ENTRY_CHECKED(jobject,
 JNI_END
 
 JNI_ENTRY_CHECKED(jint,
-  checked_jni_EnsureLocalCapacity(JNIEnv *env,
-                                  jint capacity))
+  checked_jni_EnsureLocalCapacity(JNIEnv *env, jint capacity))
     functionEnter(thr);
     if (capacity < 0) {
       NativeReportJNIFatalError(thr, "negative capacity");
@@ -1303,8 +1299,7 @@ JNI_ENTRY_CHECKED(void,
     if (chars == NULL) {
        // still do the unchecked call to allow dtrace probes
        UNCHECKED()->ReleaseStringChars(env,str,chars);
-    }
-    else {
+    } else {
       GuardedMemory guarded((void*)chars);
       if (!guarded.verify_guards()) {
         tty->print_cr("ReleaseStringChars: release chars failed bounds check. string: " PTR_FORMAT " chars: " PTR_FORMAT, p2i(str), p2i(chars));
@@ -1373,8 +1368,7 @@ JNI_ENTRY_CHECKED(void,
     if (chars == NULL) {
        // still do the unchecked call to allow dtrace probes
        UNCHECKED()->ReleaseStringUTFChars(env,str,chars);
-    }
-    else {
+    } else {
       GuardedMemory guarded((void*)chars);
       if (!guarded.verify_guards()) {
         tty->print_cr("ReleaseStringUTFChars: release chars failed bounds check. string: " PTR_FORMAT " chars: " PTR_FORMAT, p2i(str), p2i(chars));

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/systemDictionary.hpp"
 #include "compiler/compilerOracle.hpp"
 #include "interpreter/bytecode.hpp"
@@ -496,8 +497,7 @@ void RetData::print_data_on(outputStream* st, const char* extra) const {
   for (row = 0; row < row_limit(); row++) {
     if (bci(row) != no_bci) {
       tab(st);
-      st->print_cr("bci(%d: count(%u) displacement(%d))",
-                   bci(row), bci_count(row), bci_displacement(row));
+      st->print_cr("bci(%d: count(%u) displacement(%d))", bci(row), bci_count(row), bci_displacement(row));
     }
   }
 }
@@ -519,8 +519,7 @@ void BranchData::post_initialize(BytecodeStream* stream, MethodData* mdo) {
 
 void BranchData::print_data_on(outputStream* st, const char* extra) const {
   print_shared(st, "BranchData", extra);
-  st->print_cr("taken(%u) displacement(%d)",
-               taken(), displacement());
+  st->print_cr("taken(%u) displacement(%d)", taken(), displacement());
   tab(st);
   st->print_cr("not taken(%u)", not_taken());
 }
@@ -587,13 +586,11 @@ void MultiBranchData::post_initialize(BytecodeStream* stream, MethodData* mdo) {
 
 void MultiBranchData::print_data_on(outputStream* st, const char* extra) const {
   print_shared(st, "MultiBranchData", extra);
-  st->print_cr("default_count(%u) displacement(%d)",
-               default_count(), default_displacement());
+  st->print_cr("default_count(%u) displacement(%d)", default_count(), default_displacement());
   int cases = number_of_cases();
   for (int i = 0; i < cases; i++) {
     tab(st);
-    st->print_cr("count(%u) displacement(%d)",
-                 count_at(i), displacement_at(i));
+    st->print_cr("count(%u) displacement(%d)", count_at(i), displacement_at(i));
   }
 }
 
@@ -1480,7 +1477,6 @@ bool MethodData::profile_parameters_for_method(const methodHandle& m) {
 }
 
 void MethodData::metaspace_pointers_do(MetaspaceClosure* it) {
-  log_trace(cds)("Iter(MethodData): %p", this);
   it->push(&_method);
 }
 
@@ -1572,14 +1568,11 @@ void MethodData::clean_extra_data(CleanExtraDataClosure* cl) {
 
 // Verify there's no unloaded or redefined method referenced by a
 // SpeculativeTrapData entry
-void MethodData::verify_extra_data_clean(CleanExtraDataClosure* cl) {
-}
+void MethodData::verify_extra_data_clean(CleanExtraDataClosure* cl) { }
 
 void MethodData::clean_method_data(bool always_clean) {
   ResourceMark rm;
-  for (ProfileData* data = first_data();
-       is_valid(data);
-       data = next_data(data)) {
+  for (ProfileData* data = first_data(); is_valid(data); data = next_data(data)) {
     data->clean_weak_klass_links(always_clean);
   }
   ParametersTypeData* parameters = parameters_type_data();
@@ -1596,9 +1589,7 @@ void MethodData::clean_method_data(bool always_clean) {
 // methods out of MethodData for all methods.
 void MethodData::clean_weak_method_links() {
   ResourceMark rm;
-  for (ProfileData* data = first_data();
-       is_valid(data);
-       data = next_data(data)) {
+  for (ProfileData* data = first_data(); is_valid(data); data = next_data(data)) {
     data->clean_weak_method_links();
   }
 

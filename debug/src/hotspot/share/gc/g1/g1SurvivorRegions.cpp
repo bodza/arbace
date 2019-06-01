@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1SurvivorRegions.hpp"
 #include "gc/g1/heapRegion.hpp"
 #include "utilities/growableArray.hpp"
@@ -15,9 +16,7 @@ uint G1SurvivorRegions::length() const {
 }
 
 void G1SurvivorRegions::convert_to_eden() {
-  for (GrowableArrayIterator<HeapRegion*> it = _regions->begin();
-       it != _regions->end();
-       ++it) {
+  for (GrowableArrayIterator<HeapRegion*> it = _regions->begin(); it != _regions->end(); ++it) {
     HeapRegion* hr = *it;
     hr->set_eden_pre_gc();
   }

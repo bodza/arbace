@@ -278,10 +278,7 @@ class ExceptionInfo: public CompilationResourceObj {
   XHandlers*      _exception_handlers; // flat list of exception handlers covering this PC
 
  public:
-  ExceptionInfo(int pco, XHandlers* exception_handlers)
-    : _pco(pco)
-    , _exception_handlers(exception_handlers)
-  { }
+  ExceptionInfo(int pco, XHandlers* exception_handlers) : _pco(pco), _exception_handlers(exception_handlers) { }
 
   int pco()                                      { return _pco; }
   XHandlers* exception_handlers()                { return _exception_handlers; }

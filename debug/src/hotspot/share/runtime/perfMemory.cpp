@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
@@ -68,15 +69,7 @@ void PerfMemory::initialize() {
     // initialization already performed
     return;
 
-  size_t capacity = align_up(PerfDataMemorySize,
-                             os::vm_allocation_granularity());
-
-  log_debug(perf, memops)("PerfDataMemorySize = " SIZE_FORMAT ","
-                          " os::vm_allocation_granularity = %d,"
-                          " adjusted size = " SIZE_FORMAT,
-                          PerfDataMemorySize,
-                          os::vm_allocation_granularity(),
-                          capacity);
+  size_t capacity = align_up(PerfDataMemorySize, os::vm_allocation_granularity());
 
   // allocate PerfData memory region
   create_memory_region(capacity);
@@ -96,15 +89,9 @@ void PerfMemory::initialize() {
     }
 
     _prologue = NEW_C_HEAP_OBJ(PerfDataPrologue, mtInternal);
-  }
-  else {
+  } else {
 
     // the PerfMemory region was created as expected.
-
-    log_debug(perf, memops)("PerfMemory created: address = " INTPTR_FORMAT ","
-                            " size = " SIZE_FORMAT,
-                            p2i(_start),
-                            _capacity);
 
     _prologue = (PerfDataPrologue *)_start;
     _end = _start + _capacity;
@@ -151,10 +138,8 @@ void PerfMemory::destroy() {
     //
     if (PrintMiscellaneous && Verbose) {
       warning("PerfMemory Overflow Occurred.\n"
-              "\tCapacity = " SIZE_FORMAT " bytes"
-              "  Used = " SIZE_FORMAT " bytes"
-              "  Overflow = " INT32_FORMAT " bytes"
-              "\n\tUse -XX:PerfDataMemorySize=<size> to specify larger size.",
+              "\tCapacity = " SIZE_FORMAT " bytes  Used = " SIZE_FORMAT " bytes  Overflow = " INT32_FORMAT " bytes\n"
+              "\tUse -XX:PerfDataMemorySize=<size> to specify larger size.",
               PerfMemory::capacity(),
               PerfMemory::used(),
               _prologue->overflow);

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/assembler.inline.hpp"
 #include "c1/c1_Compilation.hpp"
 #include "c1/c1_Instruction.hpp"
@@ -32,7 +33,7 @@ PatchingStub::PatchID LIR_Assembler::patching_id(CodeEmitInfo* info) {
 
 //---------------------------------------------------------------
 
-LIR_Assembler::LIR_Assembler(Compilation* c):
+LIR_Assembler::LIR_Assembler(Compilation* c) :
    _compilation(c)
  , _masm(c->masm())
  , _bs(BarrierSet::barrier_set())
@@ -114,7 +115,6 @@ void LIR_Assembler::emit_exception_entries(ExceptionInfoList* info_list) {
         } else {
           handler->set_entry_pco(handler->entry_block()->exception_handler_pco());
         }
-
       }
     }
   }
@@ -399,16 +399,6 @@ void LIR_Assembler::emit_op1(LIR_Op1* op) {
       monitor_address(op->in_opr()->as_constant_ptr()->as_jint(), op->result_opr());
       break;
 
-#ifdef SPARC
-    case lir_pack64:
-      pack64(op->in_opr(), op->result_opr());
-      break;
-
-    case lir_unpack64:
-      unpack64(op->in_opr(), op->result_opr());
-      break;
-#endif
-
     case lir_unwind:
       unwind_op(op->in_opr());
       break;
@@ -634,5 +624,4 @@ void LIR_Assembler::move_op(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
   }
 }
 
-void LIR_Assembler::verify_oop_map(CodeEmitInfo* info) {
-}
+void LIR_Assembler::verify_oop_map(CodeEmitInfo* info) { }

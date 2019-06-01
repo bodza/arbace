@@ -244,7 +244,7 @@ private:
   // If not, we can skip a few steps.
   bool _has_humongous_reclaim_candidates;
 
-  G1HRPrinter _hr_printer;
+  G1HRPrinter _hr_printer;
 
   // It decides whether an explicit GC should start a concurrent cycle
   // instead of doing a STW GC. Currently, a concurrent cycle is
@@ -547,7 +547,7 @@ public:
     return _old_marking_cycles_completed;
   }
 
-  G1HRPrinter* hr_printer() { return &_hr_printer; }
+  G1HRPrinter* hr_printer() { return &_hr_printer; }
 
   // Allocates a new heap region instance.
   HeapRegion* new_heap_region(uint hrs_index, MemRegion mr);
@@ -638,12 +638,6 @@ private:
   // (Rounds down to a HeapRegion boundary.)
   void shrink(size_t expand_bytes);
   void shrink_helper(size_t expand_bytes);
-
-  #if TASKQUEUE_STATS
-  static void print_taskqueue_stats_hdr(outputStream* const st);
-  void print_taskqueue_stats() const;
-  void reset_taskqueue_stats();
-  #endif
 
   // Schedule the VM operation that will do an evacuation pause to
   // satisfy an allocation request of word_size. *succeeded will
@@ -1273,9 +1267,6 @@ public:
 
   virtual void print_gc_threads_on(outputStream* st) const;
   virtual void gc_threads_do(ThreadClosure* tc) const;
-
-  // Override
-  void print_tracing_info() const;
 
   // The following two methods are helpful for debugging RSet issues.
   void print_cset_rsets() { };

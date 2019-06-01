@@ -1,11 +1,11 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "code/codeCache.hpp"
 #include "compiler/compileBroker.hpp"
 #include "compiler/disassembler.hpp"
 #include "gc/shared/gcConfig.hpp"
 #include "logging/logConfiguration.hpp"
-// #include "jfr/jfrEvents.hpp"
 #include "memory/resourceArea.hpp"
 #include "prims/whitebox.hpp"
 #include "runtime/arguments.hpp"
@@ -139,30 +139,6 @@ char* VMError::error_string(char* buf, int buflen) {
 }
 
 void VMError::print_stack_trace(outputStream* st, JavaThread* jt, char* buf, int buflen, bool verbose) {
-#ifdef ZERO
-  if (jt->zero_stack()->sp() && jt->top_zero_frame()) {
-    // StackFrameStream uses the frame anchor, which may not have
-    // been set up.  This can be done at any time in Zero, however,
-    // so if it hasn't been set up then we just set it up now and
-    // clear it again when we're done.
-    bool has_last_Java_frame = jt->has_last_Java_frame();
-    if (!has_last_Java_frame)
-      jt->set_last_Java_frame();
-    st->print("Java frames:");
-    st->cr();
-
-    // Print the frames
-    StackFrameStream sfs(jt);
-    for (int i = 0; !sfs.is_done(); sfs.next(), i++) {
-      sfs.current()->zero_print_on_error(i, st, buf, buflen);
-      st->cr();
-    }
-
-    // Reset the frame anchor if necessary
-    if (!has_last_Java_frame)
-      jt->reset_last_Java_frame();
-  }
-#else
   if (jt->has_last_Java_frame()) {
     st->print_cr("Java frames: (J=compiled Java code, j=interpreted, Vv=VM code)");
     for (StackFrameStream sfs(jt); !sfs.is_done(); sfs.next()) {
@@ -170,7 +146,6 @@ void VMError::print_stack_trace(outputStream* st, JavaThread* jt, char* buf, int
       st->cr();
     }
   }
-#endif
 }
 
 void VMError::print_native_stack(outputStream* st, frame fr, Thread* t, char* buf, int buf_size) {
@@ -1274,9 +1249,7 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
         // The current step had a timeout. Lets continue reporting with the next step.
         st->print_raw("[timeout occurred during error reporting in step \"");
         st->print_raw(_current_step_info);
-        st->print_cr("\"] after " INT64_FORMAT " s.",
-                     (int64_t)
-                     ((get_current_timestamp() - _step_start_time) / TIMESTAMP_TO_SECONDS_FACTOR));
+        st->print_cr("\"] after " INT64_FORMAT " s.", (int64_t) ((get_current_timestamp() - _step_start_time) / TIMESTAMP_TO_SECONDS_FACTOR));
       } else if (_reporting_did_timeout) {
         // We hit ErrorLogTimeout. Reporting will stop altogether. Let's wrap things
         // up, the process is about to be stopped by the WatcherThread.
@@ -1291,8 +1264,7 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
         stringStream ss(buffer, sizeof(buffer));
         // Note: this string does get parsed by a number of jtreg tests,
         // see hotspot/jtreg/runtime/ErrorHandling.
-        ss.print("[error occurred during error reporting (%s), id 0x%x",
-                   _current_step_info, id);
+        ss.print("[error occurred during error reporting (%s), id 0x%x", _current_step_info, id);
         char signal_name[64];
         if (os::exception_name(id, signal_name, sizeof(signal_name))) {
           ss.print(", %s (0x%x) at pc=" PTR_FORMAT, signal_name, id, p2i(pc));
@@ -1422,8 +1394,7 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
       out.print_raw_cr("\" ...");
 
       if (os::fork_and_exec(cmd) < 0) {
-        out.print_cr("os::fork_and_exec failed: %s (%s=%d)",
-                     os::strerror(errno), os::errno_name(errno), errno);
+        out.print_cr("os::fork_and_exec failed: %s (%s=%d)", os::strerror(errno), os::errno_name(errno), errno);
       }
     }
 
@@ -1479,8 +1450,7 @@ void VM_ReportJavaOutOfMemory::doit() {
     tty->print_cr("\"%s\"...", cmd);
 
     if (os::fork_and_exec(cmd, true) < 0) {
-      tty->print_cr("os::fork_and_exec failed: %s (%s=%d)",
-                     os::strerror(errno), os::errno_name(errno), errno);
+      tty->print_cr("os::fork_and_exec failed: %s (%s=%d)", os::strerror(errno), os::errno_name(errno), errno);
     }
   }
 }

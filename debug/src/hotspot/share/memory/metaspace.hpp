@@ -135,10 +135,8 @@ class Metaspace : public AllStatic {
   }
 
   static const MetaspaceTracer* tracer() { return _tracer; }
-  static void freeze() {
-  }
-  static void assert_not_frozen() {
-  }
+  static void freeze() { }
+  static void assert_not_frozen() { }
   static void allocate_metaspace_compressed_klass_ptrs(char* requested_addr, address cds_base);
 
  private:

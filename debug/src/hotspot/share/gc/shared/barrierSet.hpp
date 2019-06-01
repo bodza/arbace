@@ -80,7 +80,7 @@ protected:
 
   template <class BarrierSetAssemblerT>
   static BarrierSetAssembler* make_barrier_set_assembler() {
-    return NOT_ZERO(new BarrierSetAssemblerT()) ZERO_ONLY(NULL);
+    return new BarrierSetAssemblerT();
   }
 
   template <class BarrierSetC1T>

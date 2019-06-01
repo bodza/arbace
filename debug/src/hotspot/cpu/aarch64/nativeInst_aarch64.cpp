@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.hpp"
 #include "memory/resourceArea.hpp"
 #include "nativeInst_aarch64.hpp"
@@ -9,8 +10,7 @@
 #include "utilities/ostream.hpp"
 #include "c1/c1_Runtime1.hpp"
 
-void NativeCall::verify() {
-}
+void NativeCall::verify() { }
 
 void NativeInstruction::wrote(int offset) {
   ICache::invalidate_word(addr_at(offset));
@@ -21,8 +21,7 @@ void NativeLoadGot::report_and_fail() const {
   fatal("not a indirect rip mov to rbx");
 }
 
-void NativeLoadGot::verify() const {
-}
+void NativeLoadGot::verify() const { }
 
 address NativeLoadGot::got_address() const {
   return MacroAssembler::target_addr_for_insn((address)this);
@@ -99,8 +98,7 @@ void NativePltCall::set_stub_to_clean() {
   jump->set_jump_destination((address)-1);
 }
 
-void NativePltCall::verify() const {
-}
+void NativePltCall::verify() const { }
 
 address NativeGotJump::got_address() const {
   return MacroAssembler::target_addr_for_insn((address)this);
@@ -116,8 +114,7 @@ bool NativeGotJump::is_GotJump() const {
   return insn->encoding() == 0xd61f0200; // br x16
 }
 
-void NativeGotJump::verify() const {
-}
+void NativeGotJump::verify() const { }
 
 address NativeCall::destination() const {
   address addr = (address)this;
@@ -263,15 +260,13 @@ void NativeMovRegMem::set_offset(int x) {
   }
 }
 
-void NativeMovRegMem::verify() {
-}
+void NativeMovRegMem::verify() { }
 
 //--------------------------------------------------------------------------------
 
-void NativeJump::verify() { ; }
+void NativeJump::verify() { }
 
-void NativeJump::check_verified_entry_alignment(address entry, address verified_entry) {
-}
+void NativeJump::check_verified_entry_alignment(address entry, address verified_entry) { }
 
 address NativeJump::jump_destination() const {
   address dest = MacroAssembler::target_addr_for_insn(instruction_address());

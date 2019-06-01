@@ -28,8 +28,7 @@ class CodeStub: public CompilationResourceObj {
   CodeStub() { }
 
   // code generation
-  void assert_no_unbound_labels()                {
-    }
+  void assert_no_unbound_labels()                { }
   virtual void emit_code(LIR_Assembler* e) = 0;
   virtual CodeEmitInfo* info() const             { return NULL; }
   virtual bool is_exception_throw_stub() const   { return false; }
@@ -41,8 +40,7 @@ class CodeStub: public CompilationResourceObj {
   Label* entry()                                 { return &_entry; }
   Label* continuation()                          { return &_continuation; }
   // for LIR
-  virtual void visit(LIR_OpVisitState* visit) {
-  }
+  virtual void visit(LIR_OpVisitState* visit) { }
 };
 
 class CodeStubList: public GrowableArray<CodeStub*> {
@@ -63,8 +61,7 @@ class CounterOverflowStub: public CodeStub {
   LIR_Opr       _method;
 
 public:
-  CounterOverflowStub(CodeEmitInfo* info, int bci, LIR_Opr method) :  _info(info), _bci(bci), _method(method) {
-  }
+  CounterOverflowStub(CodeEmitInfo* info, int bci, LIR_Opr method) :  _info(info), _bci(bci), _method(method) { }
 
   virtual void emit_code(LIR_Assembler* e);
 
@@ -308,7 +305,7 @@ class PatchingStub: public CodeStub {
  public:
   static int patch_info_offset() { return _patch_info_offset; }
 
-  PatchingStub(MacroAssembler* masm, PatchID id, int index = -1):
+  PatchingStub(MacroAssembler* masm, PatchID id, int index = -1) :
       _id(id)
     , _info(NULL)
     , _index(index) {
@@ -382,7 +379,7 @@ class SimpleExceptionStub: public CodeStub {
   CodeEmitInfo*    _info;
 
  public:
-  SimpleExceptionStub(Runtime1::StubID stub, LIR_Opr obj, CodeEmitInfo* info):
+  SimpleExceptionStub(Runtime1::StubID stub, LIR_Opr obj, CodeEmitInfo* info) :
     _obj(obj), _info(info), _stub(stub) {
   }
 

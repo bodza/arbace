@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "memory/resourceArea.hpp"
 #include "runtime/icache.hpp"
 #include "utilities/align.hpp"
@@ -61,8 +62,7 @@ void AbstractICache::invalidate_word(address addr) {
 void AbstractICache::invalidate_range(address start, int nbytes) {
   static bool firstTime = true;
   if (firstTime) {
-    guarantee(start == CAST_FROM_FN_PTR(address, _flush_icache_stub),
-              "first flush should be for flush stub");
+    guarantee(start == CAST_FROM_FN_PTR(address, _flush_icache_stub), "first flush should be for flush stub");
     firstTime = false;
     return;
   }

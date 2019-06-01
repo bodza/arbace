@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "code/vtableStubs.hpp"
 #include "compiler/compileBroker.hpp"
 #include "compiler/disassembler.hpp"
@@ -91,22 +92,10 @@ void VtableStubs::check_and_set_size_limit(bool is_vtable_stub, int code_size, i
   guarantee(code_size <= code_size_limit(is_vtable_stub), "buffer overflow in %s stub, code_size is %d, limit is %d", name, code_size, code_size_limit(is_vtable_stub));
 
   if (is_vtable_stub) {
-    if (log_is_enabled(Trace, vtablestubs)) {
-      if ((_vtab_stub_size > 0) && ((code_size + padding) > _vtab_stub_size)) {
-        log_trace(vtablestubs)("%s size estimate needed adjustment from %d to %d bytes",
-                               name, _vtab_stub_size, code_size + padding);
-      }
-    }
     if ((code_size + padding) > _vtab_stub_size ) {
       _vtab_stub_size = code_size + padding;
     }
   } else {  // itable stub
-    if (log_is_enabled(Trace, vtablestubs)) {
-      if ((_itab_stub_size > 0) && ((code_size + padding) > _itab_stub_size)) {
-        log_trace(vtablestubs)("%s size estimate needed adjustment from %d to %d bytes",
-                               name, _itab_stub_size, code_size + padding);
-      }
-    }
     if ((code_size + padding) > _itab_stub_size ) {
       _itab_stub_size = code_size + padding;
     }
@@ -117,14 +106,6 @@ void VtableStubs::check_and_set_size_limit(bool is_vtable_stub, int code_size, i
 void VtableStubs::bookkeeping(MacroAssembler* masm, outputStream* out, VtableStub* s, address npe_addr, address ame_addr, bool is_vtable_stub, int index, int slop_bytes, int index_dependent_slop) {
   const char* name        = is_vtable_stub ? "vtable" : "itable";
   const int   stub_length = code_size_limit(is_vtable_stub);
-
-  if (log_is_enabled(Trace, vtablestubs)) {
-    log_trace(vtablestubs)("%s #%d at " PTR_FORMAT ": size: %d, estimate: %d, slop area: %d",
-                           name, index, p2i(s->code_begin()),
-                           (int)(masm->pc() - s->code_begin()),
-                           stub_length,
-                           (int)(s->code_end() - masm->pc()));
-  }
   guarantee(masm->pc() <= s->code_end(), "%s #%d: overflowed buffer, estimated len: %d, actual len: %d, overrun: %d",
                                          name, index, stub_length,
                                          (int)(masm->pc() - s->code_begin()),

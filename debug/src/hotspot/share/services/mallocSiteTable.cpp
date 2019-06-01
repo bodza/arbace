@@ -53,14 +53,14 @@ bool MallocSiteTable::initialize() {
     // On ppc64, 'fp' is a pointer to a function descriptor which is a struct  of
     // three native pointers where the first pointer is the real function address.
     // See: http://refspecs.linuxfoundation.org/ELF/ppc64/PPC-elf64abi-1.9.html#FUNC-DES
-    pc[2] = (address)(fp PPC64_ONLY(BIG_ENDIAN_ONLY([0])));
+    pc[2] = (address)(fp);
   }
   if (NMT_TrackingStackDepth >= 2) {
     uintx *fp = (uintx*)MallocSiteTable::lookup_or_add;
-    pc[1] = (address)(fp PPC64_ONLY(BIG_ENDIAN_ONLY([0])));
+    pc[1] = (address)(fp);
   }
   uintx *fp = (uintx*)MallocSiteTable::new_entry;
-  pc[0] = (address)(fp PPC64_ONLY(BIG_ENDIAN_ONLY([0])));
+  pc[0] = (address)(fp);
 
   // Instantiate NativeCallStack object, have to use placement new operator. (see comments above)
   NativeCallStack* stack = ::new ((void*)_hash_entry_allocation_stack)
@@ -104,8 +104,7 @@ bool MallocSiteTable::walk(MallocSiteWalker* walker) {
  *    2. Overflow hash bucket.
  *  Under any of above circumstances, caller should handle the situation.
  */
-MallocSite* MallocSiteTable::lookup_or_add(const NativeCallStack& key, size_t* bucket_idx,
-  size_t* pos_idx, MEMFLAGS flags) {
+MallocSite* MallocSiteTable::lookup_or_add(const NativeCallStack& key, size_t* bucket_idx, size_t* pos_idx, MEMFLAGS flags) {
   unsigned int index = hash_to_index(key.hash());
   *bucket_idx = (size_t)index;
   *pos_idx = 0;
@@ -151,9 +150,7 @@ MallocSite* MallocSiteTable::lookup_or_add(const NativeCallStack& key, size_t* b
 // Access malloc site
 MallocSite* MallocSiteTable::malloc_site(size_t bucket_idx, size_t pos_idx) {
   MallocSiteHashtableEntry* head = _table[bucket_idx];
-  for (size_t index = 0;
-       index < pos_idx && head != NULL;
-       index++, head = (MallocSiteHashtableEntry*)head->next()) { }
+  for (size_t index = 0; index < pos_idx && head != NULL; index++, head = (MallocSiteHashtableEntry*)head->next()) { }
   return head->data();
 }
 

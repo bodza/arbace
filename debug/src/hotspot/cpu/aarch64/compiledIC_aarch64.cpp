@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.inline.hpp"
 #include "code/compiledIC.hpp"
 #include "code/icBuffer.hpp"
@@ -63,9 +64,7 @@ void CompiledDirectStaticCall::set_to_interpreted(const methodHandle& callee, ad
 
   if (TraceICs) {
     ResourceMark rm;
-    tty->print_cr("CompiledDirectStaticCall@" INTPTR_FORMAT ": set_to_interpreted %s",
-                  p2i(instruction_address()),
-                  callee->name_and_sig_as_C_string());
+    tty->print_cr("CompiledDirectStaticCall@" INTPTR_FORMAT ": set_to_interpreted %s", p2i(instruction_address()), callee->name_and_sig_as_C_string());
   }
 
   // Creation also verifies the object.

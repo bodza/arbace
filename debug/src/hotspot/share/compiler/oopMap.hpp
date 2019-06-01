@@ -179,8 +179,7 @@ class OopMapSet : public ResourceObj {
   OopMap** om_data() const          { return _om_data; }
   void set_om_data(OopMap** value)  { _om_data = value; }
   void grow_om_data();
-  void set(int index,OopMap* value) {
-    _om_data[index] = value; }
+  void set(int index,OopMap* value) { _om_data[index] = value; }
 
  public:
   OopMapSet();
@@ -188,8 +187,7 @@ class OopMapSet : public ResourceObj {
   // returns the number of OopMaps in this OopMapSet
   int size() const            { return _om_count; }
   // returns the OopMap at a given index
-  OopMap* at(int index) const {
-    return _om_data[index]; }
+  OopMap* at(int index) const { return _om_data[index]; }
 
   // Collect OopMaps.
   void add_gc_map(int pc, OopMap* map);
@@ -253,8 +251,7 @@ private:
   int _pc_offset; // program counter offset from the beginning of the method
   int _oopmap_offset; // offset in the data in the ImmutableOopMapSet where the ImmutableOopMap is located
 public:
-  ImmutableOopMapPair(int pc_offset, int oopmap_offset) : _pc_offset(pc_offset), _oopmap_offset(oopmap_offset) {
-  }
+  ImmutableOopMapPair(int pc_offset, int oopmap_offset) : _pc_offset(pc_offset), _oopmap_offset(oopmap_offset) { }
   const ImmutableOopMap* get_from(const ImmutableOopMapSet* set) const;
 
   int pc_offset() const { return _pc_offset; }
@@ -283,8 +280,7 @@ public:
 
   const ImmutableOopMap* find_map_at_offset(int pc_offset) const;
 
-  const ImmutableOopMapPair* pair_at(int index) const {
-    return &get_pairs()[index]; }
+  const ImmutableOopMapPair* pair_at(int index) const { return &get_pairs()[index]; }
 
   int count() const { return _count; }
   int nr_of_bytes() const { return _size; }

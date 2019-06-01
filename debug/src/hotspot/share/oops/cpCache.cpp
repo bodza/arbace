@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/resolutionErrors.hpp"
 #include "interpreter/bytecodeStream.hpp"
 #include "interpreter/bytecodes.hpp"
@@ -30,10 +31,7 @@ void ConstantPoolCacheEntry::initialize_entry(int index) {
   _f2 = _flags = 0;
 }
 
-void ConstantPoolCacheEntry::verify_just_initialized(bool f2_used) {
-  if (!f2_used) {
-  }
-}
+void ConstantPoolCacheEntry::verify_just_initialized(bool f2_used) { }
 
 void ConstantPoolCacheEntry::reinitialize(bool f2_used) {
   _indices &= cp_index_mask;
@@ -121,8 +119,7 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
         byte_no = 2;
         set_f1(holder); // interface klass*
         break;
-      }
-      else {
+      } else {
         // We get here from InterpreterRuntime::resolve_invoke when an invokeinterface
         // instruction links to a non-interface method (in Object). This can happen when
         // an interface redeclares an Object method (like CharSequence declaring toString())
@@ -454,10 +451,7 @@ void ConstantPoolCacheEntry::verify(outputStream* st) const {
 
 // Implementation of ConstantPoolCache
 
-ConstantPoolCache* ConstantPoolCache::allocate(ClassLoaderData* loader_data,
-                                     const intStack& index_map,
-                                     const intStack& invokedynamic_index_map,
-                                     const intStack& invokedynamic_map, TRAPS) {
+ConstantPoolCache* ConstantPoolCache::allocate(ClassLoaderData* loader_data, const intStack& index_map, const intStack& invokedynamic_index_map, const intStack& invokedynamic_map, TRAPS) {
 
   const int length = index_map.length() + invokedynamic_index_map.length();
   int size = ConstantPoolCache::size(length);
@@ -491,8 +485,7 @@ void ConstantPoolCache::initialize(const intArray& inverse_index_map, const intA
   }
 }
 
-void ConstantPoolCache::verify_just_initialized() {
-}
+void ConstantPoolCache::verify_just_initialized() { }
 
 void ConstantPoolCache::remove_unshareable_info() {
   walk_entries_for_initialization(/*check_only = */ false);
@@ -553,7 +546,6 @@ void ConstantPoolCache::deallocate_contents(ClassLoaderData* data) {
 }
 
 void ConstantPoolCache::metaspace_pointers_do(MetaspaceClosure* it) {
-  log_trace(cds)("Iter(ConstantPoolCache): %p", this);
   it->push(&_constant_pool);
   it->push(&_reference_map);
 }

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/altHashing.hpp"
 #include "classfile/dictionary.hpp"
 #include "classfile/javaClasses.inline.hpp"
@@ -171,9 +172,7 @@ template <MEMFLAGS F> size_t BasicHashtable<F>::count_bytes_for_table() {
   bytes += sizeof(intptr_t); // len
 
   for (int i = 0; i < _table_size; ++i) {
-    for (BasicHashtableEntry<F>** p = _buckets[i].entry_addr();
-         *p != NULL;
-         p = (*p)->next_addr()) {
+    for (BasicHashtableEntry<F>** p = _buckets[i].entry_addr(); *p != NULL; p = (*p)->next_addr()) {
       bytes += entry_size();
     }
   }
@@ -188,9 +187,7 @@ template <MEMFLAGS F> void BasicHashtable<F>::copy_table(char* top, char* end) {
 
   int i;
   for (i = 0; i < _table_size; ++i) {
-    for (BasicHashtableEntry<F>** p = _buckets[i].entry_addr();
-         *p != NULL;
-         p = (*p)->next_addr()) {
+    for (BasicHashtableEntry<F>** p = _buckets[i].entry_addr(); *p != NULL; p = (*p)->next_addr()) {
       *p = (BasicHashtableEntry<F>*)memcpy(top, (void*)*p, entry_size());
       top += entry_size();
     }
@@ -283,15 +280,12 @@ template <MEMFLAGS F> bool BasicHashtable<F>::resize(int new_size) {
 // The StringTable and SymbolTable dumping print how much footprint is used by the String and Symbol
 // literals.
 
-template <class T, MEMFLAGS F> void Hashtable<T, F>::print_table_statistics(outputStream* st,
-                                                                            const char *table_name,
-                                                                            T (*literal_load_barrier)(HashtableEntry<T, F>*)) {
+template <class T, MEMFLAGS F> void Hashtable<T, F>::print_table_statistics(outputStream* st, const char *table_name, T (*literal_load_barrier)(HashtableEntry<T, F>*)) {
   NumberSeq summary;
   int literal_bytes = 0;
   for (int i = 0; i < this->table_size(); ++i) {
     int count = 0;
-    for (HashtableEntry<T, F>* e = this->bucket(i);
-         e != NULL; e = e->next()) {
+    for (HashtableEntry<T, F>* e = this->bucket(i); e != NULL; e = e->next()) {
       count++;
       T l = (literal_load_barrier != NULL) ? literal_load_barrier(e) : e->literal();
       literal_bytes += literal_size(l);
@@ -344,7 +338,6 @@ template <MEMFLAGS F> void BasicHashtable<F>::copy_buckets(char* top, char* end)
 
   _buckets = (HashtableBucket<F>*)memcpy(top, (void*)_buckets, len);
   top += len;
-
 }
 
 // Explicitly instantiate these types

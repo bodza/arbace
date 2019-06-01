@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "utilities/ostream.hpp"
 #include "logging/log.hpp"
 #include "logging/logSelection.hpp"
@@ -10,8 +11,7 @@
 
 const LogSelection LogSelection::Invalid;
 
-LogSelection::LogSelection() : _ntags(0), _wildcard(false), _level(LogLevel::Invalid), _tag_sets_selected(0) {
-}
+LogSelection::LogSelection() : _ntags(0), _wildcard(false), _level(LogLevel::Invalid), _tag_sets_selected(0) { }
 
 LogSelection::LogSelection(const LogTagType tags[LogTag::MaxTags], bool wildcard, LogLevelType level)
     : _ntags(0), _wildcard(wildcard), _level(level), _tag_sets_selected(0) {
@@ -102,8 +102,7 @@ static LogSelection parse_internal(char *str, outputStream* errstream) {
     }
     if (ntags == LogTag::MaxTags) {
       if (errstream != NULL) {
-        errstream->print_cr("Too many tags in log selection '%s' (can only have up to " SIZE_FORMAT " tags).",
-                               str, LogTag::MaxTags);
+        errstream->print_cr("Too many tags in log selection '%s' (can only have up to " SIZE_FORMAT " tags).", str, LogTag::MaxTags);
       }
       return LogSelection::Invalid;
     }
@@ -229,8 +228,7 @@ double LogSelection::similarity(const LogSelection& other) const {
 class SimilarityComparator {
   const LogSelection& _ref;
  public:
-  SimilarityComparator(const LogSelection& ref) : _ref(ref) {
-  }
+  SimilarityComparator(const LogSelection& ref) : _ref(ref) { }
   int operator()(const LogSelection& a, const LogSelection& b) const {
     const double epsilon = 1.0e-6;
 

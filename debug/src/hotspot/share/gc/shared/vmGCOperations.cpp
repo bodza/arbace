@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/classLoader.hpp"
 #include "classfile/javaClasses.hpp"
 #include "gc/shared/allocTracer.hpp"
@@ -114,11 +115,9 @@ void VM_GC_HeapInspection::doit() {
       // be about to attempt holds value for us only
       // if it happens now and not if it happens in the eventual
       // future.
-      log_warning(gc)("GC locker is held; pre-dump GC was skipped");
     }
   }
-  HeapInspection inspect(_csv_format, _print_help, _print_class_stats,
-                         _columns);
+  HeapInspection inspect(_csv_format, _print_help, _print_class_stats, _columns);
   inspect.heap_inspection(_out);
 }
 
@@ -198,8 +197,6 @@ void VM_CollectForMetadataAllocation::doit() {
     if (_result != NULL) {
       return;
     }
-
-    log_debug(gc)("%s full GC for Metaspace", UseConcMarkSweepGC ? "CMS" : "G1");
   }
 
   // Don't clear the soft refs yet.
@@ -227,8 +224,6 @@ void VM_CollectForMetadataAllocation::doit() {
   if (_result != NULL) {
     return;
   }
-
-  log_debug(gc)("After Metaspace GC failed to allocate size " SIZE_FORMAT, _size);
 
   if (GCLocker::is_active_and_needs_gc()) {
     set_gc_locked();

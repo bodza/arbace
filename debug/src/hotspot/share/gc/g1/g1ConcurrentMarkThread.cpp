@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/classLoaderData.hpp"
 #include "gc/g1/g1Analytics.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
@@ -268,9 +269,6 @@ void G1ConcurrentMarkThread::run_service() {
         G1ConcPhaseManager mark_manager(G1ConcurrentPhase::CONCURRENT_MARK, this);
         jlong mark_start = os::elapsed_counter();
         const char* cm_title = lookup_concurrent_phase_title(G1ConcurrentPhase::CONCURRENT_MARK);
-        log_info(gc, marking)("%s (%.3fs)",
-                              cm_title,
-                              TimeHelper::counter_to_seconds(mark_start));
         for (uint iter = 1; !_cm->has_aborted(); ++iter) {
           // Concurrent marking.
           {
@@ -304,11 +302,6 @@ void G1ConcurrentMarkThread::run_service() {
           }
 
           // Pause Remark.
-          log_info(gc, marking)("%s (%.3fs, %.3fs) %.3fms",
-                                cm_title,
-                                TimeHelper::counter_to_seconds(mark_start),
-                                TimeHelper::counter_to_seconds(mark_end),
-                                TimeHelper::counter_to_millis(mark_end - mark_start));
           mark_manager.set_phase(G1ConcurrentPhase::REMARK, false);
           CMRemark cl(_cm);
           VM_CGC_Operation op(&cl, "Pause Remark");
@@ -320,8 +313,6 @@ void G1ConcurrentMarkThread::run_service() {
           } else {
             // Loop to restart for overflow.
             mark_manager.set_phase(G1ConcurrentPhase::CONCURRENT_MARK, false);
-            log_info(gc, marking)("%s Restart for Mark Stack Overflow (iteration #%u)",
-                                  cm_title, iter);
           }
         }
       }
@@ -353,7 +344,6 @@ void G1ConcurrentMarkThread::run_service() {
       if (!_cm->has_aborted()) {
         G1ConcPhase p(G1ConcurrentPhase::CLEANUP_FOR_NEXT_MARK, this);
         _cm->cleanup_for_next_mark();
-      } else {
       }
     }
 

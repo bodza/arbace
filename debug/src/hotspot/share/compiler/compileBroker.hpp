@@ -90,8 +90,7 @@ class CompileQueue : public CHeapObj<mtCompiler> {
   void print_tty();
   void print(outputStream* st = tty);
 
-  ~CompileQueue() {
-  }
+  ~CompileQueue() { }
 };
 
 // CompileTaskWrapper

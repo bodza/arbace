@@ -1,7 +1,7 @@
 #include "precompiled.hpp"
+
 #include "classfile/vmSymbols.hpp"
 #include "logging/log.hpp"
-// #include "jfr/jfrEvents.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/metaspaceShared.hpp"
 #include "memory/padded.hpp"
@@ -33,17 +33,6 @@
 // variants of the enter-exit fast-path operations.  See i486.ad fast_lock(),
 // for instance.  If you make changes here, make sure to modify the
 // interpreter, and both C1 and C2 fast-path inline locking code emission.
-//
-// -----------------------------------------------------------------------------
-
-#define DTRACE_MONITOR_WAIT_PROBE(obj, thread, millis, mon)    { }
-#define DTRACE_MONITOR_PROBE(probe, obj, thread, mon)          { }
-
-// This exists only as a workaround of dtrace bug 6254741
-int dtrace_waited_probe(ObjectMonitor* monitor, Handle obj, Thread* thr) {
-  DTRACE_MONITOR_PROBE(waited, monitor, obj(), thr);
-  return 0;
-}
 
 #define NINFLATIONLOCKS 256
 static volatile intptr_t gInflationLocks[NINFLATIONLOCKS];
@@ -105,11 +94,6 @@ bool ObjectSynchronizer::quick_notify(oopDesc * obj, Thread * self, bool all) {
       // We have one or more waiters. Since this is an inflated monitor
       // that we own, we can transfer one or more threads from the waitset
       // to the entrylist here and now, avoiding the slow-path.
-      if (all) {
-        DTRACE_MONITOR_PROBE(notifyAll, mon, obj, self);
-      } else {
-        DTRACE_MONITOR_PROBE(notify, mon, obj, self);
-      }
       int tally = 0;
       do {
         mon->INotify(self);
@@ -364,18 +348,11 @@ int ObjectSynchronizer::wait(Handle obj, jlong millis, TRAPS) {
     TEVENT(wait - throw IAX);
     THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(), "timeout value is negative");
   }
-  ObjectMonitor* monitor = ObjectSynchronizer::inflate(THREAD,
-                                                       obj(),
-                                                       inflate_cause_wait);
+  ObjectMonitor* monitor = ObjectSynchronizer::inflate(THREAD, obj(), inflate_cause_wait);
 
-  DTRACE_MONITOR_WAIT_PROBE(monitor, obj(), THREAD, millis);
   monitor->wait(millis, true, THREAD);
 
-  // This dummy call is in place to get around dtrace bug 6254741.  Once
-  // that's fixed we can uncomment the following line, remove the call
-  // and change this function back into a "void" func.
-  // DTRACE_MONITOR_PROBE(waited, monitor, obj(), THREAD);
-  return dtrace_waited_probe(monitor, obj, THREAD);
+  return 0;
 }
 
 void ObjectSynchronizer::waitUninterruptibly(Handle obj, jlong millis, TRAPS) {
@@ -386,9 +363,7 @@ void ObjectSynchronizer::waitUninterruptibly(Handle obj, jlong millis, TRAPS) {
     TEVENT(wait - throw IAX);
     THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "timeout value is negative");
   }
-  ObjectSynchronizer::inflate(THREAD,
-                              obj(),
-                              inflate_cause_wait)->wait(millis, false, THREAD);
+  ObjectSynchronizer::inflate(THREAD, obj(), inflate_cause_wait)->wait(millis, false, THREAD);
 }
 
 void ObjectSynchronizer::notify(Handle obj, TRAPS) {
@@ -400,9 +375,7 @@ void ObjectSynchronizer::notify(Handle obj, TRAPS) {
   if (mark->has_locker() && THREAD->is_lock_owned((address)mark->locker())) {
     return;
   }
-  ObjectSynchronizer::inflate(THREAD,
-                              obj(),
-                              inflate_cause_notify)->notify(THREAD);
+  ObjectSynchronizer::inflate(THREAD, obj(), inflate_cause_notify)->notify(THREAD);
 }
 
 // NOTE: see comment of notify()
@@ -1309,14 +1282,6 @@ ObjectMonitor* ObjectSynchronizer::inflate(Thread * Self, oop object, const Infl
       // to avoid false sharing on MP systems ...
       OM_PERFDATA_OP(Inflations, inc());
       TEVENT(Inflate: overwrite stacklock);
-      if (log_is_enabled(Debug, monitorinflation)) {
-        if (object->is_instance()) {
-          ResourceMark rm;
-          log_debug(monitorinflation)("Inflating object " INTPTR_FORMAT " , mark " INTPTR_FORMAT " , type %s",
-                                      p2i(object), p2i(object->mark()),
-                                      object->klass()->external_name());
-        }
-      }
       if (event.should_commit()) {
         post_monitor_inflate_event(&event, object, cause);
       }
@@ -1359,14 +1324,6 @@ ObjectMonitor* ObjectSynchronizer::inflate(Thread * Self, oop object, const Infl
     // cache lines to avoid false sharing on MP systems ...
     OM_PERFDATA_OP(Inflations, inc());
     TEVENT(Inflate: overwrite neutral);
-    if (log_is_enabled(Debug, monitorinflation)) {
-      if (object->is_instance()) {
-        ResourceMark rm;
-        log_debug(monitorinflation)("Inflating object " INTPTR_FORMAT " , mark " INTPTR_FORMAT " , type %s",
-                                    p2i(object), p2i(object->mark()),
-                                    object->klass()->external_name());
-      }
-    }
     if (event.should_commit()) {
       post_monitor_inflate_event(&event, object, cause);
     }
@@ -1423,15 +1380,6 @@ bool ObjectSynchronizer::deflate_monitor(ObjectMonitor* mid, oop obj, ObjectMoni
     // It's idle - scavenge and return to the global free list
     // plain old deflation ...
     TEVENT(deflate_idle_monitors - scavenge1);
-    if (log_is_enabled(Debug, monitorinflation)) {
-      if (obj->is_instance()) {
-        ResourceMark rm;
-        log_debug(monitorinflation)("Deflating object " INTPTR_FORMAT " , "
-                                    "mark " INTPTR_FORMAT " , type %s",
-                                    p2i(obj), p2i(obj->mark()),
-                                    obj->klass()->external_name());
-      }
-    }
 
     // Restore the header back to obj
     obj->release_set_mark(mid->header());
@@ -1566,10 +1514,8 @@ void ObjectSynchronizer::finish_deflate_idle_monitors(DeflateMonitorCounters* co
   // Consider: audit gFreeList to ensure that gMonitorFreeCount and list agree.
 
   if (ObjectMonitor::Knob_Verbose) {
-    tty->print_cr("INFO: Deflate: InCirc=%d InUse=%d Scavenged=%d "
-                  "ForceMonitorScavenge=%d : pop=%d free=%d",
-                  counters->nInCirculation, counters->nInuse, counters->nScavenged, ForceMonitorScavenge,
-                  gMonitorPopulation, gMonitorFreeCount);
+    tty->print_cr("INFO: Deflate: InCirc=%d InUse=%d Scavenged=%d ForceMonitorScavenge=%d : pop=%d free=%d",
+                  counters->nInCirculation, counters->nInuse, counters->nScavenged, ForceMonitorScavenge, gMonitorPopulation, gMonitorFreeCount);
     tty->flush();
   }
 
@@ -1706,23 +1652,17 @@ void ObjectSynchronizer::sanity_checks(const bool verbose, const uint cache_line
     // do some cache line specific sanity checks
 
     if (offset_stwRandom < cache_line_size) {
-      tty->print_cr("WARNING: the SharedGlobals.stwRandom field is closer "
-                    "to the struct beginning than a cache line which permits "
-                    "false sharing.");
+      tty->print_cr("WARNING: the SharedGlobals.stwRandom field is closer to the struct beginning than a cache line which permits false sharing.");
       (*warning_cnt_ptr)++;
     }
 
     if ((offset_hcSequence - offset_stwRandom) < cache_line_size) {
-      tty->print_cr("WARNING: the SharedGlobals.stwRandom and "
-                    "SharedGlobals.hcSequence fields are closer than a cache "
-                    "line which permits false sharing.");
+      tty->print_cr("WARNING: the SharedGlobals.stwRandom and SharedGlobals.hcSequence fields are closer than a cache line which permits false sharing.");
       (*warning_cnt_ptr)++;
     }
 
     if ((sizeof(SharedGlobals) - offset_hcSequence) < cache_line_size) {
-      tty->print_cr("WARNING: the SharedGlobals.hcSequence field is closer "
-                    "to the struct end than a cache line which permits false "
-                    "sharing.");
+      tty->print_cr("WARNING: the SharedGlobals.hcSequence field is closer to the struct end than a cache line which permits false sharing.");
       (*warning_cnt_ptr)++;
     }
   }

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.hpp"
 #include "code/relocInfo.hpp"
 #include "nativeInst_aarch64.hpp"
@@ -75,5 +76,4 @@ void poll_Relocation::fix_relocation_after_move(const CodeBuffer* src, CodeBuffe
   }
 }
 
-void metadata_Relocation::pd_fix_value(address x) {
-}
+void metadata_Relocation::pd_fix_value(address x) { }

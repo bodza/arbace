@@ -1,14 +1,11 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/hSpaceCounters.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/perfData.hpp"
 
-HSpaceCounters::HSpaceCounters(const char* name_space,
-                               const char* name,
-                               int ordinal,
-                               size_t max_size,
-                               size_t initial_capacity) {
+HSpaceCounters::HSpaceCounters(const char* name_space, const char* name, int ordinal, size_t max_size, size_t initial_capacity) {
 
   if (UsePerfData) {
     EXCEPTION_MARK;

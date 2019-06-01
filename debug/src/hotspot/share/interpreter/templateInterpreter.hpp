@@ -7,8 +7,6 @@
 // This file contains the platform-independent parts
 // of the template interpreter and the template interpreter generator.
 
-#ifndef CC_INTERP
-
 class InterpreterMacroAssembler;
 class InterpreterCodelet;
 
@@ -155,7 +153,5 @@ class TemplateInterpreter: public AbstractInterpreter {
   // Size of interpreter code.  Max size with JVMTI
   static int InterpreterCodeSize;
 };
-
-#endif
 
 #endif

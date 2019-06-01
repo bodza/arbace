@@ -106,11 +106,8 @@ public:
   }
 
   // General klass information.
-  ciFlags                flags()          {
-    return _flags;
-  }
-  bool                   has_finalizer()  {
-    return _has_finalizer; }
+  ciFlags                flags()          { return _flags; }
+  bool                   has_finalizer()  { return _has_finalizer; }
   bool                   has_subklass()   {
     if (_is_shared && !_has_subklass) {
       if (flags().is_final()) {
@@ -121,16 +118,10 @@ public:
     }
     return _has_subklass;
   }
-  jint                   size_helper()  {
-    return (Klass::layout_helper_size_in_bytes(layout_helper())
-            >> LogHeapWordSize);
-  }
-  jint                   nonstatic_field_size()  {
-    return _nonstatic_field_size; }
-  jint                   has_nonstatic_fields()  {
-    return _has_nonstatic_fields; }
-  jint                   nonstatic_oop_map_size()  {
-    return _nonstatic_oop_map_size; }
+  jint                   size_helper()  { return (Klass::layout_helper_size_in_bytes(layout_helper()) >> LogHeapWordSize); }
+  jint                   nonstatic_field_size()  { return _nonstatic_field_size; }
+  jint                   has_nonstatic_fields()  { return _has_nonstatic_fields; }
+  jint                   nonstatic_oop_map_size()  { return _nonstatic_oop_map_size; }
   ciInstanceKlass*       super();
   jint                   nof_implementors() {
     ciInstanceKlass* impl;
@@ -143,13 +134,9 @@ public:
       return 2;
     }
   }
-  bool has_nonstatic_concrete_methods()  {
-    return _has_nonstatic_concrete_methods;
-  }
+  bool has_nonstatic_concrete_methods()  { return _has_nonstatic_concrete_methods; }
 
-  bool is_anonymous() {
-    return _is_anonymous;
-  }
+  bool is_anonymous() { return _is_anonymous; }
 
   ciInstanceKlass* get_canonical_holder(int offset);
   ciField* get_field_by_offset(int field_offset, bool is_static);

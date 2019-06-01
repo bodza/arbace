@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "memory/allocation.inline.hpp"
 #include "oops/instanceKlass.hpp"
 #include "oops/method.hpp"
@@ -25,5 +26,3 @@ void PrivilegedElement::oops_do(OopClosure* f) {
     cur = cur->_next;
   } while(cur != NULL);
 }
-
-//-------------------------------------------------------------------------------

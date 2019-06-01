@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "interpreter/oopMapCache.hpp"
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
@@ -389,13 +390,7 @@ void OopMapCache::flush_obsolete_entries() {
     OopMapCacheEntry* entry = _array[i];
     if (entry != NULL && !entry->is_empty() && entry->method()->is_old()) {
       // Cache entry is occupied by an old redefined method and we don't want
-      // to pin it down so flush the entry.
-      if (log_is_enabled(Debug, redefine, class, oopmap)) {
-        ResourceMark rm;
-        log_debug(redefine, class, interpreter, oopmap)
-          ("flush: %s(%s): cached entry @%d",
-           entry->method()->name()->as_C_string(), entry->method()->signature()->as_C_string(), i);
-      }
+      // to pin it down, so flush the entry.
       _array[i] = NULL;
       entry->flush();
       FREE_C_HEAP_OBJ(entry);
@@ -410,20 +405,11 @@ void OopMapCache::lookup(const methodHandle& method, int bci, InterpreterOopMap*
   int i;
   OopMapCacheEntry* entry = NULL;
 
-  if (log_is_enabled(Debug, interpreter, oopmap)) {
-    static int count = 0;
-    ResourceMark rm;
-    log_debug(interpreter, oopmap)
-          ("%d - Computing oopmap at bci %d for %s at hash %d", ++count, bci,
-           method()->name_and_sig_as_C_string(), probe);
-  }
-
   // Search hashtable for match
   for (i = 0; i < _probe_depth; i++) {
     entry = entry_at(probe + i);
     if (entry != NULL && !entry->is_empty() && entry->match(method, bci)) {
       entry_for->resource_copy(entry);
-      log_debug(interpreter, oopmap)("- found at hash %d", probe + i);
       return;
     }
   }
@@ -455,8 +441,6 @@ void OopMapCache::lookup(const methodHandle& method, int bci, InterpreterOopMap*
     }
   }
 
-  log_debug(interpreter, oopmap)("*** collision in oopmap cache - flushing item ***");
-
   // No empty slot (uncommon case). Use (some approximation of a) LRU algorithm
   // where the first entry in the collision array is replaced with the new one.
   OopMapCacheEntry* old = entry_at(probe + 0);
@@ -477,12 +461,6 @@ void OopMapCache::enqueue_for_cleanup(OopMapCacheEntry* entry) {
     entry->_next = head;
     success = Atomic::cmpxchg(entry, &_old_entries, head) == head;
   } while (!success);
-
-  if (log_is_enabled(Debug, interpreter, oopmap)) {
-    ResourceMark rm;
-    log_debug(interpreter, oopmap)("enqueue %s at bci %d for cleanup",
-                          entry->method()->name_and_sig_as_C_string(), entry->bci());
-  }
 }
 
 // This is called after GC threads are done and nothing is accessing the old_entries
@@ -491,11 +469,6 @@ void OopMapCache::cleanup_old_entries() {
   OopMapCacheEntry* entry = _old_entries;
   _old_entries = NULL;
   while (entry != NULL) {
-    if (log_is_enabled(Debug, interpreter, oopmap)) {
-      ResourceMark rm;
-      log_debug(interpreter, oopmap)("cleanup entry %s at bci %d",
-                          entry->method()->name_and_sig_as_C_string(), entry->bci());
-    }
     OopMapCacheEntry* next = entry->_next;
     entry->flush();
     FREE_C_HEAP_OBJ(entry);

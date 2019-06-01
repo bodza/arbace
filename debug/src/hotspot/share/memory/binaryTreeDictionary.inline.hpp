@@ -37,8 +37,7 @@ void TreeChunk<Chunk_t, FreeList_t>::verify_tree_chunk_list() const {
 }
 
 template <class Chunk_t, class FreeList_t>
-TreeList<Chunk_t, FreeList_t>::TreeList() : _parent(NULL),
-  _left(NULL), _right(NULL) { }
+TreeList<Chunk_t, FreeList_t>::TreeList() : _parent(NULL), _left(NULL), _right(NULL) { }
 
 template <class Chunk_t, class FreeList_t>
 TreeList<Chunk_t, FreeList_t>*
@@ -107,8 +106,7 @@ TreeList<Chunk_t, FreeList_t>* TreeList<Chunk_t, FreeList_t>::remove_chunk_repla
       // This can be slow for a long list.  Consider having
       // an option that does not allow the first chunk on the
       // list to be coalesced.
-      for (TreeChunk<Chunk_t, FreeList_t>* curTC = nextTC; curTC != NULL;
-          curTC = TreeChunk<Chunk_t, FreeList_t>::as_TreeChunk(curTC->next())) {
+      for (TreeChunk<Chunk_t, FreeList_t>* curTC = nextTC; curTC != NULL; curTC = TreeChunk<Chunk_t, FreeList_t>::as_TreeChunk(curTC->next())) {
         curTC->set_list(retTL);
       }
       // Fix the parent to point to the new TreeList<Chunk_t, FreeList_t>.
@@ -173,8 +171,7 @@ void TreeList<Chunk_t, FreeList_t>::return_chunk_at_head(TreeChunk<Chunk_t, Free
 }
 
 template <class Chunk_t, class FreeList_t>
-void TreeChunk<Chunk_t, FreeList_t>::assert_is_mangled() const {
-}
+void TreeChunk<Chunk_t, FreeList_t>::assert_is_mangled() const { }
 
 template <class Chunk_t, class FreeList_t>
 TreeChunk<Chunk_t, FreeList_t>* TreeList<Chunk_t, FreeList_t>::head_as_TreeChunk() {
@@ -416,7 +413,8 @@ template <class Chunk_t, class FreeList_t>
 TreeList<Chunk_t, FreeList_t>* BinaryTreeDictionary<Chunk_t, FreeList_t>::remove_tree_minimum(TreeList<Chunk_t, FreeList_t>* tl) {
   // locate the subtree minimum by walking down left branches
   TreeList<Chunk_t, FreeList_t>* curTL = tl;
-  for (; curTL->left() != NULL; curTL = curTL->left());
+  for (; curTL->left() != NULL; curTL = curTL->left())
+    ;
   // obviously curTL now has at most one child, a right child
   if (curTL != root()) {  // Should this test just be removed?
     TreeList<Chunk_t, FreeList_t>* parentTL = curTL->parent();
@@ -633,11 +631,8 @@ class PrintFreeListsClosure : public AscendTreeCensusClosure<Chunk_t, FreeList_t
     }
     fl->print_on(_st);
     size_t sz = fl->size();
-    for (Chunk_t* fc = fl->head(); fc != NULL;
-         fc = fc->next()) {
-      _st->print_cr("\t[" PTR_FORMAT "," PTR_FORMAT ")  %s",
-                    p2i(fc), p2i((HeapWord*)fc + sz),
-                    fc->cantCoalesce() ? "\t CC" : "");
+    for (Chunk_t* fc = fl->head(); fc != NULL; fc = fc->next()) {
+      _st->print_cr("\t[" PTR_FORMAT "," PTR_FORMAT ")  %s", p2i(fc), p2i((HeapWord*)fc + sz), fc->cantCoalesce() ? "\t CC" : "");
     }
   }
 };

@@ -69,10 +69,7 @@ bool CardGeneration::grow_by(size_t bytes) {
     // update the space and generation capacity counters
     update_counters();
 
-    size_t new_mem_size = _virtual_space.committed_size();
-    size_t old_mem_size = new_mem_size - bytes;
-    log_trace(gc, heap)("Expanding %s from " SIZE_FORMAT "K by " SIZE_FORMAT "K to " SIZE_FORMAT "K",
-                    name(), old_mem_size/K, bytes/K, new_mem_size/K);
+    size_t new_mem_size = _virtual_space.committed_size();
   }
   return result;
 }
@@ -103,7 +100,6 @@ bool CardGeneration::expand(size_t bytes, size_t expand_bytes) {
     success = grow_to_reserved();
   }
   if (success && GCLocker::is_active_and_needs_gc()) {
-    log_trace(gc, heap)("Garbage collection disabled, expanded heap instead");
   }
 
   return success;
@@ -138,10 +134,7 @@ void CardGeneration::shrink(size_t bytes) {
   // Shrink the card table
   GenCollectedHeap::heap()->rem_set()->resize_covered_region(mr);
 
-  size_t new_mem_size = _virtual_space.committed_size();
-  size_t old_mem_size = new_mem_size + size;
-  log_trace(gc, heap)("Shrinking %s from " SIZE_FORMAT "K to " SIZE_FORMAT "K",
-                      name(), old_mem_size/K, new_mem_size/K);
+  size_t new_mem_size = _virtual_space.committed_size();
 }
 
 // No young generation references, clear this generation's cards.
@@ -175,15 +168,6 @@ void CardGeneration::compute_new_size() {
 
     const size_t free_after_gc = free();
     const double free_percentage = ((double)free_after_gc) / capacity_after_gc;
-    log_trace(gc, heap)("CardGeneration::compute_new_size:");
-    log_trace(gc, heap)("    minimum_free_percentage: %6.2f  maximum_used_percentage: %6.2f",
-                  minimum_free_percentage,
-                  maximum_used_percentage);
-    log_trace(gc, heap)("     free_after_gc   : %6.1fK   used_after_gc   : %6.1fK   capacity_after_gc   : %6.1fK",
-                  free_after_gc / (double) K,
-                  used_after_gc / (double) K,
-                  capacity_after_gc / (double) K);
-    log_trace(gc, heap)("     free_percentage: %6.2f", free_percentage);
 
   if (capacity_after_gc < minimum_desired_capacity) {
     // If we have less free space than we want then expand
@@ -192,10 +176,6 @@ void CardGeneration::compute_new_size() {
     if (expand_bytes >= _min_heap_delta_bytes) {
       expand(expand_bytes, 0); // safe if expansion fails
     }
-    log_trace(gc, heap)("    expanding:  minimum_desired_capacity: %6.1fK  expand_bytes: %6.1fK  _min_heap_delta_bytes: %6.1fK",
-                  minimum_desired_capacity / (double) K,
-                  expand_bytes / (double) K,
-                  _min_heap_delta_bytes / (double) K);
     return;
   }
 
@@ -210,12 +190,6 @@ void CardGeneration::compute_new_size() {
     const double max_tmp = used_after_gc / minimum_used_percentage;
     size_t maximum_desired_capacity = (size_t)MIN2(max_tmp, double(max_uintx));
     maximum_desired_capacity = MAX2(maximum_desired_capacity, initial_size());
-    log_trace(gc, heap)("    maximum_free_percentage: %6.2f  minimum_used_percentage: %6.2f",
-                             maximum_free_percentage, minimum_used_percentage);
-    log_trace(gc, heap)("    _capacity_at_prologue: %6.1fK  minimum_desired_capacity: %6.1fK  maximum_desired_capacity: %6.1fK",
-                             _capacity_at_prologue / (double) K,
-                             minimum_desired_capacity / (double) K,
-                             maximum_desired_capacity / (double) K);
 
     if (capacity_after_gc > maximum_desired_capacity) {
       // Capacity too large, compute shrinking size
@@ -235,13 +209,6 @@ void CardGeneration::compute_new_size() {
           _shrink_factor = MIN2(current_shrink_factor * 4, (size_t) 100);
         }
       }
-      log_trace(gc, heap)("    shrinking:  initSize: %.1fK  maximum_desired_capacity: %.1fK",
-                               initial_size() / (double) K, maximum_desired_capacity / (double) K);
-      log_trace(gc, heap)("    shrink_bytes: %.1fK  current_shrink_factor: " SIZE_FORMAT "  new shrink factor: " SIZE_FORMAT "  _min_heap_delta_bytes: %.1fK",
-                               shrink_bytes / (double) K,
-                               current_shrink_factor,
-                               _shrink_factor,
-                               _min_heap_delta_bytes / (double) K);
     }
   }
 
@@ -253,11 +220,6 @@ void CardGeneration::compute_new_size() {
     expansion_for_promotion = MIN2(expansion_for_promotion, max_shrink_bytes);
     // We have two shrinking computations, take the largest
     shrink_bytes = MAX2(shrink_bytes, expansion_for_promotion);
-    log_trace(gc, heap)("    aggressive shrinking:  _capacity_at_prologue: %.1fK  capacity_after_gc: %.1fK  expansion_for_promotion: %.1fK  shrink_bytes: %.1fK",
-                        capacity_after_gc / (double) K,
-                        _capacity_at_prologue / (double) K,
-                        expansion_for_promotion / (double) K,
-                        shrink_bytes / (double) K);
   }
   // Don't shrink unless it's significant
   if (shrink_bytes >= _min_heap_delta_bytes) {

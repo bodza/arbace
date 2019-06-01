@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/stringTable.hpp"
 #include "classfile/symbolTable.hpp"
@@ -29,10 +30,7 @@ public:
 
   JVMFlag::Error check_int(int value, bool verbose = true) {
     if ((value < _min) || (value > _max)) {
-      JVMFlag::printError(verbose,
-                          "int %s=%d is outside the allowed range "
-                          "[ %d ... %d ]\n",
-                          name(), value, _min, _max);
+      JVMFlag::printError(verbose, "int %s=%d is outside the allowed range [ %d ... %d ]\n", name(), value, _min, _max);
       return JVMFlag::OUT_OF_BOUNDS;
     } else {
       return JVMFlag::SUCCESS;
@@ -59,10 +57,7 @@ public:
 
   JVMFlag::Error check_intx(intx value, bool verbose = true) {
     if ((value < _min) || (value > _max)) {
-      JVMFlag::printError(verbose,
-                          "intx %s=" INTX_FORMAT " is outside the allowed range "
-                          "[ " INTX_FORMAT " ... " INTX_FORMAT " ]\n",
-                          name(), value, _min, _max);
+      JVMFlag::printError(verbose, "intx %s=" INTX_FORMAT " is outside the allowed range [ " INTX_FORMAT " ... " INTX_FORMAT " ]\n", name(), value, _min, _max);
       return JVMFlag::OUT_OF_BOUNDS;
     } else {
       return JVMFlag::SUCCESS;
@@ -90,10 +85,7 @@ public:
 
   JVMFlag::Error check_uint(uint value, bool verbose = true) {
     if ((value < _min) || (value > _max)) {
-      JVMFlag::printError(verbose,
-                          "uint %s=%u is outside the allowed range "
-                          "[ %u ... %u ]\n",
-                          name(), value, _min, _max);
+      JVMFlag::printError(verbose, "uint %s=%u is outside the allowed range [ %u ... %u ]\n", name(), value, _min, _max);
       return JVMFlag::OUT_OF_BOUNDS;
     } else {
       return JVMFlag::SUCCESS;
@@ -121,10 +113,7 @@ public:
 
   JVMFlag::Error check_uintx(uintx value, bool verbose = true) {
     if ((value < _min) || (value > _max)) {
-      JVMFlag::printError(verbose,
-                          "uintx %s=" UINTX_FORMAT " is outside the allowed range "
-                          "[ " UINTX_FORMAT " ... " UINTX_FORMAT " ]\n",
-                          name(), value, _min, _max);
+      JVMFlag::printError(verbose, "uintx %s=" UINTX_FORMAT " is outside the allowed range [ " UINTX_FORMAT " ... " UINTX_FORMAT " ]\n", name(), value, _min, _max);
       return JVMFlag::OUT_OF_BOUNDS;
     } else {
       return JVMFlag::SUCCESS;
@@ -152,10 +141,7 @@ public:
 
   JVMFlag::Error check_uint64_t(uint64_t value, bool verbose = true) {
     if ((value < _min) || (value > _max)) {
-      JVMFlag::printError(verbose,
-                          "uint64_t %s=" UINT64_FORMAT " is outside the allowed range "
-                          "[ " UINT64_FORMAT " ... " UINT64_FORMAT " ]\n",
-                          name(), value, _min, _max);
+      JVMFlag::printError(verbose, "uint64_t %s=" UINT64_FORMAT " is outside the allowed range [ " UINT64_FORMAT " ... " UINT64_FORMAT " ]\n", name(), value, _min, _max);
       return JVMFlag::OUT_OF_BOUNDS;
     } else {
       return JVMFlag::SUCCESS;
@@ -183,10 +169,7 @@ public:
 
   JVMFlag::Error check_size_t(size_t value, bool verbose = true) {
     if ((value < _min) || (value > _max)) {
-      JVMFlag::printError(verbose,
-                          "size_t %s=" SIZE_FORMAT " is outside the allowed range "
-                          "[ " SIZE_FORMAT " ... " SIZE_FORMAT " ]\n",
-                          name(), value, _min, _max);
+      JVMFlag::printError(verbose, "size_t %s=" SIZE_FORMAT " is outside the allowed range [ " SIZE_FORMAT " ... " SIZE_FORMAT " ]\n", name(), value, _min, _max);
       return JVMFlag::OUT_OF_BOUNDS;
     } else {
       return JVMFlag::SUCCESS;
@@ -214,10 +197,7 @@ public:
 
   JVMFlag::Error check_double(double value, bool verbose = true) {
     if ((value < _min) || (value > _max)) {
-      JVMFlag::printError(verbose,
-                          "double %s=%f is outside the allowed range "
-                          "[ %f ... %f ]\n",
-                          name(), value, _min, _max);
+      JVMFlag::printError(verbose, "double %s=%f is outside the allowed range [ %f ... %f ]\n", name(), value, _min, _max);
       return JVMFlag::OUT_OF_BOUNDS;
     } else {
       return JVMFlag::SUCCESS;

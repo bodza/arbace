@@ -57,7 +57,6 @@ inline void HandleMark::pop_and_restore() {
   if (_chunk->next()) {
     area->set_size_in_bytes(size_in_bytes());
     _chunk->next_chop();
-  } else {
   }
   // Roll back arena to saved top markers
   area->_chunk = _chunk;

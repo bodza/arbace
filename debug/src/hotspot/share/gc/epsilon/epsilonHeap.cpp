@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/epsilon/epsilonHeap.hpp"
 #include "gc/epsilon/epsilonMemoryPool.hpp"
 #include "gc/epsilon/epsilonThreadLocalData.hpp"
@@ -32,30 +33,9 @@ jint EpsilonHeap::initialize() {
   // Enable monitoring
   _monitoring_support = new EpsilonMonitoringSupport(this);
   _last_counter_update = 0;
-  _last_heap_print = 0;
 
   // Install barrier set
   BarrierSet::set_barrier_set(new EpsilonBarrierSet());
-
-  // All done, print out the configuration
-  if (init_byte_size != max_byte_size) {
-    log_info(gc)("Resizeable heap; starting at " SIZE_FORMAT "M, max: " SIZE_FORMAT "M, step: " SIZE_FORMAT "M",
-                 init_byte_size / M, max_byte_size / M, EpsilonMinHeapExpand / M);
-  } else {
-    log_info(gc)("Non-resizeable heap; start/max: " SIZE_FORMAT "M", init_byte_size / M);
-  }
-
-  if (UseTLAB) {
-    log_info(gc)("Using TLAB allocation; max: " SIZE_FORMAT "K", _max_tlab_size * HeapWordSize / K);
-    if (EpsilonElasticTLAB) {
-      log_info(gc)("Elastic TLABs enabled; elasticity: %.2fx", EpsilonTLABElasticity);
-    }
-    if (EpsilonElasticTLABDecay) {
-      log_info(gc)("Elastic TLABs decay enabled; decay time: " SIZE_FORMAT "ms", EpsilonTLABDecayTime);
-    }
-  } else {
-    log_info(gc)("Not using TLAB allocation");
-  }
 
   return JNI_OK;
 }
@@ -129,21 +109,10 @@ HeapWord* EpsilonHeap::allocate_work(size_t size) {
     }
   }
 
-  // ...and print the occupancy line, if needed
-  {
-    size_t last = _last_heap_print;
-    if ((used - last >= _step_heap_print) && Atomic::cmpxchg(used, &_last_heap_print, last) == last) {
-      print_heap_info(used);
-      print_metaspace_info();
-    }
-  }
-
   return res;
 }
 
-HeapWord* EpsilonHeap::allocate_new_tlab(size_t min_size,
-                                         size_t requested_size,
-                                         size_t* actual_size) {
+HeapWord* EpsilonHeap::allocate_new_tlab(size_t min_size, size_t requested_size, size_t* actual_size) {
   Thread* thread = Thread::current();
 
   // Defaults in case elastic paths are not taken
@@ -182,17 +151,6 @@ HeapWord* EpsilonHeap::allocate_new_tlab(size_t min_size,
   // Always honor alignment
   size = align_up(size, MinObjAlignment);
 
-  if (log_is_enabled(Trace, gc)) {
-    ResourceMark rm;
-    log_trace(gc)("TLAB size for \"%s\" (Requested: " SIZE_FORMAT "K, Min: " SIZE_FORMAT "K, Max: " SIZE_FORMAT "K, Ergo: " SIZE_FORMAT "K) -> " SIZE_FORMAT "K",
-                  thread->name(),
-                  requested_size * HeapWordSize / K,
-                  min_size * HeapWordSize / K,
-                  _max_tlab_size * HeapWordSize / K,
-                  ergo_tlab * HeapWordSize / K,
-                  size * HeapWordSize / K);
-  }
-
   // All prepared, let's do it!
   HeapWord* res = allocate_work(size);
 
@@ -229,12 +187,8 @@ void EpsilonHeap::collect(GCCause::Cause cause) {
       // While Epsilon does not do GC, it has to perform sizing adjustments, otherwise we would
       // re-enter the safepoint again very soon.
 
-      log_info(gc)("GC request for \"%s\" is handled", GCCause::to_string(cause));
       MetaspaceGC::compute_new_size();
-      print_metaspace_info();
       break;
-    default:
-      log_info(gc)("GC request for \"%s\" is ignored", GCCause::to_string(cause));
   }
   _monitoring_support->update_counters();
 }
@@ -257,44 +211,4 @@ void EpsilonHeap::print_on(outputStream *st) const {
   _space->print_on(st);
 
   MetaspaceUtils::print_on(st);
-}
-
-void EpsilonHeap::print_tracing_info() const {
-  print_heap_info(used());
-  print_metaspace_info();
-}
-
-void EpsilonHeap::print_heap_info(size_t used) const {
-  size_t reserved  = max_capacity();
-  size_t committed = capacity();
-
-  if (reserved != 0) {
-    log_info(gc)("Heap: " SIZE_FORMAT "%s reserved, " SIZE_FORMAT "%s (%.2f%%) committed, "
-                 SIZE_FORMAT "%s (%.2f%%) used",
-            byte_size_in_proper_unit(reserved),  proper_unit_for_byte_size(reserved),
-            byte_size_in_proper_unit(committed), proper_unit_for_byte_size(committed),
-            committed * 100.0 / reserved,
-            byte_size_in_proper_unit(used),      proper_unit_for_byte_size(used),
-            used * 100.0 / reserved);
-  } else {
-    log_info(gc)("Heap: no reliable data");
-  }
-}
-
-void EpsilonHeap::print_metaspace_info() const {
-  size_t reserved  = MetaspaceUtils::reserved_bytes();
-  size_t committed = MetaspaceUtils::committed_bytes();
-  size_t used      = MetaspaceUtils::used_bytes();
-
-  if (reserved != 0) {
-    log_info(gc, metaspace)("Metaspace: " SIZE_FORMAT "%s reserved, " SIZE_FORMAT "%s (%.2f%%) committed, "
-                            SIZE_FORMAT "%s (%.2f%%) used",
-            byte_size_in_proper_unit(reserved),  proper_unit_for_byte_size(reserved),
-            byte_size_in_proper_unit(committed), proper_unit_for_byte_size(committed),
-            committed * 100.0 / reserved,
-            byte_size_in_proper_unit(used),      proper_unit_for_byte_size(used),
-            used * 100.0 / reserved);
-  } else {
-    log_info(gc, metaspace)("Metaspace: no reliable data");
-  }
 }

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/classLoaderData.inline.hpp"
 #include "classfile/placeholders.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -8,10 +9,7 @@
 
 // Placeholder methods
 
-PlaceholderEntry* PlaceholderTable::new_entry(int hash, Symbol* name,
-                                              ClassLoaderData* loader_data,
-                                              bool havesupername,
-                                              Symbol* supername) {
+PlaceholderEntry* PlaceholderTable::new_entry(int hash, Symbol* name, ClassLoaderData* loader_data, bool havesupername, Symbol* supername) {
   PlaceholderEntry* entry = (PlaceholderEntry*)Hashtable<Symbol*, mtClass>::new_entry(hash, name);
   // Hashtable with Symbol* literal must increment and decrement refcount.
   name->increment_refcount();
@@ -78,12 +76,7 @@ Symbol* PlaceholderTable::find_entry(int index, unsigned int hash, Symbol* class
   // If entry exists, reuse entry
   // For both, push SeenThread for classloadAction
   // if havesupername: this is used for circularity for instanceklass loading
-PlaceholderEntry* PlaceholderTable::find_and_add(int index, unsigned int hash,
-                                                 Symbol* name,
-                                                 ClassLoaderData* loader_data,
-                                                 classloadAction action,
-                                                 Symbol* supername,
-                                                 Thread* thread) {
+PlaceholderEntry* PlaceholderTable::find_and_add(int index, unsigned int hash, Symbol* name, ClassLoaderData* loader_data, classloadAction action, Symbol* supername, Thread* thread) {
   PlaceholderEntry* probe = get_entry(index, hash, name, loader_data);
   if (probe == NULL) {
     // Nothing found, add place holder
@@ -171,12 +164,9 @@ void PlaceholderEntry::print_entry(outputStream* st) const {
 }
 
 void PlaceholderTable::print_on(outputStream* st) const {
-  st->print_cr("Placeholder table (table_size=%d, placeholders=%d)",
-                table_size(), number_of_entries());
+  st->print_cr("Placeholder table (table_size=%d, placeholders=%d)", table_size(), number_of_entries());
   for (int pindex = 0; pindex < table_size(); pindex++) {
-    for (PlaceholderEntry* probe = bucket(pindex);
-                           probe != NULL;
-                           probe = probe->next()) {
+    for (PlaceholderEntry* probe = bucket(pindex); probe != NULL; probe = probe->next()) {
       st->print("%4d: placeholder ", pindex);
       probe->print_entry(st);
     }

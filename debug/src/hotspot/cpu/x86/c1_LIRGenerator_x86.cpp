@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_Compilation.hpp"
 #include "c1/c1_FrameMap.hpp"
 #include "c1/c1_Instruction.hpp"
@@ -260,8 +261,7 @@ void LIRGenerator::do_NegateOp(NegateOp* x) {
     if (x->type()->tag() == doubleTag) {
       tmp = new_register(T_DOUBLE);
       __ move(LIR_OprFact::doubleConst(-0.0), tmp);
-    }
-    else if (x->type()->tag() == floatTag) {
+    } else if (x->type()->tag() == floatTag) {
       tmp = new_register(T_FLOAT);
       __ move(LIR_OprFact::floatConst(-0.0), tmp);
     }

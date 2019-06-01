@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
 #include "gc/shared/barrierSet.hpp"
@@ -39,8 +40,7 @@ class StubGenerator: public StubCodeGenerator {
 
 #define inc_counter_np(counter) ((void)0)
 
-  void inc_copy_counter_np(BasicType t) {
-  }
+  void inc_copy_counter_np(BasicType t) { }
 
   //------------------------------------------------------------------------------------------------------------------------
   // Call stubs are used to call Java from C
@@ -2323,8 +2323,7 @@ class StubGenerator: public StubCodeGenerator {
         rnum++;
         if (rnum != ROUNDS[k]) {
           DoFour(aesdec, xmm_key_tmp0);
-        }
-        else {
+        } else {
           DoFour(aesdeclast, xmm_key_tmp0);
         }
         rnum++;
@@ -3475,24 +3474,22 @@ class StubGenerator: public StubCodeGenerator {
     // entry points that exist in all platforms
     // Note: This is code that could be shared among different platforms - however the benefit seems to be smaller than
     //       the disadvantage of having a much more complicated generator structure. See also comment in stubRoutines.hpp.
-    StubRoutines::_forward_exception_entry      = generate_forward_exception();
+    StubRoutines::_forward_exception_entry = generate_forward_exception();
 
-    StubRoutines::_call_stub_entry              = generate_call_stub(StubRoutines::_call_stub_return_address);
+    StubRoutines::_call_stub_entry         = generate_call_stub(StubRoutines::_call_stub_return_address);
     // is referenced by megamorphic call
-    StubRoutines::_catch_exception_entry        = generate_catch_exception();
+    StubRoutines::_catch_exception_entry   = generate_catch_exception();
 
     // These are currently used by Solaris/Intel
-    StubRoutines::_atomic_xchg_entry            = generate_atomic_xchg();
+    StubRoutines::_atomic_xchg_entry       = generate_atomic_xchg();
 
     // platform dependent
     create_control_words();
 
-    StubRoutines::x86::_verify_mxcsr_entry                 = generate_verify_mxcsr();
-    StubRoutines::x86::_verify_fpu_cntrl_wrd_entry         = generate_verify_fpu_cntrl_wrd();
-    StubRoutines::_d2i_wrapper                              = generate_d2i_wrapper(T_INT,
-                                                                                   CAST_FROM_FN_PTR(address, SharedRuntime::d2i));
-    StubRoutines::_d2l_wrapper                              = generate_d2i_wrapper(T_LONG,
-                                                                                   CAST_FROM_FN_PTR(address, SharedRuntime::d2l));
+    StubRoutines::x86::_verify_mxcsr_entry         = generate_verify_mxcsr();
+    StubRoutines::x86::_verify_fpu_cntrl_wrd_entry = generate_verify_fpu_cntrl_wrd();
+    StubRoutines::_d2i_wrapper                     = generate_d2i_wrapper(T_INT, CAST_FROM_FN_PTR(address, SharedRuntime::d2i));
+    StubRoutines::_d2l_wrapper                     = generate_d2i_wrapper(T_LONG, CAST_FROM_FN_PTR(address, SharedRuntime::d2l));
 
     // Build this early so it's available for the interpreter
     StubRoutines::_throw_StackOverflowError_entry          = generate_throw_exception("StackOverflowError throw_exception",

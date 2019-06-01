@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/atomic.hpp"
@@ -106,9 +107,7 @@ void BitMap::reinitialize(const Allocator& allocator, idx_t new_size_in_bits) {
   initialize(allocator, new_size_in_bits);
 }
 
-ResourceBitMap::ResourceBitMap(idx_t size_in_bits)
-    : BitMap(allocate(ResourceBitMapAllocator(), size_in_bits), size_in_bits) {
-}
+ResourceBitMap::ResourceBitMap(idx_t size_in_bits) : BitMap(allocate(ResourceBitMapAllocator(), size_in_bits), size_in_bits) { }
 
 void ResourceBitMap::resize(idx_t new_size_in_bits) {
   BitMap::resize(ResourceBitMapAllocator(), new_size_in_bits);
@@ -122,13 +121,9 @@ void ResourceBitMap::reinitialize(idx_t size_in_bits) {
   BitMap::reinitialize(ResourceBitMapAllocator(), size_in_bits);
 }
 
-ArenaBitMap::ArenaBitMap(Arena* arena, idx_t size_in_bits)
-    : BitMap(allocate(ArenaBitMapAllocator(arena), size_in_bits), size_in_bits) {
-}
+ArenaBitMap::ArenaBitMap(Arena* arena, idx_t size_in_bits) : BitMap(allocate(ArenaBitMapAllocator(arena), size_in_bits), size_in_bits) { }
 
-CHeapBitMap::CHeapBitMap(idx_t size_in_bits, MEMFLAGS flags, bool clear)
-    : BitMap(allocate(CHeapBitMapAllocator(flags), size_in_bits, clear), size_in_bits), _flags(flags) {
-}
+CHeapBitMap::CHeapBitMap(idx_t size_in_bits, MEMFLAGS flags, bool clear) : BitMap(allocate(CHeapBitMapAllocator(flags), size_in_bits, clear), size_in_bits), _flags(flags) { }
 
 CHeapBitMap::~CHeapBitMap() {
   free(CHeapBitMapAllocator(_flags), map(), size());
@@ -561,9 +556,7 @@ bool BitMap::iterate(BitMapClosure* blk, idx_t leftOffset, idx_t rightOffset) {
 
   idx_t startIndex = word_index(leftOffset);
   idx_t endIndex   = MIN2(word_index(rightOffset) + 1, size_in_words());
-  for (idx_t index = startIndex, offset = leftOffset;
-       offset < rightOffset && index < endIndex;
-       offset = (++index) << LogBitsPerWord) {
+  for (idx_t index = startIndex, offset = leftOffset; offset < rightOffset && index < endIndex; offset = (++index) << LogBitsPerWord) {
     idx_t rest = map(index) >> (offset & (BitsPerWord - 1));
     for (; offset < rightOffset && rest != 0; offset++) {
       if (rest & 1) {

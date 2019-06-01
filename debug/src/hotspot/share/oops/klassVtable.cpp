@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/javaClasses.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -118,12 +119,6 @@ int klassVtable::initialize_from_super(Klass* super) {
     // copy methods from superKlass
     klassVtable superVtable = super->vtable();
     superVtable.copy_vtable_to(table());
-    if (log_develop_is_enabled(Trace, vtables)) {
-      ResourceMark rm;
-      log_develop_trace(vtables)("copy vtable from %s to %s size %d",
-                                 super->internal_name(), klass()->internal_name(),
-                                 _length);
-    }
     return superVtable.length();
   }
 }
@@ -137,11 +132,6 @@ void klassVtable::initialize_vtable(bool checkconstraints, TRAPS) {
   int nofNewEntries = 0;
 
   bool is_shared = _klass->is_shared();
-
-  if (!_klass->is_array_klass()) {
-    ResourceMark rm(THREAD);
-    log_develop_debug(vtables)("Initializing: %s", _klass->name()->as_C_string());
-  }
 
   if (Universe::is_bootstrapping()) {
     // just clear everything
@@ -181,7 +171,6 @@ void klassVtable::initialize_vtable(bool checkconstraints, TRAPS) {
         Array<int>* def_vtable_indices = NULL;
         if ((def_vtable_indices = ik()->default_vtable_indices()) == NULL) {
           def_vtable_indices = ik()->create_new_default_vtable_indices(len, CHECK);
-        } else {
         }
         for (int i = 0; i < len; i++) {
           HandleMark hm(THREAD);
@@ -239,8 +228,7 @@ void klassVtable::initialize_vtable(bool checkconstraints, TRAPS) {
 // Therefore: all package private methods need their own vtable entries for
 // them to be the root of an inheritance overriding decision
 // Package private methods may also override other vtable entries
-InstanceKlass* klassVtable::find_transitive_override(InstanceKlass* initialsuper, const methodHandle& target_method,
-                            int vtable_index, Handle target_loader, Symbol* target_classname, Thread * THREAD) {
+InstanceKlass* klassVtable::find_transitive_override(InstanceKlass* initialsuper, const methodHandle& target_method, int vtable_index, Handle target_loader, Symbol* target_classname, Thread * THREAD) {
   InstanceKlass* superk = initialsuper;
   while (superk != NULL && superk->super() != NULL) {
     InstanceKlass* supersuperklass = InstanceKlass::cast(superk->super());
@@ -248,20 +236,6 @@ InstanceKlass* klassVtable::find_transitive_override(InstanceKlass* initialsuper
     if (vtable_index < ssVtable.length()) {
       Method* super_method = ssVtable.method_at(vtable_index);
       if (supersuperklass->is_override(super_method, target_loader, target_classname, THREAD)) {
-        if (log_develop_is_enabled(Trace, vtables)) {
-          ResourceMark rm(THREAD);
-          LogTarget(Trace, vtables) lt;
-          LogStream ls(lt);
-          char* sig = target_method()->name_and_sig_as_C_string();
-          ls.print("transitive overriding superclass %s with %s index %d, original flags: ",
-                       supersuperklass->internal_name(),
-                       sig, vtable_index);
-          super_method->print_linkage_flags(&ls);
-          ls.print("overriders flags: ");
-          target_method->print_linkage_flags(&ls);
-          ls.cr();
-        }
-
         break; // return found superk
       }
     } else  {
@@ -276,10 +250,7 @@ InstanceKlass* klassVtable::find_transitive_override(InstanceKlass* initialsuper
   return superk;
 }
 
-static void log_vtables(int i, bool overrides, const methodHandle& target_method,
-                        Klass* target_klass, Method* super_method,
-                        Thread* thread) {
-}
+static void log_vtables(int i, bool overrides, const methodHandle& target_method, Klass* target_klass, Method* super_method, Thread* thread) { }
 
 // Update child's copy of super vtable for overrides
 // OR return true if a new vtable entry is required.
@@ -465,17 +436,6 @@ void klassVtable::put_method_at(Method* m, int index) {
     // constraints based on the runtime classloaders' context. The dumptime
     // method at the vtable index should be the same as the runtime method.
   } else {
-    if (log_develop_is_enabled(Trace, vtables)) {
-      ResourceMark rm;
-      LogTarget(Trace, vtables) lt;
-      LogStream ls(lt);
-      const char* sig = (m != NULL) ? m->name_and_sig_as_C_string() : "<NULL>";
-      ls.print("adding %s at index %d, flags: ", sig, index);
-      if (m != NULL) {
-        m->print_linkage_flags(&ls);
-      }
-      ls.cr();
-    }
     table()[index].set(m);
   }
 }
@@ -781,19 +741,6 @@ int klassVtable::fill_in_mirandas(int initialized) {
                ik()->default_methods(), ik()->local_interfaces(),
                klass()->is_interface());
   for (int i = 0; i < mirandas.length(); i++) {
-    if (log_develop_is_enabled(Trace, vtables)) {
-      Method* meth = mirandas.at(i);
-      ResourceMark rm(Thread::current());
-      LogTarget(Trace, vtables) lt;
-      LogStream ls(lt);
-      if (meth != NULL) {
-        char* sig = meth->name_and_sig_as_C_string();
-        ls.print("fill in mirandas with %s index %d, flags: ",
-                     sig, initialized);
-        meth->print_linkage_flags(&ls);
-        ls.cr();
-      }
-    }
     put_method_at(mirandas.at(i), initialized);
     ++initialized;
   }
@@ -866,9 +813,6 @@ void klassItable::initialize_itable(bool checkconstraints, TRAPS) {
   guarantee(size_offset_table() >= 1, "too small");
   int num_interfaces = size_offset_table() - 1;
   if (num_interfaces > 0) {
-    log_develop_debug(itables)("%3d: Initializing itables for %s", ++initialize_count,
-                       _klass->name()->as_C_string());
-
     // Iterate through all interfaces
     int i;
     for (i = 0; i < num_interfaces; i++) {
@@ -896,8 +840,6 @@ inline bool interface_method_needs_itable_index(Method* m) {
 
 int klassItable::assign_itable_indices_for_interface(Klass* klass) {
   // an interface does not have an itable, but its methods need to be numbered
-  log_develop_debug(itables)("%3d: Initializing itable indices for interface %s",
-                             ++initialize_count, klass->name()->as_C_string());
   Array<Method*>* methods = InstanceKlass::cast(klass)->methods();
   int nof_methods = methods->length();
   int ime_num = 0;
@@ -905,19 +847,6 @@ int klassItable::assign_itable_indices_for_interface(Klass* klass) {
     Method* m = methods->at(i);
     if (interface_method_needs_itable_index(m)) {
       // If m is already assigned a vtable index, do not disturb it.
-      if (log_develop_is_enabled(Trace, itables)) {
-        ResourceMark rm;
-        LogTarget(Trace, itables) lt;
-        LogStream ls(lt);
-        const char* sig = m->name_and_sig_as_C_string();
-        if (m->has_vtable_index()) {
-          ls.print("vtable index %d for method: %s, flags: ", m->vtable_index(), sig);
-        } else {
-          ls.print("itable index %d for method: %s, flags: ", ime_num, sig);
-        }
-        m->print_linkage_flags(&ls);
-        ls.cr();
-      }
       if (!m->has_vtable_index()) {
         // A shared method could have an initialized itable_index that is < 0.
         m->set_itable_index(ime_num);
@@ -1005,20 +934,6 @@ void klassItable::initialize_itable_for_interface(int method_table_offset, Klass
       // ime may have moved during GC so recalculate address
       int ime_num = m->itable_index();
       itableOffsetEntry::method_entry(_klass, method_table_offset)[ime_num].initialize(target());
-      if (log_develop_is_enabled(Trace, itables)) {
-        ResourceMark rm(THREAD);
-        if (target() != NULL) {
-          LogTarget(Trace, itables) lt;
-          LogStream ls(lt);
-          char* sig = target()->name_and_sig_as_C_string();
-          ls.print("interface: %s, ime_num: %d, target: %s, method_holder: %s ",
-                       interf->internal_name(), ime_num, sig,
-                       target()->method_holder()->internal_name());
-          ls.print("target_method flags: ");
-          target()->print_linkage_flags(&ls);
-          ls.cr();
-        }
-      }
     }
   }
 }

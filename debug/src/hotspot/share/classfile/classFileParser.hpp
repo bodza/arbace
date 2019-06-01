@@ -297,14 +297,8 @@ class ClassFileParser {
   void classfile_parse_error(const char* msg, TRAPS) const;
   void classfile_parse_error(const char* msg, int index, TRAPS) const;
   void classfile_parse_error(const char* msg, const char *name, TRAPS) const;
-  void classfile_parse_error(const char* msg,
-                             int index,
-                             const char *name,
-                             TRAPS) const;
-  void classfile_parse_error(const char* msg,
-                             const char* name,
-                             const char* signature,
-                             TRAPS) const;
+  void classfile_parse_error(const char* msg, int index, const char *name, TRAPS) const;
+  void classfile_parse_error(const char* msg, const char* name, const char* signature, TRAPS) const;
 
   inline void guarantee_property(bool b, const char* msg, TRAPS) const {
     if (!b) { classfile_parse_error(msg, CHECK); }
@@ -313,16 +307,10 @@ class ClassFileParser {
   void report_assert_property_failure(const char* msg, TRAPS) const { };
   void report_assert_property_failure(const char* msg, int index, TRAPS) const { };
 
-  inline void assert_property(bool b, const char* msg, TRAPS) const {
-  }
+  inline void assert_property(bool b, const char* msg, TRAPS) const { }
+  inline void assert_property(bool b, const char* msg, int index, TRAPS) const { }
 
-  inline void assert_property(bool b, const char* msg, int index, TRAPS) const {
-  }
-
-  inline void check_property(bool property,
-                             const char* msg,
-                             int index,
-                             TRAPS) const {
+  inline void check_property(bool property, const char* msg, int index, TRAPS) const {
     if (_need_verify) {
       guarantee_property(property, msg, index, CHECK);
     } else {

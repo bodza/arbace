@@ -146,7 +146,6 @@ public:
     _active = b;
     if (!b && _buf != NULL) {
       reset();
-    } else if (b && _buf != NULL) {
     }
   }
 
@@ -203,8 +202,7 @@ public:
 
   // Return the BufferNode containing the buffer, after setting its index.
   static BufferNode* make_node_from_buffer(void** buffer, size_t index) {
-    BufferNode* node = reinterpret_cast<BufferNode*>(
-        reinterpret_cast<char*>(buffer) - buffer_offset());
+    BufferNode* node = reinterpret_cast<BufferNode*>(reinterpret_cast<char*>(buffer) - buffer_offset());
     node->set_index(index);
     return node;
   }
@@ -212,8 +210,7 @@ public:
   // Return the buffer for node.
   static void** make_buffer_from_node(BufferNode *node) {
     // &_buffer[0] might lead to index out of bounds warnings.
-    return reinterpret_cast<void**>(
-      reinterpret_cast<char*>(node) + buffer_offset());
+    return reinterpret_cast<void**>(reinterpret_cast<char*>(node) + buffer_offset());
   }
 };
 

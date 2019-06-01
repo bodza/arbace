@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "memory/metaspaceShared.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/os.hpp"
@@ -12,12 +13,6 @@
 
 #ifdef LINUX
 #include <sys/syscall.h>
-#include <unistd.h>
-#endif
-#ifdef SOLARIS
-#include <thread.h>
-#endif
-#ifdef AIX
 #include <unistd.h>
 #endif
 #ifdef BSD
@@ -128,5 +123,4 @@ void VMError::reset_signal_handlers() {
 
 // Write a hint to the stream in case siginfo relates to a segv/bus error
 // and the offending address points into CDS archive.
-void VMError::check_failing_cds_access(outputStream* st, const void* siginfo) {
-}
+void VMError::check_failing_cds_access(outputStream* st, const void* siginfo) { }

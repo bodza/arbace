@@ -72,22 +72,19 @@ class CodeletMark: ResourceMark {
     int codelet_size = AbstractInterpreter::code()->available_space() - 2*K;
 
     // Guarantee there's a little bit of code space left.
-    guarantee(codelet_size > 0 && (size_t)codelet_size > 2*K,
-              "not enough space for interpreter generation");
+    guarantee(codelet_size > 0 && (size_t)codelet_size > 2*K, "not enough space for interpreter generation");
 
     return codelet_size;
   }
 
  public:
-  CodeletMark(InterpreterMacroAssembler*& masm,
-              const char* description,
-              Bytecodes::Code bytecode = Bytecodes::_illegal);
+  CodeletMark(InterpreterMacroAssembler*& masm, const char* description, Bytecodes::Code bytecode = Bytecodes::_illegal);
   ~CodeletMark();
 };
 
 // Wrapper typedef to use the name Interpreter to mean either
 // the c++ interpreter or the template interpreter.
 
-typedef CC_INTERP_ONLY(CppInterpreter) NOT_CC_INTERP(TemplateInterpreter) Interpreter;
+typedef TemplateInterpreter Interpreter;
 
 #endif

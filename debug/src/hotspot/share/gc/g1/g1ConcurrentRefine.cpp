@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1BarrierSet.hpp"
 #include "gc/g1/g1ConcurrentRefine.hpp"
 #include "gc/g1/g1ConcurrentRefineThread.hpp"
@@ -15,11 +16,6 @@ G1ConcurrentRefineThread* G1ConcurrentRefineThreadControl::create_refinement_thr
   G1ConcurrentRefineThread* result = NULL;
   if (initializing || !InjectGCWorkerCreationFailure) {
     result = new G1ConcurrentRefineThread(_cr, worker_id);
-  }
-  if (result == NULL || result->osthread() == NULL) {
-    log_warning(gc)("Failed to create refinement thread %u, no more %s",
-                    worker_id,
-                    result == NULL ? "memory" : "OS threads");
   }
   return result;
 }
@@ -119,12 +115,6 @@ const size_t max_green_zone = max_yellow_zone / 2;
 const size_t max_red_zone = INT_MAX; // For dcqs.set_max_completed_queue.
 STATIC_ASSERT(max_yellow_zone <= max_red_zone);
 
-// Logging tag sequence for refinement control updates.
-#define CTRL_TAGS gc, ergo, refine
-
-// For logging zone values, ensuring consistency of level and tags.
-#define LOG_ZONES(...) log_debug( CTRL_TAGS )(__VA_ARGS__)
-
 // Package for pair of refinement thread activation and deactivation
 // thresholds.  The activation and deactivation levels are resp. the first
 // and second values of the pair.
@@ -209,8 +199,6 @@ G1ConcurrentRefine* G1ConcurrentRefine::create(jint* ecode) {
   size_t yellow_zone = calc_init_yellow_zone(green_zone, min_yellow_zone_size);
   size_t red_zone = calc_init_red_zone(green_zone, yellow_zone);
 
-  LOG_ZONES("Initial Refinement Zones: green: " SIZE_FORMAT ", yellow: " SIZE_FORMAT ", red: " SIZE_FORMAT ", min yellow size: " SIZE_FORMAT, green_zone, yellow_zone, red_zone, min_yellow_zone_size);
-
   G1ConcurrentRefine* cr = new G1ConcurrentRefine(green_zone, yellow_zone, red_zone, min_yellow_zone_size);
 
   if (cr == NULL) {
@@ -227,8 +215,7 @@ void G1ConcurrentRefine::stop() {
   _thread_control.stop();
 }
 
-G1ConcurrentRefine::~G1ConcurrentRefine() {
-}
+G1ConcurrentRefine::~G1ConcurrentRefine() { }
 
 void G1ConcurrentRefine::threads_do(ThreadClosure *tc) {
   _thread_control.worker_threads_do(tc);
@@ -271,19 +258,9 @@ static size_t calc_new_red_zone(size_t green, size_t yellow) {
 }
 
 void G1ConcurrentRefine::update_zones(double update_rs_time, size_t update_rs_processed_buffers, double goal_ms) {
-  log_trace( CTRL_TAGS )("Updating Refinement Zones: "
-                         "update_rs time: %.3fms, "
-                         "update_rs buffers: " SIZE_FORMAT ", "
-                         "update_rs goal time: %.3fms",
-                         update_rs_time,
-                         update_rs_processed_buffers,
-                         goal_ms);
-
   _green_zone = calc_new_green_zone(_green_zone, update_rs_time, update_rs_processed_buffers, goal_ms);
   _yellow_zone = calc_new_yellow_zone(_green_zone, _min_yellow_zone_size);
   _red_zone = calc_new_red_zone(_green_zone, _yellow_zone);
-
-  LOG_ZONES("Updated Refinement Zones: green: " SIZE_FORMAT ", yellow: " SIZE_FORMAT ", red: " SIZE_FORMAT, _green_zone, _yellow_zone, _red_zone);
 }
 
 void G1ConcurrentRefine::adjust(double update_rs_time, size_t update_rs_processed_buffers, double goal_ms) {

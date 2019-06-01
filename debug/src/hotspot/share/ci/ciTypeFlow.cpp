@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "ci/ciConstant.hpp"
 #include "ci/ciField.hpp"
 #include "ci/ciMethod.hpp"
@@ -338,9 +339,7 @@ const ciTypeFlow::StateVector* ciTypeFlow::get_start_state() {
   if (!method()->is_static()) {
     state->push(method()->holder());
   }
-  for (ciSignatureStream str(method()->signature());
-       !str.at_return_type();
-       str.next()) {
+  for (ciSignatureStream str(method()->signature()); !str.at_return_type(); str.next()) {
     state->push_translate(str.type());
   }
   // Set the rest of the locals to bottom.
@@ -1448,7 +1447,6 @@ ciTypeFlow::Block::Block(ciTypeFlow* outer,
     tty->print_cr(">> Created new block");
     print_on(tty);
   }
-
 }
 
 // ------------------------------------------------------------------
@@ -2423,7 +2421,6 @@ void ciTypeFlow::flow_types() {
     Block* blk = work_list_next();
 
     flow_block(blk, temp_vector, temp_set);
-
   }
 }
 

@@ -65,34 +65,18 @@ class MetaspaceShared : AllStatic {
   static void prepare_for_dumping() { };
   static void preload_and_dump(TRAPS) { };
   static int preload_classes(const char * class_list_path, TRAPS) { return 0; };
-
   static bool is_archive_object(oop p) { return false; };
-
-  static bool is_heap_object_archiving_allowed() {
-    return false;
-  }
-  static void create_archive_object_cache() {
-  }
-  static void destroy_archive_object_cache() {
-  }
-  static void fixup_mapped_heap_regions() { };
-
+  static bool is_heap_object_archiving_allowed() { return false; }
+  static void create_archive_object_cache() { }
+  static void destroy_archive_object_cache() { }
+  static void fixup_mapped_heap_regions() { }
   static void dump_closed_archive_heap_objects(GrowableArray<MemRegion> * closed_archive) { };
-
   static void dump_open_archive_heap_objects(GrowableArray<MemRegion> * open_archive) { };
-  static void set_open_archive_heap_region_mapped() {
-  }
-  static bool open_archive_heap_region_mapped() {
-    { return false; };
-  }
-
-  static ReservedSpace* shared_rs() {
-    return NULL;
-  }
+  static void set_open_archive_heap_region_mapped() { }
+  static bool open_archive_heap_region_mapped() { return false; }
+  static ReservedSpace* shared_rs() { return NULL; }
   static void commit_shared_space_to(char* newtop) { };
-  static size_t core_spaces_size() {
-    return _core_spaces_size;
-  }
+  static size_t core_spaces_size() { return _core_spaces_size; }
   static void initialize_dumptime_shared_and_meta_spaces() { };
   static void initialize_runtime_shared_and_meta_spaces() { };
   static void post_initialize(TRAPS) { };

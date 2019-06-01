@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/resolutionErrors.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oop.inline.hpp"
@@ -33,10 +34,7 @@ void ResolutionErrorEntry::set_message(Symbol* c) {
 }
 
 // create new error entry
-ResolutionErrorEntry* ResolutionErrorTable::new_entry(int hash, ConstantPool* pool,
-                                                      int cp_index, Symbol* error,
-                                                      Symbol* message)
-{
+ResolutionErrorEntry* ResolutionErrorTable::new_entry(int hash, ConstantPool* pool, int cp_index, Symbol* error, Symbol* message) {
   ResolutionErrorEntry* entry = (ResolutionErrorEntry*)Hashtable<ConstantPool*, mtClass>::new_entry(hash, pool);
   entry->set_cp_index(cp_index);
   entry->set_error(error);

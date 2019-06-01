@@ -58,16 +58,8 @@ inline bool ConstantPoolCacheEntry::indy_resolution_failed() const {
 }
 
 // Constructor
-inline ConstantPoolCache::ConstantPoolCache(int length,
-                                            const intStack& inverse_index_map,
-                                            const intStack& invokedynamic_inverse_index_map,
-                                            const intStack& invokedynamic_references_map) :
-                                                  _length(length),
-                                                  _constant_pool(NULL) {
-  initialize(inverse_index_map, invokedynamic_inverse_index_map,
-             invokedynamic_references_map);
-  for (int i = 0; i < length; i++) {
-  }
+inline ConstantPoolCache::ConstantPoolCache(int length, const intStack& inverse_index_map, const intStack& invokedynamic_inverse_index_map, const intStack& invokedynamic_references_map) : _length(length), _constant_pool(NULL) {
+  initialize(inverse_index_map, invokedynamic_inverse_index_map, invokedynamic_references_map);
 }
 
 inline oop ConstantPoolCache::resolved_references() { return _resolved_references.resolve(); }

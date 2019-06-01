@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "logging/logConfiguration.hpp"
 #include "logging/logDecorations.hpp"

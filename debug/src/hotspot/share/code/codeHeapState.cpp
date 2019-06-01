@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "code/codeHeapState.hpp"
 #include "compiler/compileBroker.hpp"
 #include "runtime/sweeper.hpp"
@@ -1448,8 +1449,7 @@ void CodeHeapState::print_freeSpace(outputStream* out, CodeHeap* heap) {
         }
       }
       if (iy >= nTop) {
-        ast->print_cr("Internal logic error. New Max10 = %d detected, but could not be merged. Old Max10 = %d",
-                      currSize, currMax10);
+        ast->print_cr("Internal logic error. New Max10 = %d detected, but could not be merged. Old Max10 = %d", currSize, currMax10);
         continue;
       }
       if (FreeTopTen[iy] == NULL) {
@@ -1511,8 +1511,7 @@ void CodeHeapState::print_freeSpace(outputStream* out, CodeHeap* heap) {
         }
       }
       if (iy == nTop) {
-        ast->print_cr("Internal logic error. New Max10 = %d detected, but could not be merged. Old Max10 = %d",
-                      lenTriple, currMax10);
+        ast->print_cr("Internal logic error. New Max10 = %d detected, but could not be merged. Old Max10 = %d", lenTriple, currMax10);
         continue;
       }
       if (FreeTopTenTriple[iy] == NULL) {

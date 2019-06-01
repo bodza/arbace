@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1BarrierSet.hpp"
 #include "gc/g1/g1ConcurrentRefine.hpp"
 #include "gc/g1/g1ConcurrentRefineThread.hpp"
@@ -76,10 +77,6 @@ void G1ConcurrentRefineThread::run_service() {
     }
 
     size_t buffers_processed = 0;
-    log_debug(gc, refine)("Activated worker %d, on threshold: " SIZE_FORMAT ", current: " SIZE_FORMAT,
-                          _worker_id, _cr->activation_threshold(_worker_id),
-                           G1BarrierSet::dirty_card_queue_set().completed_buffers_num());
-
     {
       SuspendibleThreadSetJoiner sts_join;
 
@@ -97,11 +94,6 @@ void G1ConcurrentRefineThread::run_service() {
     }
 
     deactivate();
-    log_debug(gc, refine)("Deactivated worker %d, off threshold: " SIZE_FORMAT
-                          ", current: " SIZE_FORMAT ", processed: " SIZE_FORMAT,
-                          _worker_id, _cr->deactivation_threshold(_worker_id),
-                          G1BarrierSet::dirty_card_queue_set().completed_buffers_num(),
-                          buffers_processed);
 
     if (os::supports_vtime()) {
       _vtime_accum = (os::elapsedVTime() - _vtime_start);
@@ -109,8 +101,6 @@ void G1ConcurrentRefineThread::run_service() {
       _vtime_accum = 0.0;
     }
   }
-
-  log_debug(gc, refine)("Stopping %d", _worker_id);
 }
 
 void G1ConcurrentRefineThread::stop_service() {

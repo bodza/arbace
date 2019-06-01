@@ -483,7 +483,7 @@ class ReferenceProcessorSubjectToDiscoveryMutator : StackObj {
   BoolObjectClosure* _saved_cl;
 
 public:
-  ReferenceProcessorSubjectToDiscoveryMutator(ReferenceProcessor* rp, BoolObjectClosure* cl):
+  ReferenceProcessorSubjectToDiscoveryMutator(ReferenceProcessor* rp, BoolObjectClosure* cl) :
     _rp(rp) {
     _saved_cl = _rp->is_subject_to_discovery_closure();
     _rp->set_is_subject_to_discovery_closure(cl);
@@ -502,8 +502,7 @@ class ReferenceProcessorSpanMutator : StackObj {
   BoolObjectClosure* _old_discoverer;
 
 public:
-  ReferenceProcessorSpanMutator(ReferenceProcessor* rp,
-                                MemRegion span):
+  ReferenceProcessorSpanMutator(ReferenceProcessor* rp, MemRegion span) :
     _rp(rp),
     _discoverer(span),
     _old_discoverer(rp->is_subject_to_discovery_closure()) {
@@ -525,8 +524,7 @@ class ReferenceProcessorMTDiscoveryMutator: StackObj {
   bool                _saved_mt;
 
  public:
-  ReferenceProcessorMTDiscoveryMutator(ReferenceProcessor* rp,
-                                       bool mt):
+  ReferenceProcessorMTDiscoveryMutator(ReferenceProcessor* rp, bool mt) :
     _rp(rp) {
     _saved_mt = _rp->discovery_is_mt();
     _rp->set_mt_discovery(mt);
@@ -546,8 +544,7 @@ class ReferenceProcessorIsAliveMutator: StackObj {
   BoolObjectClosure*  _saved_cl;
 
  public:
-  ReferenceProcessorIsAliveMutator(ReferenceProcessor* rp,
-                                   BoolObjectClosure*  cl):
+  ReferenceProcessorIsAliveMutator(ReferenceProcessor* rp, BoolObjectClosure*  cl) :
     _rp(rp) {
     _saved_cl = _rp->is_alive_non_header();
     _rp->set_is_alive_non_header(cl);
@@ -567,8 +564,7 @@ class ReferenceProcessorAtomicMutator: StackObj {
   bool                _saved_atomic_discovery;
 
  public:
-  ReferenceProcessorAtomicMutator(ReferenceProcessor* rp,
-                                  bool atomic):
+  ReferenceProcessorAtomicMutator(ReferenceProcessor* rp, bool atomic) :
     _rp(rp) {
     _saved_atomic_discovery = _rp->discovery_is_atomic();
     _rp->set_atomic_discovery(atomic);
@@ -588,8 +584,7 @@ class ReferenceProcessorMTProcMutator: StackObj {
   bool  _saved_mt;
 
  public:
-  ReferenceProcessorMTProcMutator(ReferenceProcessor* rp,
-                                  bool mt):
+  ReferenceProcessorMTProcMutator(ReferenceProcessor* rp, bool mt) :
     _rp(rp) {
     _saved_mt = _rp->processing_is_mt();
     _rp->set_mt_processing(mt);

@@ -69,18 +69,11 @@ bool ChunkManager::attempt_to_coalesce_around_chunk(Metachunk* chunk, ChunkIndex
     return false;
   }
 
-  // Success! Remove all chunks in this region...
-  log_trace(gc, metaspace, freelist)("%s: coalescing chunks in area [%p-%p)...",
-    (is_class() ? "class space" : "metaspace"),
-    p_merge_region_start, p_merge_region_end);
-
   const int num_chunks_removed = remove_chunks_in_area(p_merge_region_start, target_chunk_word_size);
 
   // ... and create a single new bigger chunk.
   Metachunk* const p_new_chunk = ::new (p_merge_region_start) Metachunk(target_chunk_type, is_class(), target_chunk_word_size, vsn);
   p_new_chunk->set_origin(origin_merge);
-
-  log_trace(gc, metaspace, freelist)("%s: created coalesced chunk at %p, size " SIZE_FORMAT_HEX ".", (is_class() ? "class space" : "metaspace"), p_new_chunk, p_new_chunk->word_size() * sizeof(MetaWord));
 
   // Fix occupancy map: remove old start bits of the small chunks and set new start bit.
   ocmap->wipe_chunk_start_bits_in_region(p_merge_region_start, target_chunk_word_size);
@@ -122,9 +115,6 @@ int ChunkManager::remove_chunks_in_area(MetaWord* p, size_t word_size) {
   int num_removed = 0;
   while (cur < end) {
     Metachunk* next = (Metachunk*)(((MetaWord*)cur) + cur->word_size());
-    log_trace(gc, metaspace, freelist)("%s: removing chunk %p, size " SIZE_FORMAT_HEX ".",
-      (is_class() ? "class space" : "metaspace"),
-      cur, cur->word_size() * sizeof(MetaWord));
     cur->remove_sentinel();
     // Note: cannot call ChunkManager::remove_chunk, because that
     // modifies the counters in ChunkManager, which we do not want. So
@@ -170,11 +160,8 @@ size_t ChunkManager::size_by_index(ChunkIndex index) const {
   return get_size_for_nonhumongous_chunktype(index, is_class());
 }
 
-void ChunkManager::locked_verify_free_chunks_total() {
-}
-
-void ChunkManager::locked_verify_free_chunks_count() {
-}
+void ChunkManager::locked_verify_free_chunks_total() { }
+void ChunkManager::locked_verify_free_chunks_count() { }
 
 void ChunkManager::verify() {
   MutexLockerEx cl(MetaspaceExpand_lock,
@@ -306,11 +293,6 @@ Metachunk* ChunkManager::split_chunk(size_t target_chunk_word_size, Metachunk* l
     free_chunks(this_chunk_index)->return_chunk_at_head(this_chunk);
     _free_chunks_count ++;
 
-    log_trace(gc, metaspace, freelist)("Created chunk at " PTR_FORMAT ", word size "
-      SIZE_FORMAT_HEX " (%s), in split region [" PTR_FORMAT "..." PTR_FORMAT ").",
-      p2i(this_chunk), this_chunk->word_size(), chunk_size_name(this_chunk_index),
-      p2i(region_start), p2i(region_end));
-
     p += this_chunk_word_size;
   }
 
@@ -356,11 +338,6 @@ Metachunk* ChunkManager::free_chunks_get(size_t word_size) {
         // Note: during this operation both ChunkManager and VirtualSpaceNode
         //  are temporarily invalid, so be careful with asserts.
 
-        log_trace(gc, metaspace, freelist)("%s: splitting chunk " PTR_FORMAT
-           ", word size " SIZE_FORMAT_HEX " (%s), to get a chunk of word size " SIZE_FORMAT_HEX " (%s)...",
-          (is_class() ? "class space" : "metaspace"), p2i(larger_chunk), larger_chunk->word_size(),
-          chunk_size_name(larger_chunk_index), word_size, chunk_size_name(target_chunk_index));
-
         chunk = split_chunk(word_size, larger_chunk);
 
         we_did_split_a_chunk = true;
@@ -374,18 +351,12 @@ Metachunk* ChunkManager::free_chunks_get(size_t word_size) {
     // Remove the chunk as the head of the list.
     free_list->remove_chunk(chunk);
 
-    log_trace(gc, metaspace, freelist)("ChunkManager::free_chunks_get: free_list: " PTR_FORMAT " chunks left: " SSIZE_FORMAT ".",
-                                       p2i(free_list), free_list->count());
-
   } else {
     chunk = humongous_dictionary()->get_chunk(word_size);
 
     if (chunk == NULL) {
       return NULL;
     }
-
-    log_trace(gc, metaspace, alloc)("Free list allocate humongous chunk size " SIZE_FORMAT " for requested size " SIZE_FORMAT " waste " SIZE_FORMAT,
-                                    chunk->word_size(), word_size, chunk->word_size() - word_size);
   }
 
   // Chunk has been removed from the chunk manager; update counters.
@@ -438,12 +409,9 @@ void ChunkManager::return_single_chunk(Metachunk* chunk) {
     // Return non-humongous chunk to freelist.
     ChunkList* list = free_chunks(index);
     list->return_chunk_at_head(chunk);
-    log_trace(gc, metaspace, freelist)("returned one %s chunk at " PTR_FORMAT " to freelist.",
-        chunk_size_name(index), p2i(chunk));
   } else {
     // Return humongous chunk to dictionary.
     _humongous_dictionary.return_chunk(chunk);
-    log_trace(gc, metaspace, freelist)("returned one %s chunk at " PTR_FORMAT " (word size " SIZE_FORMAT ") to freelist.", chunk_size_name(index), p2i(chunk), chunk->word_size());
   }
   chunk->container()->dec_container_count();
   do_update_in_use_info_for_chunk(chunk, false);

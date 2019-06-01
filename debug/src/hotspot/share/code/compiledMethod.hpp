@@ -27,12 +27,10 @@ class ExceptionCache : public CHeapObj<mtCode> {
   ExceptionCache* _next;
 
   inline address pc_at(int index);
-  void set_pc_at(int index, address a)      {
-    _pc[index] = a; }
+  void set_pc_at(int index, address a)      { _pc[index] = a; }
 
   inline address handler_at(int index);
-  void set_handler_at(int index, address a) {
-    _handler[index] = a; }
+  void set_handler_at(int index, address a) { _handler[index] = a; }
 
   inline int count();
   // increment_count is only called under lock, but there may be concurrent readers.

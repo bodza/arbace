@@ -145,7 +145,7 @@ public:
   // xlC on AIX can't compile test_oopStorage.cpp with following private
   // classes. C++03 introduced access for nested classes with DR45, but xlC
   // version 12 rejects it.
-NOT_AIX( private: )
+ private: 
   class Block;                  // Fixed-size array of oops, plus bookkeeping.
   class ActiveArray;            // Array of Blocks, plus bookkeeping.
   class AllocateEntry;          // Provides AllocateList links in a Block.

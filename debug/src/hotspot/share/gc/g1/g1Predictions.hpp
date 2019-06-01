@@ -23,8 +23,7 @@ class G1Predictions {
     return estimate;
   }
  public:
-  G1Predictions(double sigma) : _sigma(sigma) {
-  }
+  G1Predictions(double sigma) : _sigma(sigma) { }
 
   // Confidence factor.
   double sigma() const { return _sigma; }

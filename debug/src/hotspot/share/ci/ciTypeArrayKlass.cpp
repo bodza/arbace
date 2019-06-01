@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "ci/ciTypeArrayKlass.hpp"
 #include "ci/ciUtilities.inline.hpp"
 
@@ -9,8 +10,7 @@
 
 // ------------------------------------------------------------------
 // ciTypeArrayKlass::ciTypeArrayKlass
-ciTypeArrayKlass::ciTypeArrayKlass(Klass* k) : ciArrayKlass(k) {
-}
+ciTypeArrayKlass::ciTypeArrayKlass(Klass* k) : ciArrayKlass(k) { }
 
 // ------------------------------------------------------------------
 // ciTypeArrayKlass::make_impl

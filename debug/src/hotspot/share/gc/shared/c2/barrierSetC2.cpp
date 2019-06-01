@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/c2/barrierSetC2.hpp"
 #include "opto/arraycopynode.hpp"
 #include "opto/graphKit.hpp"
@@ -282,8 +283,7 @@ void C2AtomicAccess::set_memory() {
   _memory = mem;
 }
 
-Node* BarrierSetC2::atomic_cmpxchg_val_at_resolved(C2AtomicAccess& access, Node* expected_val,
-                                                   Node* new_val, const Type* value_type) const {
+Node* BarrierSetC2::atomic_cmpxchg_val_at_resolved(C2AtomicAccess& access, Node* expected_val, Node* new_val, const Type* value_type) const {
   GraphKit* kit = access.kit();
   MemNode::MemOrd mo = access.mem_node_mo();
   Node* mem = access.memory();
@@ -335,8 +335,7 @@ Node* BarrierSetC2::atomic_cmpxchg_val_at_resolved(C2AtomicAccess& access, Node*
   return load_store;
 }
 
-Node* BarrierSetC2::atomic_cmpxchg_bool_at_resolved(C2AtomicAccess& access, Node* expected_val,
-                                                    Node* new_val, const Type* value_type) const {
+Node* BarrierSetC2::atomic_cmpxchg_bool_at_resolved(C2AtomicAccess& access, Node* expected_val, Node* new_val, const Type* value_type) const {
   GraphKit* kit = access.kit();
   DecoratorSet decorators = access.decorators();
   MemNode::MemOrd mo = access.mem_node_mo();
@@ -481,15 +480,13 @@ Node* BarrierSetC2::atomic_add_at_resolved(C2AtomicAccess& access, Node* new_val
   return load_store;
 }
 
-Node* BarrierSetC2::atomic_cmpxchg_val_at(C2AtomicAccess& access, Node* expected_val,
-                                          Node* new_val, const Type* value_type) const {
+Node* BarrierSetC2::atomic_cmpxchg_val_at(C2AtomicAccess& access, Node* expected_val, Node* new_val, const Type* value_type) const {
   C2AccessFence fence(access);
   resolve_address(access);
   return atomic_cmpxchg_val_at_resolved(access, expected_val, new_val, value_type);
 }
 
-Node* BarrierSetC2::atomic_cmpxchg_bool_at(C2AtomicAccess& access, Node* expected_val,
-                                           Node* new_val, const Type* value_type) const {
+Node* BarrierSetC2::atomic_cmpxchg_bool_at(C2AtomicAccess& access, Node* expected_val, Node* new_val, const Type* value_type) const {
   C2AccessFence fence(access);
   resolve_address(access);
   return atomic_cmpxchg_bool_at_resolved(access, expected_val, new_val, value_type);

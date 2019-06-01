@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1HeapSizingPolicy.hpp"
 #include "gc/g1/g1Analytics.hpp"
@@ -98,10 +99,6 @@ size_t G1HeapSizingPolicy::expansion_amount() {
         scale_factor = MIN2(scale_factor, MaxScaleUpFactor);
       }
     }
-
-    log_debug(gc, ergo, heap)("Attempt heap expansion (recent GC overhead higher than threshold after GC) "
-                              "recent GC overhead: %1.2f %% threshold: %1.2f %% uncommitted: " SIZE_FORMAT "B base expansion amount and scale: " SIZE_FORMAT "B (%1.2f%%)",
-                              recent_gc_overhead, threshold, uncommitted_bytes, expand_bytes, scale_factor * 100);
 
     expand_bytes = static_cast<size_t>(expand_bytes * scale_factor);
 

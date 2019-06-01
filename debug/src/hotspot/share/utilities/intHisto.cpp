@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "utilities/intHisto.hpp"
 
 IntHistogram::IntHistogram(int est, int max) : _max(max), _tot(0) {
@@ -24,15 +25,13 @@ void IntHistogram::print_on(outputStream* st) const {
   for (int i=0; i < _elements->length()-2; i++) {
     int cnt = _elements->at(i);
     if (cnt != 0) {
-      st->print_cr("%7d        %10d         %8.4f",
-                   i, cnt, (double)cnt/tot_d);
+      st->print_cr("%7d        %10d         %8.4f", i, cnt, (double)cnt/tot_d);
     }
   }
   // Does it have any max entries?
   if (_elements->length()-1 == _max) {
     int cnt = _elements->at(_max);
-    st->print_cr(">= %4d        %10d         %8.4f",
-                 _max, cnt, (double)cnt/tot_d);
+    st->print_cr(">= %4d        %10d         %8.4f", _max, cnt, (double)cnt/tot_d);
   }
   st->print_cr("-----------------------------------------------");
   st->print_cr("    All        %10d         %8.4f", _tot, 1.0);

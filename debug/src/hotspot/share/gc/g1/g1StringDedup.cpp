@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaClasses.inline.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1GCPhaseTimes.hpp"

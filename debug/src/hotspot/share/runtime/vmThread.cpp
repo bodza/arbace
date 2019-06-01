@@ -1,8 +1,7 @@
 #include "precompiled.hpp"
+
 #include "compiler/compileBroker.hpp"
 #include "gc/shared/collectedHeap.hpp"
-// #include "jfr/jfrEvents.hpp"
-// #include "jfr/support/jfrThreadId.hpp"
 #include "logging/log.hpp"
 #include "logging/logConfiguration.hpp"
 #include "memory/resourceArea.hpp"
@@ -115,7 +114,7 @@ bool VMOperationQueue::add(VM_Operation *op) {
   HOTSPOT_VMOPS_REQUEST(
     (char *) op->name(), strlen(op->name()),
     op->evaluation_mode()
-);
+  );
 
   // Encapsulates VM queue policy. Currently, that
   // only involves putting them on the right list
@@ -423,8 +422,6 @@ void VMThread::loop() {
       // If we are at a safepoint we will evaluate all the operations that
       // follow that also require a safepoint
       if (_cur_vm_operation->evaluate_at_safepoint()) {
-        log_debug(vmthread)("Evaluating safepoint VM operation: %s", _cur_vm_operation->name());
-
         _vm_queue->set_drain_list(safepoint_ops); // ensure ops can be scanned
 
         SafepointSynchronize::begin();
@@ -435,14 +432,13 @@ void VMThread::loop() {
           _cur_vm_operation = safepoint_ops;
           if (_cur_vm_operation != NULL) {
             do {
-              log_debug(vmthread)("Evaluating coalesced safepoint VM operation: %s", _cur_vm_operation->name());
               // evaluate_operation deletes the op object so we have
               // to grab the next op now
               VM_Operation* next = _cur_vm_operation->next();
               _vm_queue->set_drain_list(next);
               evaluate_operation(_cur_vm_operation);
               _cur_vm_operation = next;
-              if (PrintSafepointStatistics) {
+              if (false) {
                 SafepointSynchronize::inc_vmop_coalesced_count();
               }
             } while (_cur_vm_operation != NULL);
@@ -473,7 +469,6 @@ void VMThread::loop() {
         SafepointSynchronize::end();
 
       } else {  // not a safepoint operation
-        log_debug(vmthread)("Evaluating non-safepoint VM operation: %s", _cur_vm_operation->name());
         if (TraceLongCompiles) {
           elapsedTimer t;
           t.start();
@@ -561,7 +556,6 @@ void VMThread::execute(VM_Operation* op) {
     // to be queued up during a safepoint synchronization.
     {
       VMOperationQueue_lock->lock_without_safepoint_check();
-      log_debug(vmthread)("Adding VM operation: %s", op->name());
       bool ok = _vm_queue->add(op);
       op->set_timestamp(os::javaTimeMillis());
       VMOperationQueue_lock->notify();

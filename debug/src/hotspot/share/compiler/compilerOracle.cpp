@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "compiler/compilerOracle.hpp"
 #include "compiler/methodMatcher.hpp"
@@ -755,9 +756,7 @@ void CompilerOracle::parse_compile_only(char * line) {
     MethodMatcher::Mode c_match = MethodMatcher::Exact;
     MethodMatcher::Mode m_match = MethodMatcher::Exact;
 
-    for (i = 0;
-         i < 1024 && *line != '\0' && *line != method_sep && *line != ',' && !isspace(*line);
-         line++, i++) {
+    for (i = 0; i < 1024 && *line != '\0' && *line != method_sep && *line != ',' && !isspace(*line); line++, i++) {
       name[i] = *line;
       if (name[i] == '.')  name[i] = '/';  // package prefix uses '/'
     }

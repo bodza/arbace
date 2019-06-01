@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/bytecodeAssembler.hpp"
 #include "classfile/defaultMethods.hpp"
 #include "classfile/symbolTable.hpp"
@@ -250,8 +251,7 @@ class KeepAliveRegistrar : public StackObj {
   GrowableArray<ConstantPool*> _keep_alive;
 
  public:
-  KeepAliveRegistrar(Thread* thread) : _thread(thread), _keep_alive(20) {
-  }
+  KeepAliveRegistrar(Thread* thread) : _thread(thread), _keep_alive(20) { }
 
   ~KeepAliveRegistrar() {
     for (int i = _keep_alive.length() - 1; i >= 0; --i) {
@@ -775,9 +775,7 @@ void DefaultMethods::generate_default_methods(InstanceKlass* klass, const Growab
     }
     generate_erased_defaults(klass, empty_slots, slot, klass->is_interface(), CHECK);
   }
-  log_debug(defaultmethods)("Creating defaults and overpasses...");
   create_defaults_and_exceptions(empty_slots, klass, CHECK);
-  log_debug(defaultmethods)("Default method processing complete");
 }
 
 static int assemble_method_error(BytecodeConstantPool* cp, BytecodeBuffer* buffer, Symbol* errorName, Symbol* message, TRAPS) {
@@ -905,9 +903,6 @@ static void create_defaults_and_exceptions(GrowableArray<EmptyVtableSlot*>* slot
       }
     }
   }
-
-  log_debug(defaultmethods)("Created %d overpass methods", overpasses.length());
-  log_debug(defaultmethods)("Created %d default  methods", defaults.length());
 
   if (overpasses.length() > 0) {
     switchover_constant_pool(&bpool, klass, &overpasses, CHECK);

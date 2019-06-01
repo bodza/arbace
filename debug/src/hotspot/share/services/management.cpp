@@ -1,5 +1,5 @@
 #include "precompiled.hpp"
-#include "jmm.h"
+
 #include "classfile/systemDictionary.hpp"
 #include "compiler/compileBroker.hpp"
 #include "memory/allocation.inline.hpp"
@@ -81,8 +81,7 @@ static void validate_thread_id_array(typeArrayHandle ids_ah, TRAPS) {
 // the amount of memory allocated for the thread ID specified in the
 // corresponding entry in the given array of thread IDs; or -1 if the
 // thread does not exist or has terminated.
-JVM_ENTRY(void, jmm_GetThreadAllocatedMemory(JNIEnv *env, jlongArray ids,
-                                             jlongArray sizeArray))
+JVM_ENTRY(void, jmm_GetThreadAllocatedMemory(JNIEnv *env, jlongArray ids, jlongArray sizeArray))
   // Check if threads is null
   if (ids == NULL || sizeArray == NULL) {
     THROW(vmSymbols::java_lang_NullPointerException());

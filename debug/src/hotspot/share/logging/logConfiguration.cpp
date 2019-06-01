@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "logging/log.hpp"
 #include "logging/logConfiguration.hpp"
@@ -54,7 +55,6 @@ void LogConfiguration::post_initialize() {
   Log(logging) log;
   if (log.is_info()) {
     log.info("Log configuration fully initialized.");
-    log_develop_info(logging)("Develop logging is available.");
 
     LogStream info_stream(log.info());
     describe_available(&info_stream);
@@ -138,9 +138,7 @@ size_t LogConfiguration::find_output(const char* name) {
   return SIZE_MAX;
 }
 
-LogOutput* LogConfiguration::new_output(const char* name,
-                                        const char* options,
-                                        outputStream* errstream) {
+LogOutput* LogConfiguration::new_output(const char* name, const char* options, outputStream* errstream) {
   LogOutput* output;
   if (strncmp(name, LogFileOutput::Prefix, strlen(LogFileOutput::Prefix)) == 0) {
     output = new LogFileOutput(name);
@@ -292,7 +290,6 @@ bool LogConfiguration::parse_command_line_arguments(const char* opts) {
     while (next != NULL && *next == '"') {
       char* end_quote = strchr(next + 1, '"');
       if (end_quote == NULL) {
-        log_error(logging)("Missing terminating quote in -Xlog option '%s'", str);
         os::free(copy);
         return false;
       }

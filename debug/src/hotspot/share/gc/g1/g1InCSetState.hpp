@@ -13,13 +13,8 @@ struct InCSetState {
   // This degrades performance significantly (>10%) on that platform.
   // Other tested ABIs do not seem to have this problem, and actually tend to
   // favor smaller types, so we use the smallest usable type there.
-#ifdef SPARC
-  #define CSETSTATE_FORMAT INTPTR_FORMAT
-  typedef intptr_t in_cset_state_t;
-#else
   #define CSETSTATE_FORMAT "%d"
   typedef int8_t in_cset_state_t;
-#endif
  private:
   in_cset_state_t _value;
  public:
@@ -40,8 +35,7 @@ struct InCSetState {
     Num
   };
 
-  InCSetState(in_cset_state_t value = NotInCSet) : _value(value) {
-  }
+  InCSetState(in_cset_state_t value = NotInCSet) : _value(value) { }
 
   in_cset_state_t value() const        { return _value; }
 

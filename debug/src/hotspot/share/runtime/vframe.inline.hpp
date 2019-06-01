@@ -69,7 +69,6 @@ inline void vframeStreamCommon::fill_from_compiled_frame(int decode_offset) {
   _sender_decode_offset = buffer.read_int();
   _method               = buffer.read_method();
   _bci                  = buffer.read_bci();
-
 }
 
 // The native frames are handled specially. We do not rely on ScopeDesc info

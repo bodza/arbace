@@ -368,7 +368,7 @@ class HeapRegion: public G1ContiguousSpace {
     _next_marked_bytes = _next_marked_bytes + incr_bytes;
   }
 
-  void zero_marked_bytes()      {
+  void zero_marked_bytes() {
     _prev_marked_bytes = _next_marked_bytes = 0;
   }
 
@@ -535,7 +535,6 @@ class HeapRegion: public G1ContiguousSpace {
 
       _surv_rate_group = NULL;
       _age_index = -1;
-    } else {
     }
   }
 

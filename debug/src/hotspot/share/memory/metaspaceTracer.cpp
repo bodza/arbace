@@ -1,6 +1,6 @@
 #include "precompiled.hpp"
+
 #include "classfile/classLoaderData.hpp"
-// #include "jfr/jfrEvents.hpp"
 #include "memory/metaspaceTracer.hpp"
 #include "oops/oop.inline.hpp"
 

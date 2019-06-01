@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaClasses.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
@@ -134,7 +135,6 @@ void ArrayKlass::metaspace_pointers_do(MetaspaceClosure* it) {
   Klass::metaspace_pointers_do(it);
 
   ResourceMark rm;
-  log_trace(cds)("Iter(ArrayKlass): %p (%s)", this, external_name());
 
   // need to cast away volatile
   it->push((Klass**)&_higher_dimension);

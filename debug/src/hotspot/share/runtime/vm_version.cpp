@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
 #include "memory/universe.hpp"
@@ -63,11 +64,7 @@ bool Abstract_VM_Version::_parallel_worker_threads_initialized = false;
 #define VMLP "64-Bit "
 
 #ifndef VMTYPE
-  #ifdef ZERO
-    #define VMTYPE "Zero"
-  #else
-    #define VMTYPE "Client"
-  #endif
+  #define VMTYPE "Client"
 #endif
 
 #ifndef HOTSPOT_VM_DISTRO
@@ -127,27 +124,13 @@ const char* Abstract_VM_Version::jre_release_version() {
 }
 
 #define OS       LINUX_ONLY("linux") \
-                 SOLARIS_ONLY("solaris") \
-                 AIX_ONLY("aix") \
                  BSD_ONLY("bsd")
 
 #ifndef CPU
-#ifdef ZERO
-#define CPU      ZERO_LIBARCH
-#elif defined(PPC64)
-#if defined(VM_LITTLE_ENDIAN)
-#define CPU      "ppc64le"
-#else
-#define CPU      "ppc64"
-#endif
-#else
 #define CPU      AARCH64_ONLY("aarch64") \
                  AMD64_ONLY("amd64") \
                  IA32_ONLY("x86") \
-                 IA64_ONLY("ia64") \
-                 S390_ONLY("s390") \
-                 SPARC_ONLY("sparc")
-#endif
+                 IA64_ONLY("ia64")
 #endif
 
 const char *Abstract_VM_Version::vm_platform_string() {
@@ -160,53 +143,8 @@ const char* Abstract_VM_Version::internal_vm_info_string() {
   #endif
 
   #ifndef HOTSPOT_BUILD_COMPILER
-    #ifdef _MSC_VER
-      #if _MSC_VER == 1600
-        #define HOTSPOT_BUILD_COMPILER "MS VC++ 10.0 (VS2010)"
-      #elif _MSC_VER == 1700
-        #define HOTSPOT_BUILD_COMPILER "MS VC++ 11.0 (VS2012)"
-      #elif _MSC_VER == 1800
-        #define HOTSPOT_BUILD_COMPILER "MS VC++ 12.0 (VS2013)"
-      #elif _MSC_VER == 1900
-        #define HOTSPOT_BUILD_COMPILER "MS VC++ 14.0 (VS2015)"
-      #elif _MSC_VER == 1911
-        #define HOTSPOT_BUILD_COMPILER "MS VC++ 15.3 (VS2017)"
-      #elif _MSC_VER == 1912
-        #define HOTSPOT_BUILD_COMPILER "MS VC++ 15.5 (VS2017)"
-      #elif _MSC_VER == 1913
-        #define HOTSPOT_BUILD_COMPILER "MS VC++ 15.6 (VS2017)"
-      #elif _MSC_VER == 1914
-        #define HOTSPOT_BUILD_COMPILER "MS VC++ 15.7 (VS2017)"
-      #elif _MSC_VER == 1915
-        #define HOTSPOT_BUILD_COMPILER "MS VC++ 15.8 (VS2017)"
-      #else
-        #define HOTSPOT_BUILD_COMPILER "unknown MS VC++:" XSTR(_MSC_VER)
-      #endif
-    #elif defined(__SUNPRO_CC)
-      #if   __SUNPRO_CC == 0x420
-        #define HOTSPOT_BUILD_COMPILER "Workshop 4.2"
-      #elif __SUNPRO_CC == 0x500
-        #define HOTSPOT_BUILD_COMPILER "Workshop 5.0 compat=" XSTR(__SUNPRO_CC_COMPAT)
-      #elif __SUNPRO_CC == 0x520
-        #define HOTSPOT_BUILD_COMPILER "Workshop 5.2 compat=" XSTR(__SUNPRO_CC_COMPAT)
-      #elif __SUNPRO_CC == 0x580
-        #define HOTSPOT_BUILD_COMPILER "Workshop 5.8"
-      #elif __SUNPRO_CC == 0x590
-        #define HOTSPOT_BUILD_COMPILER "Workshop 5.9"
-      #elif __SUNPRO_CC == 0x5100
-        #define HOTSPOT_BUILD_COMPILER "Sun Studio 12u1"
-      #elif __SUNPRO_CC == 0x5120
-        #define HOTSPOT_BUILD_COMPILER "Sun Studio 12u3"
-      #elif __SUNPRO_CC == 0x5130
-        #define HOTSPOT_BUILD_COMPILER "Sun Studio 12u4"
-      #else
-        #define HOTSPOT_BUILD_COMPILER "unknown Workshop:" XSTR(__SUNPRO_CC)
-      #endif
-    #elif defined(__GNUC__)
+    #if defined(__GNUC__)
         #define HOTSPOT_BUILD_COMPILER "gcc " __VERSION__
-    #elif defined(__IBMCPP__)
-        #define HOTSPOT_BUILD_COMPILER "xlC " XSTR(__IBMCPP__)
-
     #else
       #define HOTSPOT_BUILD_COMPILER "unknown compiler"
     #endif
@@ -227,9 +165,7 @@ const char* Abstract_VM_Version::internal_vm_info_string() {
          " JRE (" VERSION_STRING "), built on " __DATE__ " " __TIME__ \
          " by " XSTR(HOTSPOT_BUILD_USER) " with " HOTSPOT_BUILD_COMPILER
 
-  return strcmp(DEBUG_LEVEL, "release") == 0
-      ? VMNAME " (" INTERNAL_VERSION_SUFFIX
-      : VMNAME " (" DEBUG_LEVEL " " INTERNAL_VERSION_SUFFIX;
+  return strcmp(DEBUG_LEVEL, "release") == 0 ? VMNAME " (" INTERNAL_VERSION_SUFFIX : VMNAME " (" DEBUG_LEVEL " " INTERNAL_VERSION_SUFFIX;
 }
 
 const char *Abstract_VM_Version::vm_build_user() {
@@ -254,13 +190,6 @@ unsigned int Abstract_VM_Version::jvm_version() {
 
 void VM_Version_init() {
   VM_Version::initialize();
-
-  if (log_is_enabled(Info, os, cpu)) {
-    char buf[1024];
-    ResourceMark rm;
-    LogStream ls(Log(os, cpu)::info());
-    os::print_cpu_info(&ls, buf, sizeof(buf));
-  }
 }
 
 unsigned int Abstract_VM_Version::nof_parallel_worker_threads(unsigned int num, unsigned int den, unsigned int switch_pt) {

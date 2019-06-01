@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jni.h"
 #include "jvm.h"
 #include "ci/ciReplay.hpp"
@@ -13,8 +14,6 @@
 #include "classfile/vmSymbols.hpp"
 #include "gc/shared/gcLocker.inline.hpp"
 #include "interpreter/linkResolver.hpp"
-// #include "jfr/jfrEvents.hpp"
-// #include "jfr/support/jfrThreadId.hpp"
 #include "logging/log.hpp"
 #include "memory/allocation.hpp"
 #include "memory/allocation.inline.hpp"
@@ -193,7 +192,6 @@ void jfieldIDWorkaround::verify_instance_jfieldID(Klass* k, jfieldID id) {
   if (VerifyJNIFields) {
     if (is_checked_jfieldID(id)) {
       guarantee(klass_hash_ok(k, id), "Bug in native code: jfieldID class must match object");
-    } else {
     }
   }
   guarantee(InstanceKlass::cast(k)->contains_field_offset(offset), "Bug in native code: jfieldID offset must address interior of object");
@@ -241,10 +239,6 @@ JNI_ENTRY(jclass, jni_DefineClass(JNIEnv *env, const char *name, jobject loaderR
   }
   Klass* k = SystemDictionary::resolve_from_stream(class_name, class_loader, Handle(), &st, CHECK_NULL);
 
-  if (log_is_enabled(Debug, class, resolve) && k != NULL) {
-    trace_class_resolution(k);
-  }
-
   cls = (jclass)JNIHandles::make_local(env, k->java_mirror());
   return cls;
 JNI_END
@@ -271,11 +265,7 @@ JNI_ENTRY(jclass, jni_FindClass(JNIEnv *env, const char *name))
     THROW_MSG_0(vmSymbols::java_lang_NoClassDefFoundError(), "No class name given");
   }
   if ((int)strlen(name) > Symbol::max_length()) {
-    Exceptions::fthrow(THREAD_AND_LOCATION,
-                       vmSymbols::java_lang_NoClassDefFoundError(),
-                       "Class name exceeds maximum length of %d: %s",
-                       Symbol::max_length(),
-                       name);
+    Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::java_lang_NoClassDefFoundError(), "Class name exceeds maximum length of %d: %s", Symbol::max_length(), name);
     return 0;
   }
 
@@ -307,10 +297,6 @@ JNI_ENTRY(jclass, jni_FindClass(JNIEnv *env, const char *name))
 
   TempNewSymbol sym = SymbolTable::new_symbol(name, CHECK_NULL);
   result = find_class_from_class_loader(env, sym, true, loader, protection_domain, true, thread);
-
-  if (log_is_enabled(Debug, class, resolve) && result != NULL) {
-    trace_class_resolution(java_lang_Class::as_Klass(JNIHandles::resolve_non_null(result)));
-  }
 
   // If we were the first invocation of jni_FindClass, we enable compilation again
   // rather than just allowing invocation counter to overflow and decay.
@@ -1173,8 +1159,7 @@ static jmethodID get_method_id(JNIEnv *env, jclass clazz, const char *name_str,
   return m->jmethod_id();
 }
 
-JNI_ENTRY(jmethodID, jni_GetMethodID(JNIEnv *env, jclass clazz,
-          const char *name, const char *sig))
+JNI_ENTRY(jmethodID, jni_GetMethodID(JNIEnv *env, jclass clazz, const char *name, const char *sig))
   JNIWrapper("GetMethodID");
   HOTSPOT_JNI_GETMETHODID_ENTRY(env, clazz, (char *) name, (char *) sig);
   jmethodID ret = get_method_id(env, clazz, name, sig, false, thread);
@@ -1182,8 +1167,7 @@ JNI_ENTRY(jmethodID, jni_GetMethodID(JNIEnv *env, jclass clazz,
   return ret;
 JNI_END
 
-JNI_ENTRY(jmethodID, jni_GetStaticMethodID(JNIEnv *env, jclass clazz,
-          const char *name, const char *sig))
+JNI_ENTRY(jmethodID, jni_GetStaticMethodID(JNIEnv *env, jclass clazz, const char *name, const char *sig))
   JNIWrapper("GetStaticMethodID");
   HOTSPOT_JNI_GETSTATICMETHODID_ENTRY(env, (char *) clazz, (char *) name, (char *)sig);
   jmethodID ret = get_method_id(env, clazz, name, sig, true, thread);
@@ -1235,8 +1219,8 @@ DEFINE_CALLMETHOD(jshort,   Short,   T_SHORT
 DEFINE_CALLMETHOD(jobject,  Object,  T_OBJECT
                   , HOTSPOT_JNI_CALLOBJECTMETHOD_ENTRY(env, obj, (uintptr_t)methodID),
                   HOTSPOT_JNI_CALLOBJECTMETHOD_RETURN(_ret_ref))
-DEFINE_CALLMETHOD(jint,     Int,     T_INT,
-                  HOTSPOT_JNI_CALLINTMETHOD_ENTRY(env, obj, (uintptr_t)methodID),
+DEFINE_CALLMETHOD(jint,     Int,     T_INT
+                  , HOTSPOT_JNI_CALLINTMETHOD_ENTRY(env, obj, (uintptr_t)methodID),
                   HOTSPOT_JNI_CALLINTMETHOD_RETURN(_ret_ref))
 DEFINE_CALLMETHOD(jlong,    Long,    T_LONG
                   , HOTSPOT_JNI_CALLLONGMETHOD_ENTRY(env, obj, (uintptr_t)methodID),
@@ -1288,8 +1272,8 @@ DEFINE_CALLMETHODV(jshort,   Short,   T_SHORT
 DEFINE_CALLMETHODV(jobject,  Object,  T_OBJECT
                   , HOTSPOT_JNI_CALLOBJECTMETHODV_ENTRY(env, obj, (uintptr_t)methodID),
                   HOTSPOT_JNI_CALLOBJECTMETHODV_RETURN(_ret_ref))
-DEFINE_CALLMETHODV(jint,     Int,     T_INT,
-                  HOTSPOT_JNI_CALLINTMETHODV_ENTRY(env, obj, (uintptr_t)methodID),
+DEFINE_CALLMETHODV(jint,     Int,     T_INT
+                  , HOTSPOT_JNI_CALLINTMETHODV_ENTRY(env, obj, (uintptr_t)methodID),
                   HOTSPOT_JNI_CALLINTMETHODV_RETURN(_ret_ref))
 DEFINE_CALLMETHODV(jlong,    Long,    T_LONG
                   , HOTSPOT_JNI_CALLLONGMETHODV_ENTRY(env, obj, (uintptr_t)methodID),
@@ -1340,8 +1324,8 @@ DEFINE_CALLMETHODA(jshort,   Short,   T_SHORT
 DEFINE_CALLMETHODA(jobject,  Object,  T_OBJECT
                   , HOTSPOT_JNI_CALLOBJECTMETHODA_ENTRY(env, obj, (uintptr_t)methodID),
                   HOTSPOT_JNI_CALLOBJECTMETHODA_RETURN(_ret_ref))
-DEFINE_CALLMETHODA(jint,     Int,     T_INT,
-                  HOTSPOT_JNI_CALLINTMETHODA_ENTRY(env, obj, (uintptr_t)methodID),
+DEFINE_CALLMETHODA(jint,     Int,     T_INT
+                  , HOTSPOT_JNI_CALLINTMETHODA_ENTRY(env, obj, (uintptr_t)methodID),
                   HOTSPOT_JNI_CALLINTMETHODA_RETURN(_ret_ref))
 DEFINE_CALLMETHODA(jlong,    Long,    T_LONG
                   , HOTSPOT_JNI_CALLLONGMETHODA_ENTRY(env, obj, (uintptr_t)methodID),
@@ -1804,11 +1788,9 @@ JNI_END
 // Accessing Fields
 //
 
-DT_RETURN_MARK_DECL(GetFieldID, jfieldID
-                    , HOTSPOT_JNI_GETFIELDID_RETURN((uintptr_t)_ret_ref));
+DT_RETURN_MARK_DECL(GetFieldID, jfieldID, HOTSPOT_JNI_GETFIELDID_RETURN((uintptr_t)_ret_ref));
 
-JNI_ENTRY(jfieldID, jni_GetFieldID(JNIEnv *env, jclass clazz,
-          const char *name, const char *sig))
+JNI_ENTRY(jfieldID, jni_GetFieldID(JNIEnv *env, jclass clazz, const char *name, const char *sig))
   JNIWrapper("GetFieldID");
   HOTSPOT_JNI_GETFIELDID_ENTRY(env, clazz, (char *) name, (char *) sig);
   jfieldID ret = 0;
@@ -2002,11 +1984,9 @@ JNI_END
 //
 // Accessing Static Fields
 //
-DT_RETURN_MARK_DECL(GetStaticFieldID, jfieldID
-                    , HOTSPOT_JNI_GETSTATICFIELDID_RETURN((uintptr_t)_ret_ref));
+DT_RETURN_MARK_DECL(GetStaticFieldID, jfieldID, HOTSPOT_JNI_GETSTATICFIELDID_RETURN((uintptr_t)_ret_ref));
 
-JNI_ENTRY(jfieldID, jni_GetStaticFieldID(JNIEnv *env, jclass clazz,
-          const char *name, const char *sig))
+JNI_ENTRY(jfieldID, jni_GetStaticFieldID(JNIEnv *env, jclass clazz, const char *name, const char *sig))
   JNIWrapper("GetStaticFieldID");
   HOTSPOT_JNI_GETSTATICFIELDID_ENTRY(env, clazz, (char *) name, (char *) sig);
   jfieldID ret = NULL;
@@ -2355,30 +2335,14 @@ JNI_ENTRY(Return, \
   return ret; \
 JNI_END
 
-DEFINE_NEWSCALARARRAY(jbooleanArray, new_boolArray,   Boolean,
-                      HOTSPOT_JNI_NEWBOOLEANARRAY_ENTRY(env, len),
-                      HOTSPOT_JNI_NEWBOOLEANARRAY_RETURN(_ret_ref))
-DEFINE_NEWSCALARARRAY(jbyteArray,    new_byteArray,   Byte,
-                      HOTSPOT_JNI_NEWBYTEARRAY_ENTRY(env, len),
-                      HOTSPOT_JNI_NEWBYTEARRAY_RETURN(_ret_ref))
-DEFINE_NEWSCALARARRAY(jshortArray,   new_shortArray,  Short,
-                      HOTSPOT_JNI_NEWSHORTARRAY_ENTRY(env, len),
-                      HOTSPOT_JNI_NEWSHORTARRAY_RETURN(_ret_ref))
-DEFINE_NEWSCALARARRAY(jcharArray,    new_charArray,   Char,
-                      HOTSPOT_JNI_NEWCHARARRAY_ENTRY(env, len),
-                      HOTSPOT_JNI_NEWCHARARRAY_RETURN(_ret_ref))
-DEFINE_NEWSCALARARRAY(jintArray,     new_intArray,    Int,
-                      HOTSPOT_JNI_NEWINTARRAY_ENTRY(env, len),
-                      HOTSPOT_JNI_NEWINTARRAY_RETURN(_ret_ref))
-DEFINE_NEWSCALARARRAY(jlongArray,    new_longArray,   Long,
-                      HOTSPOT_JNI_NEWLONGARRAY_ENTRY(env, len),
-                      HOTSPOT_JNI_NEWLONGARRAY_RETURN(_ret_ref))
-DEFINE_NEWSCALARARRAY(jfloatArray,   new_singleArray, Float,
-                      HOTSPOT_JNI_NEWFLOATARRAY_ENTRY(env, len),
-                      HOTSPOT_JNI_NEWFLOATARRAY_RETURN(_ret_ref))
-DEFINE_NEWSCALARARRAY(jdoubleArray,  new_doubleArray, Double,
-                      HOTSPOT_JNI_NEWDOUBLEARRAY_ENTRY(env, len),
-                      HOTSPOT_JNI_NEWDOUBLEARRAY_RETURN(_ret_ref))
+DEFINE_NEWSCALARARRAY(jbooleanArray, new_boolArray,   Boolean, HOTSPOT_JNI_NEWBOOLEANARRAY_ENTRY(env, len), HOTSPOT_JNI_NEWBOOLEANARRAY_RETURN(_ret_ref))
+DEFINE_NEWSCALARARRAY(jbyteArray,    new_byteArray,   Byte, HOTSPOT_JNI_NEWBYTEARRAY_ENTRY(env, len), HOTSPOT_JNI_NEWBYTEARRAY_RETURN(_ret_ref))
+DEFINE_NEWSCALARARRAY(jshortArray,   new_shortArray,  Short, HOTSPOT_JNI_NEWSHORTARRAY_ENTRY(env, len), HOTSPOT_JNI_NEWSHORTARRAY_RETURN(_ret_ref))
+DEFINE_NEWSCALARARRAY(jcharArray,    new_charArray,   Char, HOTSPOT_JNI_NEWCHARARRAY_ENTRY(env, len), HOTSPOT_JNI_NEWCHARARRAY_RETURN(_ret_ref))
+DEFINE_NEWSCALARARRAY(jintArray,     new_intArray,    Int, HOTSPOT_JNI_NEWINTARRAY_ENTRY(env, len), HOTSPOT_JNI_NEWINTARRAY_RETURN(_ret_ref))
+DEFINE_NEWSCALARARRAY(jlongArray,    new_longArray,   Long, HOTSPOT_JNI_NEWLONGARRAY_ENTRY(env, len), HOTSPOT_JNI_NEWLONGARRAY_RETURN(_ret_ref))
+DEFINE_NEWSCALARARRAY(jfloatArray,   new_singleArray, Float, HOTSPOT_JNI_NEWFLOATARRAY_ENTRY(env, len), HOTSPOT_JNI_NEWFLOATARRAY_RETURN(_ret_ref))
+DEFINE_NEWSCALARARRAY(jdoubleArray,  new_doubleArray, Double, HOTSPOT_JNI_NEWDOUBLEARRAY_ENTRY(env, len), HOTSPOT_JNI_NEWDOUBLEARRAY_RETURN(_ret_ref))
 
 // Return an address which will fault if the caller writes to it.
 
@@ -2627,8 +2591,7 @@ static bool register_native(Klass* k, Symbol* name, Symbol* signature, address e
     if (method == NULL) {
       ResourceMark rm;
       stringStream st;
-      st.print("Method %s is not declared as native",
-               Method::name_and_sig_as_C_string(k, name, signature));
+      st.print("Method %s is not declared as native", Method::name_and_sig_as_C_string(k, name, signature));
       THROW_MSG_(vmSymbols::java_lang_NoSuchMethodError(), st.as_string(), false);
     }
   }
@@ -2648,12 +2611,9 @@ static bool register_native(Klass* k, Symbol* name, Symbol* signature, address e
   return true;
 }
 
-DT_RETURN_MARK_DECL(RegisterNatives, jint
-                    , HOTSPOT_JNI_REGISTERNATIVES_RETURN(_ret_ref));
+DT_RETURN_MARK_DECL(RegisterNatives, jint, HOTSPOT_JNI_REGISTERNATIVES_RETURN(_ret_ref));
 
-JNI_ENTRY(jint, jni_RegisterNatives(JNIEnv *env, jclass clazz,
-                                    const JNINativeMethod *methods,
-                                    jint nMethods))
+JNI_ENTRY(jint, jni_RegisterNatives(JNIEnv *env, jclass clazz, const JNINativeMethod *methods, jint nMethods))
   JNIWrapper("RegisterNatives");
   HOTSPOT_JNI_REGISTERNATIVES_ENTRY(env, clazz, (void *) methods, nMethods);
   jint ret = 0;
@@ -2940,9 +2900,6 @@ static jclass lookupOne(JNIEnv* env, const char* name, TRAPS) {
   TempNewSymbol sym = SymbolTable::new_symbol(name, CHECK_NULL);
   jclass result =  find_class_from_class_loader(env, sym, true, loader, protection_domain, true, CHECK_NULL);
 
-  if (log_is_enabled(Debug, class, resolve) && result != NULL) {
-    trace_class_resolution(java_lang_Class::as_Klass(JNIHandles::resolve_non_null(result)));
-  }
   return result;
 }
 

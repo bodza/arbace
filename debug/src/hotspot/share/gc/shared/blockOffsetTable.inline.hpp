@@ -31,8 +31,7 @@ inline HeapWord* BlockOffsetSharedArray::address_for_index(size_t index) const {
   return result;
 }
 
-inline void BlockOffsetSharedArray::check_reducing_assertion(bool reducing) {
-}
+inline void BlockOffsetSharedArray::check_reducing_assertion(bool reducing) { }
 
 //////////////////////////////////////////////////////////////////////////
 // BlockOffsetArrayNonContigSpace inlines

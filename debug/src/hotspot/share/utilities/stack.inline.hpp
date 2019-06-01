@@ -6,8 +6,7 @@
 #include "utilities/stack.hpp"
 #include "utilities/copy.hpp"
 
-template <MEMFLAGS F> StackBase<F>::StackBase(size_t segment_size, size_t max_cache_size,
-                     size_t max_size):
+template <MEMFLAGS F> StackBase<F>::StackBase(size_t segment_size, size_t max_cache_size, size_t max_size) :
   _seg_size(segment_size),
   _max_cache_size(max_cache_size),
   _max_size(adjust_max_size(max_size, segment_size))
@@ -24,7 +23,7 @@ template <MEMFLAGS F> size_t StackBase<F>::adjust_max_size(size_t max_size, size
 }
 
 template <class E, MEMFLAGS F>
-Stack<E, F>::Stack(size_t segment_size, size_t max_cache_size, size_t max_size):
+Stack<E, F>::Stack(size_t segment_size, size_t max_cache_size, size_t max_size) :
   StackBase<F>(adjust_segment_size(segment_size), max_cache_size, max_size)
 {
   reset(true);

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
 #include "code/debugInfoRec.hpp"
@@ -387,10 +388,10 @@ int SharedRuntime::java_calling_convention(const BasicType *sig_bt, VMRegPair *r
     case T_ARRAY:
     case T_OBJECT:
     case T_ADDRESS:
-      if (reg_arg0 == 9999 )  {
+      if (reg_arg0 == 9999 ) {
         reg_arg0 = i;
         regs[i].set1(rcx->as_VMReg());
-      } else if (reg_arg1 == 9999 )  {
+      } else if (reg_arg1 == 9999 ) {
         reg_arg1 = i;
         regs[i].set1(rdx->as_VMReg());
       } else {
@@ -781,12 +782,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed,
 }
 
 // ---------------------------------------------------------------
-AdapterHandlerEntry* SharedRuntime::generate_i2c2i_adapters(MacroAssembler *masm,
-                                                            int total_args_passed,
-                                                            int comp_args_on_stack,
-                                                            const BasicType *sig_bt,
-                                                            const VMRegPair *regs,
-                                                            AdapterFingerPrint* fingerprint) {
+AdapterHandlerEntry* SharedRuntime::generate_i2c2i_adapters(MacroAssembler *masm, int total_args_passed, int comp_args_on_stack, const BasicType *sig_bt, const VMRegPair *regs, AdapterFingerPrint* fingerprint) {
   address i2c_entry = __ pc();
 
   gen_i2c_adapter(masm, total_args_passed, comp_args_on_stack, sig_bt, regs);
@@ -808,7 +804,6 @@ AdapterHandlerEntry* SharedRuntime::generate_i2c2i_adapters(MacroAssembler *masm
   Register temp = rbx;
 
   {
-
     Label missed;
     __ movptr(temp, Address(receiver, oopDesc::klass_offset_in_bytes()));
     __ cmpptr(temp, Address(holder, CompiledICHolder::holder_klass_offset()));
@@ -1718,12 +1713,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     SkipIfEqual skip_if(masm, &DTraceMethodProbes, 0);
     __ mov_metadata(rax, method());
     __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_entry), thread, rax);
-  }
-
-  // RedefineClasses() tracing support for obsolete method entry
-  if (log_is_enabled(Trace, redefine, class, obsolete)) {
-    __ mov_metadata(rax, method());
-    __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::rc_trace_method_entry), thread, rax);
   }
 
   // These are register definitions we need for locking/unlocking

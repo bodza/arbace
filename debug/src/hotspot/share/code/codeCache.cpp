@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "aot/aotLoader.hpp"
 #include "code/codeBlob.hpp"
 #include "code/codeCache.hpp"
@@ -9,7 +10,6 @@
 #include "code/nmethod.hpp"
 #include "code/pcDesc.hpp"
 #include "compiler/compileBroker.hpp"
-// #include "jfr/jfrEvents.hpp"
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
@@ -284,8 +284,7 @@ ReservedCodeSpace CodeCache::reserve_heap_memory(size_t size) {
   const size_t rs_size = align_up(size, rs_align);
   ReservedCodeSpace rs(rs_size, rs_align, rs_ps > (size_t) os::vm_page_size());
   if (!rs.is_reserved()) {
-    vm_exit_during_initialization(err_msg("Could not reserve enough space for code cache (" SIZE_FORMAT "K)",
-                                          rs_size/K));
+    vm_exit_during_initialization(err_msg("Could not reserve enough space for code cache (" SIZE_FORMAT "K)", rs_size/K));
   }
 
   // Initialize bounds
@@ -365,8 +364,7 @@ void CodeCache::add_heap(ReservedSpace rs, const char* name, int code_blob_type)
   size_t size_initial = MIN2((size_t)InitialCodeCacheSize, rs.size());
   size_initial = align_up(size_initial, os::vm_page_size());
   if (!heap->reserve(rs, size_initial, CodeCacheSegmentSize)) {
-    vm_exit_during_initialization(err_msg("Could not reserve enough space in %s (" SIZE_FORMAT "K)",
-                                          heap->name(), size_initial/K));
+    vm_exit_during_initialization(err_msg("Could not reserve enough space in %s (" SIZE_FORMAT "K)", heap->name(), size_initial/K));
   }
 
   // Register the CodeHeap
@@ -466,8 +464,7 @@ CodeBlob* CodeCache::allocate(int size, int code_blob_type, int orig_code_blob_t
         }
         if (type != code_blob_type && type != orig_code_blob_type && heap_available(type)) {
           if (PrintCodeCacheExtension) {
-            tty->print_cr("Extension of %s failed. Trying to allocate in %s.",
-                          heap->name(), get_code_heap(type)->name());
+            tty->print_cr("Extension of %s failed. Trying to allocate in %s.", heap->name(), get_code_heap(type)->name());
           }
           return allocate(size, type, orig_code_blob_type);
         }
@@ -483,9 +480,7 @@ CodeBlob* CodeCache::allocate(int size, int code_blob_type, int orig_code_blob_t
       } else {
         tty->print("CodeCache");
       }
-      tty->print_cr(" extended to [" INTPTR_FORMAT ", " INTPTR_FORMAT "] (" SSIZE_FORMAT " bytes)",
-                    (intptr_t)heap->low_boundary(), (intptr_t)heap->high(),
-                    (address)heap->high() - (address)heap->low_boundary());
+      tty->print_cr(" extended to [" INTPTR_FORMAT ", " INTPTR_FORMAT "] (" SSIZE_FORMAT " bytes)", (intptr_t)heap->low_boundary(), (intptr_t)heap->high(), (address)heap->high() - (address)heap->low_boundary());
     }
   }
   print_trace("allocation", cb, size);
@@ -507,7 +502,6 @@ void CodeCache::free(CodeBlob* cb) {
 
   // Get heap for given CodeBlob and deallocate
   get_code_heap(cb)->deallocate(cb);
-
 }
 
 void CodeCache::free_unused_tail(CodeBlob* cb, size_t used) {
@@ -541,9 +535,6 @@ void CodeCache::commit(CodeBlob* cb) {
 }
 
 bool CodeCache::contains(void *p) {
-  // S390 uses contains() in current_frame(), which is used before
-  // code cache initialization if NativeMemoryTracking=detail is set.
-  S390_ONLY(if (_heaps == NULL) return false;)
   // It should be ok to call contains without holding a lock.
   FOR_ALL_HEAPS(heap) {
     if ((*heap)->contains(p)) {
@@ -734,11 +725,9 @@ void CodeCache::prune_scavenge_root_nmethods() {
   }
 }
 
-void CodeCache::verify_clean_inline_caches() {
-}
+void CodeCache::verify_clean_inline_caches() { }
 
-void CodeCache::verify_icholder_relocations() {
-}
+void CodeCache::verify_icholder_relocations() { }
 
 void CodeCache::gc_prologue() { }
 
@@ -1084,23 +1073,17 @@ void CodeCache::report_codemem_full(int code_blob_type, bool print) {
     if (SegmentedCodeCache) {
       ResourceMark rm;
       stringStream msg1_stream, msg2_stream;
-      msg1_stream.print("%s is full. Compiler has been disabled.",
-                        get_code_heap_name(code_blob_type));
-      msg2_stream.print("Try increasing the code heap size using -XX:%s=",
-                 get_code_heap_flag_name(code_blob_type));
+      msg1_stream.print("%s is full. Compiler has been disabled.", get_code_heap_name(code_blob_type));
+      msg2_stream.print("Try increasing the code heap size using -XX:%s=", get_code_heap_flag_name(code_blob_type));
       const char *msg1 = msg1_stream.as_string();
       const char *msg2 = msg2_stream.as_string();
 
-      log_warning(codecache)("%s", msg1);
-      log_warning(codecache)("%s", msg2);
       warning("%s", msg1);
       warning("%s", msg2);
     } else {
       const char *msg1 = "CodeCache is full. Compiler has been disabled.";
       const char *msg2 = "Try increasing the code cache size using -XX:ReservedCodeCacheSize=";
 
-      log_warning(codecache)("%s", msg1);
-      log_warning(codecache)("%s", msg2);
       warning("%s", msg1);
       warning("%s", msg2);
     }
@@ -1179,10 +1162,7 @@ void CodeCache::print_summary(outputStream* st, bool detailed) {
                  heap->max_allocated_capacity()/K, heap->unallocated_capacity()/K);
 
     if (detailed) {
-      st->print_cr(" bounds [" INTPTR_FORMAT ", " INTPTR_FORMAT ", " INTPTR_FORMAT "]",
-                   p2i(heap->low_boundary()),
-                   p2i(heap->high()),
-                   p2i(heap->high_boundary()));
+      st->print_cr(" bounds [" INTPTR_FORMAT ", " INTPTR_FORMAT ", " INTPTR_FORMAT "]", p2i(heap->low_boundary()), p2i(heap->high()), p2i(heap->high_boundary()));
 
       full_count += get_codemem_full_count(heap->code_blob_type());
     }
@@ -1277,4 +1257,3 @@ void CodeCache::print_names(outputStream *out) {
     CodeHeapState::print_names(out, (*heap));
   }
 }
-//---<  END  >--- CodeHeap State Analytics.

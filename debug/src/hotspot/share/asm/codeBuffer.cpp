@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/codeBuffer.hpp"
 #include "compiler/disassembler.hpp"
 #include "oops/methodData.hpp"
@@ -162,7 +163,6 @@ void CodeBuffer::set_blob(BufferBlob* blob) {
     start += (-(intptr_t)start) & (align-1);
     _total_start = start;
     _total_size  = end - start;
-  } else {
   }
 }
 
@@ -547,9 +547,7 @@ csize_t CodeBuffer::copy_relocations_to(address buf, csize_t buf_limit, bool onl
       // We'll insert one or more filler relocs to span that gap.
       // (Don't bother to improve this by editing the first reloc's offset.)
       csize_t new_code_point = code_end_so_far;
-      for (csize_t jump;
-           code_point_so_far < new_code_point;
-           code_point_so_far += jump) {
+      for (csize_t jump; code_point_so_far < new_code_point; code_point_so_far += jump) {
         jump = new_code_point - code_point_so_far;
         relocInfo filler = filler_relocInfo();
         if (jump >= filler.addr_offset()) {
@@ -847,8 +845,7 @@ void CodeBuffer::log_section_sizes(const char* name) {
     for (int n = (int) CodeBuffer::SECT_FIRST; n < (int) CodeBuffer::SECT_LIMIT; n++) {
       CodeSection* sect = code_section(n);
       if (!sect->is_allocated() || sect->is_empty())  continue;
-      xtty->print_cr("<sect index='%d' size='" SIZE_FORMAT "' free='" SIZE_FORMAT "'/>",
-                     n, sect->limit() - sect->start(), sect->limit() - sect->end());
+      xtty->print_cr("<sect index='%d' size='" SIZE_FORMAT "' free='" SIZE_FORMAT "'/>", n, sect->limit() - sect->start(), sect->limit() - sect->end());
     }
     xtty->print_cr("</blob>");
   }

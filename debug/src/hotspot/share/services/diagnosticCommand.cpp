@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/classLoaderHierarchyDCmd.hpp"
 #include "classfile/classLoaderStats.hpp"
@@ -126,11 +127,9 @@ void HelpDCmd::execute(DCmdSource source, TRAPS) {
       JavaPermission p = factory->permission();
       if (p._class != NULL) {
         if (p._action != NULL) {
-          output()->print_cr("\nPermission: %s(%s, %s)",
-                  p._class, p._name == NULL ? "null" : p._name, p._action);
+          output()->print_cr("\nPermission: %s(%s, %s)", p._class, p._name == NULL ? "null" : p._name, p._action);
         } else {
-          output()->print_cr("\nPermission: %s(%s)",
-                  p._class, p._name == NULL ? "null" : p._name);
+          output()->print_cr("\nPermission: %s(%s)", p._class, p._name == NULL ? "null" : p._name);
         }
       }
       output()->cr();
@@ -744,8 +743,7 @@ public:
   }
 };
 
-TouchedMethodsDCmd::TouchedMethodsDCmd(outputStream* output, bool heap) : DCmdWithParser(output, heap)
-{ }
+TouchedMethodsDCmd::TouchedMethodsDCmd(outputStream* output, bool heap) : DCmdWithParser(output, heap) { }
 
 void TouchedMethodsDCmd::execute(DCmdSource source, TRAPS) {
   if (!LogTouchedMethods) {

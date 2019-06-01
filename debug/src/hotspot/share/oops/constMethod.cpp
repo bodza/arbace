@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "interpreter/interpreter.hpp"
 #include "memory/heapInspection.hpp"
 #include "memory/metadataFactory.hpp"
@@ -345,8 +346,6 @@ void ConstMethod::copy_annotations_from(ClassLoaderData* loader_data, ConstMetho
 }
 
 void ConstMethod::metaspace_pointers_do(MetaspaceClosure* it) {
-  log_trace(cds)("Iter(ConstMethod): %p", this);
-
   it->push(&_constants);
   it->push(&_stackmap_data);
   if (has_method_annotations()) {

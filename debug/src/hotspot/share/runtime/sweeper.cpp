@@ -1,10 +1,10 @@
 #include "precompiled.hpp"
+
 #include "code/codeCache.hpp"
 #include "code/compiledIC.hpp"
 #include "code/icBuffer.hpp"
 #include "code/nmethod.hpp"
 #include "compiler/compileBroker.hpp"
-// #include "jfr/jfrEvents.hpp"
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
@@ -303,8 +303,6 @@ static void post_sweep_event(EventSweepCodeCache* event,
 void NMethodSweeper::sweep_code_cache() {
   ResourceMark rm;
   Ticks sweep_start_counter = Ticks::now();
-
-  log_debug(codecache, sweep, start)("CodeCache flushing");
 
   int flushed_count                = 0;
   int zombified_count              = 0;

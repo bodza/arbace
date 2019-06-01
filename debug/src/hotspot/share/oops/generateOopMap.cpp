@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "interpreter/bytecodeStream.hpp"
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
@@ -754,9 +755,6 @@ void GenerateOopMap::merge_state_into_bb(BasicBlock *bb) {
         bb->set_changed(true);
       }
     } else {
-      if (log_is_enabled(Info, monitormismatch)) {
-        report_monitor_mismatch("monitor stack height merge conflict");
-      }
       // When the monitor stacks are not matched, we set _monitor_top to
       // bad_monitors.  This signals that, from here on, the monitor stack cannot
       // be trusted.  In particular, monitorexit bytecodes may throw
@@ -819,9 +817,6 @@ CellTypeState GenerateOopMap::monitor_pop() {
     _monitor_safe = false;
      _monitor_top = bad_monitors;
 
-    if (log_is_enabled(Info, monitormismatch)) {
-      report_monitor_mismatch("monitor stack underflow");
-    }
     return CellTypeState::ref; // just to keep the analysis going.
   }
   return  monitors()[--_monitor_top];
@@ -834,9 +829,6 @@ void GenerateOopMap::monitor_push(CellTypeState cts) {
     _monitor_safe = false;
     _monitor_top = bad_monitors;
 
-    if (log_is_enabled(Info, monitormismatch)) {
-      report_monitor_mismatch("monitor stack overflow");
-    }
     return;
   }
   monitors()[_monitor_top++] = cts;
@@ -966,7 +958,6 @@ void GenerateOopMap::setup_method_entry_state() {
 
     // This is the start state
     merge_state_into_bb(&_basic_blocks[0]);
-
 }
 
 // The instruction at bci is changing size by "delta".  Update the basic blocks.
@@ -1168,11 +1159,6 @@ void GenerateOopMap::do_exception_edge(BytecodeStream* itr) {
   // We don't set _monitor_top to bad_monitors because there are no successors
   // to this exceptional exit.
 
-  if (log_is_enabled(Info, monitormismatch) && _monitor_safe) {
-    // We check _monitor_safe so that we only report the first mismatched
-    // exceptional exit.
-    report_monitor_mismatch("non-empty monitor stack at exceptional exit");
-  }
   _monitor_safe = false;
 }
 
@@ -1692,9 +1678,6 @@ void GenerateOopMap::do_monitorenter(int bci) {
     _monitor_top = bad_monitors;
     _monitor_safe = false;
 
-    if (log_is_enabled(Info, monitormismatch)) {
-      report_monitor_mismatch("nested redundant lock -- bailout...");
-    }
     return;
   }
 
@@ -1729,10 +1712,6 @@ void GenerateOopMap::do_monitorexit(int bci) {
     guarantee(bb != NULL, "no basic block for bci");
     bb->set_changed(true);
     bb->_monitor_top = bad_monitors;
-
-    if (log_is_enabled(Info, monitormismatch)) {
-      report_monitor_mismatch("improper monitor pair");
-    }
   } else {
     // This code is a fix for the case where we have repeated
     // locking of the same object in straightline code.  We clear
@@ -1755,10 +1734,6 @@ void GenerateOopMap::do_return_monitor_check() {
 
     // Since there are no successors to the *return bytecode, it
     // isn't necessary to set _monitor_top to bad_monitors.
-
-    if (log_is_enabled(Info, monitormismatch)) {
-      report_monitor_mismatch("non-empty monitor stack at return");
-    }
   }
 }
 
@@ -1922,10 +1897,10 @@ char* GenerateOopMap::state_vec_to_string(CellTypeState* vec, int len) {
 }
 
 void GenerateOopMap::print_time() {
-  tty->print_cr ("Accumulated oopmap times:");
-  tty->print_cr ("---------------------------");
-  tty->print_cr ("  Total : %3.3f sec.", GenerateOopMap::_total_oopmap_time.seconds());
-  tty->print_cr ("  (%3.0f bytecodes per sec) ",
+  tty->print_cr("Accumulated oopmap times:");
+  tty->print_cr("---------------------------");
+  tty->print_cr("  Total : %3.3f sec.", GenerateOopMap::_total_oopmap_time.seconds());
+  tty->print_cr("  (%3.0f bytecodes per sec) ",
   GenerateOopMap::_total_byte_count / GenerateOopMap::_total_oopmap_time.seconds());
 }
 
@@ -1965,8 +1940,7 @@ void GenerateOopMap::compute_map(TRAPS) {
       tty->print_cr("Exception table:");
       ExceptionTable excps(method());
       for (int i = 0; i < excps.length(); i ++) {
-        tty->print_cr("[%d - %d] -> %d",
-                      excps.start_pc(i), excps.end_pc(i), excps.handler_pc(i));
+        tty->print_cr("[%d - %d] -> %d", excps.start_pc(i), excps.end_pc(i), excps.handler_pc(i));
       }
     }
   }

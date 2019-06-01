@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "compiler/compileTask.hpp"
 #include "compiler/compileLog.hpp"
 #include "compiler/compileBroker.hpp"
@@ -309,9 +310,7 @@ void CompileTask::log_task_done(CompileLog* log) {
 
   // <task_done ... stamp='1.234'>  </task>
   nmethod* nm = code();
-  log->begin_elem("task_done success='%d' nmsize='%d' count='%d'",
-                  _is_success, nm == NULL ? 0 : nm->content_size(),
-                  method->invocation_count());
+  log->begin_elem("task_done success='%d' nmsize='%d' count='%d'", _is_success, nm == NULL ? 0 : nm->content_size(), method->invocation_count());
   int bec = method->backedge_count();
   if (bec != 0)  log->print(" backedge_count='%d'", bec);
   // Note:  "_is_complete" is about to be set, but is not.

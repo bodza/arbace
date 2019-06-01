@@ -101,8 +101,7 @@ class FilteringClosure: public OopIterateClosure {
     _cl(cl) { }
   virtual void do_oop(oop* p);
   virtual void do_oop(narrowOop* p);
-  virtual bool do_metadata()            {
-    return false; }
+  virtual bool do_metadata()            { return false; }
   virtual void do_klass(Klass*)         { ShouldNotReachHere(); }
   virtual void do_cld(ClassLoaderData*) { ShouldNotReachHere(); }
 };

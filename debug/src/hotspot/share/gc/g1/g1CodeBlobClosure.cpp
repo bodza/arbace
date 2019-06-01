@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "code/nmethod.hpp"
 #include "gc/g1/g1CodeBlobClosure.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"

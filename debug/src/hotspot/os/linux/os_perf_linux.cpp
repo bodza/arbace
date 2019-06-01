@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "memory/allocation.inline.hpp"
 #include "os_linux.inline.hpp"
@@ -310,19 +311,8 @@ static OSReturn get_total_ticks(int which_logical_cpu, CPUPerfTicks* pticks) {
 
   fclose(fh);
   if (n < expected_assign_count || logical_cpu != which_logical_cpu) {
-#ifdef DEBUG_LINUX_PROC_STAT
-    vm_fprintf(stderr, "[stat] read failed");
-#endif
     return OS_ERR;
   }
-
-#ifdef DEBUG_LINUX_PROC_STAT
-  vm_fprintf(stderr, "[stat] read "
-          UINT64_FORMAT " " UINT64_FORMAT " " UINT64_FORMAT " " UINT64_FORMAT " "
-          UINT64_FORMAT " " UINT64_FORMAT " " UINT64_FORMAT " \n",
-          userTicks, niceTicks, systemTicks, idleTicks,
-          iowTicks, irqTicks, sirqTicks);
-#endif
 
   pticks->used       = userTicks + niceTicks;
   pticks->usedKernel = systemTicks + irqTicks + sirqTicks;
@@ -500,7 +490,6 @@ static int perf_context_switch_rate(double* rate) {
 
   pthread_mutex_lock(&contextSwitchLock);
   {
-
     uint64_t sw;
     s8 t, d;
 
@@ -1025,15 +1014,13 @@ class NetworkPerformanceInterface::NetworkPerformance : public CHeapObj<mtIntern
   int network_utilization(NetworkInterface** network_interfaces) const;
 };
 
-NetworkPerformanceInterface::NetworkPerformance::NetworkPerformance() {
-}
+NetworkPerformanceInterface::NetworkPerformance::NetworkPerformance() { }
 
 bool NetworkPerformanceInterface::NetworkPerformance::initialize() {
   return true;
 }
 
-NetworkPerformanceInterface::NetworkPerformance::~NetworkPerformance() {
-}
+NetworkPerformanceInterface::NetworkPerformance::~NetworkPerformance() { }
 
 int64_t NetworkPerformanceInterface::NetworkPerformance::read_counter(const char* iface, const char* counter) const {
   char buf[128];

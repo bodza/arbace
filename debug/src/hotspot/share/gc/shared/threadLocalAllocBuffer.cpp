@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/threadLocalAllocBuffer.inline.hpp"
 #include "logging/log.hpp"
 #include "memory/resourceArea.hpp"
@@ -54,8 +55,6 @@ void ThreadLocalAllocBuffer::accumulate_statistics() {
   size_t allocated_since_last_gc = total_allocated - _allocated_before_last_gc;
   _allocated_before_last_gc = total_allocated;
 
-  print_stats("gc");
-
   if (_number_of_refills > 0) {
     // Update allocation history if a reasonable amount of eden was allocated.
     bool update_allocation_history = used > 0.5 * capacity;
@@ -77,8 +76,6 @@ void ThreadLocalAllocBuffer::accumulate_statistics() {
     global_stats()->update_gc_waste(_gc_waste);
     global_stats()->update_slow_refill_waste(_slow_refill_waste);
     global_stats()->update_fast_refill_waste(_fast_refill_waste);
-
-  } else {
   }
   global_stats()->update_slow_allocations(_slow_allocations);
 }
@@ -124,11 +121,6 @@ void ThreadLocalAllocBuffer::resize() {
 
   size_t aligned_new_size = align_object_size(new_size);
 
-  log_trace(gc, tlab)("TLAB new size: thread: " INTPTR_FORMAT " [id: %2d]"
-                      " refills %d  alloc: %8.6f desired_size: " SIZE_FORMAT " -> " SIZE_FORMAT,
-                      p2i(myThread()), myThread()->osthread()->thread_id(),
-                      _target_refills, _allocation_fraction.average(), desired_size(), aligned_new_size);
-
   set_desired_size(aligned_new_size);
   set_refill_waste_limit(initial_refill_waste_limit());
 }
@@ -145,7 +137,6 @@ void ThreadLocalAllocBuffer::initialize_statistics() {
 void ThreadLocalAllocBuffer::fill(HeapWord* start, HeapWord* top, size_t new_size) {
   _number_of_refills++;
   _allocated_size += new_size;
-  print_stats("fill");
 
   initialize(start, top, start + new_size - alignment_reserve());
 
@@ -196,9 +187,6 @@ void ThreadLocalAllocBuffer::startup_initialization() {
   // before the heap is initialized.  So reinitialize it now.
   guarantee(Thread::current()->is_Java_thread(), "tlab initialization thread not Java thread");
   Thread::current()->tlab().initialize();
-
-  log_develop_trace(gc, tlab)("TLAB min: " SIZE_FORMAT " initial: " SIZE_FORMAT " max: " SIZE_FORMAT,
-                               min_size(), Thread::current()->tlab().initial_desired_size(), max_size());
 }
 
 size_t ThreadLocalAllocBuffer::initial_desired_size() {
@@ -215,32 +203,6 @@ size_t ThreadLocalAllocBuffer::initial_desired_size() {
   }
   init_sz = MIN2(MAX2(init_sz, min_size()), max_size());
   return init_sz;
-}
-
-void ThreadLocalAllocBuffer::print_stats(const char* tag) {
-  Log(gc, tlab) log;
-  if (!log.is_trace()) {
-    return;
-  }
-
-  Thread* thrd = myThread();
-  size_t waste = _gc_waste + _slow_refill_waste + _fast_refill_waste;
-  double waste_percent = percent_of(waste, _allocated_size);
-  size_t tlab_used  = Universe::heap()->tlab_used(thrd);
-  log.trace("TLAB: %s thread: " INTPTR_FORMAT " [id: %2d]"
-            " desired_size: " SIZE_FORMAT "KB"
-            " slow allocs: %d  refill waste: " SIZE_FORMAT "B"
-            " alloc:%8.5f %8.0fKB refills: %d waste %4.1f%% gc: %dB"
-            " slow: %dB fast: %dB",
-            tag, p2i(thrd), thrd->osthread()->thread_id(),
-            _desired_size / (K / HeapWordSize),
-            _slow_allocations, _refill_waste_limit * HeapWordSize,
-            _allocation_fraction.average(),
-            _allocation_fraction.average() * tlab_used / K,
-            _number_of_refills, waste_percent,
-            _gc_waste * HeapWordSize,
-            _slow_refill_waste * HeapWordSize,
-            _fast_refill_waste * HeapWordSize);
 }
 
 void ThreadLocalAllocBuffer::verify() {
@@ -373,11 +335,7 @@ void GlobalTLABStats::print() {
 
   size_t waste = _total_gc_waste + _total_slow_refill_waste + _total_fast_refill_waste;
   double waste_percent = percent_of(waste, _total_allocation);
-  log.debug("TLAB totals: thrds: %d  refills: %d max: %d"
-            " slow allocs: %d max %d waste: %4.1f%%"
-            " gc: " SIZE_FORMAT "B max: " SIZE_FORMAT "B"
-            " slow: " SIZE_FORMAT "B max: " SIZE_FORMAT "B"
-            " fast: " SIZE_FORMAT "B max: " SIZE_FORMAT "B",
+  log.debug("TLAB totals: thrds: %d  refills: %d max: %d slow allocs: %d max %d waste: %4.1f%% gc: " SIZE_FORMAT "B max: " SIZE_FORMAT "B slow: " SIZE_FORMAT "B max: " SIZE_FORMAT "B fast: " SIZE_FORMAT "B max: " SIZE_FORMAT "B",
             _allocating_threads,
             _total_refills, _max_refills,
             _total_slow_allocations, _max_slow_allocations,

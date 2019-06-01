@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/systemDictionary.hpp"
 #include "code/codeCache.hpp"
@@ -446,7 +447,6 @@ void Deoptimization::unwind_callee_save_values(frame* f, vframeArray* vframe_arr
 
   // At the moment we have modified c2 to not have any callee save registers
   // so this problem does not exist and this routine is just a place holder.
-
 }
 
 // Return BasicType of value being returned
@@ -987,8 +987,7 @@ JRT_LEAF(void, Deoptimization::popframe_preserve_args(JavaThread* thread, int by
 JRT_END
 
 MethodData*
-Deoptimization::get_method_data(JavaThread* thread, const methodHandle& m,
-                                bool create_if_missing) {
+Deoptimization::get_method_data(JavaThread* thread, const methodHandle& m, bool create_if_missing) {
   Thread* THREAD = thread;
   MethodData* mdo = m()->method_data();
   if (mdo == NULL && create_if_missing && !HAS_PENDING_EXCEPTION) {
@@ -1124,7 +1123,6 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
           tty->print_cr("No speculation");
         }
       }
-    } else {
     }
 
     if (trap_bci == SynchronizationEntryBCI) {
@@ -1164,9 +1162,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
       ttyLocker ttyl;
       char buf[100];
       if (xtty != NULL) {
-        xtty->begin_head("uncommon_trap thread='" UINTX_FORMAT "' %s",
-                         os::current_thread_id(),
-                         format_trap_request(buf, sizeof(buf), trap_request));
+        xtty->begin_head("uncommon_trap thread='" UINTX_FORMAT "' %s", os::current_thread_id(), format_trap_request(buf, sizeof(buf), trap_request));
         nm->log_identity(xtty);
       }
       Symbol* class_name = NULL;
@@ -1663,9 +1659,7 @@ const char* Deoptimization::format_trap_state(char* buf, size_t buflen,
     // Random buggy state that doesn't decode??
     len = jio_snprintf(buf, buflen, "#%d", trap_state);
   } else {
-    len = jio_snprintf(buf, buflen, "%s%s",
-                       trap_reason_name(reason),
-                       recomp_flag ? " recompiled" : "");
+    len = jio_snprintf(buf, buflen, "%s%s", trap_reason_name(reason), recomp_flag ? " recompiled" : "");
   }
   return buf;
 }
@@ -1795,45 +1789,4 @@ jint Deoptimization::total_deoptimization_count() {
 
 jint Deoptimization::deoptimization_count(DeoptReason reason) {
   return _deoptimization_hist[reason][0][0];
-}
-
-void Deoptimization::print_statistics() {
-  juint total = total_deoptimization_count();
-  juint account = total;
-  if (total != 0) {
-    ttyLocker ttyl;
-    if (xtty != NULL)  xtty->head("statistics type='deoptimization'");
-    tty->print_cr("Deoptimization traps recorded:");
-    #define PRINT_STAT_LINE(name, r) \
-      tty->print_cr("  %4d (%4.1f%%) %s", (int)(r), ((r) * 100.0) / total, name);
-    PRINT_STAT_LINE("total", total);
-    // For each non-zero entry in the histogram, print the reason,
-    // the action, and (if specifically known) the type of bytecode.
-    for (int reason = 0; reason < Reason_LIMIT; reason++) {
-      for (int action = 0; action < Action_LIMIT; action++) {
-        juint* cases = _deoptimization_hist[reason][1+action];
-        for (int bc_case = 0; bc_case < BC_CASE_LIMIT; bc_case++) {
-          juint counter = cases[bc_case];
-          if (counter != 0) {
-            char name[1*K];
-            Bytecodes::Code bc = (Bytecodes::Code)(counter & LSB_MASK);
-            if (bc_case == BC_CASE_LIMIT && (int)bc == 0)
-              bc = Bytecodes::_illegal;
-            sprintf(name, "%s/%s/%s",
-                    trap_reason_name(reason),
-                    trap_action_name(action),
-                    Bytecodes::is_defined(bc)? Bytecodes::name(bc): "other");
-            juint r = counter >> LSB_BITS;
-            tty->print_cr("  %40s: " UINT32_FORMAT " (%.1f%%)", name, r, (r * 100.0) / total);
-            account -= r;
-          }
-        }
-      }
-    }
-    if (account != 0) {
-      PRINT_STAT_LINE("unaccounted", account);
-    }
-    #undef PRINT_STAT_LINE
-    if (xtty != NULL)  xtty->tail("statistics");
-  }
 }

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "compiler/compileBroker.hpp"
@@ -92,11 +93,6 @@ void Exceptions::_throw_oop(Thread* thread, const char* file, int line, oop exce
 void Exceptions::_throw(Thread* thread, const char* file, int line, Handle h_exception, const char* message) {
   ResourceMark rm;
 
-  // tracing (do this up front - so it works during boot strapping)
-  log_info(exceptions)("Exception <%s%s%s> (" INTPTR_FORMAT ") \nthrown [%s, line %d]\nfor thread " INTPTR_FORMAT,
-                       h_exception->print_value_string(),
-                       message ? ": " : "", message ? message : "",
-                       p2i(h_exception()), file, line, p2i(thread));
   // for AbortVMOnException flag
   Exceptions::debug_check_abort(h_exception, message);
 
@@ -201,9 +197,7 @@ void Exceptions::fthrow(Thread* thread, const char* file, int line, Symbol* h_na
 
 // Creates an exception oop, calls the <init> method with the given signature.
 // and returns a Handle
-Handle Exceptions::new_exception(Thread *thread, Symbol* name,
-                                 Symbol* signature, JavaCallArguments *args,
-                                 Handle h_loader, Handle h_protection_domain) {
+Handle Exceptions::new_exception(Thread *thread, Symbol* name, Symbol* signature, JavaCallArguments *args, Handle h_loader, Handle h_protection_domain) {
 
   Handle h_exception;
 
@@ -228,10 +222,7 @@ Handle Exceptions::new_exception(Thread *thread, Symbol* name,
 // Creates an exception oop, calls the <init> method with the given signature.
 // and returns a Handle
 // Initializes the cause if cause non-null
-Handle Exceptions::new_exception(Thread *thread, Symbol* name,
-                                 Symbol* signature, JavaCallArguments *args,
-                                 Handle h_cause,
-                                 Handle h_loader, Handle h_protection_domain) {
+Handle Exceptions::new_exception(Thread *thread, Symbol* name, Symbol* signature, JavaCallArguments *args, Handle h_cause, Handle h_loader, Handle h_protection_domain) {
   Handle h_exception = new_exception(thread, name, signature, args, h_loader, h_protection_domain);
 
   // Future: object initializer should take a cause argument
@@ -257,10 +248,7 @@ Handle Exceptions::new_exception(Thread *thread, Symbol* name,
 
 // Convenience method. Calls either the <init>() or <init>(Throwable) method when
 // creating a new exception
-Handle Exceptions::new_exception(Thread* thread, Symbol* name,
-                                 Handle h_cause,
-                                 Handle h_loader, Handle h_protection_domain,
-                                 ExceptionMsgToUtf8Mode to_utf8_safe) {
+Handle Exceptions::new_exception(Thread* thread, Symbol* name, Handle h_cause, Handle h_loader, Handle h_protection_domain, ExceptionMsgToUtf8Mode to_utf8_safe) {
   JavaCallArguments args;
   Symbol* signature = NULL;
   if (h_cause.is_null()) {
@@ -274,10 +262,7 @@ Handle Exceptions::new_exception(Thread* thread, Symbol* name,
 
 // Convenience method. Calls either the <init>() or <init>(String) method when
 // creating a new exception
-Handle Exceptions::new_exception(Thread* thread, Symbol* name,
-                                 const char* message, Handle h_cause,
-                                 Handle h_loader, Handle h_protection_domain,
-                                 ExceptionMsgToUtf8Mode to_utf8_safe) {
+Handle Exceptions::new_exception(Thread* thread, Symbol* name, const char* message, Handle h_cause, Handle h_loader, Handle h_protection_domain, ExceptionMsgToUtf8Mode to_utf8_safe) {
   JavaCallArguments args;
   Symbol* signature = NULL;
   if (message == NULL) {
@@ -325,9 +310,7 @@ Handle Exceptions::new_exception(Thread* thread, Symbol* name,
 // encoding scheme of the string into account. One thing we should do at some
 // point is to push this flag down to class java_lang_String since other
 // classes may need similar functionalities.
-Handle Exceptions::new_exception(Thread* thread, Symbol* name,
-                                 const char* message,
-                                 ExceptionMsgToUtf8Mode to_utf8_safe) {
+Handle Exceptions::new_exception(Thread* thread, Symbol* name, const char* message, ExceptionMsgToUtf8Mode to_utf8_safe) {
 
   Handle       h_loader(thread, NULL);
   Handle       h_prot(thread, NULL);
@@ -465,15 +448,5 @@ void Exceptions::debug_check_abort_helper(Handle exception, const char* message)
 // for logging exceptions
 void Exceptions::log_exception(Handle exception, stringStream tempst) {
   ResourceMark rm;
-  Symbol* message = java_lang_Throwable::detail_message(exception());
-  if (message != NULL) {
-    log_info(exceptions)("Exception <%s: %s>\n thrown in %s",
-                         exception->print_value_string(),
-                         message->as_C_string(),
-                         tempst.as_string());
-  } else {
-    log_info(exceptions)("Exception <%s>\n thrown in %s",
-                         exception->print_value_string(),
-                         tempst.as_string());
-  }
+  Symbol* message = java_lang_Throwable::detail_message(exception());
 }

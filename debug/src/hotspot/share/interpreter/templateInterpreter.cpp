@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
 #include "interpreter/interp_masm.hpp"
@@ -7,8 +8,6 @@
 #include "interpreter/templateTable.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/timerTrace.hpp"
-
-#ifndef CC_INTERP
 
 # define __ _masm->
 
@@ -20,7 +19,6 @@ void TemplateInterpreter::initialize() {
 
   // generate interpreter
   { ResourceMark rm;
-    TraceTime timer("Interpreter generation", TRACETIME_LOG(Info, startuptime));
     int code_size = InterpreterCodeSize;
     _code = new StubQueue(new InterpreterCodeletInterface, code_size, NULL, "Interpreter");
     TemplateInterpreterGenerator g(_code);
@@ -285,5 +283,3 @@ bool TemplateInterpreter::bytecode_should_reexecute(Bytecodes::Code code) {
 InterpreterCodelet* TemplateInterpreter::codelet_containing(address pc) {
   return (InterpreterCodelet*)_code->stub_containing(pc);
 }
-
-#endif

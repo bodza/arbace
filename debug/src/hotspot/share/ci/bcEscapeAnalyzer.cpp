@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "ci/bcEscapeAnalyzer.hpp"
 #include "ci/ciConstant.hpp"
 #include "ci/ciField.hpp"
@@ -311,8 +312,7 @@ void BCEscapeAnalyzer::invoke(StateInfo &state, Bytecodes::Code code, ciMethod* 
       _dependencies.appendAll(analyzer.dependencies());
     }
   } else {
-    TRACE_BCEA(1, tty->print_cr("[EA] virtual method %s is not monomorphic.",
-                                target->name()->as_utf8()));
+    TRACE_BCEA(1, tty->print_cr("[EA] virtual method %s is not monomorphic.", target->name()->as_utf8()));
     // conservatively mark all actual parameters as escaping globally
     for (i = 0; i < arg_size; i++) {
       ArgumentMap arg = state.raw_pop();
@@ -1231,11 +1231,9 @@ void BCEscapeAnalyzer::compute_escape_info() {
       else if (!method()->holder()->is_initialized())
         tty->print_cr("class of method is not initialized.");
       else if (_level > MaxBCEAEstimateLevel)
-        tty->print_cr("level (%d) exceeds MaxBCEAEstimateLevel (%d).",
-                      _level, (int) MaxBCEAEstimateLevel);
+        tty->print_cr("level (%d) exceeds MaxBCEAEstimateLevel (%d).", _level, (int) MaxBCEAEstimateLevel);
       else if (method()->code_size() > MaxBCEAEstimateSize)
-        tty->print_cr("code size (%d) exceeds MaxBCEAEstimateSize (%d).",
-                      method()->code_size(), (int) MaxBCEAEstimateSize);
+        tty->print_cr("code size (%d) exceeds MaxBCEAEstimateSize (%d).", method()->code_size(), (int) MaxBCEAEstimateSize);
       else
         ShouldNotReachHere();
     }
@@ -1353,14 +1351,10 @@ BCEscapeAnalyzer::BCEscapeAnalyzer(ciMethod* method, BCEscapeAnalyzer* parent)
     if (methodData() == NULL)
       return;
     if (methodData()->has_escape_info()) {
-      TRACE_BCEA(2, tty->print_cr("[EA] Reading previous results for %s.%s",
-                                  method->holder()->name()->as_utf8(),
-                                  method->name()->as_utf8()));
+      TRACE_BCEA(2, tty->print_cr("[EA] Reading previous results for %s.%s", method->holder()->name()->as_utf8(), method->name()->as_utf8()));
       read_escape_info();
     } else {
-      TRACE_BCEA(2, tty->print_cr("[EA] computing results for %s.%s",
-                                  method->holder()->name()->as_utf8(),
-                                  method->name()->as_utf8()));
+      TRACE_BCEA(2, tty->print_cr("[EA] computing results for %s.%s", method->holder()->name()->as_utf8(), method->name()->as_utf8()));
 
       compute_escape_info();
       methodData()->update_escape_info();

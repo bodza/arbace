@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaClasses.inline.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "gc/shared/collectedHeap.hpp"
@@ -74,7 +75,6 @@ ReferenceProcessor::ReferenceProcessor(BoolObjectClosure* is_subject_to_discover
   _next_id(0),
   _adjust_no_of_processing_threads(adjust_no_of_processing_threads)
 {
-
   _discovery_is_atomic = atomic_discovery;
   _discovery_is_mt     = mt_discovery;
   _num_queues          = MAX2(1U, mt_processing_degree);
@@ -248,22 +248,9 @@ void DiscoveredListIterator::complete_enqueue() {
   }
 }
 
-inline void log_dropped_ref(const DiscoveredListIterator& iter, const char* reason) {
-  if (log_develop_is_enabled(Trace, gc, ref)) {
-    ResourceMark rm;
-    log_develop_trace(gc, ref)("Dropping %s reference " PTR_FORMAT ": %s",
-                               reason, p2i(iter.obj()),
-                               iter.obj()->klass()->internal_name());
-  }
-}
+inline void log_dropped_ref(const DiscoveredListIterator& iter, const char* reason) { }
 
-inline void log_enqueued_ref(const DiscoveredListIterator& iter, const char* reason) {
-  if (log_develop_is_enabled(Trace, gc, ref)) {
-    ResourceMark rm;
-    log_develop_trace(gc, ref)("Enqueue %s reference (" INTPTR_FORMAT ": %s)",
-                               reason, p2i(iter.obj()), iter.obj()->klass()->internal_name());
-  }
-}
+inline void log_enqueued_ref(const DiscoveredListIterator& iter, const char* reason) { }
 
 size_t ReferenceProcessor::process_soft_ref_reconsider_work(DiscoveredList&    refs_list,
                                                             ReferencePolicy*   policy,
@@ -289,8 +276,6 @@ size_t ReferenceProcessor::process_soft_ref_reconsider_work(DiscoveredList&    r
   // Close the reachable set
   complete_gc->do_void();
 
-  log_develop_trace(gc, ref)(" Dropped " SIZE_FORMAT " dead Refs out of " SIZE_FORMAT " discovered Refs by policy, from list " INTPTR_FORMAT,
-                             iter.removed(), iter.processed(), p2i(&refs_list));
   return iter.removed();
 }
 
@@ -333,7 +318,6 @@ size_t ReferenceProcessor::process_soft_weak_final_refs_work(DiscoveredList&    
     refs_list.clear();
   }
 
-  log_develop_trace(gc, ref)(" Dropped " SIZE_FORMAT " active Refs out of " SIZE_FORMAT " Refs in discovered list " INTPTR_FORMAT, iter.removed(), iter.processed(), p2i(&refs_list));
   return iter.removed();
 }
 
@@ -404,9 +388,6 @@ ReferenceProcessor::clear_discovered_references(DiscoveredList& refs_list) {
 void ReferenceProcessor::abandon_partial_discovery() {
   // loop over the lists
   for (uint i = 0; i < _max_num_queues * number_of_subclasses_of_ref(); i++) {
-    if ((i % _max_num_queues) == 0) {
-      log_develop_trace(gc, ref)("Abandoning %s discovered list", list_name(i));
-    }
     clear_discovered_references(_discovered_refs[i]);
   }
 }
@@ -595,7 +576,6 @@ void ReferenceProcessor::maybe_balance_queues(DiscoveredList refs_lists[]) {
 void ReferenceProcessor::balance_queues(DiscoveredList ref_lists[]) {
   // calculate total length
   size_t total_refs = 0;
-  log_develop_trace(gc, ref)("Balance ref_lists ");
 
   log_reflist_counts(ref_lists, _max_num_queues);
 
@@ -671,7 +651,6 @@ void ReferenceProcessor::process_soft_ref_reconsider(BoolObjectClosure* is_alive
   phase_times->set_processing_is_mt(_processing_is_mt);
 
   if (num_soft_refs == 0 || _current_soft_ref_policy == NULL) {
-    log_debug(gc, ref)("Skipped phase1 of Reference Processing due to unavailable references");
     return;
   }
 
@@ -714,7 +693,6 @@ void ReferenceProcessor::process_soft_weak_final_refs(BoolObjectClosure* is_aliv
   phase_times->set_processing_is_mt(_processing_is_mt);
 
   if (num_total_refs == 0) {
-    log_debug(gc, ref)("Skipped phase2 of Reference Processing due to unavailable references");
     return;
   }
 
@@ -781,7 +759,6 @@ void ReferenceProcessor::process_final_keep_alive(OopClosure* keep_alive, VoidCl
   phase_times->set_processing_is_mt(_processing_is_mt);
 
   if (num_final_refs == 0) {
-    log_debug(gc, ref)("Skipped phase3 of Reference Processing due to unavailable references");
     return;
   }
 
@@ -816,7 +793,6 @@ void ReferenceProcessor::process_phantom_refs(BoolObjectClosure* is_alive, OopCl
   phase_times->set_processing_is_mt(_processing_is_mt);
 
   if (num_phantom_refs == 0) {
-    log_debug(gc, ref)("Skipped phase4 of Reference Processing due to unavailable references");
     return;
   }
 
@@ -886,14 +862,11 @@ inline DiscoveredList* ReferenceProcessor::get_discovered_list(ReferenceType rt)
     default:
       ShouldNotReachHere();
   }
-  log_develop_trace(gc, ref)("Thread %d gets list " INTPTR_FORMAT, id, p2i(list));
   return list;
 }
 
 inline void
-ReferenceProcessor::add_to_discovered_list_mt(DiscoveredList& refs_list,
-                                              oop             obj,
-                                              HeapWord*       discovered_addr) {
+ReferenceProcessor::add_to_discovered_list_mt(DiscoveredList& refs_list, oop             obj, HeapWord*       discovered_addr) {
   // First we must make sure this object is only enqueued once. CAS in a non null
   // discovered_addr.
   oop current_head = refs_list.head();
@@ -909,13 +882,9 @@ ReferenceProcessor::add_to_discovered_list_mt(DiscoveredList& refs_list,
     refs_list.set_head(obj);
     refs_list.inc_length(1);
 
-    log_develop_trace(gc, ref)("Discovered reference (mt) (" INTPTR_FORMAT ": %s)",
-                               p2i(obj), obj->klass()->internal_name());
   } else {
     // If retest was non NULL, another thread beat us to it:
     // The reference has already been discovered...
-    log_develop_trace(gc, ref)("Already discovered reference (" INTPTR_FORMAT ": %s)",
-                               p2i(obj), obj->klass()->internal_name());
   }
 }
 
@@ -994,8 +963,6 @@ bool ReferenceProcessor::discover_reference(oop obj, ReferenceType rt) {
   const oop  discovered = java_lang_ref_Reference::discovered(obj);
   if (discovered != NULL) {
     // The reference has already been discovered...
-    log_develop_trace(gc, ref)("Already discovered reference (" INTPTR_FORMAT ": %s)",
-                               p2i(obj), obj->klass()->internal_name());
     if (RefDiscoveryPolicy == ReferentBasedDiscovery) {
       // assumes that an object is not processed twice;
       // if it's been already discovered it must be on another
@@ -1015,7 +982,6 @@ bool ReferenceProcessor::discover_reference(oop obj, ReferenceType rt) {
     } else {
       return false;
     }
-  } else {
   }
 
   // Get the right type of discovered queue head.
@@ -1036,8 +1002,6 @@ bool ReferenceProcessor::discover_reference(oop obj, ReferenceType rt) {
     RawAccess<>::oop_store(discovered_addr, next_discovered);
     list->set_head(obj);
     list->inc_length(1);
-
-    log_develop_trace(gc, ref)("Discovered reference (" INTPTR_FORMAT ": %s)", p2i(obj), obj->klass()->internal_name());
   }
   verify_referent(obj);
   return true;
@@ -1140,10 +1104,6 @@ bool ReferenceProcessor::preclean_discovered_reflist(DiscoveredList& refs_list, 
     }
     iter.load_ptrs();
     if (iter.referent() == NULL || iter.is_referent_alive()) {
-      // The referent has been cleared, or is alive; we need to trace
-      // and mark its cohort.
-      log_develop_trace(gc, ref)("Precleaning Reference (" INTPTR_FORMAT ": %s)",
-                                 p2i(iter.obj()), iter.obj()->klass()->internal_name());
       // Remove Reference object from list
       iter.remove();
       // Keep alive its cohort.
@@ -1156,10 +1116,6 @@ bool ReferenceProcessor::preclean_discovered_reflist(DiscoveredList& refs_list, 
   // Close the reachable set
   complete_gc->do_void();
 
-  if (iter.processed() > 0) {
-    log_develop_trace(gc, ref)(" Dropped " SIZE_FORMAT " Refs out of " SIZE_FORMAT " Refs in discovered list " INTPTR_FORMAT,
-                               iter.removed(), iter.processed(), p2i(&refs_list));
-  }
   return false;
 }
 
@@ -1195,9 +1151,7 @@ bool RefProcMTDegreeAdjuster::use_max_threads(RefProcPhases phase) const {
   return (phase == ReferenceProcessor::RefPhase1 || phase == ReferenceProcessor::RefPhase3);
 }
 
-RefProcMTDegreeAdjuster::RefProcMTDegreeAdjuster(ReferenceProcessor* rp,
-                                                 RefProcPhases phase,
-                                                 size_t ref_count):
+RefProcMTDegreeAdjuster::RefProcMTDegreeAdjuster(ReferenceProcessor* rp, RefProcPhases phase, size_t ref_count) :
     _rp(rp),
     _saved_mt_processing(_rp->processing_is_mt()),
     _saved_num_queues(_rp->num_queues()) {

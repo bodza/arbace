@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1GCPhaseTimes.hpp"
 #include "gc/g1/g1HotCardCache.hpp"
@@ -20,7 +21,6 @@ G1GCPhaseTimes::G1GCPhaseTimes(STWGCTimer* gc_timer, uint max_gc_threads) :
   _gc_pause_time_ms(0.0),
   _ref_phase_times((GCTimer*)gc_timer, max_gc_threads)
 {
-
   _gc_par_phases[GCWorkerStart] = new WorkerDataArray<double>(max_gc_threads, "GC Worker Start (ms):");
   _gc_par_phases[ExtRootScan] = new WorkerDataArray<double>(max_gc_threads, "Ext Root Scanning (ms):");
 
@@ -259,13 +259,9 @@ void G1GCPhaseTimes::trace_phase(WorkerDataArray<double>* phase, bool print_sum)
 
 #define TIME_FORMAT "%.1lfms"
 
-void G1GCPhaseTimes::info_time(const char* name, double value) const {
-  log_info(gc, phases)("%s%s: " TIME_FORMAT, Indents[1], name, value);
-}
+void G1GCPhaseTimes::info_time(const char* name, double value) const { }
 
-void G1GCPhaseTimes::debug_time(const char* name, double value) const {
-  log_debug(gc, phases)("%s%s: " TIME_FORMAT, Indents[2], name, value);
-}
+void G1GCPhaseTimes::debug_time(const char* name, double value) const { }
 
 void G1GCPhaseTimes::debug_time_for_reference(const char* name, double value) const {
   LogTarget(Debug, gc, phases) lt;
@@ -280,13 +276,9 @@ void G1GCPhaseTimes::debug_time_for_reference(const char* name, double value) co
   }
 }
 
-void G1GCPhaseTimes::trace_time(const char* name, double value) const {
-  log_trace(gc, phases)("%s%s: " TIME_FORMAT, Indents[3], name, value);
-}
+void G1GCPhaseTimes::trace_time(const char* name, double value) const { }
 
-void G1GCPhaseTimes::trace_count(const char* name, size_t value) const {
-  log_trace(gc, phases)("%s%s: " SIZE_FORMAT, Indents[3], name, value);
-}
+void G1GCPhaseTimes::trace_count(const char* name, size_t value) const { }
 
 double G1GCPhaseTimes::print_pre_evacuate_collection_set() const {
   const double sum_ms = _root_region_scan_wait_time_ms +
@@ -432,7 +424,6 @@ G1EvacPhaseWithTrimTimeTracker::G1EvacPhaseWithTrimTimeTracker(G1ParScanThreadSt
   _total_time(total_time),
   _trim_time(trim_time),
   _stopped(false) {
-
 }
 
 G1EvacPhaseWithTrimTimeTracker::~G1EvacPhaseWithTrimTimeTracker() {
@@ -461,10 +452,7 @@ G1GCParPhaseTimesTracker::~G1GCParPhaseTimesTracker() {
   }
 }
 
-G1EvacPhaseTimesTracker::G1EvacPhaseTimesTracker(G1GCPhaseTimes* phase_times,
-                                                 G1ParScanThreadState* pss,
-                                                 G1GCPhaseTimes::GCParPhases phase,
-                                                 uint worker_id) :
+G1EvacPhaseTimesTracker::G1EvacPhaseTimesTracker(G1GCPhaseTimes* phase_times, G1ParScanThreadState* pss, G1GCPhaseTimes::GCParPhases phase, uint worker_id) :
   G1GCParPhaseTimesTracker(phase_times, phase, worker_id),
   _total_time(),
   _trim_time(),

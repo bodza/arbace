@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
@@ -237,9 +238,7 @@ void DCmdParser::print_help(outputStream* out, const char* cmd_name) const {
     out->print_cr("\nArguments:");
     arg = _arguments_list;
     while (arg != NULL) {
-      out->print("\t%s : %s %s (%s, ", arg->name(),
-                 arg->is_mandatory() ? "" : "[optional]",
-                 arg->description(), arg->type());
+      out->print("\t%s : %s %s (%s, ", arg->name(), arg->is_mandatory() ? "" : "[optional]", arg->description(), arg->type());
       if (arg->has_default()) {
         out->print("%s", arg->default_string());
       } else {
@@ -253,9 +252,7 @@ void DCmdParser::print_help(outputStream* out, const char* cmd_name) const {
     out->print_cr("\nOptions: (options must be specified using the <key> or <key>=<value> syntax)");
     arg = _options;
     while (arg != NULL) {
-      out->print("\t%s : %s %s (%s, ", arg->name(),
-                 arg->is_mandatory() ? "" : "[optional]",
-                 arg->description(), arg->type());
+      out->print("\t%s : %s %s (%s, ", arg->name(), arg->is_mandatory() ? "" : "[optional]", arg->description(), arg->type());
       if (arg->has_default()) {
         out->print("%s", arg->default_string());
       } else {
@@ -484,8 +481,7 @@ int DCmdFactory::register_DCmdFactory(DCmdFactory* factory) {
   return 0; // Actually, there's no checks for duplicates
 }
 
-DCmd* DCmdFactory::create_local_DCmd(DCmdSource source, CmdLine &line,
-                                     outputStream* out, TRAPS) {
+DCmd* DCmdFactory::create_local_DCmd(DCmdSource source, CmdLine &line, outputStream* out, TRAPS) {
   DCmdFactory* f = factory(source, line.cmd_addr(), line.cmd_len());
   if (f != NULL) {
     if (!f->is_enabled()) {

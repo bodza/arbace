@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/altHashing.hpp"
 #include "classfile/compactHashtable.inline.hpp"
 #include "classfile/javaClasses.inline.hpp"
@@ -158,15 +159,10 @@ static size_t ceil_pow_2(uintx val) {
   return ret;
 }
 
-StringTable::StringTable() : _local_table(NULL), _current_size(0), _has_work(0),
-  _needs_rehashing(false), _weak_handles(NULL), _items(0), _uncleaned_items(0) {
-  _weak_handles = new OopStorage("StringTable weak",
-                                 StringTableWeakAlloc_lock,
-                                 StringTableWeakActive_lock);
+StringTable::StringTable() : _local_table(NULL), _current_size(0), _has_work(0), _needs_rehashing(false), _weak_handles(NULL), _items(0), _uncleaned_items(0) {
+  _weak_handles = new OopStorage("StringTable weak", StringTableWeakAlloc_lock, StringTableWeakActive_lock);
   size_t start_size_log_2 = ceil_pow_2(StringTableSize);
   _current_size = ((size_t)1) << start_size_log_2;
-  log_trace(stringtable)("Start size: " SIZE_FORMAT " (" SIZE_FORMAT ")",
-                         _current_size, start_size_log_2);
   _local_table = new StringTableHash(start_size_log_2, END_SIZE, REHASH_LEN);
 }
 
@@ -176,7 +172,6 @@ size_t StringTable::item_added() {
 
 size_t StringTable::add_items_to_clean(size_t ndead) {
   size_t total = Atomic::add((size_t)ndead, &(the_table()->_uncleaned_items));
-  log_trace(stringtable)("Uncleaned items:" SIZE_FORMAT " added: " SIZE_FORMAT " total:" SIZE_FORMAT, the_table()->_uncleaned_items, ndead, total);
   return total;
 }
 
@@ -416,9 +411,7 @@ void StringTable::grow(JavaThread* jt) {
   if (!gt.prepare(jt)) {
     return;
   }
-  log_trace(stringtable)("Started to grow");
   {
-    TraceTime timer("Grow", TRACETIME_LOG(Debug, stringtable, perf));
     while (gt.do_task(jt)) {
       gt.pause(jt);
       {
@@ -429,7 +422,6 @@ void StringTable::grow(JavaThread* jt) {
   }
   gt.done(jt);
   _current_size = table_size(jt);
-  log_debug(stringtable)("Grown to size:" SIZE_FORMAT, _current_size);
 }
 
 struct StringTableDoDelete : StackObj {
@@ -463,7 +455,6 @@ void StringTable::clean_dead_entries(JavaThread* jt) {
   StringTableDeleteCheck stdc;
   StringTableDoDelete stdd;
   {
-    TraceTime timer("Clean", TRACETIME_LOG(Debug, stringtable, perf));
     while (bdt.do_task(jt, stdc, stdd)) {
       bdt.pause(jt);
       {
@@ -473,7 +464,6 @@ void StringTable::clean_dead_entries(JavaThread* jt) {
     }
     bdt.done(jt);
   }
-  log_debug(stringtable)("Cleaned %ld of %ld", stdc._count, stdc._item);
 }
 
 void StringTable::check_concurrent_work() {
@@ -487,7 +477,6 @@ void StringTable::check_concurrent_work() {
   // more items than preferred load factor or
   // more dead items than water mark.
   if ((dead_factor > load_factor) || (load_factor > PREF_AVG_LIST_LEN) || (dead_factor > CLEAN_DEAD_HIGH_WATER_MARK)) {
-    log_debug(stringtable)("Concurrent work triggered, live factor:%g dead factor:%g", load_factor, dead_factor);
     trigger_concurrent_work();
   }
 }
@@ -495,7 +484,6 @@ void StringTable::check_concurrent_work() {
 void StringTable::concurrent_work(JavaThread* jt) {
   _has_work = false;
   double load_factor = get_load_factor();
-  log_debug(stringtable, perf)("Concurrent work, live factor: %g", load_factor);
   // We prefer growing, since that also removes dead items
   if (load_factor > PREF_AVG_LIST_LEN && !_local_table->is_max_size_reached()) {
     grow(jt);
@@ -533,18 +521,15 @@ bool StringTable::do_rehash() {
 
 void StringTable::try_rehash_table() {
   static bool rehashed = false;
-  log_debug(stringtable)("Table imbalanced, rehashing called.");
 
   // Grow instead of rehash.
   if (get_load_factor() > PREF_AVG_LIST_LEN && !_local_table->is_max_size_reached()) {
-    log_debug(stringtable)("Choosing growing over rehashing.");
     trigger_concurrent_work();
     _needs_rehashing = false;
     return;
   }
   // Already rehashed.
   if (rehashed) {
-    log_warning(stringtable)("Rehashing already done, still long lists.");
     trigger_concurrent_work();
     _needs_rehashing = false;
     return;
@@ -554,8 +539,6 @@ void StringTable::try_rehash_table() {
   {
     if (do_rehash()) {
       rehashed = true;
-    } else {
-      log_info(stringtable)("Resizes in progress rehashing skipped.");
     }
   }
   _needs_rehashing = false;
@@ -601,8 +584,6 @@ class VerifyStrings : StackObj {
  public:
   bool operator()(WeakHandle<vm_string_table_data>* val) {
     oop s = val->peek();
-    if (s != NULL) {
-    }
     return true;
   };
 };
@@ -612,7 +593,6 @@ void StringTable::verify() {
   Thread* thr = Thread::current();
   VerifyStrings vs;
   if (!the_table()->_local_table->try_scan(thr, vs)) {
-    log_info(stringtable)("verify unavailable at this moment");
   }
 }
 
@@ -645,7 +625,6 @@ size_t StringTable::verify_and_compare_entries() {
 
   VerifyCompStrings vcs(oops);
   if (!the_table()->_local_table->try_scan(thr, vcs)) {
-    log_info(stringtable)("verify unavailable at this moment");
   }
   delete oops;
   return vcs._errors;

@@ -263,8 +263,7 @@ class JavaThreadIterator : public StackObj {
   uint _index;
 
 public:
-  JavaThreadIterator(ThreadsList *list) : _list(list), _index(0) {
-  }
+  JavaThreadIterator(ThreadsList *list) : _list(list), _index(0) { }
 
   JavaThread *first() {
     _index = 0;

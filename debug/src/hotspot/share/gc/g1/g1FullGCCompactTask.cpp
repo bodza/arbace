@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1ConcurrentMarkBitMap.inline.hpp"
 #include "gc/g1/g1FullCollector.hpp"
@@ -25,7 +26,6 @@ public:
           // Clear bitmap and fix mark word.
           _bitmap->clear(obj);
           obj->init_mark_raw();
-        } else {
         }
       }
       current->reset_during_compaction();
@@ -62,9 +62,7 @@ void G1FullGCCompactTask::compact_region(HeapRegion* hr) {
 void G1FullGCCompactTask::work(uint worker_id) {
   Ticks start = Ticks::now();
   GrowableArray<HeapRegion*>* compaction_queue = collector()->compaction_point(worker_id)->regions();
-  for (GrowableArrayIterator<HeapRegion*> it = compaction_queue->begin();
-       it != compaction_queue->end();
-       ++it) {
+  for (GrowableArrayIterator<HeapRegion*> it = compaction_queue->begin(); it != compaction_queue->end(); ++it) {
     compact_region(*it);
   }
 
@@ -76,9 +74,7 @@ void G1FullGCCompactTask::work(uint worker_id) {
 void G1FullGCCompactTask::serial_compaction() {
   GCTraceTime(Debug, gc, phases) tm("Phase 4: Serial Compaction", collector()->scope()->timer());
   GrowableArray<HeapRegion*>* compaction_queue = collector()->serial_compaction_point()->regions();
-  for (GrowableArrayIterator<HeapRegion*> it = compaction_queue->begin();
-       it != compaction_queue->end();
-       ++it) {
+  for (GrowableArrayIterator<HeapRegion*> it = compaction_queue->begin(); it != compaction_queue->end(); ++it) {
     compact_region(*it);
   }
 }

@@ -53,12 +53,9 @@ class ConcurrentHashTable<VALUE, CONFIG, F>::BucketsOperation {
     return OrderAccess::load_acquire(&_next_to_claim) >= _stop_task;
   }
 
-  void thread_owns_resize_lock(Thread* thread) {
-  }
-  void thread_owns_only_state_lock(Thread* thread) {
-  }
-  void thread_do_not_own_resize_lock(Thread* thread) {
-  }
+  void thread_owns_resize_lock(Thread* thread) { }
+  void thread_owns_only_state_lock(Thread* thread) { }
+  void thread_do_not_own_resize_lock(Thread* thread) { }
 
 public:
   // Pauses for safepoint
@@ -106,9 +103,7 @@ class ConcurrentHashTable<VALUE, CONFIG, F>::BulkDeleteTask :
     if (!this->claim(&start, &stop)) {
       return false;
     }
-    BucketsOperation::_cht->do_bulk_delete_locked_for(thread, start, stop,
-                                                      eval_f, del_f,
-                                                      BucketsOperation::_is_mt);
+    BucketsOperation::_cht->do_bulk_delete_locked_for(thread, start, stop, eval_f, del_f, BucketsOperation::_is_mt);
     return true;
   }
 
@@ -125,8 +120,7 @@ class ConcurrentHashTable<VALUE, CONFIG, F>::GrowTask :
   public BucketsOperation
 {
  public:
-  GrowTask(ConcurrentHashTable<VALUE, CONFIG, F>* cht) : BucketsOperation(cht) {
-  }
+  GrowTask(ConcurrentHashTable<VALUE, CONFIG, F>* cht) : BucketsOperation(cht) { }
   // Before start prepare must be called.
   bool prepare(Thread* thread) {
     if (!BucketsOperation::_cht->internal_grow_prolog(thread, BucketsOperation::_cht->_log2_size_limit)) {

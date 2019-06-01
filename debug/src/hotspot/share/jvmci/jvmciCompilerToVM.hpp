@@ -13,8 +13,7 @@ class JVMCIKlassHandle : public StackObj {
   Thread*    _thread;
 
   Klass*        klass() const                     { return _klass; }
-  Klass*        non_null_klass() const            {
-    return _klass; }
+  Klass*        non_null_klass() const            { return _klass; }
 
  public:
   /* Constructors */

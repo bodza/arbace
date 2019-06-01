@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaClasses.inline.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
@@ -287,27 +288,6 @@ void InterpreterRuntime::note_trap(JavaThread* thread, int reason, TRAPS) {
   note_trap_inner(thread, reason, trap_method, trap_bci, THREAD);
 }
 
-#ifdef CC_INTERP
-// As legacy note_trap, but we have more arguments.
-IRT_ENTRY(void, InterpreterRuntime::note_trap(JavaThread* thread, int reason, Method *method, int trap_bci))
-  methodHandle trap_method(method);
-  note_trap_inner(thread, reason, trap_method, trap_bci, THREAD);
-IRT_END
-
-// Class Deoptimization is not visible in BytecodeInterpreter, so we need a wrapper
-// for each exception.
-void InterpreterRuntime::note_nullCheck_trap(JavaThread* thread, Method *method, int trap_bci)
-  { if (ProfileTraps) note_trap(thread, Deoptimization::Reason_null_check, method, trap_bci); }
-void InterpreterRuntime::note_div0Check_trap(JavaThread* thread, Method *method, int trap_bci)
-  { if (ProfileTraps) note_trap(thread, Deoptimization::Reason_div0_check, method, trap_bci); }
-void InterpreterRuntime::note_rangeCheck_trap(JavaThread* thread, Method *method, int trap_bci)
-  { if (ProfileTraps) note_trap(thread, Deoptimization::Reason_range_check, method, trap_bci); }
-void InterpreterRuntime::note_classCheck_trap(JavaThread* thread, Method *method, int trap_bci)
-  { if (ProfileTraps) note_trap(thread, Deoptimization::Reason_class_check, method, trap_bci); }
-void InterpreterRuntime::note_arrayCheck_trap(JavaThread* thread, Method *method, int trap_bci)
-  { if (ProfileTraps) note_trap(thread, Deoptimization::Reason_array_check, method, trap_bci); }
-#endif
-
 static Handle get_preinitialized_exception(Klass* k, TRAPS) {
   // get klass
   InstanceKlass* klass = InstanceKlass::cast(k);
@@ -422,11 +402,7 @@ IRT_ENTRY(address, InterpreterRuntime::exception_handler_for_exception(JavaThrea
     // during deoptimization so the interpreter needs to skip it when
     // the frame is popped.
     thread->set_do_not_unlock_if_synchronized(true);
-#ifdef CC_INTERP
-    return (address) -1;
-#else
     return Interpreter::remove_activation_entry();
-#endif
   }
 
   // Need to do this check first since when _do_not_unlock_if_synchronized
@@ -436,25 +412,12 @@ IRT_ENTRY(address, InterpreterRuntime::exception_handler_for_exception(JavaThrea
   if (thread->do_not_unlock_if_synchronized()) {
     ResourceMark rm;
     thread->set_vm_result(exception);
-#ifdef CC_INTERP
-    return (address) -1;
-#else
     return Interpreter::remove_activation_entry();
-#endif
   }
 
   do {
     should_repeat = false;
 
-    // tracing
-    if (log_is_enabled(Info, exceptions)) {
-      ResourceMark rm(thread);
-      stringStream tempst;
-      tempst.print("interpreter method <%s>\n"
-                   " at bci %d for thread " INTPTR_FORMAT " (%s)",
-                   h_method->print_value_string(), current_bci, p2i(thread), thread->name());
-      Exceptions::log_exception(h_exception, tempst);
-    }
     // for AbortVMOnException flag
     Exceptions::debug_check_abort(h_exception);
 
@@ -486,28 +449,20 @@ IRT_ENTRY(address, InterpreterRuntime::exception_handler_for_exception(JavaThrea
     }
   }
 
-#ifdef CC_INTERP
-  address continuation = (address)(intptr_t) handler_bci;
-#else
   address continuation = NULL;
-#endif
   address handler_pc = NULL;
   if (handler_bci < 0 || !thread->reguard_stack((address) &continuation)) {
     // Forward exception to callee (leaving bci/bcp untouched) because (a) no
     // handler in this method, or (b) after a stack overflow there is not yet
     // enough stack space available to reprotect the stack.
-#ifndef CC_INTERP
     continuation = Interpreter::remove_activation_entry();
-#endif
     // Count this for compilation purposes
     h_method->interpreter_throwout_increment(THREAD);
   } else {
     // handler in this method => change bci/bcp to handler bci/bcp and continue there
     handler_pc = h_method->code_base() + handler_bci;
-#ifndef CC_INTERP
     set_bcp_and_mdp(handler_pc, thread);
     continuation = Interpreter::dispatch_table(vtos)[*handler_pc];
-#endif
   }
 
   thread->set_vm_result(h_exception());
@@ -528,16 +483,13 @@ IRT_END
 // on some platforms the receiver still resides in a register...). Thus,
 // we have no choice but print an error message not containing the receiver
 // type.
-IRT_ENTRY(void, InterpreterRuntime::throw_AbstractMethodErrorWithMethod(JavaThread* thread,
-                                                                        Method* missingMethod))
+IRT_ENTRY(void, InterpreterRuntime::throw_AbstractMethodErrorWithMethod(JavaThread* thread, Method* missingMethod))
   ResourceMark rm(thread);
   methodHandle m(thread, missingMethod);
   LinkResolver::throw_abstract_method_error(m, THREAD);
 IRT_END
 
-IRT_ENTRY(void, InterpreterRuntime::throw_AbstractMethodErrorVerbose(JavaThread* thread,
-                                                                     Klass* recvKlass,
-                                                                     Method* missingMethod))
+IRT_ENTRY(void, InterpreterRuntime::throw_AbstractMethodErrorVerbose(JavaThread* thread, Klass* recvKlass, Method* missingMethod))
   ResourceMark rm(thread);
   methodHandle mh = methodHandle(thread, missingMethod);
   LinkResolver::throw_abstract_method_error(mh, recvKlass, THREAD);
@@ -547,9 +499,7 @@ IRT_ENTRY(void, InterpreterRuntime::throw_IncompatibleClassChangeError(JavaThrea
   THROW(vmSymbols::java_lang_IncompatibleClassChangeError());
 IRT_END
 
-IRT_ENTRY(void, InterpreterRuntime::throw_IncompatibleClassChangeErrorVerbose(JavaThread* thread,
-                                                                              Klass* recvKlass,
-                                                                              Klass* interfaceKlass))
+IRT_ENTRY(void, InterpreterRuntime::throw_IncompatibleClassChangeErrorVerbose(JavaThread* thread, Klass* recvKlass, Klass* interfaceKlass))
   ResourceMark rm(thread);
   char buf[1000];
   buf[0] = '\0';
@@ -708,7 +658,6 @@ void InterpreterRuntime::resolve_invoke(JavaThread* thread, Bytecodes::Code byte
     Bytecode_invoke call(m, last_frame.bci());
     Symbol* signature = call.signature();
     receiver = Handle(thread, last_frame.callee_receiver(signature));
-
   }
 
   // resolve method
@@ -843,8 +792,7 @@ nmethod* InterpreterRuntime::frequency_counter_overflow(JavaThread* thread, addr
   return nm;
 }
 
-IRT_ENTRY(nmethod*,
-          InterpreterRuntime::frequency_counter_overflow_inner(JavaThread* thread, address branch_bcp))
+IRT_ENTRY(nmethod*, InterpreterRuntime::frequency_counter_overflow_inner(JavaThread* thread, address branch_bcp))
   // use UnlockFlagSaver to clear and restore the _do_not_unlock_if_synchronized
   // flag, in case this method triggers classloading which will call into Java.
   UnlockFlagSaver fs(thread);
@@ -866,9 +814,7 @@ IRT_ENTRY(nmethod*,
     if (UseBiasedLocking) {
       ResourceMark rm;
       GrowableArray<Handle>* objects_to_revoke = new GrowableArray<Handle>();
-      for ( BasicObjectLock *kptr = last_frame.monitor_end();
-           kptr < last_frame.monitor_begin();
-           kptr = last_frame.next_monitor(kptr)) {
+      for ( BasicObjectLock *kptr = last_frame.monitor_end(); kptr < last_frame.monitor_begin(); kptr = last_frame.next_monitor(kptr)) {
         if (kptr->obj() != NULL ) {
           objects_to_revoke->append(Handle(THREAD, kptr->obj()));
         }
@@ -971,8 +917,7 @@ void SignatureHandlerLibrary::initialize() {
     vm_exit_out_of_memory(blob_size, OOM_MALLOC_ERROR, "native signature handlers");
   }
 
-  BufferBlob* bb = BufferBlob::create("Signature Handler Temp Buffer",
-                                      SignatureHandlerLibrary::buffer_size);
+  BufferBlob* bb = BufferBlob::create("Signature Handler Temp Buffer", SignatureHandlerLibrary::buffer_size);
   _buffer = bb->code_begin();
 
   _fingerprints = new(ResourceObj::C_HEAP, mtCode)GrowableArray<uint64_t>(32, true);

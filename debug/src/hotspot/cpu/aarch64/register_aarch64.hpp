@@ -31,8 +31,7 @@ class RegisterImpl: public AbstractRegisterImpl {
   VMReg as_VMReg();
 
   // accessors
-  int   encoding() const                         {
-    return (intptr_t)this; }
+  int   encoding() const                         { return (intptr_t)this; }
   bool  is_valid() const                         { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   bool  has_byte_register() const                { return 0 <= (intptr_t)this && (intptr_t)this < number_of_byte_registers; }
   const char* name() const;
@@ -113,8 +112,7 @@ class FloatRegisterImpl: public AbstractRegisterImpl {
   FloatRegister successor() const                          { return as_FloatRegister(encoding() + 1); }
 
   // accessors
-  int   encoding() const                          {
-    return (intptr_t)this; }
+  int   encoding() const                          { return (intptr_t)this; }
   int   encoding_nocheck() const                         { return (intptr_t)this; }
   bool  is_valid() const                          { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   const char* name() const;

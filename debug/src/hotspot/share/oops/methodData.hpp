@@ -449,8 +449,7 @@ protected:
   };
   enum { bit_cell_count = 0 };  // no additional data fields needed.
 public:
-  BitData(DataLayout* layout) : ProfileData(layout) {
-  }
+  BitData(DataLayout* layout) : ProfileData(layout) { }
 
   virtual bool is_BitData() const { return true; }
 
@@ -550,8 +549,7 @@ protected:
   }
 
 public:
-  JumpData(DataLayout* layout) : ProfileData(layout) {
-  }
+  JumpData(DataLayout* layout) : ProfileData(layout) { }
 
   virtual bool is_JumpData() const { return true; }
 
@@ -901,8 +899,7 @@ private:
     return uint_at(cell_count_global_offset());
   }
 
-  void check_number_of_arguments(int total) {
-  }
+  void check_number_of_arguments(int total) { }
 
 public:
   CallTypeData(DataLayout* layout) :
@@ -1028,8 +1025,7 @@ protected:
   };
 
 public:
-  ReceiverTypeData(DataLayout* layout) : CounterData(layout) {
-  }
+  ReceiverTypeData(DataLayout* layout) : CounterData(layout) { }
 
   virtual bool is_ReceiverTypeData() const { return true; }
 
@@ -1130,8 +1126,7 @@ public:
 // virtual call.  For now, it has nothing more than a ReceiverTypeData.
 class VirtualCallData : public ReceiverTypeData {
 public:
-  VirtualCallData(DataLayout* layout) : ReceiverTypeData(layout) {
-  }
+  VirtualCallData(DataLayout* layout) : ReceiverTypeData(layout) { }
 
   virtual bool is_VirtualCallData() const { return true; }
 
@@ -1222,8 +1217,7 @@ private:
     return uint_at(cell_count_global_offset());
   }
 
-  void check_number_of_arguments(int total) {
-  }
+  void check_number_of_arguments(int total) { }
 
 public:
   VirtualCallTypeData(DataLayout* layout) :
@@ -1351,8 +1345,7 @@ protected:
   }
 
 public:
-  RetData(DataLayout* layout) : CounterData(layout) {
-  }
+  RetData(DataLayout* layout) : CounterData(layout) { }
 
   virtual bool is_RetData() const { return true; }
 
@@ -1431,8 +1424,7 @@ protected:
   }
 
 public:
-  BranchData(DataLayout* layout) : JumpData(layout) {
-  }
+  BranchData(DataLayout* layout) : JumpData(layout) { }
 
   virtual bool is_BranchData() const { return true; }
 
@@ -1568,8 +1560,7 @@ protected:
   }
 
 public:
-  MultiBranchData(DataLayout* layout) : ArrayData(layout) {
-  }
+  MultiBranchData(DataLayout* layout) : ArrayData(layout) { }
 
   virtual bool is_MultiBranchData() const { return true; }
 
@@ -1626,8 +1617,7 @@ public:
 class ArgInfoData : public ArrayData {
 
 public:
-  ArgInfoData(DataLayout* layout) : ArrayData(layout) {
-  }
+  ArgInfoData(DataLayout* layout) : ArrayData(layout) { }
 
   virtual bool is_ArgInfoData() const { return true; }
 
@@ -1666,8 +1656,7 @@ private:
   }
 
   static bool profiling_enabled();
-  static void assert_profiling_enabled() {
-  }
+  static void assert_profiling_enabled() { }
 
 public:
   ParametersTypeData(DataLayout* layout) : ArrayData(layout), _parameters(1, number_of_parameters()) {
@@ -1731,8 +1720,7 @@ protected:
     speculative_trap_cell_count
   };
 public:
-  SpeculativeTrapData(DataLayout* layout) : ProfileData(layout) {
-  }
+  SpeculativeTrapData(DataLayout* layout) : ProfileData(layout) { }
 
   virtual bool is_SpeculativeTrapData() const { return true; }
 

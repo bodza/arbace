@@ -1,10 +1,10 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaClasses.hpp"
 #include "memory/universe.hpp"
 #include "runtime/reflectionUtils.hpp"
 
-KlassStream::KlassStream(InstanceKlass* klass, bool local_only,
-                         bool classes_only, bool walk_defaults) {
+KlassStream::KlassStream(InstanceKlass* klass, bool local_only, bool classes_only, bool walk_defaults) {
   _klass = _base_klass = klass;
   _base_class_search_defaults = false;
   _defaults_checked = false;

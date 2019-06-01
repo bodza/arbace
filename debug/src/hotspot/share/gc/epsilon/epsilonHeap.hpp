@@ -25,7 +25,6 @@ private:
   size_t _step_heap_print;
   int64_t _decay_time_ns;
   volatile size_t _last_counter_update;
-  volatile size_t _last_heap_print;
 
 public:
   static EpsilonHeap* heap();
@@ -122,11 +121,6 @@ public:
   }
 
   virtual void print_on(outputStream* st) const;
-  virtual void print_tracing_info() const;
-
-private:
-  void print_heap_info(size_t used) const;
-  void print_metaspace_info() const;
 };
 
 #endif

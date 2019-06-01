@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/compactHashtable.inline.hpp"
 #include "classfile/javaClasses.hpp"
@@ -14,8 +15,7 @@
 //
 // The compact hash table writer implementations
 //
-CompactHashtableWriter::CompactHashtableWriter(int num_buckets,
-                                               CompactHashtableStats* stats) {
+CompactHashtableWriter::CompactHashtableWriter(int num_buckets, CompactHashtableStats* stats) {
   _num_buckets = num_buckets;
   _num_entries = 0;
   _buckets = NEW_C_HEAP_ARRAY(GrowableArray<Entry>*, _num_buckets, mtSymbol);

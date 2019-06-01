@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/barrierSet.hpp"
 #include "gc/shared/barrierSetAssembler.hpp"
 #include "runtime/thread.hpp"
@@ -18,8 +19,6 @@ void BarrierSet::set_barrier_set(BarrierSet* barrier_set) {
 // Called from init.cpp
 void gc_barrier_stubs_init() {
   BarrierSet* bs = BarrierSet::barrier_set();
-#ifndef ZERO
   BarrierSetAssembler* bs_assembler = bs->barrier_set_assembler();
   bs_assembler->barrier_stubs_init();
-#endif
 }

@@ -1,7 +1,7 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/ageTableTracer.hpp"
 #include "gc/shared/gcId.hpp"
-// #include "jfr/jfrEvents.hpp"
 
 void AgeTableTracer::send_tenuring_distribution_event(uint age, size_t size) {
   EventTenuringDistribution e;

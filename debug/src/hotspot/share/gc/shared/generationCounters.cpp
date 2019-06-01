@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/generationCounters.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
@@ -30,19 +31,13 @@ void GenerationCounters::initialize(const char* name, int ordinal, int spaces, s
   }
 }
 
-GenerationCounters::GenerationCounters(const char* name,
-                                       int ordinal, int spaces,
-                                       size_t min_capacity, size_t max_capacity,
-                                       VirtualSpace* v)
+GenerationCounters::GenerationCounters(const char* name, int ordinal, int spaces, size_t min_capacity, size_t max_capacity, VirtualSpace* v)
   : _virtual_space(v) {
   initialize(name, ordinal, spaces,
              min_capacity, max_capacity, v->committed_size());
 }
 
-GenerationCounters::GenerationCounters(const char* name,
-                                       int ordinal, int spaces,
-                                       size_t min_capacity, size_t max_capacity,
-                                       size_t curr_capacity)
+GenerationCounters::GenerationCounters(const char* name, int ordinal, int spaces, size_t min_capacity, size_t max_capacity, size_t curr_capacity)
   : _virtual_space(NULL) {
   initialize(name, ordinal, spaces, min_capacity, max_capacity, curr_capacity);
 }

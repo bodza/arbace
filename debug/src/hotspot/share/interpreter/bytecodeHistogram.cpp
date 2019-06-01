@@ -1,5 +1,0 @@
-#include "precompiled.hpp"
-#include "interpreter/bytecodeHistogram.hpp"
-#include "memory/resourceArea.hpp"
-#include "runtime/os.hpp"
-#include "utilities/growableArray.hpp"

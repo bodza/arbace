@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/stringTable.hpp"
 #include "gc/shared/stringdedup/stringDedup.hpp"
 #include "gc/shared/stringdedup/stringDedupQueue.hpp"
@@ -60,11 +61,4 @@ void StringDedupThread::print_start(const StringDedupStat* last_stat) {
 
 void StringDedupThread::print_end(const StringDedupStat* last_stat, const StringDedupStat* total_stat) {
   StringDedupStat::print_end(last_stat, total_stat);
-  if (log_is_enabled(Debug, gc, stringdedup)) {
-    last_stat->print_statistics(false);
-    total_stat->print_statistics(true);
-
-    StringDedupTable::print_statistics();
-    StringDedupQueue::print_statistics();
-  }
 }

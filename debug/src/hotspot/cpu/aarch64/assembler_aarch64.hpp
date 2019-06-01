@@ -360,9 +360,7 @@ class Address {
   }
 
   Register base() const {
-    guarantee((_mode == base_plus_offset | _mode == base_plus_offset_reg
-               | _mode == post | _mode == post_reg),
-              "wrong mode");
+    guarantee((_mode == base_plus_offset | _mode == base_plus_offset_reg | _mode == post | _mode == post_reg), "wrong mode");
     return _base;
   }
   long offset() const {
@@ -488,8 +486,7 @@ class Address {
     guarantee(_offset % size == 0, "bad offset");
     i->sf(_offset / size, 21, 15);
     i->srf(_base, 5);
-    guarantee(_mode == Address::base_plus_offset,
-              "Bad addressing mode for non-temporal op");
+    guarantee(_mode == Address::base_plus_offset, "Bad addressing mode for non-temporal op");
   }
 
   void lea(MacroAssembler *, Register) const;
@@ -2557,8 +2554,7 @@ void ext(FloatRegister Vd, SIMD_Arrangement T, FloatRegister Vn, FloatRegister V
     f(0b000000000000000000000000000, 26, 0);
   }
 
-  Assembler(CodeBuffer* code) : AbstractAssembler(code) {
-  }
+  Assembler(CodeBuffer* code) : AbstractAssembler(code) { }
 
   virtual RegisterOrConstant delayed_value_impl(intptr_t* delayed_value_addr, Register tmp, int offset) {
     ShouldNotCallThis();

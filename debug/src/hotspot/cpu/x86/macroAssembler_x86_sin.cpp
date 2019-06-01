@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/assembler.hpp"
 #include "asm/assembler.inline.hpp"
 #include "macroAssembler_x86.hpp"
@@ -404,8 +405,7 @@ void MacroAssembler::fast_sin(XMMRegister xmm0, XMMRegister xmm1, XMMRegister xm
   mulsd(xmm3, xmm1);
   if (VM_Version::supports_sse3()) {
     movddup(xmm1, xmm1);
-  }
-  else {
+  } else {
     movlhps(xmm1, xmm1);
   }
   andl(edx, 63);
@@ -419,8 +419,7 @@ void MacroAssembler::fast_sin(XMMRegister xmm0, XMMRegister xmm1, XMMRegister xm
   subsd(xmm0, xmm3);
   if (VM_Version::supports_sse3()) {
     movddup(xmm3, xmm4);
-  }
-  else {
+  } else {
     movdqu(xmm3, xmm4);
     movlhps(xmm3, xmm3);
   }

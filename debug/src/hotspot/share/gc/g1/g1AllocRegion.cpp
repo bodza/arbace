@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1AllocRegion.inline.hpp"
 #include "gc/g1/g1EvacStats.inline.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
@@ -141,14 +142,12 @@ HeapRegion* G1AllocRegion::release() {
   return (alloc_region == _dummy_region) ? NULL : alloc_region;
 }
 
-G1AllocRegion::G1AllocRegion(const char* name,
-                             bool bot_updates)
+G1AllocRegion::G1AllocRegion(const char* name, bool bot_updates)
   : _name(name), _bot_updates(bot_updates),
     _alloc_region(NULL), _count(0),
     _used_bytes_before(0) { }
 
-HeapRegion* MutatorAllocRegion::allocate_new_region(size_t word_size,
-                                                    bool force) {
+HeapRegion* MutatorAllocRegion::allocate_new_region(size_t word_size, bool force) {
   return _g1h->new_mutator_alloc_region(word_size, force);
 }
 
@@ -222,16 +221,10 @@ HeapRegion* MutatorAllocRegion::release() {
     _wasted_bytes += retire_internal(_retained_alloc_region, false);
     _retained_alloc_region = NULL;
   }
-  log_debug(gc, alloc, region)("Mutator Allocation stats, regions: %u, wasted size: " SIZE_FORMAT "%s (%4.1f%%)",
-                               count(),
-                               byte_size_in_proper_unit(_wasted_bytes),
-                               proper_unit_for_byte_size(_wasted_bytes),
-                               percent_of(_wasted_bytes, count() * HeapRegion::GrainBytes));
   return ret;
 }
 
-HeapRegion* G1GCAllocRegion::allocate_new_region(size_t word_size,
-                                                 bool force) {
+HeapRegion* G1GCAllocRegion::allocate_new_region(size_t word_size, bool force) {
   return _g1h->new_gc_alloc_region(word_size, _purpose);
 }
 

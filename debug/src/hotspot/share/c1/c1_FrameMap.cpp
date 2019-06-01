@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_FrameMap.hpp"
 #include "c1/c1_LIR.hpp"
 #include "code/vmreg.inline.hpp"
@@ -206,8 +207,6 @@ ByteSize FrameMap::sp_offset_for_slot(const int index) const {
 
 ByteSize FrameMap::sp_offset_for_double_slot(const int index) const {
   ByteSize offset = sp_offset_for_slot(index);
-  if (index >= argcount()) {
-  }
   return offset;
 }
 
@@ -258,5 +257,3 @@ VMReg FrameMap::regname(LIR_Opr opr) const {
   ShouldNotReachHere();
   return VMRegImpl::Bad();
 }
-
-// ------------ extra spill slots ---------------

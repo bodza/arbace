@@ -1,10 +1,10 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/copyFailedInfo.hpp"
 #include "gc/shared/gcHeapSummary.hpp"
 #include "gc/shared/gcTimer.hpp"
 #include "gc/shared/gcTrace.hpp"
 #include "gc/shared/gcWhen.hpp"
-// #include "jfr/jfrEvents.hpp"
 #include "runtime/os.hpp"
 #include "utilities/macros.hpp"
 #include "gc/g1/evacuationInfo.hpp"

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
 #include "compiler/disassembler.hpp"
@@ -92,7 +93,6 @@ AbstractInterpreter::MethodKind AbstractInterpreter::method_kind(const methodHan
     return kind;
   }
 
-#ifndef CC_INTERP
   switch (m->intrinsic_id()) {
     // Use optimized stub code for CRC32 native methods.
     case vmIntrinsics::_updateCRC32            : return java_util_zip_CRC32_update;
@@ -107,7 +107,6 @@ AbstractInterpreter::MethodKind AbstractInterpreter::method_kind(const methodHan
     case vmIntrinsics::_doubleToRawLongBits: return java_lang_Double_doubleToRawLongBits;
     default:                                 break;
   }
-#endif
 
   // Native method?
   // Note: This test must come _before_ the test for intrinsic

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
 #include "code/debugInfoRec.hpp"
@@ -508,8 +509,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed,
         // are accessed as negative so LSW is at LOW address
 
         // ld_off is MSW so get LSW
-        const int offset = (sig_bt[i]==T_LONG||sig_bt[i]==T_DOUBLE)?
-                           next_off : ld_off;
+        const int offset = (sig_bt[i] == T_LONG || sig_bt[i] == T_DOUBLE) ? next_off : ld_off;
         __ ldr(rscratch2, Address(esp, offset));
         // st_off is LSW (i.e. reg.first())
         __ str(rscratch2, Address(sp, st_off));
@@ -524,8 +524,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed,
         // So we must adjust where to pick up the data to match the
         // interpreter.
 
-        const int offset = (sig_bt[i]==T_LONG||sig_bt[i]==T_DOUBLE)?
-                           next_off : ld_off;
+        const int offset = (sig_bt[i] == T_LONG || sig_bt[i] == T_DOUBLE) ? next_off : ld_off;
 
         // this can be a misaligned move
         __ ldr(r, Address(esp, offset));
@@ -619,12 +618,7 @@ static void generate_i2c_adapter_name(char *result, int total_args_passed, const
 #endif
 
 // ---------------------------------------------------------------
-AdapterHandlerEntry* SharedRuntime::generate_i2c2i_adapters(MacroAssembler *masm,
-                                                            int total_args_passed,
-                                                            int comp_args_on_stack,
-                                                            const BasicType *sig_bt,
-                                                            const VMRegPair *regs,
-                                                            AdapterFingerPrint* fingerprint) {
+AdapterHandlerEntry* SharedRuntime::generate_i2c2i_adapters(MacroAssembler *masm, int total_args_passed, int comp_args_on_stack, const BasicType *sig_bt, const VMRegPair *regs, AdapterFingerPrint* fingerprint) {
   address i2c_entry = __ pc();
 #ifdef BUILTIN_SIM
   char *name = NULL;
@@ -1021,7 +1015,7 @@ class ComputeMoveOrder: public StackObj {
     static int get_id(VMRegPair r) { Unimplemented(); return 0; }
 
    public:
-    MoveOperation(int src_index, VMRegPair src, int dst_index, VMRegPair dst):
+    MoveOperation(int src_index, VMRegPair src, int dst_index, VMRegPair dst) :
       _src(src)
     , _src_index(src_index)
     , _dst(dst)
@@ -1609,15 +1603,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     __ ldrb(rscratch1, Address(rscratch1, offset));
     __ cbnzw(rscratch1, dtrace_method_entry);
     __ bind(dtrace_method_entry_done);
-  }
-
-  // RedefineClasses() tracing support for obsolete method entry
-  if (log_is_enabled(Trace, redefine, class, obsolete)) {
-    // protect the args we've loaded
-    save_args(masm, total_c_args, c_arg, out_regs);
-    __ mov_metadata(c_rarg1, method());
-    __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::rc_trace_method_entry), rthread, c_rarg1);
-    restore_args(masm, total_c_args, c_arg, out_regs);
   }
 
   // Lock a synchronized method

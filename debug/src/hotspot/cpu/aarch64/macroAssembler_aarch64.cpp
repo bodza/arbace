@@ -1,6 +1,7 @@
 #include <sys/types.h>
 
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "asm/assembler.hpp"
 #include "asm/assembler.inline.hpp"
@@ -788,9 +789,9 @@ void MacroAssembler::notify(int type) {
     // set_last_Java_frame(esp, rfp, (address)NULL);
     Assembler::notify(type);
     // reset_last_Java_frame(true);
-  }
-  else
+  } else {
     Assembler::notify(type);
+  }
 }
 
 // Look up the method for a megamorphic invokeinterface call.
@@ -3328,7 +3329,6 @@ void MacroAssembler::decode_heap_oop_not_null(Register r) {
     } else {
       add(r, zr, r, Assembler::LSL, LogMinObjAlignmentInBytes);
     }
-  } else {
   }
 }
 
@@ -3573,8 +3573,7 @@ void MacroAssembler::zero_memory(Register addr, Register len, Register t1) {
   cbnz(len, loop);
 }
 
-void MacroAssembler::verify_tlab() {
-}
+void MacroAssembler::verify_tlab() { }
 
 // Writes to stack successive pages until offset reached to check for
 // stack overflow + shadow pages.  This clobbers tmp.
@@ -4676,7 +4675,6 @@ const int MacroAssembler::zero_words_block_size = 8;
 // ptr, cnt, rscratch1, and rscratch2 are clobbered.
 void MacroAssembler::zero_words(Register ptr, Register cnt)
 {
-
   BLOCK_COMMENT("zero_words {");
   cmp(cnt, zero_words_block_size);
   Label around, done, done16;

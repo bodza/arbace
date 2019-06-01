@@ -163,7 +163,6 @@
 // Each log message can be assigned between 1 to LogTag::MaxTags number of tags.
 // Specifying multiple tags for a log message means that only outputs configured
 // for those exact tags, or a subset of the tags with a wildcard, will see the logging.
-// Multiple tags should be comma separated, e.g. log_error(tag1, tag2)("msg").
 class LogTag : public AllStatic {
  public:
   // The maximum number of tags that a single log message can have.

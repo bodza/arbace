@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1BlockOffsetTable.inline.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1ConcurrentRefine.hpp"
@@ -257,7 +258,6 @@ void OtherRegionsTable::link_to_all(PerRegionTable* prt) {
   // the new element is always the first element without a predecessor
   prt->set_prev(NULL);
   _first_all_fine_prts = prt;
-
 }
 
 void OtherRegionsTable::unlink_from_all(PerRegionTable* prt) {
@@ -281,7 +281,6 @@ void OtherRegionsTable::unlink_from_all(PerRegionTable* prt) {
 
   prt->set_next(NULL);
   prt->set_prev(NULL);
-
 }
 
 CardIdx_t OtherRegionsTable::card_within_region(OopOrNarrowOopStar within_region, HeapRegion* hr) {
@@ -550,8 +549,7 @@ OtherRegionsTable::do_cleanup_work(HRRSCleanupTask* hrrs_cleanup_task) {
   _sparse_table.do_cleanup_work(hrrs_cleanup_task);
 }
 
-HeapRegionRemSet::HeapRegionRemSet(G1BlockOffsetTable* bot,
-                                   HeapRegion* hr)
+HeapRegionRemSet::HeapRegionRemSet(G1BlockOffsetTable* bot, HeapRegion* hr)
   : _bot(bot),
     _m(Mutex::leaf, FormatBuffer<128>("HeapRegionRemSet lock #%u", hr->hrm_index()), true, Monitor::_safepoint_check_never),
     _code_roots(),

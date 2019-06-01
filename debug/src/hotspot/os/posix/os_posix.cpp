@@ -175,7 +175,7 @@ int os::create_file_for_heap(const char* dir) {
 
 static char* reserve_mmapped_memory(size_t bytes, char* requested_addr) {
   char * addr;
-  int flags = MAP_PRIVATE NOT_AIX( | MAP_NORESERVE ) | MAP_ANONYMOUS;
+  int flags = MAP_PRIVATE | MAP_NORESERVE | MAP_ANONYMOUS;
   if (requested_addr != NULL) {
     flags |= MAP_FIXED;
   }
@@ -316,7 +316,7 @@ int os::vsnprintf(char* buf, size_t len, const char* fmt, va_list args) {
 }
 
 int os::get_fileno(FILE* fp) {
-  return NOT_AIX(::)fileno(fp);
+  return ::fileno(fp);
 }
 
 struct tm* os::gmtime_pd(const time_t* clock, struct tm* res) {
@@ -936,10 +936,6 @@ const char* os::Posix::describe_sa_flags(int flags, char* buffer, size_t size) {
     { SA_SIGINFO,   "SA_SIGINFO"   },
     { SA_NOCLDWAIT, "SA_NOCLDWAIT" },
     { SA_NODEFER,   "SA_NODEFER"   },
-#ifdef AIX
-    { SA_ONSTACK,   "SA_ONSTACK"   },
-    { SA_OLDSTYLE,  "SA_OLDSTYLE"  },
-#endif
     { 0, NULL }
   };
 
@@ -1003,10 +999,6 @@ static bool get_signal_code_description(const siginfo_t* si, enum_sigcode_desc_t
     { SIGFPE,  FPE_FLTSUB,   "FPE_FLTSUB",   "Subscript out of range." },
     { SIGSEGV, SEGV_MAPERR,  "SEGV_MAPERR",  "Address not mapped to object." },
     { SIGSEGV, SEGV_ACCERR,  "SEGV_ACCERR",  "Invalid permissions for mapped object." },
-#ifdef AIX
-    // no explanation found what keyerr would be
-    { SIGSEGV, SEGV_KEYERR,  "SEGV_KEYERR",  "key error" },
-#endif
 #if defined(IA64)
     { SIGSEGV, SEGV_PSTKOVF, "SEGV_PSTKOVF", "Paragraph stack overflow" },
 #endif
@@ -1052,11 +1044,6 @@ static bool get_signal_code_description(const siginfo_t* si, enum_sigcode_desc_t
 #endif
 #ifdef SI_SIGIO
     { SI_SIGIO,     "SI_SIGIO",    "Signal sent by queued SIGIO" },
-#endif
-
-#ifdef AIX
-    { SI_UNDEFINED, "SI_UNDEFINED","siginfo contains partial information" },
-    { SI_EMPTY,     "SI_EMPTY",    "siginfo contains no useful information" },
 #endif
 
 #ifdef __sun
@@ -1252,7 +1239,7 @@ char * os::native_path(char *path) {
 // page size which again depends on the concrete system the VM is running
 // on. Space for libc guard pages is not included in this size.
 jint os::Posix::set_minimum_stack_sizes() {
-  size_t os_min_stack_allowed = SOLARIS_ONLY(thr_min_stack()) NOT_SOLARIS(PTHREAD_STACK_MIN);
+  size_t os_min_stack_allowed = PTHREAD_STACK_MIN;
 
   _java_thread_min_stack_allowed = _java_thread_min_stack_allowed + JavaThread::stack_guard_zone_size() + JavaThread::stack_shadow_zone_size();
 
@@ -1264,9 +1251,7 @@ jint os::Posix::set_minimum_stack_sizes() {
     // The '-Xss' and '-XX:ThreadStackSize=N' options both set
     // ThreadStackSize so we go with "Java thread stack size" instead
     // of "ThreadStackSize" to be more friendly.
-    tty->print_cr("\nThe Java thread stack size specified is too small. "
-                  "Specify at least " SIZE_FORMAT "k",
-                  _java_thread_min_stack_allowed / K);
+    tty->print_cr("\nThe Java thread stack size specified is too small. Specify at least " SIZE_FORMAT "k", _java_thread_min_stack_allowed / K);
     return JNI_ERR;
   }
 
@@ -1282,9 +1267,7 @@ jint os::Posix::set_minimum_stack_sizes() {
 
   stack_size_in_bytes = CompilerThreadStackSize * K;
   if (stack_size_in_bytes != 0 && stack_size_in_bytes < _compiler_thread_min_stack_allowed) {
-    tty->print_cr("\nThe CompilerThreadStackSize specified is too small. "
-                  "Specify at least " SIZE_FORMAT "k",
-                  _compiler_thread_min_stack_allowed / K);
+    tty->print_cr("\nThe CompilerThreadStackSize specified is too small. Specify at least " SIZE_FORMAT "k", _compiler_thread_min_stack_allowed / K);
     return JNI_ERR;
   }
 
@@ -1293,9 +1276,7 @@ jint os::Posix::set_minimum_stack_sizes() {
 
   stack_size_in_bytes = VMThreadStackSize * K;
   if (stack_size_in_bytes != 0 && stack_size_in_bytes < _vm_internal_thread_min_stack_allowed) {
-    tty->print_cr("\nThe VMThreadStackSize specified is too small. "
-                  "Specify at least " SIZE_FORMAT "k",
-                  _vm_internal_thread_min_stack_allowed / K);
+    tty->print_cr("\nThe VMThreadStackSize specified is too small. Specify at least " SIZE_FORMAT "k", _vm_internal_thread_min_stack_allowed / K);
     return JNI_ERR;
   }
   return JNI_OK;
@@ -1371,8 +1352,7 @@ Thread* os::ThreadCrashProtection::_protected_thread = NULL;
 os::ThreadCrashProtection* os::ThreadCrashProtection::_crash_protection = NULL;
 volatile intptr_t os::ThreadCrashProtection::_crash_mux = 0;
 
-os::ThreadCrashProtection::ThreadCrashProtection() {
-}
+os::ThreadCrashProtection::ThreadCrashProtection() { }
 
 /*
  * See the caveats for this class in os_posix.hpp
@@ -1425,9 +1405,6 @@ void os::ThreadCrashProtection::check_crash_protection(int sig, Thread* thread) 
 }
 
 // Shared pthread_mutex/cond based PlatformEvent implementation.
-// Not currently usable by Solaris.
-
-#ifndef SOLARIS
 
 // Shared condattr object for use with relative timed-waits. Will be associated
 // with CLOCK_MONOTONIC if available to avoid issues with time-of-day changes,
@@ -1539,8 +1516,7 @@ void os::Posix::init(void) {
     if ((status = _pthread_condattr_setclock(_condAttr, CLOCK_MONOTONIC)) != 0) {
       if (status == EINVAL) {
         _use_clock_monotonic_condattr = false;
-        warning("Unable to use monotonic clock with relative timed-waits" \
-                " - changes to the time-of-day clock may have adverse affects");
+        warning("Unable to use monotonic clock with relative timed-waits - changes to the time-of-day clock may have adverse affects");
       } else {
         fatal("pthread_condattr_setclock: %s", os::strerror(status));
       }
@@ -1552,14 +1528,7 @@ void os::Posix::init(void) {
   }
 }
 
-void os::Posix::init_2(void) {
-  log_info(os)("Use of CLOCK_MONOTONIC is%s supported",
-               (_clock_gettime != NULL ? "" : " not"));
-  log_info(os)("Use of pthread_condattr_setclock is%s supported",
-               (_pthread_condattr_setclock != NULL ? "" : " not"));
-  log_info(os)("Relative timed-wait using pthread_cond_timedwait is associated with %s",
-               _use_clock_monotonic_condattr ? "CLOCK_MONOTONIC" : "the default clock");
-}
+void os::Posix::init_2(void) { }
 
 #else
 
@@ -1567,11 +1536,7 @@ void os::Posix::init(void) {
   pthread_init_common();
 }
 
-void os::Posix::init_2(void) {
-  log_info(os)("Use of CLOCK_MONOTONIC is not supported");
-  log_info(os)("Use of pthread_condattr_setclock is not supported");
-  log_info(os)("Relative timed-wait using pthread_cond_timedwait is associated with the default clock");
-}
+void os::Posix::init_2(void) { }
 
 #endif
 
@@ -1680,7 +1645,6 @@ static void to_abstime(timespec* abstime, jlong timeout, bool isAbsolute) {
       calc_rel_time(abstime, timeout, now.tv_sec, now.tv_usec, MICROUNITS);
     }
   }
-
 }
 
 // PlatformEvent
@@ -1909,12 +1873,10 @@ void Parker::park(bool isAbsolute, jlong time) {
     _cur_index = REL_INDEX; // arbitrary choice when not timed
     status = pthread_cond_wait(&_cond[_cur_index], _mutex);
     assert_status(status == 0, status, "cond_timedwait");
-  }
-  else {
+  } else {
     _cur_index = isAbsolute ? ABS_INDEX : REL_INDEX;
     status = pthread_cond_timedwait(&_cond[_cur_index], _mutex, &absTime);
-    assert_status(status == 0 || status == ETIMEDOUT,
-                  status, "cond_timedwait");
+    assert_status(status == 0 || status == ETIMEDOUT, status, "cond_timedwait");
   }
   _cur_index = -1;
 
@@ -1955,5 +1917,3 @@ void Parker::unpark() {
     assert_status(status == 0, status, "invariant");
   }
 }
-
-#endif

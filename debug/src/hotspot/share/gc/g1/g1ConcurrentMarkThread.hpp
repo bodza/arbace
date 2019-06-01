@@ -48,14 +48,11 @@ class G1ConcurrentMarkThread: public ConcurrentGCThread {
 
   G1ConcurrentMark* cm()   { return _cm; }
 
-  void set_idle()          {
-    _state = Idle; }
+  void set_idle()          { _state = Idle; }
   bool idle()              { return _state == Idle; }
-  void set_started()       {
-    _state = Started; }
+  void set_started()       { _state = Started; }
   bool started()           { return _state == Started; }
-  void set_in_progress()   {
-    _state = InProgress; }
+  void set_in_progress()   { _state = InProgress; }
   bool in_progress()       { return _state == InProgress; }
 
   // Returns true from the moment a marking cycle is

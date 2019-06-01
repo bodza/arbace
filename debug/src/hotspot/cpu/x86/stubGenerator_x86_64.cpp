@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
 #include "ci/ciUtilities.hpp"
@@ -904,8 +905,7 @@ class StubGenerator: public StubCodeGenerator {
   //    Rint  -  32-bits value
   //    Rtmp  -  scratch
   //
-  void assert_clean_int(Register Rint, Register Rtmp) {
-  }
+  void assert_clean_int(Register Rint, Register Rtmp) { }
 
   //  Generate overlap test for array copy stubs
   //

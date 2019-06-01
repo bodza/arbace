@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "logging/log.hpp"
@@ -18,5 +19,4 @@
 
 // Implementation of InterfaceSupport
 
-void InterfaceSupport_init() {
-}
+void InterfaceSupport_init() { }

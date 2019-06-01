@@ -1,33 +1,9 @@
-# 
-# Copyright (c) 2004, 2017, Oracle and/or its affiliates. All rights reserved.
-# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-#
-# This code is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License version 2 only, as
-# published by the Free Software Foundation.
-#
-# This code is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-# version 2 for more details (a copy is included in the LICENSE file that
-# accompanied this code).
-#
-# You should have received a copy of the GNU General Public License version
-# 2 along with this work; if not, write to the Free Software Foundation,
-# Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-# Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
-# or visit www.oracle.com if you need additional information or have any
-# questions.
-# 
-
-	
         # NOTE WELL!  The _Copy functions are called directly
 	# from server-compiler-generated code via CallLeafNoFP,
 	# which means that they *must* either not use floating
 	# point or use it in the same manner as does the server
 	# compiler.
-	
+
         .globl _Copy_conjoint_bytes
         .globl _Copy_arrayof_conjoint_bytes
         .globl _Copy_conjoint_jshorts_atomic
@@ -174,7 +150,7 @@ _Copy_arrayof_conjoint_bytes:
         leal     -1(%esi,%ecx),%eax   # from + count - 1
         jbe      acb_CopyRight
         cmpl     %eax,%edi
-        jbe      acb_CopyLeft 
+        jbe      acb_CopyLeft
         # copy from low to high
 acb_CopyRight:
         cmpl     $3,%ecx
@@ -262,7 +238,7 @@ _Copy_conjoint_jshorts_atomic:
         leal     -2(%esi,%ecx,2),%eax # from + count*2 - 2
         jbe      cs_CopyRight
         cmpl     %eax,%edi
-        jbe      cs_CopyLeft 
+        jbe      cs_CopyLeft
         # copy from low to high
 cs_CopyRight:
         # align source address at dword address boundary
@@ -283,7 +259,7 @@ cs_CopyRight:
         jbe      2f                   # <= 32 dwords
         # copy aligned dwords
         rep;     smovl
-        jmp      4f 
+        jmp      4f
         # copy aligned dwords
 2:      subl     %esi,%edi
         .p2align 4,,15
@@ -349,7 +325,7 @@ _Copy_arrayof_conjoint_jshorts:
         leal     -2(%esi,%ecx,2),%eax # from + count*2 - 2
         jbe      acs_CopyRight
         cmpl     %eax,%edi
-        jbe      acs_CopyLeft 
+        jbe      acs_CopyLeft
 acs_CopyRight:
         movl     %ecx,%eax            # word count
         sarl     %ecx                 # dword count
@@ -358,10 +334,10 @@ acs_CopyRight:
         jbe      2f                   # <= 32 dwords
         # copy aligned dwords
         rep;     smovl
-        jmp      4f 
+        jmp      4f
         # copy aligned dwords
         .space 5
-2:      subl     %esi,%edi 
+2:      subl     %esi,%edi
         .p2align 4,,15
 3:      movl     (%esi),%edx
         movl     %edx,(%edi,%esi,1)
@@ -428,7 +404,7 @@ _Copy_arrayof_conjoint_jints:
         leal     -4(%esi,%ecx,4),%eax # from + count*4 - 4
         jbe      ci_CopyRight
         cmpl     %eax,%edi
-        jbe      ci_CopyLeft 
+        jbe      ci_CopyLeft
 ci_CopyRight:
         cmpl     $32,%ecx
         jbe      2f                   # <= 32 dwords
@@ -471,7 +447,7 @@ ci_CopyLeft:
         popl     %edi
         popl     %esi
         ret
-	
+
         # Support for void Copy::conjoint_jlongs_atomic(jlong* from,
         #                                               jlong* to,
         #                                               size_t count)
@@ -537,7 +513,7 @@ mmx_acs_CopyRight:
         je       5f
         cmpl     $33,%ecx
         jae      3f
-1:      subl     %esi,%edi 
+1:      subl     %esi,%edi
         .p2align 4,,15
 2:      movl     (%esi),%edx
         movl     %edx,(%edi,%esi,1)
@@ -545,7 +521,7 @@ mmx_acs_CopyRight:
         subl     $1,%ecx
         jnz      2b
         addl     %esi,%edi
-        jmp      5f 
+        jmp      5f
 3:      smovl # align to 8 bytes, we know we are 4 byte aligned to start
         subl     $1,%ecx
 4:      .p2align 4,,15
@@ -611,7 +587,6 @@ mmx_acs_CopyLeft:
         popl     %esi
         ret
 
-
         # Support for jlong Atomic::cmpxchg(jlong exchange_value,
         #                                   volatile jlong* dest,
         #                                   jlong compare_value)
@@ -632,7 +607,6 @@ _Atomic_cmpxchg_long:
         popl     %ebx
         ret
 
-
         # Support for jlong Atomic::load and Atomic::store.
         # void _Atomic_move_long(const volatile jlong* src, volatile jlong* dst)
         .p2align 4,,15
@@ -643,4 +617,3 @@ _Atomic_move_long:
         movl     8(%esp), %eax   # dest
         fistpll   (%eax)
         ret
-

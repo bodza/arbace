@@ -23,8 +23,7 @@ class ArrayKlass: public Klass {
   // The constructor with the Symbol argument does the real array
   // initialization, the other is a dummy
   ArrayKlass(Symbol* name, KlassID id);
-  ArrayKlass() {
-    }
+  ArrayKlass() { }
 
  public:
   // Instance variables

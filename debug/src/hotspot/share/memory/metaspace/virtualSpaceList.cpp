@@ -6,6 +6,7 @@
  */
 
 #include "precompiled.hpp"
+
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
 #include "memory/metaspace.hpp"
@@ -71,7 +72,6 @@ void VirtualSpaceList::purge(ChunkManager* chunk_manager) {
     // Don't free the current virtual space since it will likely
     // be needed soon.
     if (vsl->container_count() == 0 && vsl != current_virtual_space()) {
-      log_trace(gc, metaspace, freelist)("Purging VirtualSpaceNode " PTR_FORMAT " (capacity: " SIZE_FORMAT ", used: " SIZE_FORMAT ").", p2i(vsl), vsl->capacity_words_in_vs(), vsl->used_words_in_vs());
       // Unlink it from the list
       if (prev_vsl == vsl) {
         // This is the case of the current node being the first node.
@@ -208,13 +208,11 @@ bool VirtualSpaceList::expand_by(size_t min_words, size_t preferred_words) {
   const char* const class_or_not = (is_class() ? "class" : "non-class");
 
   if (!MetaspaceGC::can_expand(min_words, this->is_class())) {
-    log_trace(gc, metaspace, freelist)("Cannot expand %s virtual space list.", class_or_not);
     return  false;
   }
 
   size_t allowed_expansion_words = MetaspaceGC::allowed_expansion();
   if (allowed_expansion_words < min_words) {
-    log_trace(gc, metaspace, freelist)("Cannot expand %s virtual space list (must try gc first).", class_or_not);
     return false;
   }
 
@@ -223,10 +221,8 @@ bool VirtualSpaceList::expand_by(size_t min_words, size_t preferred_words) {
   // Commit more memory from the the current virtual space.
   bool vs_expanded = expand_node_by(current_virtual_space(), min_words, max_expansion_words);
   if (vs_expanded) {
-     log_trace(gc, metaspace, freelist)("Expanded %s virtual space list.", class_or_not);
      return true;
   }
-  log_trace(gc, metaspace, freelist)("%s virtual space list: retire current node.", class_or_not);
   retire_current_virtual_space();
 
   // Get another virtual space.

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.inline.hpp"
 #include "gc/shared/barrierSetAssembler.hpp"
 #include "interpreter/bytecodeHistogram.hpp"
@@ -443,7 +444,6 @@ address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state, i
     // Take lock.
     lock_method();
     __ bind(L);
-  } else {
   }
   // handle exceptions
   {

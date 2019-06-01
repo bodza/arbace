@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1Analytics.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1CollectionSet.hpp"
@@ -240,10 +241,7 @@ G1Policy::YoungTargetLengths G1Policy::young_list_target_lengths(size_t rs_lengt
 }
 
 uint
-G1Policy::calculate_young_list_target_length(size_t rs_lengths,
-                                                    uint base_min_length,
-                                                    uint desired_min_length,
-                                                    uint desired_max_length) const {
+G1Policy::calculate_young_list_target_length(size_t rs_lengths, uint base_min_length, uint desired_min_length, uint desired_max_length) const {
 
   // In case some edge-condition makes the desired max length too small...
   if (desired_max_length <= desired_min_length) {
@@ -325,9 +323,7 @@ double G1Policy::predict_survivor_regions_evac_time() const {
   double survivor_regions_evac_time = 0.0;
   const GrowableArray<HeapRegion*>* survivor_regions = _g1h->survivor()->regions();
 
-  for (GrowableArrayIterator<HeapRegion*> it = survivor_regions->begin();
-       it != survivor_regions->end();
-       ++it) {
+  for (GrowableArrayIterator<HeapRegion*> it = survivor_regions->begin(); it != survivor_regions->end(); ++it) {
     survivor_regions_evac_time += predict_region_elapsed_time_ms(*it, collector_state()->in_young_only_phase());
   }
   return survivor_regions_evac_time;
@@ -412,7 +408,6 @@ void G1Policy::record_collection_pause_start(double start_time_sec) {
   // do that for any other surv rate groups
   _short_lived_surv_rate_group->stop_adding_regions();
   _survivors_age_table.clear();
-
 }
 
 void G1Policy::record_concurrent_mark_init_end(double mark_init_elapsed_time_ms) {
@@ -480,9 +475,6 @@ bool G1Policy::need_to_start_conc_mark(const char* source, size_t alloc_word_siz
   bool result = false;
   if (marking_request_bytes > marking_initiating_used_threshold) {
     result = collector_state()->in_young_only_phase() && !collector_state()->in_young_gc_before_mixed();
-    log_debug(gc, ergo, ihop)("%s occupancy: " SIZE_FORMAT "B allocation request: " SIZE_FORMAT "B threshold: " SIZE_FORMAT "B (%1.2f) source: %s",
-                              result ? "Request concurrent cycle initiation (occupancy higher than threshold)" : "Do not request concurrent cycle initiation (still doing mixed collections)",
-                              cur_used_bytes, alloc_byte_size, marking_initiating_used_threshold, (double) marking_initiating_used_threshold / _g1h->capacity() * 100, source);
   }
 
   return result;
@@ -651,8 +643,6 @@ void G1Policy::record_collection_pause_end(double pause_time_ms, size_t cards_sc
   double update_rs_time_goal_ms = _mmu_tracker->max_gc_time() * MILLIUNITS * G1RSetUpdatingPauseTimePercent / 100.0;
 
   if (update_rs_time_goal_ms < scan_hcc_time_ms) {
-    log_debug(gc, ergo, refine)("Adjust concurrent refinement thresholds (scanning the HCC expected to take longer than Update RS time goal). Update RS time goal: %1.2fms Scan HCC time: %1.2fms", update_rs_time_goal_ms, scan_hcc_time_ms);
-
     update_rs_time_goal_ms = 0;
   } else {
     update_rs_time_goal_ms -= scan_hcc_time_ms;
@@ -811,7 +801,6 @@ void G1Policy::update_max_gc_locker_expansion() {
     // We use ceiling so that if expansion_region_num_d is > 0.0 (but
     // less than 1.0) we'll get 1.
     expansion_region_num = (uint) ceil(expansion_region_num_d);
-  } else {
   }
   _young_list_max_length = _young_list_target_length + expansion_region_num;
 }
@@ -836,11 +825,9 @@ bool G1Policy::force_initial_mark_if_outside_cycle(GCCause::Cause gc_cause) {
   // even while we are still in the process of reclaiming memory.
   bool during_cycle = _g1h->concurrent_mark()->cm_thread()->during_cycle();
   if (!during_cycle) {
-    log_debug(gc, ergo)("Request concurrent cycle initiation (requested by GC cause). GC cause: %s", GCCause::to_string(gc_cause));
     collector_state()->set_initiate_conc_mark_if_possible(true);
     return true;
   } else {
-    log_debug(gc, ergo)("Do not request concurrent cycle initiation (concurrent cycle already in progress). GC cause: %s", GCCause::to_string(gc_cause));
     return false;
   }
 }
@@ -867,7 +854,6 @@ void G1Policy::decide_on_conc_mark_initiation() {
     if (!about_to_start_mixed_phase() && collector_state()->in_young_only_phase()) {
       // Initiate a new initial mark if there is no marking or reclamation going on.
       initiate_conc_mark();
-      log_debug(gc, ergo)("Initiate concurrent cycle (concurrent cycle initiation requested)");
     } else if (_g1h->is_user_requested_concurrent_full_gc(_g1h->gc_cause())) {
       // Initiate a user requested initial mark. An initial mark must be young only
       // GC, so the collector state must be updated to reflect this.
@@ -881,7 +867,6 @@ void G1Policy::decide_on_conc_mark_initiation() {
       clear_collection_set_candidates();
       abort_time_to_mixed_tracking();
       initiate_conc_mark();
-      log_debug(gc, ergo)("Initiate concurrent cycle (user requested concurrent cycle)");
     } else {
       // The concurrent marking thread is still finishing up the
       // previous cycle. If we start one right now the two cycles
@@ -895,7 +880,6 @@ void G1Policy::decide_on_conc_mark_initiation() {
       // and, if it's in a yield point, it's waiting for us to
       // finish. So, at this point we will not start a cycle and we'll
       // let the concurrent marking thread complete the last one.
-      log_debug(gc, ergo)("Do not initiate concurrent cycle (concurrent cycle already in progress)");
     }
   }
 }
@@ -992,7 +976,6 @@ void G1Policy::abort_time_to_mixed_tracking() {
 
 bool G1Policy::next_gc_should_be_mixed(const char* true_action_str, const char* false_action_str) const {
   if (cset_chooser()->is_empty()) {
-    log_debug(gc, ergo)("%s (candidate old regions not available)", false_action_str);
     return false;
   }
 
@@ -1001,12 +984,8 @@ bool G1Policy::next_gc_should_be_mixed(const char* true_action_str, const char* 
   double reclaimable_percent = reclaimable_bytes_percent(reclaimable_bytes);
   double threshold = (double) G1HeapWastePercent;
   if (reclaimable_percent <= threshold) {
-    log_debug(gc, ergo)("%s (reclaimable percentage not over threshold). candidate old regions: %u reclaimable: " SIZE_FORMAT " (%1.2f) threshold: " UINTX_FORMAT,
-                        false_action_str, cset_chooser()->remaining_regions(), reclaimable_bytes, reclaimable_percent, G1HeapWastePercent);
     return false;
   }
-  log_debug(gc, ergo)("%s (candidate old regions available). candidate old regions: %u reclaimable: " SIZE_FORMAT " (%1.2f) threshold: " UINTX_FORMAT,
-                      true_action_str, cset_chooser()->remaining_regions(), reclaimable_bytes, reclaimable_percent, G1HeapWastePercent);
   return true;
 }
 
@@ -1060,9 +1039,7 @@ void G1Policy::transfer_survivors_to_cset(const G1SurvivorRegions* survivors) {
   finished_recalculating_age_indexes(true /* is_survivors */);
 
   HeapRegion* last = NULL;
-  for (GrowableArrayIterator<HeapRegion*> it = survivors->regions()->begin();
-       it != survivors->regions()->end();
-       ++it) {
+  for (GrowableArrayIterator<HeapRegion*> it = survivors->regions()->begin(); it != survivors->regions()->end(); ++it) {
     HeapRegion* curr = *it;
     set_region_survivor(curr);
 

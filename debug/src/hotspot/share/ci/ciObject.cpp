@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "ci/ciObject.hpp"
 #include "ci/ciUtilities.inline.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"

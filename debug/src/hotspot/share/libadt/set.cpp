@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "libadt/set.hpp"
 #include "memory/allocation.inline.hpp"
 
@@ -12,17 +13,13 @@
 //-------------------------Virtual Functions-----------------------------------
 // These functions MUST be implemented by the inheriting class.
 class SparseSet;
-const SparseSet *Set::asSparseSet() const {
-    return NULL; }
+const SparseSet *Set::asSparseSet() const { return NULL; }
 class VectorSet;
-const VectorSet *Set::asVectorSet() const {
-    return NULL; }
+const VectorSet *Set::asVectorSet() const { return NULL; }
 class ListSet;
-const ListSet *Set::asListSet() const {
-    return NULL; }
+const ListSet *Set::asListSet() const { return NULL; }
 class CoSet;
-const CoSet *Set::asCoSet() const {
-    return NULL; }
+const CoSet *Set::asCoSet() const { return NULL; }
 
 //------------------------------setstr-----------------------------------------
 // Create a string with a printable representation of a set.

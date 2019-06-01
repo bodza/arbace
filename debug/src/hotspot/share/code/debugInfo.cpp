@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "code/debugInfo.hpp"
 #include "code/debugInfoRec.hpp"
 #include "code/nmethod.hpp"
@@ -123,8 +124,7 @@ void ObjectValue::print_on(outputStream* st) const {
   st->print("obj[%d]", _id);
 }
 
-void ObjectValue::print_fields_on(outputStream* st) const {
-}
+void ObjectValue::print_fields_on(outputStream* st) const { }
 
 // ConstantIntValue
 

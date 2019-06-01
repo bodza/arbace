@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1BiasedArray.hpp"
 #include "gc/g1/g1RegionToSpaceMapper.hpp"
 #include "memory/allocation.inline.hpp"
@@ -7,12 +8,7 @@
 #include "utilities/align.hpp"
 #include "utilities/bitMap.inline.hpp"
 
-G1RegionToSpaceMapper::G1RegionToSpaceMapper(ReservedSpace rs,
-                                             size_t used_size,
-                                             size_t page_size,
-                                             size_t region_granularity,
-                                             size_t commit_factor,
-                                             MemoryType type) :
+G1RegionToSpaceMapper::G1RegionToSpaceMapper(ReservedSpace rs, size_t used_size, size_t page_size, size_t region_granularity, size_t commit_factor, MemoryType type) :
   _storage(rs, used_size, page_size),
   _region_granularity(region_granularity),
   _listener(NULL),
@@ -143,12 +139,7 @@ void G1RegionToSpaceMapper::fire_on_commit(uint start_idx, size_t num_regions, b
   }
 }
 
-G1RegionToSpaceMapper* G1RegionToSpaceMapper::create_mapper(ReservedSpace rs,
-                                                            size_t actual_size,
-                                                            size_t page_size,
-                                                            size_t region_granularity,
-                                                            size_t commit_factor,
-                                                            MemoryType type) {
+G1RegionToSpaceMapper* G1RegionToSpaceMapper::create_mapper(ReservedSpace rs, size_t actual_size, size_t page_size, size_t region_granularity, size_t commit_factor, MemoryType type) {
 
   if (region_granularity >= (page_size * commit_factor)) {
     return new G1RegionsLargerThanCommitSizeMapper(rs, actual_size, page_size, region_granularity, commit_factor, type);

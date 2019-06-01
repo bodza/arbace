@@ -31,7 +31,7 @@ class CompilerStatistics {
  public:
   Data _standard;  // stats for non-OSR compilations
   Data _osr;       // stats for OSR compilations
-  int _nmethods_size; //
+  int _nmethods_size;
   int _nmethods_code_size;
   int bytes_per_second() {
     int bytes = _standard._bytes + _osr._bytes;
@@ -73,9 +73,9 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
   virtual const char* name() = 0;
 
   // Missing feature tests
-  virtual bool supports_native()                 { return true; }
-  virtual bool supports_osr   ()                 { return true; }
-  virtual bool can_compile_method(const methodHandle& method)  { return true; }
+  virtual bool supports_native()                              { return true; }
+  virtual bool supports_osr   ()                              { return true; }
+  virtual bool can_compile_method(const methodHandle& method) { return true; }
 
   // Determine if the current compiler provides an intrinsic
   // for method 'method'. An intrinsic is available if:

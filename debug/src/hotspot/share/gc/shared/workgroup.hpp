@@ -133,7 +133,6 @@ class AbstractWorkGang : public CHeapObj<mtInternal> {
   uint update_active_workers(uint v) {
     _active_workers = MIN2(v, _total_workers);
     add_workers(false /* exit_on_failure */);
-    log_trace(gc, task)("%s: using %d out of %d workers", name(), _active_workers, _total_workers);
     return _active_workers;
   }
 

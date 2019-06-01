@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/assembler.hpp"
 #include "asm/assembler.inline.hpp"
 #include "gc/shared/cardTableBarrierSet.hpp"
@@ -549,10 +550,8 @@ address Assembler::locate_operand(address inst, WhichOperand which) {
 
   // These convenience macros generate groups of "case" labels for the switch.
 #define REP4(x) (x)+0: case (x)+1: case (x)+2: case (x)+3
-#define REP8(x) (x)+0: case (x)+1: case (x)+2: case (x)+3: \
-             case (x)+4: case (x)+5: case (x)+6: case (x)+7
-#define REP16(x) REP8((x)+0): \
-              case REP8((x)+8)
+#define REP8(x) (x)+0: case (x)+1: case (x)+2: case (x)+3: case (x)+4: case (x)+5: case (x)+6: case (x)+7
+#define REP16(x) REP8((x)+0): case REP8((x)+8)
 
   case CS_segment:
   case SS_segment:
@@ -6755,16 +6754,13 @@ void Assembler::vex_prefix(Address adr, int nds_enc, int xreg_enc, VexSimdPrefix
     }
   }
 
-  if (UseAVX > 2) {
-  }
-
   _is_managed = false;
   if (UseAVX > 2 && !attributes->is_legacy_mode())
   {
     bool evex_r = (xreg_enc >= 16);
     bool evex_v;
     // EVEX.V' is set to true when VSIB is used as we may need to use higher order XMM registers (16-31)
-    if (adr.isxmmindex())  {
+    if (adr.isxmmindex()) {
       evex_v = ((adr._xmmindex->encoding() > 15) ? true : false);
     } else {
       evex_v = (nds_enc >= 16);

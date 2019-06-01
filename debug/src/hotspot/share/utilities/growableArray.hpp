@@ -124,10 +124,6 @@ template<class E> class GrowableArray : public GenericGrowableArray {
   GrowableArray(int initial_size, bool C_heap = false, MEMFLAGS F = mtInternal)
     : GenericGrowableArray(initial_size, 0, C_heap, F) {
     _data = (E*)raw_allocate(sizeof(E));
-// Needed for Visual Studio 2012 and older
-#ifdef _MSC_VER
-#pragma warning(suppress: 4345)
-#endif
     for (int i = 0; i < _max; i++) ::new ((void*)&_data[i]) E();
   }
 
@@ -158,8 +154,7 @@ template<class E> class GrowableArray : public GenericGrowableArray {
   void  clear()                 { _len = 0; }
   int   length() const          { return _len; }
   int   max_length() const      { return _max; }
-  void  trunc_to(int l)         {
-    _len = l; }
+  void  trunc_to(int l)         { _len = l; }
   bool  is_empty() const        { return _len == 0; }
   bool  is_nonempty() const     { return _len != 0; }
   bool  is_full() const         { return _len == _max; }
@@ -397,10 +392,6 @@ template<class E> void GrowableArray<E>::grow(int j) {
     E* newData = (E*)raw_allocate(sizeof(E));
     int i = 0;
     for (     ; i < _len; i++) ::new ((void*)&newData[i]) E(_data[i]);
-// Needed for Visual Studio 2012 and older
-#ifdef _MSC_VER
-#pragma warning(suppress: 4345)
-#endif
     for (     ; i < _max; i++) ::new ((void*)&newData[i]) E();
     for (i = 0; i < old_max; i++) _data[i].~E();
     if (on_C_heap() && _data != NULL) {
@@ -449,8 +440,7 @@ template<class E> class GrowableArrayIterator : public StackObj {
   int _position;                  // The current position in the GrowableArray
 
   // Private constructor used in GrowableArray::begin() and GrowableArray::end()
-  GrowableArrayIterator(const GrowableArray<E>* array, int position) : _array(array), _position(position) {
-  }
+  GrowableArrayIterator(const GrowableArray<E>* array, int position) : _array(array), _position(position) { }
 
  public:
   GrowableArrayIterator() : _array(NULL), _position(0) { }

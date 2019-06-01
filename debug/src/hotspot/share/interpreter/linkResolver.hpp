@@ -57,8 +57,7 @@ class CallInfo : public StackObj {
   friend class LinkResolver;
 
  public:
-  CallInfo() {
-  }
+  CallInfo() { }
 
   // utility to extract an effective CallInfo from a method and an optional receiver limit
   // does not queue the method for compilation.  This also creates a ResolvedMethodName

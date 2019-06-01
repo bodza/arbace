@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "ci/ciExceptionHandler.hpp"
 #include "ci/ciUtilities.inline.hpp"
 #include "runtime/handles.inline.hpp"
@@ -30,9 +31,7 @@ ciInstanceKlass* ciExceptionHandler::catch_klass() {
 // ------------------------------------------------------------------
 // ciExceptionHandler::print()
 void ciExceptionHandler::print() {
-  tty->print("<ciExceptionHandler start=%d limit=%d"
-             " handler_bci=%d ex_klass_index=%d",
-             start(), limit(), handler_bci(), catch_klass_index());
+  tty->print("<ciExceptionHandler start=%d limit=%d handler_bci=%d ex_klass_index=%d", start(), limit(), handler_bci(), catch_klass_index());
   if (_catch_klass != NULL) {
     tty->print(" ex_klass=");
     _catch_klass->print();

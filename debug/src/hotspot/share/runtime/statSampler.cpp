@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "memory/allocation.inline.hpp"
@@ -270,20 +271,15 @@ void StatSampler::create_misc_perfdata() {
 
   // HotSpot flags (from .hotspotrc) and args (from command line)
   //
-  PerfDataManager::create_string_constant(JAVA_RT, "vmFlags",
-                                          Arguments::jvm_flags(), CHECK);
-  PerfDataManager::create_string_constant(JAVA_RT, "vmArgs",
-                                          Arguments::jvm_args(), CHECK);
+  PerfDataManager::create_string_constant(JAVA_RT, "vmFlags", Arguments::jvm_flags(), CHECK);
+  PerfDataManager::create_string_constant(JAVA_RT, "vmArgs", Arguments::jvm_args(), CHECK);
 
   // java class name/jar file and arguments to main class
   // note: name is cooridnated with launcher and Arguments.cpp
-  PerfDataManager::create_string_constant(SUN_RT, "javaCommand",
-                                          Arguments::java_command(), CHECK);
+  PerfDataManager::create_string_constant(SUN_RT, "javaCommand", Arguments::java_command(), CHECK);
 
   // the Java VM Internal version string
-  PerfDataManager::create_string_constant(SUN_RT, "internalVersion",
-                                         VM_Version::internal_vm_info_string(),
-                                         CHECK);
+  PerfDataManager::create_string_constant(SUN_RT, "internalVersion", VM_Version::internal_vm_info_string(), CHECK);
 
   // create sampled instrumentation objects
   create_sampled_perfdata();
@@ -311,8 +307,7 @@ void StatSampler::create_sampled_perfdata() {
   // the os class. This counter can be used as either a time stamp
   // for each logged entry or as a liveness indicator for the VM.
   PerfSampleHelper* psh = new HighResTimeSampler();
-  PerfDataManager::create_counter(SUN_OS, "hrt.ticks",
-                                  PerfData::U_Ticks, psh, CHECK);
+  PerfDataManager::create_counter(SUN_OS, "hrt.ticks", PerfData::U_Ticks, psh, CHECK);
 }
 
 /*

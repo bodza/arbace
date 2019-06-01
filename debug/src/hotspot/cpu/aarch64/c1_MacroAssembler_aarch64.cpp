@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_MacroAssembler.hpp"
 #include "c1/c1_Runtime1.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -298,8 +299,7 @@ void C1_MacroAssembler::remove_frame(int framesize) {
   }
 }
 
-void C1_MacroAssembler::verified_entry() {
-}
+void C1_MacroAssembler::verified_entry() { }
 
 void C1_MacroAssembler::load_parameter(int offset_in_words, Register reg) {
   // rbp, + 0: link

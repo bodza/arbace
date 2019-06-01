@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1ConcurrentMarkThread.inline.hpp"
 #include "gc/g1/g1Policy.hpp"
@@ -113,9 +114,7 @@ void VM_G1CollectForAllocation::doit() {
         // There has been a request to perform a GC to free some space. We have no
         // information on how much memory has been asked for. In case there are
         // absolutely no regions left to allocate into, do a maximally compacting full GC.
-        log_info(gc, ergo)("Attempting maximally compacting collection");
-        _pause_succeeded = g1h->do_full_collection(false, /* explicit gc */
-                                                   true   /* clear_all_soft_refs */);
+        _pause_succeeded = g1h->do_full_collection(/* explicit gc */ false, /* clear_all_soft_refs */ true);
       }
     }
     guarantee(_pause_succeeded, "Elevated collections during the safepoint must always succeed.");

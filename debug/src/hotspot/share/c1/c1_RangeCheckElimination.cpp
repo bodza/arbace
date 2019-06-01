@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_ValueStack.hpp"
 #include "c1/c1_RangeCheckElimination.hpp"
 #include "c1/c1_IR.hpp"
@@ -953,13 +954,7 @@ void RangeCheckEliminator::Verification::block_do(BlockBegin *block) {
 
   BlockBegin *dominator = block->dominator();
   if (dominator) {
-    BlockList *all_blocks = _ir->linear_scan_order();
-    for (int i=0; i<all_blocks->length(); i++) {
-      BlockBegin *cur = all_blocks->at(i);
-      if (cur != dominator && cur != block) {
-      }
-    }
-  } else {
+    BlockList *all_blocks = _ir->linear_scan_order();
   }
 
   if (block->is_set(BlockBegin::linear_scan_loop_header_flag)) {
@@ -974,16 +969,6 @@ void RangeCheckEliminator::Verification::block_do(BlockBegin *block) {
         if (dominates(xhandler, block->pred_at(j)) || xhandler == block->pred_at(j)) {
           loop_through_xhandler = true;
         }
-      }
-    }
-
-    for (int i=0; i<block->number_of_sux(); i++) {
-      BlockBegin *sux = block->sux_at(i);
-    }
-
-    for (int i=0; i<all_blocks->length(); i++) {
-      BlockBegin *cur = all_blocks->at(i);
-      if (cur->loop_index() == loop_index && cur != block) {
       }
     }
   }
@@ -1058,8 +1043,7 @@ bool RangeCheckEliminator::Verification::can_reach(BlockBegin *start, BlockBegin
 }
 
 // Bound
-RangeCheckEliminator::Bound::~Bound() {
-}
+RangeCheckEliminator::Bound::~Bound() { }
 
 // Bound constructor
 RangeCheckEliminator::Bound::Bound() {
@@ -1135,8 +1119,7 @@ void RangeCheckEliminator::Bound::add_constant(int value) {
 }
 
 // Init
-void RangeCheckEliminator::Bound::init() {
-}
+void RangeCheckEliminator::Bound::init() { }
 
 // or
 void RangeCheckEliminator::Bound::or_op(Bound *b) {

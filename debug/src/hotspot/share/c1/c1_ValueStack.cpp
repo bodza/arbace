@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_IR.hpp"
 #include "c1/c1_InstructionPrinter.hpp"
 #include "c1/c1_ValueStack.hpp"
@@ -137,7 +138,6 @@ void ValueStack::setup_phi_for_stack(BlockBegin* b, int index) {
   ValueType* t = stack_at(index)->type();
   Value phi = new Phi(t, b, -index - 1);
   _stack.at_put(index, phi);
-
 }
 
 void ValueStack::setup_phi_for_local(BlockBegin* b, int index) {

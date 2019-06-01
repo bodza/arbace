@@ -1,27 +1,3 @@
-//
-// Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
-// DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-//
-// This code is free software; you can redistribute it and/or modify it
-// under the terms of the GNU General Public License version 2 only, as
-// published by the Free Software Foundation.
-//
-// This code is distributed in the hope that it will be useful, but WITHOUT
-// ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-// FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-// version 2 for more details (a copy is included in the LICENSE file that
-// accompanied this code).
-//
-// You should have received a copy of the GNU General Public License version
-// 2 along with this work; if not, write to the Free Software Foundation,
-// Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
-//
-// Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
-// or visit www.oracle.com if you need additional information or have any
-// questions.
-//
-//
-
 // X86 Common Architecture Description File
 
 //----------REGISTER DEFINITION BLOCK------------------------------------------
@@ -209,8 +185,6 @@ reg_def XMM7m( SOC, SOC, Op_RegF, 7, xmm7->as_VMReg()->next(12));
 reg_def XMM7n( SOC, SOC, Op_RegF, 7, xmm7->as_VMReg()->next(13));
 reg_def XMM7o( SOC, SOC, Op_RegF, 7, xmm7->as_VMReg()->next(14));
 reg_def XMM7p( SOC, SOC, Op_RegF, 7, xmm7->as_VMReg()->next(15));
-
-#ifdef _LP64
 
 reg_def XMM8 ( SOC, SOC, Op_RegF, 8, xmm8->as_VMReg());
 reg_def XMM8b( SOC, SOC, Op_RegF, 8, xmm8->as_VMReg()->next(1));
@@ -620,13 +594,7 @@ reg_def XMM31n( SOC, SOC, Op_RegF, 31, xmm31->as_VMReg()->next(13));
 reg_def XMM31o( SOC, SOC, Op_RegF, 31, xmm31->as_VMReg()->next(14));
 reg_def XMM31p( SOC, SOC, Op_RegF, 31, xmm31->as_VMReg()->next(15));
 
-#endif // _LP64
-
-#ifdef _LP64
 reg_def RFLAGS(SOC, SOC, 0, 16, VMRegImpl::Bad());
-#else
-reg_def RFLAGS(SOC, SOC, 0, 8, VMRegImpl::Bad());
-#endif // _LP64
 
 alloc_class chunk1(XMM0,  XMM0b,  XMM0c,  XMM0d,  XMM0e,  XMM0f,  XMM0g,  XMM0h,  XMM0i,  XMM0j,  XMM0k,  XMM0l,  XMM0m,  XMM0n,  XMM0o,  XMM0p,
                    XMM1,  XMM1b,  XMM1c,  XMM1d,  XMM1e,  XMM1f,  XMM1g,  XMM1h,  XMM1i,  XMM1j,  XMM1k,  XMM1l,  XMM1m,  XMM1n,  XMM1o,  XMM1p,
@@ -635,17 +603,16 @@ alloc_class chunk1(XMM0,  XMM0b,  XMM0c,  XMM0d,  XMM0e,  XMM0f,  XMM0g,  XMM0h,
                    XMM4,  XMM4b,  XMM4c,  XMM4d,  XMM4e,  XMM4f,  XMM4g,  XMM4h,  XMM4i,  XMM4j,  XMM4k,  XMM4l,  XMM4m,  XMM4n,  XMM4o,  XMM4p,
                    XMM5,  XMM5b,  XMM5c,  XMM5d,  XMM5e,  XMM5f,  XMM5g,  XMM5h,  XMM5i,  XMM5j,  XMM5k,  XMM5l,  XMM5m,  XMM5n,  XMM5o,  XMM5p,
                    XMM6,  XMM6b,  XMM6c,  XMM6d,  XMM6e,  XMM6f,  XMM6g,  XMM6h,  XMM6i,  XMM6j,  XMM6k,  XMM6l,  XMM6m,  XMM6n,  XMM6o,  XMM6p,
-                   XMM7,  XMM7b,  XMM7c,  XMM7d,  XMM7e,  XMM7f,  XMM7g,  XMM7h,  XMM7i,  XMM7j,  XMM7k,  XMM7l,  XMM7m,  XMM7n,  XMM7o,  XMM7p
-#ifdef _LP64
-                  ,XMM8,  XMM8b,  XMM8c,  XMM8d,  XMM8e,  XMM8f,  XMM8g,  XMM8h,  XMM8i,  XMM8j,  XMM8k,  XMM8l,  XMM8m,  XMM8n,  XMM8o,  XMM8p,
+                   XMM7,  XMM7b,  XMM7c,  XMM7d,  XMM7e,  XMM7f,  XMM7g,  XMM7h,  XMM7i,  XMM7j,  XMM7k,  XMM7l,  XMM7m,  XMM7n,  XMM7o,  XMM7p,
+                   XMM8,  XMM8b,  XMM8c,  XMM8d,  XMM8e,  XMM8f,  XMM8g,  XMM8h,  XMM8i,  XMM8j,  XMM8k,  XMM8l,  XMM8m,  XMM8n,  XMM8o,  XMM8p,
                    XMM9,  XMM9b,  XMM9c,  XMM9d,  XMM9e,  XMM9f,  XMM9g,  XMM9h,  XMM9i,  XMM9j,  XMM9k,  XMM9l,  XMM9m,  XMM9n,  XMM9o,  XMM9p,
                    XMM10, XMM10b, XMM10c, XMM10d, XMM10e, XMM10f, XMM10g, XMM10h, XMM10i, XMM10j, XMM10k, XMM10l, XMM10m, XMM10n, XMM10o, XMM10p,
                    XMM11, XMM11b, XMM11c, XMM11d, XMM11e, XMM11f, XMM11g, XMM11h, XMM11i, XMM11j, XMM11k, XMM11l, XMM11m, XMM11n, XMM11o, XMM11p,
                    XMM12, XMM12b, XMM12c, XMM12d, XMM12e, XMM12f, XMM12g, XMM12h, XMM12i, XMM12j, XMM12k, XMM12l, XMM12m, XMM12n, XMM12o, XMM12p,
                    XMM13, XMM13b, XMM13c, XMM13d, XMM13e, XMM13f, XMM13g, XMM13h, XMM13i, XMM13j, XMM13k, XMM13l, XMM13m, XMM13n, XMM13o, XMM13p,
                    XMM14, XMM14b, XMM14c, XMM14d, XMM14e, XMM14f, XMM14g, XMM14h, XMM14i, XMM14j, XMM14k, XMM14l, XMM14m, XMM14n, XMM14o, XMM14p,
-                   XMM15, XMM15b, XMM15c, XMM15d, XMM15e, XMM15f, XMM15g, XMM15h, XMM15i, XMM15j, XMM15k, XMM15l, XMM15m, XMM15n, XMM15o, XMM15p
-                  ,XMM16, XMM16b, XMM16c, XMM16d, XMM16e, XMM16f, XMM16g, XMM16h, XMM16i, XMM16j, XMM16k, XMM16l, XMM16m, XMM16n, XMM16o, XMM16p,
+                   XMM15, XMM15b, XMM15c, XMM15d, XMM15e, XMM15f, XMM15g, XMM15h, XMM15i, XMM15j, XMM15k, XMM15l, XMM15m, XMM15n, XMM15o, XMM15p,
+                   XMM16, XMM16b, XMM16c, XMM16d, XMM16e, XMM16f, XMM16g, XMM16h, XMM16i, XMM16j, XMM16k, XMM16l, XMM16m, XMM16n, XMM16o, XMM16p,
                    XMM17, XMM17b, XMM17c, XMM17d, XMM17e, XMM17f, XMM17g, XMM17h, XMM17i, XMM17j, XMM17k, XMM17l, XMM17m, XMM17n, XMM17o, XMM17p,
                    XMM18, XMM18b, XMM18c, XMM18d, XMM18e, XMM18f, XMM18g, XMM18h, XMM18i, XMM18j, XMM18k, XMM18l, XMM18m, XMM18n, XMM18o, XMM18p,
                    XMM19, XMM19b, XMM19c, XMM19d, XMM19e, XMM19f, XMM19g, XMM19h, XMM19i, XMM19j, XMM19k, XMM19l, XMM19m, XMM19n, XMM19o, XMM19p,
@@ -661,7 +628,6 @@ alloc_class chunk1(XMM0,  XMM0b,  XMM0c,  XMM0d,  XMM0e,  XMM0f,  XMM0g,  XMM0h,
                    XMM29, XMM29b, XMM29c, XMM29d, XMM29e, XMM29f, XMM29g, XMM29h, XMM29i, XMM29j, XMM29k, XMM29l, XMM29m, XMM29n, XMM29o, XMM29p,
                    XMM30, XMM30b, XMM30c, XMM30d, XMM30e, XMM30f, XMM30g, XMM30h, XMM30i, XMM30j, XMM30k, XMM30l, XMM30m, XMM30n, XMM30o, XMM30p,
                    XMM31, XMM31b, XMM31c, XMM31d, XMM31e, XMM31f, XMM31g, XMM31h, XMM31i, XMM31j, XMM31k, XMM31l, XMM31m, XMM31n, XMM31o, XMM31p
-#endif
                       );
 
 // flags allocation class should be last.
@@ -678,9 +644,8 @@ reg_class float_reg_legacy(XMM0,
                     XMM4,
                     XMM5,
                     XMM6,
-                    XMM7
-#ifdef _LP64
-                   ,XMM8,
+                    XMM7,
+                    XMM8,
                     XMM9,
                     XMM10,
                     XMM11,
@@ -688,7 +653,6 @@ reg_class float_reg_legacy(XMM0,
                     XMM13,
                     XMM14,
                     XMM15
-#endif
                     );
 
 // Class for evex float registers
@@ -699,9 +663,8 @@ reg_class float_reg_evex(XMM0,
                     XMM4,
                     XMM5,
                     XMM6,
-                    XMM7
-#ifdef _LP64
-                   ,XMM8,
+                    XMM7,
+                    XMM8,
                     XMM9,
                     XMM10,
                     XMM11,
@@ -725,7 +688,6 @@ reg_class float_reg_evex(XMM0,
                     XMM29,
                     XMM30,
                     XMM31
-#endif
                     );
 
 reg_class_dynamic float_reg(float_reg_evex, float_reg_legacy, %{ VM_Version::supports_evex() %} );
@@ -739,9 +701,8 @@ reg_class double_reg_legacy(XMM0,  XMM0b,
                      XMM4,  XMM4b,
                      XMM5,  XMM5b,
                      XMM6,  XMM6b,
-                     XMM7,  XMM7b
-#ifdef _LP64
-                    ,XMM8,  XMM8b,
+                     XMM7,  XMM7b,
+                     XMM8,  XMM8b,
                      XMM9,  XMM9b,
                      XMM10, XMM10b,
                      XMM11, XMM11b,
@@ -749,7 +710,6 @@ reg_class double_reg_legacy(XMM0,  XMM0b,
                      XMM13, XMM13b,
                      XMM14, XMM14b,
                      XMM15, XMM15b
-#endif
                      );
 
 // Class for evex double registers
@@ -760,9 +720,8 @@ reg_class double_reg_evex(XMM0,  XMM0b,
                      XMM4,  XMM4b,
                      XMM5,  XMM5b,
                      XMM6,  XMM6b,
-                     XMM7,  XMM7b
-#ifdef _LP64
-                    ,XMM8,  XMM8b,
+                     XMM7,  XMM7b,
+                     XMM8,  XMM8b,
                      XMM9,  XMM9b,
                      XMM10, XMM10b,
                      XMM11, XMM11b,
@@ -786,7 +745,6 @@ reg_class double_reg_evex(XMM0,  XMM0b,
                      XMM29, XMM29b,
                      XMM30, XMM30b,
                      XMM31, XMM31b
-#endif
                      );
 
 reg_class_dynamic double_reg(double_reg_evex, double_reg_legacy, %{ VM_Version::supports_evex() %} );
@@ -800,9 +758,8 @@ reg_class vectors_reg_legacy(XMM0,
                       XMM4,
                       XMM5,
                       XMM6,
-                      XMM7
-#ifdef _LP64
-                     ,XMM8,
+                      XMM7,
+                      XMM8,
                       XMM9,
                       XMM10,
                       XMM11,
@@ -810,7 +767,6 @@ reg_class vectors_reg_legacy(XMM0,
                       XMM13,
                       XMM14,
                       XMM15
-#endif
                       );
 
 // Class for evex 32bit vector registers
@@ -821,9 +777,8 @@ reg_class vectors_reg_evex(XMM0,
                       XMM4,
                       XMM5,
                       XMM6,
-                      XMM7
-#ifdef _LP64
-                     ,XMM8,
+                      XMM7,
+                      XMM8,
                       XMM9,
                       XMM10,
                       XMM11,
@@ -847,7 +802,6 @@ reg_class vectors_reg_evex(XMM0,
                       XMM29,
                       XMM30,
                       XMM31
-#endif
                       );
 
 reg_class_dynamic vectors_reg(vectors_reg_evex, vectors_reg_legacy, %{ VM_Version::supports_evex() %} );
@@ -861,9 +815,8 @@ reg_class vectord_reg_legacy(XMM0,  XMM0b,
                       XMM4,  XMM4b,
                       XMM5,  XMM5b,
                       XMM6,  XMM6b,
-                      XMM7,  XMM7b
-#ifdef _LP64
-                     ,XMM8,  XMM8b,
+                      XMM7,  XMM7b,
+                      XMM8,  XMM8b,
                       XMM9,  XMM9b,
                       XMM10, XMM10b,
                       XMM11, XMM11b,
@@ -871,7 +824,6 @@ reg_class vectord_reg_legacy(XMM0,  XMM0b,
                       XMM13, XMM13b,
                       XMM14, XMM14b,
                       XMM15, XMM15b
-#endif
                       );
 
 // Class for all 64bit vector registers
@@ -882,9 +834,8 @@ reg_class vectord_reg_evex(XMM0,  XMM0b,
                       XMM4,  XMM4b,
                       XMM5,  XMM5b,
                       XMM6,  XMM6b,
-                      XMM7,  XMM7b
-#ifdef _LP64
-                     ,XMM8,  XMM8b,
+                      XMM7,  XMM7b,
+                      XMM8,  XMM8b,
                       XMM9,  XMM9b,
                       XMM10, XMM10b,
                       XMM11, XMM11b,
@@ -908,7 +859,6 @@ reg_class vectord_reg_evex(XMM0,  XMM0b,
                       XMM29, XMM29b,
                       XMM30, XMM30b,
                       XMM31, XMM31b
-#endif
                       );
 
 reg_class_dynamic vectord_reg(vectord_reg_evex, vectord_reg_legacy, %{ VM_Version::supports_evex() %} );
@@ -922,9 +872,8 @@ reg_class vectorx_reg_legacy(XMM0,  XMM0b,  XMM0c,  XMM0d,
                       XMM4,  XMM4b,  XMM4c,  XMM4d,
                       XMM5,  XMM5b,  XMM5c,  XMM5d,
                       XMM6,  XMM6b,  XMM6c,  XMM6d,
-                      XMM7,  XMM7b,  XMM7c,  XMM7d
-#ifdef _LP64
-                     ,XMM8,  XMM8b,  XMM8c,  XMM8d,
+                      XMM7,  XMM7b,  XMM7c,  XMM7d,
+                      XMM8,  XMM8b,  XMM8c,  XMM8d,
                       XMM9,  XMM9b,  XMM9c,  XMM9d,
                       XMM10, XMM10b, XMM10c, XMM10d,
                       XMM11, XMM11b, XMM11c, XMM11d,
@@ -932,7 +881,6 @@ reg_class vectorx_reg_legacy(XMM0,  XMM0b,  XMM0c,  XMM0d,
                       XMM13, XMM13b, XMM13c, XMM13d,
                       XMM14, XMM14b, XMM14c, XMM14d,
                       XMM15, XMM15b, XMM15c, XMM15d
-#endif
                       );
 
 // Class for all 128bit vector registers
@@ -943,9 +891,8 @@ reg_class vectorx_reg_evex(XMM0,  XMM0b,  XMM0c,  XMM0d,
                       XMM4,  XMM4b,  XMM4c,  XMM4d,
                       XMM5,  XMM5b,  XMM5c,  XMM5d,
                       XMM6,  XMM6b,  XMM6c,  XMM6d,
-                      XMM7,  XMM7b,  XMM7c,  XMM7d
-#ifdef _LP64
-                     ,XMM8,  XMM8b,  XMM8c,  XMM8d,
+                      XMM7,  XMM7b,  XMM7c,  XMM7d,
+                      XMM8,  XMM8b,  XMM8c,  XMM8d,
                       XMM9,  XMM9b,  XMM9c,  XMM9d,
                       XMM10, XMM10b, XMM10c, XMM10d,
                       XMM11, XMM11b, XMM11c, XMM11d,
@@ -969,7 +916,6 @@ reg_class vectorx_reg_evex(XMM0,  XMM0b,  XMM0c,  XMM0d,
                       XMM29, XMM29b, XMM29c, XMM29d,
                       XMM30, XMM30b, XMM30c, XMM30d,
                       XMM31, XMM31b, XMM31c, XMM31d
-#endif
                       );
 
 reg_class_dynamic vectorx_reg(vectorx_reg_evex, vectorx_reg_legacy, %{ VM_Version::supports_evex() %} );
@@ -983,9 +929,8 @@ reg_class vectory_reg_legacy(XMM0,  XMM0b,  XMM0c,  XMM0d,  XMM0e,  XMM0f,  XMM0
                       XMM4,  XMM4b,  XMM4c,  XMM4d,  XMM4e,  XMM4f,  XMM4g,  XMM4h,
                       XMM5,  XMM5b,  XMM5c,  XMM5d,  XMM5e,  XMM5f,  XMM5g,  XMM5h,
                       XMM6,  XMM6b,  XMM6c,  XMM6d,  XMM6e,  XMM6f,  XMM6g,  XMM6h,
-                      XMM7,  XMM7b,  XMM7c,  XMM7d,  XMM7e,  XMM7f,  XMM7g,  XMM7h
-#ifdef _LP64
-                     ,XMM8,  XMM8b,  XMM8c,  XMM8d,  XMM8e,  XMM8f,  XMM8g,  XMM8h,
+                      XMM7,  XMM7b,  XMM7c,  XMM7d,  XMM7e,  XMM7f,  XMM7g,  XMM7h,
+                      XMM8,  XMM8b,  XMM8c,  XMM8d,  XMM8e,  XMM8f,  XMM8g,  XMM8h,
                       XMM9,  XMM9b,  XMM9c,  XMM9d,  XMM9e,  XMM9f,  XMM9g,  XMM9h,
                       XMM10, XMM10b, XMM10c, XMM10d, XMM10e, XMM10f, XMM10g, XMM10h,
                       XMM11, XMM11b, XMM11c, XMM11d, XMM11e, XMM11f, XMM11g, XMM11h,
@@ -993,7 +938,6 @@ reg_class vectory_reg_legacy(XMM0,  XMM0b,  XMM0c,  XMM0d,  XMM0e,  XMM0f,  XMM0
                       XMM13, XMM13b, XMM13c, XMM13d, XMM13e, XMM13f, XMM13g, XMM13h,
                       XMM14, XMM14b, XMM14c, XMM14d, XMM14e, XMM14f, XMM14g, XMM14h,
                       XMM15, XMM15b, XMM15c, XMM15d, XMM15e, XMM15f, XMM15g, XMM15h
-#endif
                       );
 
 // Class for all 256bit vector registers
@@ -1004,9 +948,8 @@ reg_class vectory_reg_evex(XMM0,  XMM0b,  XMM0c,  XMM0d,  XMM0e,  XMM0f,  XMM0g,
                       XMM4,  XMM4b,  XMM4c,  XMM4d,  XMM4e,  XMM4f,  XMM4g,  XMM4h,
                       XMM5,  XMM5b,  XMM5c,  XMM5d,  XMM5e,  XMM5f,  XMM5g,  XMM5h,
                       XMM6,  XMM6b,  XMM6c,  XMM6d,  XMM6e,  XMM6f,  XMM6g,  XMM6h,
-                      XMM7,  XMM7b,  XMM7c,  XMM7d,  XMM7e,  XMM7f,  XMM7g,  XMM7h
-#ifdef _LP64
-                     ,XMM8,  XMM8b,  XMM8c,  XMM8d,  XMM8e,  XMM8f,  XMM8g,  XMM8h,
+                      XMM7,  XMM7b,  XMM7c,  XMM7d,  XMM7e,  XMM7f,  XMM7g,  XMM7h,
+                      XMM8,  XMM8b,  XMM8c,  XMM8d,  XMM8e,  XMM8f,  XMM8g,  XMM8h,
                       XMM9,  XMM9b,  XMM9c,  XMM9d,  XMM9e,  XMM9f,  XMM9g,  XMM9h,
                       XMM10, XMM10b, XMM10c, XMM10d, XMM10e, XMM10f, XMM10g, XMM10h,
                       XMM11, XMM11b, XMM11c, XMM11d, XMM11e, XMM11f, XMM11g, XMM11h,
@@ -1030,7 +973,6 @@ reg_class vectory_reg_evex(XMM0,  XMM0b,  XMM0c,  XMM0d,  XMM0e,  XMM0f,  XMM0g,
                       XMM29, XMM29b, XMM29c, XMM29d, XMM29e, XMM29f, XMM29g, XMM29h,
                       XMM30, XMM30b, XMM30c, XMM30d, XMM30e, XMM30f, XMM30g, XMM30h,
                       XMM31, XMM31b, XMM31c, XMM31d, XMM31e, XMM31f, XMM31g, XMM31h
-#endif
                       );
 
 reg_class_dynamic vectory_reg(vectory_reg_evex, vectory_reg_legacy, %{ VM_Version::supports_evex() %} );
@@ -1044,17 +986,16 @@ reg_class vectorz_reg_evex(XMM0,  XMM0b,  XMM0c,  XMM0d,  XMM0e,  XMM0f,  XMM0g,
                       XMM4,  XMM4b,  XMM4c,  XMM4d,  XMM4e,  XMM4f,  XMM4g,  XMM4h,  XMM4i,  XMM4j,  XMM4k,  XMM4l,  XMM4m,  XMM4n,  XMM4o,  XMM4p,
                       XMM5,  XMM5b,  XMM5c,  XMM5d,  XMM5e,  XMM5f,  XMM5g,  XMM5h,  XMM5i,  XMM5j,  XMM5k,  XMM5l,  XMM5m,  XMM5n,  XMM5o,  XMM5p,
                       XMM6,  XMM6b,  XMM6c,  XMM6d,  XMM6e,  XMM6f,  XMM6g,  XMM6h,  XMM6i,  XMM6j,  XMM6k,  XMM6l,  XMM6m,  XMM6n,  XMM6o,  XMM6p,
-                      XMM7,  XMM7b,  XMM7c,  XMM7d,  XMM7e,  XMM7f,  XMM7g,  XMM7h,  XMM7i,  XMM7j,  XMM7k,  XMM7l,  XMM7m,  XMM7n,  XMM7o,  XMM7p
-#ifdef _LP64
-                     ,XMM8,  XMM8b,  XMM8c,  XMM8d,  XMM8e,  XMM8f,  XMM8g,  XMM8h,  XMM8i,  XMM8j,  XMM8k,  XMM8l,  XMM8m,  XMM8n,  XMM8o,  XMM8p,
+                      XMM7,  XMM7b,  XMM7c,  XMM7d,  XMM7e,  XMM7f,  XMM7g,  XMM7h,  XMM7i,  XMM7j,  XMM7k,  XMM7l,  XMM7m,  XMM7n,  XMM7o,  XMM7p,
+                      XMM8,  XMM8b,  XMM8c,  XMM8d,  XMM8e,  XMM8f,  XMM8g,  XMM8h,  XMM8i,  XMM8j,  XMM8k,  XMM8l,  XMM8m,  XMM8n,  XMM8o,  XMM8p,
                       XMM9,  XMM9b,  XMM9c,  XMM9d,  XMM9e,  XMM9f,  XMM9g,  XMM9h,  XMM9i,  XMM9j,  XMM9k,  XMM9l,  XMM9m,  XMM9n,  XMM9o,  XMM9p,
                       XMM10, XMM10b, XMM10c, XMM10d, XMM10e, XMM10f, XMM10g, XMM10h, XMM10i, XMM10j, XMM10k, XMM10l, XMM10m, XMM10n, XMM10o, XMM10p,
                       XMM11, XMM11b, XMM11c, XMM11d, XMM11e, XMM11f, XMM11g, XMM11h, XMM11i, XMM11j, XMM11k, XMM11l, XMM11m, XMM11n, XMM11o, XMM11p,
                       XMM12, XMM12b, XMM12c, XMM12d, XMM12e, XMM12f, XMM12g, XMM12h, XMM12i, XMM12j, XMM12k, XMM12l, XMM12m, XMM12n, XMM12o, XMM12p,
                       XMM13, XMM13b, XMM13c, XMM13d, XMM13e, XMM13f, XMM13g, XMM13h, XMM13i, XMM13j, XMM13k, XMM13l, XMM13m, XMM13n, XMM13o, XMM13p,
                       XMM14, XMM14b, XMM14c, XMM14d, XMM14e, XMM14f, XMM14g, XMM14h, XMM14i, XMM14j, XMM14k, XMM14l, XMM14m, XMM14n, XMM14o, XMM14p,
-                      XMM15, XMM15b, XMM15c, XMM15d, XMM15e, XMM15f, XMM15g, XMM15h, XMM15i, XMM15j, XMM15k, XMM15l, XMM15m, XMM15n, XMM15o, XMM15p
-                     ,XMM16, XMM16b, XMM16c, XMM16d, XMM16e, XMM16f, XMM16g, XMM16h, XMM16i, XMM16j, XMM16k, XMM16l, XMM16m, XMM16n, XMM16o, XMM16p,
+                      XMM15, XMM15b, XMM15c, XMM15d, XMM15e, XMM15f, XMM15g, XMM15h, XMM15i, XMM15j, XMM15k, XMM15l, XMM15m, XMM15n, XMM15o, XMM15p,
+                      XMM16, XMM16b, XMM16c, XMM16d, XMM16e, XMM16f, XMM16g, XMM16h, XMM16i, XMM16j, XMM16k, XMM16l, XMM16m, XMM16n, XMM16o, XMM16p,
                       XMM17, XMM17b, XMM17c, XMM17d, XMM17e, XMM17f, XMM17g, XMM17h, XMM17i, XMM17j, XMM17k, XMM17l, XMM17m, XMM17n, XMM17o, XMM17p,
                       XMM18, XMM18b, XMM18c, XMM18d, XMM18e, XMM18f, XMM18g, XMM18h, XMM18i, XMM18j, XMM18k, XMM18l, XMM18m, XMM18n, XMM18o, XMM18p,
                       XMM19, XMM19b, XMM19c, XMM19d, XMM19e, XMM19f, XMM19g, XMM19h, XMM19i, XMM19j, XMM19k, XMM19l, XMM19m, XMM19n, XMM19o, XMM19p,
@@ -1070,7 +1011,6 @@ reg_class vectorz_reg_evex(XMM0,  XMM0b,  XMM0c,  XMM0d,  XMM0e,  XMM0f,  XMM0g,
                       XMM29, XMM29b, XMM29c, XMM29d, XMM29e, XMM29f, XMM29g, XMM29h, XMM29i, XMM29j, XMM29k, XMM29l, XMM29m, XMM29n, XMM29o, XMM29p,
                       XMM30, XMM30b, XMM30c, XMM30d, XMM30e, XMM30f, XMM30g, XMM30h, XMM30i, XMM30j, XMM30k, XMM30l, XMM30m, XMM30n, XMM30o, XMM30p,
                       XMM31, XMM31b, XMM31c, XMM31d, XMM31e, XMM31f, XMM31g, XMM31h, XMM31i, XMM31j, XMM31k, XMM31l, XMM31m, XMM31n, XMM31o, XMM31p
-#endif
                       );
 
 // Class for restricted 512bit vector registers
@@ -1081,9 +1021,8 @@ reg_class vectorz_reg_legacy(XMM0,  XMM0b,  XMM0c,  XMM0d,  XMM0e,  XMM0f,  XMM0
                       XMM4,  XMM4b,  XMM4c,  XMM4d,  XMM4e,  XMM4f,  XMM4g,  XMM4h,  XMM4i,  XMM4j,  XMM4k,  XMM4l,  XMM4m,  XMM4n,  XMM4o,  XMM4p,
                       XMM5,  XMM5b,  XMM5c,  XMM5d,  XMM5e,  XMM5f,  XMM5g,  XMM5h,  XMM5i,  XMM5j,  XMM5k,  XMM5l,  XMM5m,  XMM5n,  XMM5o,  XMM5p,
                       XMM6,  XMM6b,  XMM6c,  XMM6d,  XMM6e,  XMM6f,  XMM6g,  XMM6h,  XMM6i,  XMM6j,  XMM6k,  XMM6l,  XMM6m,  XMM6n,  XMM6o,  XMM6p,
-                      XMM7,  XMM7b,  XMM7c,  XMM7d,  XMM7e,  XMM7f,  XMM7g,  XMM7h,  XMM7i,  XMM7j,  XMM7k,  XMM7l,  XMM7m,  XMM7n,  XMM7o,  XMM7p
-#ifdef _LP64
-                     ,XMM8,  XMM8b,  XMM8c,  XMM8d,  XMM8e,  XMM8f,  XMM8g,  XMM8h,  XMM8i,  XMM8j,  XMM8k,  XMM8l,  XMM8m,  XMM8n,  XMM8o,  XMM8p,
+                      XMM7,  XMM7b,  XMM7c,  XMM7d,  XMM7e,  XMM7f,  XMM7g,  XMM7h,  XMM7i,  XMM7j,  XMM7k,  XMM7l,  XMM7m,  XMM7n,  XMM7o,  XMM7p,
+                      XMM8,  XMM8b,  XMM8c,  XMM8d,  XMM8e,  XMM8f,  XMM8g,  XMM8h,  XMM8i,  XMM8j,  XMM8k,  XMM8l,  XMM8m,  XMM8n,  XMM8o,  XMM8p,
                       XMM9,  XMM9b,  XMM9c,  XMM9d,  XMM9e,  XMM9f,  XMM9g,  XMM9h,  XMM9i,  XMM9j,  XMM9k,  XMM9l,  XMM9m,  XMM9n,  XMM9o,  XMM9p,
                       XMM10, XMM10b, XMM10c, XMM10d, XMM10e, XMM10f, XMM10g, XMM10h, XMM10i, XMM10j, XMM10k, XMM10l, XMM10m, XMM10n, XMM10o, XMM10p,
                       XMM11, XMM11b, XMM11c, XMM11d, XMM11e, XMM11f, XMM11g, XMM11h, XMM11i, XMM11j, XMM11k, XMM11l, XMM11m, XMM11n, XMM11o, XMM11p,
@@ -1091,7 +1030,6 @@ reg_class vectorz_reg_legacy(XMM0,  XMM0b,  XMM0c,  XMM0d,  XMM0e,  XMM0f,  XMM0
                       XMM13, XMM13b, XMM13c, XMM13d, XMM13e, XMM13f, XMM13g, XMM13h, XMM13i, XMM13j, XMM13k, XMM13l, XMM13m, XMM13n, XMM13o, XMM13p,
                       XMM14, XMM14b, XMM14c, XMM14d, XMM14e, XMM14f, XMM14g, XMM14h, XMM14i, XMM14j, XMM14k, XMM14l, XMM14m, XMM14n, XMM14o, XMM14p,
                       XMM15, XMM15b, XMM15c, XMM15d, XMM15e, XMM15f, XMM15g, XMM15h, XMM15i, XMM15j, XMM15k, XMM15l, XMM15m, XMM15n, XMM15o, XMM15p
-#endif
                       );
 
 reg_class_dynamic vectorz_reg(vectorz_reg_evex, vectorz_reg_legacy, %{ VM_Version::supports_evex() %} );
@@ -1128,8 +1066,6 @@ reg_class zmm6_reg(XMM6, XMM6b, XMM6c, XMM6d, XMM6e, XMM6f, XMM6g, XMM6h, XMM6i,
 reg_class xmm7_reg(XMM7, XMM7b, XMM7c, XMM7d);
 reg_class ymm7_reg(XMM7, XMM7b, XMM7c, XMM7d, XMM7e, XMM7f, XMM7g, XMM7h);
 reg_class zmm7_reg(XMM7, XMM7b, XMM7c, XMM7d, XMM7e, XMM7f, XMM7g, XMM7h, XMM7i, XMM7j, XMM7k, XMM7l, XMM7m, XMM7n, XMM7o, XMM7p);
-
-#ifdef _LP64
 
 reg_class xmm8_reg(XMM8, XMM8b, XMM8c, XMM8d);
 reg_class ymm8_reg(XMM8, XMM8b, XMM8c, XMM8d, XMM8e, XMM8f, XMM8g, XMM8h);
@@ -1227,10 +1163,7 @@ reg_class xmm31_reg(XMM31, XMM31b, XMM31c, XMM31d);
 reg_class ymm31_reg(XMM31, XMM31b, XMM31c, XMM31d, XMM31e, XMM31f, XMM31g, XMM31h);
 reg_class zmm31_reg(XMM31, XMM31b, XMM31c, XMM31d, XMM31e, XMM31f, XMM31g, XMM31h, XMM31i, XMM31j, XMM31k, XMM31l, XMM31m, XMM31n, XMM31o, XMM31p);
 
-#endif
-
 %}
-
 
 //----------SOURCE BLOCK-------------------------------------------------------
 // This is a block of C++ code which provides values, functions, and
@@ -1280,24 +1213,13 @@ class HandlerImpl {
     return NativeJump::instruction_size;
   }
 
-#ifdef _LP64
   static uint size_deopt_handler() {
     // three 5 byte instructions
     return 15;
   }
-#else
-  static uint size_deopt_handler() {
-    // NativeCall instruction size is the same as NativeJump.
-    // exception handler starts out as jump and can be patched to
-    // a call be deoptimization.  (4932387)
-    // Note that this value is also credited (in output.cpp) to
-    // the size of the code section.
-    return 5 + NativeJump::instruction_size; // pushl(); jmp;
-  }
-#endif
 };
 
-%} // end source_hpp
+%}
 
 source %{
 
@@ -1317,7 +1239,6 @@ int HandlerImpl::emit_exception_handler(CodeBuffer& cbuf) {
   }
   int offset = __ offset();
   __ jump(RuntimeAddress(OptoRuntime::exception_blob()->entry_point()));
-  assert(__ offset() - offset <= (int) size_exception_handler(), "overflow");
   __ end_a_stub();
   return offset;
 }
@@ -1335,7 +1256,6 @@ int HandlerImpl::emit_deopt_handler(CodeBuffer& cbuf) {
   }
   int offset = __ offset();
 
-#ifdef _LP64
   address the_pc = (address) __ pc();
   Label next;
   // push a "the_pc" on the stack without destroying any registers
@@ -1346,33 +1266,19 @@ int HandlerImpl::emit_deopt_handler(CodeBuffer& cbuf) {
   __ bind(next);
   // adjust it so it matches "the_pc"
   __ subptr(Address(rsp, 0), __ offset() - offset);
-#else
-  InternalAddress here(__ pc());
-  __ pushptr(here.addr());
-#endif
 
   __ jump(RuntimeAddress(SharedRuntime::deopt_blob()->unpack()));
-  assert(__ offset() - offset <= (int) size_deopt_handler(), "overflow");
   __ end_a_stub();
   return offset;
 }
 
-
 //=============================================================================
 
   // Float masks come from different places depending on platform.
-#ifdef _LP64
   static address float_signmask()  { return StubRoutines::x86::float_sign_mask(); }
   static address float_signflip()  { return StubRoutines::x86::float_sign_flip(); }
   static address double_signmask() { return StubRoutines::x86::double_sign_mask(); }
   static address double_signflip() { return StubRoutines::x86::double_sign_flip(); }
-#else
-  static address float_signmask()  { return (address)float_signmask_pool; }
-  static address float_signflip()  { return (address)float_signflip_pool; }
-  static address double_signmask() { return (address)double_signmask_pool; }
-  static address double_signflip() { return (address)double_signflip_pool; }
-#endif
-
 
 const bool Matcher::match_rule_supported(int opcode) {
   if (!has_match_rule(opcode))
@@ -1423,9 +1329,7 @@ const bool Matcher::match_rule_supported(int opcode) {
         ret_value = false;
       break;
     case Op_CompareAndSwapL:
-#ifdef _LP64
     case Op_CompareAndSwapP:
-#endif
       if (!VM_Version::supports_cx8())
         ret_value = false;
       break;
@@ -1496,19 +1400,16 @@ const bool Matcher::has_predicated_vectors(void) {
 
 const int Matcher::float_pressure(int default_pressure_threshold) {
   int float_pressure_threshold = default_pressure_threshold;
-#ifdef _LP64
   if (UseAVX > 2) {
     // Increase pressure threshold on machines with AVX3 which have
     // 2x more XMM registers.
     float_pressure_threshold = default_pressure_threshold * 2;
   }
-#endif
   return float_pressure_threshold;
 }
 
 // Max vector size in bytes. 0 if not supported.
 const int Matcher::vector_width_in_bytes(BasicType bt) {
-  assert(is_java_primitive(bt), "only primitive type vectors");
   if (UseSSE < 2) return 0;
   // SSE2 supports 128bit vectors for all types.
   // AVX2 supports 256bit vectors for all types.
@@ -1562,7 +1463,6 @@ const int Matcher::min_vector_size(const BasicType bt) {
 
 // Vector ideal reg corresponding to specified size in bytes
 const uint Matcher::vector_ideal_reg(int size) {
-  assert(MaxVectorSize >= size, "");
   switch(size) {
     case  4: return Op_VecS;
     case  8: return Op_VecD;
@@ -1590,7 +1490,6 @@ const bool Matcher::pass_original_key_for_aes() {
   return false;
 }
 
-
 const bool Matcher::convi2l_type_required = true;
 
 // Check for shift by small constant as well
@@ -1602,7 +1501,6 @@ static bool clone_shift(Node* shift, Matcher* matcher, Matcher::MStack& mstack, 
     address_visited.set(shift->_idx); // Flag as address_visited
     mstack.push(shift->in(2), Matcher::Visit);
     Node *conv = shift->in(1);
-#ifdef _LP64
     // Allow Matcher to match the rule which bypass
     // ConvI2L operation for an array index on LP64
     // if the index value is positive.
@@ -1613,7 +1511,6 @@ static bool clone_shift(Node* shift, Matcher* matcher, Matcher::MStack& mstack, 
       address_visited.set(conv->_idx); // Flag as address_visited
       mstack.push(conv->in(1), Matcher::Pre_Visit);
     } else
-#endif
       mstack.push(conv, Matcher::Pre_Visit);
     return true;
   }
@@ -1660,19 +1557,13 @@ bool Matcher::clone_address_expressions(AddPNode* m, Matcher::MStack& mstack, Ve
   return false;
 }
 
-void Compile::reshape_address(AddPNode* addp) {
-}
+void Compile::reshape_address(AddPNode* addp) { }
 
 // Helper methods for MachSpillCopyNode::implementation().
-static int vec_mov_helper(CodeBuffer *cbuf, bool do_size, int src_lo, int dst_lo,
-                          int src_hi, int dst_hi, uint ireg, outputStream* st) {
+static int vec_mov_helper(CodeBuffer *cbuf, bool do_size, int src_lo, int dst_lo, int src_hi, int dst_hi, uint ireg, outputStream* st) {
   // In 64-bit VM size calculation is very complex. Emitting instructions
   // into scratch buffer is used to get size in 64-bit VM.
-  LP64_ONLY( assert(!do_size, "this method calculates size only for 32-bit VM"); )
-  assert(ireg == Op_VecS || // 32bit vector
-         (src_lo & 1) == 0 && (src_lo + 1) == src_hi &&
-         (dst_lo & 1) == 0 && (dst_lo + 1) == dst_hi,
-         "no non-adjacent vector moves" );
+  assert(!do_size, "this method calculates size only for 32-bit VM");
   if (cbuf) {
     MacroAssembler _masm(cbuf);
     int offset = __ offset();
@@ -1680,28 +1571,20 @@ static int vec_mov_helper(CodeBuffer *cbuf, bool do_size, int src_lo, int dst_lo
     case Op_VecS: // copy whole register
     case Op_VecD:
     case Op_VecX:
-#ifndef LP64
-      __ movdqu(as_XMMRegister(Matcher::_regEncode[dst_lo]), as_XMMRegister(Matcher::_regEncode[src_lo]));
-#else
       if ((UseAVX < 3) || VM_Version::supports_avx512vl()) {
         __ movdqu(as_XMMRegister(Matcher::_regEncode[dst_lo]), as_XMMRegister(Matcher::_regEncode[src_lo]));
       } else {
         __ vpxor(as_XMMRegister(Matcher::_regEncode[dst_lo]), as_XMMRegister(Matcher::_regEncode[dst_lo]), 2);
         __ vinserti32x4(as_XMMRegister(Matcher::_regEncode[dst_lo]), as_XMMRegister(Matcher::_regEncode[dst_lo]), as_XMMRegister(Matcher::_regEncode[src_lo]), 0x0);
      }
-#endif
       break;
     case Op_VecY:
-#ifndef LP64
-      __ vmovdqu(as_XMMRegister(Matcher::_regEncode[dst_lo]), as_XMMRegister(Matcher::_regEncode[src_lo]));
-#else
       if ((UseAVX < 3) || VM_Version::supports_avx512vl()) {
         __ vmovdqu(as_XMMRegister(Matcher::_regEncode[dst_lo]), as_XMMRegister(Matcher::_regEncode[src_lo]));
       } else {
         __ vpxor(as_XMMRegister(Matcher::_regEncode[dst_lo]), as_XMMRegister(Matcher::_regEncode[dst_lo]), 2);
         __ vinserti64x4(as_XMMRegister(Matcher::_regEncode[dst_lo]), as_XMMRegister(Matcher::_regEncode[dst_lo]), as_XMMRegister(Matcher::_regEncode[src_lo]), 0x0);
      }
-#endif
       break;
     case Op_VecZ:
       __ evmovdquq(as_XMMRegister(Matcher::_regEncode[dst_lo]), as_XMMRegister(Matcher::_regEncode[src_lo]), 2);
@@ -1710,37 +1593,16 @@ static int vec_mov_helper(CodeBuffer *cbuf, bool do_size, int src_lo, int dst_lo
       ShouldNotReachHere();
     }
     int size = __ offset() - offset;
-#ifdef ASSERT
-    // VEX_2bytes prefix is used if UseAVX > 0, so it takes the same 2 bytes as SIMD prefix.
-    assert(!do_size || size == 4, "incorrect size calculattion");
-#endif
     return size;
-#ifndef PRODUCT
-  } else if (!do_size) {
-    switch (ireg) {
-    case Op_VecS:
-    case Op_VecD:
-    case Op_VecX:
-      st->print("movdqu  %s,%s\t# spill",Matcher::regName[dst_lo],Matcher::regName[src_lo]);
-      break;
-    case Op_VecY:
-    case Op_VecZ:
-      st->print("vmovdqu %s,%s\t# spill",Matcher::regName[dst_lo],Matcher::regName[src_lo]);
-      break;
-    default:
-      ShouldNotReachHere();
-    }
-#endif
   }
   // VEX_2bytes prefix is used if UseAVX > 0, and it takes the same 2 bytes as SIMD prefix.
   return (UseAVX > 2) ? 6 : 4;
 }
 
-static int vec_spill_helper(CodeBuffer *cbuf, bool do_size, bool is_load,
-                            int stack_offset, int reg, uint ireg, outputStream* st) {
+static int vec_spill_helper(CodeBuffer *cbuf, bool do_size, bool is_load, int stack_offset, int reg, uint ireg, outputStream* st) {
   // In 64-bit VM size calculation is very complex. Emitting instructions
   // into scratch buffer is used to get size in 64-bit VM.
-  LP64_ONLY( assert(!do_size, "this method calculates size only for 32-bit VM"); )
+  assert(!do_size, "this method calculates size only for 32-bit VM");
   if (cbuf) {
     MacroAssembler _masm(cbuf);
     int offset = __ offset();
@@ -1753,28 +1615,20 @@ static int vec_spill_helper(CodeBuffer *cbuf, bool do_size, bool is_load,
         __ movq(as_XMMRegister(Matcher::_regEncode[reg]), Address(rsp, stack_offset));
         break;
       case Op_VecX:
-#ifndef LP64
-        __ movdqu(as_XMMRegister(Matcher::_regEncode[reg]), Address(rsp, stack_offset));
-#else
         if ((UseAVX < 3) || VM_Version::supports_avx512vl()) {
           __ movdqu(as_XMMRegister(Matcher::_regEncode[reg]), Address(rsp, stack_offset));
         } else {
           __ vpxor(as_XMMRegister(Matcher::_regEncode[reg]), as_XMMRegister(Matcher::_regEncode[reg]), 2);
           __ vinserti32x4(as_XMMRegister(Matcher::_regEncode[reg]), as_XMMRegister(Matcher::_regEncode[reg]), Address(rsp, stack_offset),0x0);
         }
-#endif
         break;
       case Op_VecY:
-#ifndef LP64
-        __ vmovdqu(as_XMMRegister(Matcher::_regEncode[reg]), Address(rsp, stack_offset));
-#else
         if ((UseAVX < 3) || VM_Version::supports_avx512vl()) {
           __ vmovdqu(as_XMMRegister(Matcher::_regEncode[reg]), Address(rsp, stack_offset));
         } else {
           __ vpxor(as_XMMRegister(Matcher::_regEncode[reg]), as_XMMRegister(Matcher::_regEncode[reg]), 2);
           __ vinserti64x4(as_XMMRegister(Matcher::_regEncode[reg]), as_XMMRegister(Matcher::_regEncode[reg]), Address(rsp, stack_offset),0x0);
         }
-#endif
         break;
       case Op_VecZ:
         __ evmovdquq(as_XMMRegister(Matcher::_regEncode[reg]), Address(rsp, stack_offset), 2);
@@ -1791,28 +1645,18 @@ static int vec_spill_helper(CodeBuffer *cbuf, bool do_size, bool is_load,
         __ movq(Address(rsp, stack_offset), as_XMMRegister(Matcher::_regEncode[reg]));
         break;
       case Op_VecX:
-#ifndef LP64
-        __ movdqu(Address(rsp, stack_offset), as_XMMRegister(Matcher::_regEncode[reg]));
-#else
         if ((UseAVX < 3) || VM_Version::supports_avx512vl()) {
           __ movdqu(Address(rsp, stack_offset), as_XMMRegister(Matcher::_regEncode[reg]));
-        }
-        else {
+        } else {
           __ vextracti32x4(Address(rsp, stack_offset), as_XMMRegister(Matcher::_regEncode[reg]), as_XMMRegister(Matcher::_regEncode[reg]), 0x0);
         }
-#endif
         break;
       case Op_VecY:
-#ifndef LP64
-        __ vmovdqu(Address(rsp, stack_offset), as_XMMRegister(Matcher::_regEncode[reg]));
-#else
         if ((UseAVX < 3) || VM_Version::supports_avx512vl()) {
           __ vmovdqu(Address(rsp, stack_offset), as_XMMRegister(Matcher::_regEncode[reg]));
-        }
-        else {
+        } else {
           __ vextracti64x4(Address(rsp, stack_offset), as_XMMRegister(Matcher::_regEncode[reg]), as_XMMRegister(Matcher::_regEncode[reg]), 0x0);
         }
-#endif
         break;
       case Op_VecZ:
         __ evmovdquq(Address(rsp, stack_offset), as_XMMRegister(Matcher::_regEncode[reg]), 2);
@@ -1822,52 +1666,7 @@ static int vec_spill_helper(CodeBuffer *cbuf, bool do_size, bool is_load,
       }
     }
     int size = __ offset() - offset;
-#ifdef ASSERT
-    int offset_size = (stack_offset == 0) ? 0 : ((stack_offset < 0x80) ? 1 : (UseAVX > 2) ? 6 : 4);
-    // VEX_2bytes prefix is used if UseAVX > 0, so it takes the same 2 bytes as SIMD prefix.
-    assert(!do_size || size == (5+offset_size), "incorrect size calculattion");
-#endif
     return size;
-#ifndef PRODUCT
-  } else if (!do_size) {
-    if (is_load) {
-      switch (ireg) {
-      case Op_VecS:
-        st->print("movd    %s,[rsp + %d]\t# spill", Matcher::regName[reg], stack_offset);
-        break;
-      case Op_VecD:
-        st->print("movq    %s,[rsp + %d]\t# spill", Matcher::regName[reg], stack_offset);
-        break;
-       case Op_VecX:
-        st->print("movdqu  %s,[rsp + %d]\t# spill", Matcher::regName[reg], stack_offset);
-        break;
-      case Op_VecY:
-      case Op_VecZ:
-        st->print("vmovdqu %s,[rsp + %d]\t# spill", Matcher::regName[reg], stack_offset);
-        break;
-      default:
-        ShouldNotReachHere();
-      }
-    } else { // store
-      switch (ireg) {
-      case Op_VecS:
-        st->print("movd    [rsp + %d],%s\t# spill", stack_offset, Matcher::regName[reg]);
-        break;
-      case Op_VecD:
-        st->print("movq    [rsp + %d],%s\t# spill", stack_offset, Matcher::regName[reg]);
-        break;
-       case Op_VecX:
-        st->print("movdqu  [rsp + %d],%s\t# spill", stack_offset, Matcher::regName[reg]);
-        break;
-      case Op_VecY:
-      case Op_VecZ:
-        st->print("vmovdqu [rsp + %d],%s\t# spill", stack_offset, Matcher::regName[reg]);
-        break;
-      default:
-        ShouldNotReachHere();
-      }
-    }
-#endif
   }
   bool is_single_byte = false;
   int vec_len = 0;
@@ -1914,7 +1713,6 @@ static int vec_spill_helper(CodeBuffer *cbuf, bool do_size, bool is_load,
 
 static inline jint replicate4_imm(int con, int width) {
   // Load a constant of "width" (in bytes) and replicate it to fill 32bit.
-  assert(width == 1 || width == 2, "only byte or short types here");
   int bit_width = width * 8;
   jint val = con;
   val &= (1 << bit_width) - 1;  // mask off sign bits
@@ -1927,7 +1725,6 @@ static inline jint replicate4_imm(int con, int width) {
 
 static inline jlong replicate8_imm(int con, int width) {
   // Load a constant of "width" (in bytes) and replicate it to fill 64bit.
-  assert(width == 1 || width == 2 || width == 4, "only byte, short or int types here");
   int bit_width = width * 8;
   jlong val = con;
   val &= (((jlong) 1) << bit_width) - 1;  // mask off sign bits
@@ -1938,12 +1735,6 @@ static inline jlong replicate8_imm(int con, int width) {
   return val;
 }
 
-#ifndef PRODUCT
-  void MachNopNode::format(PhaseRegAlloc*, outputStream* st) const {
-    st->print("nop \t# %d bytes pad for loops and calls", _count);
-  }
-#endif
-
   void MachNopNode::emit(CodeBuffer &cbuf, PhaseRegAlloc*) const {
     MacroAssembler _masm(&cbuf);
     __ nop(_count);
@@ -1952,12 +1743,6 @@ static inline jlong replicate8_imm(int con, int width) {
   uint MachNopNode::size(PhaseRegAlloc*) const {
     return _count;
   }
-
-#ifndef PRODUCT
-  void MachBreakpointNode::format(PhaseRegAlloc*, outputStream* st) const {
-    st->print("# breakpoint");
-  }
-#endif
 
   void MachBreakpointNode::emit(CodeBuffer &cbuf, PhaseRegAlloc* ra_) const {
     MacroAssembler _masm(&cbuf);
@@ -1987,7 +1772,6 @@ encode %{
   %}
 
 %}
-
 
 //----------OPERANDS-----------------------------------------------------------
 // Operand definitions must precede instruction definitions for correct parsing
@@ -2031,7 +1815,6 @@ operand cmpOp_vcmppd() %{
     no_overflow  (0x21, "no"); // not really supported by the instruction
   %}
 %}
-
 
 // INSTRUCTIONS -- Platform independent definitions (same for 32- and 64-bit)
 
@@ -2842,7 +2625,6 @@ instruct fmaF_reg(regF a, regF b, regF c) %{
 
 // ====================VECTOR INSTRUCTIONS=====================================
 
-
 // Load vectors (4 bytes long)
 instruct loadV4(vecS dst, memory mem) %{
   predicate(n->as_LoadVector()->memory_size() == 4);
@@ -3564,7 +3346,6 @@ instruct Repl2L_mem(vecX dst, memory mem) %{
 %}
 
 // Replicate long (8 byte) scalar to be vector
-#ifdef _LP64
 instruct Repl4L(vecY dst, rRegL src) %{
   predicate(n->as_Vector()->length() == 4 && !VM_Version::supports_avx512vl());
   match(Set dst (ReplicateL src));
@@ -3594,47 +3375,6 @@ instruct Repl8L(legVecZ dst, rRegL src) %{
   %}
   ins_pipe( pipe_slow );
 %}
-#else // _LP64
-instruct Repl4L(vecY dst, eRegL src, vecY tmp) %{
-  predicate(n->as_Vector()->length() == 4 && !VM_Version::supports_avx512vl());
-  match(Set dst (ReplicateL src));
-  effect(TEMP dst, USE src, TEMP tmp);
-  format %{ "movdl   $dst,$src.lo\n\t"
-            "movdl   $tmp,$src.hi\n\t"
-            "punpckldq $dst,$tmp\n\t"
-            "punpcklqdq $dst,$dst\n\t"
-            "vinserti128_high $dst,$dst\t! replicate4L" %}
-  ins_encode %{
-    __ movdl($dst$$XMMRegister, $src$$Register);
-    __ movdl($tmp$$XMMRegister, HIGH_FROM_LOW($src$$Register));
-    __ punpckldq($dst$$XMMRegister, $tmp$$XMMRegister);
-    __ punpcklqdq($dst$$XMMRegister, $dst$$XMMRegister);
-    __ vinserti128_high($dst$$XMMRegister, $dst$$XMMRegister);
-  %}
-  ins_pipe( pipe_slow );
-%}
-
-instruct Repl8L(legVecZ dst, eRegL src, legVecZ tmp) %{
-  predicate(n->as_Vector()->length() == 8 && !VM_Version::supports_avx512vl());
-  match(Set dst (ReplicateL src));
-  effect(TEMP dst, USE src, TEMP tmp);
-  format %{ "movdl   $dst,$src.lo\n\t"
-            "movdl   $tmp,$src.hi\n\t"
-            "punpckldq $dst,$tmp\n\t"
-            "punpcklqdq $dst,$dst\n\t"
-            "vinserti128_high $dst,$dst\t"
-            "vinserti64x4 $dst,$dst,$dst,0x1\t! replicate8L" %}
-  ins_encode %{
-    __ movdl($dst$$XMMRegister, $src$$Register);
-    __ movdl($tmp$$XMMRegister, HIGH_FROM_LOW($src$$Register));
-    __ punpckldq($dst$$XMMRegister, $tmp$$XMMRegister);
-    __ punpcklqdq($dst$$XMMRegister, $dst$$XMMRegister);
-    __ vinserti128_high($dst$$XMMRegister, $dst$$XMMRegister);
-    __ vinserti64x4($dst$$XMMRegister, $dst$$XMMRegister, $dst$$XMMRegister, 0x1);
-  %}
-  ins_pipe( pipe_slow );
-%}
-#endif // _LP64
 
 instruct Repl4L_imm(vecY dst, immL con) %{
   predicate(n->as_Vector()->length() == 4 && !VM_Version::supports_avx512vl());
@@ -4126,7 +3866,6 @@ instruct Repl8I_zero(vecY dst, immI0 zero) %{
 %}
 
 // Replicate long (8 byte) scalar to be vector
-#ifdef _LP64
 instruct Repl2L(vecX dst, rRegL src) %{
   predicate(n->as_Vector()->length() == 2);
   match(Set dst (ReplicateL src));
@@ -4138,24 +3877,6 @@ instruct Repl2L(vecX dst, rRegL src) %{
   %}
   ins_pipe( pipe_slow );
 %}
-#else // _LP64
-instruct Repl2L(vecX dst, eRegL src, vecX tmp) %{
-  predicate(n->as_Vector()->length() == 2);
-  match(Set dst (ReplicateL src));
-  effect(TEMP dst, USE src, TEMP tmp);
-  format %{ "movdl   $dst,$src.lo\n\t"
-            "movdl   $tmp,$src.hi\n\t"
-            "punpckldq $dst,$tmp\n\t"
-            "punpcklqdq $dst,$dst\t! replicate2L"%}
-  ins_encode %{
-    __ movdl($dst$$XMMRegister, $src$$Register);
-    __ movdl($tmp$$XMMRegister, HIGH_FROM_LOW($src$$Register));
-    __ punpckldq($dst$$XMMRegister, $tmp$$XMMRegister);
-    __ punpcklqdq($dst$$XMMRegister, $dst$$XMMRegister);
-  %}
-  ins_pipe( pipe_slow );
-%}
-#endif // _LP64
 
 // Replicate long (8 byte) scalar immediate to be vector by loading from const table.
 instruct Repl2L_imm(vecX dst, immL con) %{
@@ -4623,7 +4344,6 @@ instruct Repl16I_zero_evex(vecZ dst, immI0 zero) %{
 %}
 
 // Replicate long (8 byte) scalar to be vector
-#ifdef _LP64
 instruct Repl4L_evex(vecY dst, rRegL src) %{
   predicate(n->as_Vector()->length() == 4 && UseAVX > 2 && VM_Version::supports_avx512vl());
   match(Set dst (ReplicateL src));
@@ -4645,43 +4365,6 @@ instruct Repl8L_evex(vecZ dst, rRegL src) %{
   %}
   ins_pipe( pipe_slow );
 %}
-#else // _LP64
-instruct Repl4L_evex(vecY dst, eRegL src, regD tmp) %{
-  predicate(n->as_Vector()->length() == 4 && UseAVX > 2 && VM_Version::supports_avx512vl());
-  match(Set dst (ReplicateL src));
-  effect(TEMP dst, USE src, TEMP tmp);
-  format %{ "movdl   $dst,$src.lo\n\t"
-            "movdl   $tmp,$src.hi\n\t"
-            "punpckldq $dst,$tmp\n\t"
-            "vpbroadcastq  $dst,$dst\t! replicate4L" %}
-  ins_encode %{
-    int vector_len = 1;
-    __ movdl($dst$$XMMRegister, $src$$Register);
-    __ movdl($tmp$$XMMRegister, HIGH_FROM_LOW($src$$Register));
-    __ punpckldq($dst$$XMMRegister, $tmp$$XMMRegister);
-    __ vpbroadcastq($dst$$XMMRegister, $dst$$XMMRegister, vector_len);
-  %}
-  ins_pipe( pipe_slow );
-%}
-
-instruct Repl8L_evex(legVecZ dst, eRegL src, legVecZ tmp) %{
-  predicate(n->as_Vector()->length() == 8 && UseAVX > 2);
-  match(Set dst (ReplicateL src));
-  effect(TEMP dst, USE src, TEMP tmp);
-  format %{ "movdl   $dst,$src.lo\n\t"
-            "movdl   $tmp,$src.hi\n\t"
-            "punpckldq $dst,$tmp\n\t"
-            "vpbroadcastq  $dst,$dst\t! replicate8L" %}
-  ins_encode %{
-    int vector_len = 2;
-    __ movdl($dst$$XMMRegister, $src$$Register);
-    __ movdl($tmp$$XMMRegister, HIGH_FROM_LOW($src$$Register));
-    __ punpckldq($dst$$XMMRegister, $tmp$$XMMRegister);
-    __ vpbroadcastq($dst$$XMMRegister, $dst$$XMMRegister, vector_len);
-  %}
-  ins_pipe( pipe_slow );
-%}
-#endif // _LP64
 
 instruct Repl4L_imm_evex(vecY dst, immL con) %{
   predicate(n->as_Vector()->length() == 4 && UseAVX > 2 && VM_Version::supports_avx512vl());
@@ -5133,7 +4816,6 @@ instruct rvadd16I_reduction_reg_evex(rRegI dst, rRegI src1, legVecZ src2, legVec
   ins_pipe( pipe_slow );
 %}
 
-#ifdef _LP64
 instruct rvadd2L_reduction_reg(rRegL dst, rRegL src1, vecX src2, vecX tmp, vecX tmp2) %{
   predicate(UseAVX > 2);
   match(Set dst (AddReductionVL src1 src2));
@@ -5202,7 +4884,6 @@ instruct rvadd8L_reduction_reg(rRegL dst, rRegL src1, legVecZ src2, legVecZ tmp,
   %}
   ins_pipe( pipe_slow );
 %}
-#endif
 
 instruct rsadd2F_reduction_reg(regF dst, vecD src2, vecD tmp) %{
   predicate(UseSSE >= 1 && UseAVX == 0);
@@ -5627,7 +5308,6 @@ instruct rvmul16I_reduction_reg(rRegI dst, rRegI src1, legVecZ src2, legVecZ tmp
   ins_pipe( pipe_slow );
 %}
 
-#ifdef _LP64
 instruct rvmul2L_reduction_reg(rRegL dst, rRegL src1, vecX src2, vecX tmp, vecX tmp2) %{
   predicate(UseAVX > 2 && VM_Version::supports_avx512dq());
   match(Set dst (MulReductionVL src1 src2));
@@ -5696,7 +5376,6 @@ instruct rvmul8L_reduction_reg(rRegL dst, rRegL src1, legVecZ src2, legVecZ tmp,
   %}
   ins_pipe( pipe_slow );
 %}
-#endif
 
 instruct rsmul2F_reduction(regF dst, vecD src2, vecD tmp) %{
   predicate(UseSSE >= 1 && UseAVX == 0);
@@ -6002,7 +5681,6 @@ instruct vadd4B_reg(vecS dst, vecS src1, vecS src2) %{
   ins_pipe( pipe_slow );
 %}
 
-
 instruct vadd4B_mem(vecS dst, vecS src, memory mem) %{
   predicate(UseAVX > 0 && n->as_Vector()->length() == 4);
   match(Set dst (AddVB src (LoadVector mem)));
@@ -6034,7 +5712,6 @@ instruct vadd8B_reg(vecD dst, vecD src1, vecD src2) %{
   %}
   ins_pipe( pipe_slow );
 %}
-
 
 instruct vadd8B_mem(vecD dst, vecD src, memory mem) %{
   predicate(UseAVX > 0 && n->as_Vector()->length() == 8);
@@ -9273,7 +8950,6 @@ instruct vsra16I_reg_imm(vecZ dst, vecZ src, immI8 shift) %{
 
 // There are no longs vector arithmetic right shift instructions.
 
-
 // --------------------------------- AND --------------------------------------
 
 instruct vand4B(vecS dst, vecS src) %{
@@ -9727,7 +9403,6 @@ instruct vfma2D_mem(vecX a, memory b, vecX c) %{
   %}
   ins_pipe( pipe_slow );
 %}
-
 
 // a * b + c
 instruct vfma4D_reg(vecY a, vecY b, vecY c) %{

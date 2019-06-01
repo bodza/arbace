@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "aot/aotLoader.hpp"
 #include "classfile/classFileParser.hpp"
@@ -75,18 +76,7 @@ static inline bool is_class_loader(const Symbol* class_name,
 // called to verify that k is a member of this nest
 bool InstanceKlass::has_nest_member(InstanceKlass* k, TRAPS) const {
   if (_nest_members == NULL || _nest_members == Universe::the_empty_short_array()) {
-    if (log_is_enabled(Trace, class, nestmates)) {
-      ResourceMark rm(THREAD);
-      log_trace(class, nestmates)("Checked nest membership of %s in non-nest-host class %s",
-                                  k->external_name(), this->external_name());
-    }
     return false;
-  }
-
-  if (log_is_enabled(Trace, class, nestmates)) {
-    ResourceMark rm(THREAD);
-    log_trace(class, nestmates)("Checking nest membership of %s in %s",
-                                k->external_name(), this->external_name());
   }
 
   // Check names first and if they match then check actual klass. This avoids
@@ -95,23 +85,18 @@ bool InstanceKlass::has_nest_member(InstanceKlass* k, TRAPS) const {
     int cp_index = _nest_members->at(i);
     Symbol* name = _constants->klass_name_at(cp_index);
     if (name == k->name()) {
-      log_trace(class, nestmates)("- Found it at nest_members[%d] => cp[%d]", i, cp_index);
-
       // names match so check actual klass - this may trigger class loading if
       // it doesn't match (but that should be impossible)
       Klass* k2 = _constants->klass_at(cp_index, CHECK_false);
       if (k2 == k) {
-        log_trace(class, nestmates)("- class is listed as a nest member");
         return true;
       } else {
         // same name but different klass!
-        log_trace(class, nestmates)(" - klass comparison failed!");
         // can't have different classes for the same name, so we're done
         return false;
       }
     }
   }
-  log_trace(class, nestmates)("- class is NOT a nest member!");
   return false;
 }
 
@@ -130,19 +115,7 @@ InstanceKlass* InstanceKlass::nest_host(Symbol* validationException, TRAPS) {
     if (_nest_host_index != 0) { // we have a real nest_host
       // Before trying to resolve check if we're in a suitable context
       if (!THREAD->can_call_java() && !_constants->tag_at(_nest_host_index).is_klass()) {
-        if (log_is_enabled(Trace, class, nestmates)) {
-          ResourceMark rm(THREAD);
-          log_trace(class, nestmates)("Rejected resolution of nest-host of %s in unsuitable thread",
-                                      this->external_name());
-        }
         return NULL;
-      }
-
-      if (log_is_enabled(Trace, class, nestmates)) {
-        ResourceMark rm(THREAD);
-        log_trace(class, nestmates)("Resolving nest-host of %s using cp entry for %s",
-                                    this->external_name(),
-                                    _constants->klass_name_at(_nest_host_index)->as_C_string());
       }
 
       Klass* k = _constants->klass_at(_nest_host_index, THREAD);
@@ -154,7 +127,6 @@ InstanceKlass* InstanceKlass::nest_host(Symbol* validationException, TRAPS) {
           char buf[200];
           CLEAR_PENDING_EXCEPTION;
           jio_snprintf(buf, sizeof(buf), "Unable to load nest-host class (%s) of %s", _constants->klass_name_at(_nest_host_index)->as_C_string(), this->external_name());
-          log_trace(class, nestmates)("%s - NoClassDefFoundError", buf);
           THROW_MSG_CAUSE_NULL(vmSymbols::java_lang_NoClassDefFoundError(), buf, exc_h);
         }
         // All other exceptions pass through (OOME, StackOverflowError, LinkageErrors etc).
@@ -180,11 +152,6 @@ InstanceKlass* InstanceKlass::nest_host(Symbol* validationException, TRAPS) {
             // save resolved nest-host value
             _nest_host = nest_host_k;
 
-            if (log_is_enabled(Trace, class, nestmates)) {
-              ResourceMark rm(THREAD);
-              log_trace(class, nestmates)("Resolved nest-host of %s to %s",
-                                          this->external_name(), k->external_name());
-            }
             return nest_host_k;
           }
         }
@@ -193,31 +160,12 @@ InstanceKlass* InstanceKlass::nest_host(Symbol* validationException, TRAPS) {
         error = "types are in different packages";
       }
 
-      if (log_is_enabled(Trace, class, nestmates)) {
-        ResourceMark rm(THREAD);
-        log_trace(class, nestmates)("Type %s is not a nest member of resolved type %s: %s",
-                                    this->external_name(),
-                                    k->external_name(),
-                                    error);
-      }
-
       if (validationException != NULL) {
         ResourceMark rm(THREAD);
-        Exceptions::fthrow(THREAD_AND_LOCATION,
-                           validationException,
-                           "Type %s is not a nest member of %s: %s",
-                           this->external_name(),
-                           k->external_name(),
-                           error
-                           );
+        Exceptions::fthrow(THREAD_AND_LOCATION, validationException, "Type %s is not a nest member of %s: %s", this->external_name(), k->external_name(), error);
       }
       return NULL;
     } else {
-      if (log_is_enabled(Trace, class, nestmates)) {
-        ResourceMark rm(THREAD);
-        log_trace(class, nestmates)("Type %s is not part of a nest: setting nest-host to self",
-                                    this->external_name());
-      }
       // save resolved nest-host value
       return (_nest_host = this);
     }
@@ -248,14 +196,6 @@ bool InstanceKlass::has_nestmate_access_to(InstanceKlass* k, TRAPS) {
 
   bool access = (cur_host == k_nest_host);
 
-  if (log_is_enabled(Trace, class, nestmates)) {
-    ResourceMark rm(THREAD);
-    log_trace(class, nestmates)("Class %s does %shave nestmate access to %s",
-                                this->external_name(),
-                                access ? "" : "NOT ",
-                                k->external_name());
-  }
-
   return access;
 }
 
@@ -277,8 +217,7 @@ InstanceKlass* InstanceKlass::allocate_instance_klass(const ClassFileParser& par
     if (class_name == vmSymbols::java_lang_Class()) {
       // mirror
       ik = new (loader_data, size, THREAD) InstanceMirrorKlass(parser);
-    }
-    else if (is_class_loader(class_name, parser)) {
+    } else if (is_class_loader(class_name, parser)) {
       // class loader
       ik = new (loader_data, size, THREAD) InstanceClassLoaderKlass(parser);
     } else {
@@ -334,7 +273,6 @@ InstanceKlass::InstanceKlass(const ClassFileParser& parser, unsigned kind, Klass
     set_is_anonymous(parser.is_anonymous());
     set_layout_helper(Klass::instance_layout_helper(parser.layout_size(),
                                                     false));
-
 }
 
 void InstanceKlass::deallocate_methods(ClassLoaderData* loader_data, Array<Method*>* methods) {
@@ -549,11 +487,6 @@ void InstanceKlass::eager_initialize_impl() {
     // linking successfull, mark class as initialized
     set_init_state(fully_initialized);
     fence_and_clear_init_lock();
-    // trace
-    if (log_is_enabled(Info, class, init)) {
-      ResourceMark rm(THREAD);
-      log_info(class, init)("[Initialized %s without side effects]", external_name());
-    }
   }
 }
 
@@ -566,7 +499,6 @@ void InstanceKlass::initialize(TRAPS) {
     // Note: at this point the class may be initialized
     //       OR it may be in the state of being initialized
     //       in case of recursive initialization!
-  } else {
   }
 }
 
@@ -608,10 +540,7 @@ bool InstanceKlass::link_class_impl(bool throw_verifyerror, TRAPS) {
     // if we are executing Java code. This is not a problem for CDS dumping phase since
     // it doesn't execute any Java code.
     ResourceMark rm(THREAD);
-    Exceptions::fthrow(THREAD_AND_LOCATION,
-                       vmSymbols::java_lang_NoClassDefFoundError(),
-                       "Class %s, or one of its supertypes, failed class initialization",
-                       external_name());
+    Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::java_lang_NoClassDefFoundError(), "Class %s, or one of its supertypes, failed class initialization", external_name());
     return false;
   }
   // return if already verified
@@ -876,10 +805,7 @@ void InstanceKlass::initialize_impl(TRAPS) {
   // Step 9
   if (!HAS_PENDING_EXCEPTION) {
     set_initialization_state_and_notify(fully_initialized, CHECK);
-    {
-    }
-  }
-  else {
+  } else {
     // Step 10 and 11
     Handle e(THREAD, PENDING_EXCEPTION);
     CLEAR_PENDING_EXCEPTION;
@@ -893,9 +819,7 @@ void InstanceKlass::initialize_impl(TRAPS) {
       THROW_OOP(e());
     } else {
       JavaCallArguments args(e);
-      THROW_ARG(vmSymbols::java_lang_ExceptionInInitializerError(),
-                vmSymbols::throwable_void_signature(),
-                &args);
+      THROW_ARG(vmSymbols::java_lang_ExceptionInInitializerError(), vmSymbols::throwable_void_signature(), &args);
     }
   }
   DTRACE_CLASSINIT_PROBE_WAIT(end, -1, wait);
@@ -1000,8 +924,7 @@ bool InstanceKlass::can_be_primary_super_slow() const {
     return Klass::can_be_primary_super_slow();
 }
 
-GrowableArray<Klass*>* InstanceKlass::compute_secondary_supers(int num_extra_slots,
-                                                               Array<Klass*>* transitive_interfaces) {
+GrowableArray<Klass*>* InstanceKlass::compute_secondary_supers(int num_extra_slots, Array<Klass*>* transitive_interfaces) {
   // The secondaries are the implemented interfaces.
   Array<Klass*>* interfaces = transitive_interfaces;
   int num_secondaries = num_extra_slots + interfaces->length();
@@ -1378,8 +1301,7 @@ static int binary_search(const Array<Method*>* methods, const Symbol* name) {
 }
 
 // find_method looks up the name/signature in the local methods array
-Method* InstanceKlass::find_method(const Symbol* name,
-                                   const Symbol* signature) const {
+Method* InstanceKlass::find_method(const Symbol* name, const Symbol* signature) const {
   return find_method_impl(name, signature, find_overpass, find_static, find_private);
 }
 
@@ -1388,34 +1310,19 @@ Method* InstanceKlass::find_method_impl(const Symbol* name,
                                         OverpassLookupMode overpass_mode,
                                         StaticLookupMode static_mode,
                                         PrivateLookupMode private_mode) const {
-  return InstanceKlass::find_method_impl(methods(),
-                                         name,
-                                         signature,
-                                         overpass_mode,
-                                         static_mode,
-                                         private_mode);
+  return InstanceKlass::find_method_impl(methods(), name, signature, overpass_mode, static_mode, private_mode);
 }
 
 // find_instance_method looks up the name/signature in the local methods array
 // and skips over static methods
-Method* InstanceKlass::find_instance_method(const Array<Method*>* methods,
-                                            const Symbol* name,
-                                            const Symbol* signature,
-                                            PrivateLookupMode private_mode) {
-  Method* const meth = InstanceKlass::find_method_impl(methods,
-                                                 name,
-                                                 signature,
-                                                 find_overpass,
-                                                 skip_static,
-                                                 private_mode);
+Method* InstanceKlass::find_instance_method(const Array<Method*>* methods, const Symbol* name, const Symbol* signature, PrivateLookupMode private_mode) {
+  Method* const meth = InstanceKlass::find_method_impl(methods, name, signature, find_overpass, skip_static, private_mode);
   return meth;
 }
 
 // find_instance_method looks up the name/signature in the local methods array
 // and skips over static methods
-Method* InstanceKlass::find_instance_method(const Symbol* name,
-                                            const Symbol* signature,
-                                            PrivateLookupMode private_mode) const {
+Method* InstanceKlass::find_instance_method(const Symbol* name, const Symbol* signature, PrivateLookupMode private_mode) const {
   return InstanceKlass::find_instance_method(methods(), name, signature, private_mode);
 }
 
@@ -1424,17 +1331,8 @@ Method* InstanceKlass::find_instance_method(const Symbol* name,
 // This returns the first one found
 // note that the local methods array can have up to one overpass, one static
 // and one instance (private or not) with the same name/signature
-Method* InstanceKlass::find_local_method(const Symbol* name,
-                                         const Symbol* signature,
-                                         OverpassLookupMode overpass_mode,
-                                         StaticLookupMode static_mode,
-                                         PrivateLookupMode private_mode) const {
-  return InstanceKlass::find_method_impl(methods(),
-                                         name,
-                                         signature,
-                                         overpass_mode,
-                                         static_mode,
-                                         private_mode);
+Method* InstanceKlass::find_local_method(const Symbol* name, const Symbol* signature, OverpassLookupMode overpass_mode, StaticLookupMode static_mode, PrivateLookupMode private_mode) const {
+  return InstanceKlass::find_method_impl(methods(), name, signature, overpass_mode, static_mode, private_mode);
 }
 
 // Find looks up the name/signature in the local methods array
@@ -1448,23 +1346,11 @@ Method* InstanceKlass::find_local_method(const Array<Method*>* methods,
                                          OverpassLookupMode overpass_mode,
                                          StaticLookupMode static_mode,
                                          PrivateLookupMode private_mode) {
-  return InstanceKlass::find_method_impl(methods,
-                                         name,
-                                         signature,
-                                         overpass_mode,
-                                         static_mode,
-                                         private_mode);
+  return InstanceKlass::find_method_impl(methods, name, signature, overpass_mode, static_mode, private_mode);
 }
 
-Method* InstanceKlass::find_method(const Array<Method*>* methods,
-                                   const Symbol* name,
-                                   const Symbol* signature) {
-  return InstanceKlass::find_method_impl(methods,
-                                         name,
-                                         signature,
-                                         find_overpass,
-                                         find_static,
-                                         find_private);
+Method* InstanceKlass::find_method(const Array<Method*>* methods, const Symbol* name, const Symbol* signature) {
+  return InstanceKlass::find_method_impl(methods, name, signature, find_overpass, find_static, find_private);
 }
 
 Method* InstanceKlass::find_method_impl(const Array<Method*>* methods,
@@ -1553,18 +1439,11 @@ int InstanceKlass::find_method_by_name(const Array<Method*>* methods, const Symb
 // uncached_lookup_method searches both the local class methods array and all
 // superclasses methods arrays, skipping any overpass methods in superclasses,
 // and possibly skipping private methods.
-Method* InstanceKlass::uncached_lookup_method(const Symbol* name,
-                                              const Symbol* signature,
-                                              OverpassLookupMode overpass_mode,
-                                              PrivateLookupMode private_mode) const {
+Method* InstanceKlass::uncached_lookup_method(const Symbol* name, const Symbol* signature, OverpassLookupMode overpass_mode, PrivateLookupMode private_mode) const {
   OverpassLookupMode overpass_local_mode = overpass_mode;
   const Klass* klass = this;
   while (klass != NULL) {
-    Method* const method = InstanceKlass::cast(klass)->find_method_impl(name,
-                                                                        signature,
-                                                                        overpass_local_mode,
-                                                                        find_static,
-                                                                        private_mode);
+    Method* const method = InstanceKlass::cast(klass)->find_method_impl(name, signature, overpass_local_mode, find_static, private_mode);
     if (method != NULL) {
       return method;
     }
@@ -1576,8 +1455,7 @@ Method* InstanceKlass::uncached_lookup_method(const Symbol* name,
 
 // lookup a method in the default methods list then in all transitive interfaces
 // Do NOT return private or static methods
-Method* InstanceKlass::lookup_method_in_ordered_interfaces(Symbol* name,
-                                                         Symbol* signature) const {
+Method* InstanceKlass::lookup_method_in_ordered_interfaces(Symbol* name, Symbol* signature) const {
   Method* m = NULL;
   if (default_methods() != NULL) {
     m = find_method(default_methods(), name, signature);
@@ -1592,9 +1470,7 @@ Method* InstanceKlass::lookup_method_in_ordered_interfaces(Symbol* name,
 // lookup a method in all the interfaces that this class implements
 // Do NOT return private or static methods, new in JDK8 which are not externally visible
 // They should only be found in the initial InterfaceMethodRef
-Method* InstanceKlass::lookup_method_in_all_interfaces(Symbol* name,
-                                                       Symbol* signature,
-                                                       DefaultsLookupMode defaults_mode) const {
+Method* InstanceKlass::lookup_method_in_all_interfaces(Symbol* name, Symbol* signature, DefaultsLookupMode defaults_mode) const {
   Array<Klass*>* all_ifs = transitive_interfaces();
   int num_ifs = all_ifs->length();
   InstanceKlass *ik = NULL;
@@ -1903,7 +1779,6 @@ void InstanceKlass::clean_method_data() {
 bool InstanceKlass::supers_have_passed_fingerprint_checks() {
   if (java_super() != NULL && !java_super()->has_passed_fingerprint_check()) {
     ResourceMark rm;
-    log_trace(class, fingerprint)("%s : super %s not fingerprinted", external_name(), java_super()->external_name());
     return false;
   }
 
@@ -1914,7 +1789,6 @@ bool InstanceKlass::supers_have_passed_fingerprint_checks() {
       InstanceKlass* intf = InstanceKlass::cast(local_interfaces->at(i));
       if (!intf->has_passed_fingerprint_check()) {
         ResourceMark rm;
-        log_trace(class, fingerprint)("%s : interface %s not fingerprinted", external_name(), intf->external_name());
         return false;
       }
     }
@@ -1948,17 +1822,11 @@ void InstanceKlass::store_fingerprint(uint64_t fingerprint) {
     Bytes::put_native_u8(adr, (u8)fingerprint); // adr may not be 64-bit aligned
 
     ResourceMark rm;
-    log_trace(class, fingerprint)("stored as " PTR64_FORMAT " for class %s", fingerprint, external_name());
   }
 }
 
 void InstanceKlass::metaspace_pointers_do(MetaspaceClosure* it) {
   Klass::metaspace_pointers_do(it);
-
-  if (log_is_enabled(Trace, cds)) {
-    ResourceMark rm;
-    log_trace(cds)("Iter(InstanceKlass): %p (%s)", this, external_name());
-  }
 
   it->push(&_annotations);
   it->push((Klass**)&_array_klasses);
@@ -2264,22 +2132,6 @@ void InstanceKlass::set_package(ClassLoaderData* loader_data, TRAPS) {
         _package_entry = loader_data->packages()->lookup(pkg_name, loader_data->unnamed_module());
       }
     }
-
-    if (log_is_enabled(Debug, module)) {
-      ResourceMark rm;
-      ModuleEntry* m = _package_entry->module();
-      log_trace(module)("Setting package: class: %s, package: %s, loader: %s, module: %s",
-                        external_name(),
-                        pkg_name->as_C_string(),
-                        loader_data->loader_name_and_id(),
-                        (m->is_named() ? m->name()->as_C_string() : UNNAMED_MODULE));
-    }
-  } else {
-    ResourceMark rm;
-    log_trace(module)("Setting package: class: %s, package: unnamed, loader: %s, module: %s",
-                      external_name(),
-                      (loader_data != NULL) ? loader_data->loader_name_and_id() : "NULL",
-                      UNNAMED_MODULE);
   }
 }
 
@@ -2516,9 +2368,7 @@ Method* InstanceKlass::method_at_itable(Klass* holder, int index, TRAPS) {
       ResourceMark rm(THREAD);
       stringStream ss;
       bool same_module = (module() == holder->module());
-      ss.print("Receiver class %s does not implement "
-               "the interface %s defining the method to be called "
-               "(%s%s%s)",
+      ss.print("Receiver class %s does not implement the interface %s defining the method to be called (%s%s%s)",
                external_name(), holder->external_name(),
                (same_module) ? joint_in_module_of_loader(holder) : class_in_module_of_loader(),
                (same_module) ? "" : "; ",
@@ -2712,83 +2562,6 @@ void InstanceKlass::oop_print_value_on(oop obj, outputStream* st) {
 
 const char* InstanceKlass::internal_name() const {
   return external_name();
-}
-
-void InstanceKlass::print_class_load_logging(ClassLoaderData* loader_data, const char* module_name, const ClassFileStream* cfs) const {
-  if (!log_is_enabled(Info, class, load)) {
-    return;
-  }
-
-  ResourceMark rm;
-  LogMessage(class, load) msg;
-  stringStream info_stream;
-
-  // Name and class hierarchy info
-  info_stream.print("%s", external_name());
-
-  // Source
-  if (cfs != NULL) {
-    if (cfs->source() != NULL) {
-      if (module_name != NULL) {
-        if (ClassLoader::is_modules_image(cfs->source())) {
-          info_stream.print(" source: jrt:/%s", module_name);
-        } else {
-          info_stream.print(" source: %s", cfs->source());
-        }
-      } else {
-        info_stream.print(" source: %s", cfs->source());
-      }
-    } else if (loader_data == ClassLoaderData::the_null_class_loader_data()) {
-      Thread* THREAD = Thread::current();
-      Klass* caller = THREAD->is_Java_thread() ? ((JavaThread*)THREAD)->security_get_caller_class(1) : NULL;
-      // caller can be NULL, for example, during a JVMTI VM_Init hook
-      if (caller != NULL) {
-        info_stream.print(" source: instance of %s", caller->external_name());
-      } else {
-        // source is unknown
-      }
-    } else {
-      oop class_loader = loader_data->class_loader();
-      info_stream.print(" source: %s", class_loader->klass()->external_name());
-    }
-  } else {
-    info_stream.print(" source: shared objects file");
-  }
-
-  msg.info("%s", info_stream.as_string());
-
-  if (log_is_enabled(Debug, class, load)) {
-    stringStream debug_stream;
-
-    // Class hierarchy info
-    debug_stream.print(" klass: " INTPTR_FORMAT " super: " INTPTR_FORMAT,
-                       p2i(this),  p2i(superklass()));
-
-    // Interfaces
-    if (local_interfaces() != NULL && local_interfaces()->length() > 0) {
-      debug_stream.print(" interfaces:");
-      int length = local_interfaces()->length();
-      for (int i = 0; i < length; i++) {
-        debug_stream.print(" " INTPTR_FORMAT,
-                           p2i(InstanceKlass::cast(local_interfaces()->at(i))));
-      }
-    }
-
-    // Class loader
-    debug_stream.print(" loader: [");
-    loader_data->print_value_on(&debug_stream);
-    debug_stream.print("]");
-
-    // Classfile checksum
-    if (cfs) {
-      debug_stream.print(" bytes: %d checksum: %08x",
-                         cfs->length(),
-                         ClassLoader::crc32(0, (const char*)cfs->buffer(),
-                         cfs->length()));
-    }
-
-    msg.debug("%s", debug_stream.as_string());
-  }
 }
 
 // Verification

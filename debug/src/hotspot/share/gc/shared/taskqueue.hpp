@@ -6,74 +6,6 @@
 #include "utilities/ostream.hpp"
 #include "utilities/stack.hpp"
 
-// Simple TaskQueue stats that are collected by default in debug builds.
-
-#if !defined(TASKQUEUE_STATS)
-#define TASKQUEUE_STATS 0
-#endif
-
-#if TASKQUEUE_STATS
-#define TASKQUEUE_STATS_ONLY(code) code
-#else
-#define TASKQUEUE_STATS_ONLY(code)
-#endif
-
-#if TASKQUEUE_STATS
-class TaskQueueStats {
-public:
-  enum StatId {
-    push,             // number of taskqueue pushes
-    pop,              // number of taskqueue pops
-    pop_slow,         // subset of taskqueue pops that were done slow-path
-    steal_attempt,    // number of taskqueue steal attempts
-    steal,            // number of taskqueue steals
-    overflow,         // number of overflow pushes
-    overflow_max_len, // max length of overflow stack
-    last_stat_id
-  };
-
-public:
-  inline TaskQueueStats()       { reset(); }
-
-  inline void record_push()     { ++_stats[push]; }
-  inline void record_pop()      { ++_stats[pop]; }
-  inline void record_pop_slow() { record_pop(); ++_stats[pop_slow]; }
-  inline void record_steal(bool success);
-  inline void record_overflow(size_t new_length);
-
-  TaskQueueStats & operator +=(const TaskQueueStats & addend);
-
-  inline size_t get(StatId id) const { return _stats[id]; }
-  inline const size_t* get() const   { return _stats; }
-
-  inline void reset();
-
-  // Print the specified line of the header (does not include a line separator).
-  static void print_header(unsigned int line, outputStream* const stream = tty,
-                           unsigned int width = 10);
-  // Print the statistics (does not include a line separator).
-  void print(outputStream* const stream = tty, unsigned int width = 10) const;
-
-private:
-  size_t                    _stats[last_stat_id];
-  static const char * const _names[last_stat_id];
-};
-
-void TaskQueueStats::record_steal(bool success) {
-  ++_stats[steal_attempt];
-  if (success) ++_stats[steal];
-}
-
-void TaskQueueStats::record_overflow(size_t new_len) {
-  ++_stats[overflow];
-  if (new_len > _stats[overflow_max_len]) _stats[overflow_max_len] = new_len;
-}
-
-void TaskQueueStats::reset() {
-  memset(_stats, 0, sizeof(_stats));
-}
-#endif
-
 // TaskQueueSuper collects functionality common to all GenericTaskQueue instances.
 
 template <unsigned int N, MEMFLAGS F>
@@ -185,8 +117,6 @@ public:
 
   // Total size of queue.
   static const uint total_size() { return N; }
-
-  TASKQUEUE_STATS_ONLY(TaskQueueStats stats;)
 };
 
 //
@@ -236,10 +166,6 @@ public:
   using TaskQueueSuper<N, F>::max_elems;
   using TaskQueueSuper<N, F>::size;
 
-#if  TASKQUEUE_STATS
-  using TaskQueueSuper<N, F>::stats;
-#endif
-
 private:
   // Slow paths for push, pop_local.  (pop_global has no fast path.)
   bool push_slow(E t, uint dirty_n_elems);
@@ -279,8 +205,7 @@ private:
 };
 
 template<class E, MEMFLAGS F, unsigned int N>
-GenericTaskQueue<E, F, N>::GenericTaskQueue() {
-}
+GenericTaskQueue<E, F, N>::GenericTaskQueue() { }
 
 // OverflowTaskQueue is a TaskQueue that also includes an overflow stack for
 // elements that do not fit in the TaskQueue.
@@ -298,8 +223,6 @@ class OverflowTaskQueue: public GenericTaskQueue<E, F, N> {
 public:
   typedef Stack<E, F>               overflow_t;
   typedef GenericTaskQueue<E, F, N> taskqueue_t;
-
-  TASKQUEUE_STATS_ONLY(using taskqueue_t::stats;)
 
   // Push task t onto the queue or onto the overflow stack.  Return true.
   inline bool push(E t);
@@ -329,8 +252,7 @@ public:
   virtual bool peek() = 0;
 };
 
-template <MEMFLAGS F> class TaskQueueSetSuperImpl: public CHeapObj<F>, public TaskQueueSetSuper {
-};
+template <MEMFLAGS F> class TaskQueueSetSuperImpl: public CHeapObj<F>, public TaskQueueSetSuper { };
 
 template<class T, MEMFLAGS F>
 class GenericTaskQueueSet: public TaskQueueSetSuperImpl<F> {
@@ -449,12 +371,6 @@ public:
 typedef GenericTaskQueue<oop, mtGC>             OopTaskQueue;
 typedef GenericTaskQueueSet<OopTaskQueue, mtGC> OopTaskQueueSet;
 
-#ifdef _MSC_VER
-#pragma warning(push)
-// warning C4522: multiple assignment operators specified
-#pragma warning(disable:4522)
-#endif
-
 // This is a container class for either an oop* or a narrowOop*.
 // Both are pushed onto a task queue and the consumer will test is_narrow()
 // to determine which should be processed.
@@ -493,8 +409,7 @@ class StarTask {
 class ObjArrayTask {
 public:
   ObjArrayTask(oop o = NULL, int idx = 0): _obj(o), _index(idx) { }
-  ObjArrayTask(oop o, size_t idx): _obj(o), _index(int(idx)) {
-  }
+  ObjArrayTask(oop o, size_t idx): _obj(o), _index(int(idx)) { }
   ObjArrayTask(const ObjArrayTask& t): _obj(t._obj), _index(t._index) { }
 
   ObjArrayTask& operator =(const ObjArrayTask& t) {
@@ -516,10 +431,6 @@ private:
   oop _obj;
   int _index;
 };
-
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
 
 typedef OverflowTaskQueue<StarTask, mtGC>           OopStarTaskQueue;
 typedef GenericTaskQueueSet<OopStarTaskQueue, mtGC> OopStarTaskQueueSet;

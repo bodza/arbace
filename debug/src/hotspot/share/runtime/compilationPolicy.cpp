@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/classLoaderData.inline.hpp"
 #include "code/compiledIC.hpp"
 #include "code/nmethod.hpp"
@@ -197,7 +198,6 @@ void NonTieredCompPolicy::reset_counter_for_invocation_event(const methodHandle&
   MethodCounters* mcs = m->method_counters();
   mcs->invocation_counter()->set_carry();
   mcs->backedge_counter()->set_carry();
-
 }
 
 void NonTieredCompPolicy::reset_counter_for_back_branch_event(const methodHandle& m) {
@@ -387,4 +387,3 @@ void SimpleCompPolicy::method_back_branch_event(const methodHandle& m, int bci, 
     CompileBroker::compile_method(m, bci, comp_level, m, hot_count, CompileTask::Reason_BackedgeCount, thread);
   }
 }
-// StackWalkCompPolicy - walk up stack to find a suitable method to compile

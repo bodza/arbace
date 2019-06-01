@@ -1,8 +1,8 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/heapRegion.hpp"
 #include "g1HeapRegionEventSender.hpp"
-// #include "jfr/jfrEvents.hpp"
 
 class DumpEventInfoClosure : public HeapRegionClosure {
 public:

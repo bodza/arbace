@@ -88,9 +88,7 @@ public:
 
   // Explict user conversions
   operator void* () const             { return (void *)obj(); }
-#ifndef SOLARIS
   operator void* () const volatile    { return (void *)obj(); }
-#endif
   operator HeapWord* () const         { return (HeapWord*)obj(); }
   operator oopDesc* () const volatile { return obj(); }
   operator intptr_t* () const         { return (intptr_t*)obj(); }

@@ -203,8 +203,7 @@ public:
     _max(NULL),
     _open(open) { }
 
-  virtual ~G1ArchiveAllocator() {
-  }
+  virtual ~G1ArchiveAllocator() { }
 
   static G1ArchiveAllocator* create_allocator(G1CollectedHeap* g1h, bool open);
 

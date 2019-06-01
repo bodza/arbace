@@ -50,7 +50,6 @@ public:
 
   static void unlink_or_oops_do(StringDedupUnlinkOrOopsDoClosure* cl);
 
-  static void print_statistics();
   static void verify();
 
   // GC support
@@ -76,9 +75,6 @@ protected:
   virtual oop pop_impl() = 0;
 
   virtual void unlink_or_oops_do_impl(StringDedupUnlinkOrOopsDoClosure* cl, size_t queue) = 0;
-
-  virtual void print_statistics_impl() = 0;
-  virtual void verify_impl() = 0;
 
   virtual size_t num_queues() const = 0;
 

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
 #include "c1/c1_Compilation.hpp"
@@ -2932,9 +2933,7 @@ void LIR_Assembler::negate(LIR_Opr left, LIR_Opr dest, LIR_Opr tmp) {
   } else if (dest->is_single_xmm()) {
     if (UseAVX > 2 && !VM_Version::supports_avx512vl()) {
       __ vpxor(dest->as_xmm_float_reg(), tmp->as_xmm_float_reg(), left->as_xmm_float_reg(), 2);
-    }
-    else
-    {
+    } else {
       if (left->as_xmm_float_reg() != dest->as_xmm_float_reg()) {
         __ movflt(dest->as_xmm_float_reg(), left->as_xmm_float_reg());
       }
@@ -2943,9 +2942,7 @@ void LIR_Assembler::negate(LIR_Opr left, LIR_Opr dest, LIR_Opr tmp) {
   } else if (dest->is_double_xmm()) {
     if (UseAVX > 2 && !VM_Version::supports_avx512vl()) {
       __ vpxor(dest->as_xmm_double_reg(), tmp->as_xmm_double_reg(), left->as_xmm_double_reg(), 2);
-    }
-    else
-    {
+    } else {
       if (left->as_xmm_double_reg() != dest->as_xmm_double_reg()) {
         __ movdbl(dest->as_xmm_double_reg(), left->as_xmm_double_reg());
       }

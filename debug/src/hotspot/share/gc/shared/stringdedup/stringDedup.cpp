@@ -44,7 +44,6 @@ void StringDedup::verify() {
   StringDedupTable::verify();
 }
 
-StringDedupUnlinkOrOopsDoClosure::StringDedupUnlinkOrOopsDoClosure(BoolObjectClosure* is_alive,
-                                                                   OopClosure* keep_alive) :
+StringDedupUnlinkOrOopsDoClosure::StringDedupUnlinkOrOopsDoClosure(BoolObjectClosure* is_alive, OopClosure* keep_alive) :
   _is_alive(is_alive), _keep_alive(keep_alive) {
 }

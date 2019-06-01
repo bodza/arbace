@@ -262,10 +262,8 @@ class nmethod : public CompiledMethod {
   int metadata_size     () const                  { return (address)  metadata_end     () - (address)  metadata_begin     (); }
   int dependencies_size () const                  { return            dependencies_end () -            dependencies_begin (); }
 
-  int     oops_count() const {
-    return (oops_size() / oopSize) + 1; }
-  int metadata_count() const {
-    return (metadata_size() / wordSize) + 1; }
+  int     oops_count() const { return (oops_size() / oopSize) + 1; }
+  int metadata_count() const { return (metadata_size() / wordSize) + 1; }
 
   int total_size        () const;
 
@@ -312,18 +310,14 @@ class nmethod : public CompiledMethod {
   bool  unload_reported()                         { return _unload_reported; }
   void  set_unload_reported()                     { _unload_reported = true; }
 
-  int get_state() const {
-    return _state;
-  }
+  int get_state() const { return _state; }
 
   void  make_unloaded(oop cause);
 
   bool has_dependencies()                         { return dependencies_size() != 0; }
   void flush_dependencies(bool delete_immediately);
   bool has_flushed_dependencies()                 { return _has_flushed_dependencies; }
-  void set_has_flushed_dependencies()             {
-    _has_flushed_dependencies = 1;
-  }
+  void set_has_flushed_dependencies()             { _has_flushed_dependencies = 1; }
 
   int   comp_level() const                        { return _comp_level; }
 
@@ -375,10 +369,8 @@ public:
   address continuation_for_implicit_exception(address pc);
 
   // On-stack replacement support
-  int   osr_entry_bci() const                     {
-    return _entry_bci; }
-  address  osr_entry() const                      {
-    return _osr_entry_point; }
+  int   osr_entry_bci() const                     { return _entry_bci; }
+  address  osr_entry() const                      { return _osr_entry_point; }
   void  invalidate_osr_method();
   nmethod* osr_link() const                       { return _osr_link; }
   void     set_osr_link(nmethod *n)               { _osr_link = n; }
@@ -521,7 +513,6 @@ public:
 
   // Prints a comment for one native instruction (reloc info, pc desc)
   void print_code_comment_on(outputStream* st, int column, address begin, address end);
-  static void print_statistics() { };
 
   // Compiler task identification.  Note that all OSR methods
   // are numbered in an independent sequence if CICountOSR is true,

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "logging/logDecorations.hpp"
 #include "logging/logFileStreamOutput.hpp"
@@ -66,9 +67,7 @@ void LogTagSet::log(const LogMessageBuffer& msg) {
 int LogTagSet::label(char* buf, size_t len, const char* separator) const {
   int tot_written = 0;
   for (size_t i = 0; i < _ntags; i++) {
-    int written = jio_snprintf(buf + tot_written, len - tot_written, "%s%s",
-                               (i == 0 ? "" : separator),
-                               LogTag::name(_tag[i]));
+    int written = jio_snprintf(buf + tot_written, len - tot_written, "%s%s", (i == 0 ? "" : separator), LogTag::name(_tag[i]));
     if (written < 0) {
       return -1;
     }

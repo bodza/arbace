@@ -27,10 +27,6 @@ public:
   // Initialization
   static void initialize();
 
-  // Asserts
-  static void assert_is_initialized() {
-  }
-
   static bool expensive_load(int ld_size, int scale) {
     if (cpu_family() == CPU_ARM) {
       // Half-word load with index shift by 1 (aka scale is 2) has

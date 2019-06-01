@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1FullGCScope.hpp"
 
 G1FullGCScope::G1FullGCScope(GCMemoryManager* memory_manager, bool explicit_gc, bool clear_soft) :

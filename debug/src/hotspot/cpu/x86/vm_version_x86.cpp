@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
@@ -484,7 +485,6 @@ void VM_Version::get_processor_features() {
 
   get_cpu_info_stub(&_cpuid_info);
 
-  assert_is_initialized();
   _cpu = extended_cpu_family();
   _model = extended_cpu_model();
   _stepping = cpu_stepping();
@@ -906,24 +906,21 @@ void VM_Version::get_processor_features() {
           warning("MaxVectorSize must be 0");
         FLAG_SET_DEFAULT(MaxVectorSize, 0);
       }
-    }
-    else if (UseAVX == 0 || !os_supports_avx_vectors()) {
+    } else if (UseAVX == 0 || !os_supports_avx_vectors()) {
       // 32 bytes vectors (in YMM) are only supported with AVX+
       if (MaxVectorSize > 16) {
         if (!FLAG_IS_DEFAULT(MaxVectorSize))
           warning("MaxVectorSize must be <= 16");
         FLAG_SET_DEFAULT(MaxVectorSize, 16);
       }
-    }
-    else if (UseAVX == 1 || UseAVX == 2) {
+    } else if (UseAVX == 1 || UseAVX == 2) {
       // 64 bytes vectors (in ZMM) are only supported with AVX 3
       if (MaxVectorSize > 32) {
         if (!FLAG_IS_DEFAULT(MaxVectorSize))
           warning("MaxVectorSize must be <= 32");
         FLAG_SET_DEFAULT(MaxVectorSize, 32);
       }
-    }
-    else if (UseAVX > 2 ) {
+    } else if (UseAVX > 2 ) {
       if (MaxVectorSize > 64) {
         if (!FLAG_IS_DEFAULT(MaxVectorSize))
           warning("MaxVectorSize must be <= 64");

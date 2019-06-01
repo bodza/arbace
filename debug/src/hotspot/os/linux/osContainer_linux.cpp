@@ -89,21 +89,16 @@ typedef char * cptr;
 
 PRAGMA_DIAG_PUSH
 PRAGMA_FORMAT_NONLITERAL_IGNORED
-template <typename T> int subsystem_file_contents(CgroupSubsystem* c,
-                                              const char *filename,
-                                              const char *scan_fmt,
-                                              T returnval) {
+template <typename T> int subsystem_file_contents(CgroupSubsystem* c, const char *filename, const char *scan_fmt, T returnval) {
   FILE *fp = NULL;
   char *p;
   char file[MAXPATHLEN+1];
   char buf[MAXPATHLEN+1];
 
   if (c == NULL) {
-    log_debug(os, container)("subsystem_file_contents: CgroupSubsytem* is NULL");
     return OSCONTAINER_ERROR;
   }
   if (c->subsystem_path() == NULL) {
-    log_debug(os, container)("subsystem_file_contents: subsystem path is NULL");
     return OSCONTAINER_ERROR;
   }
 
@@ -111,11 +106,9 @@ template <typename T> int subsystem_file_contents(CgroupSubsystem* c,
   file[MAXPATHLEN-1] = '\0';
   int filelen = strlen(file);
   if ((filelen + strlen(filename)) > (MAXPATHLEN-1)) {
-    log_debug(os, container)("File path too long %s, %s", file, filename);
     return OSCONTAINER_ERROR;
   }
   strncat(file, filename, MAXPATHLEN-filelen);
-  log_trace(os, container)("Path to %s is %s", filename, file);
   fp = fopen(file, "r");
   if (fp != NULL) {
     p = fgets(buf, MAXPATHLEN, fp);
@@ -124,14 +117,8 @@ template <typename T> int subsystem_file_contents(CgroupSubsystem* c,
       if (matched == 1) {
         fclose(fp);
         return 0;
-      } else {
-        log_debug(os, container)("Type %s not found in file %s", scan_fmt, file);
       }
-    } else {
-      log_debug(os, container)("Empty file %s", file);
     }
-  } else {
-    log_debug(os, container)("Open of file %s failed, %s", file, os::strerror(errno));
   }
   if (fp != NULL)
     fclose(fp);
@@ -139,34 +126,22 @@ template <typename T> int subsystem_file_contents(CgroupSubsystem* c,
 }
 PRAGMA_DIAG_POP
 
-#define GET_CONTAINER_INFO(return_type, subsystem, filename, \
-                           logstring, scan_fmt, variable) \
+#define GET_CONTAINER_INFO(return_type, subsystem, filename, logstring, scan_fmt, variable) \
   return_type variable; \
 { \
   int err; \
-  err = subsystem_file_contents(subsystem, \
-                                filename, \
-                                scan_fmt, \
-                                &variable); \
+  err = subsystem_file_contents(subsystem, filename, scan_fmt, &variable); \
   if (err != 0) \
     return (return_type) OSCONTAINER_ERROR; \
- \
-  log_trace(os, container)(logstring, variable); \
 }
 
-#define GET_CONTAINER_INFO_CPTR(return_type, subsystem, filename, \
-                               logstring, scan_fmt, variable, bufsize) \
+#define GET_CONTAINER_INFO_CPTR(return_type, subsystem, filename, logstring, scan_fmt, variable, bufsize) \
   char variable[bufsize]; \
 { \
   int err; \
-  err = subsystem_file_contents(subsystem, \
-                                filename, \
-                                scan_fmt, \
-                                variable); \
+  err = subsystem_file_contents(subsystem, filename, scan_fmt, variable); \
   if (err != 0) \
     return (return_type) NULL; \
- \
-  log_trace(os, container)(logstring, variable); \
 }
 
 /* init
@@ -193,9 +168,7 @@ void OSContainer::init() {
 
   _unlimited_memory = (LONG_MAX / os::vm_page_size()) * os::vm_page_size();
 
-  log_trace(os, container)("OSContainer::init: Initializing Container Support");
   if (!UseContainerSupport) {
-    log_trace(os, container)("Container Support not enabled");
     return;
   }
 
@@ -211,8 +184,6 @@ void OSContainer::init() {
    */
   mntinfo = fopen("/proc/self/mountinfo", "r");
   if (mntinfo == NULL) {
-      log_debug(os, container)("Can't open /proc/self/mountinfo, %s",
-                               os::strerror(errno));
       return;
   }
 
@@ -224,74 +195,30 @@ void OSContainer::init() {
     if (s != NULL && sscanf(s, " - %s", fstype) == 1 && strcmp(fstype, "cgroup") == 0) {
 
       if (strstr(p, "memory") != NULL) {
-        int matched = sscanf(p, "%d %d %d:%d %s %s",
-                             &mountid,
-                             &parentid,
-                             &major,
-                             &minor,
-                             tmproot,
-                             tmpmount);
+        int matched = sscanf(p, "%d %d %d:%d %s %s", &mountid, &parentid, &major, &minor, tmproot, tmpmount);
         if (matched == 6) {
           memory = new CgroupSubsystem(tmproot, tmpmount);
         }
-        else
-          log_debug(os, container)("Incompatible str containing cgroup and memory: %s", p);
       } else if (strstr(p, "cpuset") != NULL) {
-        int matched = sscanf(p, "%d %d %d:%d %s %s",
-                             &mountid,
-                             &parentid,
-                             &major,
-                             &minor,
-                             tmproot,
-                             tmpmount);
+        int matched = sscanf(p, "%d %d %d:%d %s %s", &mountid, &parentid, &major, &minor, tmproot, tmpmount);
         if (matched == 6) {
           cpuset = new CgroupSubsystem(tmproot, tmpmount);
         }
-        else {
-          log_debug(os, container)("Incompatible str containing cgroup and cpuset: %s", p);
-        }
       } else if (strstr(p, "cpu,cpuacct") != NULL || strstr(p, "cpuacct,cpu") != NULL) {
-        int matched = sscanf(p, "%d %d %d:%d %s %s",
-                             &mountid,
-                             &parentid,
-                             &major,
-                             &minor,
-                             tmproot,
-                             tmpmount);
+        int matched = sscanf(p, "%d %d %d:%d %s %s", &mountid, &parentid, &major, &minor, tmproot, tmpmount);
         if (matched == 6) {
           cpu = new CgroupSubsystem(tmproot, tmpmount);
           cpuacct = new CgroupSubsystem(tmproot, tmpmount);
-        }
-        else {
-          log_debug(os, container)("Incompatible str containing cgroup and cpu,cpuacct: %s", p);
         }
       } else if (strstr(p, "cpuacct") != NULL) {
-        int matched = sscanf(p, "%d %d %d:%d %s %s",
-                             &mountid,
-                             &parentid,
-                             &major,
-                             &minor,
-                             tmproot,
-                             tmpmount);
+        int matched = sscanf(p, "%d %d %d:%d %s %s", &mountid, &parentid, &major, &minor, tmproot, tmpmount);
         if (matched == 6) {
           cpuacct = new CgroupSubsystem(tmproot, tmpmount);
         }
-        else {
-          log_debug(os, container)("Incompatible str containing cgroup and cpuacct: %s", p);
-        }
       } else if (strstr(p, "cpu") != NULL) {
-        int matched = sscanf(p, "%d %d %d:%d %s %s",
-                             &mountid,
-                             &parentid,
-                             &major,
-                             &minor,
-                             tmproot,
-                             tmpmount);
+        int matched = sscanf(p, "%d %d %d:%d %s %s", &mountid, &parentid, &major, &minor, tmproot, tmpmount);
         if (matched == 6) {
           cpu = new CgroupSubsystem(tmproot, tmpmount);
-        }
-        else {
-          log_debug(os, container)("Incompatible str containing cgroup and cpu: %s", p);
         }
       }
     }
@@ -300,19 +227,15 @@ void OSContainer::init() {
   fclose(mntinfo);
 
   if (memory == NULL) {
-    log_debug(os, container)("Required cgroup memory subsystem not found");
     return;
   }
   if (cpuset == NULL) {
-    log_debug(os, container)("Required cgroup cpuset subsystem not found");
     return;
   }
   if (cpu == NULL) {
-    log_debug(os, container)("Required cgroup cpu subsystem not found");
     return;
   }
   if (cpuacct == NULL) {
-    log_debug(os, container)("Required cgroup cpuacct subsystem not found");
     return;
   }
 
@@ -341,8 +264,6 @@ void OSContainer::init() {
    */
   cgroup = fopen("/proc/self/cgroup", "r");
   if (cgroup == NULL) {
-    log_debug(os, container)("Can't open /proc/self/cgroup, %s",
-                             os::strerror(errno));
     return;
   }
 
@@ -403,23 +324,18 @@ const char * OSContainer::container_type() {
  *    OSCONTAINER_ERROR for not supported
  */
 jlong OSContainer::memory_limit_in_bytes() {
-  GET_CONTAINER_INFO(julong, memory, "/memory.limit_in_bytes",
-                     "Memory Limit is: " JULONG_FORMAT, JULONG_FORMAT, memlimit);
+  GET_CONTAINER_INFO(julong, memory, "/memory.limit_in_bytes", "Memory Limit is: " JULONG_FORMAT, JULONG_FORMAT, memlimit);
 
   if (memlimit >= _unlimited_memory) {
-    log_trace(os, container)("Memory Limit is: Unlimited");
     return (jlong)-1;
-  }
-  else {
+  } else {
     return (jlong)memlimit;
   }
 }
 
 jlong OSContainer::memory_and_swap_limit_in_bytes() {
-  GET_CONTAINER_INFO(julong, memory, "/memory.memsw.limit_in_bytes",
-                     "Memory and Swap Limit is: " JULONG_FORMAT, JULONG_FORMAT, memswlimit);
+  GET_CONTAINER_INFO(julong, memory, "/memory.memsw.limit_in_bytes", "Memory and Swap Limit is: " JULONG_FORMAT, JULONG_FORMAT, memswlimit);
   if (memswlimit >= _unlimited_memory) {
-    log_trace(os, container)("Memory and Swap Limit is: Unlimited");
     return (jlong)-1;
   } else {
     return (jlong)memswlimit;
@@ -427,10 +343,8 @@ jlong OSContainer::memory_and_swap_limit_in_bytes() {
 }
 
 jlong OSContainer::memory_soft_limit_in_bytes() {
-  GET_CONTAINER_INFO(julong, memory, "/memory.soft_limit_in_bytes",
-                     "Memory Soft Limit is: " JULONG_FORMAT, JULONG_FORMAT, memsoftlimit);
+  GET_CONTAINER_INFO(julong, memory, "/memory.soft_limit_in_bytes", "Memory Soft Limit is: " JULONG_FORMAT, JULONG_FORMAT, memsoftlimit);
   if (memsoftlimit >= _unlimited_memory) {
-    log_trace(os, container)("Memory Soft Limit is: Unlimited");
     return (jlong)-1;
   } else {
     return (jlong)memsoftlimit;
@@ -447,8 +361,7 @@ jlong OSContainer::memory_soft_limit_in_bytes() {
  *    OSCONTAINER_ERROR for not supported
  */
 jlong OSContainer::memory_usage_in_bytes() {
-  GET_CONTAINER_INFO(jlong, memory, "/memory.usage_in_bytes",
-                     "Memory Usage is: " JLONG_FORMAT, JLONG_FORMAT, memusage);
+  GET_CONTAINER_INFO(jlong, memory, "/memory.usage_in_bytes", "Memory Usage is: " JLONG_FORMAT, JLONG_FORMAT, memusage);
   return memusage;
 }
 
@@ -461,8 +374,7 @@ jlong OSContainer::memory_usage_in_bytes() {
  *    OSCONTAINER_ERROR for not supported
  */
 jlong OSContainer::memory_max_usage_in_bytes() {
-  GET_CONTAINER_INFO(jlong, memory, "/memory.max_usage_in_bytes",
-                     "Maximum Memory Usage is: " JLONG_FORMAT, JLONG_FORMAT, memmaxusage);
+  GET_CONTAINER_INFO(jlong, memory, "/memory.max_usage_in_bytes", "Maximum Memory Usage is: " JLONG_FORMAT, JLONG_FORMAT, memmaxusage);
   return memmaxusage;
 }
 
@@ -514,11 +426,9 @@ int OSContainer::active_processor_count() {
 
   if (quota > -1 && period > 0) {
     quota_count = ceilf((float)quota / (float)period);
-    log_trace(os, container)("CPU Quota count based on quota/period: %d", quota_count);
   }
   if (share > -1) {
     share_count = ceilf((float)share / (float)PER_CPU_SHARES);
-    log_trace(os, container)("CPU Share count based on shares: %d", share_count);
   }
 
   // If both shares and quotas are setup results depend
@@ -538,19 +448,16 @@ int OSContainer::active_processor_count() {
   }
 
   result = MIN2(cpu_count, limit_count);
-  log_trace(os, container)("OSContainer::active_processor_count: %d", result);
   return result;
 }
 
 char * OSContainer::cpu_cpuset_cpus() {
-  GET_CONTAINER_INFO_CPTR(cptr, cpuset, "/cpuset.cpus",
-                     "cpuset.cpus is: %s", "%1023s", cpus, 1024);
+  GET_CONTAINER_INFO_CPTR(cptr, cpuset, "/cpuset.cpus", "cpuset.cpus is: %s", "%1023s", cpus, 1024);
   return os::strdup(cpus);
 }
 
 char * OSContainer::cpu_cpuset_memory_nodes() {
-  GET_CONTAINER_INFO_CPTR(cptr, cpuset, "/cpuset.mems",
-                     "cpuset.mems is: %s", "%1023s", mems, 1024);
+  GET_CONTAINER_INFO_CPTR(cptr, cpuset, "/cpuset.mems", "cpuset.mems is: %s", "%1023s", mems, 1024);
   return os::strdup(mems);
 }
 
@@ -565,14 +472,12 @@ char * OSContainer::cpu_cpuset_memory_nodes() {
  *    OSCONTAINER_ERROR for not supported
  */
 int OSContainer::cpu_quota() {
-  GET_CONTAINER_INFO(int, cpu, "/cpu.cfs_quota_us",
-                     "CPU Quota is: %d", "%d", quota);
+  GET_CONTAINER_INFO(int, cpu, "/cpu.cfs_quota_us", "CPU Quota is: %d", "%d", quota);
   return quota;
 }
 
 int OSContainer::cpu_period() {
-  GET_CONTAINER_INFO(int, cpu, "/cpu.cfs_period_us",
-                     "CPU Period is: %d", "%d", period);
+  GET_CONTAINER_INFO(int, cpu, "/cpu.cfs_period_us", "CPU Period is: %d", "%d", period);
   return period;
 }
 
@@ -587,8 +492,7 @@ int OSContainer::cpu_period() {
  *    OSCONTAINER_ERROR for not supported
  */
 int OSContainer::cpu_shares() {
-  GET_CONTAINER_INFO(int, cpu, "/cpu.shares",
-                     "CPU Shares is: %d", "%d", shares);
+  GET_CONTAINER_INFO(int, cpu, "/cpu.shares", "CPU Shares is: %d", "%d", shares);
   // Convert 1024 to no shares setup
   if (shares == 1024) return -1;
 

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "oops/oop.inline.hpp"
 #include "runtime/atomic.hpp"
 #include "utilities/accessFlags.hpp"
@@ -23,5 +24,4 @@ void AccessFlags::atomic_clear_bits(jint bits) {
   } while(f != old_flags);
 }
 
-void accessFlags_init() {
-}
+void accessFlags_init() { }

@@ -1,5 +1,5 @@
 #include "precompiled.hpp"
-// #include "jfr/jfrEvents.hpp"
+
 #include "memory/allocation.inline.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/flags/jvmFlag.hpp"
@@ -341,13 +341,11 @@ JVMFlag::MsgType JVMFlag::get_locked_message(char* buf, int buflen) const {
     return JVMFlag::EXPERIMENTAL_FLAG_BUT_LOCKED;
   }
   if (is_develop() && is_product_build()) {
-    jio_snprintf(buf, buflen, "Error: VM option '%s' is develop and is available only in debug version of VM.\n",
-                 _name);
+    jio_snprintf(buf, buflen, "Error: VM option '%s' is develop and is available only in debug version of VM.\n", _name);
     return JVMFlag::DEVELOPER_FLAG_BUT_PRODUCT_BUILD;
   }
   if (is_notproduct() && is_product_build()) {
-    jio_snprintf(buf, buflen, "Error: VM option '%s' is notproduct and is available only in debug version of VM.\n",
-                 _name);
+    jio_snprintf(buf, buflen, "Error: VM option '%s' is notproduct and is available only in debug version of VM.\n", _name);
     return JVMFlag::NOTPRODUCT_FLAG_BUT_PRODUCT_BUILD;
   }
   return get_locked_message_ext(buf, buflen);

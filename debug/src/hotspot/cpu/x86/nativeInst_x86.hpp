@@ -140,7 +140,7 @@ class NativeCall: public NativeInstruction {
   address displacement_address() const      { return addr_at(displacement_offset); }
   address return_address() const            { return addr_at(return_address_offset); }
   address destination() const;
-  void  set_destination(address dest)       {
+  void  set_destination(address dest) {
 #ifdef AMD64
     intptr_t disp = dest - return_address();
     guarantee(disp == (intptr_t)(jint)disp, "must be 32-bit offset");
@@ -149,8 +149,7 @@ class NativeCall: public NativeInstruction {
   }
   void  set_destination_mt_safe(address dest);
 
-  void  verify_alignment() {
-    }
+  void  verify_alignment() { }
   void  verify();
   void  print();
 
@@ -441,7 +440,7 @@ class NativeJump: public NativeInstruction {
     return dest;
   }
 
-  void  set_jump_destination(address dest)  {
+  void  set_jump_destination(address dest) {
     intptr_t val = dest - next_instruction_address();
     if (dest == (address) -1) {
       val = -5; // jump to self
@@ -540,7 +539,7 @@ public:
   address next_instruction_address() const { return addr_at(instruction_size); }
   bool is_GotJump() const { return ubyte_at(0) == instruction_code; }
 
-  void set_jump_destination(address dest)  {
+  void set_jump_destination(address dest) {
     address *got_entry = (address *) got_address();
     *got_entry = dest;
   }

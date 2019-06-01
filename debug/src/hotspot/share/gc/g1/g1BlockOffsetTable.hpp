@@ -30,8 +30,7 @@ private:
   // address.
   u_char* _offset_array;          // byte array keeping backwards offsets
 
-  void check_offset(size_t offset, const char* msg) const {
-  }
+  void check_offset(size_t offset, const char* msg) const { }
 
   // Bounds checking accessors:
   // For performance these have to devolve to array accesses in product builds.

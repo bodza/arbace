@@ -71,7 +71,6 @@ class klassVtable {
   // Debugging code
   void print()                                              { };
   void verify(outputStream* st, bool force = false);
-  static void print_statistics()                            { };
 
  protected:
   friend class vtableEntry;
@@ -102,9 +101,7 @@ class klassVtable {
   // support for miranda methods
   bool is_miranda_entry_at(int i);
   int fill_in_mirandas(int initialized);
-  static bool is_miranda(Method* m, Array<Method*>* class_methods,
-                         Array<Method*>* default_methods, const Klass* super,
-                         bool is_interface);
+  static bool is_miranda(Method* m, Array<Method*>* class_methods, Array<Method*>* default_methods, const Klass* super, bool is_interface);
   static void add_new_mirandas_to_lists(
       GrowableArray<Method*>* new_mirandas,
       GrowableArray<Method*>* all_mirandas,
@@ -161,8 +158,7 @@ class vtableEntry {
 
  private:
   Method* _method;
-  void set(Method* method)  {
-    _method = method; }
+  void set(Method* method)  { _method = method; }
   void clear()                { _method = NULL; }
   void print()                                        { };
   void verify(klassVtable* vt, outputStream* st);
@@ -257,11 +253,9 @@ class klassItable {
  public:
   klassItable(InstanceKlass* klass);
 
-  itableOffsetEntry* offset_entry(int i) {
-                                           return &((itableOffsetEntry*)vtable_start())[i]; }
+  itableOffsetEntry* offset_entry(int i) { return &((itableOffsetEntry*)vtable_start())[i]; }
 
-  itableMethodEntry* method_entry(int i) {
-                                           return &((itableMethodEntry*)method_start())[i]; }
+  itableMethodEntry* method_entry(int i) { return &((itableMethodEntry*)method_start())[i]; }
 
   int size_offset_table()                { return _size_offset_table; }
 
@@ -277,8 +271,6 @@ class klassItable {
   // Resolving of method to index
   static Method* method_for_itable_index(Klass* klass, int itable_index);
 
-  // Debugging/Statistics
-  static void print_statistics() { };
  private:
   intptr_t* vtable_start() const { return ((intptr_t*)_klass) + _table_offset; }
   intptr_t* method_start() const { return vtable_start() + _size_offset_table * itableOffsetEntry::size(); }

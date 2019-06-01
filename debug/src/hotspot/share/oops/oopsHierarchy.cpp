@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "oops/oopsHierarchy.hpp"

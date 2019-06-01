@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "logging/log.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/virtualspace.hpp"
@@ -11,9 +12,7 @@
 // ReservedSpace
 
 // Dummy constructor
-ReservedSpace::ReservedSpace() : _base(NULL), _size(0), _noaccess_prefix(0),
-    _alignment(0), _special(false), _executable(false), _fd_for_heap(-1) {
-}
+ReservedSpace::ReservedSpace() : _base(NULL), _size(0), _noaccess_prefix(0), _alignment(0), _special(false), _executable(false), _fd_for_heap(-1) { }
 
 ReservedSpace::ReservedSpace(size_t size, size_t preferred_page_size) : _fd_for_heap(-1) {
   bool has_preferred_page_size = preferred_page_size != 0;
@@ -34,20 +33,15 @@ ReservedSpace::ReservedSpace(size_t size, size_t preferred_page_size) : _fd_for_
   initialize(size, alignment, large_pages, NULL, false);
 }
 
-ReservedSpace::ReservedSpace(size_t size, size_t alignment,
-                             bool large,
-                             char* requested_address) : _fd_for_heap(-1) {
+ReservedSpace::ReservedSpace(size_t size, size_t alignment, bool large, char* requested_address) : _fd_for_heap(-1) {
   initialize(size, alignment, large, requested_address, false);
 }
 
-ReservedSpace::ReservedSpace(size_t size, size_t alignment,
-                             bool large,
-                             bool executable) : _fd_for_heap(-1) {
+ReservedSpace::ReservedSpace(size_t size, size_t alignment, bool large, bool executable) : _fd_for_heap(-1) {
   initialize(size, alignment, large, NULL, executable);
 }
 
-ReservedSpace::ReservedSpace(char* base, size_t size, size_t alignment,
-                             bool special, bool executable) : _fd_for_heap(-1) {
+ReservedSpace::ReservedSpace(char* base, size_t size, size_t alignment, bool special, bool executable) : _fd_for_heap(-1) {
   _base = base;
   _size = size;
   _alignment = alignment;
@@ -77,7 +71,6 @@ static bool failed_to_reserve_as_requested(char* base, char* requested_address,
   if (base != NULL) {
     // Different reserve address may be acceptable in other cases
     // but for compressed oops heap should be at requested address.
-    log_debug(gc, heap, coops)("Reserved memory not at requested address: " PTR_FORMAT " vs " PTR_FORMAT, p2i(base), p2i(requested_address));
     // OS ignored requested address. Try different address.
     if (special) {
       if (!os::release_memory_special(base, size)) {
@@ -113,9 +106,6 @@ void ReservedSpace::initialize(size_t size, size_t alignment, bool large, char* 
   bool special = large && !os::can_commit_large_page_memory();
   if (special && _fd_for_heap != -1) {
     special = false;
-    if (UseLargePages && (!FLAG_IS_DEFAULT(UseLargePages) || !FLAG_IS_DEFAULT(LargePageSizeInBytes))) {
-      log_debug(gc, heap)("Ignoring UseLargePages since large page support is up to the file system of the backing file for Java heap");
-    }
   }
 
   char* base = NULL;
@@ -130,11 +120,6 @@ void ReservedSpace::initialize(size_t size, size_t alignment, bool large, char* 
         return;
       }
       _special = true;
-    } else {
-      // failed; try to reserve regular memory below
-      if (UseLargePages && (!FLAG_IS_DEFAULT(UseLargePages) || !FLAG_IS_DEFAULT(LargePageSizeInBytes))) {
-        log_debug(gc, heap, coops)("Reserve regular memory without large pages");
-      }
     }
   }
 
@@ -186,8 +171,7 @@ void ReservedSpace::initialize(size_t size, size_t alignment, bool large, char* 
   }
 }
 
-ReservedSpace ReservedSpace::first_part(size_t partition_size, size_t alignment,
-                                        bool split, bool realloc) {
+ReservedSpace ReservedSpace::first_part(size_t partition_size, size_t alignment, bool split, bool realloc) {
   if (split) {
     os::split_reserved_memory(base(), size(), partition_size, realloc);
   }
@@ -249,19 +233,12 @@ void ReservedHeapSpace::establish_noaccess_prefix() {
   _noaccess_prefix = noaccess_prefix_size(_alignment);
 
   if (base() && base() + _size > (char *)OopEncodingHeapMax) {
-    if (true
-        AIX_ONLY(&& os::vm_page_size() != 64*K)) {
+    {
       // Protect memory at the base of the allocated region.
       // If special, the page was committed (only matters on windows)
       if (!os::protect_memory(_base, _noaccess_prefix, os::MEM_PROT_NONE, _special)) {
         fatal("cannot protect protection page");
       }
-      log_debug(gc, heap, coops)("Protected page at the reserved heap base: "
-                                 PTR_FORMAT " / " INTX_FORMAT " bytes",
-                                 p2i(_base),
-                                 _noaccess_prefix);
-    } else {
-      Universe::set_narrow_oop_use_implicit_null_checks(false);
     }
   }
 
@@ -288,13 +265,8 @@ void ReservedHeapSpace::try_reserve_heap(size_t size, size_t alignment, bool lar
   bool special = large && !os::can_commit_large_page_memory();
   if (special && _fd_for_heap != -1) {
     special = false;
-    if (UseLargePages && (!FLAG_IS_DEFAULT(UseLargePages) || !FLAG_IS_DEFAULT(LargePageSizeInBytes))) {
-      log_debug(gc, heap)("Cannot allocate large pages for Java Heap when AllocateHeapAt option is set.");
-    }
   }
   char* base = NULL;
-
-  log_trace(gc, heap, coops)("Trying to allocate at address " PTR_FORMAT " heap of size " SIZE_FORMAT_HEX, p2i(requested_address), size);
 
   if (special) {
     base = os::reserve_memory_special(size, alignment, requested_address, false);
@@ -305,11 +277,6 @@ void ReservedHeapSpace::try_reserve_heap(size_t size, size_t alignment, bool lar
   }
 
   if (base == NULL) {
-    // Failed; try to reserve regular memory below
-    if (UseLargePages && (!FLAG_IS_DEFAULT(UseLargePages) || !FLAG_IS_DEFAULT(LargePageSizeInBytes))) {
-      log_debug(gc, heap, coops)("Reserve regular memory without large pages");
-    }
-
     // Optimistically assume that the OSes returns an aligned base pointer.
     // When reserving a large address range, most OSes seem to align to at
     // least 64K.
@@ -410,22 +377,18 @@ static char** get_attach_addresses_for_disjoint_mode() {
 }
 
 void ReservedHeapSpace::initialize_compressed_heap(const size_t size, size_t alignment, bool large) {
-  guarantee(size + noaccess_prefix_size(alignment) <= OopEncodingHeapMax,
-            "can not allocate compressed oop heap for this size");
+  guarantee(size + noaccess_prefix_size(alignment) <= OopEncodingHeapMax, "can not allocate compressed oop heap for this size");
   guarantee(alignment == MAX2(alignment, (size_t)os::vm_page_size()), "alignment too small");
 
   const size_t granularity = os::vm_allocation_granularity();
 
   // The necessary attach point alignment for generated wish addresses.
   // This is needed to increase the chance of attaching for mmap and shmat.
-  const size_t os_attach_point_alignment =
-    AIX_ONLY(SIZE_256M)  // Known shm boundary alignment.
-    NOT_AIX(os::vm_allocation_granularity());
+  const size_t os_attach_point_alignment = os::vm_allocation_granularity();
   const size_t attach_point_alignment = lcm(alignment, os_attach_point_alignment);
 
   char *aligned_heap_base_min_address = (char *)align_up((void *)HeapBaseMinAddress, alignment);
-  size_t noaccess_prefix = ((aligned_heap_base_min_address + size) > (char*)OopEncodingHeapMax) ?
-    noaccess_prefix_size(alignment) : 0;
+  size_t noaccess_prefix = ((aligned_heap_base_min_address + size) > (char*)OopEncodingHeapMax) ? noaccess_prefix_size(alignment) : 0;
 
   // Attempt to alloc at user-given address.
   if (!FLAG_IS_DEFAULT(HeapBaseMinAddress)) {
@@ -508,7 +471,6 @@ void ReservedHeapSpace::initialize_compressed_heap(const size_t size, size_t ali
 
     // Last, desperate try without any placement.
     if (_base == NULL) {
-      log_trace(gc, heap, coops)("Trying to allocate at address NULL heap of size " SIZE_FORMAT_HEX, size + noaccess_prefix);
       initialize(size + noaccess_prefix, alignment, large, NULL, false);
     }
   }
@@ -553,9 +515,7 @@ ReservedHeapSpace::ReservedHeapSpace(size_t size, size_t alignment, bool large, 
 
 // Reserve space for code segment.  Same as Java heap only we mark this as
 // executable.
-ReservedCodeSpace::ReservedCodeSpace(size_t r_size,
-                                     size_t rs_align,
-                                     bool large) :
+ReservedCodeSpace::ReservedCodeSpace(size_t r_size, size_t rs_align, bool large) :
   ReservedSpace(r_size, rs_align, large, /*executable*/ true) {
   MemTracker::record_virtual_memory_type((address)base(), mtCode);
 }

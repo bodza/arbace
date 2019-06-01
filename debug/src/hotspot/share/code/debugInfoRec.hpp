@@ -108,8 +108,6 @@ class DebugInformationRecorder: public ResourceObj {
   // verifies the debug information
   void verify(const nmethod* code);
 
-  static void print_statistics() { };
-
   // Method for setting oopmaps to temporarily preserve old handling of oopmaps
   OopMapSet *_oopmaps;
   void set_oopmaps(OopMapSet *oopmaps) { _oopmaps = oopmaps; }

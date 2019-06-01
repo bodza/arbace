@@ -210,25 +210,14 @@ class Dependencies: public ResourceObj {
     bool operator == (const DepValue& other) const   { return other._id == _id; }
 
     bool is_valid() const             { return _id != 0; }
-    int  index() const                {
-        return _id < 0 ? -(_id + 1) : _id - 1; }
-    bool is_metadata() const          {
-        return _id > 0; }
-    bool is_object() const            {
-        return _id < 0; }
+    int  index() const                { return _id < 0 ? -(_id + 1) : _id - 1; }
+    bool is_metadata() const          { return _id > 0; }
+    bool is_object() const            { return _id < 0; }
 
-    Metadata*  as_metadata(OopRecorder* rec) const    {
-        return rec->metadata_at(index()); }
-    Klass*     as_klass(OopRecorder* rec) const {
-      Metadata* m = as_metadata(rec);
-      return (Klass*) m;
-    }
-    Method*    as_method(OopRecorder* rec) const {
-      Metadata* m = as_metadata(rec);
-      return (Method*) m;
-    }
-    jobject    as_object(OopRecorder* rec) const      {
-        return rec->oop_at(index()); }
+    Metadata*  as_metadata(OopRecorder* rec) const    { return rec->metadata_at(index()); }
+    Klass*     as_klass(OopRecorder* rec) const { Metadata* m = as_metadata(rec); return (Klass*) m; }
+    Method*    as_method(OopRecorder* rec) const { Metadata* m = as_metadata(rec); return (Method*) m; }
+    jobject    as_object(OopRecorder* rec) const      { return rec->oop_at(index()); }
   };
 
  private:
@@ -292,10 +281,8 @@ class Dependencies: public ResourceObj {
  private:
   // Check for a valid context type.
   // Enforce the restriction against array types.
-  static void check_ctxk(ciKlass* ctxk) {
-  }
-  static void check_ctxk_concrete(ciKlass* ctxk) {
-  }
+  static void check_ctxk(ciKlass* ctxk) { }
+  static void check_ctxk_concrete(ciKlass* ctxk) { }
   static void check_ctxk_abstract(ciKlass* ctxk) {
     check_ctxk(ctxk);
   }
@@ -318,8 +305,7 @@ class Dependencies: public ResourceObj {
   void assert_call_site_target_value(ciCallSite* call_site, ciMethodHandle* method_handle);
 
  private:
-  static void check_ctxk(Klass* ctxk) {
-  }
+  static void check_ctxk(Klass* ctxk) { }
   static void check_ctxk_abstract(Klass* ctxk) {
     check_ctxk(ctxk);
   }
@@ -372,18 +358,12 @@ class Dependencies: public ResourceObj {
   // Checking old assertions at run-time (in the VM only):
   static Klass* check_evol_method(Method* m);
   static Klass* check_leaf_type(Klass* ctxk);
-  static Klass* check_abstract_with_unique_concrete_subtype(Klass* ctxk, Klass* conck,
-                                                              KlassDepChange* changes = NULL);
-  static Klass* check_abstract_with_no_concrete_subtype(Klass* ctxk,
-                                                          KlassDepChange* changes = NULL);
-  static Klass* check_concrete_with_no_concrete_subtype(Klass* ctxk,
-                                                          KlassDepChange* changes = NULL);
-  static Klass* check_unique_concrete_method(Klass* ctxk, Method* uniqm,
-                                               KlassDepChange* changes = NULL);
-  static Klass* check_abstract_with_exclusive_concrete_subtypes(Klass* ctxk, Klass* k1, Klass* k2,
-                                                                  KlassDepChange* changes = NULL);
-  static Klass* check_exclusive_concrete_methods(Klass* ctxk, Method* m1, Method* m2,
-                                                   KlassDepChange* changes = NULL);
+  static Klass* check_abstract_with_unique_concrete_subtype(Klass* ctxk, Klass* conck, KlassDepChange* changes = NULL);
+  static Klass* check_abstract_with_no_concrete_subtype(Klass* ctxk, KlassDepChange* changes = NULL);
+  static Klass* check_concrete_with_no_concrete_subtype(Klass* ctxk, KlassDepChange* changes = NULL);
+  static Klass* check_unique_concrete_method(Klass* ctxk, Method* uniqm, KlassDepChange* changes = NULL);
+  static Klass* check_abstract_with_exclusive_concrete_subtypes(Klass* ctxk, Klass* k1, Klass* k2, KlassDepChange* changes = NULL);
+  static Klass* check_exclusive_concrete_methods(Klass* ctxk, Method* m1, Method* m2, KlassDepChange* changes = NULL);
   static Klass* check_has_no_finalizable_subclasses(Klass* ctxk, KlassDepChange* changes = NULL);
   static Klass* check_call_site_target_value(oop call_site, oop method_handle, CallSiteDepChange* changes = NULL);
   // A returned Klass* is NULL if the dependency assertion is still
@@ -467,15 +447,11 @@ class Dependencies: public ResourceObj {
     bool is_klass() const              { return is_metadata() && metadata_value()->is_klass(); }
     bool is_method() const              { return is_metadata() && metadata_value()->is_method(); }
 
-    oop oop_value() const              {
-        return (oop) _value; }
-    Metadata* metadata_value() const {
-        return (Metadata*) _value; }
+    oop oop_value() const              { return (oop) _value; }
+    Metadata* metadata_value() const { return (Metadata*) _value; }
   };
 
-  static void print_dependency(DepType dept,
-                               GrowableArray<DepArgument>* args,
-                               Klass* witness = NULL, outputStream* st = tty);
+  static void print_dependency(DepType dept, GrowableArray<DepArgument>* args, Klass* witness = NULL, outputStream* st = tty);
 
  private:
   // helper for encoding common context types as zero:
@@ -483,18 +459,9 @@ class Dependencies: public ResourceObj {
 
   static Klass* ctxk_encoded_as_null(DepType dept, Metadata* x);
 
-  static void write_dependency_to(CompileLog* log,
-                                  DepType dept,
-                                  GrowableArray<ciBaseObject*>* args,
-                                  Klass* witness = NULL);
-  static void write_dependency_to(CompileLog* log,
-                                  DepType dept,
-                                  GrowableArray<DepArgument>* args,
-                                  Klass* witness = NULL);
-  static void write_dependency_to(xmlStream* xtty,
-                                  DepType dept,
-                                  GrowableArray<DepArgument>* args,
-                                  Klass* witness = NULL);
+  static void write_dependency_to(CompileLog* log, DepType dept, GrowableArray<ciBaseObject*>* args, Klass* witness = NULL);
+  static void write_dependency_to(CompileLog* log, DepType dept, GrowableArray<DepArgument>* args, Klass* witness = NULL);
+  static void write_dependency_to(xmlStream* xtty, DepType dept, GrowableArray<DepArgument>* args, Klass* witness = NULL);
  public:
   // Use this to iterate over an nmethod's dependency set.
   // Works on new and old dependency sets.
@@ -549,8 +516,7 @@ class Dependencies: public ResourceObj {
     uintptr_t get_identifier(int i);
 
     int argument_count()         { return dep_args(type()); }
-    int argument_index(int i)    {
-                                   return _xi[i]; }
+    int argument_index(int i)    { return _xi[i]; }
     Metadata* argument(int i);     // => recorded_oop_at(argument_index(i))
     oop argument_oop(int i);         // => recorded_oop_at(argument_index(i))
     Klass* context_type();
@@ -584,8 +550,6 @@ class Dependencies: public ResourceObj {
     void print_dependency(Klass* witness = NULL, bool verbose = false, outputStream* st = tty);
   };
   friend class Dependencies::DepStream;
-
-  static void print_statistics() { };
 };
 
 class DependencySignature : public ResourceObj {

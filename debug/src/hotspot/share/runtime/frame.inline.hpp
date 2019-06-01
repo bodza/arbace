@@ -9,11 +9,6 @@
 #include "runtime/frame.hpp"
 #include "runtime/signature.hpp"
 #include "utilities/macros.hpp"
-#ifdef ZERO
-# include "entryFrame_zero.hpp"
-# include "fakeStubFrame_zero.hpp"
-# include "interpreterFrame_zero.hpp"
-#endif
 
 #include CPU_HEADER_INLINE(frame)
 

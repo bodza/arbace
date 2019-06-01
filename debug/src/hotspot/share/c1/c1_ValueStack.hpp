@@ -47,9 +47,7 @@ class ValueStack: public CompilationResourceObj {
   ValueStack* copy(Kind new_kind, int new_bci)   { return new ValueStack(this, new_kind, new_bci); }
   ValueStack* copy_for_parsing()                 { return new ValueStack(this, Parsing, -99); }
 
-  void set_caller_state(ValueStack* s)           {
-    _caller_state = s;
-  }
+  void set_caller_state(ValueStack* s)           { _caller_state = s; }
 
   bool is_same(ValueStack* s);                   // returns true if this & s's types match (w/o checking locals)
 

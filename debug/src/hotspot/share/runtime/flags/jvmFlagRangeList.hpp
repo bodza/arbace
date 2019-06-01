@@ -31,7 +31,7 @@ public:
   virtual JVMFlag::Error check_uint64_t(uint64_t value, bool verbose = true) { ShouldNotReachHere(); return JVMFlag::ERR_OTHER; }
   virtual JVMFlag::Error check_size_t(size_t value, bool verbose = true) { ShouldNotReachHere(); return JVMFlag::ERR_OTHER; }
   virtual JVMFlag::Error check_double(double value, bool verbose = true) { ShouldNotReachHere(); return JVMFlag::ERR_OTHER; }
-  virtual void print(outputStream* st) { ; }
+  virtual void print(outputStream* st) { }
 };
 
 class JVMFlagRangeList : public AllStatic {

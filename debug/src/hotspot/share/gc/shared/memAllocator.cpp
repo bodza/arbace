@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaClasses.hpp"
 #include "gc/shared/allocTracer.hpp"
 #include "gc/shared/collectedHeap.hpp"
@@ -111,18 +112,9 @@ void MemAllocator::Allocation::verify_before() {
   CHECK_UNHANDLED_OOPS_ONLY(THREAD->clear_unhandled_oops();)
 }
 
-void MemAllocator::Allocation::verify_after() {
-}
+void MemAllocator::Allocation::verify_after() { }
 
-void MemAllocator::Allocation::check_for_bad_heap_word_value() const {
-  MemRegion obj_range = _allocator.obj_memory_range(obj());
-  HeapWord* addr = obj_range.start();
-  size_t size = obj_range.word_size();
-  if (CheckMemoryInitialization && ZapUnusedHeapArea) {
-    for (size_t slot = 0; slot < size; slot += 1) {
-    }
-  }
-}
+void MemAllocator::Allocation::check_for_bad_heap_word_value() const { }
 
 void MemAllocator::Allocation::notify_allocation_jvmti_sampler() {
   if (!ThreadHeapSampler::enabled()) {

@@ -34,8 +34,7 @@ private:
 
 public:
 
-  static VMReg  as_VMReg(int val, bool bad_ok = false) {
-    return (VMReg) (intptr_t) val; }
+  static VMReg  as_VMReg(int val, bool bad_ok = false) { return (VMReg) (intptr_t) val; }
 
   const char*  name() {
     if (is_reg()) {

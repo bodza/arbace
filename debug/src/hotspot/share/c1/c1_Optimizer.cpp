@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_Canonicalizer.hpp"
 #include "c1/c1_Optimizer.hpp"
 #include "c1/c1_ValueMap.hpp"
@@ -329,8 +330,7 @@ class BlockMerger: public BlockClosure {
         // debugging output
         _merge_count++;
         if (PrintBlockElimination) {
-          tty->print_cr("%d. merged B%d & B%d (stack size = %d)",
-                        _merge_count, block->block_id(), sux->block_id(), sux->state()->stack_size());
+          tty->print_cr("%d. merged B%d & B%d (stack size = %d)", _merge_count, block->block_id(), sux->block_id(), sux->state()->stack_size());
         }
 
         _hir->verify();
@@ -499,12 +499,9 @@ class NullCheckEliminator: public ValueVisitor {
   NullCheckVisitor  _visitor;
   NullCheck*        _last_explicit_null_check;
 
-  bool set_contains(Value x)                      {
-    return _set->contains(x); }
-  void set_put     (Value x)                      {
-    _set->put(x); }
-  void set_remove  (Value x)                      {
-    _set->remove(x); }
+  bool set_contains(Value x)                      { return _set->contains(x); }
+  void set_put     (Value x)                      { _set->put(x); }
+  void set_remove  (Value x)                      { _set->remove(x); }
 
   BlockList* work_list()                          { return _work_list; }
 
@@ -516,8 +513,7 @@ class NullCheckEliminator: public ValueVisitor {
   ValueSet* state_for      (BlockBegin* block)    { return _block_states.at(block->block_id()); }
   void      set_state_for  (BlockBegin* block, ValueSet* stack) { _block_states.at_put(block->block_id(), stack); }
   // Returns true if caused a change in the block's state.
-  bool      merge_state_for(BlockBegin* block,
-                            ValueSet*   incoming_state);
+  bool      merge_state_for(BlockBegin* block, ValueSet* incoming_state);
 
  public:
   // constructor
@@ -685,11 +681,7 @@ void NullCheckEliminator::iterate_one(BlockBegin* block) {
   set_last_explicit_null_check(NULL);
 
   if (PrintNullCheckElimination) {
-    tty->print_cr(" ...iterating block %d in null check elimination for %s::%s%s",
-                  block->block_id(),
-                  ir()->method()->holder()->name()->as_utf8(),
-                  ir()->method()->name()->as_utf8(),
-                  ir()->method()->signature()->as_symbol()->as_utf8());
+    tty->print_cr(" ...iterating block %d in null check elimination for %s::%s%s", block->block_id(), ir()->method()->holder()->name()->as_utf8(), ir()->method()->name()->as_utf8(), ir()->method()->signature()->as_symbol()->as_utf8());
   }
 
   // Create new state if none present (only happens at root)
@@ -786,8 +778,7 @@ void NullCheckEliminator::handle_AccessField(AccessField* x) {
           ciObject* obj_val = field_val.as_object();
           if (!obj_val->is_null_object()) {
             if (PrintNullCheckElimination) {
-              tty->print_cr("AccessField %d proven non-null by static final non-null oop check",
-                            x->id());
+              tty->print_cr("AccessField %d proven non-null by static final non-null oop check", x->id());
             }
             set_put(x);
           }
@@ -806,8 +797,7 @@ void NullCheckEliminator::handle_AccessField(AccessField* x) {
       x->set_explicit_null_check(consume_last_explicit_null_check());
       x->set_needs_null_check(true);
       if (PrintNullCheckElimination) {
-        tty->print_cr("Folded NullCheck %d into AccessField %d's null check for value %d",
-                      x->explicit_null_check()->id(), x->id(), obj->id());
+        tty->print_cr("Folded NullCheck %d into AccessField %d's null check for value %d", x->explicit_null_check()->id(), x->id(), obj->id());
       }
     } else {
       x->set_explicit_null_check(NULL);
@@ -836,8 +826,7 @@ void NullCheckEliminator::handle_ArrayLength(ArrayLength* x) {
       x->set_explicit_null_check(consume_last_explicit_null_check());
       x->set_needs_null_check(true);
       if (PrintNullCheckElimination) {
-        tty->print_cr("Folded NullCheck %d into ArrayLength %d's null check for value %d",
-                      x->explicit_null_check()->id(), x->id(), array->id());
+        tty->print_cr("Folded NullCheck %d into ArrayLength %d's null check for value %d", x->explicit_null_check()->id(), x->id(), array->id());
       }
     } else {
       x->set_explicit_null_check(NULL);
@@ -866,8 +855,7 @@ void NullCheckEliminator::handle_LoadIndexed(LoadIndexed* x) {
       x->set_explicit_null_check(consume_last_explicit_null_check());
       x->set_needs_null_check(true);
       if (PrintNullCheckElimination) {
-        tty->print_cr("Folded NullCheck %d into LoadIndexed %d's null check for value %d",
-                      x->explicit_null_check()->id(), x->id(), array->id());
+        tty->print_cr("Folded NullCheck %d into LoadIndexed %d's null check for value %d", x->explicit_null_check()->id(), x->id(), array->id());
       }
     } else {
       x->set_explicit_null_check(NULL);
@@ -1059,10 +1047,7 @@ void Optimizer::eliminate_null_checks() {
   NullCheckEliminator nce(this);
 
   if (PrintNullCheckElimination) {
-    tty->print_cr("Starting null check elimination for method %s::%s%s",
-                  ir()->method()->holder()->name()->as_utf8(),
-                  ir()->method()->name()->as_utf8(),
-                  ir()->method()->signature()->as_symbol()->as_utf8());
+    tty->print_cr("Starting null check elimination for method %s::%s%s", ir()->method()->holder()->name()->as_utf8(), ir()->method()->name()->as_utf8(), ir()->method()->signature()->as_symbol()->as_utf8());
   }
 
   // Apply to graph
@@ -1101,9 +1086,6 @@ void Optimizer::eliminate_null_checks() {
   }
 
   if (PrintNullCheckElimination) {
-    tty->print_cr("Done with null check elimination for method %s::%s%s",
-                  ir()->method()->holder()->name()->as_utf8(),
-                  ir()->method()->name()->as_utf8(),
-                  ir()->method()->signature()->as_symbol()->as_utf8());
+    tty->print_cr("Done with null check elimination for method %s::%s%s", ir()->method()->holder()->name()->as_utf8(), ir()->method()->name()->as_utf8(), ir()->method()->signature()->as_symbol()->as_utf8());
   }
 }

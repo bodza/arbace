@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1BlockOffsetTable.inline.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/heapRegion.hpp"
@@ -18,10 +19,6 @@ G1BlockOffsetTable::G1BlockOffsetTable(MemRegion heap, G1RegionToSpaceMapper* st
   MemRegion bot_reserved = storage->reserved();
 
   _offset_array = (u_char*)bot_reserved.start();
-
-  log_trace(gc, bot)("G1BlockOffsetTable::G1BlockOffsetTable: ");
-  log_trace(gc, bot)("    rs.base(): " PTR_FORMAT "  rs.size(): " SIZE_FORMAT "  rs end(): " PTR_FORMAT,
-                     p2i(bot_reserved.start()), bot_reserved.byte_size(), p2i(bot_reserved.end()));
 }
 
 bool G1BlockOffsetTable::is_card_boundary(HeapWord* p) const {

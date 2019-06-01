@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/dirtyCardQueue.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1CollectorState.hpp"
@@ -165,8 +166,7 @@ class RemoveSelfForwardPtrHRClosure: public HeapRegionClosure {
   UpdateRSetDeferred _update_rset_cl;
 
 public:
-  RemoveSelfForwardPtrHRClosure(uint worker_id,
-                                HeapRegionClaimer* hrclaimer) :
+  RemoveSelfForwardPtrHRClosure(uint worker_id, HeapRegionClaimer* hrclaimer) :
     _g1h(G1CollectedHeap::heap()),
     _dcq(&_g1h->dirty_card_queue_set()),
     _update_rset_cl(&_dcq),
@@ -174,12 +174,8 @@ public:
     _hrclaimer(hrclaimer) {
   }
 
-  size_t remove_self_forward_ptr_by_walking_hr(HeapRegion* hr,
-                                               bool during_initial_mark) {
-    RemoveSelfForwardPtrObjClosure rspc(hr,
-                                        &_update_rset_cl,
-                                        during_initial_mark,
-                                        _worker_id);
+  size_t remove_self_forward_ptr_by_walking_hr(HeapRegion* hr, bool during_initial_mark) {
+    RemoveSelfForwardPtrObjClosure rspc(hr, &_update_rset_cl, during_initial_mark, _worker_id);
     hr->object_iterate(&rspc);
     // Need to zap the remainder area of the processed region.
     rspc.zap_remainder();
@@ -194,8 +190,7 @@ public:
         bool during_initial_mark = _g1h->collector_state()->in_initial_mark_gc();
         bool during_conc_mark = _g1h->collector_state()->mark_or_rebuild_in_progress();
 
-        hr->note_self_forwarding_removal_start(during_initial_mark,
-                                               during_conc_mark);
+        hr->note_self_forwarding_removal_start(during_initial_mark, during_conc_mark);
         _g1h->verifier()->check_bitmaps("Self-Forwarding Ptr Removal", hr);
 
         hr->reset_bot();

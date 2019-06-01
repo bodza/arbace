@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "utilities/debug.hpp"
 
 // This file contains definitions for functions that exist

@@ -5,9 +5,7 @@
 void CompiledDirectStaticCall::set_to_far(const methodHandle& callee, address entry) {
   if (TraceICs) {
     ResourceMark rm;
-    tty->print_cr("CompiledDirectStaticCall@" INTPTR_FORMAT ": set_to_far %s",
-                  p2i(instruction_address()),
-                  callee->name_and_sig_as_C_string());
+    tty->print_cr("CompiledDirectStaticCall@" INTPTR_FORMAT ": set_to_far %s", p2i(instruction_address()), callee->name_and_sig_as_C_string());
   }
 
   set_destination_mt_safe(entry);
@@ -18,9 +16,7 @@ void CompiledPltStaticCall::set_to_interpreted(const methodHandle& callee, addre
   guarantee(stub != NULL, "stub not found");
   if (TraceICs) {
     ResourceMark rm;
-    tty->print_cr("CompiledPltStaticCall@" INTPTR_FORMAT ": set_to_interpreted %s",
-                  p2i(instruction_address()),
-                  callee->name_and_sig_as_C_string());
+    tty->print_cr("CompiledPltStaticCall@" INTPTR_FORMAT ": set_to_interpreted %s", p2i(instruction_address()), callee->name_and_sig_as_C_string());
   }
 
   // Creation also verifies the object.

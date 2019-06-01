@@ -50,7 +50,7 @@ class Space: public CHeapObj<mtGC> {
   // claiming sub-tasks from a larger parallel task.
   SequentialSubTasksDone _par_seq_tasks;
 
-  Space():
+  Space() :
     _bottom(NULL), _end(NULL) { }
 
  public:
@@ -253,9 +253,7 @@ protected:
   virtual void walk_mem_region(MemRegion mr, HeapWord* bottom, HeapWord* top);
 
 public:
-  DirtyCardToOopClosure(Space* sp, OopIterateClosure* cl,
-                        CardTable::PrecisionStyle precision,
-                        HeapWord* boundary) :
+  DirtyCardToOopClosure(Space* sp, OopIterateClosure* cl, CardTable::PrecisionStyle precision, HeapWord* boundary) :
     _sp(sp), _cl(cl), _precision(precision), _boundary(boundary),
     _min_done(NULL) {
   }

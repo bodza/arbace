@@ -161,22 +161,17 @@ julong os::Linux::available_memory() {
   if (OSContainer::is_containerized()) {
     jlong mem_limit, mem_usage;
     if ((mem_limit = OSContainer::memory_limit_in_bytes()) < 1) {
-      log_debug(os, container)("container memory limit %s: " JLONG_FORMAT ", using host value",
-                             mem_limit == OSCONTAINER_ERROR ? "failed" : "unlimited", mem_limit);
     }
     if (mem_limit > 0 && (mem_usage = OSContainer::memory_usage_in_bytes()) < 1) {
-      log_debug(os, container)("container memory usage failed: " JLONG_FORMAT ", using host value", mem_usage);
     }
     if (mem_limit > 0 && mem_usage > 0 ) {
       avail_mem = mem_limit > mem_usage ? (julong)mem_limit - (julong)mem_usage : 0;
-      log_trace(os)("available container memory: " JULONG_FORMAT, avail_mem);
       return avail_mem;
     }
   }
 
   sysinfo(&si);
   avail_mem = (julong)si.freeram * si.mem_unit;
-  log_trace(os)("available memory: " JULONG_FORMAT, avail_mem);
   return avail_mem;
 }
 
@@ -185,15 +180,11 @@ julong os::physical_memory() {
   if (OSContainer::is_containerized()) {
     jlong mem_limit;
     if ((mem_limit = OSContainer::memory_limit_in_bytes()) > 0) {
-      log_trace(os)("total container memory: " JLONG_FORMAT, mem_limit);
       return mem_limit;
     }
-    log_debug(os, container)("container memory limit %s: " JLONG_FORMAT ", using host value",
-                            mem_limit == OSCONTAINER_ERROR ? "failed" : "unlimited", mem_limit);
   }
 
   phys_mem = Linux::physical_memory();
-  log_trace(os)("total system memory: " JLONG_FORMAT, phys_mem);
   return phys_mem;
 }
 
@@ -245,8 +236,7 @@ pid_t os::Linux::gettid() {
 // a single processor and elide locking (see is_MP() call).
 static bool unsafe_chroot_detected = false;
 static const char *unstable_chroot_error = "/proc file system not found.\n"
-                     "Java may be unstable running multithreaded in a chroot "
-                     "environment on Linux when /proc filesystem is not mounted.";
+                     "Java may be unstable running multithreaded in a chroot environment on Linux when /proc filesystem is not mounted.";
 
 void os::Linux::initialize_system_info() {
   set_processor_count(sysconf(_SC_NPROCESSORS_CONF));
@@ -297,7 +287,7 @@ void os::init_system_properties_values() {
   //        1: ...
   //        ...
   //        7: The default directories, normally /lib and /usr/lib.
-#if defined(AMD64) || defined(SPARC) || defined(PPC64) || defined(S390)
+#if defined(AMD64)
   #define DEFAULT_LIBPATH "/usr/lib64:/lib64:/lib:/usr/lib"
 #else
   #define DEFAULT_LIBPATH "/lib:/usr/lib"
@@ -415,9 +405,6 @@ void os::Linux::signal_sets_init() {
   sigaddset(&unblocked_sigs, SIGSEGV);
   sigaddset(&unblocked_sigs, SIGBUS);
   sigaddset(&unblocked_sigs, SIGFPE);
-#if defined(PPC64)
-  sigaddset(&unblocked_sigs, SIGTRAP);
-#endif
   sigaddset(&unblocked_sigs, SR_signum);
 
   if (!ReduceSignalUsage) {
@@ -626,9 +613,6 @@ static void *thread_native_entry(Thread *thread) {
 
   osthread->set_thread_id(os::current_thread_id());
 
-  log_info(os, thread)("Thread is alive (tid: " UINTX_FORMAT ", pthread id: " UINTX_FORMAT ").",
-    os::current_thread_id(), (uintx) pthread_self());
-
   if (UseNUMA) {
     int lgrp_id = os::numa_get_group_id();
     if (lgrp_id != -1) {
@@ -661,9 +645,6 @@ static void *thread_native_entry(Thread *thread) {
   // Note: at this point the thread object may already have deleted itself.
   // Prevent dereferencing it from here on out.
   thread = NULL;
-
-  log_info(os, thread)("Thread finished (tid: " UINTX_FORMAT ", pthread id: " UINTX_FORMAT ").",
-    os::current_thread_id(), (uintx) pthread_self());
 
   return 0;
 }
@@ -714,15 +695,6 @@ bool os::create_thread(Thread* thread, ThreadType thr_type, size_t req_stack_siz
   {
     pthread_t tid;
     int ret = pthread_create(&tid, &attr, (void* (*)(void*)) thread_native_entry, thread);
-
-    char buf[64];
-    if (ret == 0) {
-      log_info(os, thread)("Thread started (pthread id: " UINTX_FORMAT ", attributes: %s). ",
-        (uintx) tid, os::Posix::describe_pthread_attr(buf, sizeof(buf), &attr));
-    } else {
-      log_warning(os, thread)("Failed to start thread - pthread_create failed (%s) for attributes: %s.",
-        os::errno_name(ret), os::Posix::describe_pthread_attr(buf, sizeof(buf), &attr));
-    }
 
     pthread_attr_destroy(&attr);
 
@@ -813,9 +785,6 @@ bool os::create_attached_thread(JavaThread* thread) {
   // initialize signal mask for this thread
   // and save the caller's signal mask
   os::Linux::hotspot_sigmask(thread);
-
-  log_info(os, thread)("Thread attached (tid: " UINTX_FORMAT ", pthread id: " UINTX_FORMAT ").",
-    os::current_thread_id(), (uintx) pthread_self());
 
   return true;
 }
@@ -1078,16 +1047,6 @@ void os::Linux::capture_initial_stack(size_t max_size) {
   }
   _initial_thread_stack_size = align_down(_initial_thread_stack_size, page_size());
   _initial_thread_stack_bottom = (address)stack_top - _initial_thread_stack_size;
-
-  if (log_is_enabled(Info, os, thread)) {
-    // See if we seem to be on primordial process thread
-    bool primordial = uintptr_t(&rlim) > uintptr_t(_initial_thread_stack_bottom) && uintptr_t(&rlim) < stack_top;
-
-    log_info(os, thread)("Capturing initial stack in %s thread: req. size: " SIZE_FORMAT "K, actual size: "
-                         SIZE_FORMAT "K, top=" INTPTR_FORMAT ", bottom=" INTPTR_FORMAT,
-                         primordial ? "primordial" : "user", max_size / K,  _initial_thread_stack_size / K,
-                         stack_top, intptr_t(_initial_thread_stack_bottom));
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1177,8 +1136,8 @@ void os::Linux::clock_init() {
 }
 
 #ifndef SYS_clock_getres
-  #if defined(X86) || defined(PPC64) || defined(S390)
-    #define SYS_clock_getres AMD64_ONLY(229) IA32_ONLY(266) PPC64_ONLY(247) S390_ONLY(261)
+  #if defined(X86)
+    #define SYS_clock_getres AMD64_ONLY(229) IA32_ONLY(266)
     #define sys_clock_getres(x,y)  ::syscall(SYS_clock_getres, x, y)
   #else
     #warning "SYS_clock_getres not defined for this platform, disabling fast_thread_cpu_time"
@@ -1248,9 +1207,7 @@ char * os::local_time_string(char *buf, size_t buflen) {
   time_t long_time;
   time(&long_time);
   localtime_r(&long_time, &t);
-  jio_snprintf(buf, buflen, "%d-%02d-%02d %02d:%02d:%02d",
-               t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
-               t.tm_hour, t.tm_min, t.tm_sec);
+  jio_snprintf(buf, buflen, "%d-%02d-%02d %02d:%02d:%02d", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
   return buf;
 }
 
@@ -1504,8 +1461,7 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
       } else {
         warning("You have loaded library %s which might have disabled stack guard. "
                 "The VM will try to fix the stack guard now.\n"
-                "It's highly recommended that you fix the library with "
-                "'execstack -c <libfile>', or link it with '-z noexecstack'.",
+                "It's highly recommended that you fix the library with 'execstack -c <libfile>', or link it with '-z noexecstack'.",
                 filename);
 
         JavaThread *jt = JavaThread::current();
@@ -1672,12 +1628,10 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
     return NULL;
   }
 
-#ifndef S390
   if (lib_arch.elf_class != arch_array[running_arch_index].elf_class) {
     ::snprintf(diag_msg_buf, diag_msg_max_length-1," (Possible cause: architecture word width mismatch)");
     return NULL;
   }
-#endif
 
   if (lib_arch.compat_class != arch_array[running_arch_index].compat_class) {
     if (lib_arch.name!=NULL) {
@@ -2123,14 +2077,6 @@ void os::pd_print_cpu_info(outputStream* st, char* buf, size_t buflen) {
 
 #if defined(AMD64) || defined(IA32) || defined(X32)
 const char* search_string = "model name";
-#elif defined(M68K)
-const char* search_string = "CPU";
-#elif defined(PPC64)
-const char* search_string = "cpu";
-#elif defined(S390)
-const char* search_string = "processor";
-#elif defined(SPARC)
-const char* search_string = "cpu";
 #else
 const char* search_string = "Processor";
 #endif
@@ -2178,14 +2124,6 @@ void os::get_summary_cpu_info(char* cpuinfo, size_t length) {
   strncpy(cpuinfo, "x86_32", length);
 #elif defined(IA64)
   strncpy(cpuinfo, "IA64", length);
-#elif defined(PPC)
-  strncpy(cpuinfo, "PPC64", length);
-#elif defined(S390)
-  strncpy(cpuinfo, "S390", length);
-#elif defined(SPARC)
-  strncpy(cpuinfo, "sparcv9", length);
-#elif defined(ZERO_LIBARCH)
-  strncpy(cpuinfo, ZERO_LIBARCH, length);
 #else
   strncpy(cpuinfo, "unknown", length);
 #endif
@@ -2207,9 +2145,6 @@ void os::print_signal_handlers(outputStream* st, char* buf, size_t buflen) {
   print_signal_handler(st, SHUTDOWN2_SIGNAL , buf, buflen);
   print_signal_handler(st, SHUTDOWN3_SIGNAL , buf, buflen);
   print_signal_handler(st, BREAK_SIGNAL, buf, buflen);
-#if defined(PPC64)
-  print_signal_handler(st, SIGTRAP, buf, buflen);
-#endif
 }
 
 static char saved_jvm_path[MAXPATHLEN] = { 0 };
@@ -3314,17 +3249,13 @@ size_t os::Linux::find_large_page_size() {
   // format has been changed), we'll use the largest page size supported by
   // the processor.
 
-#ifndef ZERO
   large_page_size =
     AARCH64_ONLY(2 * M)
     AMD64_ONLY(2 * M)
     ARM32_ONLY(2 * M)
     IA32_ONLY(4 * M)
     IA64_ONLY(256 * M)
-    PPC_ONLY(4 * M)
-    S390_ONLY(1 * M)
-    SPARC_ONLY(4 * M);
-#endif
+    ;
 
   FILE *fp = fopen("/proc/meminfo", "r");
   if (fp) {
@@ -3929,8 +3860,7 @@ OSReturn os::set_native_priority(Thread* thread, int newpri) {
   return (ret == 0) ? OS_OK : OS_ERR;
 }
 
-OSReturn os::get_native_priority(const Thread* const thread,
-                                 int *priority_ptr) {
+OSReturn os::get_native_priority(const Thread* const thread, int *priority_ptr) {
   if (!UseThreadPriorities || ThreadPriorityPolicy == 0) {
     *priority_ptr = java_to_os_priority[NormPriority];
     return OS_OK;
@@ -4345,8 +4275,7 @@ void os::Linux::set_signal_handler(int sig, bool set_installed) {
       // libjsig also interposes the sigaction() call below and saves the
       // old sigaction on it own.
     } else {
-      fatal("Encountered unexpected pre-existing sigaction handler "
-            "%#lx for signal %d.", (long)oldhand, sig);
+      fatal("Encountered unexpected pre-existing sigaction handler %#lx for signal %d.", (long)oldhand, sig);
     }
   }
 
@@ -4398,9 +4327,6 @@ void os::Linux::install_signal_handlers() {
     set_signal_handler(SIGBUS, true);
     set_signal_handler(SIGILL, true);
     set_signal_handler(SIGFPE, true);
-#if defined(PPC64)
-    set_signal_handler(SIGTRAP, true);
-#endif
     set_signal_handler(SIGXFSZ, true);
 
     if (libjsig_is_loaded) {
@@ -4578,9 +4504,6 @@ void os::run_periodic_checks() {
   DO_SIGNAL_CHECK(SIGBUS);
   DO_SIGNAL_CHECK(SIGPIPE);
   DO_SIGNAL_CHECK(SIGXFSZ);
-#if defined(PPC64)
-  DO_SIGNAL_CHECK(SIGTRAP);
-#endif
 
   // ReduceSignalUsage allows the user to override these handlers
   // see comments at the very top and jvm_md.h
@@ -4651,8 +4574,7 @@ void os::Linux::check_signal_handler(int sig) {
     sigaddset(&check_signal_done, sig);
     // Running under non-interactive shell, SHUTDOWN2_SIGNAL will be reassigned SIG_IGN
     if (sig == SHUTDOWN2_SIGNAL && !isatty(fileno(stdin))) {
-      tty->print_cr("Running in non-interactive shell, %s handler is replaced by shell",
-                    exception_name(sig, buf, O_BUFLEN));
+      tty->print_cr("Running in non-interactive shell, %s handler is replaced by shell", exception_name(sig, buf, O_BUFLEN));
     }
   } else if(os::Linux::get_our_sigflags(sig) != 0 && (int)act.sa_flags != os::Linux::get_our_sigflags(sig)) {
     tty->print("Warning: %s handler flags ", exception_name(sig, buf, O_BUFLEN));
@@ -4753,8 +4675,6 @@ jint os::init_2(void) {
 
   Linux::libpthread_init();
   Linux::sched_getcpu_init();
-  log_info(os)("HotSpot is running with %s, %s",
-               Linux::glibc_version(), Linux::libpthread_version());
 
   if (UseNUMA) {
     if (!Linux::libnuma_init()) {
@@ -4773,8 +4693,7 @@ jint os::init_2(void) {
       // UseNUMA and UseLargePages (or UseSHM/UseHugeTLBFS) on the command line - warn
       // and disable adaptive resizing.
       if (UseAdaptiveSizePolicy || UseAdaptiveNUMAChunkSizing) {
-        warning("UseNUMA is not fully compatible with SHM/HugeTLBFS large pages, "
-                "disabling adaptive resizing (-XX:-UseAdaptiveSizePolicy -XX:-UseAdaptiveNUMAChunkSizing)");
+        warning("UseNUMA is not fully compatible with SHM/HugeTLBFS large pages, disabling adaptive resizing (-XX:-UseAdaptiveSizePolicy -XX:-UseAdaptiveNUMAChunkSizing)");
         UseAdaptiveSizePolicy = false;
         UseAdaptiveNUMAChunkSizing = false;
       }
@@ -4790,14 +4709,9 @@ jint os::init_2(void) {
     // if getrlimit/setrlimit fails but continue regardless.
     struct rlimit nbr_files;
     int status = getrlimit(RLIMIT_NOFILE, &nbr_files);
-    if (status != 0) {
-      log_info(os)("os::init_2 getrlimit failed: %s", os::strerror(errno));
-    } else {
+    if (status == 0) {
       nbr_files.rlim_cur = nbr_files.rlim_max;
       status = setrlimit(RLIMIT_NOFILE, &nbr_files);
-      if (status != 0) {
-        log_info(os)("os::init_2 setrlimit failed: %s", os::strerror(errno));
-      }
     }
   }
 
@@ -4887,53 +4801,34 @@ int os::Linux::active_processor_count() {
   // introduce a diagnostic flag: UseCpuAllocPath
   if (configured_cpus >= CPU_SETSIZE || UseCpuAllocPath) {
     // kernel may use a mask bigger than cpu_set_t
-    log_trace(os)("active_processor_count: using dynamic path %s"
-                  "- configured processors: %d",
-                  UseCpuAllocPath ? "(forced) " : "",
-                  configured_cpus);
     cpus_p = CPU_ALLOC(configured_cpus);
     if (cpus_p != NULL) {
       cpus_size = CPU_ALLOC_SIZE(configured_cpus);
       // zero it just to be safe
       CPU_ZERO_S(cpus_size, cpus_p);
-    }
-    else {
+    } else {
        // failed to allocate so fallback to online cpus
        int online_cpus = ::sysconf(_SC_NPROCESSORS_ONLN);
-       log_trace(os)("active_processor_count: "
-                     "CPU_ALLOC failed (%s) - using "
-                     "online processor count: %d",
-                     os::strerror(errno), online_cpus);
        return online_cpus;
     }
-  }
-  else {
-    log_trace(os)("active_processor_count: using static path - configured processors: %d",
-                  configured_cpus);
   }
 #else
 // these stubs won't be executed
 #define CPU_COUNT_S(size, cpus) -1
 #define CPU_FREE(cpus)
 
-  log_trace(os)("active_processor_count: only static path available - configured processors: %d",
-                configured_cpus);
 #endif
 
   // pid 0 means the current thread - which we have to assume represents the process
   if (sched_getaffinity(0, cpus_size, cpus_p) == 0) {
     if (cpus_p != &cpus) { // can only be true when CPU_ALLOC used
       cpu_count = CPU_COUNT_S(cpus_size, cpus_p);
-    }
-    else {
+    } else {
       cpu_count = CPU_COUNT(cpus_p);
     }
-    log_trace(os)("active_processor_count: sched_getaffinity processor count: %d", cpu_count);
-  }
-  else {
+  } else {
     cpu_count = ::sysconf(_SC_NPROCESSORS_ONLN);
-    warning("sched_getaffinity failed (%s)- using online processor count (%d) "
-            "which may exceed available processors", os::strerror(errno), cpu_count);
+    warning("sched_getaffinity failed (%s)- using online processor count (%d) which may exceed available processors", os::strerror(errno), cpu_count);
   }
 
   if (cpus_p != &cpus) { // can only be true when CPU_ALLOC used
@@ -4959,17 +4854,12 @@ int os::Linux::active_processor_count() {
 int os::active_processor_count() {
   // User has overridden the number of active processors
   if (ActiveProcessorCount > 0) {
-    log_trace(os)("active_processor_count: "
-                  "active processor count set by user : %d",
-                  ActiveProcessorCount);
     return ActiveProcessorCount;
   }
 
   int active_cpus;
   if (OSContainer::is_containerized()) {
     active_cpus = OSContainer::active_processor_count();
-    log_trace(os)("active_processor_count: determined by OSContainer: %d",
-                   active_cpus);
   } else {
     active_cpus = os::Linux::active_processor_count();
   }
@@ -5060,12 +4950,8 @@ bool os::find(address addr, outputStream* st) {
 // able to use structured exception handling (thread-local exception filters)
 // on, e.g., Win32.
 void
-os::os_exception_wrapper(java_call_t f, JavaValue* value, const methodHandle& method,
-                         JavaCallArguments* args, Thread* thread) {
+os::os_exception_wrapper(java_call_t f, JavaValue* value, const methodHandle& method, JavaCallArguments* args, Thread* thread) {
   f(value, method, args, thread);
-}
-
-void os::print_statistics() {
 }
 
 bool os::message_box(const char* title, const char* message) {
@@ -5366,10 +5252,7 @@ static jlong slow_thread_cpu_time(Thread *thread, bool user_sys_cpu_time) {
   // Skip blank chars
   do { s++; } while (s && isspace(*s));
 
-  count = sscanf(s,"%c %d %d %d %d %d %lu %lu %lu %lu %lu %lu %lu",
-                 &cdummy, &idummy, &idummy, &idummy, &idummy, &idummy,
-                 &ldummy, &ldummy, &ldummy, &ldummy, &ldummy,
-                 &user_time, &sys_time);
+  count = sscanf(s,"%c %d %d %d %d %d %lu %lu %lu %lu %lu %lu %lu", &cdummy, &idummy, &idummy, &idummy, &idummy, &idummy, &ldummy, &ldummy, &ldummy, &ldummy, &ldummy, &user_time, &sys_time);
   if (count != 13) return -1;
   if (user_sys_cpu_time) {
     return ((jlong)sys_time + (jlong)user_time) * (1000000000 / clock_tics_per_sec);
@@ -5555,8 +5438,7 @@ bool os::start_debugging(char *buf, int buflen) {
 
   if (yes) {
     // yes, user asked VM to launch debugger
-    jio_snprintf(buf, sizeof(char)*buflen, "gdb /proc/%d/exe %d",
-                 os::current_process_id(), os::current_process_id());
+    jio_snprintf(buf, sizeof(char)*buflen, "gdb /proc/%d/exe %d", os::current_process_id(), os::current_process_id());
 
     os::fork_and_exec(buf);
     yes = false;
@@ -5600,7 +5482,6 @@ bool os::start_debugging(char *buf, int buflen) {
 //    of the stack size given in pthread_attr. We work around this for
 //    threads created by the VM. (We adapt bottom to be P1 and size accordingly.)
 //
-#ifndef ZERO
 static void current_stack_region(address * bottom, size_t * size) {
   if (os::is_primordial_thread()) {
     // primordial thread needs special handling because pthread_getattr_np()
@@ -5653,7 +5534,6 @@ size_t os::current_stack_size() {
   current_stack_region(&bottom, &size);
   return size;
 }
-#endif
 
 static inline struct timespec get_mtime(const char* filename) {
   struct stat st;

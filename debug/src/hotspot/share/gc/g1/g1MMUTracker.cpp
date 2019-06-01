@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1MMUTracker.hpp"
 #include "gc/shared/gcTrace.hpp"
 #include "logging/log.hpp"
@@ -81,10 +82,6 @@ void G1MMUTrackerQueue::add_pause(double start, double end) {
   // Current entry needs to be added before calculating the value
   double slice_time = calculate_gc_time(end);
   G1MMUTracer::report_mmu(_time_slice, slice_time, _max_gc_time);
-
-  if (slice_time >= _max_gc_time) {
-    log_info(gc, mmu)("MMU target violated: %.1lfms (%.1lfms/%.1lfms)", slice_time * 1000.0, _max_gc_time * 1000.0, _time_slice * 1000);
-  }
 }
 
 double G1MMUTrackerQueue::when_sec(double current_time, double pause_time) {

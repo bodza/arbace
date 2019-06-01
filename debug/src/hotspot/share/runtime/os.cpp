@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/classLoader.hpp"
 #include "classfile/javaClasses.hpp"
@@ -416,8 +417,7 @@ void os::initialize_jdk_signal_support(TRAPS) {
       // in that case. However, since this must work and we do not allow
       // exceptions anyway, check and abort if this fails.
       if (signal_thread == NULL || signal_thread->osthread() == NULL) {
-        vm_exit_during_initialization("java.lang.OutOfMemoryError",
-                                      os::native_thread_creation_failed_msg());
+        vm_exit_during_initialization("java.lang.OutOfMemoryError", os::native_thread_creation_failed_msg());
       }
 
       java_lang_Thread::set_thread(thread_oop(), signal_thread);
@@ -600,7 +600,6 @@ void* os::malloc(size_t size, MEMFLAGS memflags, const NativeCallStack& stack) {
   ptr = (u_char*)::malloc(alloc_size);
 
   if ((intptr_t)ptr == (intptr_t)MallocCatchPtr) {
-    log_warning(malloc, free)("os::malloc caught, " SIZE_FORMAT " bytes --> " PTR_FORMAT, size, p2i(ptr));
     breakpoint();
   }
 
@@ -926,8 +925,7 @@ void os::print_location(outputStream* st, intptr_t x, bool verbose) {
   for (JavaThreadIteratorWithHandle jtiwh; JavaThread *thread = jtiwh.next(); ) {
     // Check for privilege stack
     if (thread->privileged_stack_top() != NULL && thread->privileged_stack_top()->contains(addr)) {
-      st->print_cr(INTPTR_FORMAT " is pointing into the privilege stack "
-                   "for thread: " INTPTR_FORMAT, p2i(addr), p2i(thread));
+      st->print_cr(INTPTR_FORMAT " is pointing into the privilege stack for thread: " INTPTR_FORMAT, p2i(addr), p2i(thread));
       if (verbose) thread->print_on(st);
       return;
     }
@@ -943,8 +941,7 @@ void os::print_location(outputStream* st, intptr_t x, bool verbose) {
     // If the addr is in the stack region for this thread then report that
     // and print thread info
     if (thread->on_local_stack(addr)) {
-      st->print_cr(INTPTR_FORMAT " is pointing into the stack for thread: "
-                   INTPTR_FORMAT, p2i(addr), p2i(thread));
+      st->print_cr(INTPTR_FORMAT " is pointing into the stack for thread: " INTPTR_FORMAT, p2i(addr), p2i(thread));
       if (verbose) thread->print_on(st);
       return;
     }
@@ -1199,8 +1196,6 @@ static volatile intptr_t SerializePageLock = 0;
 // thread tries to store to the "read-only" memory serialize page during state
 // transition.
 void os::block_on_serialize_page_trap() {
-  log_debug(safepoint)("Block until the serialize page permission restored");
-
   // When VMThread is holding the SerializePageLock during modifying the
   // access permission of the memory serialize page, the following call
   // will block until the permission of that page is restored to rw.
@@ -1405,37 +1400,9 @@ void os::trace_page_sizes(const char* str, const size_t* page_sizes, int count) 
 
 #define trace_page_size_params(size) byte_size_in_exact_unit(size), exact_unit_for_byte_size(size)
 
-void os::trace_page_sizes(const char* str, const size_t region_min_size, const size_t region_max_size, const size_t page_size, const char* base, const size_t size) {
+void os::trace_page_sizes(const char* str, const size_t region_min_size, const size_t region_max_size, const size_t page_size, const char* base, const size_t size) { }
 
-  log_info(pagesize)("%s: "
-                     " min=" SIZE_FORMAT "%s"
-                     " max=" SIZE_FORMAT "%s"
-                     " base=" PTR_FORMAT
-                     " page_size=" SIZE_FORMAT "%s"
-                     " size=" SIZE_FORMAT "%s",
-                     str,
-                     trace_page_size_params(region_min_size),
-                     trace_page_size_params(region_max_size),
-                     p2i(base),
-                     trace_page_size_params(page_size),
-                     trace_page_size_params(size));
-}
-
-void os::trace_page_sizes_for_requested_size(const char* str, const size_t requested_size, const size_t page_size, const size_t alignment, const char* base, const size_t size) {
-
-  log_info(pagesize)("%s:"
-                     " req_size=" SIZE_FORMAT "%s"
-                     " base=" PTR_FORMAT
-                     " page_size=" SIZE_FORMAT "%s"
-                     " alignment=" SIZE_FORMAT "%s"
-                     " size=" SIZE_FORMAT "%s",
-                     str,
-                     trace_page_size_params(requested_size),
-                     p2i(base),
-                     trace_page_size_params(page_size),
-                     trace_page_size_params(alignment),
-                     trace_page_size_params(size));
-}
+void os::trace_page_sizes_for_requested_size(const char* str, const size_t requested_size, const size_t page_size, const size_t alignment, const char* base, const size_t size) { }
 
 // This is the working definition of a server class machine:
 // >= 2 physical CPU's and >=2GB of memory, with some fuzz
@@ -1483,7 +1450,6 @@ bool os::is_server_class_machine() {
 
 void os::initialize_initial_active_processor_count() {
   _initial_active_processor_count = active_processor_count();
-  log_debug(os)("Initial active processor count set to %d" , _initial_active_processor_count);
 }
 
 void os::SuspendedThreadTask::run() {
@@ -1648,9 +1614,7 @@ void os::realign_memory(char *addr, size_t bytes, size_t alignment_hint) {
 /* try to switch state from state "from" to state "to"
  * returns the state set after the method is complete
  */
-os::SuspendResume::State os::SuspendResume::switch_state(os::SuspendResume::State from,
-                                                         os::SuspendResume::State to)
-{
+os::SuspendResume::State os::SuspendResume::switch_state(os::SuspendResume::State from, os::SuspendResume::State to) {
   os::SuspendResume::State result = Atomic::cmpxchg(to, &_state, from);
   if (result == from) {
     // success

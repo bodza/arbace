@@ -62,7 +62,6 @@ class arrayOopDesc : public oopDesc {
     if (obj != NULL) {
       char* base = reinterpret_cast<char*>((void*) obj);
       raw = reinterpret_cast<T*>(base + offset_in_bytes);
-    } else {
     }
     return raw;
   }

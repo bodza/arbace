@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "asm/codeBuffer.hpp"
 #include "classfile/javaClasses.inline.hpp"
@@ -209,15 +210,6 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
     // New exception handling mechanism can support inlined methods
     // with exception handlers since the mappings are from PC to PC
 
-    // debugging support
-    // tracing
-    if (log_is_enabled(Info, exceptions)) {
-      ResourceMark rm;
-      stringStream tempst;
-      tempst.print("compiled method <%s>\n at PC" INTPTR_FORMAT " for thread " INTPTR_FORMAT, cm->method()->print_value_string(), p2i(pc), p2i(thread));
-      Exceptions::log_exception(exception, tempst);
-    }
-
     // Clear out the exception oop and pc since looking up an
     // exception handler can cause class loading, which might throw an
     // exception and those fields are expected to be clear during
@@ -242,11 +234,6 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
 
   // Set flag if return address is a method handle call site.
   thread->set_is_method_handle_return(cm->is_method_handle_return(pc));
-
-  if (log_is_enabled(Info, exceptions)) {
-    ResourceMark rm;
-    log_info(exceptions)("Thread " PTR_FORMAT " continuing at PC " PTR_FORMAT " for exception thrown at PC " PTR_FORMAT, p2i(thread), p2i(continuation), p2i(pc));
-  }
 
   return continuation;
 JRT_END
@@ -304,18 +291,6 @@ JRT_END
 JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* thread, oopDesc* obj, BasicLock* lock))
   // monitorexit is non-blocking (leaf routine) => no exceptions can be thrown
   EXCEPTION_MARK;
-
-#ifdef DEBUG
-  if (!oopDesc::is_oop(obj)) {
-    ResetNoHandleMark rhm;
-    nmethod* method = thread->last_frame().cb()->as_nmethod_or_null();
-    if (method != NULL) {
-      tty->print_cr("ERROR in monitorexit in method %s wrong obj " INTPTR_FORMAT, method->name(), p2i(obj));
-    }
-    thread->print_stack_on(tty);
-    ShouldNotReachHere();
-  }
-#endif
 
   if (JVMCIUseFastLocking) {
     // When using fast locking, the compiled code has already tried the fast case
@@ -682,11 +657,9 @@ JVM_ENTRY(void, JVM_RegisterJVMCINatives(JNIEnv *env, jclass c2vmClass))
     THROW_MSG(vmSymbols::java_lang_InternalError(), "JVMCI is not enabled");
   }
 
-#ifndef SPARC
   uintptr_t heap_end = (uintptr_t) Universe::heap()->reserved_region().end();
   uintptr_t allocation_end = heap_end + ((uintptr_t)16) * 1024 * 1024 * 1024;
   guarantee(heap_end < allocation_end, "heap end too close to end of address space (might lead to erroneous TLAB allocations)");
-#endif
 
   JVMCIRuntime::initialize_well_known_classes(CHECK);
 

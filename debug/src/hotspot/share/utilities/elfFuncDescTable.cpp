@@ -11,8 +11,7 @@ ElfFuncDescTable::ElfFuncDescTable(FILE* file, Elf_Shdr shdr, int index) :
   _status = _section.status();
 }
 
-ElfFuncDescTable::~ElfFuncDescTable() {
-}
+ElfFuncDescTable::~ElfFuncDescTable() { }
 
 address ElfFuncDescTable::lookup(Elf_Word index) {
   if (NullDecoder::is_error(_status)) {

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/moduleEntry.hpp"
 #include "classfile/packageEntry.hpp"
 #include "logging/log.hpp"
@@ -46,13 +47,6 @@ void PackageEntry::set_export_walk_required(ClassLoaderData* m_loader_data) {
   ModuleEntry* this_pkg_mod = module();
   if (!_must_walk_exports && (this_pkg_mod == NULL || this_pkg_mod->loader_data() != m_loader_data) && !m_loader_data->is_builtin_class_loader_data()) {
     _must_walk_exports = true;
-    if (log_is_enabled(Trace, module)) {
-      ResourceMark rm;
-      log_trace(module)("PackageEntry::set_export_walk_required(): package %s defined in module %s, exports list must be walked",
-                        name()->as_C_string(),
-                        (this_pkg_mod == NULL || this_pkg_mod->name() == NULL) ?
-                          UNNAMED_MODULE : this_pkg_mod->name()->as_C_string());
-    }
   }
 }
 
@@ -100,14 +94,6 @@ void PackageEntry::purge_qualified_exports() {
     // This package's _must_walk_exports flag will be reset based
     // on the remaining live modules on the exports list.
     _must_walk_exports = false;
-
-    if (log_is_enabled(Trace, module)) {
-      ResourceMark rm;
-      ModuleEntry* pkg_mod = module();
-      log_trace(module)("PackageEntry::purge_qualified_exports(): package %s defined in module %s, exports list being walked",
-                        name()->as_C_string(),
-                        (pkg_mod == NULL || pkg_mod->name() == NULL) ? UNNAMED_MODULE : pkg_mod->name()->as_C_string());
-    }
 
     // Go backwards because this removes entries that are dead.
     int len = _qualified_exports->length();
@@ -249,9 +235,7 @@ bool PackageEntry::exported_pending_delete() const {
 // Remove dead entries from all packages' exported list
 void PackageEntryTable::purge_all_package_exports() {
   for (int i = 0; i < table_size(); i++) {
-    for (PackageEntry* entry = bucket(i);
-                       entry != NULL;
-                       entry = entry->next()) {
+    for (PackageEntry* entry = bucket(i); entry != NULL; entry = entry->next()) {
       if (entry->exported_pending_delete()) {
         // exported list is pending deletion due to a transition
         // from qualified to unqualified
@@ -264,12 +248,9 @@ void PackageEntryTable::purge_all_package_exports() {
 }
 
 void PackageEntryTable::print(outputStream* st) {
-  st->print_cr("Package Entry Table (table_size=%d, entries=%d)",
-               table_size(), number_of_entries());
+  st->print_cr("Package Entry Table (table_size=%d, entries=%d)", table_size(), number_of_entries());
   for (int i = 0; i < table_size(); i++) {
-    for (PackageEntry* probe = bucket(i);
-                       probe != NULL;
-                       probe = probe->next()) {
+    for (PackageEntry* probe = bucket(i); probe != NULL; probe = probe->next()) {
       probe->print(st);
     }
   }

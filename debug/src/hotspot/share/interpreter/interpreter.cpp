@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
 #include "compiler/disassembler.hpp"
@@ -31,8 +32,7 @@ void InterpreterCodelet::initialize(const char* description, Bytecodes::Code byt
   _bytecode          = bytecode;
 }
 
-void InterpreterCodelet::verify() {
-}
+void InterpreterCodelet::verify() { }
 
 void InterpreterCodelet::print_on(outputStream* st) const {
   ttyLocker ttyl;
@@ -44,8 +44,7 @@ void InterpreterCodelet::print_on(outputStream* st) const {
 
   if (description() != NULL) st->print("%s  ", description());
   if (bytecode()    >= 0   ) st->print("%d %s  ", bytecode(), Bytecodes::name(bytecode()));
-  st->print_cr("[" INTPTR_FORMAT ", " INTPTR_FORMAT "]  %d bytes",
-                p2i(code_begin()), p2i(code_end()), code_size());
+  st->print_cr("[" INTPTR_FORMAT ", " INTPTR_FORMAT "]  %d bytes", p2i(code_begin()), p2i(code_end()), code_size());
 
   if (PrintInterpreter) {
     st->cr();
@@ -53,9 +52,7 @@ void InterpreterCodelet::print_on(outputStream* st) const {
   }
 }
 
-CodeletMark::CodeletMark(InterpreterMacroAssembler*& masm,
-                         const char* description,
-                         Bytecodes::Code bytecode) :
+CodeletMark::CodeletMark(InterpreterMacroAssembler*& masm, const char* description, Bytecodes::Code bytecode) :
   _clet((InterpreterCodelet*)AbstractInterpreter::code()->request(codelet_size())),
   _cb(_clet->code_begin(), _clet->code_size()) {
 

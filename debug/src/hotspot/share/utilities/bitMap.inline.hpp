@@ -178,8 +178,7 @@ BitMap::get_next_zero_offset(idx_t l_offset, idx_t r_offset) const {
     res = map(index);
     if (res != ~(bm_word_t)0) {
       // found a 0, return the offset
-      for (res_offset = index << LogBitsPerWord; res & 1;
-           res_offset++) {
+      for (res_offset = index << LogBitsPerWord; res & 1; res_offset++) {
         res = res >> 1;
       }
       return MIN2(res_offset, r_offset);
@@ -189,8 +188,7 @@ BitMap::get_next_zero_offset(idx_t l_offset, idx_t r_offset) const {
 }
 
 inline BitMap::idx_t
-BitMap::get_next_one_offset_aligned_right(idx_t l_offset, idx_t r_offset) const
-{
+BitMap::get_next_one_offset_aligned_right(idx_t l_offset, idx_t r_offset) const {
   verify_range(l_offset, r_offset);
 
   if (l_offset == r_offset) {

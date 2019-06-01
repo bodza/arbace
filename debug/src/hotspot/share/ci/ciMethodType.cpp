@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "ci/ciInstance.hpp"
 #include "ci/ciMethodType.hpp"
 #include "ci/ciUtilities.inline.hpp"

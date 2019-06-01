@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
 #include "memory/resourceArea.hpp"
@@ -89,8 +90,6 @@ class VM_HandshakeOneThread: public VM_Handshake {
     VM_Handshake(op), _target(target), _thread_alive(false) { }
 
   void doit() {
-    TraceTime timer("Performing single-target operation (vmoperation doit)", TRACETIME_LOG(Info, handshake));
-
     {
       ThreadsListHandle tlh;
       if (tlh.includes(_target)) {
@@ -107,7 +106,6 @@ class VM_HandshakeOneThread: public VM_Handshake {
       os::serialize_thread_states();
     }
 
-    log_trace(handshake)("Thread signaled, begin processing by VMThtread");
     jlong start_time = os::elapsed_counter();
     do {
       if (handshake_has_timed_out(start_time)) {
@@ -145,8 +143,6 @@ class VM_HandshakeAllThreads: public VM_Handshake {
   VM_HandshakeAllThreads(HandshakeThreadsOperation* op) : VM_Handshake(op) { }
 
   void doit() {
-    TraceTime timer("Performing operation (vmoperation doit)", TRACETIME_LOG(Info, handshake));
-
     int number_of_threads_issued = 0;
     for (JavaThreadIteratorWithHandle jtiwh; JavaThread *thr = jtiwh.next(); ) {
       set_handshake(thr);
@@ -154,7 +150,6 @@ class VM_HandshakeAllThreads: public VM_Handshake {
     }
 
     if (number_of_threads_issued < 1) {
-      log_debug(handshake)("No threads to handshake.");
       return;
     }
 
@@ -162,7 +157,6 @@ class VM_HandshakeAllThreads: public VM_Handshake {
       os::serialize_thread_states();
     }
 
-    log_debug(handshake)("Threads signaled, begin processing blocked threads by VMThtread");
     const jlong start_time = os::elapsed_counter();
     int number_of_threads_completed = 0;
     do {
@@ -225,9 +219,7 @@ public:
 
 void HandshakeThreadsOperation::do_handshake(JavaThread* thread) {
   ResourceMark rm;
-  FormatBufferResource message("Operation for thread " PTR_FORMAT ", is_vm_thread: %s",
-                               p2i(thread), BOOL_TO_STR(Thread::current()->is_VM_thread()));
-  TraceTime timer(message, TRACETIME_LOG(Debug, handshake, task));
+  FormatBufferResource message("Operation for thread " PTR_FORMAT ", is_vm_thread: %s", p2i(thread), BOOL_TO_STR(Thread::current()->is_VM_thread()));
   _thread_cl->do_thread(thread);
 
   // Use the semaphore to inform the VM thread that we have completed the operation

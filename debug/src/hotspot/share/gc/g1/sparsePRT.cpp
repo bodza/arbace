@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/heapRegion.hpp"
 #include "gc/g1/heapRegionBounds.inline.hpp"
 #include "gc/g1/heapRegionRemSet.hpp"
@@ -289,14 +290,10 @@ void SparsePRT::finish_cleanup_task(SparsePRTCleanupTask* sprt_cleanup_task) {
 
     tail->set_next_expanded(_head_expanded_list);
     _head_expanded_list = head;
-  } else {
   }
 }
 
 bool SparsePRT::should_be_on_expanded_list() {
-  if (_expanded) {
-  } else {
-  }
   return expanded();
 }
 

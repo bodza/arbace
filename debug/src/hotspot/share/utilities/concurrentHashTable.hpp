@@ -19,9 +19,7 @@ class ConcurrentHashTable : public CHeapObj<F> {
     Node * volatile _next;
     VALUE _value;
    public:
-    Node(const VALUE& value, Node* next = NULL)
-      : _next(next), _value(value) {
-    }
+    Node(const VALUE& value, Node* next = NULL) : _next(next), _value(value) { }
 
     Node* next() const;
     void set_next(Node* node)         { _next = node; }

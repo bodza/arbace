@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jni.h"
 #include "jvm.h"
 #include "classfile/vmSymbols.hpp"
@@ -91,8 +92,7 @@ PERF_ENTRY(void, Perf_Detach(JNIEnv *env, jobject unused, jobject buffer))
   PerfMemory::detach((char*)address, capacity, CHECK);
 PERF_END
 
-PERF_ENTRY(jobject, Perf_CreateLong(JNIEnv *env, jobject perf, jstring name,
-           int variability, int units, jlong value))
+PERF_ENTRY(jobject, Perf_CreateLong(JNIEnv *env, jobject perf, jstring name, int variability, int units, jlong value))
 
   PerfWrapper("Perf_CreateLong");
 
@@ -149,10 +149,7 @@ PERF_ENTRY(jobject, Perf_CreateLong(JNIEnv *env, jobject perf, jstring name,
   }
 PERF_END
 
-PERF_ENTRY(jobject, Perf_CreateByteArray(JNIEnv *env, jobject perf,
-                                         jstring name, jint variability,
-                                         jint units, jbyteArray value,
-                                         jint maxlength))
+PERF_ENTRY(jobject, Perf_CreateByteArray(JNIEnv *env, jobject perf, jstring name, jint variability, jint units, jbyteArray value, jint maxlength))
 
   PerfWrapper("Perf_CreateByteArray");
 
@@ -201,20 +198,12 @@ PERF_ENTRY(jobject, Perf_CreateByteArray(JNIEnv *env, jobject perf,
 
     if (variability == PerfData::V_Constant) {
       // create the string constant
-      pbv = PerfDataManager::create_string_constant(NULL_NS, (char*)name_utf,
-                                                    (char*)value_local,
-                                                    CHECK_NULL);
+      pbv = PerfDataManager::create_string_constant(NULL_NS, (char*)name_utf, (char*)value_local, CHECK_NULL);
 
       maxlength = value_length;
-    }
-    else {
-
+    } else {
       // create the string variable
-      pbv = PerfDataManager::create_string_variable(NULL_NS, (char*)name_utf,
-                                                    maxlength,
-                                                    (char*)value_local,
-                                                    CHECK_NULL);
-
+      pbv = PerfDataManager::create_string_variable(NULL_NS, (char*)name_utf, maxlength, (char*)value_local, CHECK_NULL);
     }
   }
 

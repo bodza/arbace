@@ -179,7 +179,7 @@ class NativeCall: public NativeInstruction {
   address return_address() const            { return addr_at(return_address_offset); }
   address destination() const;
 
-  void set_destination(address dest)        {
+  void set_destination(address dest) {
     int offset = dest - instruction_address();
     unsigned int insn = 0b100101 << 26;
     offset >>= 2;
@@ -188,7 +188,7 @@ class NativeCall: public NativeInstruction {
     set_int_at(displacement_offset, insn);
   }
 
-  void  verify_alignment()                       { ; }
+  void  verify_alignment()                       { }
   void  verify();
   void  print();
 
@@ -472,7 +472,7 @@ public:
   address next_instruction_address() const { return addr_at(instruction_size); }
   bool is_GotJump() const;
 
-  void set_jump_destination(address dest)  {
+  void set_jump_destination(address dest) {
     address* got = (address *)got_address();
     *got = dest;
   }

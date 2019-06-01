@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "code/codeCache.hpp"
 #include "interpreter/interpreter.hpp"
 #include "oops/method.inline.hpp"
@@ -121,8 +122,7 @@ void InterpretedRFrame::init() {
   _invocations = _method->invocation_count() + _method->backedge_count();
 }
 
-void RFrame::print(const char* kind) {
-}
+void RFrame::print(const char* kind) { }
 
 void CompiledRFrame::print() {
   RFrame::print("comp");

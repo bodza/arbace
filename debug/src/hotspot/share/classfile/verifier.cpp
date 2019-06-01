@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/classFileStream.hpp"
 #include "classfile/javaClasses.hpp"
@@ -64,8 +65,7 @@ static void* verify_byte_codes_fn() {
 // Methods in Verifier
 
 bool Verifier::should_verify_for(oop class_loader, bool should_verify_class) {
-  return (class_loader == NULL || !should_verify_class) ?
-    BytecodeVerificationLocal : BytecodeVerificationRemote;
+  return (class_loader == NULL || !should_verify_class) ? BytecodeVerificationLocal : BytecodeVerificationRemote;
 }
 
 bool Verifier::relax_access_for(oop loader) {
@@ -78,26 +78,11 @@ bool Verifier::relax_access_for(oop loader) {
   return !need_verify;
 }
 
-void Verifier::trace_class_resolution(Klass* resolve_class, InstanceKlass* verify_class) {
-  ResourceMark rm;
-  Symbol* s = verify_class->source_file_name();
-  const char* source_file = (s != NULL ? s->as_C_string() : NULL);
-  const char* verify = verify_class->external_name();
-  const char* resolve = resolve_class->external_name();
-  // print in a single call to reduce interleaving between threads
-  if (source_file != NULL) {
-    log_debug(class, resolve)("%s %s %s (verification)", verify, resolve, source_file);
-  } else {
-    log_debug(class, resolve)("%s %s (verification)", verify, resolve);
-  }
-}
-
 // Prints the end-verification message to the appropriate output.
 void Verifier::log_end_verification(outputStream* st, const char* klassName, Symbol* exception_name, TRAPS) {
   if (HAS_PENDING_EXCEPTION) {
     st->print("Verification for %s has", klassName);
-    st->print_cr(" exception pending %s ",
-                 PENDING_EXCEPTION->klass()->external_name());
+    st->print_cr(" exception pending %s ", PENDING_EXCEPTION->klass()->external_name());
   } else if (exception_name != NULL) {
     st->print_cr("Verification for %s failed", klassName);
   }
@@ -147,14 +132,11 @@ bool Verifier::verify(InstanceKlass* klass, Verifier::Mode mode, bool should_ver
   const char* klassName = klass->external_name();
   bool can_failover = FailOverToOldVerifier && klass->major_version() < NOFAILOVER_MAJOR_VERSION;
 
-  log_info(class, init)("Start class verification for: %s", klassName);
   if (klass->major_version() >= STACKMAP_ATTRIBUTE_MAJOR_VERSION) {
     ClassVerifier split_verifier(klass, THREAD);
     split_verifier.verify_class(THREAD);
     exception_name = split_verifier.result();
     if (can_failover && !HAS_PENDING_EXCEPTION && (exception_name == vmSymbols::java_lang_VerifyError() || exception_name == vmSymbols::java_lang_ClassFormatError())) {
-      log_info(verification)("Fail over class verification to old verifier for: %s", klassName);
-      log_info(class, init)("Fail over class verification to old verifier for: %s", klassName);
       exception_name = inference_verify(klass, message_buffer, message_buffer_len, THREAD);
     }
     if (exception_name != NULL) {
@@ -182,9 +164,6 @@ bool Verifier::verify(InstanceKlass* klass, Verifier::Mode mode, bool should_ver
   } else { // VerifyError or ClassFormatError to be created and thrown
     ResourceMark rm(THREAD);
     Klass* kls = SystemDictionary::resolve_or_fail(exception_name, true, CHECK_false);
-    if (log_is_enabled(Debug, class, resolve)) {
-      Verifier::trace_class_resolution(kls, klass);
-    }
 
     while (kls != NULL) {
       if (kls == klass) {
@@ -244,7 +223,6 @@ Symbol* Verifier::inference_verify(InstanceKlass* klass, char* message, size_t m
   }
 
   ResourceMark rm(THREAD);
-  log_info(verification)("Verifying class %s with old format", klass->external_name());
 
   jclass cls = (jclass) JNIHandles::make_local(env, klass->java_mirror());
   jint result;
@@ -536,8 +514,6 @@ TypeOrigin ClassVerifier::ref_ctx(const char* sig, TRAPS) {
 }
 
 void ClassVerifier::verify_class(TRAPS) {
-  log_info(verification)("Verifying class %s with new format", _klass->external_name());
-
   Array<Method*>* methods = _klass->methods();
   int num_methods = methods->length();
 
@@ -556,16 +532,12 @@ void ClassVerifier::verify_class(TRAPS) {
   }
 
   if (was_recursively_verified()) {
-    log_info(verification)("Recursive verification detected for: %s", _klass->external_name());
-    log_info(class, init)("Recursive verification detected for: %s",
-                        _klass->external_name());
   }
 }
 
 void ClassVerifier::verify_method(const methodHandle& m, TRAPS) {
   HandleMark hm(THREAD);
   _method = m;   // initialize _method
-  log_info(verification)("Verifying method %s", m->name_and_sig_as_C_string());
 
 // For clang, the only good constant format string is a literal constant format string.
 #define bad_type_msg "Bad type on operand stack in %s"
@@ -1688,12 +1660,6 @@ Klass* ClassVerifier::load_class(Symbol* name, TRAPS) {
 
   Klass* kls = SystemDictionary::resolve_or_fail(name, Handle(THREAD, loader), Handle(THREAD, protection_domain), true, THREAD);
 
-  if (kls != NULL) {
-    if (log_is_enabled(Debug, class, resolve)) {
-      InstanceKlass* cur_class = InstanceKlass::cast(current_class());
-      Verifier::trace_class_resolution(kls, cur_class);
-    }
-  }
   return kls;
 }
 
@@ -2185,9 +2151,6 @@ void ClassVerifier::verify_invoke_init(
           if (!ends_in_athrow(exhandlers.handler_pc(i))) {
             verify_error(ErrorContext::bad_code(bci), "Bad <init> method call from after the start of a try block");
             return;
-          } else if (log_is_enabled(Info, verification)) {
-            ResourceMark rm(THREAD);
-            log_info(verification)("Survived call to ends_in_athrow(): %s", current_class()->name()->as_C_string());
           }
         }
       }
@@ -2196,8 +2159,7 @@ void ClassVerifier::verify_invoke_init(
       // incoming stackmap (before initialize_object() changes them to outgoing
       // state).
       if (was_recursively_verified()) return;
-      verify_exception_handler_targets(bci, true, current_frame,
-                                       stackmap_table, CHECK_VERIFY(this));
+      verify_exception_handler_targets(bci, true, current_frame, stackmap_table, CHECK_VERIFY(this));
     }
 
     current_frame->initialize_object(type, current_type());
@@ -2229,10 +2191,7 @@ void ClassVerifier::verify_invoke_init(
     if (name_in_supers(ref_class_type.name(), current_class())) {
       Klass* ref_klass = load_class(ref_class_type.name(), CHECK);
       if (was_recursively_verified()) return;
-      Method* m = InstanceKlass::cast(ref_klass)->uncached_lookup_method(
-        vmSymbols::object_initializer_name(),
-        cp->signature_ref_at(bcs->get_index_u2()),
-        Klass::find_overpass);
+      Method* m = InstanceKlass::cast(ref_klass)->uncached_lookup_method(vmSymbols::object_initializer_name(), cp->signature_ref_at(bcs->get_index_u2()), Klass::find_overpass);
       // Do nothing if method is not found.  Let resolution detect the error.
       if (m != NULL) {
         InstanceKlass* mh = m->method_holder();
@@ -2593,8 +2552,7 @@ void ClassVerifier::verify_return_value(VerificationType return_type, Verificati
 // The verifier creates symbols which are substrings of Symbols.
 // These are stored in the verifier until the end of verification so that
 // they can be reference counted.
-Symbol* ClassVerifier::create_temporary_symbol(const Symbol *s, int begin,
-                                               int end, TRAPS) {
+Symbol* ClassVerifier::create_temporary_symbol(const Symbol *s, int begin, int end, TRAPS) {
   Symbol* sym = SymbolTable::new_symbol(s, begin, end, CHECK_NULL);
   _symbols->push(sym);
   return sym;

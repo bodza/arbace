@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "gc/shared/collectedHeap.hpp"
@@ -152,8 +153,7 @@ void MemoryService::gc_begin(GCMemoryManager* manager, bool recordGCBeginTime, b
 
 void MemoryService::gc_end(GCMemoryManager* manager, bool recordPostGCUsage, bool recordAccumulatedGCTime, bool recordGCEndTime, bool countCollection, GCCause::Cause cause, bool allMemoryPoolsAffected) {
   // register the GC end statistics and memory usage
-  manager->gc_end(recordPostGCUsage, recordAccumulatedGCTime, recordGCEndTime,
-                  countCollection, cause, allMemoryPoolsAffected);
+  manager->gc_end(recordPostGCUsage, recordAccumulatedGCTime, recordGCEndTime, countCollection, cause, allMemoryPoolsAffected);
 }
 
 void MemoryService::oops_do(OopClosure* f) {
@@ -167,19 +167,6 @@ void MemoryService::oops_do(OopClosure* f) {
     MemoryManager* mgr = _managers_list->at(i);
     mgr->oops_do(f);
   }
-}
-
-bool MemoryService::set_verbose(bool verbose) {
-  MutexLocker m(Management_lock);
-  // verbose will be set to the previous value
-  if (verbose) {
-    LogConfiguration::configure_stdout(LogLevel::Info, true, LOG_TAGS(gc));
-  } else {
-    LogConfiguration::configure_stdout(LogLevel::Off, true, LOG_TAGS(gc));
-  }
-  ClassLoadingService::reset_trace_class_unloading();
-
-  return verbose;
 }
 
 Handle MemoryService::create_MemoryUsage_obj(MemoryUsage usage, TRAPS) {

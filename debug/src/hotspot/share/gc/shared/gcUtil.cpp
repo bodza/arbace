@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/gcUtil.hpp"
 
 // Catch-all file for utility classes

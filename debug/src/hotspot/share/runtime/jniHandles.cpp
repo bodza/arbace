@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/oopStorage.inline.hpp"
 #include "logging/log.hpp"
 #include "memory/iterator.hpp"
@@ -50,13 +51,10 @@ jobject JNIHandles::make_local(JNIEnv* env, oop obj) {
   }
 }
 
-static void report_handle_allocation_failure(AllocFailType alloc_failmode,
-                                             const char* handle_kind) {
+static void report_handle_allocation_failure(AllocFailType alloc_failmode, const char* handle_kind) {
   if (alloc_failmode == AllocFailStrategy::EXIT_OOM) {
     // Fake size value, since we don't know the min allocation size here.
-    vm_exit_out_of_memory(sizeof(oop), OOM_MALLOC_ERROR,
-                          "Cannot create %s JNI handle", handle_kind);
-  } else {
+    vm_exit_out_of_memory(sizeof(oop), OOM_MALLOC_ERROR, "Cannot create %s JNI handle", handle_kind);
   }
 }
 
@@ -147,12 +145,8 @@ void JNIHandles::weak_oops_do(OopClosure* f) {
 }
 
 void JNIHandles::initialize() {
-  _global_handles = new OopStorage("JNI Global",
-                                   JNIGlobalAlloc_lock,
-                                   JNIGlobalActive_lock);
-  _weak_global_handles = new OopStorage("JNI Weak",
-                                        JNIWeakAlloc_lock,
-                                        JNIWeakActive_lock);
+  _global_handles = new OopStorage("JNI Global", JNIGlobalAlloc_lock, JNIGlobalActive_lock);
+  _weak_global_handles = new OopStorage("JNI Weak", JNIWeakAlloc_lock, JNIWeakActive_lock);
 }
 
 inline bool is_storage_handle(const OopStorage* storage, const oop* ptr) {
@@ -278,8 +272,7 @@ JNIHandleBlock* JNIHandleBlock::allocate_block(Thread* thread)  {
   if (thread != NULL && thread->free_handle_block() != NULL) {
     block = thread->free_handle_block();
     thread->set_free_handle_block(block->_next);
-  }
-  else {
+  } else {
     // locking with safepoint checking introduces a potential deadlock:
     // - we would hold JNIHandleBlockFreeList_lock and then Threads_lock
     // - another would hold Threads_lock (jni_AttachCurrentThread) and then
@@ -352,8 +345,7 @@ void JNIHandleBlock::oops_do(OopClosure* f) {
   // Iterate over chain of blocks, followed by chains linked through the
   // pop frame links.
   while (current_chain != NULL) {
-    for (JNIHandleBlock* current = current_chain; current != NULL;
-         current = current->_next) {
+    for (JNIHandleBlock* current = current_chain; current != NULL; current = current->_next) {
       for (int index = 0; index < current->_top; index++) {
         oop* root = &(current->_handles)[index];
         oop value = *root;
@@ -377,8 +369,7 @@ jobject JNIHandleBlock::allocate_handle(oop obj) {
     // This is the first allocation or the initial block got zapped when
     // entering a native function. If we have any following blocks they are
     // not valid anymore.
-    for (JNIHandleBlock* current = _next; current != NULL;
-         current = current->_next) {
+    for (JNIHandleBlock* current = _next; current != NULL; current = current->_next) {
       if (current->_top == 0) {
         // All blocks after the first clear trailing block are already cleared.
         break;

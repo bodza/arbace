@@ -6,9 +6,6 @@
 #include "runtime/monitorChunk.hpp"
 #include "runtime/registerMap.hpp"
 #include "utilities/macros.hpp"
-#ifdef ZERO
-# include "stack_zero.hpp"
-#endif
 
 typedef class BytecodeInterpreter* interpreterState;
 
@@ -244,11 +241,9 @@ class frame {
 
   intptr_t* interpreter_frame_sender_sp() const;
 
-#ifndef CC_INTERP
   // template based interpreter deoptimization support
   void  set_interpreter_frame_sender_sp(intptr_t* sender_sp);
   void interpreter_frame_set_monitor_end(BasicObjectLock* value);
-#endif
 
   // Address of the temp oop in the frame. Needed as GC root.
   oop* interpreter_frame_temp_oop_addr() const;

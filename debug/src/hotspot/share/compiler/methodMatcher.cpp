@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "compiler/methodMatcher.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
@@ -37,7 +38,7 @@
 #define RANGE0 "[*" RANGEBASE "]"
 #define RANGESLASH "[*" RANGEBASE "/]"
 
-MethodMatcher::MethodMatcher():
+MethodMatcher::MethodMatcher() :
     _class_mode(Exact)
   , _method_mode(Exact)
   , _class_name(NULL)

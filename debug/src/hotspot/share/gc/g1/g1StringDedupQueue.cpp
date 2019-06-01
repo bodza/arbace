@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaClasses.inline.hpp"
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1StringDedup.hpp"
@@ -98,25 +99,6 @@ void G1StringDedupQueue::unlink_or_oops_do_impl(StringDedupUnlinkOrOopsDoClosure
       } else {
         // Clear dead reference
         *p = NULL;
-      }
-    }
-  }
-}
-
-void G1StringDedupQueue::print_statistics_impl() {
-  log_debug(gc, stringdedup)("  Queue");
-  log_debug(gc, stringdedup)("    Dropped: " UINTX_FORMAT, _dropped);
-}
-
-void G1StringDedupQueue::verify_impl() {
-  for (size_t i = 0; i < _nqueues; i++) {
-    StackIterator<oop, mtGC> iter(_queues[i]);
-    while (!iter.is_empty()) {
-      oop obj = iter.next();
-      if (obj != NULL) {
-        guarantee(G1CollectedHeap::heap()->is_in_reserved(obj), "Object must be on the heap");
-        guarantee(!obj->is_forwarded(), "Object must not be forwarded");
-        guarantee(java_lang_String::is_instance(obj), "Object must be a String");
       }
     }
   }

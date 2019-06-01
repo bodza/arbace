@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "logging/logLevel.hpp"
 #include "logging/logOutputList.hpp"
 #include "memory/allocation.inline.hpp"
@@ -71,12 +72,6 @@ void LogOutputList::add_output(LogOutput* output, LogLevelType level) {
   LogOutputNode* node = new LogOutputNode();
   node->_value = output;
   node->_level = level;
-
-  // Set the next pointer to the first node of a lower level
-  for (node->_next = _level_start[level];
-       node->_next != NULL && node->_next->_level == level;
-       node->_next = node->_next->_next) {
-  }
 
   // Update the _level_start index
   for (int l = LogLevel::Last; l >= level; l--) {

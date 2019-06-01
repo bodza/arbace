@@ -58,15 +58,9 @@ class java_lang_String : AllStatic {
 
   static void set_compact_strings(bool value);
 
-  static int value_offset_in_bytes()  {
-    return value_offset;
-  }
-  static int hash_offset_in_bytes()   {
-    return hash_offset;
-  }
-  static int coder_offset_in_bytes()   {
-    return coder_offset;
-  }
+  static int value_offset_in_bytes() { return value_offset; }
+  static int hash_offset_in_bytes()  { return hash_offset; }
+  static int coder_offset_in_bytes() { return coder_offset; }
 
   static inline void set_value_raw(oop string, typeArrayOop buffer);
   static inline void set_value(oop string, typeArrayOop buffer);

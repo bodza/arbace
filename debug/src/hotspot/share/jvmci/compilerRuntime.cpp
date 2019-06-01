@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/stringTable.hpp"
 #include "classfile/symbolTable.hpp"
 #include "interpreter/linkResolver.hpp"
@@ -73,8 +74,7 @@ JRT_BLOCK_ENTRY(Klass*, CompilerRuntime::resolve_klass_by_symbol(JavaThread *thr
   return k;
 JRT_END
 
-Method* CompilerRuntime::resolve_method_helper(Klass* klass, const char* method_name, int method_name_len,
-                                                               const char* signature_name, int signature_name_len) {
+Method* CompilerRuntime::resolve_method_helper(Klass* klass, const char* method_name, int method_name_len, const char* signature_name, int signature_name_len) {
   Method* m = NULL;
   TempNewSymbol name_symbol = SymbolTable::probe(method_name, method_name_len);
   TempNewSymbol signature_symbol = SymbolTable::probe(signature_name, signature_name_len);

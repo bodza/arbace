@@ -466,8 +466,7 @@ public:
   int  size_of_parameters() const                { return _size_of_parameters; }
   void set_size_of_parameters(int size)          { _size_of_parameters = size; }
 
-  void set_result_type(BasicType rt)             {
-                                                   _result_type = (u1)rt; }
+  void set_result_type(BasicType rt)             { _result_type = (u1)rt; }
   // Deallocation for RedefineClasses
   void deallocate_contents(ClassLoaderData* loader_data);
   bool is_klass() const { return false; }

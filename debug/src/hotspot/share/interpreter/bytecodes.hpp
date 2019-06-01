@@ -327,10 +327,8 @@ class Bytecodes: AllStatic {
 
  public:
   // Conversion
-  static void        check          (Code code)    {
-    }
-  static void        wide_check     (Code code)    {
-    }
+  static void        check          (Code code)    { }
+  static void        wide_check     (Code code)    { }
   static Code        cast           (int  code)    { return (Code)code; }
 
   // Fetch a bytecode, hiding breakpoints as necessary.  The method

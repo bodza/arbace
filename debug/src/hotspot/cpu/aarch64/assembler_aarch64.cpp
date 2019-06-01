@@ -2,6 +2,7 @@
 #include <sys/types.h>
 
 #include "precompiled.hpp"
+
 #include "asm/assembler.hpp"
 #include "asm/assembler.inline.hpp"
 #include "interpreter/interpreter.hpp"
@@ -346,8 +347,7 @@ asm_util::encode_logical_immediate(bool is32, uint64_t imm)
 unsigned Assembler::pack(double value) {
   float val = (float)value;
   unsigned result = encoding_for_fp_immediate(val);
-  guarantee(unpack(result) == value,
-            "Invalid floating-point immediate operand");
+  guarantee(unpack(result) == value, "Invalid floating-point immediate operand");
   return result;
 }
 

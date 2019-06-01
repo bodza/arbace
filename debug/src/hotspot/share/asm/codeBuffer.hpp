@@ -122,8 +122,7 @@ class CodeSection {
   address     end() const           { return _end; }
   address     limit() const         { return _limit; }
   csize_t     size() const          { return (csize_t)(_end - _start); }
-  csize_t     mark_off() const      {
-                                      return (csize_t)(_mark - _start); }
+  csize_t     mark_off() const      { return (csize_t)(_mark - _start); }
   csize_t     capacity() const      { return (csize_t)(_limit - _start); }
   csize_t     remaining() const     { return (csize_t)(_limit - _end); }
 
@@ -154,12 +153,9 @@ class CodeSection {
   bool allocates(address pc) const  { return pc >= _start && pc <  _limit; }
   bool allocates2(address pc) const { return pc >= _start && pc <= _limit; }
 
-  void    set_end(address pc)       {
-    _end = pc; }
-  void    set_mark(address pc)      {
-                                      _mark = pc; }
-  void    set_mark_off(int offset)  {
-                                      _mark = offset + _start; }
+  void    set_end(address pc)       { _end = pc; }
+  void    set_mark(address pc)      { _mark = pc; }
+  void    set_mark_off(int offset)  { _mark = offset + _start; }
   void    set_mark()                { _mark = _end; }
   void    clear_mark()              { _mark = NULL; }
 
@@ -216,12 +212,10 @@ private:
   CodeString* find(intptr_t offset) const;
   CodeString* find_last(intptr_t offset) const;
 
-  void set_null_and_invalidate() {
-  }
+  void set_null_and_invalidate() { }
 
 public:
-  CodeStrings() {
-  }
+  CodeStrings() { }
 
   bool is_null() {
     return true;
@@ -238,11 +232,9 @@ public:
   // FREE strings; invalidate this.
   void free() { };
   // Guarantee that _strings are used at most once; assign and free invalidate a buffer.
-  inline void check_valid() const {
-  }
+  inline void check_valid() const { }
 
-  static void set_prefix(const char *prefix) {
-  }
+  static void set_prefix(const char *prefix) { }
 };
 
 // A CodeBuffer describes a memory space into which assembly
@@ -465,8 +457,7 @@ class CodeBuffer: public StackObj {
   csize_t insts_size() const             { return _insts.size(); }
 
   // same as insts_size(), except that it asserts there is no non-code here
-  csize_t pure_insts_size() const        {
-                                           return insts_size(); }
+  csize_t pure_insts_size() const        { return insts_size(); }
   // capacity in bytes of the insts sections
   csize_t insts_capacity() const         { return _insts.capacity(); }
 

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "gc/shared/ageTable.inline.hpp"
 #include "gc/shared/ageTableTracer.hpp"
@@ -66,26 +67,16 @@ uint AgeTable::compute_tenuring_threshold(size_t desired_survivor_size) {
     result = age < MaxTenuringThreshold ? age : MaxTenuringThreshold;
   }
 
-  log_debug(gc, age)("Desired survivor size " SIZE_FORMAT " bytes, new threshold " UINTX_FORMAT " (max threshold " UINTX_FORMAT ")",
-                     desired_survivor_size * oopSize, (uintx) result, MaxTenuringThreshold);
-
   return result;
 }
 
 void AgeTable::print_age_table(uint tenuring_threshold) {
-  if (log_is_enabled(Trace, gc, age) || UsePerfData || AgeTableTracer::is_tenuring_distribution_event_enabled()) {
-    log_trace(gc, age)("Age table with threshold %u (max threshold " UINTX_FORMAT ")",
-                       tenuring_threshold, MaxTenuringThreshold);
-
+  if (UsePerfData || AgeTableTracer::is_tenuring_distribution_event_enabled()) {
     size_t total = 0;
     uint age = 1;
     while (age < table_size) {
       size_t wordSize = sizes[age];
       total += wordSize;
-      if (wordSize > 0) {
-        log_trace(gc, age)("- age %3u: " SIZE_FORMAT_W(10) " bytes, " SIZE_FORMAT_W(10) " total",
-                            age, wordSize * oopSize, total * oopSize);
-      }
       AgeTableTracer::send_tenuring_distribution_event(age, wordSize * oopSize);
       if (UsePerfData) {
         _perf_sizes[age]->set_value(wordSize * oopSize);

@@ -22,8 +22,7 @@ private:
   InstanceClassLoaderKlass(const ClassFileParser& parser) : InstanceKlass(parser, InstanceKlass::_misc_kind_class_loader, ID) { }
 
 public:
-  InstanceClassLoaderKlass() {
-    }
+  InstanceClassLoaderKlass() { }
 
   // GC specific object visitors
   //

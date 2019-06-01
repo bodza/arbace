@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1BarrierSet.inline.hpp"
 #include "gc/g1/g1BarrierSetAssembler.hpp"
 #include "gc/g1/g1CardTable.inline.hpp"
@@ -88,7 +89,8 @@ void G1BarrierSet::invalidate(MemRegion mr) {
   jbyte* last_byte = _card_table->byte_for(mr.last());
   Thread* thr = Thread::current();
     // skip all consecutive young cards
-  for (; byte <= last_byte && *byte == G1CardTable::g1_young_card_val(); byte++);
+  for (; byte <= last_byte && *byte == G1CardTable::g1_young_card_val(); byte++)
+    ;
 
   if (byte <= last_byte) {
     OrderAccess::storeload();

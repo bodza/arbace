@@ -31,8 +31,7 @@ class InstanceRefKlass: public InstanceKlass {
   InstanceRefKlass(const ClassFileParser& parser) : InstanceKlass(parser, InstanceKlass::_misc_kind_reference, ID) { }
 
  public:
-  InstanceRefKlass() {
-    }
+  InstanceRefKlass() { }
 
   // GC specific object visitors
   //

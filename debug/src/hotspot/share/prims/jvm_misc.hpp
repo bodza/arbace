@@ -9,8 +9,6 @@
 
 jclass find_class_from_class_loader(JNIEnv* env, Symbol* name, jboolean init, Handle loader, Handle protection_domain, jboolean throwError, TRAPS);
 
-void trace_class_resolution(Klass* to_class);
-
 /*
  * Support for -Xcheck:jni
  */

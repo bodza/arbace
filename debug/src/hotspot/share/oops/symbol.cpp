@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/altHashing.hpp"
 #include "classfile/classLoaderData.hpp"
 #include "gc/shared/collectedHeap.hpp"
@@ -193,14 +194,7 @@ void Symbol::decrement_refcount() {
   }
 }
 
-void Symbol::metaspace_pointers_do(MetaspaceClosure* it) {
-  if (log_is_enabled(Trace, cds)) {
-    LogStream trace_stream(Log(cds)::trace());
-    trace_stream.print("Iter(Symbol): %p ", this);
-    print_value_on(&trace_stream);
-    trace_stream.cr();
-  }
-}
+void Symbol::metaspace_pointers_do(MetaspaceClosure* it) { }
 
 void Symbol::print_on(outputStream* st) const {
   if (this == NULL) {

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "code/compiledIC.hpp"
 #include "code/compiledMethod.inline.hpp"
 #include "code/scopeDesc.hpp"
@@ -354,8 +355,7 @@ unsigned char CompiledMethod::unloading_clock() {
 // static_stub_Relocations may have dangling references to
 // nmethods so trim them out here.  Otherwise it looks like
 // compiled code is maintaining a link to dead metadata.
-void CompiledMethod::clean_ic_stubs() {
-}
+void CompiledMethod::clean_ic_stubs() { }
 
 // This is called at the end of the strong tracing/marking phase of a
 // GC to unload an nmethod if it contains otherwise unreachable

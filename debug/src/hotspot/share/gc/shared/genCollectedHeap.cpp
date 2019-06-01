@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "aot/aotLoader.hpp"
 #include "classfile/symbolTable.hpp"
 #include "classfile/stringTable.hpp"
@@ -43,10 +44,7 @@
 #include "utilities/stack.inline.hpp"
 #include "utilities/vmError.hpp"
 
-GenCollectedHeap::GenCollectedHeap(GenCollectorPolicy *policy,
-                                   Generation::Name young,
-                                   Generation::Name old,
-                                   const char* policy_counters_name) :
+GenCollectedHeap::GenCollectedHeap(GenCollectorPolicy *policy, Generation::Name young, Generation::Name old, const char* policy_counters_name) :
   CollectedHeap(),
   _rem_set(NULL),
   _young_gen_spec(new GenerationSpec(young,
@@ -131,12 +129,7 @@ char* GenCollectedHeap::allocate(size_t alignment,
 
   *heap_rs = Universe::reserve_heap(total_reserved, alignment);
 
-  os::trace_page_sizes("Heap",
-                       collector_policy()->min_heap_byte_size(),
-                       total_reserved,
-                       alignment,
-                       heap_rs->base(),
-                       heap_rs->size());
+  os::trace_page_sizes("Heap", collector_policy()->min_heap_byte_size(), total_reserved, alignment, heap_rs->base(), heap_rs->size());
 
   return heap_rs->base();
 }
@@ -223,9 +216,7 @@ HeapWord* GenCollectedHeap::expand_heap_and_allocate(size_t size, bool   is_tlab
   return result;
 }
 
-HeapWord* GenCollectedHeap::mem_allocate_work(size_t size,
-                                              bool is_tlab,
-                                              bool* gc_overhead_limit_was_exceeded) {
+HeapWord* GenCollectedHeap::mem_allocate_work(size_t size, bool is_tlab, bool* gc_overhead_limit_was_exceeded) {
   // In general gc_overhead_limit_was_exceeded should be false so
   // set it so here and reset it to true only if the gc time
   // limit is being exceeded as checked below.
@@ -248,7 +239,6 @@ HeapWord* GenCollectedHeap::mem_allocate_work(size_t size,
     uint gc_count_before;  // Read inside the Heap_lock locked region.
     {
       MutexLocker ml(Heap_lock);
-      log_trace(gc, alloc)("GenCollectedHeap::mem_allocate_work: attempting locked slow path allocation");
       // Note that only large objects get a shot at being
       // allocated in later generations.
       bool first_only = !should_try_older_generation_allocation(size);
@@ -327,11 +317,6 @@ HeapWord* GenCollectedHeap::mem_allocate_work(size_t size,
       }
       return result;
     }
-
-    // Give a warning if we seem to be looping forever.
-    if ((QueuedAllocationWarningCount > 0) && (try_count % QueuedAllocationWarningCount == 0)) {
-          log_warning(gc, ergo)("GenCollectedHeap::mem_allocate_work retries %d times, size=" SIZE_FORMAT " %s", try_count, size, is_tlab ? "(TLAB)" : "");
-    }
   }
 }
 
@@ -352,8 +337,7 @@ HeapWord* GenCollectedHeap::attempt_allocation(size_t size, bool is_tlab, bool f
   return res;
 }
 
-HeapWord* GenCollectedHeap::mem_allocate(size_t size,
-                                         bool* gc_overhead_limit_was_exceeded) {
+HeapWord* GenCollectedHeap::mem_allocate(size_t size, bool* gc_overhead_limit_was_exceeded) {
   return mem_allocate_work(size,
                            false /* is_tlab */,
                            gc_overhead_limit_was_exceeded);
@@ -376,8 +360,6 @@ void GenCollectedHeap::collect_generation(Generation* gen, bool full, size_t siz
   // a previous collection will do mangling and will
   // change top of some spaces.
   record_gen_tops_before_GC();
-
-  log_trace(gc)("%s invoke=%d size=" SIZE_FORMAT, heap()->is_young_gen(gen) ? "Young" : "Old", gen->stat_record()->invocations, size * HeapWordSize);
 
   if (run_verification && VerifyBeforeGC) {
     HandleMark hm;  // Discard invalid handles created during verification
@@ -594,7 +576,6 @@ HeapWord* GenCollectedHeap::satisfy_failed_allocation(size_t size, bool is_tlab)
                   is_tlab,                   // is_tlab
                   GenCollectedHeap::OldGen); // max_generation
   } else {
-    log_trace(gc)(" :: Trying full because partial may fail :: ");
     // Try a full collection; see delta for bug id 6266275
     // for the original code and why this has been simplified
     // with from-space allocation criteria modified and
@@ -826,7 +807,6 @@ void GenCollectedHeap::do_full_collection(bool clear_all_soft_refs, GenerationTy
   // A scavenge may not have been attempted, or may have
   // been attempted and failed, because the old gen was too full
   if (local_last_generation == YoungGen && gc_cause() == GCCause::_gc_locker && incremental_collection_will_fail(false /* don't consult_young */)) {
-    log_debug(gc, jni)("GC locker: Trying a full collection because scavenge failed");
     // This time allow the old gen to be collected as well
     do_collection(true,                // full
                   clear_all_soft_refs, // clear_all_soft_refs
@@ -919,9 +899,7 @@ size_t GenCollectedHeap::unsafe_max_tlab_alloc(Thread* thr) const {
   return 0;
 }
 
-HeapWord* GenCollectedHeap::allocate_new_tlab(size_t min_size,
-                                              size_t requested_size,
-                                              size_t* actual_size) {
+HeapWord* GenCollectedHeap::allocate_new_tlab(size_t min_size, size_t requested_size, size_t* actual_size) {
   bool gc_overhead_limit_was_exceeded;
   HeapWord* result = mem_allocate_work(requested_size /* size */,
                                        true /* is_tlab */,
@@ -968,8 +946,7 @@ static void sort_scratch_list(ScratchBlock*& list) {
   list = sorted;
 }
 
-ScratchBlock* GenCollectedHeap::gather_scratch(Generation* requestor,
-                                               size_t max_alloc_words) {
+ScratchBlock* GenCollectedHeap::gather_scratch(Generation* requestor, size_t max_alloc_words) {
   ScratchBlock* res = NULL;
   _young_gen->contribute_scratch(res, requestor, max_alloc_words);
   _old_gen->contribute_scratch(res, requestor, max_alloc_words);
@@ -1019,13 +996,8 @@ GenCollectedHeap* GenCollectedHeap::heap() {
 }
 
 void GenCollectedHeap::verify(VerifyOption option /* ignored */) {
-  log_debug(gc, verify)("%s", _old_gen->name());
   _old_gen->verify();
-
-  log_debug(gc, verify)("%s", _old_gen->name());
   _young_gen->verify();
-
-  log_debug(gc, verify)("RemSet");
   rem_set()->verify();
 }
 
@@ -1035,26 +1007,10 @@ void GenCollectedHeap::print_on(outputStream* st) const {
   MetaspaceUtils::print_on(st);
 }
 
-void GenCollectedHeap::gc_threads_do(ThreadClosure* tc) const {
-}
+void GenCollectedHeap::gc_threads_do(ThreadClosure* tc) const { }
 
-void GenCollectedHeap::print_gc_threads_on(outputStream* st) const {
-}
-
-void GenCollectedHeap::print_tracing_info() const {
-  if (log_is_enabled(Debug, gc, heap, exit)) {
-    LogStreamHandle(Debug, gc, heap, exit) lsh;
-    _young_gen->print_summary_info_on(&lsh);
-    _old_gen->print_summary_info_on(&lsh);
-  }
-}
-
-void GenCollectedHeap::print_heap_change(size_t young_prev_used, size_t old_prev_used) const {
-  log_info(gc, heap)("%s: " SIZE_FORMAT "K->" SIZE_FORMAT "K("  SIZE_FORMAT "K)",
-                     _young_gen->short_name(), young_prev_used / K, _young_gen->used() /K, _young_gen->capacity() /K);
-  log_info(gc, heap)("%s: " SIZE_FORMAT "K->" SIZE_FORMAT "K("  SIZE_FORMAT "K)",
-                     _old_gen->short_name(), old_prev_used / K, _old_gen->used() /K, _old_gen->capacity() /K);
-}
+void GenCollectedHeap::print_gc_threads_on(outputStream* st) const { }
+void GenCollectedHeap::print_heap_change(size_t young_prev_used, size_t old_prev_used) const { }
 
 class GenGCPrologueClosure: public GenCollectedHeap::GenClosure {
  private:
@@ -1158,7 +1114,6 @@ jlong GenCollectedHeap::millis_since_last_gc() {
 
   jlong retVal = now - tolgc_cl.time();
   if (retVal < 0) {
-    log_warning(gc)("millis_since_last_gc() would return : " JLONG_FORMAT ". returning zero instead.", retVal);
     return 0;
   }
   return retVal;

@@ -44,7 +44,6 @@ template <class T> inline void G1FullGCMarker::mark_and_push(T* p) {
     oop obj = CompressedOops::decode_not_null(heap_oop);
     if (mark_object(obj)) {
       _oop_stack.push(obj);
-    } else {
     }
   }
 }
@@ -111,7 +110,6 @@ inline void G1FullGCMarker::follow_object(oop obj) {
       _verify_closure.set_containing_obj(obj);
       obj->oop_iterate(&_verify_closure);
       if (_verify_closure.failures()) {
-        log_warning(gc, verify)("Failed after %d", _verify_closure._cc);
         ShouldNotReachHere();
       }
     }

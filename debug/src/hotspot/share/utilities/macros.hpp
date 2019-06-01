@@ -30,36 +30,12 @@
 #define NOT_CHECK_UNHANDLED_OOPS(code)  code
 #endif
 
-#ifdef CC_INTERP
-#define CC_INTERP_ONLY(code) code
-#define NOT_CC_INTERP(code)
-#else
-#define CC_INTERP_ONLY(code)
-#define NOT_CC_INTERP(code) code
-#endif
-
 #ifdef LINUX
 #define LINUX_ONLY(code) code
 #define NOT_LINUX(code)
 #else
 #define LINUX_ONLY(code)
 #define NOT_LINUX(code) code
-#endif
-
-#ifdef AIX
-#define AIX_ONLY(code) code
-#define NOT_AIX(code)
-#else
-#define AIX_ONLY(code)
-#define NOT_AIX(code) code
-#endif
-
-#ifdef SOLARIS
-#define SOLARIS_ONLY(code) code
-#define NOT_SOLARIS(code)
-#else
-#define SOLARIS_ONLY(code)
-#define NOT_SOLARIS(code) code
 #endif
 
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__APPLE__)
@@ -71,14 +47,6 @@
 #else
 #define BSD_ONLY(code)
 #define NOT_BSD(code) code
-#endif
-
-#if defined(ZERO)
-#define ZERO_ONLY(code) code
-#define NOT_ZERO(code)
-#else
-#define ZERO_ONLY(code)
-#define NOT_ZERO(code) code
 #endif
 
 #if defined(IA32) || defined(AMD64)
@@ -99,10 +67,6 @@
 #define NOT_IA32(code) code
 #endif
 
-// This is a REALLY BIG HACK, but on AIX <sys/systemcfg.h> unconditionally defines IA64.
-// At least on AIX 7.1 this is a real problem because 'systemcfg.h' is indirectly included
-// by 'pthread.h' and other common system headers.
-
 #if defined(IA64)
 #define IA64_ONLY(code) code
 #define NOT_IA64(code)
@@ -117,58 +81,6 @@
 #else
 #define AMD64_ONLY(code)
 #define NOT_AMD64(code) code
-#endif
-
-#ifdef S390
-#define S390_ONLY(code) code
-#define NOT_S390(code)
-#else
-#define S390_ONLY(code)
-#define NOT_S390(code) code
-#endif
-
-#ifdef SPARC
-#define SPARC_ONLY(code) code
-#define NOT_SPARC(code)
-#else
-#define SPARC_ONLY(code)
-#define NOT_SPARC(code) code
-#endif
-
-#if defined(PPC32) || defined(PPC64)
-#ifndef PPC
-#define PPC
-#endif
-#define PPC_ONLY(code) code
-#define NOT_PPC(code)
-#else
-#undef PPC
-#define PPC_ONLY(code)
-#define NOT_PPC(code) code
-#endif
-
-#ifdef PPC32
-#define PPC32_ONLY(code) code
-#define NOT_PPC32(code)
-#else
-#define PPC32_ONLY(code)
-#define NOT_PPC32(code) code
-#endif
-
-#ifdef PPC64
-#define PPC64_ONLY(code) code
-#define NOT_PPC64(code)
-#else
-#define PPC64_ONLY(code)
-#define NOT_PPC64(code) code
-#endif
-
-#ifdef E500V2
-#define E500V2_ONLY(code) code
-#define NOT_E500V2(code)
-#else
-#define E500V2_ONLY(code)
-#define NOT_E500V2(code) code
 #endif
 
 // Note: There are three ARM ports. They set the following in the makefiles:

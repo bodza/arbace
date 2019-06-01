@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1FullGCMarker.inline.hpp"
 #include "gc/shared/referenceProcessor.hpp"
 #include "memory/iterator.inline.hpp"
@@ -15,8 +16,7 @@ G1FullGCMarker::G1FullGCMarker(uint worker_id, PreservedMarks* preserved_stack, 
   _objarray_stack.initialize();
 }
 
-G1FullGCMarker::~G1FullGCMarker() {
-}
+G1FullGCMarker::~G1FullGCMarker() { }
 
 void G1FullGCMarker::complete_marking(OopQueueSet* oop_stacks, ObjArrayTaskQueueSet* array_stacks, ParallelTaskTerminator* terminator) {
   int hash_seed = 17;

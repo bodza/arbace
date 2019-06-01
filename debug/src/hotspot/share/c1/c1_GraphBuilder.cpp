@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_CFGPrinter.hpp"
 #include "c1/c1_Canonicalizer.hpp"
 #include "c1/c1_Compilation.hpp"
@@ -11,7 +12,6 @@
 #include "ci/ciUtilities.inline.hpp"
 #include "compiler/compileBroker.hpp"
 #include "interpreter/bytecode.hpp"
-// #include "jfr/jfrEvents.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
@@ -115,7 +115,6 @@ BlockBegin* BlockListBuilder::make_block_at(int cur_bci, BlockBegin* predecessor
     block->init_stores_to_locals(method()->max_locals());
     _bci2block->at_put(cur_bci, block);
     _blocks.append(block);
-
   }
 
   if (predecessor != NULL) {
@@ -600,8 +599,7 @@ BlockBegin* GraphBuilder::ScopeData::block_at(int bci) {
     if (block != NULL && block == parent()->bci2block()->at(bci)) {
       BlockBegin* new_block = new BlockBegin(block->bci());
       if (PrintInitialBlockList) {
-        tty->print_cr("CFG: cloned block %d (bci %d) as block %d for jsr",
-                      block->block_id(), block->bci(), new_block->block_id());
+        tty->print_cr("CFG: cloned block %d (bci %d) as block %d for jsr", block->block_id(), block->bci(), new_block->block_id());
       }
       // copy data from cloned blocked
       new_block->set_depth_first_number(block->depth_first_number());
@@ -1576,8 +1574,7 @@ Values* GraphBuilder::args_list_for_profiling(ciMethod* target, int& start, bool
   return NULL;
 }
 
-void GraphBuilder::check_args_for_profiling(Values* obj_args, int expected) {
-}
+void GraphBuilder::check_args_for_profiling(Values* obj_args, int expected) { }
 
 // Collect arguments that we want to profile in a list
 Values* GraphBuilder::collect_args_for_profiling(Values* args, ciMethod* target, bool may_have_receiver) {
@@ -1614,9 +1611,7 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
 
   CompileLog* log = compilation()->log();
   if (log != NULL)
-      log->elem("call method='%d' instr='%s'",
-                log->identify(target),
-                Bytecodes::name(code));
+      log->elem("call method='%d' instr='%s'", log->identify(target), Bytecodes::name(code));
 
   // invoke-special-super
   if (bc_raw == Bytecodes::_invokespecial && !target->is_object_initializer()) {
@@ -1818,22 +1813,6 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
   Values* args = state()->pop_arguments(target->arg_size_no_receiver() + patching_appendix_arg);
   Value recv = has_receiver ? apop() : NULL;
   int vtable_index = Method::invalid_vtable_index;
-
-#ifdef SPARC
-  // Currently only supported on Sparc.
-  // The UseInlineCaches only controls dispatch to invokevirtuals for
-  // loaded classes which we weren't able to statically bind.
-  if (!UseInlineCaches && target->is_loaded() && code == Bytecodes::_invokevirtual && !target->can_be_statically_bound()) {
-    // Find a vtable index if one is available
-    // For arrays, callee_holder is Object. Resolving the call with
-    // Object would allow an illegal call to finalize() on an
-    // array. We use holder instead: illegal calls to finalize() won't
-    // be compiled as vtable calls (IC call resolution will catch the
-    // illegal call) and the few legal calls on array types won't be
-    // either.
-    vtable_index = target->resolve_vtable_index(calling_klass, holder);
-  }
-#endif
 
   // A null check is required here (when there is a receiver) for any of the following cases
   // - invokespecial, always need a null check.
@@ -3453,8 +3432,7 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
     // low number so that continuation gets parsed as early as possible
     cont->set_depth_first_number(0);
     if (PrintInitialBlockList) {
-      tty->print_cr("CFG: created block %d (bci %d) as continuation for inline at bci %d",
-                    cont->block_id(), cont->bci(), bci());
+      tty->print_cr("CFG: created block %d (bci %d) as continuation for inline at bci %d", cont->block_id(), cont->bci(), bci());
     }
     continuation_existed = false;
   }

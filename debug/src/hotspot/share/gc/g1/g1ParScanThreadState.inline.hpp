@@ -26,7 +26,6 @@ template <class T> void G1ParScanThreadState::do_oop_evac(T* p) {
     RawAccess<IS_NOT_NULL>::oop_store(p, obj);
   } else if (in_cset_state.is_humongous()) {
     _g1h->set_humongous_is_live(obj);
-  } else {
   }
 
   if (!HeapRegion::is_in_same_region(p, obj)) {

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/altHashing.hpp"
 #include "classfile/classLoaderData.inline.hpp"
 #include "classfile/javaClasses.inline.hpp"
@@ -91,14 +92,11 @@ static void compute_offset(int &dest_offset,
   fieldDescriptor fd;
   if (ik == NULL) {
     ResourceMark rm;
-    log_error(class)("Mismatch JDK version for field: %s type: %s", name_symbol->as_C_string(), signature_symbol->as_C_string());
     vm_exit_during_initialization("Invalid layout of preloaded class");
   }
 
   if (!ik->find_local_field(name_symbol, signature_symbol, &fd) || fd.is_static() != is_static) {
     ResourceMark rm;
-    log_error(class)("Invalid layout of %s field: %s type: %s", ik->external_name(),
-                     name_symbol->as_C_string(), signature_symbol->as_C_string());
     vm_exit_during_initialization("Invalid layout of preloaded class: use -Xlog:class+load=info to see the origin of the problem class");
   }
   dest_offset = fd.offset();
@@ -111,7 +109,6 @@ static void compute_offset(int& dest_offset, InstanceKlass* ik,
   TempNewSymbol name = SymbolTable::probe(name_string, (int)strlen(name_string));
   if (name == NULL) {
     ResourceMark rm;
-    log_error(class)("Name %s should be in the SymbolTable since its class is loaded", name_string);
     vm_exit_during_initialization("Invalid layout of preloaded class", ik->external_name());
   }
   compute_offset(dest_offset, ik, name, signature_symbol, is_static);
@@ -1009,7 +1006,6 @@ BasicType java_lang_Class::primitive_type(oop java_class) {
   if (ak != NULL) {
     // Note: create_basic_type_mirror above initializes ak to a non-null value.
     type = ArrayKlass::cast(ak)->element_type();
-  } else {
   }
   return type;
 }
@@ -1763,7 +1759,6 @@ void java_lang_Throwable::fill_in_stack_trace(Handle throwable, const methodHand
   if (!thread->has_last_Java_frame()) {
     if (max_depth >= 1 && method() != NULL) {
       bt.push(method(), 0, CHECK);
-      log_info(stacktrace)("%s, %d", throwable->klass()->external_name(), 1);
       set_depth(throwable(), 1);
       set_backtrace(throwable(), bt.backtrace());
     }
@@ -1830,8 +1825,7 @@ void java_lang_Throwable::fill_in_stack_trace(Handle throwable, const methodHand
     if (!skip_fillInStackTrace_check) {
       if (method->name() == vmSymbols::fillInStackTrace_name() && throwable->is_a(method->method_holder())) {
         continue;
-      }
-      else {
+      } else {
         skip_fillInStackTrace_check = true; // gone past them all
       }
     }
@@ -1852,8 +1846,6 @@ void java_lang_Throwable::fill_in_stack_trace(Handle throwable, const methodHand
     bt.push(method, bci, CHECK);
     total_count++;
   }
-
-  log_info(stacktrace)("%s, %d", throwable->klass()->external_name(), total_count);
 
   // Put completed stack trace into throwable object
   set_backtrace(throwable(), bt.backtrace());
@@ -1916,7 +1908,6 @@ void java_lang_Throwable::fill_in_stack_trace_of_preallocated_backtrace(Handle t
     if (chunk_count >= trace_chunk_size) break;
   }
   set_depth(throwable(), chunk_count);
-  log_info(stacktrace)("%s, %d", throwable->klass()->external_name(), chunk_count);
 
   // We support the Throwable immutability protocol defined for Java 7.
   java_lang_Throwable::set_stacktrace(throwable(), java_lang_Throwable::unassigned_stacktrace());

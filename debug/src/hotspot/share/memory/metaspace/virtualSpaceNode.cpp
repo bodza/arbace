@@ -187,7 +187,6 @@ void VirtualSpaceNode::allocate_padding_chunks_until_top_is_at(MetaWord* target_
     ChunkIndex padding_chunk_type = get_chunk_type_by_size(padding_chunk_word_size, is_class());
 
     Metachunk* const padding_chunk = ::new (here) Metachunk(padding_chunk_type, is_class(), padding_chunk_word_size, this);
-    log_trace(gc, metaspace, freelist)("Created padding chunk in %s at " PTR_FORMAT ", size " SIZE_FORMAT_HEX ".", (is_class() ? "class space " : "metaspace"), p2i(padding_chunk), padding_chunk->word_size() * sizeof(MetaWord));
 
     // Mark chunk start in occupancy map.
     occupancy_map()->set_chunk_starts_at_address((MetaWord*)padding_chunk, true);
@@ -205,7 +204,6 @@ void VirtualSpaceNode::allocate_padding_chunks_until_top_is_at(MetaWord* target_
     // it may have vanished at this point. Do not reference the padding
     // chunk beyond this point.
   }
-
 }
 
 // Allocates the chunk from the virtual space only.
@@ -247,9 +245,6 @@ Metachunk* VirtualSpaceNode::take_from_committed(size_t chunk_word_size) {
   // smallest size, hence always aligned. Homungous chunks are allocated unaligned
   // (implicitly, also aligned to smallest chunk size).
   if ((chunk_word_size == med_word_size || chunk_word_size == small_word_size) && next_aligned > top())  {
-    log_trace(gc, metaspace, freelist)("Creating padding chunks in %s between %p and %p...",
-        (is_class() ? "class space " : "metaspace"),
-        top(), next_aligned);
     allocate_padding_chunks_until_top_is_at(next_aligned);
   }
 
@@ -296,12 +291,6 @@ bool VirtualSpaceNode::expand_by(size_t min_words, size_t preferred_words) {
 
   size_t commit = MIN2(preferred_bytes, uncommitted);
   bool result = virtual_space()->expand_by(commit, false);
-
-  if (result) {
-    log_trace(gc, metaspace, freelist)("Expanded %s virtual space list node by " SIZE_FORMAT " words.", (is_class() ? "class" : "non-class"), commit);
-  } else {
-    log_trace(gc, metaspace, freelist)("Failed to expand %s virtual space list node by " SIZE_FORMAT " words.", (is_class() ? "class" : "non-class"), commit);
-  }
 
   return result;
 }

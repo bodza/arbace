@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1MonitoringSupport.hpp"
 #include "gc/g1/g1Policy.hpp"
@@ -6,19 +7,13 @@
 #include "gc/shared/hSpaceCounters.hpp"
 #include "memory/metaspaceCounters.hpp"
 
-G1GenerationCounters::G1GenerationCounters(G1MonitoringSupport* g1mm,
-                                           const char* name,
-                                           int ordinal, int spaces,
-                                           size_t min_capacity,
-                                           size_t max_capacity,
-                                           size_t curr_capacity)
+G1GenerationCounters::G1GenerationCounters(G1MonitoringSupport* g1mm, const char* name, int ordinal, int spaces, size_t min_capacity, size_t max_capacity, size_t curr_capacity)
   : GenerationCounters(name, ordinal, spaces, min_capacity,
                        max_capacity, curr_capacity), _g1mm(g1mm) { }
 
 // We pad the capacity three times given that the young generation
 // contains three spaces (eden and two survivors).
-G1YoungGenerationCounters::G1YoungGenerationCounters(G1MonitoringSupport* g1mm,
-                                                     const char* name)
+G1YoungGenerationCounters::G1YoungGenerationCounters(G1MonitoringSupport* g1mm, const char* name)
   : G1GenerationCounters(g1mm, name, 0 /* ordinal */, 3 /* spaces */,
                G1MonitoringSupport::pad_capacity(0, 3) /* min_capacity */,
                G1MonitoringSupport::pad_capacity(g1mm->young_gen_max(), 3),
@@ -28,8 +23,7 @@ G1YoungGenerationCounters::G1YoungGenerationCounters(G1MonitoringSupport* g1mm,
   }
 }
 
-G1OldGenerationCounters::G1OldGenerationCounters(G1MonitoringSupport* g1mm,
-                                                 const char* name)
+G1OldGenerationCounters::G1OldGenerationCounters(G1MonitoringSupport* g1mm, const char* name)
   : G1GenerationCounters(g1mm, name, 1 /* ordinal */, 1 /* spaces */,
                G1MonitoringSupport::pad_capacity(0) /* min_capacity */,
                G1MonitoringSupport::pad_capacity(g1mm->old_gen_max()),

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
 #include "interpreter/interp_masm.hpp"
@@ -6,8 +7,6 @@
 #include "interpreter/templateInterpreterGenerator.hpp"
 #include "interpreter/templateTable.hpp"
 #include "oops/methodData.hpp"
-
-#ifndef CC_INTERP
 
 # define __ _masm->
 
@@ -390,4 +389,3 @@ address TemplateInterpreterGenerator::generate_method_entry(AbstractInterpreter:
 
   return entry_point;
 }
-#endif

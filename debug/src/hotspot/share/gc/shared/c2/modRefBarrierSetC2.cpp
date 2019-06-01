@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "opto/arraycopynode.hpp"
 #include "opto/graphKit.hpp"
 #include "opto/idealKit.hpp"
@@ -33,8 +34,7 @@ Node* ModRefBarrierSetC2::store_at_resolved(C2Access& access, C2AccessValue& val
   return store;
 }
 
-Node* ModRefBarrierSetC2::atomic_cmpxchg_val_at_resolved(C2AtomicAccess& access, Node* expected_val,
-                                                         Node* new_val, const Type* value_type) const {
+Node* ModRefBarrierSetC2::atomic_cmpxchg_val_at_resolved(C2AtomicAccess& access, Node* expected_val, Node* new_val, const Type* value_type) const {
   GraphKit* kit = access.kit();
 
   if (!access.is_oop()) {
@@ -53,8 +53,7 @@ Node* ModRefBarrierSetC2::atomic_cmpxchg_val_at_resolved(C2AtomicAccess& access,
   return result;
 }
 
-Node* ModRefBarrierSetC2::atomic_cmpxchg_bool_at_resolved(C2AtomicAccess& access, Node* expected_val,
-                                                          Node* new_val, const Type* value_type) const {
+Node* ModRefBarrierSetC2::atomic_cmpxchg_bool_at_resolved(C2AtomicAccess& access, Node* expected_val, Node* new_val, const Type* value_type) const {
   GraphKit* kit = access.kit();
 
   if (!access.is_oop()) {

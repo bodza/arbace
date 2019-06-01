@@ -147,8 +147,7 @@ protected:
 
   // Constructor
   Klass(KlassID id);
-  Klass() : _id(KlassID(-1)) {
-    }
+  Klass() : _id(KlassID(-1)) { }
 
   void* operator new(size_t size, ClassLoaderData* loader_data, size_t word_size, TRAPS) throw();
 
@@ -259,10 +258,8 @@ protected:
     _shared_class_path_index = index;
   };
 
-  void set_has_raw_archived_mirror() {
-  }
-  void clear_has_raw_archived_mirror() {
-  }
+  void set_has_raw_archived_mirror() { }
+  void clear_has_raw_archived_mirror() { }
   bool has_raw_archived_mirror() const {
     return false;
   }

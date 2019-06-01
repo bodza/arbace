@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/moduleEntry.hpp"
 #include "classfile/packageEntry.hpp"
 #include "classfile/symbolTable.hpp"
@@ -31,8 +32,7 @@ bool TypeArrayKlass::compute_is_subtype_of(Klass* k) {
   return element_type() == tak->element_type();
 }
 
-TypeArrayKlass* TypeArrayKlass::create_klass(BasicType type,
-                                      const char* name_str, TRAPS) {
+TypeArrayKlass* TypeArrayKlass::create_klass(BasicType type, const char* name_str, TRAPS) {
   Symbol* sym = NULL;
   if (name_str != NULL) {
     sym = SymbolTable::new_permanent_symbol(name_str, CHECK_NULL);
@@ -96,8 +96,7 @@ void TypeArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos
     ResourceMark rm(THREAD);
     stringStream ss;
     if (d->is_objArray()) {
-      ss.print("arraycopy: type mismatch: can not copy %s[] into object array[]",
-               type2name_tab[ArrayKlass::cast(s->klass())->element_type()]);
+      ss.print("arraycopy: type mismatch: can not copy %s[] into object array[]", type2name_tab[ArrayKlass::cast(s->klass())->element_type()]);
     } else {
       ss.print("arraycopy: destination type %s is not an array", d->klass()->external_name());
     }
@@ -118,11 +117,9 @@ void TypeArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos
     ResourceMark rm(THREAD);
     stringStream ss;
     if (src_pos < 0) {
-      ss.print("arraycopy: source index %d out of bounds for %s[%d]",
-               src_pos, type2name_tab[ArrayKlass::cast(s->klass())->element_type()], s->length());
+      ss.print("arraycopy: source index %d out of bounds for %s[%d]", src_pos, type2name_tab[ArrayKlass::cast(s->klass())->element_type()], s->length());
     } else if (dst_pos < 0) {
-      ss.print("arraycopy: destination index %d out of bounds for %s[%d]",
-               dst_pos, type2name_tab[ArrayKlass::cast(d->klass())->element_type()], d->length());
+      ss.print("arraycopy: destination index %d out of bounds for %s[%d]", dst_pos, type2name_tab[ArrayKlass::cast(d->klass())->element_type()], d->length());
     } else {
       ss.print("arraycopy: length %d is negative", length);
     }
@@ -222,8 +219,7 @@ const char* TypeArrayKlass::external_name(BasicType type) {
 
 // Printing
 
-void TypeArrayKlass::print_on(outputStream* st) const {
-}
+void TypeArrayKlass::print_on(outputStream* st) const { }
 
 void TypeArrayKlass::print_value_on(outputStream* st) const {
   st->print("{type array ");

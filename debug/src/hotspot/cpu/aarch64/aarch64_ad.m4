@@ -1,25 +1,3 @@
-dnl Copyright (c) 2014, Red Hat Inc. All rights reserved.
-dnl DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
-dnl
-dnl This code is free software; you can redistribute it and/or modify it
-dnl under the terms of the GNU General Public License version 2 only, as
-dnl published by the Free Software Foundation.
-dnl
-dnl This code is distributed in the hope that it will be useful, but WITHOUT
-dnl ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-dnl FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-dnl version 2 for more details (a copy is included in the LICENSE file that
-dnl accompanied this code).
-dnl
-dnl You should have received a copy of the GNU General Public License version
-dnl 2 along with this work; if not, write to the Free Software Foundation,
-dnl Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
-dnl
-dnl Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
-dnl or visit www.oracle.com if you need additional information or have any
-dnl questions.
-dnl
-dnl 
 dnl Process this file with m4 aarch64_ad.m4 to generate the arithmetic
 dnl and shift patterns patterns used in aarch64.ad.
 dnl
@@ -29,9 +7,7 @@ define(`ORL2I', `ifelse($1,I,orL2I)')
 dnl
 define(`BASE_SHIFT_INSN',
 `
-instruct $2$1_reg_$4_reg(iReg$1NoSp dst,
-                         iReg$1`'ORL2I($1) src1, iReg$1`'ORL2I($1) src2,
-                         immI src3, rFlagsReg cr) %{
+instruct $2$1_reg_$4_reg(iReg$1NoSp dst, iReg$1`'ORL2I($1) src1, iReg$1`'ORL2I($1) src2, immI src3, rFlagsReg cr) %{
   match(Set dst ($2$1 src1 ($4$1 src2 src3)));
 
   ins_cost(1.9 * INSN_COST);
@@ -49,9 +25,7 @@ instruct $2$1_reg_$4_reg(iReg$1NoSp dst,
 %}')dnl
 define(`BASE_INVERTED_INSN',
 `
-instruct $2$1_reg_not_reg(iReg$1NoSp dst,
-                         iReg$1`'ORL2I($1) src1, iReg$1`'ORL2I($1) src2, imm$1_M1 m1,
-                         rFlagsReg cr) %{
+instruct $2$1_reg_not_reg(iReg$1NoSp dst, iReg$1`'ORL2I($1) src1, iReg$1`'ORL2I($1) src2, imm$1_M1 m1, rFlagsReg cr) %{
 dnl This ifelse is because hotspot reassociates (xor (xor ..)..)
 dnl into this canonical form.
   ifelse($2,Xor,
@@ -71,9 +45,7 @@ dnl into this canonical form.
 %}')dnl
 define(`INVERTED_SHIFT_INSN',
 `
-instruct $2$1_reg_$4_not_reg(iReg$1NoSp dst,
-                         iReg$1`'ORL2I($1) src1, iReg$1`'ORL2I($1) src2,
-                         immI src3, imm$1_M1 src4, rFlagsReg cr) %{
+instruct $2$1_reg_$4_not_reg(iReg$1NoSp dst, iReg$1`'ORL2I($1) src1, iReg$1`'ORL2I($1) src2, immI src3, imm$1_M1 src4, rFlagsReg cr) %{
 dnl This ifelse is because hotspot reassociates (xor (xor ..)..)
 dnl into this canonical form.
   ifelse($2,Xor,
@@ -93,9 +65,7 @@ dnl into this canonical form.
   ins_pipe(ialu_reg_reg_shift);
 %}')dnl
 define(`NOT_INSN',
-`instruct reg$1_not_reg(iReg$1NoSp dst,
-                         iReg$1`'ORL2I($1) src1, imm$1_M1 m1,
-                         rFlagsReg cr) %{
+`instruct reg$1_not_reg(iReg$1NoSp dst, iReg$1`'ORL2I($1) src1, imm$1_M1 m1, rFlagsReg cr) %{
   match(Set dst (Xor$1 src1 m1));
   ins_cost(INSN_COST);
   format %{ "$2  $dst, $src1, zr" %}

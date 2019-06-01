@@ -28,8 +28,7 @@ public:
       return "Medium: Depends on number of classes loaded.";
   }
   static const JavaPermission permission() {
-    JavaPermission p = {"java.lang.management.ManagementPermission",
-                        "monitor", NULL};
+    JavaPermission p = {"java.lang.management.ManagementPermission", "monitor", NULL};
     return p;
   }
   static int num_arguments();

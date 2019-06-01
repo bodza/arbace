@@ -139,10 +139,8 @@ class LinearScan : public CompilationResourceObj {
   bool          bailed_out() const               { return compilation()->bailed_out(); }
 
   // access to block list (sorted in linear scan order)
-  int           block_count() const              {
-    return _cached_blocks.length(); }
-  BlockBegin*   block_at(int idx) const          {
-    return _cached_blocks.at(idx); }
+  int           block_count() const              { return _cached_blocks.length(); }
+  BlockBegin*   block_at(int idx) const          { return _cached_blocks.at(idx); }
 
   int           num_virtual_regs() const         { return _num_virtual_regs; }
   // size of live_in and live_out sets of BasicBlocks (BitMap needs rounded size for iteration)
@@ -166,20 +164,15 @@ class LinearScan : public CompilationResourceObj {
   IntervalList* new_intervals_from_allocation() const { return _new_intervals_from_allocation; }
 
   // access to LIR_Ops and Blocks indexed by op_id
-  int          max_lir_op_id() const                {
-    return (_lir_ops.length() - 1) << 1; }
-  LIR_Op*      lir_op_with_id(int op_id) const      {
-    return _lir_ops.at(op_id >> 1); }
-  BlockBegin*  block_of_op_with_id(int op_id) const {
-    return _block_of_op.at(op_id >> 1); }
+  int          max_lir_op_id() const                { return (_lir_ops.length() - 1) << 1; }
+  LIR_Op*      lir_op_with_id(int op_id) const      { return _lir_ops.at(op_id >> 1); }
+  BlockBegin*  block_of_op_with_id(int op_id) const { return _block_of_op.at(op_id >> 1); }
 
   bool is_block_begin(int op_id)                    { return op_id == 0 || block_of_op_with_id(op_id) != block_of_op_with_id(op_id - 1); }
   bool covers_block_begin(int op_id_1, int op_id_2) { return block_of_op_with_id(op_id_1) != block_of_op_with_id(op_id_2); }
 
-  bool has_call(int op_id)                          {
-    return _has_call.at(op_id >> 1); }
-  bool has_info(int op_id)                          {
-    return _has_info.at(op_id >> 1); }
+  bool has_call(int op_id)                          { return _has_call.at(op_id >> 1); }
+  bool has_info(int op_id)                          { return _has_info.at(op_id >> 1); }
 
   // functions for converting LIR-Operands to register numbers
   static bool is_valid_reg_num(int reg_num)         { return reg_num >= 0; }
@@ -347,8 +340,7 @@ class LinearScan : public CompilationResourceObj {
 
   // accessors used by Compilation
   int         max_spills()  const { return _max_spills; }
-  int         num_calls() const   {
-    return _num_calls; }
+  int         num_calls() const   { return _num_calls; }
 
   // entry functions for printing
 };
@@ -374,10 +366,8 @@ class MoveResolver: public StackObj {
   bool             _multiple_reads_allowed;
   int              _register_blocked[LinearScan::nof_regs];
 
-  int  register_blocked(int reg)                    {
-    return _register_blocked[reg]; }
-  void set_register_blocked(int reg, int direction) {
-                                                      _register_blocked[reg] += direction; }
+  int  register_blocked(int reg)                    { return _register_blocked[reg]; }
+  void set_register_blocked(int reg, int direction) { _register_blocked[reg] += direction; }
 
   void block_registers(Interval* it);
   void unblock_registers(Interval* it);
@@ -490,12 +480,9 @@ class Interval : public CompilationResourceObj {
 
   // accessors
   int              reg_num() const               { return _reg_num; }
-  void             set_reg_num(int r)            {
-    _reg_num = r; }
-  BasicType        type() const                  {
-    return _type; }
-  void             set_type(BasicType type)      {
-    _type = type; }
+  void             set_reg_num(int r)            { _reg_num = r; }
+  BasicType        type() const                  { return _type; }
+  void             set_type(BasicType type)      { _type = type; }
 
   Range*           first() const                 { return _first; }
   int              from() const                  { return _first->from(); }
@@ -521,16 +508,14 @@ class Interval : public CompilationResourceObj {
   // access to split parent and split children
   bool             is_split_parent() const       { return _split_parent == this; }
   bool             is_split_child() const        { return _split_parent != this; }
-  Interval*        split_parent() const          {
-    return _split_parent; }
+  Interval*        split_parent() const          { return _split_parent; }
   Interval*        split_child_at_op_id(int op_id, LIR_OpVisitState::OprMode mode);
   Interval*        split_child_before_op_id(int op_id);
   bool             split_child_covers(int op_id, LIR_OpVisitState::OprMode mode);
 
   // information stored in split parent, but available for all children
   int              canonical_spill_slot() const            { return split_parent()->_canonical_spill_slot; }
-  void             set_canonical_spill_slot(int slot)      {
-    split_parent()->_canonical_spill_slot = slot; }
+  void             set_canonical_spill_slot(int slot)      { split_parent()->_canonical_spill_slot = slot; }
   Interval*        current_split_child() const             { return split_parent()->_current_split_child; }
   void             make_current_split_child()              { split_parent()->_current_split_child = this; }
 
@@ -540,10 +525,8 @@ class Interval : public CompilationResourceObj {
   // for spill optimization
   IntervalSpillState spill_state() const         { return split_parent()->_spill_state; }
   int              spill_definition_pos() const  { return split_parent()->_spill_definition_pos; }
-  void             set_spill_state(IntervalSpillState state) {
-  split_parent()->_spill_state = state; }
-  void             set_spill_definition_pos(int pos) {
-    split_parent()->_spill_definition_pos = pos; }
+  void             set_spill_state(IntervalSpillState state) { split_parent()->_spill_state = state; }
+  void             set_spill_definition_pos(int pos) { split_parent()->_spill_definition_pos = pos; }
   // returns true if this interval has a shadow copy on the stack that is always correct
   bool             always_in_memory() const      { return split_parent()->_spill_state == storeAtDefinition || split_parent()->_spill_state == startInMemory; }
 
@@ -574,8 +557,7 @@ class Interval : public CompilationResourceObj {
 
   // range iteration
   void   rewind_range()                          { _current = _first; }
-  void   next_range()                            {
-    _current = _current->next(); }
+  void   next_range()                            { _current = _current->next(); }
   int    current_from() const                    { return _current->from(); }
   int    current_to() const                      { return _current->to(); }
   bool   current_at_end() const                  { return _current == Range::end(); }
@@ -606,8 +588,7 @@ class IntervalWalker : public CompilationResourceObj {
   void             bailout(const char* msg) const    { compilation()->bailout(msg); }
   bool             bailed_out() const                { return compilation()->bailed_out(); }
 
-  void check_bounds(IntervalKind kind) {
-    }
+  void check_bounds(IntervalKind kind) { }
 
   Interval** unhandled_first_addr(IntervalKind kind) { check_bounds(kind); return &_unhandled_first[kind]; }
   Interval** active_first_addr(IntervalKind kind)    { check_bounds(kind); return &_active_first[kind]; }

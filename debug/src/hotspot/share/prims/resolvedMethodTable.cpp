@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaClasses.hpp"
 #include "logging/log.hpp"
 #include "memory/allocation.hpp"
@@ -41,10 +42,7 @@ oop ResolvedMethodTable::lookup(int index, unsigned int hash, Method* method) {
       // The method is in the table as a target already
       if (target != NULL && java_lang_invoke_ResolvedMethodName::vmtarget(target) == method) {
         ResourceMark rm;
-        log_debug(membername, table) ("ResolvedMethod entry found for %s index %d",
-                                       method->name_and_sig_as_C_string(), index);
-        // The object() accessor makes sure the target object is kept alive before
-        // leaking out.
+        // The object() accessor makes sure the target object is kept alive before leaking out.
         return p->object();
       }
     }
@@ -78,8 +76,6 @@ oop ResolvedMethodTable::basic_add(Method* method, Handle rmethod_name) {
   ResolvedMethodEntry* p = (ResolvedMethodEntry*) Hashtable<ClassLoaderWeakHandle, mtClass>::new_entry(hash, w);
   Hashtable<ClassLoaderWeakHandle, mtClass>::add_entry(index, p);
   ResourceMark rm;
-  log_debug(membername, table) ("ResolvedMethod entry added for %s index %d",
-                                 method->name_and_sig_as_C_string(), index);
   return rmethod_name();
 }
 
@@ -130,9 +126,6 @@ void ResolvedMethodTable::unlink() {
       } else {
         // Entry has been removed.
         _oops_removed++;
-        if (log_is_enabled(Debug, membername, table)) {
-          log_debug(membername, table) ("ResolvedMethod entry removed for index %d", i);
-        }
         entry->literal().release();
         *p = entry->next();
         _the_table->free_entry(entry);
@@ -141,6 +134,4 @@ void ResolvedMethodTable::unlink() {
       entry = (ResolvedMethodEntry*)HashtableEntry<ClassLoaderWeakHandle, mtClass>::make_ptr(*p);
     }
   }
-  log_debug(membername, table) ("ResolvedMethod entries counted %d removed %d",
-                                _oops_counted, _oops_removed);
 }

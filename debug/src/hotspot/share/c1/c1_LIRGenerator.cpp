@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_Compilation.hpp"
 #include "c1/c1_Defs.hpp"
 #include "c1/c1_FrameMap.hpp"
@@ -284,7 +285,6 @@ void LIRGenerator::do_root(Value instr) {
   InstructionMark im(compilation(), instr);
 
   instr->visit(this);
-
 }
 
 // This is called for each node in tree; the walk stops if a root is reached
@@ -322,7 +322,6 @@ CodeEmitInfo* LIRGenerator::state_for(Instruction* x, ValueStack* state, bool ig
       if (x->as_ExceptionObject() || x->as_Throw()) {
         // all locals are dead on exit from the synthetic unlocker
         liveness.clear();
-      } else {
       }
     }
     if (!liveness.is_valid()) {
@@ -475,9 +474,7 @@ void LIRGenerator::arithmetic_op_fpu(Bytecodes::Code code, LIR_Opr result, LIR_O
 
 void LIRGenerator::shift_op(Bytecodes::Code code, LIR_Opr result_op, LIR_Opr value, LIR_Opr count, LIR_Opr tmp) {
 
-  if (TwoOperandLIRForm && value != result_op
-      // Only 32bit right shifts require two operand form on S390.
-      S390_ONLY(&& (code == Bytecodes::_ishr || code == Bytecodes::_iushr))) {
+  if (TwoOperandLIRForm && value != result_op) {
     __ move(value, result_op);
     value = result_op;
   }
@@ -865,7 +862,6 @@ void LIRGenerator::move_to_phi(ValueStack* cur_state) {
       for_each_local_value(sux_state, index, sux_value) {
         move_to_phi(&resolver, cur_state->local_at(index), sux_value);
       }
-
     }
   }
 }
@@ -1402,8 +1398,7 @@ void LIRGenerator::access_store_at(DecoratorSet decorators, BasicType type, LIRI
   }
 }
 
-LIR_Opr LIRGenerator::access_atomic_cmpxchg_at(DecoratorSet decorators, BasicType type,
-                                               LIRItem& base, LIRItem& offset, LIRItem& cmp_value, LIRItem& new_value) {
+LIR_Opr LIRGenerator::access_atomic_cmpxchg_at(DecoratorSet decorators, BasicType type, LIRItem& base, LIRItem& offset, LIRItem& cmp_value, LIRItem& new_value) {
   // Atomic operations are SEQ_CST by default
   decorators |= C1_READ_ACCESS;
   decorators |= C1_WRITE_ACCESS;
@@ -1416,8 +1411,7 @@ LIR_Opr LIRGenerator::access_atomic_cmpxchg_at(DecoratorSet decorators, BasicTyp
   }
 }
 
-LIR_Opr LIRGenerator::access_atomic_xchg_at(DecoratorSet decorators, BasicType type,
-                                            LIRItem& base, LIRItem& offset, LIRItem& value) {
+LIR_Opr LIRGenerator::access_atomic_xchg_at(DecoratorSet decorators, BasicType type, LIRItem& base, LIRItem& offset, LIRItem& value) {
   // Atomic operations are SEQ_CST by default
   decorators |= C1_READ_ACCESS;
   decorators |= C1_WRITE_ACCESS;
@@ -1430,8 +1424,7 @@ LIR_Opr LIRGenerator::access_atomic_xchg_at(DecoratorSet decorators, BasicType t
   }
 }
 
-LIR_Opr LIRGenerator::access_atomic_add_at(DecoratorSet decorators, BasicType type,
-                                           LIRItem& base, LIRItem& offset, LIRItem& value) {
+LIR_Opr LIRGenerator::access_atomic_add_at(DecoratorSet decorators, BasicType type, LIRItem& base, LIRItem& offset, LIRItem& value) {
   // Atomic operations are SEQ_CST by default
   decorators |= C1_READ_ACCESS;
   decorators |= C1_WRITE_ACCESS;
@@ -2669,7 +2662,6 @@ void LIRGenerator::profile_arguments(ProfileCall* x) {
             md->set_argument_type(bci, i, exact);
           }
         }
-      } else {
       }
     }
   }
@@ -3004,8 +2996,7 @@ LIR_Opr LIRGenerator::call_runtime(Value arg1, Value arg2, address entry, ValueT
   return call_runtime(&signature, &args, entry, result_type, info);
 }
 
-LIR_Opr LIRGenerator::call_runtime(BasicTypeArray* signature, LIR_OprList* args,
-                                   address entry, ValueType* result_type, CodeEmitInfo* info) {
+LIR_Opr LIRGenerator::call_runtime(BasicTypeArray* signature, LIR_OprList* args, address entry, ValueType* result_type, CodeEmitInfo* info) {
   // get a result register
   LIR_Opr phys_reg = LIR_OprFact::illegalOpr;
   LIR_Opr result = LIR_OprFact::illegalOpr;
@@ -3042,8 +3033,7 @@ LIR_Opr LIRGenerator::call_runtime(BasicTypeArray* signature, LIR_OprList* args,
   return result;
 }
 
-LIR_Opr LIRGenerator::call_runtime(BasicTypeArray* signature, LIRItemList* args,
-                                   address entry, ValueType* result_type, CodeEmitInfo* info) {
+LIR_Opr LIRGenerator::call_runtime(BasicTypeArray* signature, LIRItemList* args, address entry, ValueType* result_type, CodeEmitInfo* info) {
   // get a result register
   LIR_Opr phys_reg = LIR_OprFact::illegalOpr;
   LIR_Opr result = LIR_OprFact::illegalOpr;

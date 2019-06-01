@@ -1,7 +1,6 @@
 #ifndef SHARE_VM_SERVICES_MANAGEMENT_HPP
 #define SHARE_VM_SERVICES_MANAGEMENT_HPP
 
-#include "jmm.h"
 #include "memory/allocation.hpp"
 #include "runtime/handles.hpp"
 #include "runtime/timer.hpp"

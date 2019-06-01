@@ -110,7 +110,6 @@ private:
   static void update_statistics_on_sync_end(jlong end_time);
   static void update_statistics_on_cleanup_end(jlong end_time);
   static void end_statistics(jlong end_time);
-  static void print_statistics();
   inline static void inc_page_trap_count() {
     Atomic::inc(&_safepoint_stats[_cur_stat_index]._nof_threads_hit_page_trap);
   }
@@ -166,8 +165,6 @@ public:
   static bool is_cleanup_needed();
   static void do_cleanup_tasks();
 
-  static void deferred_initialize_stat();
-  static void print_stat_on_exit();
   inline static void inc_vmop_coalesced_count() { _coalesced_vmop_count++; }
 
   static void set_is_at_safepoint()                        { _state = _synchronized; }

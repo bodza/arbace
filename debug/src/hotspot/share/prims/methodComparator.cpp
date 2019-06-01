@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "logging/log.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/constantPool.inline.hpp"
@@ -17,12 +18,6 @@ bool MethodComparator::methods_EMCP(Method* old_method, Method* new_method) {
   if (old_method->code_size() != new_method->code_size())
     return false;
   if (check_stack_and_locals_size(old_method, new_method) != 0) {
-    if (log_is_enabled(Debug, redefine, class, methodcomparator)) {
-      ResourceMark rm;
-      log_debug(redefine, class, methodcomparator)
-        ("Methods %s non-comparable with diagnosis %d",
-         old_method->name()->as_C_string(), check_stack_and_locals_size(old_method, new_method));
-    }
     return false;
   }
 

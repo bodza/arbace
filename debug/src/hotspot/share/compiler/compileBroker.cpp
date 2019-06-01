@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/symbolTable.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -11,7 +12,6 @@
 #include "compiler/compilerOracle.hpp"
 #include "compiler/directivesParser.hpp"
 #include "interpreter/linkResolver.hpp"
-// #include "jfr/jfrEvents.hpp"
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
@@ -127,8 +127,7 @@ CompileQueue* CompileBroker::_c1_compile_queue     = NULL;
 
 class CompilationLog : public StringEventLog {
  public:
-  CompilationLog() : StringEventLog("Compilation events") {
-  }
+  CompilationLog() : StringEventLog("Compilation events") { }
 
   void log_compile(JavaThread* thread, CompileTask* task) {
     StringLogMessage lm;
@@ -643,8 +642,7 @@ JavaThread* CompileBroker::make_thread(jobject thread_handle, CompileQueue* queu
       }
       return NULL;
     }
-    vm_exit_during_initialization("java.lang.OutOfMemoryError",
-                                  os::native_thread_creation_failed_msg());
+    vm_exit_during_initialization("java.lang.OutOfMemoryError", os::native_thread_creation_failed_msg());
   }
 
   // Let go of Threads_lock before yielding
@@ -655,8 +653,6 @@ JavaThread* CompileBroker::make_thread(jobject thread_handle, CompileQueue* queu
 
 void CompileBroker::init_compiler_sweeper_threads() {
   EXCEPTION_MARK;
-#if !defined(ZERO)
-#endif
   // Initialize the compilation queue
   if (_c2_count > 0) {
     const char* name = UseJVMCICompiler ? "JVMCI compile queue" : "C2 compile queue";
@@ -744,8 +740,7 @@ void CompileBroker::possibly_add_compiler_threads() {
       if (TraceCompilerThreads) {
         ResourceMark rm;
         MutexLocker mu(Threads_lock);
-        tty->print_cr("Added compiler thread %s (available memory: %dMB, available non-profiled code cache: %dMB)",
-                      ct->get_thread_name(), (int)(available_memory/M), (int)(available_cc_np/M));
+        tty->print_cr("Added compiler thread %s (available memory: %dMB, available non-profiled code cache: %dMB)", ct->get_thread_name(), (int)(available_memory/M), (int)(available_cc_np/M));
       }
     }
   }
@@ -764,8 +759,7 @@ void CompileBroker::possibly_add_compiler_threads() {
       if (TraceCompilerThreads) {
         ResourceMark rm;
         MutexLocker mu(Threads_lock);
-        tty->print_cr("Added compiler thread %s (available memory: %dMB, available profiled code cache: %dMB)",
-                      ct->get_thread_name(), (int)(available_memory/M), (int)(available_cc_p/M));
+        tty->print_cr("Added compiler thread %s (available memory: %dMB, available profiled code cache: %dMB)", ct->get_thread_name(), (int)(available_memory/M), (int)(available_cc_p/M));
       }
     }
   }
@@ -1159,9 +1153,7 @@ bool CompileBroker::compilation_is_prohibited(const methodHandle& method, int os
     if (PrintCompilation && !quietly) {
       // This does not happen quietly...
       ResourceMark rm;
-      tty->print("### Excluding %s:%s",
-                 method->is_native() ? "generation of native wrapper" : "compile",
-                 (method->is_static() ? " static" : ""));
+      tty->print("### Excluding %s:%s", method->is_native() ? "generation of native wrapper" : "compile", (method->is_static() ? " static" : ""));
       method->print_short_name(tty);
       tty->cr();
     }
@@ -1469,10 +1461,7 @@ void CompileBroker::compiler_thread_loop() {
   // Open a log.
   CompileLog* log = get_log(thread);
   if (log != NULL) {
-    log->begin_elem("start_compile_thread name='%s' thread='" UINTX_FORMAT "' process='%d'",
-                    thread->name(),
-                    os::current_thread_id(),
-                    os::current_process_id());
+    log->begin_elem("start_compile_thread name='%s' thread='" UINTX_FORMAT "' process='%d'", thread->name(), os::current_thread_id(), os::current_process_id());
     log->stamp();
     log->end_elem();
   }
@@ -1500,8 +1489,7 @@ void CompileBroker::compiler_thread_loop() {
         MutexLocker only_one(CompileThread_lock);
         if (can_remove(thread, true)) {
           if (TraceCompilerThreads) {
-            tty->print_cr("Removing compiler thread %s after " JLONG_FORMAT " ms idle time",
-                          thread->name(), thread->idle_time_millis());
+            tty->print_cr("Removing compiler thread %s after " JLONG_FORMAT " ms idle time", thread->name(), thread->idle_time_millis());
           }
           // Free buffer blob, if allocated
           if (thread->get_buffer_blob() != NULL) {
@@ -1562,8 +1550,7 @@ void CompileBroker::init_compiler_thread_log() {
     for (int try_temp_dir = 1; try_temp_dir >= 0; try_temp_dir--) {
       const char* dir = (try_temp_dir ? os::get_temp_directory() : NULL);
       if (dir == NULL) {
-        jio_snprintf(file_name, sizeof(file_name), "hs_c" UINTX_FORMAT "_pid%u.log",
-                     thread_id, os::current_process_id());
+        jio_snprintf(file_name, sizeof(file_name), "hs_c" UINTX_FORMAT "_pid%u.log", thread_id, os::current_process_id());
       } else {
         jio_snprintf(file_name, sizeof(file_name), "%s%shs_c" UINTX_FORMAT "_pid%u.log", dir, os::file_separator(), thread_id, os::current_process_id());
       }
@@ -1977,8 +1964,7 @@ void CompileBroker::set_last_compile(CompilerThread* thread, const methodHandle&
         // lop of the entire class name string, let snprintf handle
         // truncation of the method name.
         class_name += s1len; // null string
-      }
-      else {
+      } else {
         // lop off the extra characters from the front of the class name
         class_name += ((s1len + s2len + 2) - maxLen);
       }
@@ -2123,8 +2109,7 @@ void CompileBroker::collect_statistics(CompilerThread* thread, elapsedTimer time
 
     if (CITimeEach) {
       float bytes_per_sec = 1.0 * (method->code_size() + task->num_inlined_bytecodes()) / time.seconds();
-      tty->print_cr("%3d   seconds: %f bytes/sec : %f (bytes %d + %d inlined)",
-                    compile_id, time.seconds(), bytes_per_sec, method->code_size(), task->num_inlined_bytecodes());
+      tty->print_cr("%3d   seconds: %f bytes/sec : %f (bytes %d + %d inlined)", compile_id, time.seconds(), bytes_per_sec, method->code_size(), task->num_inlined_bytecodes());
     }
 
     // Collect counts of successful compilations

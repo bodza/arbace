@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/classLoaderData.inline.hpp"
 #include "classfile/dictionary.inline.hpp"
 #include "classfile/protectionDomainCache.hpp"
@@ -33,9 +34,7 @@ Dictionary::Dictionary(ClassLoaderData* loader_data, int table_size, bool resiza
   Hashtable<InstanceKlass*, mtClass>(table_size, (int)entry_size()) {
 };
 
-Dictionary::Dictionary(ClassLoaderData* loader_data,
-                       int table_size, HashtableBucket<mtClass>* t,
-                       int number_of_entries, bool resizable)
+Dictionary::Dictionary(ClassLoaderData* loader_data, int table_size, HashtableBucket<mtClass>* t, int number_of_entries, bool resizable)
   : _loader_data(loader_data), _resizable(resizable), _needs_resizing(false),
   Hashtable<InstanceKlass*, mtClass>(table_size, (int)entry_size(), t, number_of_entries) {
 };
@@ -84,8 +83,7 @@ const int _prime_array_size = sizeof(_primelist)/sizeof(int);
 static int calculate_dictionary_size(int requested) {
   int newsize = _primelist[0];
   int index = 0;
-  for (newsize = _primelist[index]; index < (_prime_array_size - 1);
-       newsize = _primelist[++index]) {
+  for (newsize = _primelist[index]; index < (_prime_array_size - 1); newsize = _primelist[++index]) {
     if (requested <= newsize) {
       break;
     }
@@ -136,9 +134,7 @@ bool DictionaryEntry::contains_protection_domain(oop protection_domain) const {
     return true;
   }
 
-  for (ProtectionDomainEntry* current = pd_set_acquire();
-                              current != NULL;
-                              current = current->next()) {
+  for (ProtectionDomainEntry* current = pd_set_acquire(); current != NULL; current = current->next()) {
     if (oopDesc::equals(current->object_no_keepalive(), protection_domain)) return true;
   }
   return false;
@@ -215,9 +211,7 @@ void Dictionary::remove_classes_in_error_state() {
 //   Just the classes from defining class loaders
 void Dictionary::classes_do(void f(InstanceKlass*)) {
   for (int index = 0; index < table_size(); index++) {
-    for (DictionaryEntry* probe = bucket(index);
-                          probe != NULL;
-                          probe = probe->next()) {
+    for (DictionaryEntry* probe = bucket(index); probe != NULL; probe = probe->next()) {
       InstanceKlass* k = probe->instance_klass();
       if (loader_data() == k->class_loader_data()) {
         f(k);
@@ -230,9 +224,7 @@ void Dictionary::classes_do(void f(InstanceKlass*)) {
 //   Just the classes from defining class loaders
 void Dictionary::classes_do(void f(InstanceKlass*, TRAPS), TRAPS) {
   for (int index = 0; index < table_size(); index++) {
-    for (DictionaryEntry* probe = bucket(index);
-                          probe != NULL;
-                          probe = probe->next()) {
+    for (DictionaryEntry* probe = bucket(index); probe != NULL; probe = probe->next()) {
       InstanceKlass* k = probe->instance_klass();
       if (loader_data() == k->class_loader_data()) {
         f(k, CHECK);
@@ -244,9 +236,7 @@ void Dictionary::classes_do(void f(InstanceKlass*, TRAPS), TRAPS) {
 // All classes, and their class loaders, including initiating class loaders
 void Dictionary::all_entries_do(void f(InstanceKlass*, ClassLoaderData*)) {
   for (int index = 0; index < table_size(); index++) {
-    for (DictionaryEntry* probe = bucket(index);
-                          probe != NULL;
-                          probe = probe->next()) {
+    for (DictionaryEntry* probe = bucket(index); probe != NULL; probe = probe->next()) {
       InstanceKlass* k = probe->instance_klass();
       f(k, loader_data());
     }
@@ -327,7 +317,6 @@ void Dictionary::add_protection_domain(int index, unsigned int hash, InstanceKla
   DictionaryEntry* entry = get_entry(index, hash, klass_name);
 
   entry->add_protection_domain(this, protection_domain);
-
 }
 
 bool Dictionary::is_valid_protection_domain(unsigned int hash, Symbol* name, Handle protection_domain) {
@@ -387,14 +376,11 @@ void SymbolPropertyTable::methods_do(void f(Method*)) {
 void Dictionary::print_on(outputStream* st) const {
   ResourceMark rm;
 
-  st->print_cr("Java dictionary (table_size=%d, classes=%d)",
-               table_size(), number_of_entries());
+  st->print_cr("Java dictionary (table_size=%d, classes=%d)", table_size(), number_of_entries());
   st->print_cr("^ indicates that initiating loader is different from defining loader");
 
   for (int index = 0; index < table_size(); index++) {
-    for (DictionaryEntry* probe = bucket(index);
-                          probe != NULL;
-                          probe = probe->next()) {
+    for (DictionaryEntry* probe = bucket(index); probe != NULL; probe = probe->next()) {
       Klass* e = probe->instance_klass();
       bool is_defining_class = (loader_data() == e->class_loader_data());
       st->print("%4d: %s%s", index, is_defining_class ? " " : "^", e->external_name());

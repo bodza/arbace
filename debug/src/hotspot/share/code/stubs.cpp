@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "code/codeBlob.hpp"
 #include "code/codeCache.hpp"
 #include "code/stubs.hpp"
@@ -38,8 +39,7 @@
 // CAUTION: DO NOT MESS WITH THIS CODE IF YOU CANNOT PROVE
 // ITS CORRECTNESS! THIS CODE IS MORE SUBTLE THAN IT LOOKS!
 
-StubQueue::StubQueue(StubInterface* stub_interface, int buffer_size,
-                     Mutex* lock, const char* name) : _mutex(lock) {
+StubQueue::StubQueue(StubInterface* stub_interface, int buffer_size, Mutex* lock, const char* name) : _mutex(lock) {
   intptr_t size = align_up(buffer_size, 2*BytesPerWord);
   BufferBlob* blob = BufferBlob::create(name, size);
   if (blob == NULL) {

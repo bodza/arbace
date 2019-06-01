@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/collectionSetChooser.hpp"
 #include "gc/g1/g1RemSetTrackingPolicy.hpp"
 #include "gc/g1/heapRegion.inline.hpp"
@@ -36,24 +37,7 @@ void G1RemSetTrackingPolicy::update_at_free(HeapRegion* r) {
   /* nothing to do */
 }
 
-static void print_before_rebuild(HeapRegion* r, bool selected_for_rebuild, size_t total_live_bytes, size_t live_bytes) {
-  log_trace(gc, remset, tracking)("Before rebuild region %u "
-                                  "(ntams: " PTR_FORMAT ") "
-                                  "total_live_bytes " SIZE_FORMAT " "
-                                  "selected %s "
-                                  "(live_bytes " SIZE_FORMAT " "
-                                  "next_marked " SIZE_FORMAT " "
-                                  "marked " SIZE_FORMAT " "
-                                  "type %s)",
-                                  r->hrm_index(),
-                                  p2i(r->next_top_at_mark_start()),
-                                  total_live_bytes,
-                                  BOOL_TO_STR(selected_for_rebuild),
-                                  live_bytes,
-                                  r->next_marked_bytes(),
-                                  r->marked_bytes(),
-                                  r->get_type_str());
-}
+static void print_before_rebuild(HeapRegion* r, bool selected_for_rebuild, size_t total_live_bytes, size_t live_bytes) { }
 
 bool G1RemSetTrackingPolicy::update_humongous_before_rebuild(HeapRegion* r, bool is_live) {
 
@@ -123,18 +107,6 @@ void G1RemSetTrackingPolicy::update_after_rebuild(HeapRegion* r) {
         cur->rem_set()->clear_locked(true /* only_cardset */);
       }
     }
-    G1ConcurrentMark* cm = G1CollectedHeap::heap()->concurrent_mark();
-    log_trace(gc, remset, tracking)("After rebuild region %u "
-                                    "(ntams " PTR_FORMAT " "
-                                    "liveness " SIZE_FORMAT " "
-                                    "next_marked_bytes " SIZE_FORMAT " "
-                                    "remset occ " SIZE_FORMAT " "
-                                    "size " SIZE_FORMAT ")",
-                                    r->hrm_index(),
-                                    p2i(r->next_top_at_mark_start()),
-                                    cm->liveness(r->hrm_index()) * HeapWordSize,
-                                    r->next_marked_bytes(),
-                                    r->rem_set()->occupied_locked(),
-                                    r->rem_set()->mem_size());
+    G1ConcurrentMark* cm = G1CollectedHeap::heap()->concurrent_mark();
   }
 }

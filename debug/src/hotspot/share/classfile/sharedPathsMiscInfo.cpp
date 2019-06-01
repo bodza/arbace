@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/classLoader.hpp"
 #include "classfile/sharedPathsMiscInfo.hpp"
 #include "logging/log.hpp"
@@ -25,7 +26,6 @@ SharedPathsMiscInfo::~SharedPathsMiscInfo() {
 }
 
 void SharedPathsMiscInfo::add_path(const char* path, int type) {
-  log_info(class, path)("type=%s ", type_name(type));
   ClassLoader::trace_class_path("add misc shared path ", path);
   write(path, strlen(path) + 1);
   write_jint(jint(type));
@@ -121,7 +121,6 @@ char* skip_first_path_entry(const char* path) {
   char* p = strstr((char*)path, os::path_separator());
   if (p != NULL) {
     p += path_sep_len;
-  } else {
   }
   return p;
 }

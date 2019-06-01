@@ -473,10 +473,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   // Iterator for all GC threads (other than VM thread)
   virtual void gc_threads_do(ThreadClosure* tc) const = 0;
 
-  // Print any relevant tracing info that flags imply.
-  // Default implementation does nothing.
-  virtual void print_tracing_info() const = 0;
-
   void print_heap_before_gc();
   void print_heap_after_gc();
 

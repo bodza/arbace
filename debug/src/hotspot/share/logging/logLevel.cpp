@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "logging/logLevel.hpp"
 #include "utilities/globalDefinitions.hpp"
 #include "utilities/stringUtils.hpp"

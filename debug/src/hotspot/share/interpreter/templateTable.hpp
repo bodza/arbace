@@ -6,7 +6,6 @@
 #include "runtime/frame.hpp"
 #include "utilities/macros.hpp"
 
-#ifndef CC_INTERP
 // All the necessary definitions used for (bytecode) template generation. Instead of
 // spreading the implementation functionality for each bytecode in the interpreter
 // and the snippet generator, a template is assigned to each bytecode which can be
@@ -323,6 +322,5 @@ class TemplateTable: AllStatic {
   // Platform specifics
 #include CPU_HEADER(templateTable)
 };
-#endif
 
 #endif

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/concurrentGCPhaseManager.hpp"
 #include "runtime/mutexLocker.hpp"
 #include "runtime/thread.hpp"
@@ -75,9 +76,7 @@ bool ConcurrentGCPhaseManager::wait_for_phase(int phase, Stack* stack) {
   // Wait until phase or IDLE is active.
   while (true) {
     bool idle = false;
-    for (ConcurrentGCPhaseManager* manager = stack->_top;
-         manager != NULL;
-         manager = manager->_prev) {
+    for (ConcurrentGCPhaseManager* manager = stack->_top; manager != NULL; manager = manager->_prev) {
       if (manager->_phase == phase) {
         return true;            // phase is active.
       } else if (manager->_phase == IDLE_PHASE) {

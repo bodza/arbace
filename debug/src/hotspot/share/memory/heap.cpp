@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "memory/heap.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/os.hpp"
@@ -139,8 +140,7 @@ void* CodeHeap::allocate(size_t instance_size) {
 
   if (block != NULL) {
     guarantee((char*) block >= _memory.low_boundary() && (char*) block < _memory.high(),
-              "The newly allocated block " INTPTR_FORMAT " is not within the heap "
-              "starting with "  INTPTR_FORMAT " and ending with "  INTPTR_FORMAT,
+              "The newly allocated block " INTPTR_FORMAT " is not within the heap starting with "  INTPTR_FORMAT " and ending with "  INTPTR_FORMAT,
               p2i(block), p2i(_memory.low_boundary()), p2i(_memory.high()));
     _max_allocated_capacity = MAX2(_max_allocated_capacity, allocated_capacity());
     _blob_count++;
@@ -156,8 +156,7 @@ void* CodeHeap::allocate(size_t instance_size) {
     b->initialize(number_of_segments);
     _next_segment += number_of_segments;
     guarantee((char*) b >= _memory.low_boundary() && (char*) block < _memory.high(),
-              "The newly allocated block " INTPTR_FORMAT " is not within the heap "
-              "starting with "  INTPTR_FORMAT " and ending with " INTPTR_FORMAT,
+              "The newly allocated block " INTPTR_FORMAT " is not within the heap starting with "  INTPTR_FORMAT " and ending with " INTPTR_FORMAT,
               p2i(b), p2i(_memory.low_boundary()), p2i(_memory.high()));
     _max_allocated_capacity = MAX2(_max_allocated_capacity, allocated_capacity());
     _blob_count++;
@@ -184,8 +183,7 @@ void CodeHeap::deallocate(void* p) {
   // Find start of HeapBlock
   HeapBlock* b = (((HeapBlock *)p) - 1);
   guarantee((char*) b >= _memory.low_boundary() && (char*) b < _memory.high(),
-            "The block to be deallocated " INTPTR_FORMAT " is not within the heap "
-            "starting with "  INTPTR_FORMAT " and ending with " INTPTR_FORMAT,
+            "The block to be deallocated " INTPTR_FORMAT " is not within the heap starting with "  INTPTR_FORMAT " and ending with " INTPTR_FORMAT,
             p2i(b), p2i(_memory.low_boundary()), p2i(_memory.high()));
   add_to_freelist(b);
 }

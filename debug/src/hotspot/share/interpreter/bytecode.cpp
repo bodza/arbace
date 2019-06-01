@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "interpreter/bytecode.inline.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "oops/constantPool.hpp"
@@ -19,8 +20,7 @@ int Bytecode_tableswitch::dest_offset_at(int i) const {
 
 // Implementation of Bytecode_invoke
 
-void Bytecode_invoke::verify() const {
-}
+void Bytecode_invoke::verify() const { }
 
 int Bytecode_invoke::size_of_parameters() const {
   ArgumentSizeComputer asc(signature());
@@ -80,8 +80,7 @@ ConstantPoolCacheEntry* Bytecode_member_ref::cpcache_entry() const {
 
 // Implementation of Bytecode_field
 
-void Bytecode_field::verify() const {
-}
+void Bytecode_field::verify() const { }
 
 // Implementation of Bytecode_loadconstant
 

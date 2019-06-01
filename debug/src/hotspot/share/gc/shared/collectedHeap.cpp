@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/systemDictionary.hpp"
 #include "gc/shared/allocTracer.hpp"
 #include "gc/shared/barrierSet.hpp"
@@ -48,10 +49,7 @@ void GCHeapLog::log_heap(CollectedHeap* heap, bool before) {
   _records[index].data.is_before = before;
   stringStream st(_records[index].data.buffer(), _records[index].data.size());
 
-  st.print_cr("{Heap %s GC invocations=%u (full %u):",
-                 before ? "before" : "after",
-                 heap->total_collections(),
-                 heap->total_full_collections());
+  st.print_cr("{Heap %s GC invocations=%u (full %u):", before ? "before" : "after", heap->total_collections(), heap->total_full_collections());
 
   heap->print_on(&st);
   st.print_cr("}");
@@ -69,24 +67,14 @@ GCHeapSummary CollectedHeap::create_heap_summary() {
 }
 
 MetaspaceSummary CollectedHeap::create_metaspace_summary() {
-  const MetaspaceSizes meta_space(
-      MetaspaceUtils::committed_bytes(),
-      MetaspaceUtils::used_bytes(),
-      MetaspaceUtils::reserved_bytes());
-  const MetaspaceSizes data_space(
-      MetaspaceUtils::committed_bytes(Metaspace::NonClassType),
-      MetaspaceUtils::used_bytes(Metaspace::NonClassType),
-      MetaspaceUtils::reserved_bytes(Metaspace::NonClassType));
-  const MetaspaceSizes class_space(
-      MetaspaceUtils::committed_bytes(Metaspace::ClassType),
-      MetaspaceUtils::used_bytes(Metaspace::ClassType),
-      MetaspaceUtils::reserved_bytes(Metaspace::ClassType));
+  const MetaspaceSizes meta_space(MetaspaceUtils::committed_bytes(), MetaspaceUtils::used_bytes(), MetaspaceUtils::reserved_bytes());
+  const MetaspaceSizes data_space(MetaspaceUtils::committed_bytes(Metaspace::NonClassType), MetaspaceUtils::used_bytes(Metaspace::NonClassType), MetaspaceUtils::reserved_bytes(Metaspace::NonClassType));
+  const MetaspaceSizes class_space(MetaspaceUtils::committed_bytes(Metaspace::ClassType), MetaspaceUtils::used_bytes(Metaspace::ClassType), MetaspaceUtils::reserved_bytes(Metaspace::ClassType));
 
   const MetaspaceChunkFreeListSummary& ms_chunk_free_list_summary = MetaspaceUtils::chunk_free_list_summary(Metaspace::NonClassType);
   const MetaspaceChunkFreeListSummary& class_chunk_free_list_summary = MetaspaceUtils::chunk_free_list_summary(Metaspace::ClassType);
 
-  return MetaspaceSummary(MetaspaceGC::capacity_until_GC(), meta_space, data_space, class_space,
-                          ms_chunk_free_list_summary, class_chunk_free_list_summary);
+  return MetaspaceSummary(MetaspaceGC::capacity_until_GC(), meta_space, data_space, class_space, ms_chunk_free_list_summary, class_chunk_free_list_summary);
 }
 
 void CollectedHeap::print_heap_before_gc() {
@@ -213,9 +201,7 @@ void CollectedHeap::collect_as_vm_thread(GCCause::Cause cause) {
   }
 }
 
-MetaWord* CollectedHeap::satisfy_failed_metadata_allocation(ClassLoaderData* loader_data,
-                                                            size_t word_size,
-                                                            Metaspace::MetadataType mdtype) {
+MetaWord* CollectedHeap::satisfy_failed_metadata_allocation(ClassLoaderData* loader_data, size_t word_size, Metaspace::MetadataType mdtype) {
   uint loop_count = 0;
   uint gc_count = 0;
   uint full_gc_count = 0;
@@ -276,9 +262,6 @@ MetaWord* CollectedHeap::satisfy_failed_metadata_allocation(ClassLoaderData* loa
       return op.result();
     }
     loop_count++;
-    if ((QueuedAllocationWarningCount > 0) && (loop_count % QueuedAllocationWarningCount == 0)) {
-      log_warning(gc, ergo)("satisfy_failed_metadata_allocation() retries %d times, size=" SIZE_FORMAT, loop_count, word_size);
-    }
   } while (true);  // Until a GC is done
 }
 
@@ -349,9 +332,7 @@ void CollectedHeap::fill_with_dummy_object(HeapWord* start, HeapWord* end, bool 
   CollectedHeap::fill_with_object(start, end, zap);
 }
 
-HeapWord* CollectedHeap::allocate_new_tlab(size_t min_size,
-                                           size_t requested_size,
-                                           size_t* actual_size) {
+HeapWord* CollectedHeap::allocate_new_tlab(size_t min_size, size_t requested_size, size_t* actual_size) {
   guarantee(false, "thread-local allocation buffers not supported");
   return NULL;
 }

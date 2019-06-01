@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1HeapSizingPolicy.hpp"
 #include "memory/allocation.inline.hpp"
 

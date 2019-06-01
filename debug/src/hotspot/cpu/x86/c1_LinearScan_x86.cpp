@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_Instruction.hpp"
 #include "c1/c1_LinearScan.hpp"
 #include "utilities/bitMap.inline.hpp"
@@ -117,7 +118,6 @@ void FpuStackAllocator::allocate_block(BlockBegin* block) {
         // propagate stack at first branch to a successor
         processed_merge = true;
         bool required_merge = merge_fpu_stack_with_successors(block);
-
       }
 
     } else if (op1 != NULL) {
@@ -150,7 +150,6 @@ void FpuStackAllocator::compute_debug_information(LIR_Op* op) {
       for (int k = 0; k < n; k++) {
         allocate_exception_handler(xhandlers->handler_at(k));
       }
-    } else {
     }
 
     // compute debug information
@@ -498,9 +497,6 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
       new_in = to_fpu_stack_top(in);
       pop_if_last_use(op1, in);
       break;
-    }
-
-    default: {
     }
   }
 

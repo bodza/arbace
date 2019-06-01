@@ -377,9 +377,7 @@ private:
 
   // hint accessors
   int      hint_di() const  { return _hint_di; }
-  void set_hint_di(int di)  {
-    _hint_di = di;
-  }
+  void set_hint_di(int di)  { _hint_di = di; }
   ciProfileData* data_before(int bci) {
     // avoid SEGV on this edge case
     if (data_size() == 0)

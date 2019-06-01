@@ -132,8 +132,7 @@ class vframeArray: public CHeapObj<mtCompiler> {
                                RegisterMap* reg_map, frame sender, frame caller, frame self,
                                bool realloc_failures);
 
-  vframeArrayElement* element(int index)        {
-    return &_elements[index]; }
+  vframeArrayElement* element(int index)        { return &_elements[index]; }
 
   // Allocates a new vframe in the array and fills the array with vframe information in chunk
   void fill_in(JavaThread* thread, int frame_size, GrowableArray<compiledVFrame*>* chunk, const RegisterMap *reg_map, bool realloc_failures);

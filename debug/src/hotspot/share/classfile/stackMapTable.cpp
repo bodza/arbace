@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/stackMapTable.hpp"
 #include "classfile/verifier.hpp"
 #include "memory/resourceArea.hpp"
@@ -6,9 +7,7 @@
 #include "runtime/fieldType.hpp"
 #include "runtime/handles.inline.hpp"
 
-StackMapTable::StackMapTable(StackMapReader* reader, StackMapFrame* init_frame,
-                             u2 max_locals, u2 max_stack,
-                             char* code_data, int code_len, TRAPS) {
+StackMapTable::StackMapTable(StackMapReader* reader, StackMapFrame* init_frame, u2 max_locals, u2 max_stack, char* code_data, int code_len, TRAPS) {
   _code_length = code_len;
   _frame_count = reader->get_frame_count();
   if (_frame_count > 0) {
@@ -109,8 +108,7 @@ void StackMapTable::print_on(outputStream* str) const {
   str->print_cr(" }");
 }
 
-StackMapReader::StackMapReader(ClassVerifier* v, StackMapStream* stream, char* code_data,
-                               int32_t code_len, TRAPS) :
+StackMapReader::StackMapReader(ClassVerifier* v, StackMapStream* stream, char* code_data, int32_t code_len, TRAPS) :
                                _verifier(v), _stream(stream),
                                _code_data(code_data), _code_length(code_len) {
   methodHandle m = v->method();

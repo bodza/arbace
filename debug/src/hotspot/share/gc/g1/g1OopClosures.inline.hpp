@@ -79,8 +79,7 @@ inline void G1RootRegionScanClosure::do_oop_work(T* p) {
 }
 
 template <class T>
-inline static void check_obj_during_refinement(T* p, oop const obj) {
-}
+inline static void check_obj_during_refinement(T* p, oop const obj) { }
 
 template <class T>
 inline void G1ConcurrentRefineOopClosure::do_oop_work(T* p) {

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/systemDictionary.hpp"
 #include "code/codeCache.hpp"
@@ -125,8 +126,7 @@ void report_unimplemented(const char* file, int line) {
   report_vm_error(file, line, "Unimplemented()");
 }
 
-void report_untested(const char* file, int line, const char* message) {
-}
+void report_untested(const char* file, int line, const char* message) { }
 
 void report_java_out_of_memory(const char* message) {
   static int out_of_memory_reported = 0;
@@ -245,11 +245,6 @@ void initialize_assert_poison() {
 
 static void store_context(const void* context) {
   memcpy(&g_stored_assertion_context, context, sizeof(ucontext_t));
-#if defined(__linux) && defined(PPC64)
-  // on Linux ppc64, ucontext_t contains pointers into itself which have to be patched up
-  //  after copying the context (see comment in sys/ucontext.h):
-  *((void**) &g_stored_assertion_context.uc_mcontext.regs) = &(g_stored_assertion_context.uc_mcontext.gp_regs);
-#endif
 }
 
 bool handle_assert_poison_fault(const void* ucVoid, const void* faulting_address) {

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/stackMapFrame.hpp"
 #include "classfile/verifier.hpp"
 #include "memory/resourceArea.hpp"

@@ -105,7 +105,6 @@ public:
 
   virtual void reset();
   virtual void add(const StringDedupStat* const stat);
-  virtual void print_statistics(bool total) const;
 
   static void print_start(const StringDedupStat* last_stat);
   static void print_end(const StringDedupStat* last_stat, const StringDedupStat* total_stat);

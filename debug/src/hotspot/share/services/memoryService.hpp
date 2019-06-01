@@ -83,9 +83,6 @@ public:
 
   static void oops_do(OopClosure* f);
 
-  static bool get_verbose() { return log_is_enabled(Info, gc); }
-  static bool set_verbose(bool verbose);
-
   // Create an instance of java/lang/management/MemoryUsage
   static Handle create_MemoryUsage_obj(MemoryUsage usage, TRAPS);
 };

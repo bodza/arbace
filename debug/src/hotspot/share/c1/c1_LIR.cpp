@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_InstructionPrinter.hpp"
 #include "c1/c1_LIR.hpp"
 #include "c1/c1_LIRAssembler.hpp"
@@ -111,8 +112,7 @@ bool LIR_OprDesc::is_oop() const {
   }
 }
 
-void LIR_Op2::verify() const {
-}
+void LIR_Op2::verify() const { }
 
 LIR_OpBranch::LIR_OpBranch(LIR_Condition cond, BasicType type, BlockBegin* block)
   : LIR_Op(lir_branch, LIR_OprFact::illegalOpr, (CodeEmitInfo*)NULL)
@@ -167,10 +167,8 @@ void LIR_OpBranch::negate_cond() {
   }
 }
 
-LIR_OpTypeCheck::LIR_OpTypeCheck(LIR_Code code, LIR_Opr result, LIR_Opr object, ciKlass* klass,
-                                 LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3,
-                                 bool fast_check, CodeEmitInfo* info_for_exception, CodeEmitInfo* info_for_patch,
-                                 CodeStub* stub)
+LIR_OpTypeCheck::LIR_OpTypeCheck(LIR_Code code, LIR_Opr result, LIR_Opr object, ciKlass* klass, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3,
+                                 bool fast_check, CodeEmitInfo* info_for_exception, CodeEmitInfo* info_for_patch, CodeStub* stub)
 
   : LIR_Op(code, result, NULL)
   , _object(object)
@@ -252,8 +250,7 @@ void LIR_Op1::verify() const {
   }
 }
 
-void LIR_OpRTCall::verify() const {
-}
+void LIR_OpRTCall::verify() const { }
 
 //-------------------visits--------------------------
 
@@ -344,10 +341,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 
       if (opConvert->_opr->is_valid())       do_input(opConvert->_opr);
       if (opConvert->_result->is_valid())    do_output(opConvert->_result);
-#ifdef PPC32
-      if (opConvert->_tmp1->is_valid())      do_temp(opConvert->_tmp1);
-      if (opConvert->_tmp2->is_valid())      do_temp(opConvert->_tmp2);
-#endif
       do_stub(opConvert->_stub);
 
       break;
@@ -822,10 +815,7 @@ void LIR_OpProfileType::emit_code(LIR_Assembler* masm) {
 }
 
 // LIR_List
-LIR_List::LIR_List(Compilation* compilation, BlockBegin* block)
-  : _operations(8)
-  , _compilation(compilation)
-{ }
+LIR_List::LIR_List(Compilation* compilation, BlockBegin* block) : _operations(8), _compilation(compilation) { }
 
 void LIR_List::append(LIR_InsertionBuffer* buffer) {
   const int n = _operations.length();
@@ -1010,8 +1000,7 @@ void LIR_List::cas_int(LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value, LIR_O
   append(new LIR_OpCompareAndSwap(lir_cas_int, addr, cmp_value, new_value, t1, t2, result));
 }
 
-void print_LIR(BlockList* blocks) {
-}
+void print_LIR(BlockList* blocks) { }
 
 // Implementation of LIR_InsertionBuffer
 

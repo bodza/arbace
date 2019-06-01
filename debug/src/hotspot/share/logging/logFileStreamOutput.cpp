@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "logging/logDecorators.hpp"
 #include "logging/logDecorations.hpp"
@@ -36,9 +37,7 @@ int LogFileStreamOutput::write_decorations(const LogDecorations& decorations) {
       continue;
     }
 
-    int written = jio_fprintf(_stream, "[%-*s]",
-                              _decorator_padding[decorator],
-                              decorations.decoration(decorator));
+    int written = jio_fprintf(_stream, "[%-*s]", _decorator_padding[decorator], decorations.decoration(decorator));
     if (written <= 0) {
       return -1;
     } else if (static_cast<size_t>(written - 2) > _decorator_padding[decorator]) {

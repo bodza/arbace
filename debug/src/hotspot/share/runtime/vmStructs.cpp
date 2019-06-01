@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "ci/ciField.hpp"
 #include "ci/ciInstance.hpp"
 #include "ci/ciMethodData.hpp"
@@ -2294,11 +2295,11 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   declare_constant(Deoptimization::Reason_rtm_state_change) \
   declare_constant(Deoptimization::Reason_unstable_if) \
   declare_constant(Deoptimization::Reason_unstable_fused_if) \
-  NOT_ZERO(declare_constant(Deoptimization::Reason_aliasing)) \
-  NOT_ZERO(declare_constant(Deoptimization::Reason_transfer_to_interpreter)) \
-  NOT_ZERO(declare_constant(Deoptimization::Reason_not_compiled_exception_handler)) \
-  NOT_ZERO(declare_constant(Deoptimization::Reason_unresolved)) \
-  NOT_ZERO(declare_constant(Deoptimization::Reason_jsr_mismatch)) \
+  declare_constant(Deoptimization::Reason_aliasing) \
+  declare_constant(Deoptimization::Reason_transfer_to_interpreter) \
+  declare_constant(Deoptimization::Reason_not_compiled_exception_handler) \
+  declare_constant(Deoptimization::Reason_unresolved) \
+  declare_constant(Deoptimization::Reason_jsr_mismatch) \
   declare_constant(Deoptimization::Reason_tenured) \
   declare_constant(Deoptimization::Reason_LIMIT) \
   declare_constant(Deoptimization::Reason_RECORDED_LIMIT) \
@@ -2434,9 +2435,8 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   /**********************/ \
   /* frame              */ \
   /**********************/ \
-  NOT_ZERO(PPC64_ONLY(declare_constant(frame::entry_frame_locals_size))) \
  \
-  NOT_ZERO(X86_ONLY(declare_constant(frame::entry_frame_call_wrapper_offset))) \
+  X86_ONLY(declare_constant(frame::entry_frame_call_wrapper_offset)) \
   declare_constant(frame::pc_return_offset) \
  \
   /*************/ \
@@ -2869,5 +2869,4 @@ JNIEXPORT uint64_t gHotSpotVMLongConstantEntryValueOffset = offset_of(VMLongCons
 JNIEXPORT uint64_t gHotSpotVMLongConstantEntryArrayStride = STRIDE(gHotSpotVMLongConstants);
 }
 
-void vmStructs_init() {
-}
+void vmStructs_init() { }

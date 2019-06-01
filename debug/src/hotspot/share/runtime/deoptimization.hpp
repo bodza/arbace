@@ -256,9 +256,7 @@ public:
   static void deoptimize_frame(JavaThread* thread, intptr_t* id);
 
   // Statistics
-  static void gather_statistics(DeoptReason reason, DeoptAction action,
-                                Bytecodes::Code bc = Bytecodes::_illegal);
-  static void print_statistics();
+  static void gather_statistics(DeoptReason reason, DeoptAction action, Bytecodes::Code bc = Bytecodes::_illegal);
 
   // How much room to adjust the last frame's SP by, to make space for
   // the callee's interpreter frame (which expects locals to be next to

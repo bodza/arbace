@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_Canonicalizer.hpp"
 #include "c1/c1_InstructionPrinter.hpp"
 #include "c1/c1_ValueStack.hpp"
@@ -937,8 +938,7 @@ void Canonicalizer::do_UnsafeRawOp(UnsafeRawOp* x) {
     x->set_index(index);
     x->set_log2_scale(log2_scale);
     if (PrintUnsafeOptimization) {
-      tty->print_cr("Canonicalizer: UnsafeRawOp id %d: base = id %d, index = id %d, log2_scale = %d",
-                    x->id(), x->base()->id(), x->index()->id(), x->log2_scale());
+      tty->print_cr("Canonicalizer: UnsafeRawOp id %d: base = id %d, index = id %d, log2_scale = %d", x->id(), x->base()->id(), x->index()->id(), x->log2_scale());
     }
   }
 }

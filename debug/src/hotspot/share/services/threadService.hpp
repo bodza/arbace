@@ -316,10 +316,8 @@ class ConcurrentLocksDump : public StackObj {
   void add_lock(JavaThread* thread, instanceOop o);
 
  public:
-  ConcurrentLocksDump(bool retain_map_on_free) : _map(NULL), _last(NULL), _retain_map_on_free(retain_map_on_free) {
-  };
-  ConcurrentLocksDump() : _map(NULL), _last(NULL), _retain_map_on_free(false) {
-  };
+  ConcurrentLocksDump(bool retain_map_on_free) : _map(NULL), _last(NULL), _retain_map_on_free(retain_map_on_free) { };
+  ConcurrentLocksDump() : _map(NULL), _last(NULL), _retain_map_on_free(false) { };
   ~ConcurrentLocksDump();
 
   void                        dump_at_safepoint();

@@ -175,7 +175,6 @@ inline void HeapRegion::apply_to_marked_objects(G1CMBitMap* bitmap, ApplyToMarke
       next_addr = bitmap->get_next_marked_addr(next_addr, limit);
     }
   }
-
 }
 
 inline HeapWord* HeapRegion::par_allocate_no_bot_updates(size_t min_word_size,

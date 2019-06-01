@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "logging/log.hpp"
 #include "logging/logStream.hpp"
 
@@ -27,8 +28,6 @@ void LogStream::LineBuffer::try_ensure_cap(size_t atleast) {
     const size_t additional_expansion = 256;
     size_t newcap = align_up(atleast + additional_expansion, additional_expansion);
     if (newcap > reasonable_max) {
-      log_info(logging)("Suspiciously long log line: \"%.100s%s",
-              _buf, (_pos >= 100 ? "..." : ""));
       newcap = reasonable_max;
     }
 

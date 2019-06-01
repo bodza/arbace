@@ -21,8 +21,7 @@ struct G1RegionMarkStats {
   }
   // Clear all members after a marking overflow. Nothing to do as the live words
   // are updated by the atomic mark. We do not remark objects after overflow.
-  void clear_during_overflow() {
-  }
+  void clear_during_overflow() { }
 
   bool is_clear() const { return _live_words == 0; }
 };

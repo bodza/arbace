@@ -39,18 +39,10 @@ public:
   int       morphism() const          { return _morphism; }
 
   int       count() const             { return _count; }
-  int       receiver_count(int i)  {
-    return _receiver_count[i];
-  }
-  float     receiver_prob(int i)  {
-    return (float)_receiver_count[i]/(float)_count;
-  }
-  ciMethod* method(int i)          {
-    return _method[i];
-  }
-  ciKlass*  receiver(int i)        {
-    return _receiver[i];
-  }
+  int       receiver_count(int i)     { return _receiver_count[i]; }
+  float     receiver_prob(int i)      { return (float)_receiver_count[i] / (float)_count; }
+  ciMethod* method(int i)             { return _method[i]; }
+  ciKlass*  receiver(int i)           { return _receiver[i]; }
 
   // Rescale the current profile based on the incoming scale
   ciCallProfile rescale(double scale) {

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/vmSymbols.hpp"
 #include "logging/log.hpp"
@@ -55,9 +56,7 @@ const char* PerfDataManager::_name_spaces[] = {
   "",
 };
 
-PerfData::PerfData(CounterNS ns, const char* name, Units u, Variability v)
-                  : _name(NULL), _u(u), _v(v), _valuep(NULL),
-                    _on_c_heap(false) {
+PerfData::PerfData(CounterNS ns, const char* name, Units u, Variability v) : _name(NULL), _u(u), _v(v), _valuep(NULL), _on_c_heap(false) {
 
   const char* prefix = PerfDataManager::ns_to_string(ns);
 
@@ -69,18 +68,15 @@ PerfData::PerfData(CounterNS ns, const char* name, Units u, Variability v)
      // set the F_Supported flag based on the counter name prefix.
      if (PerfDataManager::is_stable_supported(_name) || PerfDataManager::is_unstable_supported(_name)) {
        _flags = F_Supported;
-     }
-     else {
+     } else {
        _flags = F_None;
      }
-  }
-  else {
+  } else {
     sprintf(_name, "%s.%s", prefix, name);
     // set the F_Supported flag based on the given namespace.
     if (PerfDataManager::is_stable_supported(ns) || PerfDataManager::is_unstable_supported(ns)) {
       _flags = F_Supported;
-    }
-    else {
+    } else {
       _flags = F_None;
     }
   }
@@ -138,16 +134,6 @@ void PerfData::create_entry(BasicType dtype, size_t dsize, size_t vlen) {
   pdep->flags = (jbyte)flags();
   pdep->data_offset = (jint) data_start;
 
-  log_debug(perf, datacreation)("name = %s, dtype = %d, variability = %d,"
-                                " units = %d, dsize = " SIZE_FORMAT ", vlen = " SIZE_FORMAT ","
-                                " pad_length = " SIZE_FORMAT ", size = " SIZE_FORMAT ", on_c_heap = %s,"
-                                " address = " INTPTR_FORMAT ","
-                                " data address = " INTPTR_FORMAT,
-                                cname, dtype, variability(),
-                                units(), dsize, vlen,
-                                pad_length, size, is_on_c_heap() ? "TRUE":"FALSE",
-                                p2i(psmp), p2i(valuep));
-
   // record the start of the entry and the location of the data field.
   _pdep = pdep;
   _valuep = valuep;
@@ -156,8 +142,7 @@ void PerfData::create_entry(BasicType dtype, size_t dsize, size_t vlen) {
   PerfMemory::mark_updated();
 }
 
-PerfLong::PerfLong(CounterNS ns, const char* namep, Units u, Variability v)
-                 : PerfData(ns, namep, u, v) {
+PerfLong::PerfLong(CounterNS ns, const char* namep, Units u, Variability v) : PerfData(ns, namep, u, v) {
 
   create_entry(T_LONG, sizeof(jlong));
 }
@@ -166,16 +151,11 @@ int PerfLong::format(char* buffer, int length) {
   return jio_snprintf(buffer, length, JLONG_FORMAT, *(jlong*)_valuep);
 }
 
-PerfLongVariant::PerfLongVariant(CounterNS ns, const char* namep, Units u,
-                                 Variability v, jlong* sampled)
-                                : PerfLong(ns, namep, u, v),
-                                  _sampled(sampled), _sample_helper(NULL) {
-
+PerfLongVariant::PerfLongVariant(CounterNS ns, const char* namep, Units u, Variability v, jlong* sampled) : PerfLong(ns, namep, u, v), _sampled(sampled), _sample_helper(NULL) {
   sample();
 }
 
-PerfLongVariant::PerfLongVariant(CounterNS ns, const char* namep, Units u,
-                                 Variability v, PerfLongSampleHelper* helper)
+PerfLongVariant::PerfLongVariant(CounterNS ns, const char* namep, Units u, Variability v, PerfLongSampleHelper* helper)
                                 : PerfLong(ns, namep, u, v),
                                   _sampled(NULL), _sample_helper(helper) {
 
@@ -188,8 +168,7 @@ void PerfLongVariant::sample() {
   }
 }
 
-PerfByteArray::PerfByteArray(CounterNS ns, const char* namep, Units u,
-                             Variability v, jint length)
+PerfByteArray::PerfByteArray(CounterNS ns, const char* namep, Units u, Variability v, jint length)
                             : PerfData(ns, namep, u, v), _length(length) {
 
   create_entry(T_BYTE, sizeof(jbyte), (size_t)_length);
@@ -337,10 +316,7 @@ char *PerfDataManager::name_space(const char* ns, int instance) {
    return name_space(ns, intbuf);
 }
 
-PerfStringConstant* PerfDataManager::create_string_constant(CounterNS ns,
-                                                            const char* name,
-                                                            const char* s,
-                                                            TRAPS) {
+PerfStringConstant* PerfDataManager::create_string_constant(CounterNS ns, const char* name, const char* s, TRAPS) {
 
   PerfStringConstant* p = new PerfStringConstant(ns, name, s);
 
@@ -355,10 +331,7 @@ PerfStringConstant* PerfDataManager::create_string_constant(CounterNS ns,
   return p;
 }
 
-PerfLongConstant* PerfDataManager::create_long_constant(CounterNS ns,
-                                                        const char* name,
-                                                        PerfData::Units u,
-                                                        jlong val, TRAPS) {
+PerfLongConstant* PerfDataManager::create_long_constant(CounterNS ns, const char* name, PerfData::Units u, jlong val, TRAPS) {
 
   PerfLongConstant* p = new PerfLongConstant(ns, name, u, val);
 
@@ -373,11 +346,7 @@ PerfLongConstant* PerfDataManager::create_long_constant(CounterNS ns,
   return p;
 }
 
-PerfStringVariable* PerfDataManager::create_string_variable(CounterNS ns,
-                                                            const char* name,
-                                                            int max_length,
-                                                            const char* s,
-                                                            TRAPS) {
+PerfStringVariable* PerfDataManager::create_string_variable(CounterNS ns, const char* name, int max_length, const char* s, TRAPS) {
 
   if (max_length == 0 && s != NULL) max_length = (int)strlen(s);
 
@@ -394,10 +363,7 @@ PerfStringVariable* PerfDataManager::create_string_variable(CounterNS ns,
   return p;
 }
 
-PerfLongVariable* PerfDataManager::create_long_variable(CounterNS ns,
-                                                        const char* name,
-                                                        PerfData::Units u,
-                                                        jlong ival, TRAPS) {
+PerfLongVariable* PerfDataManager::create_long_variable(CounterNS ns, const char* name, PerfData::Units u, jlong ival, TRAPS) {
 
   PerfLongVariable* p = new PerfLongVariable(ns, name, u, ival);
 
@@ -412,10 +378,7 @@ PerfLongVariable* PerfDataManager::create_long_variable(CounterNS ns,
   return p;
 }
 
-PerfLongVariable* PerfDataManager::create_long_variable(CounterNS ns,
-                                                        const char* name,
-                                                        PerfData::Units u,
-                                                        jlong* sp, TRAPS) {
+PerfLongVariable* PerfDataManager::create_long_variable(CounterNS ns, const char* name, PerfData::Units u, jlong* sp, TRAPS) {
 
   // Sampled counters not supported if UsePerfData is false
   if (!UsePerfData) return NULL;
@@ -433,11 +396,7 @@ PerfLongVariable* PerfDataManager::create_long_variable(CounterNS ns,
   return p;
 }
 
-PerfLongVariable* PerfDataManager::create_long_variable(CounterNS ns,
-                                                        const char* name,
-                                                        PerfData::Units u,
-                                                        PerfSampleHelper* sh,
-                                                        TRAPS) {
+PerfLongVariable* PerfDataManager::create_long_variable(CounterNS ns, const char* name, PerfData::Units u, PerfSampleHelper* sh, TRAPS) {
 
   // Sampled counters not supported if UsePerfData is false
   if (!UsePerfData) return NULL;
@@ -455,10 +414,7 @@ PerfLongVariable* PerfDataManager::create_long_variable(CounterNS ns,
   return p;
 }
 
-PerfLongCounter* PerfDataManager::create_long_counter(CounterNS ns,
-                                                      const char* name,
-                                                      PerfData::Units u,
-                                                      jlong ival, TRAPS) {
+PerfLongCounter* PerfDataManager::create_long_counter(CounterNS ns, const char* name, PerfData::Units u, jlong ival, TRAPS) {
 
   PerfLongCounter* p = new PerfLongCounter(ns, name, u, ival);
 
@@ -473,10 +429,7 @@ PerfLongCounter* PerfDataManager::create_long_counter(CounterNS ns,
   return p;
 }
 
-PerfLongCounter* PerfDataManager::create_long_counter(CounterNS ns,
-                                                      const char* name,
-                                                      PerfData::Units u,
-                                                      jlong* sp, TRAPS) {
+PerfLongCounter* PerfDataManager::create_long_counter(CounterNS ns, const char* name, PerfData::Units u, jlong* sp, TRAPS) {
 
   // Sampled counters not supported if UsePerfData is false
   if (!UsePerfData) return NULL;
@@ -494,11 +447,7 @@ PerfLongCounter* PerfDataManager::create_long_counter(CounterNS ns,
   return p;
 }
 
-PerfLongCounter* PerfDataManager::create_long_counter(CounterNS ns,
-                                                      const char* name,
-                                                      PerfData::Units u,
-                                                      PerfSampleHelper* sh,
-                                                      TRAPS) {
+PerfLongCounter* PerfDataManager::create_long_counter(CounterNS ns, const char* name, PerfData::Units u, PerfSampleHelper* sh, TRAPS) {
 
   // Sampled counters not supported if UsePerfData is false
   if (!UsePerfData) return NULL;

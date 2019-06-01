@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1CardTable.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/shared/memset_with_concurrent_readers.hpp"
@@ -57,11 +58,6 @@ void G1CardTable::initialize(G1RegionToSpaceMapper* mapper) {
 
   _byte_map = (jbyte*) mapper->reserved().start();
   _byte_map_base = _byte_map - (uintptr_t(low_bound) >> card_shift);
-
-  log_trace(gc, barrier)("G1CardTable::G1CardTable: ");
-  log_trace(gc, barrier)("    &_byte_map[0]: " INTPTR_FORMAT "  &_byte_map[_last_valid_index]: " INTPTR_FORMAT,
-                         p2i(&_byte_map[0]), p2i(&_byte_map[_last_valid_index]));
-  log_trace(gc, barrier)("    _byte_map_base: " INTPTR_FORMAT,  p2i(_byte_map_base));
 }
 
 bool G1CardTable::is_in_young(oop obj) const {

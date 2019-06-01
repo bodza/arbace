@@ -162,7 +162,7 @@ bool AOTCompiledMethod::make_not_entrant_helper(int new_state) {
     }
   }
 
-  if (TraceCreateZombies) {
+  if (false) {
     ResourceMark m;
     const char *new_state_str = (new_state == not_entrant) ? "not entrant" : "not used";
     tty->print_cr("aot method <" INTPTR_FORMAT "> %s code made %s", p2i(this), this->method() ? this->method()->name_and_sig_as_C_string() : "null", new_state_str);
@@ -195,7 +195,7 @@ bool AOTCompiledMethod::make_entrant() {
     log_state_change();
   }
 
-  if (TraceCreateZombies) {
+  if (false) {
     ResourceMark m;
     tty->print_cr("aot method <" INTPTR_FORMAT "> %s code made entrant", p2i(this), this->method() ? this->method()->name_and_sig_as_C_string() : "null");
   }
@@ -313,14 +313,11 @@ void AOTCompiledMethod::log_state_change() const {
     if (xtty != NULL) {
       ttyLocker ttyl;  // keep the following output all in one block
       if (*_state_adr == not_entrant) {
-        xtty->begin_elem("make_not_entrant thread='" UINTX_FORMAT "'",
-                         os::current_thread_id());
+        xtty->begin_elem("make_not_entrant thread='" UINTX_FORMAT "'", os::current_thread_id());
       } else if (*_state_adr == not_used) {
-        xtty->begin_elem("make_not_used thread='" UINTX_FORMAT "'",
-                         os::current_thread_id());
+        xtty->begin_elem("make_not_used thread='" UINTX_FORMAT "'", os::current_thread_id());
       } else if (*_state_adr == in_use) {
-        xtty->begin_elem("make_entrant thread='" UINTX_FORMAT "'",
-                         os::current_thread_id());
+        xtty->begin_elem("make_entrant thread='" UINTX_FORMAT "'", os::current_thread_id());
       }
       log_identity(xtty);
       xtty->stamp();
@@ -341,12 +338,6 @@ void AOTCompiledMethod::log_state_change() const {
 
 NativeInstruction* PltNativeCallWrapper::get_load_instruction(virtual_call_Relocation* r) const {
   return nativeLoadGot_at(_call->plt_load_got());
-}
-
-void PltNativeCallWrapper::verify_resolve_call(address dest) const {
-  CodeBlob* db = CodeCache::find_blob_unsafe(dest);
-  if (db == NULL) {
-  }
 }
 
 void PltNativeCallWrapper::set_to_interpreted(const methodHandle& method, CompiledICInfo& info) {

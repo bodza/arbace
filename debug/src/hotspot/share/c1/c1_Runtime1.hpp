@@ -141,8 +141,6 @@ class Runtime1: public AllStatic {
   static int  is_instance_of(oopDesc* mirror, oopDesc* obj);
 
   static void predicate_failed_trap(JavaThread* thread);
-
-  static void print_statistics()                 { };
 };
 
 #endif

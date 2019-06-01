@@ -20,8 +20,6 @@ public:
 
   void add(const StringDedupStat* const stat);
 
-  void print_statistics(bool total) const;
-
   void reset();
 };
 

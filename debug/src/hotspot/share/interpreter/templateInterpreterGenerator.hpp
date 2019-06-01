@@ -4,8 +4,6 @@
 // This file contains the platform-independent parts
 // of the template interpreter generator.
 
-#ifndef CC_INTERP
-
 class TemplateInterpreterGenerator: public AbstractInterpreterGenerator {
  protected:
 
@@ -84,24 +82,13 @@ class TemplateInterpreterGenerator: public AbstractInterpreterGenerator {
   void generate_counter_overflow(Label& continue_entry);
 
   void generate_fixed_frame(bool native_call);
-#ifdef SPARC
-  void save_native_result(void);
-  void restore_native_result(void);
-#endif
 
 #ifdef AARCH64
   void generate_transcendental_entry(AbstractInterpreter::MethodKind kind, int fpargs);
 #endif
 
-#ifdef PPC
-  void lock_method(Register Rflags, Register Rscratch1, Register Rscratch2, bool flags_preloaded=false);
-  void generate_fixed_frame(bool native_call, Register Rsize_of_parameters, Register Rsize_of_locals);
-#endif
-
  public:
   TemplateInterpreterGenerator(StubQueue* _code);
 };
-
-#endif
 
 #endif

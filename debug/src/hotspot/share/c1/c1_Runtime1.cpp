@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/codeBuffer.hpp"
 #include "c1/c1_CodeStubs.hpp"
 #include "c1/c1_Defs.hpp"
@@ -19,7 +20,6 @@
 #include "gc/shared/collectedHeap.hpp"
 #include "interpreter/bytecode.hpp"
 #include "interpreter/interpreter.hpp"
-// #include "jfr/support/jfrIntrinsics.hpp"
 #include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/oopFactory.hpp"
@@ -388,16 +388,6 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
     // New exception handling mechanism can support inlined methods
     // with exception handlers since the mappings are from PC to PC
 
-    // debugging support
-    // tracing
-    if (log_is_enabled(Info, exceptions)) {
-      ResourceMark rm;
-      stringStream tempst;
-      tempst.print("compiled method <%s>\n"
-                   " at PC" INTPTR_FORMAT " for thread " INTPTR_FORMAT,
-                   nm->method()->print_value_string(), p2i(pc), p2i(thread));
-      Exceptions::log_exception(exception, tempst);
-    }
     // for AbortVMOnException flag
     Exceptions::debug_check_abort(exception);
 
@@ -426,13 +416,6 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
   thread->set_vm_result(exception());
   // Set flag if return address is a method handle call site.
   thread->set_is_method_handle_return(nm->is_method_handle_return(pc));
-
-  if (log_is_enabled(Info, exceptions)) {
-    ResourceMark rm;
-    log_info(exceptions)("Thread " PTR_FORMAT " continuing at PC " PTR_FORMAT
-                         " for exception thrown at PC " PTR_FORMAT,
-                         p2i(thread), p2i(continuation), p2i(pc));
-  }
 
   return continuation;
 JRT_END
@@ -897,34 +880,6 @@ JRT_ENTRY(void, Runtime1::patch_code(JavaThread* thread, Runtime1::StubID stub_i
           ShouldNotReachHere();
         }
 
-#if defined(SPARC) || defined(PPC32)
-        if (load_klass_or_mirror_patch_id || stub_id == Runtime1::load_appendix_patching_id) {
-          // Update the location in the nmethod with the proper
-          // metadata.  When the code was generated, a NULL was stuffed
-          // in the metadata table and that table needs to be update to
-          // have the right value.  On intel the value is kept
-          // directly in the instruction instead of in the metadata
-          // table, so set_data above effectively updated the value.
-          nmethod* nm = CodeCache::find_nmethod(instr_pc);
-          RelocIterator mds(nm, copy_buff, copy_buff + 1);
-          bool found = false;
-          while (mds.next() && !found) {
-            if (mds.type() == relocInfo::oop_type) {
-              oop_Relocation* r = mds.oop_reloc();
-              oop* oop_adr = r->oop_addr();
-              *oop_adr = stub_id == Runtime1::load_mirror_patching_id ? mirror() : appendix();
-              r->fix_oop_relocation();
-              found = true;
-            } else if (mds.type() == relocInfo::metadata_type) {
-              metadata_Relocation* r = mds.metadata_reloc();
-              Metadata** metadata_adr = r->metadata_addr();
-              *metadata_adr = load_klass;
-              r->fix_metadata_relocation();
-              found = true;
-            }
-          }
-        }
-#endif
         if (do_patch) {
           // replace instructions
           // first replace the tail, then the call
@@ -970,20 +925,6 @@ JRT_ENTRY(void, Runtime1::patch_code(JavaThread* thread, Runtime1::StubID stub_i
             RelocIterator iter(nm, (address)instr_pc, (address)(instr_pc + 1));
             relocInfo::change_reloc_info_for_address(&iter, (address) instr_pc,
                                                      relocInfo::none, rtype);
-#ifdef SPARC
-            // Sparc takes two relocations for an metadata so update the second one.
-            address instr_pc2 = instr_pc + NativeMovConstReg::add_offset;
-            RelocIterator iter2(nm, instr_pc2, instr_pc2 + 1);
-            relocInfo::change_reloc_info_for_address(&iter2, (address) instr_pc2,
-                                                     relocInfo::none, rtype);
-#endif
-#ifdef PPC32
-          { address instr_pc2 = instr_pc + NativeMovConstReg::lo_offset;
-            RelocIterator iter2(nm, instr_pc2, instr_pc2 + 1);
-            relocInfo::change_reloc_info_for_address(&iter2, (address) instr_pc2,
-                                                     relocInfo::none, rtype);
-          }
-#endif
           }
 
         } else {

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/taskqueue.hpp"
 #include "oops/oop.inline.hpp"
 #include "logging/log.hpp"
@@ -12,53 +13,6 @@
 uint ParallelTaskTerminator::_total_yields = 0;
 uint ParallelTaskTerminator::_total_spins = 0;
 uint ParallelTaskTerminator::_total_peeks = 0;
-#endif
-
-#if TASKQUEUE_STATS
-const char * const TaskQueueStats::_names[last_stat_id] = {
-  "qpush", "qpop", "qpop-s", "qattempt", "qsteal", "opush", "omax"
-};
-
-TaskQueueStats & TaskQueueStats::operator +=(const TaskQueueStats & addend) {
-  for (unsigned int i = 0; i < last_stat_id; ++i) {
-    _stats[i] += addend._stats[i];
-  }
-  return *this;
-}
-
-void TaskQueueStats::print_header(unsigned int line, outputStream* const stream, unsigned int width) {
-  // Use a width w: 1 <= w <= max_width
-  const unsigned int max_width = 40;
-  const unsigned int w = MAX2(MIN2(width, max_width), 1U);
-
-  if (line == 0) { // spaces equal in width to the header
-    const unsigned int hdr_width = w * last_stat_id + last_stat_id - 1;
-    stream->print("%*s", hdr_width, " ");
-  } else if (line == 1) { // labels
-    stream->print("%*s", w, _names[0]);
-    for (unsigned int i = 1; i < last_stat_id; ++i) {
-      stream->print(" %*s", w, _names[i]);
-    }
-  } else if (line == 2) { // dashed lines
-    char dashes[max_width + 1];
-    memset(dashes, '-', w);
-    dashes[w] = '\0';
-    stream->print("%s", dashes);
-    for (unsigned int i = 1; i < last_stat_id; ++i) {
-      stream->print(" %s", dashes);
-    }
-  }
-}
-
-void TaskQueueStats::print(outputStream* stream, unsigned int width) const {
-  #define FMT SIZE_FORMAT_W(*)
-  stream->print(FMT, width, _stats[0]);
-  for (unsigned int i = 1; i < last_stat_id; ++i) {
-    stream->print(" " FMT, width, _stats[i]);
-  }
-  #undef FMT
-}
-
 #endif
 
 int TaskQueueSetSuper::randomParkAndMiller(int *seed0) {
@@ -156,8 +110,6 @@ ParallelTaskTerminator::offer_termination(TerminatorTerminator* terminator) {
 #endif
         }
       } else {
-        log_develop_trace(gc, task)("ParallelTaskTerminator::offer_termination() thread " PTR_FORMAT " sleeps after %u yields",
-                                    p2i(Thread::current()), yield_count);
         yield_count = 0;
         // A sleep will cause this processor to seek work on another processor's
         // runqueue, if it has nothing else to run (as opposed to the yield
@@ -178,9 +130,7 @@ ParallelTaskTerminator::offer_termination(TerminatorTerminator* terminator) {
 }
 
 #ifdef TRACESPINNING
-void ParallelTaskTerminator::print_termination_counts() {
-  log_trace(gc, task)("ParallelTaskTerminator Total yields: %u Total spins: %u Total peeks: %u", total_yields(), total_spins(), total_peeks());
-}
+void ParallelTaskTerminator::print_termination_counts() { }
 #endif
 
 void ParallelTaskTerminator::reset_for_reuse() {

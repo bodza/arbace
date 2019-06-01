@@ -70,8 +70,7 @@ class BaseBytecodeStream: StackObj {
   Bytecode        bytecode() const               { return Bytecode(_method(), bcp()); }
 
   // State changes
-  void            set_next_bci(int bci)          {
-    _next_bci = bci; }
+  void            set_next_bci(int bci)          { _next_bci = bci; }
 
   // Bytecode-specific attributes
   int             dest() const                   { return bci() + bytecode().get_offset_s2(raw_code()); }

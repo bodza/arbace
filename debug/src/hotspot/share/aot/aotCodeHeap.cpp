@@ -69,14 +69,10 @@ Klass* AOTCodeHeap::lookup_klass(const char* name, int len, const Method* method
   }
   TempNewSymbol sym = SymbolTable::probe(name, len);
   if (sym == NULL) {
-    log_debug(aot, class, resolve)("Probe failed for AOT class %s", name);
     return NULL;
   }
   Klass* k = SystemDictionary::find_instance_or_array_klass(sym, loader, protection_domain, thread);
 
-  if (k != NULL) {
-    log_info(aot, class, resolve)("%s %s (lookup)", caller->method_holder()->external_name(), k->external_name());
-  }
   return k;
 }
 
@@ -279,7 +275,6 @@ void AOTCodeHeap::publish_aot(const methodHandle& mh, AOTMethodData* method_data
     // When the AOT compiler compiles something big we fail to generate metadata
     // in CodeInstaller::gather_metadata. In that case the scopes_pcs_begin == scopes_pcs_end.
     // In all successful cases we always have 2 entries of scope pcs.
-    log_info(aot, class, resolve)("Failed to load %s (no metadata available)", mh->name_and_sig_as_C_string());
     _code_to_aot[code_id]._state = invalid;
     return;
   }
@@ -660,35 +655,24 @@ bool AOTCodeHeap::load_klass_data(InstanceKlass* ik, Thread* thread) {
   }
 
   if (!ik->has_passed_fingerprint_check()) {
-    log_trace(aot, class, fingerprint)("class  %s%s  has bad fingerprint in  %s tid=" INTPTR_FORMAT,
-                                       ik->internal_name(), ik->is_shared() ? " (shared)" : "",
-                                       _lib->name(), p2i(thread));
     sweep_dependent_methods(klass_data);
     return false;
   }
 
   if (ik->has_been_redefined()) {
-    log_trace(aot, class, load)("class  %s%s in %s  has been redefined tid=" INTPTR_FORMAT,
-                                ik->internal_name(), ik->is_shared() ? " (shared)" : "",
-                                _lib->name(), p2i(thread));
     sweep_dependent_methods(klass_data);
     return false;
   }
 
   AOTClass* aot_class = &_classes[klass_data->_class_id];
   if (aot_class->_classloader != NULL && aot_class->_classloader != ik->class_loader_data()) {
-    log_trace(aot, class, load)("class  %s  in  %s already loaded for classloader %p vs %p tid=" INTPTR_FORMAT,
-                                ik->internal_name(), _lib->name(), aot_class->_classloader, ik->class_loader_data(), p2i(thread));
     return false;
   }
 
   if (_lib->config()->_omitAssertions && JavaAssertions::enabled(ik->name()->as_C_string(), ik->class_loader() == NULL)) {
-    log_trace(aot, class, load)("class  %s  in  %s does not have java assertions in compiled code, but assertions are enabled for this execution.", ik->internal_name(), _lib->name());
     sweep_dependent_methods(klass_data);
     return false;
   }
-
-  log_trace(aot, class, load)("found  %s  in  %s for classloader %p tid=" INTPTR_FORMAT, ik->internal_name(), _lib->name(), ik->class_loader_data(), p2i(thread));
 
   aot_class->_classloader = ik->class_loader_data();
   // Set klass's Resolve (second) got cell.
@@ -921,9 +905,6 @@ bool AOTCodeHeap::reconcile_dynamic_klass(AOTCompiledMethod *caller, InstanceKla
 
   // TODO: support anonymous supers
   if (!dyno->supers_have_passed_fingerprint_checks() || dyno->get_stored_fingerprint() != dyno_data->_fingerprint) {
-      log_trace(aot, class, fingerprint)("class  %s%s  has bad fingerprint in  %s tid=" INTPTR_FORMAT,
-          dyno->internal_name(), dyno->is_shared() ? " (shared)" : "",
-          _lib->name(), p2i(thread));
     sweep_dependent_methods(holder_data);
     sweep_dependent_methods(dyno_data);
     return false;

@@ -42,8 +42,7 @@ template <class T> inline void OopsInGenClosure::par_do_barrier(T* p) {
   }
 }
 
-inline BasicOopsInGenClosure::BasicOopsInGenClosure(Generation* gen) : OopsInGenClosure(gen) {
-}
+inline BasicOopsInGenClosure::BasicOopsInGenClosure(Generation* gen) : OopsInGenClosure(gen) { }
 
 inline void OopsInClassLoaderDataOrGenClosure::do_cld_barrier() {
   if (!_scanned_cld->has_modified_oops()) {

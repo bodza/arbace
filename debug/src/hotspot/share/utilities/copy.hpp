@@ -286,25 +286,12 @@ class Copy : AllStatic {
     return pointer_delta(from, to) >= count;
   }
 
-  // These methods raise a fatal if they detect a problem.
-
-  static void assert_disjoint(const HeapWord* from, HeapWord* to, size_t count) {
-  }
-
-  static void assert_params_ok(const void* from, void* to, intptr_t alignment) {
-  }
-
-  static void assert_params_ok(HeapWord* to, intptr_t alignment) {
-  }
-
-  static void assert_params_aligned(const HeapWord* from, HeapWord* to) {
-  }
-
-  static void assert_params_aligned(HeapWord* to) {
-  }
-
-  static void assert_byte_count_ok(size_t byte_count, size_t unit_size) {
-  }
+  static void assert_disjoint(const HeapWord* from, HeapWord* to, size_t count) { }
+  static void assert_params_ok(const void* from, void* to, intptr_t alignment) { }
+  static void assert_params_ok(HeapWord* to, intptr_t alignment) { }
+  static void assert_params_aligned(const HeapWord* from, HeapWord* to) { }
+  static void assert_params_aligned(HeapWord* to) { }
+  static void assert_byte_count_ok(size_t byte_count, size_t unit_size) { }
 
   // Platform dependent implementations of the above methods.
 #include CPU_HEADER(copy)

@@ -1,13 +1,11 @@
 #include "precompiled.hpp"
+
 #include "gc/epsilon/epsilonHeap.hpp"
 #include "gc/epsilon/epsilonMemoryPool.hpp"
 
 EpsilonMemoryPool::EpsilonMemoryPool(EpsilonHeap* heap) :
         _heap(heap),
-        CollectedMemoryPool("Epsilon Heap",
-                            heap->capacity(),
-                            heap->max_capacity(),
-                            false) {
+        CollectedMemoryPool("Epsilon Heap", heap->capacity(), heap->max_capacity(), false) {
 }
 
 MemoryUsage EpsilonMemoryPool::get_memory_usage() {

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaClasses.inline.hpp"
 #include "classfile/stringTable.hpp"
 #include "code/codeCache.hpp"
@@ -49,7 +50,6 @@ MethodHandlesAdapterBlob* MethodHandles::_adapter_code = NULL;
 void MethodHandles::generate_adapters() {
 
   ResourceMark rm;
-  TraceTime timer("MethodHandles adapters generation", TRACETIME_LOG(Info, startuptime));
   _adapter_code = MethodHandlesAdapterBlob::create(adapter_code_size);
   CodeBuffer code(_adapter_code);
   MethodHandlesAdapterGenerator g(&code);
@@ -63,9 +63,7 @@ void MethodHandles::generate_adapters() {
 void MethodHandlesAdapterGenerator::generate() {
   // Generate generic method handle adapters.
   // Generate interpreter entries
-  for (Interpreter::MethodKind mk = Interpreter::method_handle_invoke_FIRST;
-       mk <= Interpreter::method_handle_invoke_LAST;
-       mk = Interpreter::MethodKind(1 + (int)mk)) {
+  for (Interpreter::MethodKind mk = Interpreter::method_handle_invoke_FIRST; mk <= Interpreter::method_handle_invoke_LAST; mk = Interpreter::MethodKind(1 + (int)mk)) {
     vmIntrinsics::ID iid = Interpreter::method_handle_intrinsic(mk);
     StubCodeMark mark(this, "MethodHandle::interpreter_entry", vmIntrinsics::name_at(iid));
     address entry = MethodHandles::generate_method_handle_interpreter_entry(_masm, iid);
@@ -208,8 +206,7 @@ oop MethodHandles::init_method_MemberName(Handle mname, CallInfo& info) {
        if (!m->is_abstract()) {
          if (!m->is_private()) {
            tty->print("default");
-         }
-         else {
+         } else {
            tty->print("private-intf");
          }
        }
@@ -644,8 +641,7 @@ oop MethodHandles::field_signature_type_or_null(Symbol* s) {
 // An unresolved member name is a mere symbolic reference.
 // Resolving it plants a vmtarget/vmindex in it,
 // which refers directly to JVM internals.
-Handle MethodHandles::resolve_MemberName(Handle mname, Klass* caller,
-                                         bool speculative_resolve, TRAPS) {
+Handle MethodHandles::resolve_MemberName(Handle mname, Klass* caller, bool speculative_resolve, TRAPS) {
   Handle empty;
 
   if (java_lang_invoke_MemberName::vmtarget(mname()) != NULL) {
@@ -1077,8 +1073,7 @@ JVM_ENTRY(void, MHN_expand_Mem(JNIEnv *env, jobject igcls, jobject mname_jh)) {
 JVM_END
 
 // void resolve(MemberName self, Class<?> caller)
-JVM_ENTRY(jobject, MHN_resolve_Mem(JNIEnv *env, jobject igcls, jobject mname_jh, jclass caller_jh,
-    jboolean speculative_resolve)) {
+JVM_ENTRY(jobject, MHN_resolve_Mem(JNIEnv *env, jobject igcls, jobject mname_jh, jclass caller_jh, jboolean speculative_resolve)) {
   if (mname_jh == NULL) { THROW_MSG_NULL(vmSymbols::java_lang_InternalError(), "mname is null"); }
   Handle mname(THREAD, JNIHandles::resolve_non_null(mname_jh));
 
@@ -1183,9 +1178,7 @@ JVM_END
 
 //  static native int getMembers(Class<?> defc, String matchName, String matchSig,
 //          int matchFlags, Class<?> caller, int skip, MemberName[] results);
-JVM_ENTRY(jint, MHN_getMembers(JNIEnv *env, jobject igcls,
-                               jclass clazz_jh, jstring name_jh, jstring sig_jh,
-                               int mflags, jclass caller_jh, jint skip, jobjectArray results_jh)) {
+JVM_ENTRY(jint, MHN_getMembers(JNIEnv *env, jobject igcls, jclass clazz_jh, jstring name_jh, jstring sig_jh, int mflags, jclass caller_jh, jint skip, jobjectArray results_jh)) {
   if (clazz_jh == NULL || results_jh == NULL)  return -1;
   Klass* k = java_lang_Class::as_Klass(JNIHandles::resolve_non_null(clazz_jh));
 

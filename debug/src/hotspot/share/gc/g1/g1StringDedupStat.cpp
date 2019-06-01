@@ -32,20 +32,6 @@ void G1StringDedupStat::add(const StringDedupStat* const stat) {
   _deduped_old_bytes += g1_stat->_deduped_old_bytes;
 }
 
-void G1StringDedupStat::print_statistics(bool total) const {
-  StringDedupStat::print_statistics(total);
-
-  double deduped_young_percent       = percent_of(_deduped_young, _deduped);
-  double deduped_young_bytes_percent = percent_of(_deduped_young_bytes, _deduped_bytes);
-  double deduped_old_percent         = percent_of(_deduped_old, _deduped);
-  double deduped_old_bytes_percent   = percent_of(_deduped_old_bytes, _deduped_bytes);
-
-  log_debug(gc, stringdedup)("      Young:      " STRDEDUP_OBJECTS_FORMAT "(" STRDEDUP_PERCENT_FORMAT ") " STRDEDUP_BYTES_FORMAT "(" STRDEDUP_PERCENT_FORMAT ")",
-                             _deduped_young, deduped_young_percent, STRDEDUP_BYTES_PARAM(_deduped_young_bytes), deduped_young_bytes_percent);
-  log_debug(gc, stringdedup)("      Old:        " STRDEDUP_OBJECTS_FORMAT "(" STRDEDUP_PERCENT_FORMAT ") " STRDEDUP_BYTES_FORMAT "(" STRDEDUP_PERCENT_FORMAT ")",
-                             _deduped_old, deduped_old_percent, STRDEDUP_BYTES_PARAM(_deduped_old_bytes), deduped_old_bytes_percent);
-}
-
 void G1StringDedupStat::reset() {
   StringDedupStat::reset();
   _deduped_young = 0;

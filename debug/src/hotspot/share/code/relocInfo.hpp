@@ -296,18 +296,13 @@ class relocInfo {
   // accessors
  public:
   relocType  type()       const { return (relocType)((unsigned)_value >> nontype_width); }
-  int  format()           const { return format_mask==0? 0: format_mask &
-                                         ((unsigned)_value >> offset_width); }
-  int  addr_offset()      const {
-                                  return (_value & offset_mask)*offset_unit; }
+  int  format()           const { return format_mask==0? 0: format_mask & ((unsigned)_value >> offset_width); }
+  int  addr_offset()      const { return (_value & offset_mask)*offset_unit; }
 
  protected:
-  const short* data()     const {
-                                  return (const short*)(this + 1); }
-  int          datalen()  const {
-                                  return (_value & datalen_mask); }
-  int         immediate() const {
-                                  return (_value & datalen_mask); }
+  const short* data()     const { return (const short*)(this + 1); }
+  int          datalen()  const { return (_value & datalen_mask); }
+  int         immediate() const { return (_value & datalen_mask); }
  public:
   static int addr_unit()        { return offset_unit; }
   static int offset_limit()     { return (1 << offset_width) * offset_unit; }
@@ -320,10 +315,8 @@ class relocInfo {
  protected:
   bool is_none()                const { return type() == none; }
   bool is_prefix()              const { return type() == data_prefix_tag; }
-  bool is_datalen()             const {
-                                        return (_value & datalen_tag) != 0; }
-  bool is_immediate()           const {
-                                        return (_value & datalen_tag) == 0; }
+  bool is_datalen()             const { return (_value & datalen_tag) != 0; }
+  bool is_immediate()           const { return (_value & datalen_tag) == 0; }
 
  public:
   // Occasionally records of type relocInfo::none will appear in the stream.
@@ -508,8 +501,7 @@ class RelocIterator : public StackObj {
 
   RelocationHolder _rh; // where the current relocation is allocated
 
-  relocInfo* current() const {
-                               return _current; }
+  relocInfo* current() const { return _current; }
 
   void set_limits(address begin, address limit);
 
@@ -630,8 +622,7 @@ class Relocation {
   virtual void pack_data_to(CodeSection* dest) { }
 
   // here is the type-specific hook which reads (unpacks) relocation data:
-  virtual void unpack_data() {
-  }
+  virtual void unpack_data() { }
 
  protected:
   // Helper functions for pack_data_to() and unpack_data().

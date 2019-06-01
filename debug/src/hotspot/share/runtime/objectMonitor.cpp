@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
+
 #include "classfile/vmSymbols.hpp"
-// #include "jfr/jfrEvents.hpp"
-// #include "jfr/support/jfrThreadId.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/markOop.hpp"
@@ -22,9 +21,6 @@
 #include "utilities/dtrace.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/preserveException.hpp"
-
-#define DTRACE_MONITOR_WAIT_PROBE(obj, thread, millis, mon)    { }
-#define DTRACE_MONITOR_PROBE(probe, obj, thread, mon)          { }
 
 // Tunables ...
 // The knob* variables are effectively final.  Once set they should
@@ -244,8 +240,6 @@ void ObjectMonitor::enter(TRAPS) {
 
     Self->set_current_pending_monitor(this);
 
-    DTRACE_MONITOR_PROBE(contended__enter, this, object(), jt);
-
     OSThreadContendState osts(Self->osthread());
     ThreadBlockInVM tbivm(jt);
 
@@ -296,8 +290,6 @@ void ObjectMonitor::enter(TRAPS) {
   // time -- such as next time some thread encounters contention but has
   // yet to acquire the lock.  While spinning that thread could
   // spinning we could increment JVMStat counters, etc.
-
-  DTRACE_MONITOR_PROBE(contended__entered, this, object(), jt);
 
   if (event.should_commit()) {
     event.set_previousOwner((uintptr_t)_previous_owner_tid);
@@ -909,8 +901,7 @@ void ObjectMonitor::exit(bool not_suspended, TRAPS) {
       // Append the RATs to the EntryList
       // TODO: organize EntryList as a CDLL so we can locate the tail in constant-time.
       ObjectWaiter * Tail;
-      for (Tail = _EntryList; Tail != NULL && Tail->_next != NULL;
-           Tail = Tail->_next)
+      for (Tail = _EntryList; Tail != NULL && Tail->_next != NULL; Tail = Tail->_next)
         /* empty */;
       if (Tail == NULL) {
         _EntryList = w;
@@ -1113,7 +1104,6 @@ void ObjectMonitor::ExitEpilog(Thread * Self, ObjectWaiter * Wakee) {
     TEVENT(unpark before SAFEPOINT);
   }
 
-  DTRACE_MONITOR_PROBE(contended__exit, this, object(), Self);
   Trigger->unpark();
 
   // Maintain stats and report events to JVMTI
@@ -1417,8 +1407,6 @@ void ObjectMonitor::INotify(Thread * Self) {
     iterator->_notifier_tid = JFR_THREAD_ID(Self);
 
     ObjectWaiter * list = _EntryList;
-    if (list != NULL) {
-    }
 
     if (policy == 0) {       // prepend to EntryList
       if (list == NULL) {
@@ -1515,7 +1503,6 @@ void ObjectMonitor::notify(TRAPS) {
     TEVENT(Empty-Notify);
     return;
   }
-  DTRACE_MONITOR_PROBE(notify, this, object(), THREAD);
   INotify(THREAD);
   OM_PERFDATA_OP(Notifications, inc(1));
 }
@@ -1534,7 +1521,6 @@ void ObjectMonitor::notifyAll(TRAPS) {
     return;
   }
 
-  DTRACE_MONITOR_PROBE(notifyAll, this, object(), THREAD);
   int tally = 0;
   while (_WaitSet != NULL) {
     tally++;
@@ -2144,26 +2130,22 @@ void ObjectMonitor::sanity_checks() {
     // do some cache line specific sanity checks
 
     if ((offset_owner - offset_header) < cache_line_size) {
-      tty->print_cr("WARNING: the _header and _owner fields are closer "
-                    "than a cache line which permits false sharing.");
+      tty->print_cr("WARNING: the _header and _owner fields are closer than a cache line which permits false sharing.");
       warning_cnt++;
     }
 
     if ((sizeof(PaddedEnd<ObjectMonitor>) % cache_line_size) != 0) {
-      tty->print_cr("WARNING: PaddedEnd<ObjectMonitor> size is not a "
-                    "multiple of a cache line which permits false sharing.");
+      tty->print_cr("WARNING: PaddedEnd<ObjectMonitor> size is not a multiple of a cache line which permits false sharing.");
       warning_cnt++;
     }
   }
 
-  ObjectSynchronizer::sanity_checks(verbose, cache_line_size, &error_cnt,
-                                    &warning_cnt);
+  ObjectSynchronizer::sanity_checks(verbose, cache_line_size, &error_cnt, &warning_cnt);
 
   if (verbose || error_cnt != 0 || warning_cnt != 0) {
     tty->print_cr("INFO: error_cnt=%d", error_cnt);
     tty->print_cr("INFO: warning_cnt=%d", warning_cnt);
   }
 
-  guarantee(error_cnt == 0,
-            "Fatal error(s) found in ObjectMonitor::sanity_checks()");
+  guarantee(error_cnt == 0, "Fatal error(s) found in ObjectMonitor::sanity_checks()");
 }

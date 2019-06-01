@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "code/codeCache.hpp"
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1CollectorPolicy.hpp"
@@ -65,10 +66,7 @@ uint G1FullCollector::calc_active_workers() {
 
   // Update active workers to the lower of the limits.
   uint worker_count = MIN2(heap_waste_worker_limit, adaptive_worker_limit);
-  log_debug(gc, task)("Requesting %u active workers for full compaction (waste limited workers: %u, adaptive workers: %u)",
-                      worker_count, heap_waste_worker_limit, adaptive_worker_limit);
   worker_count = heap->workers()->update_active_workers(worker_count);
-  log_info(gc, task)("Using %u workers of %u for full compaction", worker_count, max_worker_count);
 
   return worker_count;
 }

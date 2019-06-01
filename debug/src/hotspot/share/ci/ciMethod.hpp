@@ -97,8 +97,7 @@ class ciMethod : public ciMetadata {
   void assert_call_type_ok(int bci);
 
  public:
-  void check_is_loaded() const                   {
-    }
+  void check_is_loaded() const                   { }
 
   // Basic method information.
   ciFlags flags() const                          { check_is_loaded(); return _flags; }

@@ -20,8 +20,7 @@ class nmethod;
 
 // Essentially a wrapper around SparsePRTCleanupTask. See
 // sparsePRT.hpp for more details.
-class HRRSCleanupTask : public SparsePRTCleanupTask {
-};
+class HRRSCleanupTask : public SparsePRTCleanupTask { };
 
 // The "_coarse_map" is a bitmap with one bit for each region, where set
 // bits indicate that the corresponding region may contain some pointer

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "memory/resourceArea.hpp"
 #include "runtime/mutexLocker.hpp"
 #include "runtime/vmThread.hpp"
@@ -14,8 +15,7 @@ NMTDCmd::NMTDCmd(outputStream* output,
            "which includes total reserved and committed memory, along " \
            "with memory usage summary by each subsytem.",
            "BOOLEAN", false, "false"),
-  _detail("detail", "request runtime to report memory allocation >= "
-           "1K by each callsite.",
+  _detail("detail", "request runtime to report memory allocation >= 1K by each callsite.",
            "BOOLEAN", false, "false"),
   _baseline("baseline", "request runtime to baseline current memory usage, " \
             "so it can be compared against in later time.",

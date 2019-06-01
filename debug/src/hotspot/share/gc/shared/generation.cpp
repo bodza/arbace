@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/blockOffsetTable.inline.hpp"
 #include "gc/shared/cardTableRS.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
@@ -71,8 +72,7 @@ void Generation::print_on(outputStream* st) const {
 void Generation::print_summary_info_on(outputStream* st) {
   StatRecord* sr = stat_record();
   double time = sr->accumulated_time.seconds();
-  st->print_cr("Accumulated %s generation GC time %3.7f secs, "
-               "%u GC's, avg GC time %3.7f",
+  st->print_cr("Accumulated %s generation GC time %3.7f secs, %u GC's, avg GC time %3.7f",
                GenCollectedHeap::heap()->is_young_gen(this) ? "young" : "old" ,
                time,
                sr->invocations,
@@ -124,8 +124,6 @@ size_t Generation::max_contiguous_available() const {
 bool Generation::promotion_attempt_is_safe(size_t max_promotion_in_bytes) const {
   size_t available = max_contiguous_available();
   bool   res = (available >= max_promotion_in_bytes);
-  log_trace(gc)("Generation: promo attempt is%s safe: available(" SIZE_FORMAT ") %s max_promo(" SIZE_FORMAT ")",
-                res? "":" not", available, res? ">=":"<", max_promotion_in_bytes);
   return res;
 }
 

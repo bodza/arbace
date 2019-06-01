@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/os.hpp"
@@ -72,8 +73,7 @@ bool CPUPerformanceInterface::CPUPerformance::initialize() {
   return true;
 }
 
-CPUPerformanceInterface::CPUPerformance::~CPUPerformance() {
-}
+CPUPerformanceInterface::CPUPerformance::~CPUPerformance() { }
 
 int CPUPerformanceInterface::CPUPerformance::cpu_load(int which_logical_cpu, double* cpu_load) {
   return FUNCTIONALITY_NOT_IMPLEMENTED;
@@ -249,15 +249,13 @@ class SystemProcessInterface::SystemProcesses : public CHeapObj<mtInternal> {
   int system_processes(SystemProcess** system_processes, int* no_of_sys_processes) const;
 };
 
-SystemProcessInterface::SystemProcesses::SystemProcesses() {
-}
+SystemProcessInterface::SystemProcesses::SystemProcesses() { }
 
 bool SystemProcessInterface::SystemProcesses::initialize() {
   return true;
 }
 
-SystemProcessInterface::SystemProcesses::~SystemProcesses() {
-}
+SystemProcessInterface::SystemProcesses::~SystemProcesses() { }
 int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** system_processes, int* no_of_sys_processes) const {
 #ifdef __APPLE__
   pid_t* pids = NULL;
@@ -394,15 +392,13 @@ class NetworkPerformanceInterface::NetworkPerformance : public CHeapObj<mtIntern
   int network_utilization(NetworkInterface** network_interfaces) const;
 };
 
-NetworkPerformanceInterface::NetworkPerformance::NetworkPerformance() {
-}
+NetworkPerformanceInterface::NetworkPerformance::NetworkPerformance() { }
 
 bool NetworkPerformanceInterface::NetworkPerformance::initialize() {
   return true;
 }
 
-NetworkPerformanceInterface::NetworkPerformance::~NetworkPerformance() {
-}
+NetworkPerformanceInterface::NetworkPerformance::~NetworkPerformance() { }
 
 int NetworkPerformanceInterface::NetworkPerformance::network_utilization(NetworkInterface** network_interfaces) const {
   size_t len;

@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
- * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
- *
- * This code is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
- *
- * This code is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
- * version 2 for more details (a copy is included in the LICENSE file that
- * accompanied this code).
- *
- * You should have received a copy of the GNU General Public License version
- * 2 along with this work; if not, write to the Free Software Foundation,
- * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
- * or visit www.oracle.com if you need additional information or have any
- * questions.
- */
-
 #ifndef _JAVASOFT_JVM_H_
 #define _JAVASOFT_JVM_H_
 
@@ -108,12 +83,10 @@ JNIEXPORT jlong JNICALL
 JVM_GetNanoTimeAdjustment(JNIEnv *env, jclass ignored, jlong offset_secs);
 
 JNIEXPORT void JNICALL
-JVM_ArrayCopy(JNIEnv *env, jclass ignored, jobject src, jint src_pos,
-              jobject dst, jint dst_pos, jint length);
+JVM_ArrayCopy(JNIEnv *env, jclass ignored, jobject src, jint src_pos, jobject dst, jint dst_pos, jint length);
 
 JNIEXPORT jobject JNICALL
 JVM_InitProperties(JNIEnv *env, jobject p);
-
 
 /*
  * java.lang.Runtime
@@ -171,7 +144,6 @@ JVM_IsSupportedJNIVersion(jint version);
 JNIEXPORT jobjectArray JNICALL
 JVM_GetVmArguments(JNIEnv *env);
 
-
 /*
  * java.lang.Throwable
  */
@@ -198,14 +170,10 @@ enum {
 };
 
 JNIEXPORT jobject JNICALL
-JVM_CallStackWalk(JNIEnv *env, jobject stackStream, jlong mode,
-                  jint skip_frames, jint frame_count, jint start_index,
-                  jobjectArray frames);
+JVM_CallStackWalk(JNIEnv *env, jobject stackStream, jlong mode, jint skip_frames, jint frame_count, jint start_index, jobjectArray frames);
 
 JNIEXPORT jint JNICALL
-JVM_MoreStackWalk(JNIEnv *env, jobject stackStream, jlong mode, jlong anchor,
-                  jint frame_count, jint start_index,
-                  jobjectArray frames);
+JVM_MoreStackWalk(JNIEnv *env, jobject stackStream, jlong mode, jlong anchor, jint frame_count, jint start_index, jobjectArray frames);
 
 /*
  * java.lang.Thread
@@ -311,15 +279,13 @@ JNIEXPORT void JNICALL
 JVM_SetArrayElement(JNIEnv *env, jobject arr, jint index, jobject val);
 
 JNIEXPORT void JNICALL
-JVM_SetPrimitiveArrayElement(JNIEnv *env, jobject arr, jint index, jvalue v,
-                             unsigned char vCode);
+JVM_SetPrimitiveArrayElement(JNIEnv *env, jobject arr, jint index, jvalue v, unsigned char vCode);
 
 JNIEXPORT jobject JNICALL
 JVM_NewArray(JNIEnv *env, jclass eltClass, jint length);
 
 JNIEXPORT jobject JNICALL
 JVM_NewMultiArray(JNIEnv *env, jclass eltClass, jintArray dim);
-
 
 /*
  * Returns the immediate caller class of the native method invoking
@@ -333,14 +299,12 @@ JVM_NewMultiArray(JNIEnv *env, jclass eltClass, jintArray dim);
 JNIEXPORT jclass JNICALL
 JVM_GetCallerClass(JNIEnv *env);
 
-
 /*
  * Find primitive classes
  * utf: class name
  */
 JNIEXPORT jclass JNICALL
 JVM_FindPrimitiveClass(JNIEnv *env, const char *utf);
-
 
 /*
  * Find a class from a boot class loader. Returns NULL if class not found.
@@ -358,15 +322,13 @@ JVM_FindClassFromBootLoader(JNIEnv *env, const char *name);
  *          manager is not installed.
  */
 JNIEXPORT jclass JNICALL
-JVM_FindClassFromCaller(JNIEnv *env, const char *name, jboolean init,
-                        jobject loader, jclass caller);
+JVM_FindClassFromCaller(JNIEnv *env, const char *name, jboolean init, jobject loader, jclass caller);
 
 /*
  * Find a class from a given class.
  */
 JNIEXPORT jclass JNICALL
-JVM_FindClassFromClass(JNIEnv *env, const char *name, jboolean init,
-                             jclass from);
+JVM_FindClassFromClass(JNIEnv *env, const char *name, jboolean init, jclass from);
 
 /* Find a loaded class cached by the VM */
 JNIEXPORT jclass JNICALL
@@ -374,14 +336,11 @@ JVM_FindLoadedClass(JNIEnv *env, jobject loader, jstring name);
 
 /* Define a class */
 JNIEXPORT jclass JNICALL
-JVM_DefineClass(JNIEnv *env, const char *name, jobject loader, const jbyte *buf,
-                jsize len, jobject pd);
+JVM_DefineClass(JNIEnv *env, const char *name, jobject loader, const jbyte *buf, jsize len, jobject pd);
 
 /* Define a class with a source (added in JDK1.5) */
 JNIEXPORT jclass JNICALL
-JVM_DefineClassWithSource(JNIEnv *env, const char *name, jobject loader,
-                          const jbyte *buf, jsize len, jobject pd,
-                          const char *source);
+JVM_DefineClassWithSource(JNIEnv *env, const char *name, jobject loader, const jbyte *buf, jsize len, jobject pd, const char *source);
 
 /*
  * Module support funcions
@@ -398,8 +357,7 @@ JVM_DefineClassWithSource(JNIEnv *env, const char *name, jobject loader,
  *  num_packages: number of packages in the module
  */
 JNIEXPORT void JNICALL
-JVM_DefineModule(JNIEnv *env, jobject module, jboolean is_open, jstring version,
-                 jstring location, const char* const* packages, jsize num_packages);
+JVM_DefineModule(JNIEnv *env, jobject module, jboolean is_open, jstring version, jstring location, const char* const* packages, jsize num_packages);
 
 /*
  * Set the boot loader's unnamed module.
@@ -619,8 +577,7 @@ JVM_GetMethodParameters(JNIEnv *env, jobject method);
  */
 
 JNIEXPORT jobject JNICALL
-JVM_DoPrivileged(JNIEnv *env, jclass cls,
-                 jobject action, jobject context, jboolean wrapException);
+JVM_DoPrivileged(JNIEnv *env, jclass cls, jobject action, jobject context, jboolean wrapException);
 
 JNIEXPORT jobject JNICALL
 JVM_GetInheritedAccessControlContext(JNIEnv *env, jclass cls);
@@ -715,8 +672,7 @@ JVM_DTraceGetVersion(JNIEnv* env);
  * built with.
  */
 JNIEXPORT jlong JNICALL
-JVM_DTraceActivate(JNIEnv* env, jint version, jstring module_name,
-  jint providers_count, JVM_DTraceProvider* providers);
+JVM_DTraceActivate(JNIEnv* env, jint version, jstring module_name, jint providers_count, JVM_DTraceProvider* providers);
 
 /*
  * Check JSDT probe
@@ -777,8 +733,7 @@ JVM_GetClassMethodsCount(JNIEnv *env, jclass cb);
  * The method is identified by method_index.
  */
 JNIEXPORT void JNICALL
-JVM_GetMethodIxExceptionIndexes(JNIEnv *env, jclass cb, jint method_index,
-                                unsigned short *exceptions);
+JVM_GetMethodIxExceptionIndexes(JNIEnv *env, jclass cb, jint method_index, unsigned short *exceptions);
 /*
  * Returns the number of exceptions raised by a given method.
  * The method is identified by method_index.
@@ -793,8 +748,7 @@ JVM_GetMethodIxExceptionsCount(JNIEnv *env, jclass cb, jint method_index);
  * The method is identified by method_index.
  */
 JNIEXPORT void JNICALL
-JVM_GetMethodIxByteCode(JNIEnv *env, jclass cb, jint method_index,
-                        unsigned char *code);
+JVM_GetMethodIxByteCode(JNIEnv *env, jclass cb, jint method_index, unsigned char *code);
 
 /*
  * Returns the length of the byte code sequence of a given method.
@@ -820,9 +774,7 @@ typedef struct {
  * The method is identified by method_index.
  */
 JNIEXPORT void JNICALL
-JVM_GetMethodIxExceptionTableEntry(JNIEnv *env, jclass cb, jint method_index,
-                                   jint entry_index,
-                                   JVM_ExceptionTableEntryType *entry);
+JVM_GetMethodIxExceptionTableEntry(JNIEnv *env, jclass cb, jint method_index, jint entry_index, JVM_ExceptionTableEntryType *entry);
 
 /*
  * Returns the length of the exception table of a given method.
@@ -1041,7 +993,6 @@ typedef jboolean (*verifier_fn_t)(JNIEnv *env,
                                   char * msg_buf,
                                   jint buf_len);
 
-
 /*
  * Support for a VM-independent class format checker.
  */
@@ -1172,7 +1123,6 @@ jio_fprintf(FILE *, const char *fmt, ...);
 
 JNIEXPORT int
 jio_vfprintf(FILE *, const char *fmt, va_list args);
-
 
 JNIEXPORT void * JNICALL
 JVM_RawMonitorCreate(void);
@@ -1328,10 +1278,9 @@ typedef struct JDK1_1InitArgs {
     jint debugPort;
 } JDK1_1InitArgs;
 
-
 #ifdef __cplusplus
-} /* extern "C" */
+}
 
-#endif /* __cplusplus */
+#endif
 
-#endif /* !_JAVASOFT_JVM_H_ */
+#endif

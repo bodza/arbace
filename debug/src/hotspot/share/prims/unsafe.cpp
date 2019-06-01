@@ -1,9 +1,9 @@
 #include "precompiled.hpp"
+
 #include "jni.h"
 #include "jvm.h"
 #include "classfile/classFileStream.hpp"
 #include "classfile/vmSymbols.hpp"
-// #include "jfr/jfrEvents.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/access.inline.hpp"
@@ -69,8 +69,7 @@ static inline jlong field_offset_from_byte_offset(jlong byte_offset) {
   return byte_offset;
 }
 
-static inline void assert_field_offset_sane(oop p, jlong field_offset) {
-}
+static inline void assert_field_offset_sane(oop p, jlong field_offset) { }
 
 static inline void* index_oop_from_field_offset_long(oop p, jlong field_offset) {
   assert_field_offset_sane(p, field_offset);
@@ -674,10 +673,7 @@ UNSAFE_ENTRY(jclass, Unsafe_DefineClass0(JNIEnv *env, jobject unsafe, jstring na
 // type Object instead of String, if the loaded constant is not in fact a String.
 
 static InstanceKlass*
-Unsafe_DefineAnonymousClass_impl(JNIEnv *env,
-                                 jclass host_class, jbyteArray data, jobjectArray cp_patches_jh,
-                                 u1** temp_alloc,
-                                 TRAPS) {
+Unsafe_DefineAnonymousClass_impl(JNIEnv *env, jclass host_class, jbyteArray data, jobjectArray cp_patches_jh, u1** temp_alloc, TRAPS) {
 
   if (UsePerfData) {
     ClassLoader::unsafe_defineClassCallCounter()->inc();

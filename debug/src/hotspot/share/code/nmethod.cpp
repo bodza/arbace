@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "code/codeCache.hpp"
 #include "code/compiledIC.hpp"
@@ -688,11 +689,6 @@ void nmethod::verify_clean_inline_caches() {
         // Ok, to lookup references to zombies here
         CodeBlob *cb = CodeCache::find_blob_unsafe(ic->ic_destination());
         nmethod* nm = cb->as_nmethod_or_null();
-        if (nm != NULL ) {
-          // Verify that inline caches pointing to both zombie and not_entrant methods are clean
-          if (!nm->is_in_use() || (nm->method()->code() != nm)) {
-          }
-        }
         break;
       }
       case relocInfo::static_call_type: {
@@ -706,8 +702,6 @@ void nmethod::verify_clean_inline_caches() {
         }
         break;
       }
-      default:
-        break;
     }
   }
 }
@@ -819,12 +813,9 @@ void nmethod::log_state_change() const {
     if (xtty != NULL) {
       ttyLocker ttyl;  // keep the following output all in one block
       if (_state == unloaded) {
-        xtty->begin_elem("make_unloaded thread='" UINTX_FORMAT "'",
-                         os::current_thread_id());
+        xtty->begin_elem("make_unloaded thread='" UINTX_FORMAT "'", os::current_thread_id());
       } else {
-        xtty->begin_elem("make_not_entrant thread='" UINTX_FORMAT "'%s",
-                         os::current_thread_id(),
-                         (_state == zombie ? " zombie='1'" : ""));
+        xtty->begin_elem("make_not_entrant thread='" UINTX_FORMAT "'%s", os::current_thread_id(), (_state == zombie ? " zombie='1'" : ""));
       }
       log_identity(xtty);
       xtty->stamp();
@@ -961,10 +952,9 @@ bool nmethod::make_not_entrant_or_zombie(int state) {
      // the Method may be reclaimed by class unloading now that the
      // nmethod is in zombie state
     set_method(NULL);
-  } else {
   }
 
-  if (TraceCreateZombies) {
+  if (false) {
     ResourceMark m;
     tty->print_cr("nmethod <" INTPTR_FORMAT "> %s code made %s", p2i(this), this->method() ? this->method()->name_and_sig_as_C_string() : "null", (state == not_entrant) ? "not entrant" : "zombie");
   }
@@ -1063,13 +1053,14 @@ void nmethod::post_compiled_method_load_event() {
 
   Method* moop = method();
   HOTSPOT_COMPILED_METHOD_LOAD(
-      (char *) moop->klass_name()->bytes(),
-      moop->klass_name()->utf8_length(),
-      (char *) moop->name()->bytes(),
-      moop->name()->utf8_length(),
-      (char *) moop->signature()->bytes(),
-      moop->signature()->utf8_length(),
-      insts_begin(), insts_size());
+    (char *) moop->klass_name()->bytes(),
+    moop->klass_name()->utf8_length(),
+    (char *) moop->name()->bytes(),
+    moop->name()->utf8_length(),
+    (char *) moop->signature()->bytes(),
+    moop->signature()->utf8_length(),
+    insts_begin(), insts_size()
+  );
 }
 
 jmethodID nmethod::get_and_cache_jmethod_id() {
@@ -1260,7 +1251,6 @@ bool nmethod::test_set_oops_do_mark() {
 }
 
 void nmethod::oops_do_marking_prologue() {
-  log_trace(gc, nmethod)("oops_do_marking_prologue");
   // We use cmpxchg instead of regular assignment here because the user
   // may fork a bunch of threads, and we need them all to see the same state.
   nmethod* observed = Atomic::cmpxchg(NMETHOD_SENTINEL, &_oops_do_mark_nmethods, (nmethod*)NULL);
@@ -1283,7 +1273,6 @@ void nmethod::oops_do_marking_epilogue() {
   nmethod* required = _oops_do_mark_nmethods;
   nmethod* observed = Atomic::cmpxchg((nmethod*)NULL, &_oops_do_mark_nmethods, required);
   guarantee(observed == required, "no races in this sequential code");
-  log_trace(gc, nmethod)("oops_do_marking_epilogue");
 }
 
 class DetectScavengeRoot: public OopClosure {
@@ -1464,18 +1453,6 @@ bool nmethod::is_evol_dependent_on(Klass* dependee) {
       Method* method = deps.method_argument(0);
       for (int j = 0; j < dependee_methods->length(); j++) {
         if (dependee_methods->at(j) == method) {
-          if (log_is_enabled(Debug, redefine, class, nmethod)) {
-            ResourceMark rm;
-            log_debug(redefine, class, nmethod)
-              ("Found evol dependency of nmethod %s.%s(%s) compile_id=%d on method %s.%s(%s)",
-               _method->method_holder()->external_name(),
-               _method->name()->as_C_string(),
-               _method->signature()->as_C_string(),
-               compile_id(),
-               method->method_holder()->external_name(),
-               method->name()->as_C_string(),
-               method->signature()->as_C_string());
-          }
           if (TraceDependencies || LogCompilation)
             deps.log_dependency(dependee);
           return true;
@@ -1517,8 +1494,7 @@ address nmethod::continuation_for_implicit_exception(address pc) {
   return code_begin() + cont_offset;
 }
 
-void nmethod_init() {
-}
+void nmethod_init() { }
 
 //-------------------------------------------------------------------------------------------
 
@@ -1561,8 +1537,7 @@ public:
       _nm->print_nmethod(true);
       _ok = false;
     }
-    tty->print_cr("*** non-oop " PTR_FORMAT " found at " PTR_FORMAT " (offset %d)",
-                  p2i(*p), p2i(p), (int)((intptr_t)p - (intptr_t)_nm));
+    tty->print_cr("*** non-oop " PTR_FORMAT " found at " PTR_FORMAT " (offset %d)", p2i(*p), p2i(p), (int)((intptr_t)p - (intptr_t)_nm));
   }
   virtual void do_oop(narrowOop* p) { ShouldNotReachHere(); }
 };
@@ -1689,54 +1664,18 @@ void nmethod::print() const {
     if (on_scavenge_root_list())  tty->print("scavenge_root ");
     tty->print_cr("}:");
   }
-  if (size              () > 0) tty->print_cr(" total in heap  [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
-                                              p2i(this),
-                                              p2i(this) + size(),
-                                              size());
-  if (relocation_size   () > 0) tty->print_cr(" relocation     [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
-                                              p2i(relocation_begin()),
-                                              p2i(relocation_end()),
-                                              relocation_size());
-  if (consts_size       () > 0) tty->print_cr(" constants      [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
-                                              p2i(consts_begin()),
-                                              p2i(consts_end()),
-                                              consts_size());
-  if (insts_size        () > 0) tty->print_cr(" main code      [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
-                                              p2i(insts_begin()),
-                                              p2i(insts_end()),
-                                              insts_size());
-  if (stub_size         () > 0) tty->print_cr(" stub code      [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
-                                              p2i(stub_begin()),
-                                              p2i(stub_end()),
-                                              stub_size());
-  if (oops_size         () > 0) tty->print_cr(" oops           [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
-                                              p2i(oops_begin()),
-                                              p2i(oops_end()),
-                                              oops_size());
-  if (metadata_size      () > 0) tty->print_cr(" metadata       [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
-                                              p2i(metadata_begin()),
-                                              p2i(metadata_end()),
-                                              metadata_size());
-  if (scopes_data_size  () > 0) tty->print_cr(" scopes data    [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
-                                              p2i(scopes_data_begin()),
-                                              p2i(scopes_data_end()),
-                                              scopes_data_size());
-  if (scopes_pcs_size   () > 0) tty->print_cr(" scopes pcs     [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
-                                              p2i(scopes_pcs_begin()),
-                                              p2i(scopes_pcs_end()),
-                                              scopes_pcs_size());
-  if (dependencies_size () > 0) tty->print_cr(" dependencies   [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
-                                              p2i(dependencies_begin()),
-                                              p2i(dependencies_end()),
-                                              dependencies_size());
-  if (handler_table_size() > 0) tty->print_cr(" handler table  [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
-                                              p2i(handler_table_begin()),
-                                              p2i(handler_table_end()),
-                                              handler_table_size());
-  if (nul_chk_table_size() > 0) tty->print_cr(" nul chk table  [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
-                                              p2i(nul_chk_table_begin()),
-                                              p2i(nul_chk_table_end()),
-                                              nul_chk_table_size());
+  if (size              () > 0) tty->print_cr(" total in heap  [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(this), p2i(this) + size(), size());
+  if (relocation_size   () > 0) tty->print_cr(" relocation     [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(relocation_begin()), p2i(relocation_end()), relocation_size());
+  if (consts_size       () > 0) tty->print_cr(" constants      [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(consts_begin()), p2i(consts_end()), consts_size());
+  if (insts_size        () > 0) tty->print_cr(" main code      [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(insts_begin()), p2i(insts_end()), insts_size());
+  if (stub_size         () > 0) tty->print_cr(" stub code      [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(stub_begin()), p2i(stub_end()), stub_size());
+  if (oops_size         () > 0) tty->print_cr(" oops           [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(oops_begin()), p2i(oops_end()), oops_size());
+  if (metadata_size      () > 0) tty->print_cr(" metadata       [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(metadata_begin()), p2i(metadata_end()), metadata_size());
+  if (scopes_data_size  () > 0) tty->print_cr(" scopes data    [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(scopes_data_begin()), p2i(scopes_data_end()), scopes_data_size());
+  if (scopes_pcs_size   () > 0) tty->print_cr(" scopes pcs     [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(scopes_pcs_begin()), p2i(scopes_pcs_end()), scopes_pcs_size());
+  if (dependencies_size () > 0) tty->print_cr(" dependencies   [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(dependencies_begin()), p2i(dependencies_end()), dependencies_size());
+  if (handler_table_size() > 0) tty->print_cr(" handler table  [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(handler_table_begin()), p2i(handler_table_end()), handler_table_size());
+  if (nul_chk_table_size() > 0) tty->print_cr(" nul chk table  [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(nul_chk_table_begin()), p2i(nul_chk_table_end()), nul_chk_table_size());
 }
 
 const char* nmethod::reloc_string_for(u_char* begin, u_char* end) {
@@ -1878,7 +1817,6 @@ void nmethod::print_nmethod_labels(outputStream* stream, address block_begin) co
           sig_bt[sig_index++] = t;
           if (type2size[t] == 2) {
             sig_bt[sig_index++] = T_VOID;
-          } else {
           }
         }
       }
@@ -2097,10 +2035,6 @@ public:
     if (os::is_MP()) {
       _call->verify_alignment();
     }
-  }
-
-  virtual void verify_resolve_call(address dest) const {
-    CodeBlob* db = CodeCache::find_blob_unsafe(dest);
   }
 
   virtual bool is_call_to_interpreted(address dest) const {

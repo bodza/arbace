@@ -1,6 +1,6 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
-// #include "jimage.hpp"
 #include "classfile/classListParser.hpp"
 #include "classfile/classLoaderExt.hpp"
 #include "classfile/symbolTable.hpp"
@@ -264,8 +264,6 @@ InstanceKlass* ClassListParser::load_class_from_source(Symbol* class_name, TRAPS
   InstanceKlass* k = ClassLoaderExt::load_class(class_name, _source, THREAD);
 
   if (strncmp(_class_name, "java/", 5) == 0) {
-    log_info(cds)("Prohibited package for non-bootstrap classes: %s.class from %s",
-          _class_name, _source);
     return NULL;
   }
 

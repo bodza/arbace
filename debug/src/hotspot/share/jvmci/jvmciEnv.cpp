@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvmci/jvmciEnv.hpp"
 #include "classfile/javaAssertions.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -28,7 +29,7 @@
 #include "jvmci/jvmciRuntime.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
 
-JVMCIEnv::JVMCIEnv(CompileTask* task, int system_dictionary_modification_counter):
+JVMCIEnv::JVMCIEnv(CompileTask* task, int system_dictionary_modification_counter) :
   _task(task),
   _system_dictionary_modification_counter(system_dictionary_modification_counter),
   _failure_reason(NULL),
@@ -58,10 +59,7 @@ bool JVMCIEnv::check_klass_accessibility(Klass* accessing_klass, Klass* resolved
 }
 
 // ------------------------------------------------------------------
-Klass* JVMCIEnv::get_klass_by_name_impl(Klass* accessing_klass,
-                                        const constantPoolHandle& cpool,
-                                        Symbol* sym,
-                                        bool require_local) {
+Klass* JVMCIEnv::get_klass_by_name_impl(Klass* accessing_klass, const constantPoolHandle& cpool, Symbol* sym, bool require_local) {
   JVMCI_EXCEPTION_CONTEXT;
 
   // Now we need to check the SystemDictionary
@@ -125,9 +123,7 @@ Klass* JVMCIEnv::get_klass_by_name_impl(Klass* accessing_klass,
 }
 
 // ------------------------------------------------------------------
-Klass* JVMCIEnv::get_klass_by_name(Klass* accessing_klass,
-                                  Symbol* klass_name,
-                                  bool require_local) {
+Klass* JVMCIEnv::get_klass_by_name(Klass* accessing_klass, Symbol* klass_name, bool require_local) {
   ResourceMark rm;
   constantPoolHandle cpool;
   return get_klass_by_name_impl(accessing_klass,
@@ -138,10 +134,7 @@ Klass* JVMCIEnv::get_klass_by_name(Klass* accessing_klass,
 
 // ------------------------------------------------------------------
 // Implementation of get_klass_by_index.
-Klass* JVMCIEnv::get_klass_by_index_impl(const constantPoolHandle& cpool,
-                                        int index,
-                                        bool& is_accessible,
-                                        Klass* accessor) {
+Klass* JVMCIEnv::get_klass_by_index_impl(const constantPoolHandle& cpool, int index, bool& is_accessible, Klass* accessor) {
   JVMCI_EXCEPTION_CONTEXT;
   Klass* klass = ConstantPool::klass_at_if_loaded(cpool, index);
   Symbol* klass_name = NULL;
@@ -151,10 +144,7 @@ Klass* JVMCIEnv::get_klass_by_index_impl(const constantPoolHandle& cpool,
 
   if (klass == NULL) {
     // Not found in constant pool.  Use the name to do the lookup.
-    Klass* k = get_klass_by_name_impl(accessor,
-                                      cpool,
-                                      klass_name,
-                                      false);
+    Klass* k = get_klass_by_name_impl(accessor, cpool, klass_name, false);
     // Calculate accessibility the hard way.
     if (k == NULL) {
       is_accessible = false;
@@ -178,10 +168,7 @@ Klass* JVMCIEnv::get_klass_by_index_impl(const constantPoolHandle& cpool,
 
 // ------------------------------------------------------------------
 // Get a klass from the constant pool.
-Klass* JVMCIEnv::get_klass_by_index(const constantPoolHandle& cpool,
-                                    int index,
-                                    bool& is_accessible,
-                                    Klass* accessor) {
+Klass* JVMCIEnv::get_klass_by_index(const constantPoolHandle& cpool, int index, bool& is_accessible, Klass* accessor) {
   ResourceMark rm;
   return get_klass_by_index_impl(cpool, index, is_accessible, accessor);
 }
@@ -221,7 +208,6 @@ void JVMCIEnv::get_field_by_index_impl(InstanceKlass* klass, fieldDescriptor& fi
   if (canonical_holder == NULL) {
     return;
   }
-
 }
 
 // ------------------------------------------------------------------
@@ -341,8 +327,7 @@ methodHandle JVMCIEnv::get_method_by_index(const constantPoolHandle& cpool,
 // ------------------------------------------------------------------
 // Check for changes to the system dictionary during compilation
 // class loads, evolution, breakpoints
-JVMCIEnv::CodeInstallResult JVMCIEnv::validate_compile_task_dependencies(Dependencies* dependencies, Handle compiled_code,
-                                                                         JVMCIEnv* env, char** failure_detail) {
+JVMCIEnv::CodeInstallResult JVMCIEnv::validate_compile_task_dependencies(Dependencies* dependencies, Handle compiled_code, JVMCIEnv* env, char** failure_detail) {
   // Dependencies must be checked when the system dictionary changes
   // or if we don't know whether it has changed (i.e., env == NULL).
   bool counter_changed = env == NULL || env->_system_dictionary_modification_counter != SystemDictionary::number_of_modifications();
@@ -470,9 +455,7 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
               ResourceMark rm;
               char *method_name = method->name_and_sig_as_C_string();
               ttyLocker ttyl;
-              tty->print_cr("Installing method (%d) %s [entry point: %p]",
-                            comp_level,
-                            method_name, nm->entry_point());
+              tty->print_cr("Installing method (%d) %s [entry point: %p]", comp_level, method_name, nm->entry_point());
             }
             // Allow the code to be executed
             method->set_code(method, nm);
@@ -481,10 +464,7 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
               ResourceMark rm;
               char *method_name = method->name_and_sig_as_C_string();
               ttyLocker ttyl;
-              tty->print_cr("Installing osr method (%d) %s @ %d",
-                            comp_level,
-                            method_name,
-                            entry_bci);
+              tty->print_cr("Installing osr method (%d) %s @ %d", comp_level, method_name, entry_bci);
             }
             InstanceKlass::cast(method->method_holder())->add_osr_nmethod(nm);
           }

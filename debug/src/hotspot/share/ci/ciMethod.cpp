@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "ci/ciCallProfile.hpp"
 #include "ci/ciExceptionHandler.hpp"
 #include "ci/ciInstanceKlass.hpp"
@@ -38,7 +39,6 @@ ciMethod::ciMethod(const methodHandle& h_m, ciInstanceKlass* holder) :
   ciMetadata(h_m()),
   _holder(holder)
 {
-
   if (LogTouchedMethods) {
     h_m()->log_touched(Thread::current());
   }
@@ -438,11 +438,9 @@ void ciCallProfile::add_receiver(ciKlass* receiver, int receiver_count) {
   if (_limit < MorphismLimit) _limit++;
 }
 
-void ciMethod::assert_virtual_call_type_ok(int bci) {
-}
+void ciMethod::assert_virtual_call_type_ok(int bci) { }
 
-void ciMethod::assert_call_type_ok(int bci) {
-}
+void ciMethod::assert_call_type_ok(int bci) { }
 
 /**
  * Check whether profiling provides a type for the argument i to the
@@ -1000,9 +998,9 @@ int ciMethod::instructions_size() {
     GUARDED_VM_ENTRY(
         CompiledMethod* code = get_Method()->code();
         if (code != NULL && (code->comp_level() == CompLevel_full_optimization)) {
-        _instructions_size = code->insts_end() - code->verified_entry_point();
+          _instructions_size = code->insts_end() - code->verified_entry_point();
         } else {
-        _instructions_size = 0;
+          _instructions_size = 0;
         }
     );
   }
@@ -1331,5 +1329,3 @@ bool ciMethod::is_consistent_info(ciMethod* declared_method, ciMethod* resolved_
   }
   return true; // no mismatch found
 }
-
-// ------------------------------------------------------------------

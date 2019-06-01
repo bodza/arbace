@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaAssertions.hpp"
 #include "classfile/javaClasses.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -15,8 +16,7 @@ bool                            JavaAssertions::_sysDefault = false;
 JavaAssertions::OptionList*     JavaAssertions::_classes = 0;
 JavaAssertions::OptionList*     JavaAssertions::_packages = 0;
 
-JavaAssertions::OptionList::OptionList(const char* name, bool enabled,
-  OptionList* next) {
+JavaAssertions::OptionList::OptionList(const char* name, bool enabled, OptionList* next) {
   _name = name;
   _enabled = enabled;
   _next = next;

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/cardTable.hpp"
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/space.inline.hpp"
@@ -28,7 +29,6 @@ CardTable::CardTable(MemRegion whole_heap, bool conc_scan) :
   _byte_map(NULL),
   _byte_map_base(NULL)
 {
-
   _covered   = new MemRegion[_max_covered_regions];
   if (_covered == NULL) {
     vm_exit_during_initialization("Could not allocate card table covered region set.");
@@ -86,11 +86,6 @@ void CardTable::initialize() {
   os::commit_memory_or_exit((char*)guard_page, _page_size, _page_size,
                             !ExecMem, "card table last card");
   *guard_card = last_card;
-
-  log_trace(gc, barrier)("CardTable::CardTable: ");
-  log_trace(gc, barrier)("    &_byte_map[0]: " INTPTR_FORMAT "  &_byte_map[_last_valid_index]: " INTPTR_FORMAT,
-                  p2i(&_byte_map[0]), p2i(&_byte_map[_last_valid_index]));
-  log_trace(gc, barrier)("    _byte_map_base: " INTPTR_FORMAT, p2i(_byte_map_base));
 }
 
 int CardTable::find_covering_region_by_base(HeapWord* base) {
@@ -245,16 +240,6 @@ void CardTable::resize_covered_region(MemRegion new_region) {
   }
   // In any case, the covered size changes.
   _covered[ind].set_word_size(new_region.word_size());
-
-  log_trace(gc, barrier)("CardTable::resize_covered_region: ");
-  log_trace(gc, barrier)("    _covered[%d].start(): " INTPTR_FORMAT " _covered[%d].last(): " INTPTR_FORMAT,
-                         ind, p2i(_covered[ind].start()), ind, p2i(_covered[ind].last()));
-  log_trace(gc, barrier)("    _committed[%d].start(): " INTPTR_FORMAT "  _committed[%d].last(): " INTPTR_FORMAT,
-                         ind, p2i(_committed[ind].start()), ind, p2i(_committed[ind].last()));
-  log_trace(gc, barrier)("    byte_for(start): " INTPTR_FORMAT "  byte_for(last): " INTPTR_FORMAT,
-                         p2i(byte_for(_covered[ind].start())),  p2i(byte_for(_covered[ind].last())));
-  log_trace(gc, barrier)("    addr_for(start): " INTPTR_FORMAT "  addr_for(last): " INTPTR_FORMAT,
-                         p2i(addr_for((jbyte*) _committed[ind].start())),  p2i(addr_for((jbyte*) _committed[ind].last())));
 }
 
 // Note that these versions are precise!  The scanning code has to handle the
@@ -301,18 +286,14 @@ void CardTable::dirty_card_iterate(MemRegion mr, MemRegionClosure* cl) {
     MemRegion mri = mr.intersection(_covered[i]);
     if (!mri.is_empty()) {
       jbyte *cur_entry, *next_entry, *limit;
-      for (cur_entry = byte_for(mri.start()), limit = byte_for(mri.last());
-           cur_entry <= limit;
-           cur_entry  = next_entry) {
+      for (cur_entry = byte_for(mri.start()), limit = byte_for(mri.last()); cur_entry <= limit; cur_entry  = next_entry) {
         next_entry = cur_entry + 1;
         if (*cur_entry == dirty_card) {
           size_t dirty_cards;
           // Accumulate maximal dirty card range, starting at cur_entry
-          for (dirty_cards = 1;
-               next_entry <= limit && *next_entry == dirty_card;
-               dirty_cards++, next_entry++);
-          MemRegion cur_cards(addr_for(cur_entry),
-                              dirty_cards*card_size_in_words);
+          for (dirty_cards = 1; next_entry <= limit && *next_entry == dirty_card; dirty_cards++, next_entry++)
+            ;
+          MemRegion cur_cards(addr_for(cur_entry), dirty_cards*card_size_in_words);
           cl->do_MemRegion(cur_cards);
         }
       }
@@ -320,25 +301,19 @@ void CardTable::dirty_card_iterate(MemRegion mr, MemRegionClosure* cl) {
   }
 }
 
-MemRegion CardTable::dirty_card_range_after_reset(MemRegion mr,
-                                                  bool reset,
-                                                  int reset_val) {
+MemRegion CardTable::dirty_card_range_after_reset(MemRegion mr, bool reset, int reset_val) {
   for (int i = 0; i < _cur_covered_regions; i++) {
     MemRegion mri = mr.intersection(_covered[i]);
     if (!mri.is_empty()) {
       jbyte* cur_entry, *next_entry, *limit;
-      for (cur_entry = byte_for(mri.start()), limit = byte_for(mri.last());
-           cur_entry <= limit;
-           cur_entry  = next_entry) {
+      for (cur_entry = byte_for(mri.start()), limit = byte_for(mri.last()); cur_entry <= limit; cur_entry  = next_entry) {
         next_entry = cur_entry + 1;
         if (*cur_entry == dirty_card) {
           size_t dirty_cards;
           // Accumulate maximal dirty card range, starting at cur_entry
-          for (dirty_cards = 1;
-               next_entry <= limit && *next_entry == dirty_card;
-               dirty_cards++, next_entry++);
-          MemRegion cur_cards(addr_for(cur_entry),
-                              dirty_cards*card_size_in_words);
+          for (dirty_cards = 1; next_entry <= limit && *next_entry == dirty_card; dirty_cards++, next_entry++)
+            ;
+          MemRegion cur_cards(addr_for(cur_entry), dirty_cards*card_size_in_words);
           if (reset) {
             for (size_t i = 0; i < dirty_cards; i++) {
               cur_entry[i] = reset_val;

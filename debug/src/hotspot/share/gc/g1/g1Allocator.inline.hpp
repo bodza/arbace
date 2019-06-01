@@ -78,10 +78,6 @@ inline void G1ArchiveAllocator::enable_archive_object_check() {
 
 // Set the regions containing the specified address range as archive.
 inline void G1ArchiveAllocator::set_range_archive(MemRegion range, bool open) {
-  log_info(gc, cds)("Mark %s archive regions in map: [" PTR_FORMAT ", " PTR_FORMAT "]",
-                     open ? "open" : "closed",
-                     p2i(range.start()),
-                     p2i(range.last()));
   if (open) {
     _open_archive_region_map.set_by_address(range, true);
   } else {
@@ -91,10 +87,6 @@ inline void G1ArchiveAllocator::set_range_archive(MemRegion range, bool open) {
 
 // Clear the archive regions map containing the specified address range.
 inline void G1ArchiveAllocator::clear_range_archive(MemRegion range, bool open) {
-  log_info(gc, cds)("Clear %s archive regions in map: [" PTR_FORMAT ", " PTR_FORMAT "]",
-                    open ? "open" : "closed",
-                    p2i(range.start()),
-                    p2i(range.last()));
   if (open) {
     _open_archive_region_map.set_by_address(range, false);
   } else {

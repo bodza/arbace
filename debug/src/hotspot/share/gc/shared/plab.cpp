@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/plab.inline.hpp"
 #include "gc/shared/threadLocalAllocBuffer.hpp"
@@ -78,29 +79,9 @@ void PLAB::undo_allocation(HeapWord* obj, size_t word_sz) {
   }
 }
 
-void PLABStats::log_plab_allocation() {
-  log_debug(gc, plab)("%s PLAB allocation: "
-                      "allocated: " SIZE_FORMAT "B, "
-                      "wasted: " SIZE_FORMAT "B, "
-                      "unused: " SIZE_FORMAT "B, "
-                      "used: " SIZE_FORMAT "B, "
-                      "undo waste: " SIZE_FORMAT "B, ",
-                      _description,
-                      _allocated * HeapWordSize,
-                      _wasted * HeapWordSize,
-                      _unused * HeapWordSize,
-                      used() * HeapWordSize,
-                      _undo_wasted * HeapWordSize);
-}
+void PLABStats::log_plab_allocation() { }
 
-void PLABStats::log_sizing(size_t calculated_words, size_t net_desired_words) {
-  log_debug(gc, plab)("%s sizing: "
-                      "calculated: " SIZE_FORMAT "B, "
-                      "actual: " SIZE_FORMAT "B",
-                      _description,
-                      calculated_words * HeapWordSize,
-                      net_desired_words * HeapWordSize);
-}
+void PLABStats::log_sizing(size_t calculated_words, size_t net_desired_words) { }
 
 // Calculates plab size for current number of gc worker threads.
 size_t PLABStats::desired_plab_sz(uint no_of_gc_workers) {

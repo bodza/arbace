@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaClasses.inline.hpp"
 #include "code/codeCache.hpp"
 #include "code/debugInfoRec.hpp"
@@ -41,14 +42,9 @@ void compiledVFrame::set_locals(StackValueCollection* values) const {
   fatal("Should use update_local for each local update");
 }
 
-void compiledVFrame::update_local(BasicType type, int index, jvalue value) {
-}
-
-void compiledVFrame::update_stack(BasicType type, int index, jvalue value) {
-}
-
-void compiledVFrame::update_monitor(int index, MonitorInfo* val) {
-}
+void compiledVFrame::update_local(BasicType type, int index, jvalue value) { }
+void compiledVFrame::update_stack(BasicType type, int index, jvalue value) { }
+void compiledVFrame::update_monitor(int index, MonitorInfo* val) { }
 
 StackValueCollection* compiledVFrame::expressions() const {
   // Natives has no scope

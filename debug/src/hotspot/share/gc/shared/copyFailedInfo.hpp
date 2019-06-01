@@ -1,7 +1,6 @@
 #ifndef SHARE_VM_GC_SHARED_COPYFAILEDINFO_HPP
 #define SHARE_VM_GC_SHARED_COPYFAILEDINFO_HPP
 
-// #include "jfr/support/jfrThreadId.hpp"
 #include "runtime/thread.hpp"
 #include "utilities/globalDefinitions.hpp"
 
@@ -49,7 +48,6 @@ class PromotionFailedInfo : public CopyFailedInfo {
     CopyFailedInfo::register_copy_failure(size);
     if (_thread_trace_id == 0) {
       _thread_trace_id = JFR_THREAD_ID(Thread::current());
-    } else {
     }
   }
 

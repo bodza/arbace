@@ -44,8 +44,7 @@ private:
     _start = _pc = base; _end = base + size;
   }
 
-  void assert_wide(bool require_wide) const {
-  }
+  void assert_wide(bool require_wide) const { }
 
   Bytecode bytecode() const { return Bytecode(this, _bc_start); }
   Bytecode next_bytecode() const { return Bytecode(this, _pc); }
@@ -184,14 +183,12 @@ public:
   }
 
   // For a lookup or switch table, return target destination
-  int get_int_table( int index ) const {
-    return Bytes::get_Java_u4((address)&_table_base[index]); }
+  int get_int_table( int index ) const { return Bytes::get_Java_u4((address)&_table_base[index]); }
 
   // For tableswitch - get length of offset part
   int get_tableswitch_length()  { return get_int_table(2)-get_int_table(1)+1; }
 
-  int get_dest_table( int index ) const {
-    return cur_bci() + get_int_table(index); }
+  int get_dest_table( int index ) const { return cur_bci() + get_int_table(index); }
 
   // --- Constant pool access ---
   int get_constant_raw_index() const;

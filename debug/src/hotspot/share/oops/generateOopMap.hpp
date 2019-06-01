@@ -37,8 +37,7 @@ class RetTableEntry : public ResourceObj {
   // Query
   int target_bci() const                      { return _target_bci; }
   int nof_jsrs() const                        { return _jsrs->length(); }
-  int jsrs(int i) const                       {
-    return _jsrs->at(i); }
+  int jsrs(int i) const                       { return _jsrs->at(i); }
 
   // Update entry
   void add_jsr    (int return_bci)            { _jsrs->append(return_bci); }
@@ -242,8 +241,7 @@ class BasicBlock: ResourceObj {
   // This info. is setup in a pre-parse before the real abstract interpretation starts.
   bool is_dead() const                      { return _stack_top == _dead_basic_block; }
   bool is_alive() const                     { return _stack_top != _dead_basic_block; }
-  void mark_as_alive()                      {
-    _stack_top = _unreached; }
+  void mark_as_alive()                      { _stack_top = _unreached; }
 };
 
 //

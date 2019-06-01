@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/protectionDomainCache.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "logging/log.hpp"
@@ -47,12 +48,9 @@ void ProtectionDomainCacheTable::unlink() {
 }
 
 void ProtectionDomainCacheTable::print_on(outputStream* st) const {
-  st->print_cr("Protection domain cache table (table_size=%d, classes=%d)",
-               table_size(), number_of_entries());
+  st->print_cr("Protection domain cache table (table_size=%d, classes=%d)", table_size(), number_of_entries());
   for (int index = 0; index < table_size(); index++) {
-    for (ProtectionDomainCacheEntry* probe = bucket(index);
-                                     probe != NULL;
-                                     probe = probe->next()) {
+    for (ProtectionDomainCacheEntry* probe = bucket(index); probe != NULL; probe = probe->next()) {
       st->print_cr("%4d: protection_domain: " PTR_FORMAT, index, p2i(probe->object_no_keepalive()));
     }
   }

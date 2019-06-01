@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "code/nmethod.hpp"
 #include "gc/g1/g1BlockOffsetTable.inline.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
@@ -71,7 +72,6 @@ void HeapRegion::setup_heap_region_size(size_t initial_heap_size, size_t max_hea
   // The cast to int is safe, given that we've bounded region_size by
   // MIN_REGION_SIZE and MAX_REGION_SIZE.
   GrainBytes = region_size;
-  log_info(gc, heap)("Heap region size: " SIZE_FORMAT "M", GrainBytes / M);
 
   guarantee(GrainWords == 0, "we should only set it once");
   GrainWords = GrainBytes >> LogHeapWordSize;
@@ -281,8 +281,6 @@ class VerifyStrongCodeRootOopClosure: public OopClosure {
         // Object is in the region. Check that its less than top
         if (_hr->top() <= (HeapWord*)obj) {
           // Object is above top
-          log_error(gc, verify)("Object " PTR_FORMAT " in region [" PTR_FORMAT ", " PTR_FORMAT ") is above top " PTR_FORMAT,
-                               p2i(obj), p2i(_hr->bottom()), p2i(_hr->end()), p2i(_hr->top()));
           _failures = true;
           return;
         }
@@ -293,7 +291,7 @@ class VerifyStrongCodeRootOopClosure: public OopClosure {
   }
 
 public:
-  VerifyStrongCodeRootOopClosure(const HeapRegion* hr):
+  VerifyStrongCodeRootOopClosure(const HeapRegion* hr) :
     _hr(hr), _failures(false), _has_oops_in_region(false) { }
 
   void do_oop(narrowOop* p) { do_oop_work(p); }
@@ -315,19 +313,13 @@ public:
     if (nm != NULL) {
       // Verify that the nemthod is live
       if (!nm->is_alive()) {
-        log_error(gc, verify)("region [" PTR_FORMAT "," PTR_FORMAT "] has dead nmethod " PTR_FORMAT " in its strong code roots",
-                              p2i(_hr->bottom()), p2i(_hr->end()), p2i(nm));
         _failures = true;
       } else {
         VerifyStrongCodeRootOopClosure oop_cl(_hr);
         nm->oops_do(&oop_cl);
         if (!oop_cl.has_oops_in_region()) {
-          log_error(gc, verify)("region [" PTR_FORMAT "," PTR_FORMAT "] has nmethod " PTR_FORMAT " in its strong code roots with no pointers into region",
-                                p2i(_hr->bottom()), p2i(_hr->end()), p2i(nm));
           _failures = true;
         } else if (oop_cl.failures()) {
-          log_error(gc, verify)("region [" PTR_FORMAT "," PTR_FORMAT "] has other failures for nmethod " PTR_FORMAT,
-                                p2i(_hr->bottom()), p2i(_hr->end()), p2i(nm));
           _failures = true;
         }
       }
@@ -359,8 +351,6 @@ void HeapRegion::verify_strong_code_roots(VerifyOption vo, bool* failures) const
   // on its strong code root list
   if (is_empty()) {
     if (strong_code_roots_length > 0) {
-      log_error(gc, verify)("region [" PTR_FORMAT "," PTR_FORMAT "] is empty but has " SIZE_FORMAT " code root entries",
-                            p2i(bottom()), p2i(end()), strong_code_roots_length);
       *failures = true;
     }
     return;
@@ -368,8 +358,6 @@ void HeapRegion::verify_strong_code_roots(VerifyOption vo, bool* failures) const
 
   if (is_continues_humongous()) {
     if (strong_code_roots_length > 0) {
-      log_error(gc, verify)("region " HR_FORMAT " is a continuation of a humongous region but has " SIZE_FORMAT " code root entries",
-                            HR_FORMAT_PARAMS(this), strong_code_roots_length);
       *failures = true;
     }
     return;
@@ -395,8 +383,7 @@ void HeapRegion::print_on(outputStream* st) const {
   } else {
     st->print("|  ");
   }
-  st->print_cr("|TAMS " PTR_FORMAT ", " PTR_FORMAT "| %s ",
-               p2i(prev_top_at_mark_start()), p2i(next_top_at_mark_start()), rem_set()->get_state_str());
+  st->print_cr("|TAMS " PTR_FORMAT ", " PTR_FORMAT "| %s ", p2i(prev_top_at_mark_start()), p2i(next_top_at_mark_start()), rem_set()->get_state_str());
 }
 
 class G1VerificationClosure : public BasicOopIterateClosure {
@@ -573,11 +560,9 @@ void HeapRegion::verify(VerifyOption vo, bool* failures) const {
         Klass* klass = obj->klass();
         bool is_metaspace_object = Metaspace::contains(klass);
         if (!is_metaspace_object) {
-          log_error(gc, verify)("klass " PTR_FORMAT " of object " PTR_FORMAT " not metadata", p2i(klass), p2i(obj));
           *failures = true;
           return;
         } else if (!klass->is_klass()) {
-          log_error(gc, verify)("klass " PTR_FORMAT " of object " PTR_FORMAT " not a klass", p2i(klass), p2i(obj));
           *failures = true;
           return;
         } else {
@@ -606,7 +591,6 @@ void HeapRegion::verify(VerifyOption vo, bool* failures) const {
           }
         }
       } else {
-        log_error(gc, verify)(PTR_FORMAT " not an oop", p2i(obj));
         *failures = true;
         return;
       }
@@ -622,14 +606,12 @@ void HeapRegion::verify(VerifyOption vo, bool* failures) const {
   if (is_region_humongous) {
     oop obj = oop(this->humongous_start_region()->bottom());
     if ((HeapWord*)obj > bottom() || (HeapWord*)obj + obj->size() < bottom()) {
-      log_error(gc, verify)("this humongous region is not part of its' humongous object " PTR_FORMAT, p2i(obj));
       *failures = true;
       return;
     }
   }
 
   if (!is_region_humongous && p != top()) {
-    log_error(gc, verify)("end of last object " PTR_FORMAT " does not match top " PTR_FORMAT, p2i(p), p2i(top()));
     *failures = true;
     return;
   }
@@ -643,7 +625,6 @@ void HeapRegion::verify(VerifyOption vo, bool* failures) const {
     HeapWord* addr_1 = p;
     HeapWord* b_start_1 = _bot_part.block_start_const(addr_1);
     if (b_start_1 != p) {
-      log_error(gc, verify)("BOT look up for top: " PTR_FORMAT "  yielded " PTR_FORMAT ", expecting " PTR_FORMAT, p2i(addr_1), p2i(b_start_1), p2i(p));
       *failures = true;
       return;
     }
@@ -653,7 +634,6 @@ void HeapRegion::verify(VerifyOption vo, bool* failures) const {
     if (addr_2 < the_end) {
       HeapWord* b_start_2 = _bot_part.block_start_const(addr_2);
       if (b_start_2 != p) {
-        log_error(gc, verify)("BOT look up for top + 1: " PTR_FORMAT "  yielded " PTR_FORMAT ", expecting " PTR_FORMAT, p2i(addr_2), p2i(b_start_2), p2i(p));
         *failures = true;
         return;
       }
@@ -665,7 +645,6 @@ void HeapRegion::verify(VerifyOption vo, bool* failures) const {
     if (addr_3 < the_end) {
       HeapWord* b_start_3 = _bot_part.block_start_const(addr_3);
       if (b_start_3 != p) {
-        log_error(gc, verify)("BOT look up for top + diff: " PTR_FORMAT "  yielded " PTR_FORMAT ", expecting " PTR_FORMAT, p2i(addr_3), p2i(b_start_3), p2i(p));
         *failures = true;
         return;
       }
@@ -675,7 +654,6 @@ void HeapRegion::verify(VerifyOption vo, bool* failures) const {
     HeapWord* addr_4 = the_end - 1;
     HeapWord* b_start_4 = _bot_part.block_start_const(addr_4);
     if (b_start_4 != p) {
-      log_error(gc, verify)("BOT look up for end - 1: " PTR_FORMAT "  yielded " PTR_FORMAT ", expecting " PTR_FORMAT, p2i(addr_4), p2i(b_start_4), p2i(p));
       *failures = true;
       return;
     }
@@ -711,7 +689,6 @@ void HeapRegion::verify_rem_set(VerifyOption vo, bool* failures) const {
           return;
         }
       } else {
-        log_error(gc, verify)(PTR_FORMAT " not an oop", p2i(obj));
         *failures = true;
         return;
       }
@@ -744,17 +721,14 @@ void G1ContiguousSpace::clear(bool mangle_space) {
 
 void G1ContiguousSpace::print() const {
   print_short();
-  tty->print_cr(" [" INTPTR_FORMAT ", " INTPTR_FORMAT ", "
-                INTPTR_FORMAT ", " INTPTR_FORMAT ")",
-                p2i(bottom()), p2i(top()), p2i(_bot_part.threshold()), p2i(end()));
+  tty->print_cr(" [" INTPTR_FORMAT ", " INTPTR_FORMAT ", " INTPTR_FORMAT ", " INTPTR_FORMAT ")", p2i(bottom()), p2i(top()), p2i(_bot_part.threshold()), p2i(end()));
 }
 
 HeapWord* G1ContiguousSpace::initialize_threshold() {
   return _bot_part.initialize_threshold();
 }
 
-HeapWord* G1ContiguousSpace::cross_threshold(HeapWord* start,
-                                                    HeapWord* end) {
+HeapWord* G1ContiguousSpace::cross_threshold(HeapWord* start, HeapWord* end) {
   _bot_part.alloc_block(start, end);
   return _bot_part.threshold();
 }

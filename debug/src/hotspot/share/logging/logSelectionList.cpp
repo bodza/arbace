@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "logging/logSelectionList.hpp"
 #include "logging/logTagSet.hpp"
 #include "runtime/arguments.hpp"
@@ -40,8 +41,7 @@ bool LogSelectionList::parse(const char* str, outputStream* errstream) {
   for (char *comma_pos = copy, *cur = copy; success && comma_pos != NULL; cur = comma_pos + 1) {
     if (_nselections == MaxSelections) {
       if (errstream != NULL) {
-        errstream->print_cr("Can not have more than " SIZE_FORMAT " log selections in a single configuration.",
-                            MaxSelections);
+        errstream->print_cr("Can not have more than " SIZE_FORMAT " log selections in a single configuration.", MaxSelections);
       }
       success = false;
       break;

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/metadataOnStackMark.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "code/codeCache.hpp"
@@ -41,17 +42,8 @@
 
 // Implementation of Method
 
-Method* Method::allocate(ClassLoaderData* loader_data,
-                         int byte_code_size,
-                         AccessFlags access_flags,
-                         InlineTableSizes* sizes,
-                         ConstMethod::MethodType method_type,
-                         TRAPS) {
-  ConstMethod* cm = ConstMethod::allocate(loader_data,
-                                          byte_code_size,
-                                          sizes,
-                                          method_type,
-                                          CHECK_NULL);
+Method* Method::allocate(ClassLoaderData* loader_data, int byte_code_size, AccessFlags access_flags, InlineTableSizes* sizes, ConstMethod::MethodType method_type, TRAPS) {
+  ConstMethod* cm = ConstMethod::allocate(loader_data, byte_code_size, sizes, method_type, CHECK_NULL);
   int size = Method::size(access_flags.is_native());
   return new (loader_data, size, MetaspaceObj::MethodType, THREAD) Method(cm, access_flags);
 }
@@ -244,8 +236,6 @@ Symbol* Method::klass_name() const {
 }
 
 void Method::metaspace_pointers_do(MetaspaceClosure* it) {
-  log_trace(cds)("Iter(Method): %p", this);
-
   it->push(&_constMethod);
   it->push(&_method_data);
   it->push(&_method_counters);
@@ -291,8 +281,7 @@ bool Method::was_executed_more_than(int n) {
     // interpreter doesn't bump invocation counter of trivial methods
     // compiler does not bump invocation counter of compiled methods
     return true;
-  }
-  else if ((method_counters() != NULL && method_counters()->invocation_counter()->carry()) || (method_data() != NULL && method_data()->invocation_counter()->carry())) {
+  } else if ((method_counters() != NULL && method_counters()->invocation_counter()->carry()) || (method_data() != NULL && method_data()->invocation_counter()->carry())) {
     // The carry bit is set when the counter overflows and causes
     // a compilation to occur.  We don't know how many times
     // the counter has been reset, so we simply assume it has
@@ -318,9 +307,9 @@ void Method::print_invocation_count() {
   }
   tty->cr();
 
-  tty->print_cr ("  interpreter_invocation_count: %8d ", interpreter_invocation_count());
-  tty->print_cr ("  invocation_counter:           %8d ", invocation_count());
-  tty->print_cr ("  backedge_counter:             %8d ", backedge_count());
+  tty->print_cr("  interpreter_invocation_count: %8d ", interpreter_invocation_count());
+  tty->print_cr("  invocation_counter:           %8d ", invocation_count());
+  tty->print_cr("  backedge_counter:             %8d ", backedge_count());
 }
 
 // Build a MethodData* object to hold information about this method
@@ -708,8 +697,7 @@ void Method::print_made_not_compilable(int comp_level, bool is_osr, bool report,
   }
   if ((TraceDeoptimization || LogCompilation) && (xtty != NULL)) {
     ttyLocker ttyl;
-    xtty->begin_elem("make_not_compilable thread='" UINTX_FORMAT "' osr='%d' level='%d'",
-                     os::current_thread_id(), is_osr, comp_level);
+    xtty->begin_elem("make_not_compilable thread='" UINTX_FORMAT "' osr='%d' level='%d'", os::current_thread_id(), is_osr, comp_level);
     if (reason != NULL) {
       xtty->print(" reason=\'%s\'", reason);
     }
@@ -1439,15 +1427,6 @@ void CompressedLineNumberWriteStream::write_pair_regular(int bci_delta, int line
   write_signed_int(bci_delta);
   write_signed_int(line_delta);
 }
-
-// See comment in method.hpp which explains why this exists.
-#if defined(_M_AMD64) && _MSC_VER >= 1400
-#pragma optimize("", off)
-void CompressedLineNumberWriteStream::write_pair(int bci, int line) {
-  write_pair_inline(bci, line);
-}
-#pragma optimize("", on)
-#endif
 
 CompressedLineNumberReadStream::CompressedLineNumberReadStream(u_char* buffer) : CompressedReadStream(buffer) {
   _bci = 0;

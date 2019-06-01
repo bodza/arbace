@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/systemDictionary.hpp"
 #include "code/codeCache.hpp"
 #include "code/compiledIC.hpp"
@@ -285,7 +286,7 @@ void CompiledIC::set_to_monomorphic(CompiledICInfo& info) {
 
       if (TraceICs) {
          ResourceMark rm(thread);
-         tty->print_cr ("IC@" INTPTR_FORMAT ": monomorphic to %s: %s",
+         tty->print_cr("IC@" INTPTR_FORMAT ": monomorphic to %s: %s",
            p2i(instruction_address()),
            (info.to_aot() ? "aot" : "interpreter"),
            method->print_value_string());
@@ -295,7 +296,7 @@ void CompiledIC::set_to_monomorphic(CompiledICInfo& info) {
       InlineCacheBuffer::create_transition_stub(this, info.claim_cached_icholder(), info.entry());
       if (TraceICs) {
          ResourceMark rm(thread);
-         tty->print_cr ("IC@" INTPTR_FORMAT ": monomorphic to interpreter via icholder ", p2i(instruction_address()));
+         tty->print_cr("IC@" INTPTR_FORMAT ": monomorphic to interpreter via icholder ", p2i(instruction_address()));
       }
     }
   } else {
@@ -318,7 +319,7 @@ void CompiledIC::set_to_monomorphic(CompiledICInfo& info) {
 
     if (TraceICs) {
       ResourceMark rm(thread);
-      tty->print_cr ("IC@" INTPTR_FORMAT ": monomorphic to compiled (rcvr klass) %s: %s",
+      tty->print_cr("IC@" INTPTR_FORMAT ": monomorphic to compiled (rcvr klass) %s: %s",
         p2i(instruction_address()),
         ((Klass*)info.cached_metadata())->print_value_string(),
         (safe) ? "" : "via stub");

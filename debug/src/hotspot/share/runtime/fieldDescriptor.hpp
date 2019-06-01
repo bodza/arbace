@@ -31,8 +31,7 @@ class fieldDescriptor {
   }
 
  public:
-  fieldDescriptor() {
-  }
+  fieldDescriptor() { }
   fieldDescriptor(InstanceKlass* ik, int index) {
     reinitialize(ik, index);
   }

@@ -111,11 +111,9 @@ public:
   // Assert all the stacks are empty and have no cached segments.
   void assert_empty() { };
 
-  PreservedMarksSet(bool in_c_heap)
-      : _in_c_heap(in_c_heap), _num(0), _stacks(NULL) { }
+  PreservedMarksSet(bool in_c_heap) : _in_c_heap(in_c_heap), _num(0), _stacks(NULL) { }
 
-  ~PreservedMarksSet() {
-  }
+  ~PreservedMarksSet() { }
 };
 
 #endif

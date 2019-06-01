@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/classListParser.hpp"
 #include "classfile/classLoaderExt.hpp"
@@ -132,8 +133,7 @@ public:
                   _name, used(), percent_of(used(), total_bytes), reserved(), percent_of(used(), reserved()), p2i(_base));
   }
   void print_out_of_space_msg(const char* failing_region, size_t needed_bytes) {
-    tty->print("[%-8s] " PTR_FORMAT " - " PTR_FORMAT " capacity =%9d, allocated =%9d",
-               _name, p2i(_base), p2i(_top), int(_end - _base), int(_top - _base));
+    tty->print("[%-8s] " PTR_FORMAT " - " PTR_FORMAT " capacity =%9d, allocated =%9d", _name, p2i(_base), p2i(_top), int(_end - _base), int(_top - _base));
     if (strcmp(_name, failing_region) == 0) {
       tty->print_cr(" required = %d", int(needed_bytes));
     } else {
@@ -201,7 +201,6 @@ void MetaspaceShared::initialize_runtime_shared_and_meta_spaces() {
       mapinfo->map_heap_regions();
     }
     Universe::set_narrow_klass_range(CompressedClassSpaceSize);
-  } else {
   }
 }
 
@@ -231,8 +230,7 @@ void MetaspaceShared::initialize_dumptime_shared_and_meta_spaces() {
     _shared_rs = ReservedSpace(cds_total, reserve_alignment, large_pages);
   }
   if (!_shared_rs.is_reserved()) {
-    vm_exit_during_initialization("Unable to reserve memory for shared space",
-                                  err_msg(SIZE_FORMAT " bytes.", cds_total));
+    vm_exit_during_initialization("Unable to reserve memory for shared space", err_msg(SIZE_FORMAT " bytes.", cds_total));
   }
 
   // During dump time, we allocate 4GB (UnscaledClassSpaceMax) of space and split it up:
@@ -256,8 +254,7 @@ void MetaspaceShared::initialize_dumptime_shared_and_meta_spaces() {
   Universe::set_narrow_klass_range(cds_total);
 
   Metaspace::initialize_class_space(tmp_class_space);
-  tty->print_cr("narrow_klass_base = " PTR_FORMAT ", narrow_klass_shift = %d",
-                p2i(Universe::narrow_klass_base()), Universe::narrow_klass_shift());
+  tty->print_cr("narrow_klass_base = " PTR_FORMAT ", narrow_klass_shift = %d", p2i(Universe::narrow_klass_base()), Universe::narrow_klass_shift());
 
   tty->print_cr("Allocated temporary class space: " SIZE_FORMAT " bytes at " PTR_FORMAT,
                 CompressedClassSpaceSize, p2i(tmp_class_space.base()));
@@ -328,12 +325,8 @@ void MetaspaceShared::commit_shared_space_to(char* newtop) {
 
   bool result = _shared_vs.expand_by(commit, false);
   if (!result) {
-    vm_exit_during_initialization(err_msg("Failed to expand shared space to " SIZE_FORMAT " bytes",
-                                          need_committed_size));
+    vm_exit_during_initialization(err_msg("Failed to expand shared space to " SIZE_FORMAT " bytes", need_committed_size));
   }
-
-  log_info(cds)("Expanding shared spaces by " SIZE_FORMAT_W(7) " bytes [total " SIZE_FORMAT_W(9)  " bytes ending at %p]",
-                commit, _shared_vs.actual_committed_size(), _shared_vs.high());
 }
 
 // Read/write a data stream for restoring/preserving metadata pointers and
@@ -626,7 +619,6 @@ intptr_t* CppVtableCloner<T>::clone_vtable(const char* name, CppVtableInfo* info
 
   // We already checked (and, if necessary, adjusted n) when the vtables were allocated, so we are
   // safe to do memcpy.
-  log_debug(cds, vtables)("Copying %3d vtable entries for %s", n, name);
   memcpy(dstvtable, srcvtable, sizeof(intptr_t) * n);
   return dstvtable + n;
 }
@@ -677,7 +669,6 @@ int CppVtableCloner<T>::get_vtable_length(const char* name) {
       break;
     }
   }
-  log_debug(cds, vtables)("Found   %3d vtable entries for %s", vtable_len, name);
 
   return vtable_len;
 }
@@ -843,93 +834,7 @@ public:
     int which = (read_only) ? RO : RW;
     _bytes [which][OtherType] += byte_size;
   }
-  void print_stats(int ro_all, int rw_all, int mc_all, int md_all);
 };
-
-void DumpAllocStats::print_stats(int ro_all, int rw_all, int mc_all, int md_all) {
-  // Calculate size of data that was not allocated by Metaspace::allocate()
-  MetaspaceSharedStats *stats = MetaspaceShared::stats();
-
-  // symbols
-  _counts[RO][SymbolHashentryType] = stats->symbol.hashentry_count;
-  _bytes [RO][SymbolHashentryType] = stats->symbol.hashentry_bytes;
-
-  _counts[RO][SymbolBucketType] = stats->symbol.bucket_count;
-  _bytes [RO][SymbolBucketType] = stats->symbol.bucket_bytes;
-
-  // strings
-  _counts[RO][StringHashentryType] = stats->string.hashentry_count;
-  _bytes [RO][StringHashentryType] = stats->string.hashentry_bytes;
-
-  _counts[RO][StringBucketType] = stats->string.bucket_count;
-  _bytes [RO][StringBucketType] = stats->string.bucket_bytes;
-
-  // TODO: count things like dictionary, vtable, etc
-  _bytes[RW][OtherType] += mc_all + md_all;
-  rw_all += mc_all + md_all; // mc/md are mapped Read/Write
-
-  // prevent divide-by-zero
-  if (ro_all < 1) {
-    ro_all = 1;
-  }
-  if (rw_all < 1) {
-    rw_all = 1;
-  }
-
-  int all_ro_count = 0;
-  int all_ro_bytes = 0;
-  int all_rw_count = 0;
-  int all_rw_bytes = 0;
-
-// To make fmt_stats be a syntactic constant (for format warnings), use #define.
-#define fmt_stats "%-20s: %8d %10d %5.1f | %8d %10d %5.1f | %8d %10d %5.1f"
-  const char *sep = "--------------------+---------------------------+---------------------------+--------------------------";
-  const char *hdr = "                        ro_cnt   ro_bytes     % |   rw_cnt   rw_bytes     % |  all_cnt  all_bytes     %";
-
-  LogMessage(cds) msg;
-
-  msg.info("Detailed metadata info (excluding od/st regions; rw stats include md/mc regions):");
-  msg.info("%s", hdr);
-  msg.info("%s", sep);
-  for (int type = 0; type < int(_number_of_types); type ++) {
-    const char *name = type_name((Type)type);
-    int ro_count = _counts[RO][type];
-    int ro_bytes = _bytes [RO][type];
-    int rw_count = _counts[RW][type];
-    int rw_bytes = _bytes [RW][type];
-    int count = ro_count + rw_count;
-    int bytes = ro_bytes + rw_bytes;
-
-    double ro_perc = percent_of(ro_bytes, ro_all);
-    double rw_perc = percent_of(rw_bytes, rw_all);
-    double perc    = percent_of(bytes, ro_all + rw_all);
-
-    msg.info(fmt_stats, name,
-                         ro_count, ro_bytes, ro_perc,
-                         rw_count, rw_bytes, rw_perc,
-                         count, bytes, perc);
-
-    all_ro_count += ro_count;
-    all_ro_bytes += ro_bytes;
-    all_rw_count += rw_count;
-    all_rw_bytes += rw_bytes;
-  }
-
-  int all_count = all_ro_count + all_rw_count;
-  int all_bytes = all_ro_bytes + all_rw_bytes;
-
-  double all_ro_perc = percent_of(all_ro_bytes, ro_all);
-  double all_rw_perc = percent_of(all_rw_bytes, rw_all);
-  double all_perc    = percent_of(all_bytes, ro_all + rw_all);
-
-  msg.info("%s", sep);
-  msg.info(fmt_stats, "Total",
-                       all_ro_count, all_ro_bytes, all_ro_perc,
-                       all_rw_count, all_rw_bytes, all_rw_perc,
-                       all_count, all_bytes, all_perc);
-
-#undef fmt_stats
-}
 
 // Populate the shared space.
 
@@ -1028,7 +933,6 @@ public:
     }
     memcpy(p, obj, bytes);
     bool isnew = _new_loc_table->put(obj, (address)p);
-    log_trace(cds)("Copy: " PTR_FORMAT " ==> " PTR_FORMAT " %d", p2i(obj), p2i(p), bytes);
 
     _alloc_stats->record(ref->msotype(), int(newtop - oldtop), read_only);
     if (ref->msotype() == MetaspaceObj::SymbolType) {
@@ -1037,8 +941,7 @@ public:
         // This is just a sanity check and should not appear in any real world usage. This
         // happens only if you allocate more than 2GB of Symbols and would require
         // millions of shared classes.
-        vm_exit_during_initialization("Too many Symbols in the CDS archive",
-                                      "Please reduce the number of shared classes.");
+        vm_exit_during_initialization("Too many Symbols in the CDS archive", "Please reduce the number of shared classes.");
       }
     }
   }
@@ -1349,11 +1252,6 @@ void VM_PopulateDumpSharedSpace::doit() {
 
   print_region_stats();
 
-  if (log_is_enabled(Info, cds)) {
-    ArchiveCompactor::alloc_stats()->print_stats(int(_ro_region.used()), int(_rw_region.used()),
-                                                 int(_mc_region.used()), int(_md_region.used()));
-  }
-
   if (PrintSystemDictionaryAtExit) {
     SystemDictionary::print();
   }
@@ -1385,8 +1283,7 @@ void VM_PopulateDumpSharedSpace::print_region_stats() {
   print_heap_region_stats(_closed_archive_heap_regions, "st", total_reserved);
   print_heap_region_stats(_open_archive_heap_regions, "oa", total_reserved);
 
-  tty->print_cr("total    : " SIZE_FORMAT_W(9) " [100.0%% of total] out of " SIZE_FORMAT_W(9) " bytes [%5.1f%% used]",
-                 total_bytes, total_reserved, total_u_perc);
+  tty->print_cr("total    : " SIZE_FORMAT_W(9) " [100.0%% of total] out of " SIZE_FORMAT_W(9) " bytes [%5.1f%% used]", total_bytes, total_reserved, total_u_perc);
 }
 
 void VM_PopulateDumpSharedSpace::print_heap_region_stats(GrowableArray<MemRegion> *heap_mem, const char *name, const size_t total_size) {
@@ -1451,11 +1348,9 @@ class CheckSharedClassesClosure : public KlassClosure {
 void MetaspaceShared::check_shared_class_loader_type(InstanceKlass* ik) {
   ResourceMark rm;
   if (ik->shared_classpath_index() == UNREGISTERED_INDEX) {
-    guarantee(ik->loader_type() == 0,
-            "Class loader type must not be set for this class %s", ik->name()->as_C_string());
+    guarantee(ik->loader_type() == 0, "Class loader type must not be set for this class %s", ik->name()->as_C_string());
   } else {
-    guarantee(ik->loader_type() != 0,
-            "Class loader type must be set for this class %s", ik->name()->as_C_string());
+    guarantee(ik->loader_type() != 0, "Class loader type must be set for this class %s", ik->name()->as_C_string());
   }
 }
 
@@ -1499,7 +1394,7 @@ void MetaspaceShared::prepare_for_dumping() {
 // Preload classes from a list, populate the shared spaces and dump to a
 // file.
 void MetaspaceShared::preload_and_dump(TRAPS) {
-  { TraceTime timer("Dump Shared Spaces", TRACETIME_LOG(Info, startuptime));
+  {
     ResourceMark rm;
     char class_list_path_str[JVM_MAXPATHLEN];
     // Preload classes to be shared.
@@ -1543,8 +1438,6 @@ void MetaspaceShared::preload_and_dump(TRAPS) {
     }
     tty->print_cr("Loading classes to share: done.");
 
-    log_info(cds)("Shared spaces: preloaded %d classes", class_count);
-
     // Rewrite and link classes
     tty->print_cr("Rewriting and linking classes ...");
 
@@ -1576,11 +1469,6 @@ int MetaspaceShared::preload_classes(const char* class_list_path, TRAPS) {
         CLEAR_PENDING_EXCEPTION;
       }
       if (klass != NULL) {
-        if (log_is_enabled(Trace, cds)) {
-          ResourceMark rm;
-          log_trace(cds)("Shared spaces preloaded: %s", klass->external_name());
-        }
-
         if (klass->is_instance_klass()) {
           InstanceKlass* ik = InstanceKlass::cast(klass);
 
@@ -1616,8 +1504,7 @@ bool MetaspaceShared::try_link_class(InstanceKlass* ik, TRAPS) {
     ik->link_class(THREAD);
     if (HAS_PENDING_EXCEPTION) {
       ResourceMark rm;
-      tty->print_cr("Preload Warning: Verification failed for %s",
-                    ik->external_name());
+      tty->print_cr("Preload Warning: Verification failed for %s", ik->external_name());
       CLEAR_PENDING_EXCEPTION;
       ik->set_in_error_state();
       _has_error_classes = true;

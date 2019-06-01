@@ -5,8 +5,7 @@
 #include "c1/c1_ValueSet.hpp"
 #include "utilities/bitMap.inline.hpp"
 
-inline ValueSet::ValueSet() : _map(Instruction::number_of_instructions()) {
-}
+inline ValueSet::ValueSet() : _map(Instruction::number_of_instructions()) { }
 
 inline ValueSet* ValueSet::copy() {
   ValueSet* res = new ValueSet();

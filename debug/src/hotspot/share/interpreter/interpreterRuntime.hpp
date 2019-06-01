@@ -23,10 +23,6 @@ class InterpreterRuntime: AllStatic {
   static void      note_trap_inner(JavaThread* thread, int reason,
                                    const methodHandle& trap_method, int trap_bci, TRAPS);
   static void      note_trap(JavaThread *thread, int reason, TRAPS);
-#ifdef CC_INTERP
-  // Profile traps in C++ interpreter.
-  static void      note_trap(JavaThread* thread, int reason, Method *method, int trap_bci);
-#endif
 
   // Inner work method for Interpreter's frequency counter overflow.
   static nmethod* frequency_counter_overflow_inner(JavaThread* thread, address branch_bcp);
@@ -65,17 +61,6 @@ class InterpreterRuntime: AllStatic {
   static void    create_klass_exception(JavaThread* thread, char* name, oopDesc* obj);
   static address exception_handler_for_exception(JavaThread* thread, oopDesc* exception);
   static void    throw_pending_exception(JavaThread* thread);
-
-#ifdef CC_INTERP
-  // Profile traps in C++ interpreter.
-  static void    note_nullCheck_trap (JavaThread* thread, Method *method, int trap_bci);
-  static void    note_div0Check_trap (JavaThread* thread, Method *method, int trap_bci);
-  static void    note_rangeCheck_trap(JavaThread* thread, Method *method, int trap_bci);
-  static void    note_classCheck_trap(JavaThread* thread, Method *method, int trap_bci);
-  static void    note_arrayCheck_trap(JavaThread* thread, Method *method, int trap_bci);
-  // A dummy for macros that shall not profile traps.
-  static void    note_no_trap(JavaThread* thread, Method *method, int trap_bci) { }
-#endif
 
   static void resolve_from_cache(JavaThread* thread, Bytecodes::Code bytecode);
  private:

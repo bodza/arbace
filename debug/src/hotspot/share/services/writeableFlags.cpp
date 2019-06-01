@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/javaClasses.hpp"
 #include "memory/allocation.inline.hpp"
 #include "runtime/arguments.hpp"
@@ -271,8 +272,7 @@ JVMFlag::Error WriteableFlags::set_flag_from_char(JVMFlag* f, const void* value,
 }
 
 // a writeable flag setter accepting 'jvalue' values
-JVMFlag::Error WriteableFlags::set_flag_from_jvalue(JVMFlag* f, const void* value, JVMFlag::Flags origin,
-                                                 FormatBuffer<80>& err_msg) {
+JVMFlag::Error WriteableFlags::set_flag_from_jvalue(JVMFlag* f, const void* value, JVMFlag::Flags origin, FormatBuffer<80>& err_msg) {
   jvalue new_value = *(jvalue*)value;
   if (f->is_bool()) {
     bool bvalue = (new_value.z == JNI_TRUE ? true : false);

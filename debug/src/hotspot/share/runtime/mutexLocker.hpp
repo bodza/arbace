@@ -189,8 +189,7 @@ class MonitorLockerEx: public MutexLockerEx {
  private:
   Monitor * _monitor;
  public:
-  MonitorLockerEx(Monitor* monitor,
-                  bool no_safepoint_check = !Mutex::_no_safepoint_check_flag):
+  MonitorLockerEx(Monitor* monitor, bool no_safepoint_check = !Mutex::_no_safepoint_check_flag) :
     MutexLockerEx(monitor, no_safepoint_check),
     _monitor(monitor) {
     // Superclass constructor did locking

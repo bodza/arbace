@@ -36,7 +36,6 @@ class WorkerManager : public AllStatic {
         new_worker = holder->install_worker(worker_id);
       }
       if (new_worker == NULL || !os::create_thread(new_worker, worker_type)) {
-        log_trace(gc, task)("WorkerManager::add_workers() : creation failed due to failed allocation of native %s", new_worker == NULL ?  "memory" : "thread");
         if (new_worker != NULL) {
            delete new_worker;
         }
@@ -49,23 +48,11 @@ class WorkerManager : public AllStatic {
       os::start_thread(new_worker);
     }
 
-    log_trace(gc, task)("WorkerManager::add_workers() : created_workers: %u", created_workers);
-
     return created_workers;
   }
 
   // Log (at trace level) a change in the number of created workers.
   template <class WorkerType>
-  static void log_worker_creation(WorkerType* holder,
-                                  uint previous_created_workers,
-                                  uint active_workers,
-                                  uint created_workers,
-                                  bool initializing) {
-    if (previous_created_workers < created_workers) {
-      const char* initializing_msg =  initializing ? "Adding initial" : "Creating additional";
-      log_trace(gc, task)("%s %s(s) previously created workers %u active workers %u total created workers %u",
-                          initializing_msg, holder->group_name(), previous_created_workers, active_workers, created_workers);
-    }
-  }
+  static void log_worker_creation(WorkerType* holder, uint previous_created_workers, uint active_workers, uint created_workers, bool initializing) { }
 };
 #endif

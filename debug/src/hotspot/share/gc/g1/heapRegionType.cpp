@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1HeapRegionTraceType.hpp"
 #include "gc/g1/heapRegionType.hpp"
 

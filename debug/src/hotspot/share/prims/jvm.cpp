@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "classfile/classFileStream.hpp"
 #include "classfile/classLoader.hpp"
@@ -13,7 +14,6 @@
 #include "classfile/vmSymbols.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "interpreter/bytecode.hpp"
-// #include "jfr/jfrEvents.hpp"
 #include "logging/log.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/referenceType.hpp"
@@ -154,26 +154,6 @@ static void trace_class_resolution_impl(Klass* to_class, TRAPS) {
       }
     }
   }
-  if (caller != NULL) {
-    if (to_class != caller) {
-      const char * from = caller->external_name();
-      const char * to = to_class->external_name();
-      // print in a single call to reduce interleaving between threads
-      if (source_file != NULL) {
-        log_debug(class, resolve)("%s %s %s:%d (%s)", from, to, source_file, line_number, trace);
-      } else {
-        log_debug(class, resolve)("%s %s (%s)", from, to, trace);
-      }
-    }
-  }
-}
-
-void trace_class_resolution(Klass* to_class) {
-  EXCEPTION_MARK;
-  trace_class_resolution_impl(to_class, THREAD);
-  if (HAS_PENDING_EXCEPTION) {
-    CLEAR_PENDING_EXCEPTION;
-  }
 }
 
 // Wrapper to trace JVM functions
@@ -241,8 +221,7 @@ JVM_LEAF(jlong, JVM_GetNanoTimeAdjustment(JNIEnv *env, jclass ignored, jlong off
   return (diff * (jlong)1000000000) + nanos;
 JVM_END
 
-JVM_ENTRY(void, JVM_ArrayCopy(JNIEnv *env, jclass ignored, jobject src, jint src_pos,
-                               jobject dst, jint dst_pos, jint length))
+JVM_ENTRY(void, JVM_ArrayCopy(JNIEnv *env, jclass ignored, jobject src, jint src_pos, jobject dst, jint dst_pos, jint length))
   JVMWrapper("JVM_ArrayCopy");
   // Check if we have null pointers
   if (src == NULL || dst == NULL) {
@@ -421,9 +400,7 @@ JVM_END
 
 // java.lang.StackWalker //////////////////////////////////////////////////////
 
-JVM_ENTRY(jobject, JVM_CallStackWalk(JNIEnv *env, jobject stackStream, jlong mode,
-                                     jint skip_frames, jint frame_count, jint start_index,
-                                     jobjectArray frames))
+JVM_ENTRY(jobject, JVM_CallStackWalk(JNIEnv *env, jobject stackStream, jlong mode, jint skip_frames, jint frame_count, jint start_index, jobjectArray frames))
   JVMWrapper("JVM_CallStackWalk");
   JavaThread* jt = (JavaThread*) THREAD;
   if (!jt->is_Java_thread() || !jt->has_last_Java_frame()) {
@@ -443,14 +420,11 @@ JVM_ENTRY(jobject, JVM_CallStackWalk(JNIEnv *env, jobject stackStream, jlong mod
     THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(), "not enough space in buffers", NULL);
   }
 
-  oop result = StackWalk::walk(stackStream_h, mode, skip_frames, frame_count,
-                               start_index, frames_array_h, CHECK_NULL);
+  oop result = StackWalk::walk(stackStream_h, mode, skip_frames, frame_count, start_index, frames_array_h, CHECK_NULL);
   return JNIHandles::make_local(env, result);
 JVM_END
 
-JVM_ENTRY(jint, JVM_MoreStackWalk(JNIEnv *env, jobject stackStream, jlong mode, jlong anchor,
-                                  jint frame_count, jint start_index,
-                                  jobjectArray frames))
+JVM_ENTRY(jint, JVM_MoreStackWalk(JNIEnv *env, jobject stackStream, jlong mode, jlong anchor, jint frame_count, jint start_index, jobjectArray frames))
   JVMWrapper("JVM_MoreStackWalk");
   JavaThread* jt = (JavaThread*) THREAD;
 
@@ -599,8 +573,7 @@ JVM_END
 // Returns a class loaded by the bootstrap class loader; or null
 // if not found.  ClassNotFoundException is not thrown.
 // FindClassFromBootLoader is exported to the launcher for windows.
-JVM_ENTRY(jclass, JVM_FindClassFromBootLoader(JNIEnv* env,
-                                              const char* name))
+JVM_ENTRY(jclass, JVM_FindClassFromBootLoader(JNIEnv* env, const char* name))
   JVMWrapper("JVM_FindClassFromBootLoader");
 
   // Java libraries should ensure that name is never null...
@@ -616,16 +589,11 @@ JVM_ENTRY(jclass, JVM_FindClassFromBootLoader(JNIEnv* env,
     return NULL;
   }
 
-  if (log_is_enabled(Debug, class, resolve)) {
-    trace_class_resolution(k);
-  }
   return (jclass) JNIHandles::make_local(env, k->java_mirror());
 JVM_END
 
 // Find a class with this name in this loader, using the caller's protection domain.
-JVM_ENTRY(jclass, JVM_FindClassFromCaller(JNIEnv* env, const char* name,
-                                          jboolean init, jobject loader,
-                                          jclass caller))
+JVM_ENTRY(jclass, JVM_FindClassFromCaller(JNIEnv* env, const char* name, jboolean init, jobject loader, jclass caller))
   JVMWrapper("JVM_FindClassFromCaller throws ClassNotFoundException");
   // Java libraries should ensure that name is never null...
   if (name == NULL || (int)strlen(name) > Symbol::max_length()) {
@@ -650,18 +618,13 @@ JVM_ENTRY(jclass, JVM_FindClassFromCaller(JNIEnv* env, const char* name,
 
   Handle h_loader(THREAD, loader_oop);
   Handle h_prot(THREAD, protection_domain);
-  jclass result = find_class_from_class_loader(env, h_name, init, h_loader,
-                                               h_prot, false, THREAD);
+  jclass result = find_class_from_class_loader(env, h_name, init, h_loader, h_prot, false, THREAD);
 
-  if (log_is_enabled(Debug, class, resolve) && result != NULL) {
-    trace_class_resolution(java_lang_Class::as_Klass(JNIHandles::resolve_non_null(result)));
-  }
   return result;
 JVM_END
 
 // Currently only called from the old verifier.
-JVM_ENTRY(jclass, JVM_FindClassFromClass(JNIEnv *env, const char *name,
-                                         jboolean init, jclass from))
+JVM_ENTRY(jclass, JVM_FindClassFromClass(JNIEnv *env, const char *name, jboolean init, jclass from))
   JVMWrapper("JVM_FindClassFromClass");
   if (name == NULL) {
     THROW_MSG_0(vmSymbols::java_lang_NoClassDefFoundError(), "No class name given");
@@ -669,11 +632,7 @@ JVM_ENTRY(jclass, JVM_FindClassFromClass(JNIEnv *env, const char *name,
   if ((int)strlen(name) > Symbol::max_length()) {
     // It's impossible to create this class;  the name cannot fit
     // into the constant pool.
-    Exceptions::fthrow(THREAD_AND_LOCATION,
-                       vmSymbols::java_lang_NoClassDefFoundError(),
-                       "Class name exceeds maximum length of %d: %s",
-                       Symbol::max_length(),
-                       name);
+    Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::java_lang_NoClassDefFoundError(), "Class name exceeds maximum length of %d: %s", Symbol::max_length(), name);
     return 0;
   }
   TempNewSymbol h_name = SymbolTable::new_symbol(name, CHECK_NULL);
@@ -694,19 +653,6 @@ JVM_ENTRY(jclass, JVM_FindClassFromClass(JNIEnv *env, const char *name,
   if (result != NULL) {
     oop mirror = JNIHandles::resolve_non_null(result);
     Klass* to_class = java_lang_Class::as_Klass(mirror);
-  }
-
-  if (log_is_enabled(Debug, class, resolve) && result != NULL) {
-    // this function is generally only used for class loading during verification.
-    ResourceMark rm;
-    oop from_mirror = JNIHandles::resolve_non_null(from);
-    Klass* from_class = java_lang_Class::as_Klass(from_mirror);
-    const char * from_name = from_class->external_name();
-
-    oop mirror = JNIHandles::resolve_non_null(result);
-    Klass* to_class = java_lang_Class::as_Klass(mirror);
-    const char * to = to_class->external_name();
-    log_debug(class, resolve)("%s %s (verification)", from_name, to);
   }
 
   return result;
@@ -753,11 +699,7 @@ static jclass jvm_define_class_common(JNIEnv *env, const char *name,
     if (str_len > Symbol::max_length()) {
       // It's impossible to create this class;  the name cannot fit
       // into the constant pool.
-      Exceptions::fthrow(THREAD_AND_LOCATION,
-                         vmSymbols::java_lang_NoClassDefFoundError(),
-                         "Class name exceeds maximum length of %d: %s",
-                         Symbol::max_length(),
-                         name);
+      Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::java_lang_NoClassDefFoundError(), "Class name exceeds maximum length of %d: %s", Symbol::max_length(), name);
       return 0;
     }
     class_name = SymbolTable::new_symbol(name, str_len, CHECK_NULL);
@@ -767,20 +709,10 @@ static jclass jvm_define_class_common(JNIEnv *env, const char *name,
   ClassFileStream st((u1*)buf, len, source, ClassFileStream::verify);
   Handle class_loader (THREAD, JNIHandles::resolve(loader));
   if (UsePerfData) {
-    is_lock_held_by_thread(class_loader,
-                           ClassLoader::sync_JVMDefineClassLockFreeCounter(),
-                           THREAD);
+    is_lock_held_by_thread(class_loader, ClassLoader::sync_JVMDefineClassLockFreeCounter(), THREAD);
   }
   Handle protection_domain (THREAD, JNIHandles::resolve(pd));
-  Klass* k = SystemDictionary::resolve_from_stream(class_name,
-                                                   class_loader,
-                                                   protection_domain,
-                                                   &st,
-                                                   CHECK_NULL);
-
-  if (log_is_enabled(Debug, class, resolve) && k != NULL) {
-    trace_class_resolution(k);
-  }
+  Klass* k = SystemDictionary::resolve_from_stream(class_name, class_loader, protection_domain, &st, CHECK_NULL);
 
   return (jclass) JNIHandles::make_local(env, k->java_mirror());
 }
@@ -836,8 +768,7 @@ JVM_END
 
 // Module support //////////////////////////////////////////////////////////////////////////////
 
-JVM_ENTRY(void, JVM_DefineModule(JNIEnv *env, jobject module, jboolean is_open, jstring version,
-                                 jstring location, const char* const* packages, jsize num_packages))
+JVM_ENTRY(void, JVM_DefineModule(JNIEnv *env, jobject module, jboolean is_open, jstring version, jstring location, const char* const* packages, jsize num_packages))
   JVMWrapper("JVM_DefineModule");
   Modules::define_module(module, is_open, version, location, packages, num_packages, CHECK);
 JVM_END
@@ -1707,35 +1638,20 @@ JVM_ENTRY(jobjectArray, JVM_GetNestMembers(JNIEnv* env, jclass current))
            InstanceKlass* nest_host_k = InstanceKlass::cast(k)->nest_host(icce, CHECK_NULL);
            if (nest_host_k == host) {
              result->obj_at_put(i+1, k->java_mirror());
-           }
-           else {
-             // k's nest host is legal but it isn't our host so
-             // throw ICCE
+           } else {
+             // k's nest host is legal but it isn't our host so throw ICCE
              ResourceMark rm(THREAD);
-             Exceptions::fthrow(THREAD_AND_LOCATION,
-                                icce,
-                                "Nest member %s in %s declares a different nest host of %s",
-                                k->external_name(),
-                                host->external_name(),
-                                nest_host_k->external_name()
+             Exceptions::fthrow(THREAD_AND_LOCATION, icce, "Nest member %s in %s declares a different nest host of %s", k->external_name(), host->external_name(), nest_host_k->external_name()
                            );
              return NULL;
            }
-         }
-         else {
+         } else {
            // we have a bad nest member entry - throw ICCE
            ResourceMark rm(THREAD);
-           Exceptions::fthrow(THREAD_AND_LOCATION,
-                              icce,
-                              "Class %s can not be a nest member of %s",
-                              k->external_name(),
-                              host->external_name()
-                              );
+           Exceptions::fthrow(THREAD_AND_LOCATION, icce, "Class %s can not be a nest member of %s", k->external_name(), host->external_name());
            return NULL;
          }
       }
-    }
-    else {
     }
     return (jobjectArray)JNIHandles::make_local(THREAD, result());
   }

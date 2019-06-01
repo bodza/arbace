@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_Compilation.hpp"
 #include "c1/c1_FrameMap.hpp"
 #include "c1/c1_GraphBuilder.hpp"
@@ -397,12 +398,9 @@ class ComputeLinearScanOrder : public StackObj {
   void init_visited()                     { _active_blocks.clear(); _visited_blocks.clear(); }
   bool is_visited(BlockBegin* b) const    { return _visited_blocks.at(b->block_id()); }
   bool is_active(BlockBegin* b) const     { return _active_blocks.at(b->block_id()); }
-  void set_visited(BlockBegin* b)         {
-    _visited_blocks.set_bit(b->block_id()); }
-  void set_active(BlockBegin* b)          {
-    _active_blocks.set_bit(b->block_id()); }
-  void clear_active(BlockBegin* b)        {
-    _active_blocks.clear_bit(b->block_id()); }
+  void set_visited(BlockBegin* b)         { _visited_blocks.set_bit(b->block_id()); }
+  void set_active(BlockBegin* b)          { _active_blocks.set_bit(b->block_id()); }
+  void clear_active(BlockBegin* b)        { _active_blocks.clear_bit(b->block_id()); }
 
   // accessors for _forward_branches
   void inc_forward_branches(BlockBegin* b) { _forward_branches.at_put(b->block_id(), _forward_branches.at(b->block_id()) + 1); }

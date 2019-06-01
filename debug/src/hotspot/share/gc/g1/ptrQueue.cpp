@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/ptrQueue.hpp"
 #include "memory/allocation.hpp"
 #include "memory/allocation.inline.hpp"
@@ -18,8 +19,7 @@ PtrQueue::PtrQueue(PtrQueueSet* qset, bool permanent, bool active) :
   _lock(NULL)
 { }
 
-PtrQueue::~PtrQueue() {
-}
+PtrQueue::~PtrQueue() { }
 
 void PtrQueue::flush_impl() {
   if (_buf != NULL) {
@@ -236,7 +236,6 @@ void PtrQueueSet::merge_bufferlists(PtrQueueSet *src) {
   src->_n_completed_buffers = 0;
   src->_completed_buffers_head = NULL;
   src->_completed_buffers_tail = NULL;
-
 }
 
 void PtrQueueSet::notify_if_necessary() {

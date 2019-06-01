@@ -76,10 +76,8 @@ class FrameMap : public CompilationResourceObj {
   CallingConvention*  _incoming_arguments;
   intArray*           _argument_locations;
 
-  void check_spill_index   (int spill_index)   const {
-    }
-  void check_monitor_index (int monitor_index) const {
-    }
+  void check_spill_index   (int spill_index)   const { }
+  void check_monitor_index (int monitor_index) const { }
 
   static Register cpu_rnr2reg (int rnr) {
     return _cpu_rnr2reg[rnr];
@@ -151,14 +149,11 @@ class FrameMap : public CompilationResourceObj {
   bool finalize_frame(int nof_slots);
 
   int   reserved_argument_area_size () const     { return _reserved_argument_area_size; }
-  int   framesize                   () const     {
-    return _framesize; }
+  int   framesize                   () const     { return _framesize; }
   ByteSize framesize_in_bytes       () const     { return in_ByteSize(framesize() * 4); }
   int   num_monitors                () const     { return _num_monitors; }
-  int   num_spills                  () const     {
-    return _num_spills; }
-  int   argcount              () const     {
-    return _argcount; }
+  int   num_spills                  () const     { return _num_spills; }
+  int   argcount              () const     { return _argcount; }
 
   int oop_map_arg_count() const { return _oop_map_arg_count; }
 

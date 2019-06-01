@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "utilities/utf8.hpp"
 
 // Assume the utf8 string is in legal form and has been

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/symbolTable.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "code/codeCache.hpp"
@@ -188,10 +189,7 @@ void VM_FindDeadlocks::doit() {
   }
 }
 
-VM_ThreadDump::VM_ThreadDump(ThreadDumpResult* result,
-                             int max_depth,
-                             bool with_locked_monitors,
-                             bool with_locked_synchronizers) {
+VM_ThreadDump::VM_ThreadDump(ThreadDumpResult* result, int max_depth, bool with_locked_monitors, bool with_locked_synchronizers) {
   _result = result;
   _num_threads = 0; // 0 indicates all threads
   _threads = NULL;
@@ -201,12 +199,7 @@ VM_ThreadDump::VM_ThreadDump(ThreadDumpResult* result,
   _with_locked_synchronizers = with_locked_synchronizers;
 }
 
-VM_ThreadDump::VM_ThreadDump(ThreadDumpResult* result,
-                             GrowableArray<instanceHandle>* threads,
-                             int num_threads,
-                             int max_depth,
-                             bool with_locked_monitors,
-                             bool with_locked_synchronizers) {
+VM_ThreadDump::VM_ThreadDump(ThreadDumpResult* result, GrowableArray<instanceHandle>* threads, int num_threads, int max_depth, bool with_locked_monitors, bool with_locked_synchronizers) {
   _result = result;
   _num_threads = num_threads;
   _threads = threads;

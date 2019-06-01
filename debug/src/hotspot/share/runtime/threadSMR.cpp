@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "runtime/jniHandles.inline.hpp"
@@ -301,7 +302,6 @@ class ScanHazardPtrPrintMatchingThreadsClosure : public ThreadClosure {
     JavaThreadIterator jti(current_list);
     for (JavaThread *p = jti.first(); p != NULL; p = jti.next()) {
       if (p == _thread) {
-        log_debug(thread, smr)("tid=" UINTX_FORMAT ": ThreadsSMRSupport::smr_delete: thread1=" INTPTR_FORMAT " has a hazard pointer for thread2=" INTPTR_FORMAT, os::current_thread_id(), p2i(thread), p2i(_thread));
         break;
       }
     }
@@ -423,8 +423,6 @@ void SafeThreadsListPtr::acquire_stable_list_nested_path() {
   acquire_stable_list_fast_path();
 
   verify_hazard_ptr_scanned();
-
-  log_debug(thread, smr)("tid=" UINTX_FORMAT ": SafeThreadsListPtr::acquire_stable_list: add nested list pointer to ThreadsList=" INTPTR_FORMAT, os::current_thread_id(), p2i(_list));
 }
 
 // Release a stable ThreadsList.
@@ -442,7 +440,6 @@ void SafeThreadsListPtr::release_stable_list() {
     }
     _list->dec_nested_handle_cnt();
 
-    log_debug(thread, smr)("tid=" UINTX_FORMAT ": SafeThreadsListPtr::release_stable_list: delete nested list pointer to ThreadsList=" INTPTR_FORMAT, os::current_thread_id(), p2i(_list));
   } else {
     // The normal case: a leaf ThreadsListHandle. This merely requires setting
     // the thread hazard ptr back to NULL.
@@ -464,8 +461,7 @@ void SafeThreadsListPtr::release_stable_list() {
 // Verify that the stable hazard ptr used to safely keep threads
 // alive is scanned by threads_do() which is a key piece of honoring
 // the Thread-SMR protocol.
-void SafeThreadsListPtr::verify_hazard_ptr_scanned() {
-}
+void SafeThreadsListPtr::verify_hazard_ptr_scanned() { }
 
 // 'entries + 1' so we always have at least one entry.
 ThreadsList::ThreadsList(int entries) :
@@ -650,7 +646,6 @@ void ThreadsSMRSupport::add_thread(JavaThread *thread) {
     update_java_thread_list_max(new_list->length());
   }
   // Initial _java_thread_list will not generate a "Threads::add" mesg.
-  log_debug(thread, smr)("tid=" UINTX_FORMAT ": Threads::add: new ThreadsList=" INTPTR_FORMAT, os::current_thread_id(), p2i(new_list));
 
   ThreadsList *old_list = xchg_java_thread_list(new_list);
   free_list(old_list);
@@ -719,7 +714,6 @@ void ThreadsSMRSupport::free_list(ThreadsList* threads) {
         _to_delete_list = next;
       }
 
-      log_debug(thread, smr)("tid=" UINTX_FORMAT ": ThreadsSMRSupport::free_list: threads=" INTPTR_FORMAT " is freed.", os::current_thread_id(), p2i(current));
       if (current == threads) threads_is_freed = true;
       delete current;
       if (EnableThreadSMRStatistics) {
@@ -730,12 +724,6 @@ void ThreadsSMRSupport::free_list(ThreadsList* threads) {
       prev = current;
     }
     current = next;
-  }
-
-  if (!threads_is_freed) {
-    // Only report "is not freed" on the original call to
-    // free_list() for this ThreadsList.
-    log_debug(thread, smr)("tid=" UINTX_FORMAT ": ThreadsSMRSupport::free_list: threads=" INTPTR_FORMAT " is not freed.", os::current_thread_id(), p2i(threads));
   }
 
   delete scan_table;
@@ -805,7 +793,6 @@ void ThreadsSMRSupport::release_stable_list_wake_up(bool is_nested) {
     // Notify any exiting JavaThreads that are waiting in smr_delete()
     // that we've released a ThreadsList.
     ml.notify_all();
-    log_debug(thread, smr)("tid=" UINTX_FORMAT ": ThreadsSMRSupport::release_stable_list notified %s", os::current_thread_id(), log_str);
   }
 }
 
@@ -815,9 +802,6 @@ void ThreadsSMRSupport::remove_thread(JavaThread *thread) {
     ThreadsSMRSupport::inc_java_thread_list_alloc_cnt();
     // This list is smaller so no need to check for a "longest" update.
   }
-
-  // Final _java_thread_list will not generate a "Threads::remove" mesg.
-  log_debug(thread, smr)("tid=" UINTX_FORMAT ": Threads::remove: new ThreadsList=" INTPTR_FORMAT, os::current_thread_id(), p2i(new_list));
 
   ThreadsList *old_list = ThreadsSMRSupport::xchg_java_thread_list(new_list);
   ThreadsSMRSupport::free_list(old_list);
@@ -861,18 +845,6 @@ void ThreadsSMRSupport::smr_delete(JavaThread *thread) {
       }
       if (!has_logged_once) {
         has_logged_once = true;
-        log_debug(thread, smr)("tid=" UINTX_FORMAT ": ThreadsSMRSupport::smr_delete: thread=" INTPTR_FORMAT " is not deleted.", os::current_thread_id(), p2i(thread));
-        if (log_is_enabled(Debug, os, thread)) {
-          ScanHazardPtrPrintMatchingThreadsClosure scan_cl(thread);
-          threads_do(&scan_cl);
-          ThreadsList* current = _to_delete_list;
-          while (current != NULL) {
-            if (current->_nested_handle_cnt != 0 && current->includes(thread)) {
-              log_debug(thread, smr)("tid=" UINTX_FORMAT ": ThreadsSMRSupport::smr_delete: found nested hazard pointer to thread=" INTPTR_FORMAT, os::current_thread_id(), p2i(thread));
-            }
-            current = current->next_list();
-          }
-        }
       }
     } // We have to drop the Threads_lock to wait or delete the thread
 
@@ -909,8 +881,6 @@ void ThreadsSMRSupport::smr_delete(JavaThread *thread) {
     ThreadsSMRSupport::add_deleted_thread_times(millis);
     ThreadsSMRSupport::update_deleted_thread_time_max(millis);
   }
-
-  log_debug(thread, smr)("tid=" UINTX_FORMAT ": ThreadsSMRSupport::smr_delete: thread=" INTPTR_FORMAT " is deleted.", os::current_thread_id(), p2i(thread));
 }
 
 // Apply the closure to all threads in the system, with a snapshot of
@@ -985,21 +955,15 @@ void ThreadsSMRSupport::print_info_on(outputStream* st) {
   MutexLockerEx ml((Threads_lock->owned_by_self() || VMError::is_error_reported()) ? NULL : Threads_lock);
 
   st->print_cr("Threads class SMR info:");
-  st->print_cr("_java_thread_list=" INTPTR_FORMAT ", length=%u, "
-               "elements={", p2i(_java_thread_list),
-               _java_thread_list->length());
+  st->print_cr("_java_thread_list=" INTPTR_FORMAT ", length=%u, elements={", p2i(_java_thread_list), _java_thread_list->length());
   print_info_elements_on(st, _java_thread_list);
   st->print_cr("}");
   if (_to_delete_list != NULL) {
-    st->print_cr("_to_delete_list=" INTPTR_FORMAT ", length=%u, "
-                 "elements={", p2i(_to_delete_list),
-                 _to_delete_list->length());
+    st->print_cr("_to_delete_list=" INTPTR_FORMAT ", length=%u, elements={", p2i(_to_delete_list), _to_delete_list->length());
     print_info_elements_on(st, _to_delete_list);
     st->print_cr("}");
-    for (ThreadsList *t_list = _to_delete_list->next_list();
-         t_list != NULL; t_list = t_list->next_list()) {
-      st->print("next-> " INTPTR_FORMAT ", length=%u, "
-                "elements={", p2i(t_list), t_list->length());
+    for (ThreadsList *t_list = _to_delete_list->next_list(); t_list != NULL; t_list = t_list->next_list()) {
+      st->print("next-> " INTPTR_FORMAT ", length=%u, elements={", p2i(t_list), t_list->length());
       print_info_elements_on(st, t_list);
       st->print_cr("}");
     }
@@ -1007,36 +971,25 @@ void ThreadsSMRSupport::print_info_on(outputStream* st) {
   if (!EnableThreadSMRStatistics) {
     return;
   }
-  st->print_cr("_java_thread_list_alloc_cnt=" UINT64_FORMAT ", "
-               "_java_thread_list_free_cnt=" UINT64_FORMAT ", "
-               "_java_thread_list_max=%u, "
-               "_nested_thread_list_max=%u",
+  st->print_cr("_java_thread_list_alloc_cnt=" UINT64_FORMAT ", _java_thread_list_free_cnt=" UINT64_FORMAT ", _java_thread_list_max=%u, _nested_thread_list_max=%u",
                _java_thread_list_alloc_cnt,
                _java_thread_list_free_cnt,
                _java_thread_list_max,
                _nested_thread_list_max);
   if (_tlh_cnt > 0) {
-    st->print_cr("_tlh_cnt=%u"
-                 ", _tlh_times=%u"
-                 ", avg_tlh_time=%0.2f"
-                 ", _tlh_time_max=%u",
+    st->print_cr("_tlh_cnt=%u, _tlh_times=%u, avg_tlh_time=%0.2f, _tlh_time_max=%u",
                  _tlh_cnt, _tlh_times,
                  ((double) _tlh_times / _tlh_cnt),
                  _tlh_time_max);
   }
   if (_deleted_thread_cnt > 0) {
-    st->print_cr("_deleted_thread_cnt=%u"
-                 ", _deleted_thread_times=%u"
-                 ", avg_deleted_thread_time=%0.2f"
-                 ", _deleted_thread_time_max=%u",
+    st->print_cr("_deleted_thread_cnt=%u, _deleted_thread_times=%u, avg_deleted_thread_time=%0.2f, _deleted_thread_time_max=%u",
                  _deleted_thread_cnt, _deleted_thread_times,
                  ((double) _deleted_thread_times / _deleted_thread_cnt),
                  _deleted_thread_time_max);
   }
-  st->print_cr("_delete_lock_wait_cnt=%u, _delete_lock_wait_max=%u",
-               _delete_lock_wait_cnt, _delete_lock_wait_max);
-  st->print_cr("_to_delete_list_cnt=%u, _to_delete_list_max=%u",
-               _to_delete_list_cnt, _to_delete_list_max);
+  st->print_cr("_delete_lock_wait_cnt=%u, _delete_lock_wait_max=%u", _delete_lock_wait_cnt, _delete_lock_wait_max);
+  st->print_cr("_to_delete_list_cnt=%u, _to_delete_list_max=%u", _to_delete_list_cnt, _to_delete_list_max);
 }
 
 // Print ThreadsList elements (4 per line).

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "memory/metaspace.hpp"
@@ -13,12 +14,7 @@
 #include "utilities/globalDefinitions.hpp"
 #include "utilities/macros.hpp"
 
-MemoryPool::MemoryPool(const char* name,
-                       PoolType type,
-                       size_t init_size,
-                       size_t max_size,
-                       bool support_usage_threshold,
-                       bool support_gc_threshold) {
+MemoryPool::MemoryPool(const char* name, PoolType type, size_t init_size, size_t max_size, bool support_usage_threshold, bool support_gc_threshold) {
   _name = name;
   _initial_size = init_size;
   _max_size = max_size;

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.inline.hpp"
 #include "asm/assembler.hpp"
 #include "c1/c1_CodeStubs.hpp"
@@ -2425,8 +2426,7 @@ void LIR_Assembler::emit_profile_type(LIR_OpProfileType* op) {
   COMMENT("} emit_profile_type");
 }
 
-void LIR_Assembler::align_backward_branch_target() {
-}
+void LIR_Assembler::align_backward_branch_target() { }
 
 void LIR_Assembler::negate(LIR_Opr left, LIR_Opr dest, LIR_Opr tmp) {
   if (left->is_single_cpu()) {
@@ -2537,8 +2537,7 @@ void LIR_Assembler::get_thread(LIR_Opr result_reg) {
   __ mov(result_reg->as_register(), rthread);
 }
 
-void LIR_Assembler::peephole(LIR_List *lir) {
-}
+void LIR_Assembler::peephole(LIR_List *lir) { }
 
 void LIR_Assembler::atomic_op(LIR_Code code, LIR_Opr src, LIR_Opr data, LIR_Opr dest, LIR_Opr tmp_op) {
   Address addr = as_Address(src->as_address_ptr());

@@ -142,8 +142,6 @@ class HeapRegionManager: public CHeapObj<mtGC> {
   HeapRegion* allocate_free_region(bool is_old) {
     HeapRegion* hr = _free_list.remove_region(is_old);
 
-    if (hr != NULL) {
-    }
     return hr;
   }
 

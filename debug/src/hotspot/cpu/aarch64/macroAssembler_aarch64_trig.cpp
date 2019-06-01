@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/assembler.hpp"
 #include "asm/assembler.inline.hpp"
 #include "runtime/stubRoutines.hpp"
@@ -117,9 +118,9 @@ void MacroAssembler::generate__ieee754_rem_pio2(address npio2_hw, address two_ov
             fmovd(v27, rscratch1);
             fmovd(v6, rscratch2);
             fsubd(v2, v2, v27); // z-= pio2_2
-            fsubd(v4, v2, v6);  // y[0] = z - pio2_2t
+            fsubd(v4, v2, v6); // y[0] = z - pio2_2t
             fsubd(v5, v2, v4);
-            fsubd(v5, v5, v6);  // v5 = (z - y[0]) - pio2_2t
+            fsubd(v5, v5, v6); // v5 = (z - y[0]) - pio2_2t
             b(REDUCTION_DONE);
         }
       }
@@ -147,9 +148,9 @@ void MacroAssembler::generate__ieee754_rem_pio2(address npio2_hw, address two_ov
               fmovd(v27, rscratch1);
               fmovd(v6, rscratch2);
               faddd(v2, v2, v27); // z += pio2_2
-              faddd(v4, v2, v6);  // y[0] = z + pio2_2t
+              faddd(v4, v2, v6); // y[0] = z + pio2_2t
               fsubd(v5, v2, v4);
-              faddd(v5, v5, v6);  // v5 = (z - y[0]) + pio2_2t
+              faddd(v5, v5, v6); // v5 = (z - y[0]) + pio2_2t
               b(REDUCTION_DONE);
           }
       }

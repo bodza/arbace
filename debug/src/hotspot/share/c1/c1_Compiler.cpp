@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "c1/c1_Compilation.hpp"
 #include "c1/c1_Compiler.hpp"
 #include "c1/c1_FrameMap.hpp"
@@ -9,7 +10,6 @@
 #include "c1/c1_ValueType.hpp"
 #include "compiler/compileBroker.hpp"
 #include "interpreter/linkResolver.hpp"
-// #include "jfr/support/jfrIntrinsics.hpp"
 #include "memory/allocation.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
@@ -20,8 +20,7 @@
 #include "utilities/bitMap.inline.hpp"
 #include "utilities/macros.hpp"
 
-Compiler::Compiler() : AbstractCompiler(compiler_c1) {
-}
+Compiler::Compiler() : AbstractCompiler(compiler_c1) { }
 
 void Compiler::init_c1_runtime() {
   BufferBlob* buffer_blob = CompilerThread::current()->get_buffer_blob();
@@ -178,7 +177,7 @@ bool Compiler::is_intrinsic_supported(const methodHandle& method) {
   case vmIntrinsics::_updateCRC32:
   case vmIntrinsics::_updateBytesCRC32:
   case vmIntrinsics::_updateByteBufferCRC32:
-#if defined(SPARC) || defined(S390) || defined(PPC64) || defined(AARCH64)
+#if defined(AARCH64)
   case vmIntrinsics::_updateBytesCRC32C:
   case vmIntrinsics::_updateDirectByteBufferCRC32C:
 #endif

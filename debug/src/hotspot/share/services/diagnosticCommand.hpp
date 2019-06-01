@@ -305,8 +305,7 @@ public:
   }
   static const char* description() {
     return "Print a list of all loaded classes, indented to show the class hiearchy. "
-           "The name of each class is followed by the ClassLoaderData* of its ClassLoader, "
-           "or \"null\" if loaded by the bootstrap class loader.";
+           "The name of each class is followed by the ClassLoaderData* of its ClassLoader, or \"null\" if loaded by the bootstrap class loader.";
   }
   static const char* impact() {
       return "Medium: Depends on number of loaded classes.";

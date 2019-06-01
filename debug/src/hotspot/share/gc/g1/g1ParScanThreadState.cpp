@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1Allocator.inline.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1CollectionSet.hpp"
@@ -85,10 +86,7 @@ void G1ParScanThreadState::trim_queue() {
   } while (!_refs->is_empty());
 }
 
-HeapWord* G1ParScanThreadState::allocate_in_next_plab(InCSetState const state,
-                                                      InCSetState* dest,
-                                                      size_t word_sz,
-                                                      bool previous_plab_refill_failed) {
+HeapWord* G1ParScanThreadState::allocate_in_next_plab(InCSetState const state, InCSetState* dest, size_t word_sz, bool previous_plab_refill_failed) {
 
   // Right now we only have two types of regions (young / old) so
   // let's keep the logic here simple. We can generalize it when necessary.

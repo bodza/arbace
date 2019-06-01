@@ -173,9 +173,7 @@ bool os::have_special_privileges() {
 }
 
 // Cpu architecture string
-#if   defined(ZERO)
-static char cpu_arch[] = ZERO_LIBARCH;
-#elif defined(IA64)
+#if defined(IA64)
 static char cpu_arch[] = "ia64";
 #elif defined(IA32)
 static char cpu_arch[] = "i386";
@@ -183,10 +181,6 @@ static char cpu_arch[] = "i386";
 static char cpu_arch[] = "amd64";
 #elif defined(ARM)
 static char cpu_arch[] = "arm";
-#elif defined(PPC32)
-static char cpu_arch[] = "ppc";
-#elif defined(SPARC)
-static char cpu_arch[] = "sparcv9";
 #else
   #error Add appropriate cpu_arch setting
 #endif
@@ -607,9 +601,6 @@ static void *thread_native_entry(Thread *thread) {
 
   osthread->set_thread_id(os::Bsd::gettid());
 
-  log_info(os, thread)("Thread is alive (tid: " UINTX_FORMAT ", pthread id: " UINTX_FORMAT ").",
-    os::current_thread_id(), (uintx) pthread_self());
-
 #ifdef __APPLE__
   uint64_t unique_thread_id = locate_unique_thread_id(osthread->thread_id());
   guarantee(unique_thread_id != 0, "unique thread id was not found");
@@ -649,9 +640,6 @@ static void *thread_native_entry(Thread *thread) {
   // Prevent dereferencing it from here on out.
   thread = NULL;
 
-  log_info(os, thread)("Thread finished (tid: " UINTX_FORMAT ", pthread id: " UINTX_FORMAT ").",
-    os::current_thread_id(), (uintx) pthread_self());
-
   return 0;
 }
 
@@ -686,15 +674,6 @@ bool os::create_thread(Thread* thread, ThreadType thr_type, size_t req_stack_siz
   {
     pthread_t tid;
     int ret = pthread_create(&tid, &attr, (void* (*)(void*)) thread_native_entry, thread);
-
-    char buf[64];
-    if (ret == 0) {
-      log_info(os, thread)("Thread started (pthread id: " UINTX_FORMAT ", attributes: %s). ",
-        (uintx) tid, os::Posix::describe_pthread_attr(buf, sizeof(buf), &attr));
-    } else {
-      log_warning(os, thread)("Failed to start thread - pthread_create failed (%s) for attributes: %s.",
-        os::errno_name(ret), os::Posix::describe_pthread_attr(buf, sizeof(buf), &attr));
-    }
 
     pthread_attr_destroy(&attr);
 
@@ -766,9 +745,6 @@ bool os::create_attached_thread(JavaThread* thread) {
   // initialize signal mask for this thread
   // and save the caller's signal mask
   os::Bsd::hotspot_sigmask(thread);
-
-  log_info(os, thread)("Thread attached (tid: " UINTX_FORMAT ", pthread id: " UINTX_FORMAT ").",
-    os::current_thread_id(), (uintx) pthread_self());
 
   return true;
 }
@@ -917,9 +893,7 @@ char * os::local_time_string(char *buf, size_t buflen) {
   time_t long_time;
   time(&long_time);
   localtime_r(&long_time, &t);
-  jio_snprintf(buf, buflen, "%d-%02d-%02d %02d:%02d:%02d",
-               t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
-               t.tm_hour, t.tm_min, t.tm_sec);
+  jio_snprintf(buf, buflen, "%d-%02d-%02d %02d:%02d:%02d", t.tm_year + 1900, t.tm_mon + 1, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec);
   return buf;
 }
 
@@ -1315,12 +1289,10 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
     return NULL;
   }
 
-#ifndef S390
   if (lib_arch.elf_class != arch_array[running_arch_index].elf_class) {
     ::snprintf(diag_msg_buf, diag_msg_max_length-1," (Possible cause: architecture word width mismatch)");
     return NULL;
   }
-#endif
 
   if (lib_arch.compat_class != arch_array[running_arch_index].compat_class) {
     if (lib_arch.name!=NULL) {
@@ -1818,18 +1790,15 @@ void os::pd_commit_memory_or_exit(char* addr, size_t size, size_t alignment_hint
   pd_commit_memory_or_exit(addr, size, exec, mesg);
 }
 
-void os::pd_realign_memory(char *addr, size_t bytes, size_t alignment_hint) {
-}
+void os::pd_realign_memory(char *addr, size_t bytes, size_t alignment_hint) { }
 
 void os::pd_free_memory(char *addr, size_t bytes, size_t alignment_hint) {
   ::madvise(addr, bytes, MADV_DONTNEED);
 }
 
-void os::numa_make_global(char *addr, size_t bytes) {
-}
+void os::numa_make_global(char *addr, size_t bytes) { }
 
-void os::numa_make_local(char *addr, size_t bytes, int lgrp_hint) {
-}
+void os::numa_make_local(char *addr, size_t bytes, int lgrp_hint) { }
 
 bool os::numa_topology_changed() { return false; }
 
@@ -1896,8 +1865,7 @@ static char* anon_mmap(char* requested_addr, size_t bytes, bool fixed) {
   // Map reserved/uncommitted pages PROT_NONE so we fail early if we
   // touch an uncommitted page. Otherwise, the read/write might
   // succeed if we have enough swap space to back the physical page.
-  addr = (char*)::mmap(requested_addr, bytes, PROT_NONE,
-                       flags, -1, 0);
+  addr = (char*)::mmap(requested_addr, bytes, PROT_NONE, flags, -1, 0);
 
   return addr == MAP_FAILED ? NULL : addr;
 }
@@ -1954,8 +1922,7 @@ bool os::Bsd::hugetlbfs_sanity_check(bool warn, size_t page_size) {
 
 static size_t _large_page_size = 0;
 
-void os::large_page_init() {
-}
+void os::large_page_init() { }
 
 char* os::reserve_memory_special(size_t bytes, size_t alignment, char* req_addr, bool exec) {
   fatal("This code is not used or maintained.");
@@ -2697,8 +2664,7 @@ void os::Bsd::set_signal_handler(int sig, bool set_installed) {
       // libjsig also interposes the sigaction() call below and saves the
       // old sigaction on it own.
     } else {
-      fatal("Encountered unexpected pre-existing sigaction handler "
-            "%#lx for signal %d.", (long)oldhand, sig);
+      fatal("Encountered unexpected pre-existing sigaction handler %#lx for signal %d.", (long)oldhand, sig);
     }
   }
 
@@ -2977,8 +2943,7 @@ void os::Bsd::check_signal_handler(int sig) {
     sigaddset(&check_signal_done, sig);
     // Running under non-interactive shell, SHUTDOWN2_SIGNAL will be reassigned SIG_IGN
     if (sig == SHUTDOWN2_SIGNAL && !isatty(fileno(stdin))) {
-      tty->print_cr("Running in non-interactive shell, %s handler is replaced by shell",
-                    exception_name(sig, buf, O_BUFLEN));
+      tty->print_cr("Running in non-interactive shell, %s handler is replaced by shell", exception_name(sig, buf, O_BUFLEN));
     }
   } else if(os::Bsd::get_our_sigflags(sig) != 0 && (int)act.sa_flags != os::Bsd::get_our_sigflags(sig)) {
     tty->print("Warning: %s handler flags ", exception_name(sig, buf, O_BUFLEN));
@@ -3081,9 +3046,7 @@ jint os::init_2(void) {
     // if getrlimit/setrlimit fails but continue regardless.
     struct rlimit nbr_files;
     int status = getrlimit(RLIMIT_NOFILE, &nbr_files);
-    if (status != 0) {
-      log_info(os)("os::init_2 getrlimit failed: %s", os::strerror(errno));
-    } else {
+    if (status == 0) {
       nbr_files.rlim_cur = nbr_files.rlim_max;
 
 #ifdef __APPLE__
@@ -3094,9 +3057,6 @@ jint os::init_2(void) {
 #endif
 
       status = setrlimit(RLIMIT_NOFILE, &nbr_files);
-      if (status != 0) {
-        log_info(os)("os::init_2 setrlimit failed: %s", os::strerror(errno));
-      }
     }
   }
 
@@ -3150,9 +3110,6 @@ void os::make_polling_page_readable(void) {
 int os::active_processor_count() {
   // User has overridden the number of active processors
   if (ActiveProcessorCount > 0) {
-    log_trace(os)("active_processor_count: "
-                  "active processor count set by user : %d",
-                  ActiveProcessorCount);
     return ActiveProcessorCount;
   }
 
@@ -3239,9 +3196,6 @@ bool os::find(address addr, outputStream* st) {
 // on, e.g., Win32.
 void os::os_exception_wrapper(java_call_t f, JavaValue* value, const methodHandle& method, JavaCallArguments* args, Thread* thread) {
   f(value, method, args, thread);
-}
-
-void os::print_statistics() {
 }
 
 bool os::message_box(const char* title, const char* message) {
@@ -3658,8 +3612,7 @@ bool os::start_debugging(char *buf, int buflen) {
 
   if (yes) {
     // yes, user asked VM to launch debugger
-    jio_snprintf(buf, sizeof(buf), "gdb /proc/%d/exe %d",
-                     os::current_process_id(), os::current_process_id());
+    jio_snprintf(buf, sizeof(buf), "gdb /proc/%d/exe %d", os::current_process_id(), os::current_process_id());
 
     os::fork_and_exec(buf);
     yes = false;

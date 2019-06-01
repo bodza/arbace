@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "jvm.h"
 #include "ci/ciConstant.hpp"
 #include "ci/ciEnv.hpp"
@@ -18,7 +19,6 @@
 #include "compiler/disassembler.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "interpreter/linkResolver.hpp"
-// #include "jfr/jfrEvents.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
@@ -903,9 +903,7 @@ void ciEnv::register_method(ciMethod* target, int entry_bci, CodeOffsets* offset
           ResourceMark rm;
           char *method_name = method->name_and_sig_as_C_string();
           ttyLocker ttyl;
-          tty->print_cr("Installing method (%d) %s ",
-                        task()->comp_level(),
-                        method_name);
+          tty->print_cr("Installing method (%d) %s ", task()->comp_level(), method_name);
         }
         // Allow the code to be executed
         method->set_code(method, nm);
@@ -914,10 +912,7 @@ void ciEnv::register_method(ciMethod* target, int entry_bci, CodeOffsets* offset
           ResourceMark rm;
           char *method_name = method->name_and_sig_as_C_string();
           ttyLocker ttyl;
-          tty->print_cr("Installing osr method (%d) %s @ %d",
-                        task()->comp_level(),
-                        method_name,
-                        entry_bci);
+          tty->print_cr("Installing osr method (%d) %s @ %d", task()->comp_level(), method_name, entry_bci);
         }
         method->method_holder()->add_osr_nmethod(nm);
       }
@@ -996,8 +991,7 @@ void ciEnv::record_method_not_compilable(const char* reason, bool all_tiers) {
       if (all_tiers) {
         log()->elem("method_not_compilable");
       } else {
-        log()->elem("method_not_compilable_at_tier level='%d'",
-                    current()->task()->comp_level());
+        log()->elem("method_not_compilable_at_tier level='%d'", current()->task()->comp_level());
       }
     }
     _compilable = new_compilable;
@@ -1031,11 +1025,7 @@ void ciEnv::dump_compile_data(outputStream* out) {
     Method* method = task->method();
     int entry_bci = task->osr_bci();
     int comp_level = task->comp_level();
-    out->print("compile %s %s %s %d %d",
-               method->klass_name()->as_quoted_ascii(),
-               method->name()->as_quoted_ascii(),
-               method->signature()->as_quoted_ascii(),
-               entry_bci, comp_level);
+    out->print("compile %s %s %s %d %d", method->klass_name()->as_quoted_ascii(), method->name()->as_quoted_ascii(), method->signature()->as_quoted_ascii(), entry_bci, comp_level);
     if (compiler_data() != NULL) {
       if (is_c2_compile(comp_level)) {
       } else if (is_c1_compile(comp_level)) {

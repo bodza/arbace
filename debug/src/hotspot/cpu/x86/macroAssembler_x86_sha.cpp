@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/assembler.hpp"
 #include "asm/assembler.inline.hpp"
 #include "runtime/stubRoutines.hpp"
@@ -728,7 +729,7 @@ enum {
   }//if (!multi_block)
 
   lea(NUM_BLKS, Address(INP, NUM_BLKS, Address::times_1, -64)); // pointer to the last block
-  movq(Address(rsp, _INP_END), NUM_BLKS);  //
+  movq(Address(rsp, _INP_END), NUM_BLKS);
 
   cmpptr(INP, NUM_BLKS);                   //cmp INP, NUM_BLKS
   jcc(Assembler::equal, only_one_block);   //je only_one_block
@@ -946,7 +947,6 @@ bind(compute_size_end1);
 
 void MacroAssembler::sha512_AVX2_one_round_compute(Register  old_h, Register a, Register b, Register c, Register d, Register e, Register f, Register g, Register h, int iteration)
 {
-
     const Register& y0 = r13;
     const Register& y1 = r14;
     const Register& y2 = r15;
@@ -1012,7 +1012,6 @@ void MacroAssembler::sha512_AVX2_one_round_and_schedule(
     Register h, //r11
     int iteration)
 {
-
     const Register& y0 = r13;
     const Register& y1 = r14;
     const Register& y2 = r15;

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/assembler.hpp"
 #include "asm/assembler.inline.hpp"
 #include "macroAssembler_x86.hpp"
@@ -217,8 +218,7 @@ void MacroAssembler::fast_log(XMMRegister xmm0, XMMRegister xmm1, XMMRegister xm
   mulsd(xmm6, xmm7);
   if (VM_Version::supports_sse3()) {
     movddup(xmm5, xmm1);
-  }
-  else {
+  } else {
     movdqu(xmm5, xmm1);
     movlhps(xmm5, xmm5);
   }
@@ -229,8 +229,7 @@ void MacroAssembler::fast_log(XMMRegister xmm0, XMMRegister xmm1, XMMRegister xm
   mulpd(xmm5, xmm5);
   if (VM_Version::supports_sse3()) {
     movddup(xmm6, xmm0);
-  }
-  else {
+  } else {
     movdqu(xmm6, xmm0);
     movlhps(xmm6, xmm6);
   }

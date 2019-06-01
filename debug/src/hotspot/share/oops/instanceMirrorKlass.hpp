@@ -28,8 +28,7 @@ class InstanceMirrorKlass: public InstanceKlass {
   InstanceMirrorKlass(const ClassFileParser& parser) : InstanceKlass(parser, InstanceKlass::_misc_kind_mirror, ID) { }
 
  public:
-  InstanceMirrorKlass() {
-    }
+  InstanceMirrorKlass() { }
 
   // Casting from Klass*
   static InstanceMirrorKlass* cast(Klass* k) {

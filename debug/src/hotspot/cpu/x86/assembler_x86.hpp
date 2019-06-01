@@ -266,20 +266,13 @@ class AddressLiteral {
 
  protected:
   // creation
-  AddressLiteral()
-    : _is_lval(false),
-      _target(NULL)
-  { }
+  AddressLiteral() : _is_lval(false), _target(NULL) { }
 
   public:
 
   AddressLiteral(address target, relocInfo::relocType rtype);
 
-  AddressLiteral(address target, RelocationHolder const& rspec)
-    : _rspec(rspec),
-      _is_lval(false),
-      _target(target)
-  { }
+  AddressLiteral(address target, RelocationHolder const& rspec) : _rspec(rspec), _is_lval(false), _target(target) { }
 
   AddressLiteral addr() {
     AddressLiteral ret = *this;
@@ -344,7 +337,7 @@ class ArrayAddress {
   public:
 
   ArrayAddress() { };
-  ArrayAddress(AddressLiteral base, Address index): _base(base), _index(index) { };
+  ArrayAddress(AddressLiteral base, Address index) : _base(base), _index(index) { };
   AddressLiteral base() { return _base; }
   Address index() { return _index; }
 };

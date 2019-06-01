@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "asm/macroAssembler.hpp"
 #include "memory/resourceArea.hpp"
 #include "nativeInst_x86.hpp"
@@ -593,8 +594,7 @@ void NativeIllegalInstruction::insert(address code_pos) {
   ICache::invalidate_range(code_pos, instruction_size);
 }
 
-void NativeGeneralJump::verify() {
-}
+void NativeGeneralJump::verify() { }
 
 void NativeGeneralJump::insert_unconditional(address code_pos, address entry) {
   intptr_t disp = (intptr_t)entry - ((intptr_t)code_pos + 1 + 4);

@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "gc/shared/blockOffsetTable.inline.hpp"
@@ -21,8 +22,7 @@
 #include "utilities/globalDefinitions.hpp"
 #include "utilities/macros.hpp"
 
-HeapWord* DirtyCardToOopClosure::get_actual_top(HeapWord* top,
-                                                HeapWord* top_obj) {
+HeapWord* DirtyCardToOopClosure::get_actual_top(HeapWord* top, HeapWord* top_obj) {
   if (top_obj != NULL) {
     if (_sp->block_is_obj(top_obj)) {
       if (_precision == CardTable::ObjHeadPreciseArray) {
@@ -43,7 +43,6 @@ HeapWord* DirtyCardToOopClosure::get_actual_top(HeapWord* top,
     } else {
       top = top_obj;
     }
-  } else {
   }
   return top;
 }
@@ -124,15 +123,11 @@ void DirtyCardToOopClosure::do_MemRegion(MemRegion mr) {
   _min_done = bottom;
 }
 
-DirtyCardToOopClosure* Space::new_dcto_cl(OopIterateClosure* cl,
-                                          CardTable::PrecisionStyle precision,
-                                          HeapWord* boundary,
-                                          bool parallel) {
+DirtyCardToOopClosure* Space::new_dcto_cl(OopIterateClosure* cl, CardTable::PrecisionStyle precision, HeapWord* boundary, bool parallel) {
   return new DirtyCardToOopClosure(this, cl, precision, boundary);
 }
 
-HeapWord* ContiguousSpaceDCTOC::get_actual_top(HeapWord* top,
-                                               HeapWord* top_obj) {
+HeapWord* ContiguousSpaceDCTOC::get_actual_top(HeapWord* top, HeapWord* top_obj) {
   if (top_obj != NULL && top_obj < (_sp->toContiguousSpace())->top()) {
     if (_precision == CardTable::ObjHeadPreciseArray) {
       if (oop(top_obj)->is_objArray() || oop(top_obj)->is_typeArray()) {
@@ -197,11 +192,7 @@ void ContiguousSpaceDCTOC::walk_mem_region_with_cl(MemRegion mr, \
 ContiguousSpaceDCTOC__walk_mem_region_with_cl_DEFN(OopIterateClosure)
 ContiguousSpaceDCTOC__walk_mem_region_with_cl_DEFN(FilteringClosure)
 
-DirtyCardToOopClosure*
-ContiguousSpace::new_dcto_cl(OopIterateClosure* cl,
-                             CardTable::PrecisionStyle precision,
-                             HeapWord* boundary,
-                             bool parallel) {
+DirtyCardToOopClosure* ContiguousSpace::new_dcto_cl(OopIterateClosure* cl, CardTable::PrecisionStyle precision, HeapWord* boundary, bool parallel) {
   return new ContiguousSpaceDCTOC(this, cl, precision, boundary);
 }
 
@@ -219,8 +210,7 @@ void Space::clear(bool mangle_space) {
   }
 }
 
-ContiguousSpace::ContiguousSpace(): CompactibleSpace(), _top(NULL),
-    _concurrent_iteration_safe_limit(NULL) {
+ContiguousSpace::ContiguousSpace(): CompactibleSpace(), _top(NULL), _concurrent_iteration_safe_limit(NULL) {
   _mangler = new GenSpaceMangler(this);
 }
 
@@ -271,8 +261,7 @@ void CompactibleSpace::clear(bool mangle_space) {
   _compaction_top = bottom();
 }
 
-HeapWord* CompactibleSpace::forward(oop q, size_t size,
-                                    CompactPoint* cp, HeapWord* compact_top) {
+HeapWord* CompactibleSpace::forward(oop q, size_t size, CompactPoint* cp, HeapWord* compact_top) {
   // q is alive
   // First check if we should switch compaction space
   size_t compaction_max_size = pointer_delta(end(), compact_top);
@@ -320,14 +309,12 @@ void Space::print() const { print_on(tty); }
 
 void Space::print_on(outputStream* st) const {
   print_short_on(st);
-  st->print_cr(" [" INTPTR_FORMAT ", " INTPTR_FORMAT ")",
-                p2i(bottom()), p2i(end()));
+  st->print_cr(" [" INTPTR_FORMAT ", " INTPTR_FORMAT ")", p2i(bottom()), p2i(end()));
 }
 
 void ContiguousSpace::print_on(outputStream* st) const {
   print_short_on(st);
-  st->print_cr(" [" INTPTR_FORMAT ", " INTPTR_FORMAT ", " INTPTR_FORMAT ")",
-                p2i(bottom()), p2i(top()), p2i(end()));
+  st->print_cr(" [" INTPTR_FORMAT ", " INTPTR_FORMAT ", " INTPTR_FORMAT ")", p2i(bottom()), p2i(top()), p2i(end()));
 }
 
 void OffsetTableContigSpace::print_on(outputStream* st) const {

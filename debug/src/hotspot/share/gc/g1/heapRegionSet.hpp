@@ -90,7 +90,7 @@ public:
 
 class HeapRegionSet : public HeapRegionSetBase {
 public:
-  HeapRegionSet(const char* name, bool humongous, HRSMtSafeChecker* mt_safety_checker):
+  HeapRegionSet(const char* name, bool humongous, HRSMtSafeChecker* mt_safety_checker) :
     HeapRegionSetBase(name, humongous, false /* free */, mt_safety_checker) { }
 
   void bulk_remove(const uint removed) {
@@ -126,7 +126,7 @@ protected:
   virtual void clear();
 
 public:
-  FreeRegionList(const char* name, HRSMtSafeChecker* mt_safety_checker = NULL):
+  FreeRegionList(const char* name, HRSMtSafeChecker* mt_safety_checker = NULL) :
     HeapRegionSetBase(name, false /* humongous */, true /* empty */, mt_safety_checker) {
     clear();
   }

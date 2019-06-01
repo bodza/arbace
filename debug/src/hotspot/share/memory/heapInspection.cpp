@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/classLoaderData.inline.hpp"
 #include "classfile/moduleEntry.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -698,9 +699,7 @@ void HeapInspection::heap_inspection(outputStream* st) {
     // populate table with object allocation info
     size_t missed_count = populate_table(&cit);
     if (missed_count != 0) {
-      st->print_cr("WARNING: Ran out of C-heap; undercounted " SIZE_FORMAT
-                   " total instances in data below",
-                   missed_count);
+      st->print_cr("WARNING: Ran out of C-heap; undercounted " SIZE_FORMAT " total instances in data below", missed_count);
     }
 
     // Sort and print klass instance info

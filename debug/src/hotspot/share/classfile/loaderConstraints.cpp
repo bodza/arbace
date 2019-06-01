@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/dictionary.hpp"
 #include "classfile/classLoaderData.inline.hpp"
 #include "classfile/loaderConstraints.hpp"
@@ -83,10 +84,7 @@ void LoaderConstraintTable::purge_loader_constraints() {
         if (probe->loader_data(n)->is_unloading()) {
           if (lt.is_enabled()) {
             ResourceMark rm;
-            lt.print("purging loader %s from constraint for name %s",
-                     probe->loader_data(n)->loader_name_and_id(),
-                     probe->name()->as_C_string()
-                     );
+            lt.print("purging loader %s from constraint for name %s", probe->loader_data(n)->loader_name_and_id(), probe->name()->as_C_string());
           }
 
           // Compact array
@@ -99,13 +97,11 @@ void LoaderConstraintTable::purge_loader_constraints() {
             ResourceMark rm;
             lt.print("new loader list:");
             for (int i = 0; i < probe->num_loaders(); i++) {
-              lt.print("    [%d]: %s", i,
-                            probe->loader_data(i)->loader_name_and_id());
+              lt.print("    [%d]: %s", i, probe->loader_data(i)->loader_name_and_id());
             }
           }
 
-          continue;  // current element replaced, so restart without
-                     // incrementing n
+          continue;  // current element replaced, so restart without incrementing n
           }
         n++;
       }
@@ -113,8 +109,7 @@ void LoaderConstraintTable::purge_loader_constraints() {
       if (probe->num_loaders() < 2) {
             if (lt.is_enabled()) {
               ResourceMark rm;
-              lt.print("purging complete constraint for name %s",
-                         probe->name()->as_C_string());
+              lt.print("purging complete constraint for name %s", probe->name()->as_C_string());
             }
 
         // Purge entry
@@ -201,7 +196,6 @@ bool LoaderConstraintTable::add_entry(Symbol* class_name, InstanceKlass* klass1,
         ResourceMark rm;
         lt.print("setting class object in existing constraint for name: %s and loader %s", class_name->as_C_string(), ClassLoaderData::class_loader_data(class_loader1())->loader_name_and_id());
       }
-    } else {
     }
   } else if (*pp1 == NULL) {
     extend_loader_constraint(*pp2, class_loader1, klass);
@@ -237,8 +231,7 @@ bool LoaderConstraintTable::check_or_update(InstanceKlass* k, Handle loader, Sym
   }
 }
 
-InstanceKlass* LoaderConstraintTable::find_constrained_klass(Symbol* name,
-                                                       Handle loader) {
+InstanceKlass* LoaderConstraintTable::find_constrained_klass(Symbol* name, Handle loader) {
   LoaderConstraintEntry *p = *(find_loader_constraint(name, loader));
   if (p != NULL && p->klass() != NULL) {
     if (!p->klass()->is_loaded()) {
@@ -281,7 +274,6 @@ void LoaderConstraintTable::extend_loader_constraint(LoaderConstraintEntry* p, H
   }
   if (p->klass() == NULL) {
     p->set_klass(klass);
-  } else {
   }
 }
 
@@ -307,13 +299,10 @@ void LoaderConstraintTable::merge_loader_constraints(LoaderConstraintEntry** pp1
   LogTarget(Info, class, loader, constraints) lt;
   if (lt.is_enabled()) {
     ResourceMark rm;
-    lt.print("merged constraints for name %s, new loader list:",
-                  p1->name()->as_C_string()
-                  );
+    lt.print("merged constraints for name %s, new loader list:", p1->name()->as_C_string());
 
     for (int i = 0; i < p1->num_loaders(); i++) {
-      lt.print("    [%d]: %s", i,
-                    p1->loader_data(i)->loader_name_and_id());
+      lt.print("    [%d]: %s", i, p1->loader_data(i)->loader_name_and_id());
     }
     if (p1->klass() == NULL) {
       lt.print("... and setting class object");
@@ -325,11 +314,8 @@ void LoaderConstraintTable::merge_loader_constraints(LoaderConstraintEntry** pp1
   // matching non-NULL values, otherwise either the constraints would
   // have been violated, or the constraints had been corrupted (and an
   // assertion would fail).
-  if (p2->klass() != NULL) {
-  }
   if (p1->klass() == NULL) {
     p1->set_klass(klass);
-  } else {
   }
 
   *pp2 = p2->next();
@@ -341,9 +327,7 @@ void LoaderConstraintTable::merge_loader_constraints(LoaderConstraintEntry** pp1
 void LoaderConstraintTable::verify(PlaceholderTable* placeholders) {
   Thread *thread = Thread::current();
   for (int cindex = 0; cindex < table_size(); cindex++) {
-    for (LoaderConstraintEntry* probe = bucket(cindex);
-                                probe != NULL;
-                                probe = probe->next()) {
+    for (LoaderConstraintEntry* probe = bucket(cindex); probe != NULL; probe = probe->next()) {
       if (probe->klass() != NULL) {
         InstanceKlass* ik = probe->klass();
         guarantee(ik->name() == probe->name(), "name should match");
@@ -362,16 +346,13 @@ void LoaderConstraintTable::verify(PlaceholderTable* placeholders) {
           // has to be in the placeholders table.
           unsigned int p_hash = placeholders->compute_hash(name);
           int p_index = placeholders->hash_to_index(p_hash);
-          PlaceholderEntry* entry = placeholders->get_entry(p_index, p_hash,
-                                                            name, loader_data);
+          PlaceholderEntry* entry = placeholders->get_entry(p_index, p_hash, name, loader_data);
 
           // The InstanceKlass might not be on the entry, so the only
           // thing we can check here is whether we were successful in
           // finding the class in the placeholders table.
           guarantee(entry != NULL, "klass should be in the placeholders");
         }
-      }
-      for (int n = 0; n< probe->num_loaders(); n++) {
       }
     }
   }

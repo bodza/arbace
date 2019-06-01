@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1_globals.hpp"
 #include "gc/g1/g1EvacStats.hpp"
 #include "gc/shared/gcId.hpp"
@@ -7,18 +8,6 @@
 
 void G1EvacStats::log_plab_allocation() {
   PLABStats::log_plab_allocation();
-  log_debug(gc, plab)("%s other allocation: "
-                      "region end waste: " SIZE_FORMAT "B, "
-                      "regions filled: %u, "
-                      "direct allocated: " SIZE_FORMAT "B, "
-                      "failure used: " SIZE_FORMAT "B, "
-                      "failure wasted: " SIZE_FORMAT "B",
-                      _description,
-                      _region_end_waste * HeapWordSize,
-                      _regions_filled,
-                      _direct_allocated * HeapWordSize,
-                      _failure_used * HeapWordSize,
-                      _failure_waste * HeapWordSize);
 }
 
 size_t G1EvacStats::compute_desired_plab_sz() {

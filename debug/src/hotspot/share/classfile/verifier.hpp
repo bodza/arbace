@@ -37,9 +37,6 @@ class Verifier : AllStatic {
   // Relax certain access checks to enable some broken 1.1 apps to run on 1.2.
   static bool relax_access_for(oop class_loader);
 
-  // Print output for class+resolve
-  static void trace_class_resolution(Klass* resolve_class, InstanceKlass* verify_class);
-
  private:
   static bool is_eligible_for_verification(InstanceKlass* klass, bool should_verify_class);
   static Symbol* inference_verify(InstanceKlass* klass, char* msg, size_t msg_len, TRAPS);

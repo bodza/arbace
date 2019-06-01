@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1FullCollector.hpp"
 #include "gc/g1/g1FullGCMarker.hpp"
@@ -24,8 +25,7 @@ G1FullGCReferenceProcessingExecutor::~G1FullGCReferenceProcessingExecutor() {
   }
 }
 
-G1FullGCReferenceProcessingExecutor::G1RefProcTaskProxy::G1RefProcTaskProxy(ProcessTask& proc_task,
-                                                                      G1FullCollector* collector) :
+G1FullGCReferenceProcessingExecutor::G1RefProcTaskProxy::G1RefProcTaskProxy(ProcessTask& proc_task, G1FullCollector* collector) :
      AbstractGangTask("G1 reference processing task"),
      _proc_task(proc_task),
      _collector(collector),
@@ -69,5 +69,4 @@ void G1FullGCReferenceProcessingExecutor::execute(STWGCTimer* timer, G1FullGCTra
 
   tracer->report_gc_reference_stats(stats);
   pt.print_all_references();
-
 }

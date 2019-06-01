@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "classfile/systemDictionary.hpp"
 #include "memory/allocation.hpp"
 #include "memory/heapInspection.hpp"
@@ -225,9 +226,7 @@ void ThreadService::remove_thread_dump(ThreadDumpResult* dump) {
 // Dump stack trace of threads specified in the given threads array.
 // Returns StackTraceElement[][] each element is the stack trace of a thread in
 // the corresponding entry in the given threads array
-Handle ThreadService::dump_stack_traces(GrowableArray<instanceHandle>* threads,
-                                        int num_threads,
-                                        TRAPS) {
+Handle ThreadService::dump_stack_traces(GrowableArray<instanceHandle>* threads, int num_threads, TRAPS) {
 
   ThreadDumpResult dump_result;
   VM_ThreadDump op(&dump_result,
@@ -853,8 +852,7 @@ void DeadlockCycle::print_on_with(ThreadsList * t_list, outputStream* st) const 
       st->print("  waiting to lock monitor " INTPTR_FORMAT, p2i(waitingToLockMonitor));
       oop obj = (oop)waitingToLockMonitor->object();
       if (obj != NULL) {
-        st->print(" (object " INTPTR_FORMAT ", a %s)", p2i(obj),
-                   obj->klass()->external_name());
+        st->print(" (object " INTPTR_FORMAT ", a %s)", p2i(obj), obj->klass()->external_name());
 
         if (!currentThread->current_pending_monitor_is_from_java()) {
           owner_desc = "\n  in JNI, which is held by";
@@ -863,21 +861,17 @@ void DeadlockCycle::print_on_with(ThreadsList * t_list, outputStream* st) const 
         // No Java object associated - a JVMTI raw monitor
         owner_desc = " (JVMTI raw monitor),\n  which is held by";
       }
-      currentThread = Threads::owning_thread_from_monitor_owner(t_list,
-                                                                (address)waitingToLockMonitor->owner());
+      currentThread = Threads::owning_thread_from_monitor_owner(t_list, (address)waitingToLockMonitor->owner());
       if (currentThread == NULL) {
         // The deadlock was detected at a safepoint so the JavaThread
         // that owns waitingToLockMonitor should be findable, but
         // if it is not findable, then the previous currentThread is
         // blocked permanently.
-        st->print("%s UNKNOWN_owner_addr=" PTR_FORMAT, owner_desc,
-                  p2i(waitingToLockMonitor->owner()));
+        st->print("%s UNKNOWN_owner_addr=" PTR_FORMAT, owner_desc, p2i(waitingToLockMonitor->owner()));
         continue;
       }
     } else {
-      st->print("  waiting for ownable synchronizer " INTPTR_FORMAT ", (a %s)",
-                p2i(waitingToLockBlocker),
-                waitingToLockBlocker->klass()->external_name());
+      st->print("  waiting for ownable synchronizer " INTPTR_FORMAT ", (a %s)", p2i(waitingToLockBlocker), waitingToLockBlocker->klass()->external_name());
       oop ownerObj = java_util_concurrent_locks_AbstractOwnableSynchronizer::get_owner_threadObj(waitingToLockBlocker);
       currentThread = java_lang_Thread::thread(ownerObj);
     }
@@ -900,9 +894,7 @@ void DeadlockCycle::print_on_with(ThreadsList * t_list, outputStream* st) const 
   JavaMonitorsInStackTrace = oldJavaMonitorsInStackTrace;
 }
 
-ThreadsListEnumerator::ThreadsListEnumerator(Thread* cur_thread,
-                                             bool include_jvmti_agent_threads,
-                                             bool include_jni_attaching_threads) {
+ThreadsListEnumerator::ThreadsListEnumerator(Thread* cur_thread, bool include_jvmti_agent_threads, bool include_jni_attaching_threads) {
 
   int init_size = ThreadService::get_live_thread_count();
   _threads_array = new GrowableArray<instanceHandle>(init_size);

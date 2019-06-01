@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "gc/shared/gcTimer.hpp"
 #include "gc/shared/referenceProcessorPhaseTimes.hpp"
 #include "gc/shared/referenceProcessor.inline.hpp"
@@ -61,18 +62,13 @@ RefProcWorkerTimeTracker::~RefProcWorkerTimeTracker() {
   _worker_time->set(_worker_id, result);
 }
 
-RefProcSubPhasesWorkerTimeTracker::RefProcSubPhasesWorkerTimeTracker(ReferenceProcessor::RefProcSubPhases phase,
-                                                                     ReferenceProcessorPhaseTimes* phase_times,
-                                                                     uint worker_id) :
+RefProcSubPhasesWorkerTimeTracker::RefProcSubPhasesWorkerTimeTracker(ReferenceProcessor::RefProcSubPhases phase, ReferenceProcessorPhaseTimes* phase_times, uint worker_id) :
   RefProcWorkerTimeTracker(phase_times->sub_phase_worker_time_sec(phase), worker_id) {
 }
 
-RefProcSubPhasesWorkerTimeTracker::~RefProcSubPhasesWorkerTimeTracker() {
-}
+RefProcSubPhasesWorkerTimeTracker::~RefProcSubPhasesWorkerTimeTracker() { }
 
-RefProcPhaseTimeBaseTracker::RefProcPhaseTimeBaseTracker(const char* title,
-                                                         ReferenceProcessor::RefProcPhases phase_number,
-                                                         ReferenceProcessorPhaseTimes* phase_times) :
+RefProcPhaseTimeBaseTracker::RefProcPhaseTimeBaseTracker(const char* title, ReferenceProcessor::RefProcPhases phase_number, ReferenceProcessorPhaseTimes* phase_times) :
   _phase_times(phase_times), _start_ticks(), _end_ticks(), _phase_number(phase_number) {
 
   _start_ticks.stamp();
@@ -103,8 +99,7 @@ RefProcPhaseTimeBaseTracker::~RefProcPhaseTimeBaseTracker() {
   }
 }
 
-RefProcBalanceQueuesTimeTracker::RefProcBalanceQueuesTimeTracker(ReferenceProcessor::RefProcPhases phase_number,
-                                                                 ReferenceProcessorPhaseTimes* phase_times) :
+RefProcBalanceQueuesTimeTracker::RefProcBalanceQueuesTimeTracker(ReferenceProcessor::RefProcPhases phase_number, ReferenceProcessorPhaseTimes* phase_times) :
   RefProcPhaseTimeBaseTracker("Balance queues", phase_number, phase_times) { }
 
 RefProcBalanceQueuesTimeTracker::~RefProcBalanceQueuesTimeTracker() {
@@ -112,8 +107,7 @@ RefProcBalanceQueuesTimeTracker::~RefProcBalanceQueuesTimeTracker() {
   phase_times()->set_balance_queues_time_ms(_phase_number, elapsed);
 }
 
-RefProcPhaseTimeTracker::RefProcPhaseTimeTracker(ReferenceProcessor::RefProcPhases phase_number,
-                                                       ReferenceProcessorPhaseTimes* phase_times) :
+RefProcPhaseTimeTracker::RefProcPhaseTimeTracker(ReferenceProcessor::RefProcPhases phase_number, ReferenceProcessorPhaseTimes* phase_times) :
   RefProcPhaseTimeBaseTracker(phase_enum_2_phase_string(phase_number), phase_number, phase_times) {
 }
 
@@ -122,9 +116,7 @@ RefProcPhaseTimeTracker::~RefProcPhaseTimeTracker() {
   phase_times()->set_phase_time_ms(_phase_number, elapsed);
 }
 
-RefProcTotalPhaseTimesTracker::RefProcTotalPhaseTimesTracker(ReferenceProcessor::RefProcPhases phase_number,
-                                                             ReferenceProcessorPhaseTimes* phase_times,
-                                                             ReferenceProcessor* rp) :
+RefProcTotalPhaseTimesTracker::RefProcTotalPhaseTimesTracker(ReferenceProcessor::RefProcPhases phase_number, ReferenceProcessorPhaseTimes* phase_times, ReferenceProcessor* rp) :
   _rp(rp), RefProcPhaseTimeBaseTracker(phase_enum_2_phase_string(phase_number), phase_number, phase_times) {
 }
 

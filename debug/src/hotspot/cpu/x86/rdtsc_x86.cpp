@@ -1,4 +1,5 @@
 #include "precompiled.hpp"
+
 #include "rdtsc_x86.hpp"
 #include "runtime/thread.inline.hpp"
 #include "vm_version_ext_x86.hpp"
