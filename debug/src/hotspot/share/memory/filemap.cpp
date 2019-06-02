@@ -66,15 +66,8 @@ void FileMapInfo::fail_continue(const char *msg, ...) {
   va_list ap;
   va_start(ap, msg);
   MetaspaceShared::set_archive_loading_failed();
-  if (PrintSharedArchiveAndExit && _validating_shared_path_table) {
-    // If we are doing PrintSharedArchiveAndExit and some of the classpath entries
-    // do not validate, we can still continue "limping" to validate the remaining
-    // entries. No need to quit.
-    tty->print("[");
-    tty->vprint(msg, ap);
-    tty->print_cr("]");
-  } else {
-    if (RequireSharedSpaces) {
+  {
+    if (false) {
       fail(msg, ap);
     }
     UseSharedSpaces = false;
@@ -159,8 +152,8 @@ void FileMapInfo::FileMapHeader::populate(FileMapInfo* mapinfo, size_t alignment
   _app_class_paths_start_index = ClassLoaderExt::app_class_paths_start_index();
   _app_module_paths_start_index = ClassLoaderExt::app_module_paths_start_index();
 
-  _verify_local = BytecodeVerificationLocal;
-  _verify_remote = BytecodeVerificationRemote;
+  _verify_local = false;
+  _verify_remote = false;
   _has_platform_or_app_classes = ClassLoaderExt::has_platform_or_app_classes();
 }
 
@@ -226,11 +219,7 @@ bool SharedClassPathEntry::validate(bool is_class_path) {
     }
   } else if ((has_timestamp() && _timestamp != st.st_mtime) || _filesize != st.st_size) {
     ok = false;
-    if (PrintSharedArchiveAndExit) {
-      FileMapInfo::fail_continue(_timestamp != st.st_mtime ? "Timestamp mismatch" : "File size mismatch");
-    } else {
-      FileMapInfo::fail_continue("A jar file is not the one used while building the shared archive file: %s", name);
-    }
+    FileMapInfo::fail_continue("A jar file is not the one used while building the shared archive file: %s", name);
   }
   return ok;
 }
@@ -416,7 +405,7 @@ bool FileMapInfo::validate_shared_path_table() {
     } else if (i >= module_paths_start_index) {
       if (shared_path(i)->validate(false /* not a class path entry */)) {
       }
-    } else if (!PrintSharedArchiveAndExit) {
+    } else {
       _validating_shared_path_table = false;
       _shared_path_table = NULL;
       _shared_path_table_size = 0;
@@ -893,13 +882,6 @@ bool FileMapInfo::FileMapHeader::validate() {
     _has_platform_or_app_classes = false;
   }
 
-  // For backwards compatibility, we don't check the verification setting
-  // if the archive only contains system classes.
-  if (_has_platform_or_app_classes && ((!_verify_local && BytecodeVerificationLocal) || (!_verify_remote && BytecodeVerificationRemote))) {
-    FileMapInfo::fail_continue("The shared archive file was created with less restrictive verification setting than the current setting.");
-    return false;
-  }
-
   return true;
 }
 
@@ -908,10 +890,8 @@ bool FileMapInfo::validate_header() {
 
   if (status) {
     if (!ClassLoader::check_shared_paths_misc_info(_paths_misc_info, _header->_paths_misc_info_size)) {
-      if (!PrintSharedArchiveAndExit) {
-        fail_continue("shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)");
-        status = false;
-      }
+      fail_continue("shared class paths mismatch (hint: enable -Xlog:class+path=info to diagnose the failure)");
+      status = false;
     }
   }
 
@@ -962,7 +942,7 @@ void FileMapInfo::stop_sharing_and_unmap(const char* msg) {
     map_info->dealloc_archive_heap_regions(string_ranges,
                                            num_string_ranges,
                                            false);
-  } else if (DumpSharedSpaces) {
+  } else if (false) {
     fail_stop("%s", msg);
   }
 }

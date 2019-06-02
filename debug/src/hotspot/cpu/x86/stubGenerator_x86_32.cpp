@@ -348,26 +348,6 @@ class StubGenerator: public StubCodeGenerator {
 
     const Address mxcsr_save(rsp, 0);
 
-    if (CheckJNICalls && UseSSE > 0 ) {
-      Label ok_ret;
-      ExternalAddress mxcsr_std(StubRoutines::addr_mxcsr_std());
-      __ push(rax);
-      __ subptr(rsp, wordSize);      // allocate a temp location
-      __ stmxcsr(mxcsr_save);
-      __ movl(rax, mxcsr_save);
-      __ andl(rax, MXCSR_MASK);
-      __ cmp32(rax, mxcsr_std);
-      __ jcc(Assembler::equal, ok_ret);
-
-      __ warn("MXCSR changed by native JNI code.");
-
-      __ ldmxcsr(mxcsr_std);
-
-      __ bind(ok_ret);
-      __ addptr(rsp, wordSize);
-      __ pop(rax);
-    }
-
     __ ret(0);
 
     return start;
@@ -385,26 +365,6 @@ class StubGenerator: public StubCodeGenerator {
     address start = __ pc();
 
     const Address fpu_cntrl_wrd_save(rsp, 0);
-
-    if (CheckJNICalls) {
-      Label ok_ret;
-      __ push(rax);
-      __ subptr(rsp, wordSize);      // allocate a temp location
-      __ fnstcw(fpu_cntrl_wrd_save);
-      __ movl(rax, fpu_cntrl_wrd_save);
-      __ andl(rax, FPU_CNTRL_WRD_MASK);
-      ExternalAddress fpu_std(StubRoutines::addr_fpu_cntrl_wrd_std());
-      __ cmp32(rax, fpu_std);
-      __ jcc(Assembler::equal, ok_ret);
-
-      __ warn("Floating point control word changed by native JNI code.");
-
-      __ fldcw(fpu_std);
-
-      __ bind(ok_ret);
-      __ addptr(rsp, wordSize);
-      __ pop(rax);
-    }
 
     __ ret(0);
 
@@ -554,8 +514,8 @@ class StubGenerator: public StubCodeGenerator {
         __ evmovdqul(xmm0, Address(from, 0), Assembler::AVX_512bit);
         __ evmovdqul(Address(from, to_from, Address::times_1, 0), xmm0, Assembler::AVX_512bit);
       } else if (UseAVX == 2) {
-        __ vmovdqu(xmm0, Address(from,  0));
-        __ vmovdqu(Address(from, to_from, Address::times_1,  0), xmm0);
+        __ vmovdqu(xmm0, Address(from, 0));
+        __ vmovdqu(Address(from, to_from, Address::times_1, 0), xmm0);
         __ vmovdqu(xmm1, Address(from, 32));
         __ vmovdqu(Address(from, to_from, Address::times_1, 32), xmm1);
       } else {
@@ -2296,7 +2256,7 @@ class StubGenerator: public StubCodeGenerator {
   __ opc(xmm_result0, src_reg); \
   __ opc(xmm_result1, src_reg); \
   __ opc(xmm_result2, src_reg); \
-  __ opc(xmm_result3, src_reg); \
+  __ opc(xmm_result3, src_reg);
 
     for (int k = 0; k < 3; ++k) {
       __ align(OptoLoopAlignment);

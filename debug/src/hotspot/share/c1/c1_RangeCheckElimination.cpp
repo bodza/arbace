@@ -952,11 +952,6 @@ void RangeCheckEliminator::Verification::block_do(BlockBegin *block) {
     }
   }
 
-  BlockBegin *dominator = block->dominator();
-  if (dominator) {
-    BlockList *all_blocks = _ir->linear_scan_order();
-  }
-
   if (block->is_set(BlockBegin::linear_scan_loop_header_flag)) {
     int loop_index = block->loop_index();
     BlockList *all_blocks = _ir->linear_scan_order();

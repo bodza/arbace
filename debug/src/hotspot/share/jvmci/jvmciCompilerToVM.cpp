@@ -67,7 +67,7 @@ void JNIHandleMark::pop_jni_handle_block() {
   JNIEXPORT result_type JNICALL c2v_ ## name signature { \
   TRACE_jvmci_1("CompilerToVM::" #name); \
   TRACE_CALL(result_type, jvmci_ ## name signature) \
-  JVMCI_VM_ENTRY_MARK; \
+  JVMCI_VM_ENTRY_MARK;
 
 #define C2V_END }
 
@@ -629,19 +629,7 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject target, jobject
   CodeInstaller installer(is_immutable_PIC);
   JVMCIEnv::CodeInstallResult result = installer.install(compiler, target_handle, compiled_code_handle, cb, installed_code_handle, speculation_log_handle, CHECK_0);
 
-  if (PrintCodeCacheOnCompilation) {
-    stringStream s;
-    // Dump code cache  into a buffer before locking the tty,
-    {
-      MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-      CodeCache::print_summary(&s, false);
-    }
-    ttyLocker ttyl;
-    tty->print_raw_cr(s.as_string());
-  }
-
-  if (result != JVMCIEnv::ok) {
-  } else {
+  if (result == JVMCIEnv::ok) {
     if (installed_code_handle.not_null()) {
       nmethod::invalidate_installed_code(installed_code_handle, CHECK_0);
       {
@@ -1195,7 +1183,7 @@ C2V_VMENTRY(jobject, getSignaturePolymorphicHolders, (JNIEnv*, jobject))
 C2V_END
 
 C2V_VMENTRY(jboolean, shouldDebugNonSafepoints, (JNIEnv*, jobject))
-  return DebugNonSafepoints;
+  return false;
 C2V_END
 
 // public native void materializeVirtualObjects(HotSpotStackFrameReference stackFrame, boolean invalidate);

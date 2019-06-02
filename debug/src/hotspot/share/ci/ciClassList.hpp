@@ -92,6 +92,6 @@ friend class ciKlass; \
 friend class ciInstanceKlass; \
 friend class ciArrayKlass; \
 friend class ciObjArrayKlass; \
-friend class ciTypeArrayKlass; \
+friend class ciTypeArrayKlass;
 
 #endif

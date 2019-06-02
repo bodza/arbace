@@ -15,7 +15,6 @@
 #include "runtime/os.hpp"
 #include "services/attachListener.hpp"
 #include "services/diagnosticCommand.hpp"
-#include "services/heapDumper.hpp"
 #include "services/writeableFlags.hpp"
 #include "utilities/debug.hpp"
 #include "utilities/formatBuffer.hpp"
@@ -150,48 +149,6 @@ static jint jcmd(AttachOperation* op, outputStream* out) {
   return JNI_OK;
 }
 
-// Implementation of "dumpheap" command.
-// See also: HeapDumpDCmd class
-//
-// Input arguments :-
-//   arg0: Name of the dump file
-//   arg1: "-live" or "-all"
-jint dump_heap(AttachOperation* op, outputStream* out) {
-  const char* path = op->arg(0);
-  if (path == NULL || path[0] == '\0') {
-    out->print_cr("No dump file specified");
-  } else {
-    bool live_objects_only = true;   // default is true to retain the behavior before this change is made
-    const char* arg1 = op->arg(1);
-    if (arg1 != NULL && (strlen(arg1) > 0)) {
-      if (strcmp(arg1, "-all") != 0 && strcmp(arg1, "-live") != 0) {
-        out->print_cr("Invalid argument to dumpheap operation: %s", arg1);
-        return JNI_ERR;
-      }
-      live_objects_only = strcmp(arg1, "-live") == 0;
-    }
-
-    // Request a full GC before heap dump if live_objects_only = true
-    // This helps reduces the amount of unreachable objects in the dump
-    // and makes it easier to browse.
-    HeapDumper dumper(live_objects_only /* request GC */);
-    int res = dumper.dump(op->arg(0));
-    if (res == 0) {
-      out->print_cr("Heap dump file created");
-    } else {
-      // heap dump failed
-      ResourceMark rm;
-      char* error = dumper.error_as_C_string();
-      if (error == NULL) {
-        out->print_cr("Dump failed - reason unknown");
-      } else {
-        out->print_cr("%s", error);
-      }
-    }
-  }
-  return JNI_OK;
-}
-
 // Implementation of "inspectheap" command
 // See also: ClassHistogramDCmd class
 //
@@ -262,7 +219,6 @@ static jint print_flag(AttachOperation* op, outputStream* out) {
 static AttachOperationFunctionInfo funcs[] = {
   { "agentProperties",  get_agent_properties },
   { "datadump",         data_dump },
-  { "dumpheap",         dump_heap },
   { "properties",       get_system_properties },
   { "threaddump",       thread_dump },
   { "inspectheap",      heap_inspection },

@@ -49,8 +49,7 @@ class UTF8 : AllStatic {
   static bool   is_supplementary_character(const unsigned char* str);
   static jint   get_supplementary_character(const unsigned char* str);
 
-  static bool   is_legal_utf8(const unsigned char* buffer, int length,
-                              bool version_leq_47);
+  static bool   is_legal_utf8(const unsigned char* buffer, int length, bool version_leq_47);
 };
 
 // Low-level interface for UNICODE strings

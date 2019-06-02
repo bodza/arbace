@@ -40,9 +40,6 @@ static char* create_standard_memory(size_t size) {
 
   // commit memory
   if (!os::commit_memory(mapAddress, size, !ExecMem)) {
-    if (PrintMiscellaneous && Verbose) {
-      warning("Could not commit PerfData memory\n");
-    }
     os::release_memory(mapAddress, size);
     return NULL;
   }
@@ -74,21 +71,13 @@ static void save_memory_to_file(char* addr, size_t size) {
   int result;
 
   RESTARTABLE(::open(destfile, O_CREAT|O_WRONLY|O_TRUNC, S_IREAD|S_IWRITE), result);
-  if (result == OS_ERR) {
-    if (PrintMiscellaneous && Verbose) {
-      warning("Could not create Perfdata save file: %s: %s\n",
-              destfile, os::strerror(errno));
-    }
-  } else {
+  if (result != OS_ERR) {
     int fd = result;
 
     for (size_t remaining = size; remaining > 0;) {
 
       RESTARTABLE(::write(fd, addr, remaining), result);
       if (result == OS_ERR) {
-        if (PrintMiscellaneous && Verbose) {
-          warning("Could not write Perfdata save file: %s: %s\n", destfile, os::strerror(errno));
-        }
         break;
       }
 
@@ -97,11 +86,6 @@ static void save_memory_to_file(char* addr, size_t size) {
     }
 
     result = ::close(fd);
-    if (PrintMiscellaneous && Verbose) {
-      if (result == OS_ERR) {
-        warning("Could not close %s: %s\n", destfile, os::strerror(errno));
-      }
-    }
   }
   FREE_C_HEAP_ARRAY(char, destfile);
 }
@@ -274,13 +258,6 @@ static DIR *open_directory_secure(const char* dirname) {
   RESTARTABLE(::open(dirname, O_RDONLY|O_NOFOLLOW), result);
   if (result == OS_ERR) {
     // Directory doesn't exist or is a symlink, so there is nothing to cleanup.
-    if (PrintMiscellaneous && Verbose) {
-      if (errno == ELOOP) {
-        warning("directory %s is a symlink and is not secure\n", dirname);
-      } else {
-        warning("could not open directory %s: %s\n", dirname, os::strerror(errno));
-      }
-    }
     return dirp;
   }
   int fd = result;
@@ -348,9 +325,6 @@ static DIR *open_directory_secure_cwd(const char* dirname, int *saved_cwd_fd) {
   // handle errors, otherwise shared memory files will be created in cwd.
   result = fchdir(fd);
   if (result == OS_ERR) {
-    if (PrintMiscellaneous && Verbose) {
-      warning("could not change to directory %s", dirname);
-    }
     if (*saved_cwd_fd != -1) {
       ::close(*saved_cwd_fd);
       *saved_cwd_fd = -1;
@@ -388,16 +362,10 @@ static bool is_file_secure(int fd, const char *filename) {
   // Determine if the file is secure.
   RESTARTABLE(::fstat(fd, &statbuf), result);
   if (result == OS_ERR) {
-    if (PrintMiscellaneous && Verbose) {
-      warning("fstat failed on %s: %s\n", filename, os::strerror(errno));
-    }
     return false;
   }
   if (statbuf.st_nlink > 1) {
     // A file with multiple links is not expected.
-    if (PrintMiscellaneous && Verbose) {
-      warning("file %s has multiple links\n", filename);
-    }
     return false;
   }
   return true;
@@ -425,25 +393,6 @@ static char* get_user_name(uid_t uid) {
   int result = getpwuid_r(uid, &pwent, pwbuf, (size_t)bufsize, &p);
 
   if (result != 0 || p == NULL || p->pw_name == NULL || *(p->pw_name) == '\0') {
-    if (PrintMiscellaneous && Verbose) {
-      if (result != 0) {
-        warning("Could not retrieve passwd entry: %s\n", os::strerror(result));
-      } else if (p == NULL) {
-        // this check is added to protect against an observed problem
-        // with getpwuid_r() on RedHat 9 where getpwuid_r returns 0,
-        // indicating success, but has p == NULL. This was observed when
-        // inserting a file descriptor exhaustion fault prior to the call
-        // getpwuid_r() call. In this case, error is set to the appropriate
-        // error condition, but this is undocumented behavior. This check
-        // is safe under any condition, but the use of errno in the output
-        // message may result in an erroneous message.
-        // Bug Id 89052 was opened with RedHat.
-        //
-        warning("Could not retrieve passwd entry: %s\n", os::strerror(errno));
-      } else {
-        warning("Could not determine user name: %s\n", p->pw_name == NULL ? "pw_name = NULL" : "pw_name zero length");
-      }
-    }
     FREE_C_HEAP_ARRAY(char, pwbuf);
     return NULL;
   }
@@ -610,11 +559,6 @@ static void remove_file(const char* path) {
   // maliciously planted, the directory's presence won't hurt anything.
   //
   RESTARTABLE(::unlink(path), result);
-  if (PrintMiscellaneous && Verbose && result == OS_ERR) {
-    if (errno != ENOENT) {
-      warning("Could not unlink shared memory backing store file %s : %s\n", path, os::strerror(errno));
-    }
-  }
 }
 
 // cleanup stale shared memory resources
@@ -708,18 +652,10 @@ static bool make_user_tmp_dir(const char* dirname) {
       //
       if (!is_directory_secure(dirname)) {
         // directory is not secure
-        if (PrintMiscellaneous && Verbose) {
-          warning("%s directory is insecure\n", dirname);
-        }
         return false;
       }
     } else {
-      // we encountered some other failure while attempting
-      // to create the directory
-      //
-      if (PrintMiscellaneous && Verbose) {
-        warning("could not create directory %s: %s\n", dirname, os::strerror(errno));
-      }
+      // we encountered some other failure while attempting to create the directory
       return false;
     }
   }
@@ -756,13 +692,6 @@ static int create_sharedmem_resources(const char* dirname, const char* filename,
   int result;
   RESTARTABLE(::open(filename, O_RDWR|O_CREAT|O_NOFOLLOW, S_IREAD|S_IWRITE), result);
   if (result == OS_ERR) {
-    if (PrintMiscellaneous && Verbose) {
-      if (errno == ELOOP) {
-        warning("file %s is a symlink and is not secure\n", filename);
-      } else {
-        warning("could not create file %s: %s\n", filename, os::strerror(errno));
-      }
-    }
     // close the directory and reset the current working directory
     close_directory_secure_cwd(dirp, saved_cwd_fd);
 
@@ -783,18 +712,12 @@ static int create_sharedmem_resources(const char* dirname, const char* filename,
   // truncate the file to get rid of any existing data
   RESTARTABLE(::ftruncate(fd, (off_t)0), result);
   if (result == OS_ERR) {
-    if (PrintMiscellaneous && Verbose) {
-      warning("could not truncate shared memory file: %s\n", os::strerror(errno));
-    }
     ::close(fd);
     return -1;
   }
   // set the file size
   RESTARTABLE(::ftruncate(fd, (off_t)size), result);
   if (result == OS_ERR) {
-    if (PrintMiscellaneous && Verbose) {
-      warning("could not set shared memory file size: %s\n", os::strerror(errno));
-    }
     ::close(fd);
     return -1;
   }
@@ -908,9 +831,6 @@ static char* mmap_create_shared(size_t size) {
   result = ::close(fd);
 
   if (mapAddress == MAP_FAILED) {
-    if (PrintMiscellaneous && Verbose) {
-      warning("mmap failed -  %s\n", os::strerror(errno));
-    }
     remove_file(filename);
     FREE_C_HEAP_ARRAY(char, filename);
     return NULL;
@@ -970,9 +890,6 @@ static size_t sharedmem_filesize(int fd, TRAPS) {
 
   RESTARTABLE(::fstat(fd, &statbuf), result);
   if (result == OS_ERR) {
-    if (PrintMiscellaneous && Verbose) {
-      warning("fstat failed: %s\n", os::strerror(errno));
-    }
     THROW_MSG_0(vmSymbols::java_io_IOException(), "Could not determine PerfMemory size");
   }
 
@@ -1069,11 +986,7 @@ static void mmap_attach_shared(const char* user, int vmid, PerfMemory::PerfMemor
   result = ::close(fd);
 
   if (mapAddress == MAP_FAILED) {
-    if (PrintMiscellaneous && Verbose) {
-      warning("mmap failed: %s\n", os::strerror(errno));
-    }
-    THROW_MSG(vmSymbols::java_lang_OutOfMemoryError(),
-              "Could not map PerfMemory");
+    THROW_MSG(vmSymbols::java_lang_OutOfMemoryError(), "Could not map PerfMemory");
   }
 
   // it does not go through os api, the operation has to record from here
@@ -1101,9 +1014,6 @@ void PerfMemory::create_memory_region(size_t size) {
       // creation of the shared memory region failed, attempt
       // to create a contiguous, non-shared memory region instead.
       //
-      if (PrintMiscellaneous && Verbose) {
-        warning("Reverting to non-shared PerfMemory region.\n");
-      }
       PerfDisableSharedMem = true;
       _start = create_standard_memory(size);
     }
@@ -1119,14 +1029,6 @@ void PerfMemory::create_memory_region(size_t size) {
 // tuple will be inaccessible after a call to this method.
 //
 void PerfMemory::delete_memory_region() {
-
-  // If user specifies PerfDataSaveFile, it will save the performance data
-  // to the specified file name no matter whether PerfDataSaveToFile is specified
-  // or not. In other word, -XX:PerfDataSaveFile=.. overrides flag
-  // -XX:+PerfDataSaveToFile.
-  if (PerfDataSaveToFile || PerfDataSaveFile != NULL) {
-    save_memory_to_file(start(), capacity());
-  }
 
   if (PerfDisableSharedMem) {
     delete_standard_memory(start(), capacity());

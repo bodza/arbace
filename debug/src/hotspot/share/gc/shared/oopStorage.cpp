@@ -524,10 +524,7 @@ OopStorage::Block* OopStorage::find_block_or_null(const oop* ptr) const {
   return Block::block_for_ptr(this, ptr);
 }
 
-static void log_release_transitions(uintx releasing,
-                                    uintx old_allocated,
-                                    const OopStorage* owner,
-                                    const void* block) {
+static void log_release_transitions(uintx releasing, uintx old_allocated, const OopStorage* owner, const void* block) {
   Log(oopstorage, blocks) log;
   LogStream ls(log.debug());
   if (is_full_bitmask(old_allocated)) {

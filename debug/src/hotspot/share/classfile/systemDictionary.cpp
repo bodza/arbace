@@ -761,8 +761,7 @@ Klass* SystemDictionary::resolve_instance_class_or_null(Symbol* name, Handle cla
   if (protection_domain() == NULL) return k;
 
   // Check the protection domain has the right access
-  if (dictionary->is_valid_protection_domain(d_hash, name,
-                                             protection_domain)) {
+  if (dictionary->is_valid_protection_domain(d_hash, name, protection_domain)) {
     return k;
   }
 

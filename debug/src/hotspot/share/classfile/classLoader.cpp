@@ -373,10 +373,7 @@ void ClassLoader::trace_class_path(const char* msg, const char* name) {
 
 void ClassLoader::setup_bootstrap_search_path() {
   const char* sys_class_path = Arguments::get_sysclasspath();
-  if (PrintSharedArchiveAndExit) {
-    // Don't print sys_class_path - this is the bootcp of this current VM process, not necessarily
-    // the same as the bootcp of the shared archive.
-  } else {
+  {
     trace_class_path("bootstrap loader class path=", sys_class_path);
   }
   setup_boot_search_path(sys_class_path);
@@ -961,9 +958,7 @@ InstanceKlass* ClassLoader::load_class(Symbol* name, bool search_append_only, TR
     // appear in the _patch_mod_entries. The runtime shared class visibility
     // check will determine if a shared class is visible based on the runtime
     // environemnt, including the runtime --patch-module setting.
-    if (!DumpSharedSpaces) {
-      stream = search_module_entries(_patch_mod_entries, class_name, file_name, CHECK_NULL);
-    }
+    stream = search_module_entries(_patch_mod_entries, class_name, file_name, CHECK_NULL);
   }
 
   // Load Attempt #2: [jimage | exploded build]
@@ -999,16 +994,11 @@ InstanceKlass* ClassLoader::load_class(Symbol* name, bool search_append_only, TR
     return NULL;
   }
 
-  stream->set_verify(ClassLoaderExt::should_verify(classpath_index));
-
   ClassLoaderData* loader_data = ClassLoaderData::the_null_class_loader_data();
   Handle protection_domain;
 
   InstanceKlass* result = KlassFactory::create_from_stream(stream, name, loader_data, protection_domain, NULL, NULL, THREAD);
   if (HAS_PENDING_EXCEPTION) {
-    if (DumpSharedSpaces) {
-      tty->print_cr("Preload Error: Failed to load %s", class_name);
-    }
     return NULL;
   }
 

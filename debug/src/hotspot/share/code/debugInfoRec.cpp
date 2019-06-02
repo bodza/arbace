@@ -76,7 +76,7 @@ public:
 
 static inline bool compute_recording_non_safepoints() {
   // If the flag is set manually, use it, whether true or false.
-  return DebugNonSafepoints;
+  return false;
 }
 
 DebugInformationRecorder::DebugInformationRecorder(OopRecorder* oop_recorder)

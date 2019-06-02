@@ -221,10 +221,6 @@ int CompiledMethod::verify_icholder_relocations() {
     if (iter.type() == relocInfo::virtual_call_type) {
       if (CompiledIC::is_icholder_call_site(iter.virtual_call_reloc(), this)) {
         CompiledIC *ic = CompiledIC_at(&iter);
-        if (TraceCompiledIC) {
-          tty->print("noticed icholder " INTPTR_FORMAT " ", p2i(ic->cached_icholder()));
-          ic->print();
-        }
         count++;
       }
     }
@@ -378,8 +374,7 @@ void CompiledMethod::do_unloading(BoolObjectClosure* is_alive) {
 
 // Clean references to unloaded nmethods at addr from this one, which is not unloaded.
 template <class CompiledICorStaticCall>
-static bool clean_if_nmethod_is_unloaded(CompiledICorStaticCall *ic, address addr, CompiledMethod* from,
-                                         bool parallel, bool clean_all) {
+static bool clean_if_nmethod_is_unloaded(CompiledICorStaticCall *ic, address addr, CompiledMethod* from, bool parallel, bool clean_all) {
   // Ok, to lookup references to zombies here
   CodeBlob *cb = CodeCache::find_blob_unsafe(addr);
   CompiledMethod* nm = (cb != NULL) ? cb->as_compiled_method_or_null() : NULL;

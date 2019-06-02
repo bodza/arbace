@@ -46,8 +46,7 @@ class ObjectSynchronizer : AllStatic {
   // assembly copies of these routines. Please keep them synchronized.
   //
   // attempt_rebias flag is used by UseBiasedLocking implementation
-  static void fast_enter(Handle obj, BasicLock* lock, bool attempt_rebias,
-                         TRAPS);
+  static void fast_enter(Handle obj, BasicLock* lock, bool attempt_rebias, TRAPS);
   static void fast_exit(oop obj, BasicLock* lock, Thread* THREAD);
 
   // WARNING: They are ONLY used to handle the slow cases. They should
@@ -83,8 +82,7 @@ class ObjectSynchronizer : AllStatic {
   // thread-specific and global objectMonitor free list accessors
   static void verifyInUse(Thread * Self);
   static ObjectMonitor * omAlloc(Thread * Self);
-  static void omRelease(Thread * Self, ObjectMonitor * m,
-                        bool FromPerThreadAlloc);
+  static void omRelease(Thread * Self, ObjectMonitor * m, bool FromPerThreadAlloc);
   static void omFlush(Thread * Self);
 
   // Inflate light weight monitor to heavy weight monitor
@@ -117,21 +115,15 @@ class ObjectSynchronizer : AllStatic {
   static void finish_deflate_idle_monitors(DeflateMonitorCounters* counters);
 
   // For a given monitor list: global or per-thread, deflate idle monitors
-  static int deflate_monitor_list(ObjectMonitor** listheadp,
-                                  ObjectMonitor** freeHeadp,
-                                  ObjectMonitor** freeTailp);
-  static bool deflate_monitor(ObjectMonitor* mid, oop obj,
-                              ObjectMonitor** freeHeadp,
-                              ObjectMonitor** freeTailp);
+  static int deflate_monitor_list(ObjectMonitor** listheadp, ObjectMonitor** freeHeadp, ObjectMonitor** freeTailp);
+  static bool deflate_monitor(ObjectMonitor* mid, oop obj, ObjectMonitor** freeHeadp, ObjectMonitor** freeTailp);
   static bool is_cleanup_needed();
   static void oops_do(OopClosure* f);
   // Process oops in thread local used monitors
   static void thread_local_used_oops_do(Thread* thread, OopClosure* f);
 
   // debugging
-  static void sanity_checks(const bool verbose,
-                            const unsigned int cache_line_size,
-                            int *error_cnt_ptr, int *warning_cnt_ptr);
+  static void sanity_checks(const bool verbose, const unsigned int cache_line_size, int *error_cnt_ptr, int *warning_cnt_ptr);
   static int  verify_objmon_isinpool(ObjectMonitor *addr) { return 0; };
 
  private:

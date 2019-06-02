@@ -249,21 +249,12 @@ public:
   // Resolve a superclass or superinterface. Called from ClassFileParser,
   // parse_interfaces, resolve_instance_class_or_null, load_shared_class
   // "child_name" is the class whose super class or interface is being resolved.
-  static Klass* resolve_super_or_fail(Symbol* child_name,
-                                      Symbol* class_name,
-                                      Handle class_loader,
-                                      Handle protection_domain,
-                                      bool is_superclass,
-                                      TRAPS);
+  static Klass* resolve_super_or_fail(Symbol* child_name, Symbol* class_name, Handle class_loader, Handle protection_domain, bool is_superclass, TRAPS);
 
   // Parse new stream. This won't update the dictionary or
   // class hierarchy, simply parse the stream. Used by JVMTI RedefineClasses.
   // Also used by Unsafe_DefineAnonymousClass
-  static InstanceKlass* parse_stream(Symbol* class_name,
-                                     Handle class_loader,
-                                     Handle protection_domain,
-                                     ClassFileStream* st,
-                                     TRAPS) {
+  static InstanceKlass* parse_stream(Symbol* class_name, Handle class_loader, Handle protection_domain, ClassFileStream* st, TRAPS) {
     return parse_stream(class_name,
                         class_loader,
                         protection_domain,
@@ -281,11 +272,7 @@ public:
                                      TRAPS);
 
   // Resolve from stream (called by jni_DefineClass and JVM_DefineClass)
-  static InstanceKlass* resolve_from_stream(Symbol* class_name,
-                                            Handle class_loader,
-                                            Handle protection_domain,
-                                            ClassFileStream* st,
-                                            TRAPS);
+  static InstanceKlass* resolve_from_stream(Symbol* class_name, Handle class_loader, Handle protection_domain, ClassFileStream* st, TRAPS);
 
   // Lookup an already loaded class. If not found NULL is returned.
   static Klass* find(Symbol* class_name, Handle class_loader, Handle protection_domain, TRAPS);
@@ -293,10 +280,7 @@ public:
   // Lookup an already loaded instance or array class.
   // Do not make any queries to class loaders; consult only the cache.
   // If not found NULL is returned.
-  static Klass* find_instance_or_array_klass(Symbol* class_name,
-                                               Handle class_loader,
-                                               Handle protection_domain,
-                                               TRAPS);
+  static Klass* find_instance_or_array_klass(Symbol* class_name, Handle class_loader, Handle protection_domain, TRAPS);
 
   // Lookup an instance or array class that has already been loaded
   // either into the given class loader, or else into another class
@@ -319,9 +303,7 @@ public:
   // satisfied, and it is safe for classes in the given class loader
   // to manipulate strongly-typed values of the found class, subject
   // to local linkage and access checks.
-  static Klass* find_constrained_instance_or_array_klass(Symbol* class_name,
-                                                           Handle class_loader,
-                                                           TRAPS);
+  static Klass* find_constrained_instance_or_array_klass(Symbol* class_name, Handle class_loader, TRAPS);
 
   static void classes_do(MetaspaceClosure* it);
   // Iterate over all methods in all klasses
@@ -332,10 +314,9 @@ public:
 
   // Unload (that is, break root links to) all unmarked classes and
   // loaders.  Returns "true" iff something was unloaded.
-  static bool do_unloading(GCTimer* gc_timer,
-                           bool do_cleaning = true);
+  static bool do_unloading(GCTimer* gc_timer, bool do_cleaning = true);
 
-  // Used by DumpSharedSpaces only to remove classes that failed verification
+  // Used by false only to remove classes that failed verification
   static void remove_classes_in_error_state();
 
   static int calculate_systemdictionary_size(int loadedclasses);
@@ -344,7 +325,7 @@ public:
   static void oops_do(OopClosure* f);
 
   // System loader lock
-  static oop system_loader_lock()           { return _system_loader_lock_obj; }
+  static oop system_loader_lock() { return _system_loader_lock_obj; }
 
 public:
   // Sharing support.
@@ -354,8 +335,7 @@ public:
   static size_t count_bytes_for_table();
   static void copy_buckets(char* top, char* end);
   static void copy_table(char* top, char* end);
-  static void set_shared_dictionary(HashtableBucket<mtClass>* t, int length,
-                                    int number_of_entries);
+  static void set_shared_dictionary(HashtableBucket<mtClass>* t, int length, int number_of_entries);
   // Printing
   static void print() { return print_on(tty); }
   static void print_on(outputStream* st);
@@ -456,10 +436,8 @@ public:
   // Note:  java_lang_Class::primitive_type is the inverse of java_mirror
 
   // Check class loader constraints
-  static bool add_loader_constraint(Symbol* name, Handle loader1,
-                                    Handle loader2, TRAPS);
-  static Symbol* check_signature_loaders(Symbol* signature, Handle loader1,
-                                         Handle loader2, bool is_method, TRAPS);
+  static bool add_loader_constraint(Symbol* name, Handle loader1, Handle loader2, TRAPS);
+  static Symbol* check_signature_loaders(Symbol* signature, Handle loader1, Handle loader2, bool is_method, TRAPS);
 
   // JSR 292
   // find a java.lang.invoke.MethodHandle.invoke* method for a given signature
@@ -473,9 +451,7 @@ public:
                                                  TRAPS);
   // for a given signature, find the internal MethodHandle method (linkTo* or invokeBasic)
   // (does not ask Java, since this is a low-level intrinsic defined by the JVM)
-  static methodHandle find_method_handle_intrinsic(vmIntrinsics::ID iid,
-                                                   Symbol* signature,
-                                                   TRAPS);
+  static methodHandle find_method_handle_intrinsic(vmIntrinsics::ID iid, Symbol* signature, TRAPS);
 
   // compute java_mirror (java.lang.Class instance) for a type ("I", "[[B", "LFoo;", etc.)
   // Either the accessing_klass or the CL/PD can be non-null, but not both.
@@ -499,14 +475,10 @@ public:
 
   // find a java.lang.invoke.MethodType object for a given signature
   // (asks Java to compute it if necessary, except in a compiler thread)
-  static Handle    find_method_handle_type(Symbol* signature,
-                                           Klass* accessing_klass,
-                                           TRAPS);
+  static Handle    find_method_handle_type(Symbol* signature, Klass* accessing_klass, TRAPS);
 
   // find a java.lang.Class object for a given signature
-  static Handle    find_field_handle_type(Symbol* signature,
-                                          Klass* accessing_klass,
-                                          TRAPS);
+  static Handle    find_field_handle_type(Symbol* signature, Klass* accessing_klass, TRAPS);
 
   // ask Java to compute a java.lang.invoke.MethodHandle object for a given CP entry
   static Handle    link_method_handle_constant(Klass* caller,
@@ -536,11 +508,9 @@ public:
 
   // Record the error when the first attempt to resolve a reference from a constant
   // pool entry to a class fails.
-  static void add_resolution_error(const constantPoolHandle& pool, int which, Symbol* error,
-                                   Symbol* message);
+  static void add_resolution_error(const constantPoolHandle& pool, int which, Symbol* error, Symbol* message);
   static void delete_resolution_error(ConstantPool* pool);
-  static Symbol* find_resolution_error(const constantPoolHandle& pool, int which,
-                                       Symbol** message);
+  static Symbol* find_resolution_error(const constantPoolHandle& pool, int which, Symbol** message);
 
   static ProtectionDomainCacheEntry* cache_get(Handle protection_domain);
 
@@ -586,9 +556,7 @@ public:
   static OopStorage*             _vm_weak_oop_storage;
 
 protected:
-  static void validate_protection_domain(InstanceKlass* klass,
-                                         Handle class_loader,
-                                         Handle protection_domain, TRAPS);
+  static void validate_protection_domain(InstanceKlass* klass, Handle class_loader, Handle protection_domain, TRAPS);
 
   friend class VM_PopulateDumpSharedSpace;
   friend class TraversePlaceholdersClosure;
@@ -608,15 +576,9 @@ protected:
   // to preserve lock order semantics.
   static void double_lock_wait(Handle lockObject, TRAPS);
   static void define_instance_class(InstanceKlass* k, TRAPS);
-  static InstanceKlass* find_or_define_instance_class(Symbol* class_name,
-                                                Handle class_loader,
-                                                InstanceKlass* k, TRAPS);
-  static bool is_shared_class_visible(Symbol* class_name, InstanceKlass* ik,
-                                      Handle class_loader, TRAPS);
-  static InstanceKlass* load_shared_class(InstanceKlass* ik,
-                                          Handle class_loader,
-                                          Handle protection_domain,
-                                          TRAPS);
+  static InstanceKlass* find_or_define_instance_class(Symbol* class_name, Handle class_loader, InstanceKlass* k, TRAPS);
+  static bool is_shared_class_visible(Symbol* class_name, InstanceKlass* ik, Handle class_loader, TRAPS);
+  static InstanceKlass* load_shared_class(InstanceKlass* ik, Handle class_loader, Handle protection_domain, TRAPS);
   static InstanceKlass* load_instance_class(Symbol* class_name, Handle class_loader, TRAPS);
   static Handle compute_loader_lock_object(Handle class_loader, TRAPS);
   static void check_loader_lock_contention(Handle loader_lock, TRAPS);
@@ -624,9 +586,7 @@ protected:
   static bool is_parallelDefine(Handle class_loader);
 
 public:
-  static InstanceKlass* load_shared_class(Symbol* class_name,
-                                          Handle class_loader,
-                                          TRAPS);
+  static InstanceKlass* load_shared_class(Symbol* class_name, Handle class_loader, TRAPS);
   static bool is_system_class_loader(oop class_loader);
   static bool is_platform_class_loader(oop class_loader);
   static void clear_invoke_method_table();
@@ -646,39 +606,27 @@ protected:
   static void add_to_hierarchy(InstanceKlass* k, TRAPS);
 
   // Basic find on loaded classes
-  static InstanceKlass* find_class(unsigned int hash,
-                                   Symbol* name, Dictionary* dictionary);
+  static InstanceKlass* find_class(unsigned int hash, Symbol* name, Dictionary* dictionary);
   static InstanceKlass* find_class(Symbol* class_name, ClassLoaderData* loader_data);
 
   // Basic find on classes in the midst of being loaded
   static Symbol* find_placeholder(Symbol* name, ClassLoaderData* loader_data);
 
   // Add a placeholder for a class being loaded
-  static void add_placeholder(int index,
-                              Symbol* class_name,
-                              ClassLoaderData* loader_data);
-  static void remove_placeholder(int index,
-                                 Symbol* class_name,
-                                 ClassLoaderData* loader_data);
+  static void add_placeholder(int index, Symbol* class_name, ClassLoaderData* loader_data);
+  static void remove_placeholder(int index, Symbol* class_name, ClassLoaderData* loader_data);
 
   // Performs cleanups after resolve_super_or_fail. This typically needs
   // to be called on failure.
   // Won't throw, but can block.
-  static void resolution_cleanups(Symbol* class_name,
-                                  ClassLoaderData* loader_data,
-                                  TRAPS);
+  static void resolution_cleanups(Symbol* class_name, ClassLoaderData* loader_data, TRAPS);
 
   // Initialization
   static void initialize_preloaded_classes(TRAPS);
 
   // Class loader constraints
-  static void check_constraints(unsigned int hash,
-                                InstanceKlass* k, Handle loader,
-                                bool defining, TRAPS);
-  static void update_dictionary(unsigned int d_hash,
-                                int p_index, unsigned int p_hash,
-                                InstanceKlass* k, Handle loader,
-                                TRAPS);
+  static void check_constraints(unsigned int hash, InstanceKlass* k, Handle loader, bool defining, TRAPS);
+  static void update_dictionary(unsigned int d_hash, int p_index, unsigned int p_hash, InstanceKlass* k, Handle loader, TRAPS);
 
   // Variables holding commonly used klasses (preloaded)
   static InstanceKlass* _well_known_klasses[];

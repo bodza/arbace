@@ -6,11 +6,7 @@
 
 class HeapRegionTracer : AllStatic {
   public:
-    static void send_region_type_change(uint index,
-                                        G1HeapRegionTraceType::Type from,
-                                        G1HeapRegionTraceType::Type to,
-                                        uintptr_t start,
-                                        size_t used);
+    static void send_region_type_change(uint index, G1HeapRegionTraceType::Type from, G1HeapRegionTraceType::Type to, uintptr_t start, size_t used);
 };
 
 #endif

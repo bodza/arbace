@@ -196,22 +196,6 @@ oop MethodHandles::init_method_MemberName(Handle mname, CallInfo& info) {
     vmindex = info.itable_index();
     // More importantly, the itable index only works with the method holder.
     flags |= IS_METHOD | (JVM_REF_invokeInterface << REFERENCE_KIND_SHIFT);
-    if (TraceInvokeDynamic) {
-      ttyLocker ttyl;
-      ResourceMark rm;
-      tty->print_cr("memberName: invokeinterface method_holder::method: %s, itableindex: %d, access_flags:",
-            Method::name_and_sig_as_C_string(m->method_holder(), m->name(), m->signature()),
-            vmindex);
-       m->access_flags().print_on(tty);
-       if (!m->is_abstract()) {
-         if (!m->is_private()) {
-           tty->print("default");
-         } else {
-           tty->print("private-intf");
-         }
-       }
-       tty->cr();
-    }
     break;
 
   case CallInfo::vtable_call:
@@ -229,18 +213,6 @@ oop MethodHandles::init_method_MemberName(Handle mname, CallInfo& info) {
         return NULL;  // elicit an error later in product build
       }
       m_klass = m_klass_non_interface;
-    }
-    if (TraceInvokeDynamic) {
-      ttyLocker ttyl;
-      ResourceMark rm;
-      tty->print_cr("memberName: invokevirtual method_holder::method: %s, receiver: %s, vtableindex: %d, access_flags:",
-            Method::name_and_sig_as_C_string(m->method_holder(), m->name(), m->signature()),
-            m_klass->internal_name(), vmindex);
-       m->access_flags().print_on(tty);
-       if (m->is_default_method()) {
-         tty->print("default");
-       }
-       tty->cr();
     }
     break;
 
@@ -1020,25 +992,7 @@ void MethodHandles::flush_dependent_nmethods(Handle call_site, Handle target) {
   }
 }
 
-void MethodHandles::trace_method_handle_interpreter_entry(MacroAssembler* _masm, vmIntrinsics::ID iid) {
-  if (TraceMethodHandles) {
-    const char* name = vmIntrinsics::name_at(iid);
-    if (*name == '_')  name += 1;
-    const size_t len = strlen(name) + 50;
-    char* qname = NEW_C_HEAP_ARRAY(char, len, mtInternal);
-    const char* suffix = "";
-    if (is_signature_polymorphic(iid)) {
-      if (is_signature_polymorphic_static(iid))
-        suffix = "/static";
-      else
-        suffix = "/private";
-    }
-    jio_snprintf(qname, len, "MethodHandle::interpreter_entry::%s%s", name, suffix);
-    trace_method_handle(_masm, qname);
-    // Note:  Don't free the allocated char array because it's used
-    // during runtime.
-  }
-}
+void MethodHandles::trace_method_handle_interpreter_entry(MacroAssembler* _masm, vmIntrinsics::ID iid) { }
 
 //
 // Here are the native methods in java.lang.invoke.MethodHandleNatives
@@ -1422,10 +1376,6 @@ JVM_ENTRY(void, JVM_RegisterMethodHandleMethods(JNIEnv *env, jclass MHN_class)) 
 
     status = env->RegisterNatives(MH_class, MH_methods, sizeof(MH_methods)/sizeof(JNINativeMethod));
     guarantee(status == JNI_OK && !env->ExceptionOccurred(), "register java.lang.invoke.MethodHandle natives");
-  }
-
-  if (TraceInvokeDynamic) {
-    tty->print_cr("MethodHandle support loaded (using LambdaForms)");
   }
 
   MethodHandles::set_enabled(true);

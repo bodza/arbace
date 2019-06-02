@@ -13,10 +13,8 @@
     cflags(Exclude,                 bool, false, X) \
     cflags(BreakAtExecute,          bool, false, X) \
     cflags(BreakAtCompile,          bool, false, X) \
-    cflags(Log,                     bool, LogCompilation, X) \
+    cflags(Log,                     bool, false, X) \
     cflags(PrintAssembly,           bool, PrintAssembly, PrintAssembly) \
-    cflags(PrintInlining,           bool, PrintInlining, PrintInlining) \
-    cflags(PrintNMethods,           bool, PrintNMethods, PrintNMethods) \
     cflags(BackgroundCompilation,   bool, BackgroundCompilation, BackgroundCompilation) \
     cflags(ReplayInline,            bool, false, ReplayInline) \
     cflags(DumpReplay,              bool, false, DumpReplay) \

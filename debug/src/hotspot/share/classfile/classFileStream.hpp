@@ -19,7 +19,6 @@ class ClassFileStream: public ResourceObj {
   const u1* const _buffer_end;   // Buffer top (one past last element)
   mutable const u1* _current;    // Current buffer position
   const char* const _source;     // Source of stream (directory name, ZIP/JAR archive name)
-  bool _need_verify;             // True if verification is on for the class file
 
   void truncated_file_error(TRAPS) const;
 
@@ -31,10 +30,7 @@ class ClassFileStream: public ResourceObj {
   static const bool no_verification;
   static const bool verify;
 
-  ClassFileStream(const u1* buffer,
-                  int length,
-                  const char* source,
-                  bool verify_stream = verify); // to be verified by default
+  ClassFileStream(const u1* buffer, int length, const char* source, bool verify_stream = verify); // to be verified by default
 
   virtual const ClassFileStream* clone() const;
 
@@ -51,8 +47,6 @@ class ClassFileStream: public ResourceObj {
     return (juint)(_current - _buffer_start);
   }
   const char* source() const { return _source; }
-  bool need_verify() const { return _need_verify; }
-  void set_verify(bool flag) { _need_verify = flag; }
 
   void check_truncated_file(bool b, TRAPS) const {
     if (b) {

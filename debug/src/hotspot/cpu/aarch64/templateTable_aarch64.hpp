@@ -7,8 +7,7 @@ static void prepare_invoke(int byte_no,
                              Register recv  = noreg,  // if caller wants to see it
                              Register flags = noreg   // if caller wants to test it
                              );
-  static void invokevirtual_helper(Register index, Register recv,
-                                   Register flags);
+  static void invokevirtual_helper(Register index, Register recv, Register flags);
 
   // Helpers
   static void index_check(Register array, Register index);

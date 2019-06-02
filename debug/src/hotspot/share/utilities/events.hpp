@@ -60,7 +60,7 @@ template <class T> class EventLogBase : public EventLog {
   EventRecord<T>* _records;
 
  public:
-  EventLogBase<T>(const char* name, int length = LogEventsBufferEntries) :
+  EventLogBase<T>(const char* name, int length = 10) :
     _name(name),
     _length(length),
     _count(0),
@@ -121,7 +121,7 @@ class StringLogMessage : public FormatBuffer<256> {
 // A simple ring buffer of fixed size text messages.
 class StringEventLog : public EventLogBase<StringLogMessage> {
  public:
-  StringEventLog(const char* name, int count = LogEventsBufferEntries) : EventLogBase<StringLogMessage>(name, count) { }
+  StringEventLog(const char* name, int count = 10) : EventLogBase<StringLogMessage>(name, count) { }
 
   void logv(Thread* thread, const char* format, va_list ap) ATTRIBUTE_PRINTF(3, 0) {
     if (!should_log()) return;
@@ -174,48 +174,16 @@ class Events : AllStatic {
   static void log_exception(Thread* thread, const char* format, ...) ATTRIBUTE_PRINTF(2, 3);
 
   static void log_redefinition(Thread* thread, const char* format, ...) ATTRIBUTE_PRINTF(2, 3);
-
   static void log_deopt_message(Thread* thread, const char* format, ...) ATTRIBUTE_PRINTF(2, 3);
 
   // Register default loggers
   static void init();
 };
 
-inline void Events::log(Thread* thread, const char* format, ...) {
-  if (LogEvents) {
-    va_list ap;
-    va_start(ap, format);
-    _messages->logv(thread, format, ap);
-    va_end(ap);
-  }
-}
-
-inline void Events::log_exception(Thread* thread, const char* format, ...) {
-  if (LogEvents) {
-    va_list ap;
-    va_start(ap, format);
-    _exceptions->logv(thread, format, ap);
-    va_end(ap);
-  }
-}
-
-inline void Events::log_redefinition(Thread* thread, const char* format, ...) {
-  if (LogEvents) {
-    va_list ap;
-    va_start(ap, format);
-    _redefinitions->logv(thread, format, ap);
-    va_end(ap);
-  }
-}
-
-inline void Events::log_deopt_message(Thread* thread, const char* format, ...) {
-  if (LogEvents) {
-    va_list ap;
-    va_start(ap, format);
-    _deopt_messages->logv(thread, format, ap);
-    va_end(ap);
-  }
-}
+inline void Events::log(Thread* thread, const char* format, ...) { }
+inline void Events::log_exception(Thread* thread, const char* format, ...) { }
+inline void Events::log_redefinition(Thread* thread, const char* format, ...) { }
+inline void Events::log_deopt_message(Thread* thread, const char* format, ...) { }
 
 template <class T>
 inline void EventLogBase<T>::print_log_on(outputStream* out) {

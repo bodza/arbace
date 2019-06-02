@@ -111,9 +111,6 @@ JRT_BLOCK_ENTRY(Deoptimization::UnrollBlock*, Deoptimization::fetch_unroll_info(
   // handler. Note this fact before we start generating temporary frames
   // that can confuse an asynchronous stack walker. This counter is
   // decremented at the end of unpack_frames().
-  if (TraceDeoptimization) {
-    tty->print_cr("Deoptimizing thread " INTPTR_FORMAT, p2i(thread));
-  }
   thread->inc_in_deopt_handler();
 
   return fetch_unroll_info_helper(thread, exec_mode);
@@ -176,10 +173,6 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
         // call which returns oop we need to save it since it is not in oopmap.
         oop result = deoptee.saved_oop_result(&map);
         return_value = Handle(thread, result);
-        if (TraceDeoptimization) {
-          ttyLocker ttyl;
-          tty->print_cr("SAVED OOP RESULT " INTPTR_FORMAT " in thread " INTPTR_FORMAT, p2i(result), p2i(thread));
-        }
       }
       if (objects != NULL) {
         JRT_BLOCK
@@ -203,9 +196,6 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
   ScopeDesc* trap_scope = chunk->at(0)->scope();
   Handle exceptionObject;
   if (trap_scope->rethrow_exception()) {
-    if (PrintDeoptimizationDetails) {
-      tty->print_cr("Exception to be rethrown in the interpreter for method %s::%s at bci %d", trap_scope->method()->method_holder()->name()->as_C_string(), trap_scope->method()->name()->as_C_string(), trap_scope->bci());
-    }
     GrowableArray<ScopeValue*>* expressions = trap_scope->expressions();
     guarantee(expressions != NULL && expressions->length() > 0, "must have exception to throw");
     ScopeValue* topOfStack = expressions->top();
@@ -385,13 +375,6 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
   // information to the unpacking code so the skeletal frames come out
   // correct (initial fp value, unextended sp, ...)
   info->set_initial_info((intptr_t) array->sender().initial_deoptimization_info());
-
-  if (array->frames() > 1) {
-    if (VerifyStack && TraceDeoptimization) {
-      ttyLocker ttyl;
-      tty->print_cr("Deoptimizing method containing inlining");
-    }
-  }
 
   array->set_unroll_block(info);
   return info;
@@ -730,9 +713,6 @@ void Deoptimization::reassign_fields(frame* fr, RegisterMap* reg_map, GrowableAr
     ObjectValue* sv = (ObjectValue*) objects->at(i);
     Klass* k = java_lang_Class::as_Klass(sv->klass()->as_ConstantOopReadValue()->value()());
     Handle obj = sv->value();
-    if (PrintDeoptimizationDetails) {
-      tty->print_cr("reassign fields for object of type %s!", k->name()->as_C_string());
-    }
     if (obj.is_null()) {
       continue;
     }
@@ -893,22 +873,6 @@ void Deoptimization::revoke_biases_of_monitors(CodeBlob* cb) {
 void Deoptimization::deoptimize_single_frame(JavaThread* thread, frame fr, Deoptimization::DeoptReason reason) {
 
   gather_statistics(reason, Action_none, Bytecodes::_illegal);
-
-  if (LogCompilation && xtty != NULL) {
-    CompiledMethod* cm = fr.cb()->as_compiled_method_or_null();
-
-    ttyLocker ttyl;
-    xtty->begin_head("deoptimized thread='" UINTX_FORMAT "' reason='%s' pc='" INTPTR_FORMAT "'",(uintx)thread->osthread()->thread_id(), trap_reason_name(reason), p2i(fr.pc()));
-    cm->log_identity(xtty);
-    xtty->end_head();
-    for (ScopeDesc* sd = cm->scope_desc_at(fr.pc()); ; sd = sd->sender()) {
-      xtty->begin_elem("jvms bci='%d'", sd->bci());
-      xtty->method(sd->method());
-      xtty->end_elem();
-      if (sd->is_top())  break;
-    }
-    xtty->tail("deoptimized");
-  }
 
   // Patch the compiled method so that when execution returns to it we will
   // deopt the execution state and return to the interpreter.
@@ -1091,11 +1055,6 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
 
     ScopeDesc*      trap_scope  = cvf->scope();
 
-    if (TraceDeoptimization) {
-      ttyLocker ttyl;
-      tty->print_cr("  bci=%d pc=" INTPTR_FORMAT ", relative_pc=" INTPTR_FORMAT ", method=%s, debug_id=%d", trap_scope->bci(), p2i(fr.pc()), fr.pc() - nm->code_begin(), trap_scope->method()->name_and_sig_as_C_string(), debug_id);
-    }
-
     methodHandle    trap_method = trap_scope->method();
     int             trap_bci    = trap_scope->bci();
     long speculation = thread->pending_failed_speculation();
@@ -1103,25 +1062,14 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
       if (speculation != 0) {
         oop speculation_log = nm->as_nmethod()->speculation_log();
         if (speculation_log != NULL) {
-          if (TraceDeoptimization || TraceUncollectedSpeculations) {
+          if (TraceUncollectedSpeculations) {
             if (HotSpotSpeculationLog::lastFailed(speculation_log) != 0) {
               tty->print_cr("A speculation that was not collected by the compiler is being overwritten");
             }
           }
-          if (TraceDeoptimization) {
-            tty->print_cr("Saving speculation to speculation log");
-          }
           HotSpotSpeculationLog::set_lastFailed(speculation_log, speculation);
-        } else {
-          if (TraceDeoptimization) {
-            tty->print_cr("Speculation present but no speculation log");
-          }
         }
         thread->set_pending_failed_speculation(0);
-      } else {
-        if (TraceDeoptimization) {
-          tty->print_cr("No speculation");
-        }
       }
     }
 
@@ -1155,87 +1103,6 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
     Events::log_deopt_message(thread, "Uncommon trap: reason=%s action=%s pc=" INTPTR_FORMAT " method=%s @ %d %s",
                               trap_reason_name(reason), trap_action_name(action), p2i(fr.pc()),
                               trap_method->name_and_sig_as_C_string(), trap_bci, nm->compiler_name());
-
-    // Print a bunch of diagnostics, if requested.
-    if (TraceDeoptimization || LogCompilation) {
-      ResourceMark rm;
-      ttyLocker ttyl;
-      char buf[100];
-      if (xtty != NULL) {
-        xtty->begin_head("uncommon_trap thread='" UINTX_FORMAT "' %s", os::current_thread_id(), format_trap_request(buf, sizeof(buf), trap_request));
-        nm->log_identity(xtty);
-      }
-      Symbol* class_name = NULL;
-      bool unresolved = false;
-      if (unloaded_class_index >= 0) {
-        constantPoolHandle constants (THREAD, trap_method->constants());
-        if (constants->tag_at(unloaded_class_index).is_unresolved_klass()) {
-          class_name = constants->klass_name_at(unloaded_class_index);
-          unresolved = true;
-          if (xtty != NULL)
-            xtty->print(" unresolved='1'");
-        } else if (constants->tag_at(unloaded_class_index).is_symbol()) {
-          class_name = constants->symbol_at(unloaded_class_index);
-        }
-        if (xtty != NULL)
-          xtty->name(class_name);
-      }
-      if (xtty != NULL && trap_mdo != NULL && (int)reason < (int)MethodData::_trap_hist_limit) {
-        // Dump the relevant MDO state.
-        // This is the deopt count for the current reason, any previous
-        // reasons or recompiles seen at this point.
-        int dcnt = trap_mdo->trap_count(reason);
-        if (dcnt != 0)
-          xtty->print(" count='%d'", dcnt);
-        ProfileData* pdata = trap_mdo->bci_to_data(trap_bci);
-        int dos = (pdata == NULL)? 0: pdata->trap_state();
-        if (dos != 0) {
-          xtty->print(" state='%s'", format_trap_state(buf, sizeof(buf), dos));
-          if (trap_state_is_recompiled(dos)) {
-            int recnt2 = trap_mdo->overflow_recompile_count();
-            if (recnt2 != 0)
-              xtty->print(" recompiles2='%d'", recnt2);
-          }
-        }
-      }
-      if (xtty != NULL) {
-        xtty->stamp();
-        xtty->end_head();
-      }
-      if (TraceDeoptimization) {  // make noise on the tty
-        tty->print("Uncommon trap occurred in");
-        nm->method()->print_short_name(tty);
-        tty->print(" compiler=%s compile_id=%d", nm->compiler_name(), nm->compile_id());
-        if (nm->is_nmethod()) {
-          char* installed_code_name = nm->as_nmethod()->jvmci_installed_code_name(buf, sizeof(buf));
-          if (installed_code_name != NULL) {
-            tty->print(" (JVMCI: installed code name=%s) ", installed_code_name);
-          }
-        }
-        tty->print(" (@" INTPTR_FORMAT ") thread=" UINTX_FORMAT " reason=%s action=%s unloaded_class_index=%d debug_id=%d",
-                   p2i(fr.pc()),
-                   os::current_thread_id(),
-                   trap_reason_name(reason),
-                   trap_action_name(action),
-                   unloaded_class_index, debug_id);
-        if (class_name != NULL) {
-          tty->print(unresolved ? " unresolved class: " : " symbol: ");
-          class_name->print_symbol_on(tty);
-        }
-        tty->cr();
-      }
-      if (xtty != NULL) {
-        // Log the precise location of the trap.
-        for (ScopeDesc* sd = trap_scope; ; sd = sd->sender()) {
-          xtty->begin_elem("jvms bci='%d'", sd->bci());
-          xtty->method(sd->method());
-          xtty->end_elem();
-          if (sd->is_top())  break;
-        }
-        xtty->tail("uncommon_trap");
-      }
-    }
-    // (End diagnostic printout.)
 
     // Load class if necessary
     if (unloaded_class_index >= 0) {
@@ -1518,13 +1385,6 @@ Deoptimization::query_update_method_data(MethodData* trap_mdo,
     pdata = trap_mdo->allocate_bci_to_data(trap_bci, reason_is_speculate(reason) ? compiled_method : NULL);
 
     if (pdata != NULL) {
-      if (reason_is_speculate(reason) && !pdata->is_SpeculativeTrapData()) {
-        if (LogCompilation && xtty != NULL) {
-          ttyLocker ttyl;
-          // no more room for speculative traps in this MDO
-          xtty->elem("speculative_traps_oom");
-        }
-      }
       // Query the trap state of this profile datum.
       int tstate0 = pdata->trap_state();
       if (!trap_state_has_reason(tstate0, per_bc_reason))
@@ -1539,12 +1399,6 @@ Deoptimization::query_update_method_data(MethodData* trap_mdo,
       // Store the updated state on the MDO, for next time.
       if (tstate1 != tstate0)
         pdata->set_trap_state(tstate1);
-    } else {
-      if (LogCompilation && xtty != NULL) {
-        ttyLocker ttyl;
-        // Missing MDP?  Leave a small complaint in the log.
-        xtty->elem("missing_mdp bci='%d'", trap_bci);
-      }
     }
   }
 
@@ -1564,20 +1418,10 @@ Deoptimization::update_method_data_from_interpreter(MethodData* trap_mdo, int tr
   bool ignore_maybe_prior_recompile;
   // JVMCI uses the total counts to determine if deoptimizations are happening too frequently -> do not adjust total counts
   bool update_total_counts = !UseJVMCICompiler;
-  query_update_method_data(trap_mdo, trap_bci,
-                           (DeoptReason)reason,
-                           update_total_counts,
-                           false,
-                           NULL,
-                           ignore_this_trap_count,
-                           ignore_maybe_prior_trap,
-                           ignore_maybe_prior_recompile);
+  query_update_method_data(trap_mdo, trap_bci, (DeoptReason)reason, update_total_counts, false, NULL, ignore_this_trap_count, ignore_maybe_prior_trap, ignore_maybe_prior_recompile);
 }
 
 Deoptimization::UnrollBlock* Deoptimization::uncommon_trap(JavaThread* thread, jint trap_request, jint exec_mode) {
-  if (TraceDeoptimization) {
-    tty->print("Uncommon trap ");
-  }
   // Still in Java no safepoints
   {
     // This enters VM and may safepoint
@@ -1640,9 +1484,8 @@ int Deoptimization::trap_state_set_recompiled(int trap_state, bool z) {
   else    return trap_state & ~DS_RECOMPILE_BIT;
 }
 //---------------------------format_trap_state---------------------------------
-// This is used for debugging and diagnostics, including LogFile output.
-const char* Deoptimization::format_trap_state(char* buf, size_t buflen,
-                                              int trap_state) {
+// This is used for debugging and diagnostics, including NULL output.
+const char* Deoptimization::format_trap_state(char* buf, size_t buflen, int trap_state) {
   DeoptReason reason      = trap_state_reason(trap_state);
   bool        recomp_flag = trap_state_is_recompiled(trap_state);
   // Re-encode the state from its decoded components.
@@ -1731,7 +1574,7 @@ const char* Deoptimization::trap_action_name(int action) {
   return buf;
 }
 
-// This is used for debugging and diagnostics, including LogFile output.
+// This is used for debugging and diagnostics, including NULL output.
 const char* Deoptimization::format_trap_request(char* buf, size_t buflen, int trap_request) {
   jint unloaded_class_index = trap_request_index(trap_request);
   const char* reason = trap_reason_name(trap_request_reason(trap_request));

@@ -319,28 +319,13 @@ methodHandle LinkResolver::lookup_polymorphic_method(const LinkInfo& link_info, 
   Symbol* full_signature = link_info.signature();
 
   vmIntrinsics::ID iid = MethodHandles::signature_polymorphic_name_id(name);
-  if (TraceMethodHandles) {
-    ResourceMark rm(THREAD);
-    tty->print_cr("lookup_polymorphic_method iid=%s %s.%s%s", vmIntrinsics::name_at(iid), klass->external_name(), name->as_C_string(), full_signature->as_C_string());
-  }
   if ((klass == SystemDictionary::MethodHandle_klass() || klass == SystemDictionary::VarHandle_klass()) && iid != vmIntrinsics::_none) {
     if (MethodHandles::is_signature_polymorphic_intrinsic(iid)) {
       // Most of these do not need an up-call to Java to resolve, so can be done anywhere.
       // Do not erase last argument type (MemberName) if it is a static linkTo method.
       bool keep_last_arg = MethodHandles::is_signature_polymorphic_static(iid);
       TempNewSymbol basic_signature = MethodHandles::lookup_basic_type_signature(full_signature, keep_last_arg, CHECK_NULL);
-      if (TraceMethodHandles) {
-        ResourceMark rm(THREAD);
-        tty->print_cr("lookup_polymorphic_method %s %s => basic %s", name->as_C_string(), full_signature->as_C_string(), basic_signature->as_C_string());
-      }
       methodHandle result = SystemDictionary::find_method_handle_intrinsic(iid, basic_signature, CHECK_NULL);
-      if (result.not_null()) {
-        if (TraceMethodHandles) {
-          ttyLocker ttyl;
-          tty->print("lookup_polymorphic_method => intrinsic ");
-          result->print_on(tty);
-        }
-      }
       return result;
     } else if (iid == vmIntrinsics::_invokeGeneric && THREAD->can_call_java() && appendix_result_or_null != NULL) {
       // This is a method with type-checking semantics.
@@ -349,25 +334,13 @@ methodHandle LinkResolver::lookup_polymorphic_method(const LinkInfo& link_info, 
         // Make sure the Java part of the runtime has been booted up.
         Klass* natives = SystemDictionary::MethodHandleNatives_klass();
         if (natives == NULL || InstanceKlass::cast(natives)->is_not_initialized()) {
-          SystemDictionary::resolve_or_fail(vmSymbols::java_lang_invoke_MethodHandleNatives(),
-                                            Handle(),
-                                            Handle(),
-                                            true,
-                                            CHECK_NULL);
+          SystemDictionary::resolve_or_fail(vmSymbols::java_lang_invoke_MethodHandleNatives(), Handle(), Handle(), true, CHECK_NULL);
         }
       }
 
       Handle appendix;
       Handle method_type;
       methodHandle result = SystemDictionary::find_method_handle_invoker(klass, name, full_signature, link_info.current_klass(), &appendix, &method_type, CHECK_NULL);
-      if (TraceMethodHandles) {
-        ttyLocker ttyl;
-        tty->print("lookup_polymorphic_method => (via Java) ");
-        result->print_on(tty);
-        tty->print("  lookup_polymorphic_method => appendix = ");
-        if (appendix.is_null())  tty->print_cr("(none)");
-        else                     appendix->print_on(tty);
-      }
       if (result.not_null()) {
 
         (*appendix_result_or_null) = appendix;
@@ -1275,11 +1248,6 @@ void LinkResolver::resolve_invokeinterface(CallInfo& result, Handle recv, const 
 void LinkResolver::resolve_invokehandle(CallInfo& result, const constantPoolHandle& pool, int index, TRAPS) {
   // This guy is reached from InterpreterRuntime::resolve_invokehandle.
   LinkInfo link_info(pool, index, CHECK);
-  if (TraceMethodHandles) {
-    ResourceMark rm(THREAD);
-    tty->print_cr("resolve_invokehandle %s %s", link_info.name()->as_C_string(),
-                  link_info.signature()->as_C_string());
-  }
   resolve_handle_call(result, link_info, CHECK);
 }
 
@@ -1332,23 +1300,10 @@ void LinkResolver::resolve_invokedynamic(CallInfo& result, const constantPoolHan
     return;
   }
 
-  if (TraceMethodHandles) {
-    ResourceMark rm(THREAD);
-    tty->print_cr("resolve_invokedynamic #%d %s %s in %s",
-                  ConstantPool::decode_invokedynamic_index(index),
-                  method_name->as_C_string(), method_signature->as_C_string(),
-                  current_klass->name()->as_C_string());
-    tty->print("  BSM info: "); bootstrap_specifier->print();
-  }
-
-  resolve_dynamic_call(result, pool_index, bootstrap_specifier, method_name,
-                       method_signature, current_klass, THREAD);
+  resolve_dynamic_call(result, pool_index, bootstrap_specifier, method_name, method_signature, current_klass, THREAD);
   if (HAS_PENDING_EXCEPTION && PENDING_EXCEPTION->is_a(SystemDictionary::LinkageError_klass())) {
     int encoded_index = ResolutionErrorTable::encode_cpcache_index(index);
-    bool recorded_res_status = cpce->save_and_throw_indy_exc(pool, pool_index,
-                                                             encoded_index,
-                                                             pool()->tag_at(pool_index),
-                                                             CHECK);
+    bool recorded_res_status = cpce->save_and_throw_indy_exc(pool, pool_index, encoded_index, pool()->tag_at(pool_index), CHECK);
     if (!recorded_res_status) {
       // Another thread got here just before we did.  So, either use the method
       // that it resolved or throw the LinkageError exception that it threw.

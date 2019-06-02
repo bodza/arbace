@@ -11,7 +11,7 @@
 // By specialising the BytecodeClosure, all kinds of bytecode traces can
 // be done.
 
-// class BytecodeTracer is used by TraceBytecodes option and PrintMethodData
+// class BytecodeTracer is used by false option and false
 
 class BytecodeClosure;
 class BytecodeTracer: AllStatic {

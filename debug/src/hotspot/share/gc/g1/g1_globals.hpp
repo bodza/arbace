@@ -46,8 +46,7 @@
           range(0, max_intx) \
  \
   product(double, G1ConcMarkStepDurationMillis, 10.0, \
-          "Target duration of individual concurrent marking steps " \
-          "in milliseconds.") \
+          "Target duration of individual concurrent marking steps in milliseconds.") \
           range(1.0, DBL_MAX) \
  \
   product(uint, G1RefProcDrainInterval, 1000, \
@@ -56,13 +55,11 @@
           range(1, INT_MAX) \
  \
   experimental(bool, G1UseReferencePrecleaning, true, \
-               "Concurrently preclean java.lang.ref.references instances " \
-               "before the Remark pause.") \
+          "Concurrently preclean java.lang.ref.references instances before the Remark pause.") \
  \
   experimental(double, G1LastPLABAverageOccupancy, 50.0, \
-               "The expected average occupancy of the last PLAB in " \
-               "percent.") \
-               range(0.001, 100.0) \
+         "The expected average occupancy of the last PLAB in percent.") \
+         range(0.001, 100.0) \
  \
   product(size_t, G1SATBBufferSize, 1*K, \
           "Number of entries in an SATB log buffer.") \
@@ -146,8 +143,7 @@
           constraint(G1RSetRegionEntriesConstraintFunc,AfterErgo) \
  \
   develop(intx, G1RSetSparseRegionEntriesBase, 4, \
-          "Max number of entries per region in a sparse table " \
-          "per MB.") \
+          "Max number of entries per region in a sparse table per MB.") \
           range(1, max_jint/wordSize) \
  \
   product(intx, G1RSetSparseRegionEntries, 0, \
@@ -183,8 +179,7 @@
           "Verify card table cleanup.") \
  \
   product(size_t, G1RSetScanBlockSize, 64, \
-          "Size of a work unit of cards claimed by a worker thread" \
-          "during RSet scanning.") \
+          "Size of a work unit of cards claimed by a worker threadduring RSet scanning.") \
           range(1, max_uintx) \
  \
   develop(uintx, G1DummyRegionsPerGC, 0, \
@@ -197,20 +192,17 @@
           " that heap expansion fails due to running out of swap.") \
  \
   experimental(uintx, G1MaxNewSizePercent, 60, \
-          "Percentage (0-100) of the heap size to use as default " \
-          " maximum young gen size.") \
+          "Percentage (0-100) of the heap size to use as default  maximum young gen size.") \
           range(0, 100) \
           constraint(G1MaxNewSizePercentConstraintFunc,AfterErgo) \
  \
   experimental(uintx, G1NewSizePercent, 5, \
-          "Percentage (0-100) of the heap size to use as default " \
-          "minimum young gen size.") \
+          "Percentage (0-100) of the heap size to use as default minimum young gen size.") \
           range(0, 100) \
           constraint(G1NewSizePercentConstraintFunc,AfterErgo) \
  \
   experimental(uintx, G1MixedGCLiveThresholdPercent, 85, \
-          "Threshold for regions to be considered for inclusion in the " \
-          "collection set of mixed GCs. " \
+          "Threshold for regions to be considered for inclusion in the collection set of mixed GCs. " \
           "Regions with live bytes exceeding this will not be collected.") \
           range(0, 100) \
  \
@@ -230,49 +222,39 @@
           "Try to reclaim dead large objects at every young GC.") \
  \
   experimental(bool, G1EagerReclaimHumongousObjectsWithStaleRefs, true, \
-          "Try to reclaim dead large objects that have a few stale " \
-          "references at every young GC.") \
+          "Try to reclaim dead large objects that have a few stale references at every young GC.") \
  \
   experimental(size_t, G1RebuildRemSetChunkSize, 256 * K, \
           "Chunk size used for rebuilding the remembered set.") \
           range(4 * K, 32 * M) \
  \
   experimental(uintx, G1OldCSetRegionThresholdPercent, 10, \
-          "An upper bound for the number of old CSet regions expressed " \
-          "as a percentage of the heap size.") \
+          "An upper bound for the number of old CSet regions expressed as a percentage of the heap size.") \
           range(0, 100) \
  \
   notproduct(bool, G1EvacuationFailureALot, false, \
-          "Force use of evacuation failure handling during certain " \
-          "evacuation pauses") \
+          "Force use of evacuation failure handling during certain evacuation pauses") \
  \
   develop(uintx, G1EvacuationFailureALotCount, 1000, \
-          "Number of successful evacuations between evacuation failures " \
-          "occurring at object copying") \
+          "Number of successful evacuations between evacuation failures occurring at object copying") \
  \
   develop(uintx, G1EvacuationFailureALotInterval, 5, \
-          "Total collections between forced triggering of evacuation " \
-          "failures") \
+          "Total collections between forced triggering of evacuation failures") \
  \
   develop(bool, G1EvacuationFailureALotDuringConcMark, true, \
-          "Force use of evacuation failure handling during evacuation " \
-          "pauses when marking is in progress") \
+          "Force use of evacuation failure handling during evacuation pauses when marking is in progress") \
  \
   develop(bool, G1EvacuationFailureALotDuringInitialMark, true, \
-          "Force use of evacuation failure handling during initial mark " \
-          "evacuation pauses") \
+          "Force use of evacuation failure handling during initial mark evacuation pauses") \
  \
   develop(bool, G1EvacuationFailureALotDuringYoungGC, true, \
-          "Force use of evacuation failure handling during young " \
-          "evacuation pauses") \
+          "Force use of evacuation failure handling during young evacuation pauses") \
  \
   develop(bool, G1EvacuationFailureALotDuringMixedGC, true, \
-          "Force use of evacuation failure handling during mixed " \
-          "evacuation pauses") \
+          "Force use of evacuation failure handling during mixed evacuation pauses") \
  \
   diagnostic(bool, G1VerifyRSetsDuringFullGC, false, \
-          "If true, perform verification of each heap region's " \
-          "remembered set when verifying the heap during a full GC.") \
+          "If true, perform verification of each heap region's remembered set when verifying the heap during a full GC.") \
  \
   diagnostic(bool, G1VerifyHeapRegionCodeRoots, false, \
           "Verify the code root lists attached to each heap region.") \

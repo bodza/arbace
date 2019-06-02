@@ -18,10 +18,7 @@ static jlong set_epoch() {
 
 // Base loop to estimate ticks frequency for tsc counter from user mode.
 // Volatiles and sleep() are used to prevent compiler from applying optimizations.
-static void do_time_measurements(volatile jlong& time_base,
-                                 volatile jlong& time_fast,
-                                 volatile jlong& time_base_elapsed,
-                                 volatile jlong& time_fast_elapsed) {
+static void do_time_measurements(volatile jlong& time_base, volatile jlong& time_fast, volatile jlong& time_base_elapsed, volatile jlong& time_fast_elapsed) {
   static const unsigned int FT_SLEEP_MILLISECS = 1;
   const unsigned int loopcount = 3;
 

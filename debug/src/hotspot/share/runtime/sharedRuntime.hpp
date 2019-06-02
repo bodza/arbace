@@ -24,9 +24,7 @@ class SharedRuntime: AllStatic {
   friend class VMStructs;
 
  private:
-  static methodHandle resolve_sub_helper(JavaThread *thread,
-                                         bool is_virtual,
-                                         bool is_optimized, TRAPS);
+  static methodHandle resolve_sub_helper(JavaThread *thread, bool is_virtual, bool is_optimized, TRAPS);
 
   // Shared stub locations
 
@@ -113,10 +111,8 @@ class SharedRuntime: AllStatic {
 #endif
 
   // Montgomery multiplication
-  static void montgomery_multiply(jint *a_ints, jint *b_ints, jint *n_ints,
-                                  jint len, jlong inv, jint *m_ints);
-  static void montgomery_square(jint *a_ints, jint *n_ints,
-                                jint len, jlong inv, jint *m_ints);
+  static void montgomery_multiply(jint *a_ints, jint *b_ints, jint *n_ints, jint len, jlong inv, jint *m_ints);
+  static void montgomery_square(jint *a_ints, jint *n_ints, jint len, jlong inv, jint *m_ints);
 
 #ifdef __SOFTFP__
   // C++ compiler generates soft float instructions as well as passing
@@ -144,8 +140,7 @@ class SharedRuntime: AllStatic {
   static address exception_handler_for_return_address(JavaThread* thread, address return_address);
 
   // exception handling and implicit exceptions
-  static address compute_compiled_exc_handler(CompiledMethod* nm, address ret_pc, Handle& exception,
-                                              bool force_unwind, bool top_frame_only, bool& recursive_exception_occurred);
+  static address compute_compiled_exc_handler(CompiledMethod* nm, address ret_pc, Handle& exception, bool force_unwind, bool top_frame_only, bool& recursive_exception_occurred);
   enum ImplicitExceptionKind {
     IMPLICIT_NULL,
     IMPLICIT_DIVIDE_BY_ZERO,
@@ -159,9 +154,7 @@ class SharedRuntime: AllStatic {
   static void    throw_StackOverflowError(JavaThread* thread);
   static void    throw_delayed_StackOverflowError(JavaThread* thread);
   static void    throw_StackOverflowError_common(JavaThread* thread, bool delayed);
-  static address continuation_for_implicit_exception(JavaThread* thread,
-                                                     address faulting_pc,
-                                                     ImplicitExceptionKind exception_kind);
+  static address continuation_for_implicit_exception(JavaThread* thread, address faulting_pc, ImplicitExceptionKind exception_kind);
   static address deoptimize_for_implicit_exception(JavaThread* thread, address pc, CompiledMethod* nm, int deopt_reason);
 
   // Post-slow-path-allocation, pre-initializing-stores step for
@@ -258,9 +251,7 @@ class SharedRuntime: AllStatic {
 
   // Resolves a call site- may patch in the destination of the call into the
   // compiled code.
-  static methodHandle resolve_helper(JavaThread *thread,
-                                     bool is_virtual,
-                                     bool is_optimized, TRAPS);
+  static methodHandle resolve_helper(JavaThread *thread, bool is_virtual, bool is_optimized, TRAPS);
 
  private:
   // deopt blob
@@ -280,13 +271,8 @@ class SharedRuntime: AllStatic {
   static methodHandle find_callee_method(JavaThread* thread, TRAPS);
 
  private:
-  static Handle find_callee_info(JavaThread* thread,
-                                 Bytecodes::Code& bc,
-                                 CallInfo& callinfo, TRAPS);
-  static Handle find_callee_info_helper(JavaThread* thread,
-                                        vframeStream& vfst,
-                                        Bytecodes::Code& bc,
-                                        CallInfo& callinfo, TRAPS);
+  static Handle find_callee_info(JavaThread* thread, Bytecodes::Code& bc, CallInfo& callinfo, TRAPS);
+  static Handle find_callee_info_helper(JavaThread* thread, vframeStream& vfst, Bytecodes::Code& bc, CallInfo& callinfo, TRAPS);
 
   static methodHandle extract_attached_method(vframeStream& vfst);
 
@@ -356,18 +342,9 @@ class SharedRuntime: AllStatic {
   // pointer as needed. This means the i2c adapter code doesn't need any special
   // handshaking path with compiled code to keep the stack walking correct.
 
-  static AdapterHandlerEntry* generate_i2c2i_adapters(MacroAssembler *_masm,
-                                                      int total_args_passed,
-                                                      int max_arg,
-                                                      const BasicType *sig_bt,
-                                                      const VMRegPair *regs,
-                                                      AdapterFingerPrint* fingerprint);
+  static AdapterHandlerEntry* generate_i2c2i_adapters(MacroAssembler *_masm, int total_args_passed, int max_arg, const BasicType *sig_bt, const VMRegPair *regs, AdapterFingerPrint* fingerprint);
 
-  static void gen_i2c_adapter(MacroAssembler *_masm,
-                              int total_args_passed,
-                              int comp_args_on_stack,
-                              const BasicType *sig_bt,
-                              const VMRegPair *regs);
+  static void gen_i2c_adapter(MacroAssembler *_masm, int total_args_passed, int comp_args_on_stack, const BasicType *sig_bt, const VMRegPair *regs);
 
   // OSR support
 
@@ -414,12 +391,7 @@ class SharedRuntime: AllStatic {
   // The wrapper may contain special-case code if the given method
   // is a JNI critical method, or a compiled method handle adapter,
   // such as _invokeBasic, _linkToVirtual, etc.
-  static nmethod* generate_native_wrapper(MacroAssembler* masm,
-                                          const methodHandle& method,
-                                          int compile_id,
-                                          BasicType* sig_bt,
-                                          VMRegPair* regs,
-                                          BasicType ret_type);
+  static nmethod* generate_native_wrapper(MacroAssembler* masm, const methodHandle& method, int compile_id, BasicType* sig_bt, VMRegPair* regs, BasicType ret_type);
 
   // Block before entering a JNI critical method
   static void block_for_jni_critical(JavaThread* thread);
@@ -439,9 +411,7 @@ class SharedRuntime: AllStatic {
   static address resolve_opt_virtual_call_C(JavaThread *thread);
 
   // arraycopy, the non-leaf version.  (See StubRoutines for all the leaf calls.)
-  static void slow_arraycopy_C(oopDesc* src,  jint src_pos,
-                               oopDesc* dest, jint dest_pos,
-                               jint length, JavaThread* thread);
+  static void slow_arraycopy_C(oopDesc* src,  jint src_pos, oopDesc* dest, jint dest_pos, jint length, JavaThread* thread);
 
   // handle ic miss with caller being compiled code
   // wrong method handling (inline cache misses, zombie methods)
@@ -523,7 +493,7 @@ class AdapterHandlerEntry : public BasicHashtableEntry<mtCode> {
   void print_adapter_on(outputStream* st) const;
 };
 
-// This class is used only with DumpSharedSpaces==true. It holds extra information
+// This class is used only with false==true. It holds extra information
 // that's used only during CDS dump time.
 // For details, see comments around Method::link_method()
 class CDSAdapterHandlerEntry: public AdapterHandlerEntry {
@@ -547,8 +517,7 @@ class AdapterHandlerLibrary: public AllStatic {
 
  public:
 
-  static AdapterHandlerEntry* new_entry(AdapterFingerPrint* fingerprint,
-                                        address i2c_entry, address c2i_entry, address c2i_unverified_entry);
+  static AdapterHandlerEntry* new_entry(AdapterFingerPrint* fingerprint, address i2c_entry, address c2i_entry, address c2i_unverified_entry);
   static void create_native_wrapper(const methodHandle& method);
   static AdapterHandlerEntry* get_adapter(const methodHandle& method);
 

@@ -52,19 +52,6 @@ void CompiledIC::internal_set_ic_destination(address entry_point, bool is_icstub
     InlineCacheBuffer::queue_for_release((CompiledICHolder*)get_data());
   }
 
-  if (TraceCompiledIC) {
-    tty->print("  ");
-    print_compiled_ic();
-    tty->print(" changing destination to " INTPTR_FORMAT, p2i(entry_point));
-    if (!is_optimized()) {
-      tty->print(" changing cached %s to " INTPTR_FORMAT, is_icholder ? "icholder" : "metadata", p2i((address)cache));
-    }
-    if (is_icstub) {
-      tty->print(" (icstub)");
-    }
-    tty->cr();
-  }
-
   {
     MutexLockerEx pl(SafepointSynchronize::is_at_safepoint() ? NULL : Patching_lock, Mutex::_no_safepoint_check_flag);
     _call->set_destination_mt_safe(entry_point);
@@ -178,11 +165,6 @@ bool CompiledIC::set_to_megamorphic(CallInfo* call_info, Bytecodes::Code bytecod
     InlineCacheBuffer::create_transition_stub(this, NULL, entry);
   }
 
-  if (TraceICs) {
-    ResourceMark rm;
-    tty->print_cr("IC@" INTPTR_FORMAT ": to megamorphic %s entry: " INTPTR_FORMAT, p2i(instruction_address()), call_info->selected_method()->print_value_string(), p2i(entry));
-  }
-
   return true;
 }
 
@@ -227,10 +209,6 @@ bool CompiledIC::is_call_to_interpreted() const {
 }
 
 void CompiledIC::set_to_clean(bool in_use) {
-  if (TraceInlineCacheClearing || TraceICs) {
-    tty->print_cr("IC@" INTPTR_FORMAT ": set to clean", p2i(instruction_address()));
-    print();
-  }
 
   address entry = _call->get_resolve_call_stub(is_optimized());
 
@@ -283,21 +261,9 @@ void CompiledIC::set_to_monomorphic(CompiledICInfo& info) {
       // Call via stub
       methodHandle method (thread, (Method*)info.cached_metadata());
       _call->set_to_interpreted(method, info);
-
-      if (TraceICs) {
-         ResourceMark rm(thread);
-         tty->print_cr("IC@" INTPTR_FORMAT ": monomorphic to %s: %s",
-           p2i(instruction_address()),
-           (info.to_aot() ? "aot" : "interpreter"),
-           method->print_value_string());
-      }
     } else {
       // Call via method-klass-holder
       InlineCacheBuffer::create_transition_stub(this, info.claim_cached_icholder(), info.entry());
-      if (TraceICs) {
-         ResourceMark rm(thread);
-         tty->print_cr("IC@" INTPTR_FORMAT ": monomorphic to interpreter via icholder ", p2i(instruction_address()));
-      }
     }
   } else {
     // Call to compiled code
@@ -315,14 +281,6 @@ void CompiledIC::set_to_monomorphic(CompiledICInfo& info) {
       } else {
         set_ic_destination_and_value(info.entry(), info.cached_metadata());
       }
-    }
-
-    if (TraceICs) {
-      ResourceMark rm(thread);
-      tty->print_cr("IC@" INTPTR_FORMAT ": monomorphic to compiled (rcvr klass) %s: %s",
-        p2i(instruction_address()),
-        ((Klass*)info.cached_metadata())->print_value_string(),
-        (safe) ? "" : "via stub");
     }
   }
 }
@@ -448,13 +406,6 @@ bool CompiledDirectStaticCall::is_call_to_far() const {
 }
 
 void CompiledStaticCall::set_to_compiled(address entry) {
-  if (TraceICs) {
-    ResourceMark rm;
-    tty->print_cr("%s@" INTPTR_FORMAT ": set_to_compiled " INTPTR_FORMAT,
-        name(),
-        p2i(instruction_address()),
-        p2i(entry));
-  }
   // Call to compiled code
   set_destination_mt_safe(entry);
 }

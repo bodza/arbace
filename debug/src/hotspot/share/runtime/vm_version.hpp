@@ -35,9 +35,7 @@ class Abstract_VM_Version: AllStatic {
   static unsigned int _parallel_worker_threads;
   static bool         _parallel_worker_threads_initialized;
 
-  static unsigned int nof_parallel_worker_threads(unsigned int num,
-                                                  unsigned int dem,
-                                                  unsigned int switch_pt);
+  static unsigned int nof_parallel_worker_threads(unsigned int num, unsigned int dem, unsigned int switch_pt);
  public:
   // Called as part of the runtime services initialization which is
   // called from the management module initialization (via init_globals())

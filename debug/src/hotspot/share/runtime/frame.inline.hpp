@@ -2,8 +2,6 @@
 #define SHARE_VM_RUNTIME_FRAME_INLINE_HPP
 
 #include "code/compiledMethod.inline.hpp"
-#include "interpreter/bytecodeInterpreter.hpp"
-#include "interpreter/bytecodeInterpreter.inline.hpp"
 #include "interpreter/interpreter.hpp"
 #include "oops/method.hpp"
 #include "runtime/frame.hpp"

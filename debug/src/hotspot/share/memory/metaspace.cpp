@@ -873,7 +873,7 @@ void Metaspace::initialize_class_space(ReservedSpace rs) {
 }
 
 void Metaspace::ergo_initialize() {
-  if (DumpSharedSpaces) {
+  if (false) {
     // Using large pages when dumping the shared archive is currently not implemented.
     FLAG_SET_ERGO(bool, UseLargePagesInMetaspace, false);
   }
@@ -991,7 +991,7 @@ MetaWord* Metaspace::allocate(ClassLoaderData* loader_data, size_t word_size, Me
     tracer()->report_metaspace_allocation_failure(loader_data, word_size, type, mdtype);
 
     // Allocation failed.
-    if (is_init_completed() && !(DumpSharedSpaces && THREAD->is_VM_thread())) {
+    if (is_init_completed() && !(false && THREAD->is_VM_thread())) {
       // Only start a GC if the bootstrapping has completed.
       // Also, we cannot GC if we are at the end of the CDS dumping stage which runs inside
       // the VM thread.
@@ -1002,7 +1002,7 @@ MetaWord* Metaspace::allocate(ClassLoaderData* loader_data, size_t word_size, Me
   }
 
   if (result == NULL) {
-    if (DumpSharedSpaces) {
+    if (false) {
       // CDS dumping keeps loading classes, so if we hit an OOM we probably will keep hitting OOM.
       // We should abort to avoid generating a potentially bad archive.
       tty->print_cr("Failed allocating metaspace object type %s of size " SIZE_FORMAT ". CDS dump aborted.",
@@ -1046,9 +1046,8 @@ void Metaspace::report_metadata_oome(ClassLoaderData* loader_data, size_t word_s
     out_of_compressed_class_space = MetaspaceUtils::committed_bytes(Metaspace::ClassType) + (metaspace->class_chunk_size(word_size) * BytesPerWord) > CompressedClassSpaceSize;
   }
 
-  // -XX:+HeapDumpOnOutOfMemoryError and -XX:OnOutOfMemoryError support
-  const char* space_string = out_of_compressed_class_space ?
-    "Compressed class space" : "Metaspace";
+  // -XX:+false and -XX:OnOutOfMemoryError support
+  const char* space_string = out_of_compressed_class_space ? "Compressed class space" : "Metaspace";
 
   report_java_out_of_memory(space_string);
 

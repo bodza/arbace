@@ -130,9 +130,6 @@ class ClassFileParser {
   u2 _itfs_len;
   u2 _java_fields_count;
 
-  bool _need_verify;
-  bool _relax_verify;
-
   bool _has_nonstatic_concrete_methods;
   bool _declares_nonstatic_concrete_methods;
   bool _has_final_method;
@@ -145,9 +142,7 @@ class ClassFileParser {
 
   void parse_stream(const ClassFileStream* const stream, TRAPS);
 
-  void post_process_parsed_stream(const ClassFileStream* const stream,
-                                  ConstantPool* cp,
-                                  TRAPS);
+  void post_process_parsed_stream(const ClassFileStream* const stream, ConstantPool* cp, TRAPS);
 
   void prepend_host_package_name(const InstanceKlass* host_klass, TRAPS);
   void fix_anonymous_class_name(TRAPS);
@@ -168,27 +163,14 @@ class ClassFileParser {
   void clear_class_metadata();
 
   // Constant pool parsing
-  void parse_constant_pool_entries(const ClassFileStream* const stream,
-                                   ConstantPool* cp,
-                                   const int length,
-                                   TRAPS);
+  void parse_constant_pool_entries(const ClassFileStream* const stream, ConstantPool* cp, const int length, TRAPS);
 
-  void parse_constant_pool(const ClassFileStream* const cfs,
-                           ConstantPool* const cp,
-                           const int length,
-                           TRAPS);
+  void parse_constant_pool(const ClassFileStream* const cfs, ConstantPool* const cp, const int length, TRAPS);
 
   // Interface parsing
-  void parse_interfaces(const ClassFileStream* const stream,
-                        const int itfs_len,
-                        ConstantPool* const cp,
-                        bool* has_nonstatic_concrete_methods,
-                        TRAPS);
+  void parse_interfaces(const ClassFileStream* const stream, const int itfs_len, ConstantPool* const cp, bool* has_nonstatic_concrete_methods, TRAPS);
 
-  const InstanceKlass* parse_super_class(ConstantPool* const cp,
-                                         const int super_class_index,
-                                         const bool need_verify,
-                                         TRAPS);
+  const InstanceKlass* parse_super_class(ConstantPool* const cp, const int super_class_index, const bool need_verify, TRAPS);
 
   // Field parsing
   void parse_field_attributes(const ClassFileStream* const cfs,
@@ -223,15 +205,9 @@ class ClassFileParser {
                      bool* const declares_nonstatic_concrete_methods,
                      TRAPS);
 
-  const unsafe_u2* parse_exception_table(const ClassFileStream* const stream,
-                                         u4 code_length,
-                                         u4 exception_table_length,
-                                         TRAPS);
+  const unsafe_u2* parse_exception_table(const ClassFileStream* const stream, u4 code_length, u4 exception_table_length, TRAPS);
 
-  void parse_linenumber_table(u4 code_attribute_length,
-                              u4 code_length,
-                              CompressedLineNumberWriteStream**const write_stream,
-                              TRAPS);
+  void parse_linenumber_table(u4 code_attribute_length, u4 code_length, CompressedLineNumberWriteStream**const write_stream, TRAPS);
 
   const unsafe_u2* parse_localvariable_table(const ClassFileStream* const cfs,
                                              u4 code_length,
@@ -257,32 +233,22 @@ class ClassFileParser {
   // Classfile attribute parsing
   u2 parse_generic_signature_attribute(const ClassFileStream* const cfs, TRAPS);
   void parse_classfile_sourcefile_attribute(const ClassFileStream* const cfs, TRAPS);
-  void parse_classfile_source_debug_extension_attribute(const ClassFileStream* const cfs,
-                                                        int length,
-                                                        TRAPS);
+  void parse_classfile_source_debug_extension_attribute(const ClassFileStream* const cfs, int length, TRAPS);
 
-  u2   parse_classfile_inner_classes_attribute(const ClassFileStream* const cfs,
-                                               const u1* const inner_classes_attribute_start,
-                                               bool parsed_enclosingmethod_attribute,
-                                               u2 enclosing_method_class_index,
-                                               u2 enclosing_method_method_index,
-                                               TRAPS);
+  u2 parse_classfile_inner_classes_attribute(const ClassFileStream* const cfs,
+                                             const u1* const inner_classes_attribute_start,
+                                             bool parsed_enclosingmethod_attribute,
+                                             u2 enclosing_method_class_index,
+                                             u2 enclosing_method_method_index,
+                                             TRAPS);
 
-  u2 parse_classfile_nest_members_attribute(const ClassFileStream* const cfs,
-                                            const u1* const nest_members_attribute_start,
-                                            TRAPS);
+  u2 parse_classfile_nest_members_attribute(const ClassFileStream* const cfs, const u1* const nest_members_attribute_start, TRAPS);
 
-  void parse_classfile_attributes(const ClassFileStream* const cfs,
-                                  ConstantPool* cp,
-                                  ClassAnnotationCollector* parsed_annotations,
-                                  TRAPS);
+  void parse_classfile_attributes(const ClassFileStream* const cfs, ConstantPool* cp, ClassAnnotationCollector* parsed_annotations, TRAPS);
 
   void parse_classfile_synthetic_attribute(TRAPS);
   void parse_classfile_signature_attribute(const ClassFileStream* const cfs, TRAPS);
-  void parse_classfile_bootstrap_methods_attribute(const ClassFileStream* const cfs,
-                                                   ConstantPool* cp,
-                                                   u4 attribute_length,
-                                                   TRAPS);
+  void parse_classfile_bootstrap_methods_attribute(const ClassFileStream* const cfs, ConstantPool* cp, u4 attribute_length, TRAPS);
 
   // Annotations handling
   AnnotationArray* assemble_annotations(const u1* const runtime_visible_annotations,
@@ -300,59 +266,14 @@ class ClassFileParser {
   void classfile_parse_error(const char* msg, int index, const char *name, TRAPS) const;
   void classfile_parse_error(const char* msg, const char* name, const char* signature, TRAPS) const;
 
-  inline void guarantee_property(bool b, const char* msg, TRAPS) const {
-    if (!b) { classfile_parse_error(msg, CHECK); }
-  }
-
-  void report_assert_property_failure(const char* msg, TRAPS) const { };
-  void report_assert_property_failure(const char* msg, int index, TRAPS) const { };
-
-  inline void assert_property(bool b, const char* msg, TRAPS) const { }
-  inline void assert_property(bool b, const char* msg, int index, TRAPS) const { }
-
-  inline void check_property(bool property, const char* msg, int index, TRAPS) const {
-    if (_need_verify) {
-      guarantee_property(property, msg, index, CHECK);
-    } else {
-      assert_property(property, msg, index, CHECK);
-    }
-  }
-
-  inline void check_property(bool property, const char* msg, TRAPS) const {
-    if (_need_verify) {
-      guarantee_property(property, msg, CHECK);
-    } else {
-      assert_property(property, msg, CHECK);
-    }
-  }
-
-  inline void guarantee_property(bool b, const char* msg, int index, TRAPS) const {
-    if (!b) { classfile_parse_error(msg, index, CHECK); }
-  }
-
-  inline void guarantee_property(bool b, const char* msg, const char *name, TRAPS) const {
-    if (!b) { classfile_parse_error(msg, name, CHECK); }
-  }
-
-  inline void guarantee_property(bool b, const char* msg, int index, const char *name, TRAPS) const {
-    if (!b) { classfile_parse_error(msg, index, name, CHECK); }
-  }
+  inline void guarantee_property(bool b, const char* msg, TRAPS) const { if (!b) { classfile_parse_error(msg, CHECK); } }
+  inline void guarantee_property(bool b, const char* msg, int index, TRAPS) const { if (!b) { classfile_parse_error(msg, index, CHECK); } }
+  inline void guarantee_property(bool b, const char* msg, const char *name, TRAPS) const { if (!b) { classfile_parse_error(msg, name, CHECK); } }
+  inline void guarantee_property(bool b, const char* msg, int index, const char *name, TRAPS) const { if (!b) { classfile_parse_error(msg, index, name, CHECK); } }
 
   void throwIllegalSignature(const char* type, const Symbol* name, const Symbol* sig, TRAPS) const;
 
-  void verify_constantvalue(const ConstantPool* const cp, int constantvalue_index, int signature_index, TRAPS) const;
-
-  void verify_legal_utf8(const unsigned char* buffer, int length, TRAPS) const;
-  void verify_legal_class_name(const Symbol* name, TRAPS) const;
-  void verify_legal_field_name(const Symbol* name, TRAPS) const;
-  void verify_legal_method_name(const Symbol* name, TRAPS) const;
-
-  void verify_legal_field_signature(const Symbol* fieldname, const Symbol* signature, TRAPS) const;
-  int  verify_legal_method_signature(const Symbol* methodname, const Symbol* signature, TRAPS) const;
-
   void verify_legal_class_modifiers(jint flags, TRAPS) const;
-  void verify_legal_field_modifiers(jint flags, bool is_interface, TRAPS) const;
-  void verify_legal_method_modifiers(jint flags, bool is_interface, const Symbol* name, TRAPS) const;
 
   const char* skip_over_field_signature(const char* signature, bool void_ok, unsigned int length, TRAPS) const;
 

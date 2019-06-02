@@ -1642,8 +1642,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide) {
     __ jcc(Assembler::notZero, has_counters);
     __ push(rdx);
     __ push(rcx);
-    __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::build_method_counters),
-               rcx);
+    __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::build_method_counters), rcx);
     __ pop(rcx);
     __ pop(rdx);
     __ movptr(rax, Address(rcx, Method::method_counters_offset()));
@@ -1744,10 +1743,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide) {
       __ negptr(rdx);
       __ addptr(rdx, rbcp); // branch bcp
       // IcoResult frequency_counter_overflow([JavaThread*], address branch_bcp)
-      __ call_VM(noreg,
-                 CAST_FROM_FN_PTR(address,
-                                  InterpreterRuntime::frequency_counter_overflow),
-                 rdx);
+      __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::frequency_counter_overflow), rdx);
 
       // rax: osr nmethod (osr ok) or NULL (osr not possible)
       // rdx: scratch
@@ -2051,8 +2047,7 @@ void TemplateTable::_return(TosState state) {
     __ testb(Address(r15_thread, Thread::polling_page_offset()), SafepointMechanism::poll_bit());
     __ jcc(Assembler::zero, no_safepoint);
     __ push(state);
-    __ call_VM(noreg, CAST_FROM_FN_PTR(address,
-                                    InterpreterRuntime::at_safepoint));
+    __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::at_safepoint));
     __ pop(state);
     __ bind(no_safepoint);
   }
@@ -3127,21 +3122,12 @@ void TemplateTable::_new() {
       __ movptr(rbx, Address(rcx, Klass::prototype_header_offset()));
       __ movptr(Address(rax, oopDesc::mark_offset_in_bytes ()), rbx);
     } else {
-      __ movptr(Address(rax, oopDesc::mark_offset_in_bytes ()),
-                (intptr_t)markOopDesc::prototype()); // header
+      __ movptr(Address(rax, oopDesc::mark_offset_in_bytes ()), (intptr_t)markOopDesc::prototype()); // header
       __ pop(rcx);   // get saved klass back in the register.
     }
     __ xorl(rsi, rsi); // use zero reg to clear memory (shorter code)
     __ store_klass_gap(rax, rsi);  // zero klass gap for compressed oops
     __ store_klass(rax, rcx);  // klass
-
-    {
-      SkipIfEqual skip_if(_masm, &DTraceAllocProbes, 0);
-      // Trigger dtrace event for fastpath
-      __ push(atos);
-      __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_object_alloc), rax);
-      __ pop(atos);
-    }
 
     __ jmp(done);
   }
@@ -3167,8 +3153,7 @@ void TemplateTable::newarray() {
   transition(itos, atos);
   Register rarg1 = c_rarg1;
   __ load_unsigned_byte(rarg1, at_bcp(1));
-  call_VM(rax, CAST_FROM_FN_PTR(address, InterpreterRuntime::newarray),
-          rarg1, rax);
+  call_VM(rax, CAST_FROM_FN_PTR(address, InterpreterRuntime::newarray), rarg1, rax);
 }
 
 void TemplateTable::anewarray() {
@@ -3179,8 +3164,7 @@ void TemplateTable::anewarray() {
 
   __ get_unsigned_2_byte_index_at_bcp(rarg2, 1);
   __ get_constant_pool(rarg1);
-  call_VM(rax, CAST_FROM_FN_PTR(address, InterpreterRuntime::anewarray),
-          rarg1, rarg2, rax);
+  call_VM(rax, CAST_FROM_FN_PTR(address, InterpreterRuntime::anewarray), rarg1, rarg2, rax);
 }
 
 void TemplateTable::arraylength() {
@@ -3316,17 +3300,12 @@ void TemplateTable::_breakpoint() {
 
   // get the unpatched byte code
   __ get_method(rarg);
-  __ call_VM(noreg,
-             CAST_FROM_FN_PTR(address,
-                              InterpreterRuntime::get_original_bytecode_at),
-             rarg, rbcp);
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::get_original_bytecode_at), rarg, rbcp);
   __ mov(rbx, rax);  // why?
 
   // post the breakpoint event
   __ get_method(rarg);
-  __ call_VM(noreg,
-             CAST_FROM_FN_PTR(address, InterpreterRuntime::_breakpoint),
-             rarg, rbcp);
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::_breakpoint), rarg, rbcp);
 
   // complete the execution of original bytecode
   __ dispatch_only_normal(vtos);
@@ -3492,8 +3471,7 @@ void TemplateTable::monitorexit() {
   }
 
   // error handling. Unlocking was not block-structured
-  __ call_VM(noreg, CAST_FROM_FN_PTR(address,
-                   InterpreterRuntime::throw_illegal_monitor_state_exception));
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_illegal_monitor_state_exception));
   __ should_not_reach_here();
 
   // call run-time routine

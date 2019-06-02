@@ -172,11 +172,6 @@ bool frame::is_entry_frame_valid(JavaThread* thread) const {
 bool frame::should_be_deoptimized() const {
   if (_deopt_state == is_deoptimized || !is_compiled_frame()) return false;
   CompiledMethod* nm = (CompiledMethod *)_cb;
-  if (TraceDependencies) {
-    tty->print("checking (%s) ", nm->is_marked_for_deoptimization() ? "true" : "false");
-    nm->print_value_on(tty);
-    tty->cr();
-  }
 
   if (!nm->is_marked_for_deoptimization())
     return false;

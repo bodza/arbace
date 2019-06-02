@@ -135,7 +135,7 @@ void G1GCPhaseTimes::note_gc_start() {
   reset();
 }
 
-#define ASSERT_PHASE_UNINITIALIZED(phase) \
+#define ASSERT_PHASE_UNINITIALIZED(phase)
 
 double G1GCPhaseTimes::worker_time(GCParPhases phase, uint worker) {
   if (_gc_par_phases[phase] == NULL) {

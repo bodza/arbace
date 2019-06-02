@@ -112,7 +112,7 @@ ciField::ciField(ciInstanceKlass* klass, int index) :
   if (!holder_is_accessible) {
     // _type has already been set.
     // The default values for _flags and _constant_value will suffice.
-    // We need values for _holder, _offset,  and _is_constant,
+    // We need values for _holder, _offset, and _is_constant,
     _holder = declared_holder;
     _offset = -1;
     _is_constant = false;
@@ -136,11 +136,7 @@ ciField::ciField(ciInstanceKlass* klass, int index) :
   // to check access because it can erroneously succeed. If this check fails,
   // propagate the declared holder to will_link() which in turn will bail out
   // compilation for this field access.
-  bool can_access = Reflection::verify_member_access(klass->get_Klass(),
-                                                     declared_holder->get_Klass(),
-                                                     canonical_holder,
-                                                     field_desc.access_flags(),
-                                                     true, false, THREAD);
+  bool can_access = Reflection::verify_member_access(klass->get_Klass(), declared_holder->get_Klass(), canonical_holder, field_desc.access_flags(), true, false, THREAD);
   if (!can_access) {
     _holder = declared_holder;
     _offset = -1;

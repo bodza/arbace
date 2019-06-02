@@ -160,10 +160,7 @@ class AbstractInterpreter: AllStatic {
 
   // Deoptimization support
   // Compute the entry address for continuation after
-  static address deopt_continue_after_entry(Method* method,
-                                            address bcp,
-                                            int callee_parameters,
-                                            bool is_top_frame);
+  static address deopt_continue_after_entry(Method* method, address bcp, int callee_parameters, bool is_top_frame);
   // Compute the entry address for reexecution
   static address deopt_reexecute_entry(Method* method, address bcp);
   // Deoptimization should reexecute this bytecode

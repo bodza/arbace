@@ -39,12 +39,10 @@
           "Enable detection and runtime container configuration support") \
  \
   product(bool, PreferContainerQuotaForCPUCount, true, \
-          "Calculate the container CPU availability based on the value" \
-          " of quotas (if set), when true. Otherwise, use the CPU" \
-          " shares value, provided it is less than quota.") \
+          "Calculate the container CPU availability based on the value of quotas (if set), when true. Otherwise, use the CPU shares value, provided it is less than quota.") \
  \
   diagnostic(bool, UseCpuAllocPath, false, \
-             "Use CPU_ALLOC code path in os::active_processor_count ")
+          "Use CPU_ALLOC code path in os::active_processor_count ")
 
 //
 // Defines Linux-specific default values. The flags are available on all

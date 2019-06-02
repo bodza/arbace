@@ -58,8 +58,7 @@ class Linux {
   static void initialize_system_info();
 
   static int commit_memory_impl(char* addr, size_t bytes, bool exec);
-  static int commit_memory_impl(char* addr, size_t bytes,
-                                size_t alignment_hint, bool exec);
+  static int commit_memory_impl(char* addr, size_t bytes, size_t alignment_hint, bool exec);
 
   static void set_glibc_version(const char *s)      { _glibc_version = s; }
   static void set_libpthread_version(const char *s) { _libpthread_version = s; }
@@ -124,8 +123,7 @@ class Linux {
   // This interface should be declared in os_linux_i486.hpp, but
   // that file provides extensions to the os class and not the
   // Linux class.
-  static ExtendedPC fetch_frame_from_ucontext(Thread* thread, const ucontext_t* uc,
-                                              intptr_t** ret_sp, intptr_t** ret_fp);
+  static ExtendedPC fetch_frame_from_ucontext(Thread* thread, const ucontext_t* uc, intptr_t** ret_sp, intptr_t** ret_fp);
 
   static bool get_frame_at_stack_banging_point(JavaThread* thread, ucontext_t* uc, frame* fr);
 

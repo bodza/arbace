@@ -4,7 +4,6 @@
 #include "asm/macroAssembler.inline.hpp"
 #include "compiler/disassembler.hpp"
 #include "interpreter/bytecodeHistogram.hpp"
-#include "interpreter/bytecodeInterpreter.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
 #include "interpreter/interp_masm.hpp"
@@ -32,9 +31,7 @@ void AbstractInterpreter::initialize() {
   if (_code != NULL) return;
 
   // make sure 'imported' classes are initialized
-  if (CountBytecodes || TraceBytecodes || StopInterpreterAt) BytecodeCounter::reset();
-  if (PrintBytecodeHistogram)                                BytecodeHistogram::reset();
-  if (PrintBytecodePairHistogram)                            BytecodePairHistogram::reset();
+  if (CountBytecodes || StopInterpreterAt) BytecodeCounter::reset();
 
   InvocationCounter::reinitialize(DelayCompilationDuringStartup);
 }

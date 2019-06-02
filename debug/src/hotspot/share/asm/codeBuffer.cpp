@@ -709,11 +709,9 @@ csize_t CodeBuffer::figure_expanded_capacities(CodeSection* which_cs,
     if ((uint)exp < 4*K)  exp = 4*K;       // minimum initial increase
     if (sect == which_cs) {
       if (exp < amount)  exp = amount;
-      if (StressCodeBuffers)  exp = amount;  // expand only slightly
     } else if (n == SECT_INSTS) {
       // scale down inst increases to a more modest 25%
       exp = 4*K + ((exp - 4*K) >> 2);
-      if (StressCodeBuffers)  exp = amount / 2;  // expand only slightly
     } else if (sect->is_empty()) {
       // do not grow an empty secondary section
       exp = 0;

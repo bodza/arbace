@@ -696,8 +696,7 @@ private:
 
   // Utilities
   static bool is_polling_page_far();
-  static bool query_compressed_disp_byte(int disp, bool is_evex_inst, int vector_len,
-                                         int cur_tuple_type, int in_size_in_bits, int cur_encoding);
+  static bool query_compressed_disp_byte(int disp, bool is_evex_inst, int vector_len, int cur_tuple_type, int in_size_in_bits, int cur_encoding);
 
   // Generic instructions
   // Does 32bit or 64bit as needed for the platform. In some sense these

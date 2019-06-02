@@ -48,7 +48,6 @@
 #include "runtime/java.hpp"
 #include "runtime/javaCalls.hpp"
 #include "runtime/jniHandles.inline.hpp"
-#include "runtime/jniPeriodicChecker.hpp"
 #include "runtime/memprofiler.hpp"
 #include "runtime/mutexLocker.hpp"
 #include "runtime/objectMonitor.hpp"
@@ -81,7 +80,6 @@
 #include "utilities/align.hpp"
 #include "utilities/copy.hpp"
 #include "utilities/defaultStream.hpp"
-#include "utilities/dtrace.hpp"
 #include "utilities/events.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/preserveException.hpp"
@@ -96,8 +94,6 @@
 
 // Initialization after module runtime initialization
 void universe_post_module_init();  // must happen after call_initPhase2
-
-#define DTRACE_THREAD_PROBE(probe, javathread)
 
 #ifndef USE_LIBRARY_BASED_TLS_ONLY
 // Current thread is maintained as a thread-local variable
@@ -295,10 +291,10 @@ Thread::~Thread() {
 
   // It's possible we can encounter a null _ParkEvent, etc., in stillborn threads.
   // We NULL out the fields for good hygiene.
-  ParkEvent::Release(_ParkEvent); _ParkEvent   = NULL;
+  ParkEvent::Release(_ParkEvent);  _ParkEvent   = NULL;
   ParkEvent::Release(_SleepEvent); _SleepEvent  = NULL;
   ParkEvent::Release(_MutexEvent); _MutexEvent  = NULL;
-  ParkEvent::Release(_MuxEvent); _MuxEvent    = NULL;
+  ParkEvent::Release(_MuxEvent);   _MuxEvent    = NULL;
 
   delete handle_area();
   delete metadata_handles();
@@ -341,8 +337,7 @@ void Thread::start(Thread* thread) {
       // Can not set it after the thread started because we do not know the
       // exact thread state at that time. It could be in MONITOR_WAIT or
       // in SLEEPING or some other state.
-      java_lang_Thread::set_thread_status(((JavaThread*)thread)->threadObj(),
-                                          java_lang_Thread::RUNNABLE);
+      java_lang_Thread::set_thread_status(((JavaThread*)thread)->threadObj(), java_lang_Thread::RUNNABLE);
     }
     os::start_thread(thread);
   }
@@ -354,86 +349,7 @@ void Thread::send_async_exception(oop java_thread, oop java_throwable) {
   VMThread::execute(vm_stop);
 }
 
-// Check if an external suspend request has completed (or has been
-// cancelled). Returns true if the thread is externally suspended and
-// false otherwise.
-//
-// The bits parameter returns information about the code path through
-// the routine. Useful for debugging:
-//
-// set in is_ext_suspend_completed():
-// 0x00000001 - routine was entered
-// 0x00000010 - routine return false at end
-// 0x00000100 - thread exited (return false)
-// 0x00000200 - suspend request cancelled (return false)
-// 0x00000400 - thread suspended (return true)
-// 0x00001000 - thread is in a suspend equivalent state (return true)
-// 0x00002000 - thread is native and walkable (return true)
-// 0x00004000 - thread is native_trans and walkable (needed retry)
-//
-// set in wait_for_ext_suspend_completion():
-// 0x00010000 - routine was entered
-// 0x00020000 - suspend request cancelled before loop (return false)
-// 0x00040000 - thread suspended before loop (return true)
-// 0x00080000 - suspend request cancelled in loop (return false)
-// 0x00100000 - thread suspended in loop (return true)
-// 0x00200000 - suspend not completed during retry loop (return false)
-
-// Helper class for tracing suspend wait debug bits.
-//
-// 0x00000100 indicates that the target thread exited before it could
-// self-suspend which is not a wait failure. 0x00000200, 0x00020000 and
-// 0x00080000 each indicate a cancelled suspend request so they don't
-// count as wait failures either.
-#define DEBUG_FALSE_BITS (0x00000010 | 0x00200000)
-
-class TraceSuspendDebugBits : public StackObj {
- private:
-  JavaThread * jt;
-  bool         is_wait;
-  bool         called_by_wait;  // meaningful when !is_wait
-  uint32_t *   bits;
-
- public:
-  TraceSuspendDebugBits(JavaThread *_jt, bool _is_wait, bool _called_by_wait,
-                        uint32_t *_bits) {
-    jt             = _jt;
-    is_wait        = _is_wait;
-    called_by_wait = _called_by_wait;
-    bits           = _bits;
-  }
-
-  ~TraceSuspendDebugBits() {
-    if (!is_wait) {
-#if 1
-      // By default, don't trace bits for is_ext_suspend_completed() calls.
-      // That trace is very chatty.
-      return;
-#else
-      if (!called_by_wait) {
-        // If tracing for is_ext_suspend_completed() is enabled, then only
-        // trace calls to it from wait_for_ext_suspend_completion()
-        return;
-      }
-#endif
-    }
-
-    if (AssertOnSuspendWaitFailure || TraceSuspendWaitFailures) {
-      if (bits != NULL && (*bits & DEBUG_FALSE_BITS) != 0) {
-        MutexLocker ml(Threads_lock);  // needed for get_thread_name()
-        ResourceMark rm;
-
-        tty->print_cr("Failed wait_for_ext_suspend_completion(thread=%s, debug_bits=%x)", jt->get_thread_name(), *bits);
-
-        guarantee(!AssertOnSuspendWaitFailure, "external suspend wait failed");
-      }
-    }
-  }
-};
-#undef DEBUG_FALSE_BITS
-
 bool JavaThread::is_ext_suspend_completed(bool called_by_wait, int delay, uint32_t *bits) {
-  TraceSuspendDebugBits tsdb(this, false /* !is_wait */, called_by_wait, bits);
 
   bool did_trans_retry = false;  // only do thread_in_native_trans retry once
   bool do_trans_retry;           // flag to force the retry
@@ -553,8 +469,6 @@ bool JavaThread::is_ext_suspend_completed(bool called_by_wait, int delay, uint32
 // Returns true if the thread is externally suspended and false otherwise.
 //
 bool JavaThread::wait_for_ext_suspend_completion(int retries, int delay, uint32_t *bits) {
-  TraceSuspendDebugBits tsdb(this, true /* is_wait */,
-                             false /* !called_by_wait */, bits);
 
   // local flag copies to minimize SR_lock hold time
   bool is_suspended;
@@ -571,8 +485,7 @@ bool JavaThread::wait_for_ext_suspend_completion(int retries, int delay, uint32_
 
   {
     MutexLockerEx ml(SR_lock(), Mutex::_no_safepoint_check_flag);
-    is_suspended = is_ext_suspend_completed(true /* called_by_wait */,
-                                            delay, bits);
+    is_suspended = is_ext_suspend_completed(true /* called_by_wait */, delay, bits);
     pending = is_external_suspend();
   }
   // must release SR_lock to allow suspension to complete
@@ -606,8 +519,7 @@ bool JavaThread::wait_for_ext_suspend_completion(int retries, int delay, uint32_
       // can also call this)  and increase delay with each retry
       SR_lock()->wait(!Thread::current()->is_Java_thread(), i * delay);
 
-      is_suspended = is_ext_suspend_completed(true /* called_by_wait */,
-                                              delay, bits);
+      is_suspended = is_ext_suspend_completed(true /* called_by_wait */, delay, bits);
 
       // It is possible for the external suspend request to be cancelled
       // (by a resume) before the actual suspend operation is completed.
@@ -720,13 +632,9 @@ void Thread::print_on(outputStream* st, bool print_extended_info) const {
       st->print("os_prio=%d ", os_prio);
     }
 
-    st->print("cpu=%.2fms ",
-              os::thread_cpu_time(const_cast<Thread*>(this), true) / 1000000.0
-              );
-    st->print("elapsed=%.2fs ",
-              _statistical_info.getElapsedTime() / 1000.0
-              );
-    if (is_Java_thread() && (PrintExtendedThreadInfo || print_extended_info)) {
+    st->print("cpu=%.2fms ", os::thread_cpu_time(const_cast<Thread*>(this), true) / 1000000.0);
+    st->print("elapsed=%.2fs ", _statistical_info.getElapsedTime() / 1000.0);
+    if (is_Java_thread() && print_extended_info) {
       size_t allocated_bytes = (size_t) const_cast<Thread*>(this)->cooked_allocated_bytes();
       st->print("allocated=" SIZE_FORMAT "%s ", byte_size_in_proper_unit(allocated_bytes), proper_unit_for_byte_size(allocated_bytes));
       st->print("defined_classes=" INT64_FORMAT " ", _statistical_info.getDefineClassCount());
@@ -1390,8 +1298,6 @@ void JavaThread::run() {
   // in the VM. Change thread state from _thread_new to _thread_in_vm
   ThreadStateTransition::transition_and_fence(this, _thread_new, _thread_in_vm);
 
-  DTRACE_THREAD_PROBE(start, this);
-
   // This operation might block. We call that after all safepoint checks for a new thread has
   // been completed.
   this->set_active_handles(JNIHandleBlock::allocate_block());
@@ -1422,8 +1328,6 @@ void JavaThread::thread_main_inner() {
     HandleMark hm(this);
     this->entry_point()(this, this);
   }
-
-  DTRACE_THREAD_PROBE(stop, this);
 
   this->exit(false);
   this->smr_delete();
@@ -1758,7 +1662,7 @@ void JavaThread::handle_special_runtime_exit_condition(bool check_asyncs) {
   // threads could call into the VM with another thread's JNIEnv so we
   // can be here operating on behalf of a suspended thread (4432884).
   bool do_self_suspend = is_external_suspend_with_lock();
-  if (do_self_suspend && (!AllowJNIEnvProxy || this == JavaThread::current())) {
+  if (do_self_suspend) {
     //
     // Because thread is external suspended the safepoint code will count
     // thread as at a safepoint. This can be odd because we can be here
@@ -1818,7 +1722,7 @@ void JavaThread::send_thread_stop(oop java_throwable) {
           // BiasedLocking needs an updated RegisterMap for the revoke monitors pass
           RegisterMap reg_map(this, UseBiasedLocking);
           frame compiled_frame = f.sender(&reg_map);
-          if (!StressCompiledExceptionHandlers && compiled_frame.can_be_deoptimized()) {
+          if (compiled_frame.can_be_deoptimized()) {
             Deoptimization::deoptimize(this, compiled_frame, &reg_map);
           }
         }
@@ -1865,8 +1769,7 @@ void JavaThread::java_suspend() {
     // Warning: is_ext_suspend_completed() may temporarily drop the
     // SR_lock to allow the thread to reach a stable thread state if
     // it is currently in a transient thread state.
-    if (is_ext_suspend_completed(false /* !called_by_wait */,
-                                 SuspendRetryDelay, &debug_bits)) {
+    if (is_ext_suspend_completed(false /* !called_by_wait */, SuspendRetryDelay, &debug_bits)) {
       return;
     }
   }
@@ -1945,7 +1848,7 @@ void JavaThread::check_safepoint_and_suspend_for_native_trans(JavaThread *thread
   // thread is not the current thread. In older versions of jdbx, jdbx
   // threads could call into the VM with another thread's JNIEnv so we
   // can be here operating on behalf of a suspended thread (4432884).
-  if (do_self_suspend && (!AllowJNIEnvProxy || curJT == thread)) {
+  if (do_self_suspend) {
     JavaThreadState state = thread->thread_state();
 
     // We mark this thread_blocked state as a suspend-equivalent so
@@ -2511,13 +2414,6 @@ void JavaThread::print_stack_on(outputStream* st) {
     if (f->is_java_frame()) {
       javaVFrame* jvf = javaVFrame::cast(f);
       java_lang_Throwable::print_stack_element(st, jvf->method(), jvf->bci());
-
-      // Print out lock information
-      if (JavaMonitorsInStackTrace) {
-        jvf->print_lock_info_on(st, count);
-      }
-    } else {
-      // Ignore non-Java frames
     }
 
     // Bail-out case for too deep stacks if MaxJavaStackTraceDepth > 0
@@ -2902,8 +2798,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
     os::pause();
   }
 
-  HOTSPOT_VM_INIT_BEGIN();
-
   // Initialize the os module after parsing the args
   jint os_init_2_result = os::init_2();
   if (os_init_2_result != JNI_OK) return os_init_2_result;
@@ -3039,8 +2933,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   LogConfiguration::post_initialize();
   Metaspace::post_initialize();
 
-  HOTSPOT_VM_INIT_END();
-
   // Signal Dispatcher needs to be started before VMInit event is posted
   os::initialize_jdk_signal_support(CHECK_JNI_ERR);
 
@@ -3108,7 +3000,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   if (MemProfiling)                   MemProfiler::engage();
   StatSampler::engage();
-  if (CheckJNICalls)                  JniPeriodicChecker::engage();
 
   BiasedLocking::init();
 
@@ -3141,11 +3032,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   create_vm_timer.end();
 
-  if (DumpSharedSpaces) {
-    MetaspaceShared::preload_and_dump(CHECK_JNI_ERR);
-    ShouldNotReachHere();
-  }
-
   return JNI_OK;
 }
 
@@ -3156,9 +3042,7 @@ extern "C" {
 // Find a command line agent library and return its entry point for
 //         -agentlib:  -agentpath:   -Xrun
 // num_symbol_entries must be passed-in since only the caller knows the number of symbols in the array.
-static OnLoadEntry_t lookup_on_load(AgentLibrary* agent,
-                                    const char *on_load_symbols[],
-                                    size_t num_symbol_entries) {
+static OnLoadEntry_t lookup_on_load(AgentLibrary* agent, const char *on_load_symbols[], size_t num_symbol_entries) {
   OnLoadEntry_t on_load_entry = NULL;
   void *library = NULL;
 
@@ -3412,9 +3296,6 @@ bool Threads::destroy_vm() {
   }
 
   // Hang forever on exit if we are reporting an error.
-  if (ShowMessageBoxOnError && VMError::is_error_reported()) {
-    os::infinite_sleep();
-  }
   os::wait_for_keypress_at_exit();
 
   // run Java level shutdown hooks

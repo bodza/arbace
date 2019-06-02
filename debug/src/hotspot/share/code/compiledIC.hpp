@@ -235,9 +235,7 @@ class CompiledIC: public ResourceObj {
   // allocation in the code cache fails.
   bool set_to_megamorphic(CallInfo* call_info, Bytecodes::Code bytecode, TRAPS);
 
-  static void compute_monomorphic_entry(const methodHandle& method, Klass* receiver_klass,
-                                        bool is_optimized, bool static_bound, bool caller_is_nmethod,
-                                        CompiledICInfo& info, TRAPS);
+  static void compute_monomorphic_entry(const methodHandle& method, Klass* receiver_klass, bool is_optimized, bool static_bound, bool caller_is_nmethod, CompiledICInfo& info, TRAPS);
 
   // Location
   address instruction_address() const { return _call->instruction_address(); }

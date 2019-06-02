@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "c1/c1_CFGPrinter.hpp"
 #include "c1/c1_Compilation.hpp"
 #include "c1/c1_IR.hpp"
 #include "c1/c1_LIRAssembler.hpp"
@@ -495,7 +494,7 @@ void Compilation::notice_inlined_method(ciMethod* method) {
 void Compilation::bailout(const char* msg) {
   if (!bailed_out()) {
     // keep first bailout message
-    if (PrintCompilation || PrintBailouts) tty->print_cr("compilation bailout: %s", msg);
+    if (PrintBailouts) tty->print_cr("compilation bailout: %s", msg);
     _bailout_msg = msg;
   }
 }

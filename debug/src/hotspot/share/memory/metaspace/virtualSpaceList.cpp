@@ -36,7 +36,7 @@ void VirtualSpaceList::dec_reserved_words(size_t v) {
   _reserved_words = _reserved_words - v;
 }
 
-#define assert_committed_below_limit() \
+#define assert_committed_below_limit()
 
 void VirtualSpaceList::inc_committed_words(size_t v) {
   _committed_words = _committed_words + v;

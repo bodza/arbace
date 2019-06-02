@@ -118,11 +118,7 @@ static void generate_all_subsets_of(LogTagType result[MaxSubsets][LogTag::MaxTag
 
 // Generate all possible selections (for the given level) based on the given tag set,
 // and add them to the selections array (growing it as necessary).
-static void add_selections(LogSelection** selections,
-                           size_t* n_selections,
-                           size_t* selections_cap,
-                           const LogTagSet& tagset,
-                           LogLevelType level) {
+static void add_selections(LogSelection** selections, size_t* n_selections, size_t* selections_cap, const LogTagSet& tagset, LogLevelType level) {
   LogTagType tags[LogTag::MaxTags] = { LogTag::__NO_TAG };
   for (size_t i = 0; i < tagset.ntags(); i++) {
     tags[i] = tagset.tag(i);

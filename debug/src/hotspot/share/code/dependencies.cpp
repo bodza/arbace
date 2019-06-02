@@ -1494,9 +1494,6 @@ Klass* Dependencies::check_call_site_target_value(oop call_site, oop method_hand
 
 void Dependencies::DepStream::trace_and_log_witness(Klass* witness) {
   if (witness != NULL) {
-    if (TraceDependencies) {
-      print_dependency(witness, /*verbose=*/ true);
-    }
     // The following is a no-op unless logging is enabled:
     log_dependency(witness);
   }
@@ -1580,20 +1577,10 @@ void DepChange::print() {
       tty->print_cr("  dependee = %s", k->external_name());
       break;
     case Change_new_sub:
-      if (!WizardMode) {
-        ++nsup;
-      } else {
-        tty->print_cr("  context super = %s", k->external_name());
-      }
+      ++nsup;
       break;
     case Change_new_impl:
-      if (!WizardMode) {
-        ++nint;
-      } else {
-        tty->print_cr("  context interface = %s", k->external_name());
-      }
-      break;
-    default:
+      ++nint;
       break;
     }
   }

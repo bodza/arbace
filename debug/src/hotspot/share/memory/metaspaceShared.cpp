@@ -282,7 +282,7 @@ void MetaspaceShared::post_initialize(TRAPS) {
     }
   }
 
-  if (DumpSharedSpaces) {
+  if (false) {
     if (SharedArchiveConfigFile) {
       read_extra_data(SharedArchiveConfigFile, THREAD);
     }
@@ -400,7 +400,7 @@ void MetaspaceShared::serialize_well_known_classes(SerializeClosure* soc) {
 }
 
 address MetaspaceShared::cds_i2i_entry_code_buffers(size_t total_size) {
-  if (DumpSharedSpaces) {
+  if (false) {
     if (_cds_i2i_entry_code_buffers == NULL) {
       _cds_i2i_entry_code_buffers = (address)misc_code_space_alloc(total_size);
       _cds_i2i_entry_code_buffers_size = total_size;
@@ -609,9 +609,7 @@ intptr_t* CppVtableCloner<T>::allocate(const char* name) {
 
 template <class T>
 intptr_t* CppVtableCloner<T>::clone_vtable(const char* name, CppVtableInfo* info) {
-  if (!DumpSharedSpaces) {
-    _info = info; // Remember it -- it will be used by MetaspaceShared::is_valid_shared_method()
-  }
+  _info = info; // Remember it -- it will be used by MetaspaceShared::is_valid_shared_method()
   T tmp; // Allocate temporary dummy metadata object to get to the original vtable.
   int n = info->vtable_size();
   intptr_t* srcvtable = vtable_of(tmp);
@@ -1252,9 +1250,6 @@ void VM_PopulateDumpSharedSpace::doit() {
 
   print_region_stats();
 
-  if (PrintSystemDictionaryAtExit) {
-    SystemDictionary::print();
-  }
   // There may be other pending VM operations that operate on the InstanceKlasses,
   // which will fail because InstanceKlasses::remove_unshareable_info()
   // has been called. Forget these operations and exit the VM directly.
@@ -1490,17 +1485,6 @@ int MetaspaceShared::preload_classes(const char* class_list_path, TRAPS) {
 // Returns true if the class's status has changed
 bool MetaspaceShared::try_link_class(InstanceKlass* ik, TRAPS) {
   if (ik->init_state() < InstanceKlass::linked) {
-    bool saved = BytecodeVerificationLocal;
-    if (ik->loader_type() == 0 && ik->class_loader() == NULL) {
-      // The verification decision is based on BytecodeVerificationRemote
-      // for non-system classes. Since we are using the NULL classloader
-      // to load non-system classes for customized class loaders during dumping,
-      // we need to temporarily change BytecodeVerificationLocal to be the same as
-      // BytecodeVerificationRemote. Note this can cause the parent system
-      // classes also being verified. The extra overhead is acceptable during
-      // dumping.
-      BytecodeVerificationLocal = BytecodeVerificationRemote;
-    }
     ik->link_class(THREAD);
     if (HAS_PENDING_EXCEPTION) {
       ResourceMark rm;
@@ -1509,7 +1493,6 @@ bool MetaspaceShared::try_link_class(InstanceKlass* ik, TRAPS) {
       ik->set_in_error_state();
       _has_error_classes = true;
     }
-    BytecodeVerificationLocal = saved;
     return true;
   } else {
     return false;
@@ -1634,7 +1617,7 @@ bool MetaspaceShared::map_shared_spaces(FileMapInfo* mapinfo) {
     shared_rs.release();
     // If -Xshare:on is specified, print out the error message and exit VM,
     // otherwise, set UseSharedSpaces to false and continue.
-    if (RequireSharedSpaces || PrintSharedArchiveAndExit) {
+    if (false) {
       vm_exit_during_initialization("Unable to use shared archive.", "Failed map_region for using -Xshare:on.");
     } else {
       FLAG_SET_DEFAULT(UseSharedSpaces, false);
@@ -1683,20 +1666,6 @@ void MetaspaceShared::initialize_shared_spaces() {
 
   // Close the mapinfo file
   mapinfo->close();
-
-  if (PrintSharedArchiveAndExit) {
-    if (PrintSharedDictionary) {
-      tty->print_cr("\nShared classes:\n");
-      SystemDictionary::print_shared(tty);
-    }
-    if (_archive_loading_failed) {
-      tty->print_cr("archive is invalid");
-      vm_exit(1);
-    } else {
-      tty->print_cr("archive is valid");
-      vm_exit(0);
-    }
-  }
 }
 
 // JVM/TI RedefineClasses() support:

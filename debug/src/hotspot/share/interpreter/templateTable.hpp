@@ -79,8 +79,7 @@ class TemplateTable: AllStatic {
 
   // helpers
   static void unimplemented_bc();
-  static void patch_bytecode(Bytecodes::Code bc, Register bc_reg,
-                             Register temp_reg, bool load_bc_into_bc_reg = true, int byte_no = -1);
+  static void patch_bytecode(Bytecodes::Code bc, Register bc_reg, Register temp_reg, bool load_bc_into_bc_reg = true, int byte_no = -1);
 
   // C calls
   static void call_VM(Register oop_result, address entry_point);
@@ -238,19 +237,8 @@ class TemplateTable: AllStatic {
                                       Register cache,    // output for CP cache
                                       Register index,    // output for CP index
                                       size_t index_size); // one of 1,2,4
-  static void load_invoke_cp_cache_entry(int byte_no,
-                                         Register method,
-                                         Register itable_index,
-                                         Register flags,
-                                         bool is_invokevirtual,
-                                         bool is_virtual_final,
-                                         bool is_invokedynamic);
-  static void load_field_cp_cache_entry(Register obj,
-                                        Register cache,
-                                        Register index,
-                                        Register offset,
-                                        Register flags,
-                                        bool is_static);
+  static void load_invoke_cp_cache_entry(int byte_no, Register method, Register itable_index, Register flags, bool is_invokevirtual, bool is_virtual_final, bool is_invokedynamic);
+  static void load_field_cp_cache_entry(Register obj, Register cache, Register index, Register offset, Register flags, bool is_static);
   static void invokevirtual(int byte_no);
   static void invokespecial(int byte_no);
   static void invokestatic(int byte_no);

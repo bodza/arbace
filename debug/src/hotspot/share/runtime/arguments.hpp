@@ -366,8 +366,7 @@ class Arguments : AllStatic {
   static vfprintf_hook_t  _vfprintf_hook;
 
   // System properties
-  static bool add_property(const char* prop, PropertyWriteable writeable=WriteableProperty,
-                           PropertyInternal internal=ExternalProperty);
+  static bool add_property(const char* prop, PropertyWriteable writeable=WriteableProperty, PropertyInternal internal=ExternalProperty);
 
   static bool create_property(const char* prop_name, const char* prop_value, PropertyInternal internal);
   static bool create_numbered_property(const char* prop_base_name, const char* prop_value, unsigned int count);
@@ -397,19 +396,14 @@ class Arguments : AllStatic {
                                      ScopedVMInitArgs* vm_options_file_args,
                                      ScopedVMInitArgs* args_out);
   static bool args_contains_vm_options_file_arg(const JavaVMInitArgs* args);
-  static jint expand_vm_options_as_needed(const JavaVMInitArgs* args_in,
-                                          ScopedVMInitArgs* mod_args,
-                                          JavaVMInitArgs** args_out);
-  static jint match_special_option_and_act(const JavaVMInitArgs* args,
-                                           ScopedVMInitArgs* args_out);
+  static jint expand_vm_options_as_needed(const JavaVMInitArgs* args_in, ScopedVMInitArgs* mod_args, JavaVMInitArgs** args_out);
+  static jint match_special_option_and_act(const JavaVMInitArgs* args, ScopedVMInitArgs* args_out);
 
   static bool handle_deprecated_print_gc_flags();
 
   static void handle_extra_cms_flags(const char* msg);
 
-  static jint parse_vm_init_args(const JavaVMInitArgs *java_tool_options_args,
-                                 const JavaVMInitArgs *java_options_args,
-                                 const JavaVMInitArgs *cmd_line_args);
+  static jint parse_vm_init_args(const JavaVMInitArgs *java_tool_options_args, const JavaVMInitArgs *java_options_args, const JavaVMInitArgs *cmd_line_args);
   static jint parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_mod_javabase, JVMFlag::Flags origin);
   static jint finalize_vm_init_args(bool patch_mod_javabase);
   static bool is_bad_option(const JavaVMOption* option, jboolean ignore, const char* option_type);
@@ -420,14 +414,12 @@ class Arguments : AllStatic {
 
   static void describe_range_error(ArgsRange errcode);
   static ArgsRange check_memory_size(julong size, julong min_size, julong max_size);
-  static ArgsRange parse_memory_size(const char* s, julong* long_arg,
-                                     julong min_size, julong max_size = max_uintx);
+  static ArgsRange parse_memory_size(const char* s, julong* long_arg, julong min_size, julong max_size = max_uintx);
   // Parse a string for a unsigned integer.  Returns true if value
   // is an unsigned integer greater than or equal to the minimum
   // parameter passed and returns the value in uintx_arg.  Returns
   // false otherwise, with uintx_arg undefined.
-  static bool parse_uintx(const char* value, uintx* uintx_arg,
-                          uintx min_size);
+  static bool parse_uintx(const char* value, uintx* uintx_arg, uintx min_size);
 
   // methods to build strings from individual args
   static void build_jvm_args(const char* arg);

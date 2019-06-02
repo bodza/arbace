@@ -16,7 +16,7 @@
 
 namespace metaspace {
 
-#define assert_counter(expected_value, real_value, msg) \
+#define assert_counter(expected_value, real_value, msg)
 
 // SpaceManager methods
 

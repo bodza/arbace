@@ -725,8 +725,7 @@ void InterpreterMacroAssembler::get_method_counters(Register method, Register mc
   movptr(mcs, Address(method, Method::method_counters_offset()));
   testptr(mcs, mcs);
   jcc(Assembler::notZero, has_counters);
-  call_VM(noreg, CAST_FROM_FN_PTR(address,
-          InterpreterRuntime::build_method_counters), method);
+  call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::build_method_counters), method);
   movptr(mcs, Address(method,Method::method_counters_offset()));
   testptr(mcs, mcs);
   jcc(Assembler::zero, skip); // No MethodCounters allocated, OutOfMemory
@@ -808,9 +807,7 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
     bind(slow_case);
 
     // Call the runtime routine for slow case
-    call_VM(noreg,
-            CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorenter),
-            lock_reg);
+    call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorenter), lock_reg);
 
     bind(done);
   }
@@ -831,9 +828,7 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
 void InterpreterMacroAssembler::unlock_object(Register lock_reg) {
 
   if (UseHeavyMonitors) {
-    call_VM(noreg,
-            CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorexit),
-            lock_reg);
+    call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorexit), lock_reg);
   } else {
     Label done;
 
@@ -875,11 +870,8 @@ void InterpreterMacroAssembler::unlock_object(Register lock_reg) {
     jcc(Assembler::zero, done);
 
     // Call the runtime routine for slow case.
-    movptr(Address(lock_reg, BasicObjectLock::obj_offset_in_bytes()),
-         obj_reg); // restore obj
-    call_VM(noreg,
-            CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorexit),
-            lock_reg);
+    movptr(Address(lock_reg, BasicObjectLock::obj_offset_in_bytes()), obj_reg); // restore obj
+    call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorexit), lock_reg);
 
     bind(done);
 
@@ -995,9 +987,7 @@ void InterpreterMacroAssembler::update_mdp_by_constant(Register mdp_in, int cons
 
 void InterpreterMacroAssembler::update_mdp_for_ret(Register return_bci) {
   push(return_bci); // save/restore across call_VM
-  call_VM(noreg,
-          CAST_FROM_FN_PTR(address, InterpreterRuntime::update_mdp_for_ret),
-          return_bci);
+  call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::update_mdp_for_ret), return_bci);
   pop(return_bci);
 }
 
@@ -1391,12 +1381,6 @@ void InterpreterMacroAssembler::notify_method_entry() {
   // the code to check if the event should be sent.
   Register rthread = r15_thread;
   Register rarg = c_rarg1;
-
-  {
-    SkipIfEqual skip(this, &DTraceMethodProbes, false);
-    get_method(rarg);
-    call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_entry), rthread, rarg);
-  }
 }
 
 void InterpreterMacroAssembler::notify_method_exit(TosState state, NotifyMethodExitMode mode) {
@@ -1405,13 +1389,4 @@ void InterpreterMacroAssembler::notify_method_exit(TosState state, NotifyMethodE
   // the code to check if the event should be sent.
   Register rthread = r15_thread;
   Register rarg = c_rarg1;
-
-  {
-    SkipIfEqual skip(this, &DTraceMethodProbes, false);
-    push(state);
-    get_method(rarg);
-    call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit),
-                 rthread, rarg);
-    pop(state);
-  }
 }

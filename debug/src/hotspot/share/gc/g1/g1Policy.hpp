@@ -394,8 +394,6 @@ public:
     _survivors_age_table.merge(age_table);
   }
 
-  void print_age_table();
-
   void update_max_gc_locker_expansion();
 
   void update_survivors_policy();

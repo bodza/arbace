@@ -402,9 +402,7 @@ class StubGenerator: public StubCodeGenerator {
     // returned by this call.
     __ mov(r19, lr);
     BLOCK_COMMENT("call exception_handler_for_return_address");
-    __ call_VM_leaf(CAST_FROM_FN_PTR(address,
-                         SharedRuntime::exception_handler_for_return_address),
-                    rthread, c_rarg1);
+    __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::exception_handler_for_return_address), rthread, c_rarg1);
     // we should not really care that lr is no longer the callee
     // address. we saved the value the handler needs in r19 so we can
     // just copy it to r3. however, the C2 handler will push its own
@@ -1097,25 +1095,7 @@ class StubGenerator: public StubCodeGenerator {
       if (shift)  __ lsr(rscratch2, rscratch2, shift);
       __ sub(count, count, rscratch2);
 
-#if 0
-      // ?? This code is only correct for a disjoint copy.  It may or
-      // may not make sense to use it in that case.
-
-      // Copy the first pair; s and d may not be aligned.
-      __ ldp(t0, t1, Address(s, is_backwards ? -2 * wordSize : 0));
-      __ stp(t0, t1, Address(d, is_backwards ? -2 * wordSize : 0));
-
-      // Align s and d, adjust count
-      if (is_backwards) {
-        __ sub(s, s, rscratch2);
-        __ sub(d, d, rscratch2);
-      } else {
-        __ add(s, s, rscratch2);
-        __ add(d, d, rscratch2);
-      }
-#else
       copy_memory_small(s, d, rscratch2, rscratch1, step);
-#endif
     }
 
     __ bind(aligned);

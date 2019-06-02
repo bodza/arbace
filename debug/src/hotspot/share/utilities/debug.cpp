@@ -28,7 +28,6 @@
 #include "runtime/thread.inline.hpp"
 #include "runtime/vframe.hpp"
 #include "runtime/vm_version.hpp"
-#include "services/heapDumper.hpp"
 #include "utilities/defaultStream.hpp"
 #include "utilities/events.hpp"
 #include "utilities/formatBuffer.hpp"
@@ -48,15 +47,6 @@ static void* g_assertion_context = NULL;
 
 ATTRIBUTE_PRINTF(1, 2)
 void warning(const char* format, ...) {
-  if (PrintWarnings) {
-    FILE* const err = defaultStream::error_stream();
-    jio_fprintf(err, "%s warning: ", VM_Version::vm_name());
-    va_list ap;
-    va_start(ap, format);
-    vfprintf(err, format, ap);
-    va_end(ap);
-    fputc('\n', err);
-  }
   if (BreakAtWarning) BREAKPOINT;
 }
 
@@ -70,7 +60,7 @@ void report_vm_error(const char* file, int line, const char* error_msg)
 
 void report_vm_error(const char* file, int line, const char* error_msg, const char* detail_fmt, ...)
 {
-  if (Debugging || error_is_suppressed(file, line)) return;
+  if (error_is_suppressed(file, line)) return;
   va_list detail_args;
   va_start(detail_args, detail_fmt);
   void* context = NULL;
@@ -89,7 +79,7 @@ void report_vm_status_error(const char* file, int line, const char* error_msg, i
 
 void report_fatal(const char* file, int line, const char* detail_fmt, ...)
 {
-  if (Debugging || error_is_suppressed(file, line)) return;
+  if (error_is_suppressed(file, line)) return;
   va_list detail_args;
   va_start(detail_args, detail_fmt);
   void* context = NULL;
@@ -103,7 +93,6 @@ void report_fatal(const char* file, int line, const char* detail_fmt, ...)
 }
 
 void report_vm_out_of_memory(const char* file, int line, size_t size, VMErrorType vm_err_type, const char* detail_fmt, ...) {
-  if (Debugging) return;
   va_list detail_args;
   va_start(detail_args, detail_fmt);
   VMError::report_and_die(Thread::current_or_null(), file, line, size, vm_err_type, detail_fmt, detail_args);
@@ -136,11 +125,6 @@ void report_java_out_of_memory(const char* message) {
   // commands multiple times we just do it once when the first threads reports
   // the error.
   if (Atomic::cmpxchg(1, &out_of_memory_reported, 0) == 0) {
-    // create heap dump before OnOutOfMemoryError commands are executed
-    if (HeapDumpOnOutOfMemoryError) {
-      tty->print_cr("java.lang.OutOfMemoryError: %s", message);
-      HeapDumper::dump_heap_from_oome();
-    }
 
     if (OnOutOfMemoryError && OnOutOfMemoryError[0]) {
       VMError::report_java_out_of_memory(message);
@@ -169,21 +153,17 @@ class Command : public StackObj {
   ResourceMark rm;
   ResetNoHandleMark rnhm;
   HandleMark   hm;
-  bool debug_save;
  public:
   static int level;
   Command(const char* str) {
-    debug_save = Debugging;
-    Debugging = true;
     if (level++ > 0)  return;
     tty->cr();
     tty->print_cr("\"Executing %s\"", str);
   }
 
   ~Command() {
-        tty->flush();
-        Debugging = debug_save;
-        level--;
+    tty->flush();
+    level--;
   }
 };
 

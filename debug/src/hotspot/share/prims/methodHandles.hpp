@@ -31,16 +31,13 @@ class MethodHandles: AllStatic {
 
  public:
   // working with member names
-  static Handle resolve_MemberName(Handle mname, Klass* caller,
-                                   bool speculative_resolve, TRAPS); // compute vmtarget/vmindex from name/type
+  static Handle resolve_MemberName(Handle mname, Klass* caller, bool speculative_resolve, TRAPS); // compute vmtarget/vmindex from name/type
   static void expand_MemberName(Handle mname, int suppress, TRAPS);  // expand defc/name/type if missing
   static oop init_MemberName(Handle mname_h, Handle target_h, TRAPS); // compute vmtarget/vmindex from target
   static oop init_field_MemberName(Handle mname_h, fieldDescriptor& fd, bool is_setter = false);
   static oop init_method_MemberName(Handle mname_h, CallInfo& info);
   static int method_ref_kind(Method* m, bool do_dispatch_if_possible = true);
-  static int find_MemberNames(Klass* k, Symbol* name, Symbol* sig,
-                              int mflags, Klass* caller,
-                              int skip, objArrayHandle results, TRAPS);
+  static int find_MemberNames(Klass* k, Symbol* name, Symbol* sig, int mflags, Klass* caller, int skip, objArrayHandle results, TRAPS);
   static Handle resolve_MemberName_type(Handle mname, Klass* caller, TRAPS);
 
   // bit values for suppress argument to expand_MemberName:
@@ -57,11 +54,7 @@ class MethodHandles: AllStatic {
 
   // Called from MethodHandlesAdapterGenerator.
   static address generate_method_handle_interpreter_entry(MacroAssembler* _masm, vmIntrinsics::ID iid);
-  static void generate_method_handle_dispatch(MacroAssembler* _masm,
-                                              vmIntrinsics::ID iid,
-                                              Register receiver_reg,
-                                              Register member_reg,
-                                              bool for_compiler_entry);
+  static void generate_method_handle_dispatch(MacroAssembler* _masm, vmIntrinsics::ID iid, Register receiver_reg, Register member_reg, bool for_compiler_entry);
 
   // Queries
   static bool is_signature_polymorphic(vmIntrinsics::ID iid) {
@@ -167,7 +160,7 @@ public:
 //
 class MethodHandlesAdapterGenerator : public StubCodeGenerator {
 public:
-  MethodHandlesAdapterGenerator(CodeBuffer* code) : StubCodeGenerator(code, PrintMethodHandleStubs) { }
+  MethodHandlesAdapterGenerator(CodeBuffer* code) : StubCodeGenerator(code, false) { }
 
   void generate();
 };

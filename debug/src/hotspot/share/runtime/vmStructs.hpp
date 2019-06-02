@@ -188,26 +188,15 @@ private:
 // VMTypeEntry macros
 //
 
-#define GENERATE_VM_TYPE_ENTRY(type, superclass) \
- { QUOTE(type), QUOTE(superclass), 0, 0, 0, sizeof(type) },
+#define GENERATE_VM_TYPE_ENTRY(type, superclass)      { QUOTE(type), QUOTE(superclass), 0, 0, 0, sizeof(type) },
+#define GENERATE_TOPLEVEL_VM_TYPE_ENTRY(type)         { QUOTE(type), NULL,              0, 0, 0, sizeof(type) },
+#define GENERATE_OOP_VM_TYPE_ENTRY(type)              { QUOTE(type), NULL,              1, 0, 0, sizeof(type) },
+#define GENERATE_INTEGER_VM_TYPE_ENTRY(type)          { QUOTE(type), NULL,              0, 1, 0, sizeof(type) },
+#define GENERATE_UNSIGNED_INTEGER_VM_TYPE_ENTRY(type) { QUOTE(type), NULL,              0, 1, 1, sizeof(type) },
 
-#define GENERATE_TOPLEVEL_VM_TYPE_ENTRY(type) \
- { QUOTE(type), NULL,              0, 0, 0, sizeof(type) },
+#define GENERATE_VM_TYPE_LAST_ENTRY() { NULL, NULL, 0, 0, 0, 0 }
 
-#define GENERATE_OOP_VM_TYPE_ENTRY(type) \
- { QUOTE(type), NULL,              1, 0, 0, sizeof(type) },
-
-#define GENERATE_INTEGER_VM_TYPE_ENTRY(type) \
- { QUOTE(type), NULL,              0, 1, 0, sizeof(type) },
-
-#define GENERATE_UNSIGNED_INTEGER_VM_TYPE_ENTRY(type) \
- { QUOTE(type), NULL,              0, 1, 1, sizeof(type) },
-
-#define GENERATE_VM_TYPE_LAST_ENTRY() \
- { NULL, NULL, 0, 0, 0, 0 }
-
-#define CHECK_VM_TYPE_ENTRY(type, superclass) \
- { type* dummyObj = NULL; superclass* dummySuperObj = dummyObj; }
+#define CHECK_VM_TYPE_ENTRY(type, superclass) { type* dummyObj = NULL; superclass* dummySuperObj = dummyObj; }
 
 #define CHECK_VM_TYPE_NO_OP(a)
 #define CHECK_SINGLE_ARG_VM_TYPE_NO_OP(a)
@@ -216,48 +205,32 @@ private:
 // VMIntConstantEntry macros
 //
 
-#define GENERATE_VM_INT_CONSTANT_ENTRY(name) \
- { QUOTE(name), (int32_t) name },
-
-#define GENERATE_VM_INT_CONSTANT_WITH_VALUE_ENTRY(name, value) \
- { (name), (int32_t)(value) },
-
-#define GENERATE_PREPROCESSOR_VM_INT_CONSTANT_ENTRY(name, value) \
- { name, (int32_t) value },
+#define GENERATE_VM_INT_CONSTANT_ENTRY(name)                     { QUOTE(name), (int32_t) name },
+#define GENERATE_VM_INT_CONSTANT_WITH_VALUE_ENTRY(name, value)   { (name), (int32_t)(value) },
+#define GENERATE_PREPROCESSOR_VM_INT_CONSTANT_ENTRY(name, value) { name, (int32_t) value },
 
 // This macro generates the sentinel value indicating the end of the list
-#define GENERATE_VM_INT_CONSTANT_LAST_ENTRY() \
- { NULL, 0 }
+#define GENERATE_VM_INT_CONSTANT_LAST_ENTRY() { NULL, 0 }
 
 //--------------------------------------------------------------------------------
 // VMLongConstantEntry macros
 //
 
-#define GENERATE_VM_LONG_CONSTANT_ENTRY(name) \
-  { QUOTE(name), name },
-
-#define GENERATE_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY(name, value) \
-  { name, value },
+#define GENERATE_VM_LONG_CONSTANT_ENTRY(name)                     { QUOTE(name), name },
+#define GENERATE_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY(name, value) { name, value },
 
 // This macro generates the sentinel value indicating the end of the list
-#define GENERATE_VM_LONG_CONSTANT_LAST_ENTRY() \
- { NULL, 0 }
+#define GENERATE_VM_LONG_CONSTANT_LAST_ENTRY() { NULL, 0 }
 
 //--------------------------------------------------------------------------------
 // VMAddressEntry macros
 //
 
-#define GENERATE_VM_ADDRESS_ENTRY(name) \
-  { QUOTE(name), (void*) (name) },
-
-#define GENERATE_PREPROCESSOR_VM_ADDRESS_ENTRY(name, value) \
-  { name, (void*) (value) },
-
-#define GENERATE_VM_FUNCTION_ENTRY(name) \
-  { QUOTE(name), CAST_FROM_FN_PTR(void*, &(name)) },
+#define GENERATE_VM_ADDRESS_ENTRY(name)                     { QUOTE(name), (void*) (name) },
+#define GENERATE_PREPROCESSOR_VM_ADDRESS_ENTRY(name, value) { name, (void*) (value) },
+#define GENERATE_VM_FUNCTION_ENTRY(name)                    { QUOTE(name), CAST_FROM_FN_PTR(void*, &(name)) },
 
 // This macro generates the sentinel value indicating the end of the list
-#define GENERATE_VM_ADDRESS_LAST_ENTRY() \
- { NULL, NULL }
+#define GENERATE_VM_ADDRESS_LAST_ENTRY() { NULL, NULL }
 
 #endif

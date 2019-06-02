@@ -311,7 +311,7 @@ class name : AllStatic { \
     static type name(jobject obj); \
     static void set_##name(oop obj, type x)     { check(obj, #name, _##name##_offset); obj->accessor##_put(_##name##_offset, x); } \
     static void set_##name(Handle obj, type x)  { check(obj(), #name, _##name##_offset); obj->accessor##_put(_##name##_offset, x); } \
-    static void set_##name(jobject obj, type x); \
+    static void set_##name(jobject obj, type x);
 
 #define EMPTY_CAST
 #define CHAR_FIELD(klass, name) FIELD(name, jchar, char_field, EMPTY_CAST)

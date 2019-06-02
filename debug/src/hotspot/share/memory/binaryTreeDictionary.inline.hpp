@@ -258,9 +258,6 @@ BinaryTreeDictionary<Chunk_t, FreeList_t>::get_chunk_from_tree(size_t size)
   TreeList<Chunk_t, FreeList_t> *curTL, *prevTL;
   TreeChunk<Chunk_t, FreeList_t>* retTC = NULL;
 
-  if (FLSVerifyDictionary) {
-    verify_tree();
-  }
   // starting at the root, work downwards trying to find match.
   // Remember the last node of size too great or too small.
   for (prevTL = curTL = root(); curTL != NULL;) {
@@ -290,9 +287,6 @@ BinaryTreeDictionary<Chunk_t, FreeList_t>::get_chunk_from_tree(size_t size)
     remove_chunk_from_tree(retTC);
   }
 
-  if (FLSVerifyDictionary) {
-    verify();
-  }
   return retTC;
 }
 
@@ -374,10 +368,6 @@ BinaryTreeDictionary<Chunk_t, FreeList_t>::remove_chunk_from_tree(TreeChunk<Chun
     }
     // newTL is the replacement for the (soon to be empty) node.
     // newTL may be NULL.
-    // should verify; we just cleanly excised our replacement
-    if (FLSVerifyDictionary) {
-      verify_tree();
-    }
     // first make newTL my parent's child
     if ((parentTL = replacementTL->parent()) == NULL) {
       // newTL should be root
@@ -400,9 +390,6 @@ BinaryTreeDictionary<Chunk_t, FreeList_t>::remove_chunk_from_tree(TreeChunk<Chun
   dec_total_size(retTC->size());     // size book-keeping
   set_total_free_blocks(total_free_blocks() - 1);
 
-  if (FLSVerifyDictionary) {
-    verify_tree();
-  }
   return TreeChunk<Chunk_t, FreeList_t>::as_TreeChunk(retTC);
 }
 
@@ -432,10 +419,6 @@ TreeList<Chunk_t, FreeList_t>* BinaryTreeDictionary<Chunk_t, FreeList_t>::remove
     // passing of the root so accommodate it.
     set_root(NULL);
   }
-  // we just excised a (non-root) node, we should still verify all tree invariants
-  if (FLSVerifyDictionary) {
-    verify_tree();
-  }
   return curTL;
 }
 
@@ -443,10 +426,6 @@ template <class Chunk_t, class FreeList_t>
 void BinaryTreeDictionary<Chunk_t, FreeList_t>::insert_chunk_in_tree(Chunk_t* fc) {
   TreeList<Chunk_t, FreeList_t> *curTL, *prevTL;
   size_t size = fc->size();
-
-  if (FLSVerifyDictionary) {
-    verify_tree();
-  }
 
   fc->clear_next();
   fc->link_prev(NULL);
@@ -489,9 +468,6 @@ void BinaryTreeDictionary<Chunk_t, FreeList_t>::insert_chunk_in_tree(Chunk_t* fc
   // tree, so it can cause significant performance loss if there are
   // many blocks in the tree
   set_total_free_blocks(total_free_blocks() + 1);
-  if (FLSVerifyDictionary) {
-    verify_tree();
-  }
 }
 
 template <class Chunk_t, class FreeList_t>

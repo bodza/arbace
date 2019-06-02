@@ -882,8 +882,6 @@ void DeadlockCycle::print_on_with(ThreadsList * t_list, outputStream* st) const 
   st->cr();
 
   // Print stack traces
-  bool oldJavaMonitorsInStackTrace = JavaMonitorsInStackTrace;
-  JavaMonitorsInStackTrace = true;
   st->print_cr("Java stack information for the threads listed above:");
   st->print_cr("===================================================");
   for (int j = 0; j < len; j++) {
@@ -891,7 +889,6 @@ void DeadlockCycle::print_on_with(ThreadsList * t_list, outputStream* st) const 
     st->print_cr("\"%s\":", currentThread->get_thread_name());
     currentThread->print_stack_on(st);
   }
-  JavaMonitorsInStackTrace = oldJavaMonitorsInStackTrace;
 }
 
 ThreadsListEnumerator::ThreadsListEnumerator(Thread* cur_thread, bool include_jvmti_agent_threads, bool include_jni_attaching_threads) {

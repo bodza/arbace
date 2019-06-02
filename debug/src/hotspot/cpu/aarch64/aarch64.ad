@@ -956,10 +956,10 @@ reg_class int_flags(RFLAGS);
 
 definitions %{
   // The default cost (of a register move instruction).
-  int_def INSN_COST            (    100,     100);
-  int_def BRANCH_COST          (    200,     2 * INSN_COST);
-  int_def CALL_COST            (    200,     2 * INSN_COST);
-  int_def VOLATILE_REF_COST    (   1000,     10 * INSN_COST);
+  int_def INSN_COST         ( 100, 100);
+  int_def BRANCH_COST       ( 200,   2 * INSN_COST);
+  int_def CALL_COST         ( 200,   2 * INSN_COST);
+  int_def VOLATILE_REF_COST (1000,  10 * INSN_COST);
 %}
 
 //----------SOURCE BLOCK-------------------------------------------------------
@@ -3565,15 +3565,12 @@ static void getCallInfo(const TypeFunc *tf, int &gpcnt, int &fpcnt, int &rtype) 
 
 typedef void (MacroAssembler::* mem_insn)(Register Rt, const Address &adr);
 typedef void (MacroAssembler::* mem_float_insn)(FloatRegister Rt, const Address &adr);
-typedef void (MacroAssembler::* mem_vector_insn)(FloatRegister Rt,
-                                  MacroAssembler::SIMD_RegVariant T, const Address &adr);
+typedef void (MacroAssembler::* mem_vector_insn)(FloatRegister Rt, MacroAssembler::SIMD_RegVariant T, const Address &adr);
 
   // Used for all non-volatile memory accesses.  The use of
   // $mem->opcode() to discover whether this pattern uses sign-extended
   // offsets is something of a kludge.
-  static void loadStore(MacroAssembler masm, mem_insn insn,
-                         Register reg, int opcode,
-                         Register base, int index, int size, int disp)
+  static void loadStore(MacroAssembler masm, mem_insn insn, Register reg, int opcode, Register base, int index, int size, int disp)
   {
     Address::extend scale;
 
@@ -3598,9 +3595,7 @@ typedef void (MacroAssembler::* mem_vector_insn)(FloatRegister Rt,
     }
   }
 
-  static void loadStore(MacroAssembler masm, mem_float_insn insn,
-                         FloatRegister reg, int opcode,
-                         Register base, int index, int size, int disp)
+  static void loadStore(MacroAssembler masm, mem_float_insn insn, FloatRegister reg, int opcode, Register base, int index, int size, int disp)
   {
     Address::extend scale;
 
@@ -3620,9 +3615,7 @@ typedef void (MacroAssembler::* mem_vector_insn)(FloatRegister Rt,
     }
   }
 
-  static void loadStore(MacroAssembler masm, mem_vector_insn insn,
-                         FloatRegister reg, MacroAssembler::SIMD_RegVariant T,
-                         int opcode, Register base, int index, int size, int disp)
+  static void loadStore(MacroAssembler masm, mem_vector_insn insn, FloatRegister reg, MacroAssembler::SIMD_RegVariant T, int opcode, Register base, int index, int size, int disp)
   {
     if (index == -1) {
       (masm.*insn)(reg, T, Address(base, disp));

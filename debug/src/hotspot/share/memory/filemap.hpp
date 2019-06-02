@@ -28,7 +28,7 @@ class SharedClassPathEntry {
   };
 protected:
   u1     _type;
-  time_t _timestamp;          // jar timestamp,  0 if is directory, modules image or other
+  time_t _timestamp;          // jar timestamp, 0 if is directory, modules image or other
   long   _filesize;           // jar/jimage file size, -1 if is directory, -2 if other
   Array<char>* _name;
   Array<u1>*   _manifest;
@@ -168,8 +168,8 @@ public:
 
     jshort _app_class_paths_start_index;  // Index of first app classpath entry
     jshort _app_module_paths_start_index; // Index of first module path entry
-    bool   _verify_local;                 // BytecodeVerificationLocal setting
-    bool   _verify_remote;                // BytecodeVerificationRemote setting
+    bool   _verify_local;                 // false setting
+    bool   _verify_remote;                // false setting
     bool   _has_platform_or_app_classes;  // Archive contains app classes
 
     void set_has_platform_or_app_classes(bool v) {

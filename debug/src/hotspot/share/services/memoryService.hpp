@@ -72,14 +72,8 @@ public:
   }
   static void track_memory_pool_usage(MemoryPool* pool);
 
-  static void gc_begin(GCMemoryManager* manager, bool recordGCBeginTime,
-                       bool recordAccumulatedGCTime,
-                       bool recordPreGCUsage, bool recordPeakUsage);
-  static void gc_end(GCMemoryManager* manager, bool recordPostGCUsage,
-                     bool recordAccumulatedGCTime,
-                     bool recordGCEndTime, bool countCollection,
-                     GCCause::Cause cause,
-                     bool allMemoryPoolsAffected);
+  static void gc_begin(GCMemoryManager* manager, bool recordGCBeginTime, bool recordAccumulatedGCTime, bool recordPreGCUsage, bool recordPeakUsage);
+  static void gc_end(GCMemoryManager* manager, bool recordPostGCUsage, bool recordAccumulatedGCTime, bool recordGCEndTime, bool countCollection, GCCause::Cause cause, bool allMemoryPoolsAffected);
 
   static void oops_do(OopClosure* f);
 

@@ -1131,8 +1131,7 @@ void os::Linux::clock_init() {
       }
     }
   }
-  warning("No monotonic clock was available - timed services may " \
-          "be adversely affected if the time-of-day clock changes");
+  warning("No monotonic clock was available - timed services may be adversely affected if the time-of-day clock changes");
 }
 
 #ifndef SYS_clock_getres
@@ -1345,8 +1344,7 @@ struct _address_to_library_name {
   address base;          //         library base addr
 };
 
-static int address_to_library_name_callback(struct dl_phdr_info *info,
-                                            size_t size, void *data) {
+static int address_to_library_name_callback(struct dl_phdr_info *info, size_t size, void *data) {
   int i;
   bool found = false;
   address libbase = NULL;
@@ -2129,8 +2127,7 @@ void os::get_summary_cpu_info(char* cpuinfo, size_t length) {
 #endif
 }
 
-static void print_signal_handler(outputStream* st, int sig,
-                                 char* buf, size_t buflen);
+static void print_signal_handler(outputStream* st, int sig, char* buf, size_t buflen);
 
 void os::print_signal_handlers(outputStream* st, char* buf, size_t buflen) {
   st->print_cr("Signal Handlers:");
@@ -2449,16 +2446,13 @@ static bool recoverable_mmap_error(int err) {
   }
 }
 
-static void warn_fail_commit_memory(char* addr, size_t size, bool exec,
-                                    int err) {
+static void warn_fail_commit_memory(char* addr, size_t size, bool exec, int err) {
   warning("INFO: os::commit_memory(" PTR_FORMAT ", " SIZE_FORMAT
           ", %d) failed; error='%s' (errno=%d)", p2i(addr), size, exec,
           os::strerror(err), err);
 }
 
-static void warn_fail_commit_memory(char* addr, size_t size,
-                                    size_t alignment_hint, bool exec,
-                                    int err) {
+static void warn_fail_commit_memory(char* addr, size_t size, size_t alignment_hint, bool exec, int err) {
   warning("INFO: os::commit_memory(" PTR_FORMAT ", " SIZE_FORMAT
           ", " SIZE_FORMAT ", %d) failed; error='%s' (errno=%d)", p2i(addr), size,
           alignment_hint, exec, os::strerror(err), err);
@@ -2470,8 +2464,7 @@ static void warn_fail_commit_memory(char* addr, size_t size,
 //       problem.
 int os::Linux::commit_memory_impl(char* addr, size_t size, bool exec) {
   int prot = exec ? PROT_READ|PROT_WRITE|PROT_EXEC : PROT_READ|PROT_WRITE;
-  uintptr_t res = (uintptr_t) ::mmap(addr, size, prot,
-                                     MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0);
+  uintptr_t res = (uintptr_t) ::mmap(addr, size, prot, MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS, -1, 0);
   if (res != (uintptr_t) MAP_FAILED) {
     if (UseNUMAInterleaving) {
       numa_make_global(addr, size);
@@ -3482,8 +3475,7 @@ char* os::Linux::reserve_memory_special_shm(size_t bytes, size_t alignment, char
   return addr;
 }
 
-static void warn_on_large_pages_failure(char* req_addr, size_t bytes,
-                                        int error) {
+static void warn_on_large_pages_failure(char* req_addr, size_t bytes, int error) {
 
   bool warn_on_failure = UseLargePages && (!FLAG_IS_DEFAULT(UseLargePages) || !FLAG_IS_DEFAULT(UseHugeTLBFS) || !FLAG_IS_DEFAULT(LargePageSizeInBytes));
 
@@ -3841,9 +3833,7 @@ static int prio_init() {
   if (ThreadPriorityPolicy == 1) {
     if (geteuid() != 0) {
       if (!FLAG_IS_DEFAULT(ThreadPriorityPolicy)) {
-        warning("-XX:ThreadPriorityPolicy=1 may require system level permission, " \
-                "e.g., being the root user. If the necessary permission is not " \
-                "possessed, changes to priority will be silently ignored.");
+        warning("-XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.");
       }
     }
   }
@@ -3910,8 +3900,7 @@ static void resume_clear_context(OSThread *osthread) {
   osthread->set_siginfo(NULL);
 }
 
-static void suspend_save_context(OSThread *osthread, siginfo_t* siginfo,
-                                 ucontext_t* context) {
+static void suspend_save_context(OSThread *osthread, siginfo_t* siginfo, ucontext_t* context) {
   osthread->set_ucontext(context);
   osthread->set_siginfo(siginfo);
 }
@@ -4172,8 +4161,7 @@ struct sigaction* os::Linux::get_chained_signal_action(int sig) {
   return actp;
 }
 
-static bool call_chained_handler(struct sigaction *actp, int sig,
-                                 siginfo_t *siginfo, void *context) {
+static bool call_chained_handler(struct sigaction *actp, int sig, siginfo_t *siginfo, void *context) {
   // Call the old signal handler
   if (actp->sa_handler == SIG_DFL) {
     // It's more reasonable to let jvm treat it as an unexpected exception
@@ -4333,24 +4321,6 @@ void os::Linux::install_signal_handlers() {
       // Tell libjsig jvm finishes setting signal handlers
       (*end_signal_setting)();
     }
-
-    // We don't activate signal checker if libjsig is in place, we trust ourselves
-    // and if UserSignalHandler is installed all bets are off.
-    // Log that signal checking is off only if -verbose:jni is specified.
-    if (CheckJNICalls) {
-      if (libjsig_is_loaded) {
-        if (PrintJNIResolving) {
-          tty->print_cr("Info: libjsig is activated, all active signal checking is disabled");
-        }
-        check_signals = false;
-      }
-      if (AllowUserSignalHandlers) {
-        if (PrintJNIResolving) {
-          tty->print_cr("Info: AllowUserSignalHandlers is activated, all active signal checking is disabled");
-        }
-        check_signals = false;
-      }
-    }
   }
 }
 
@@ -4416,8 +4386,7 @@ bool os::Linux::os_version_is_known() {
 #endif
 #define SIGNIFICANT_SIGNAL_MASK (~0x04000000)
 
-static const char* get_signal_handler_name(address handler,
-                                           char* buf, int buflen) {
+static const char* get_signal_handler_name(address handler, char* buf, int buflen) {
   int offset = 0;
   bool found = os::dll_address_to_library_name(handler, buf, buflen, &offset);
   if (found) {
@@ -4433,8 +4402,7 @@ static const char* get_signal_handler_name(address handler,
   return buf;
 }
 
-static void print_signal_handler(outputStream* st, int sig,
-                                 char* buf, size_t buflen) {
+static void print_signal_handler(outputStream* st, int sig, char* buf, size_t buflen) {
   struct sigaction sa;
 
   sigaction(sig, NULL, &sa);
@@ -4954,25 +4922,6 @@ os::os_exception_wrapper(java_call_t f, JavaValue* value, const methodHandle& me
   f(value, method, args, thread);
 }
 
-bool os::message_box(const char* title, const char* message) {
-  int i;
-  fdStream err(defaultStream::error_fd());
-  for (i = 0; i < 78; i++) err.print_raw("=");
-  err.cr();
-  err.print_raw_cr(title);
-  for (i = 0; i < 78; i++) err.print_raw("-");
-  err.cr();
-  err.print_raw_cr(message);
-  for (i = 0; i < 78; i++) err.print_raw("=");
-  err.cr();
-
-  char buf[16];
-  // Prevent process from exiting upon "read error" without consuming all CPU
-  while (::read(0, buf, sizeof(buf)) <= 0) { ::sleep(100); }
-
-  return buf[0] == 'y' || buf[0] == 'Y';
-}
-
 // Is a (classpath) directory empty?
 bool os::dir_is_empty(const char* path) {
   DIR *dir = NULL;
@@ -5352,98 +5301,6 @@ int os::fork_and_exec(char* cmd, bool use_vfork_if_available) {
       return status;
     }
   }
-}
-
-// Get the default path to the core file
-// Returns the length of the string
-int os::get_core_path(char* buffer, size_t bufferSize) {
-  /*
-   * Max length of /proc/sys/kernel/core_pattern is 128 characters.
-   * See https://www.kernel.org/doc/Documentation/sysctl/kernel.txt
-   */
-  const int core_pattern_len = 129;
-  char core_pattern[core_pattern_len] = { 0 };
-
-  int core_pattern_file = ::open("/proc/sys/kernel/core_pattern", O_RDONLY);
-  if (core_pattern_file == -1) {
-    return -1;
-  }
-
-  ssize_t ret = ::read(core_pattern_file, core_pattern, core_pattern_len);
-  ::close(core_pattern_file);
-  if (ret <= 0 || ret >= core_pattern_len || core_pattern[0] == '\n') {
-    return -1;
-  }
-  if (core_pattern[ret-1] == '\n') {
-    core_pattern[ret-1] = '\0';
-  } else {
-    core_pattern[ret] = '\0';
-  }
-
-  char *pid_pos = strstr(core_pattern, "%p");
-  int written;
-
-  if (core_pattern[0] == '/') {
-    written = jio_snprintf(buffer, bufferSize, "%s", core_pattern);
-  } else {
-    char cwd[PATH_MAX];
-
-    const char* p = get_current_directory(cwd, PATH_MAX);
-    if (p == NULL) {
-      return -1;
-    }
-
-    if (core_pattern[0] == '|') {
-      written = jio_snprintf(buffer, bufferSize, "\"%s\" (or dumping to %s/core.%d)", &core_pattern[1], p, current_process_id());
-    } else {
-      written = jio_snprintf(buffer, bufferSize, "%s/%s", p, core_pattern);
-    }
-  }
-
-  if (written < 0) {
-    return -1;
-  }
-
-  if (((size_t)written < bufferSize) && (pid_pos == NULL) && (core_pattern[0] != '|')) {
-    int core_uses_pid_file = ::open("/proc/sys/kernel/core_uses_pid", O_RDONLY);
-
-    if (core_uses_pid_file != -1) {
-      char core_uses_pid = 0;
-      ssize_t ret = ::read(core_uses_pid_file, &core_uses_pid, 1);
-      ::close(core_uses_pid_file);
-
-      if (core_uses_pid == '1') {
-        jio_snprintf(buffer + written, bufferSize - written, ".%d", current_process_id());
-      }
-    }
-  }
-
-  return strlen(buffer);
-}
-
-bool os::start_debugging(char *buf, int buflen) {
-  int len = (int)strlen(buf);
-  char *p = &buf[len];
-
-  jio_snprintf(p, buflen-len,
-               "\n\n"
-               "Do you want to debug the problem?\n\n"
-               "To debug, run 'gdb /proc/%d/exe %d'; then switch to thread " UINTX_FORMAT " (" INTPTR_FORMAT ")\n"
-               "Enter 'yes' to launch gdb automatically (PATH must include gdb)\n"
-               "Otherwise, press RETURN to abort...",
-               os::current_process_id(), os::current_process_id(),
-               os::current_thread_id(), os::current_thread_id());
-
-  bool yes = os::message_box("Unexpected Error", buf);
-
-  if (yes) {
-    // yes, user asked VM to launch debugger
-    jio_snprintf(buf, sizeof(char)*buflen, "gdb /proc/%d/exe %d", os::current_process_id(), os::current_process_id());
-
-    os::fork_and_exec(buf);
-    yes = false;
-  }
-  return yes;
 }
 
 // Java/Compiler thread:

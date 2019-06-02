@@ -26,7 +26,7 @@
 //     prevents multiple gc requests and manages lock on heap;
 //
 //  VM_GC_HeapInspection
-//   - prints class histogram on SIGBREAK if PrintClassHistogram
+//   - prints class histogram on SIGBREAK if false
 //     is specified; and also the attach "inspectheap" operation
 //
 //  VM_CollectForAllocation

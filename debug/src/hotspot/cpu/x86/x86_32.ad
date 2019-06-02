@@ -1528,12 +1528,12 @@ encode %{
         __ lea(rsp, Address(rsp, -4));
         __ fstp_s(Address(rsp, 0));
         __ movflt(xmm0, Address(rsp, 0));
-        __ lea(rsp, Address(rsp,  4));
+        __ lea(rsp, Address(rsp, 4));
       } else if (rt == T_DOUBLE) {
         __ lea(rsp, Address(rsp, -8));
         __ fstp_d(Address(rsp, 0));
         __ movdbl(xmm0, Address(rsp, 0));
-        __ lea(rsp, Address(rsp,  8));
+        __ lea(rsp, Address(rsp, 8));
       }
     }
   %}
@@ -2531,11 +2531,11 @@ encode %{
     // PUSH src1.hi
     emit_opcode(cbuf, HIGH_FROM_LOW(0x50+$src1$$reg));
     // PUSH src1.lo
-    emit_opcode(cbuf,               0x50+$src1$$reg  );
+    emit_opcode(cbuf,               0x50+$src1$$reg);
     // PUSH src2.hi
     emit_opcode(cbuf, HIGH_FROM_LOW(0x50+$src2$$reg));
     // PUSH src2.lo
-    emit_opcode(cbuf,               0x50+$src2$$reg  );
+    emit_opcode(cbuf,               0x50+$src2$$reg);
     // CALL directly to the runtime
     cbuf.set_insts_mark();
     emit_opcode(cbuf,0xE8);       // Call into runtime
@@ -2550,11 +2550,11 @@ encode %{
     // PUSH src1.hi
     emit_opcode(cbuf, HIGH_FROM_LOW(0x50+$src1$$reg));
     // PUSH src1.lo
-    emit_opcode(cbuf,               0x50+$src1$$reg  );
+    emit_opcode(cbuf,               0x50+$src1$$reg);
     // PUSH src2.hi
     emit_opcode(cbuf, HIGH_FROM_LOW(0x50+$src2$$reg));
     // PUSH src2.lo
-    emit_opcode(cbuf,               0x50+$src2$$reg  );
+    emit_opcode(cbuf,               0x50+$src2$$reg);
     // CALL directly to the runtime
     cbuf.set_insts_mark();
     emit_opcode(cbuf,0xE8);       // Call into runtime

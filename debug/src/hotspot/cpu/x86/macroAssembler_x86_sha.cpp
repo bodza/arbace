@@ -794,10 +794,10 @@ bind(loop1);
 
   vpaddd(xmm9, xmm5, Address(TBL, SRND, Address::times_1, 1*32), AVX_256bit);
   vmovdqu(Address(rsp, SRND, Address::times_1, _XFER + 1*32), xmm9);
-  sha256_AVX2_one_round_and_sched(xmm5, xmm6, xmm7, xmm4, r8,  r9,  r10, r11, rax, rbx, rdi, rsi,  8+0);
-  sha256_AVX2_one_round_and_sched(xmm5, xmm6, xmm7, xmm4, rsi, r8,  r9,  r10, r11, rax, rbx, rdi,  8+1);
-  sha256_AVX2_one_round_and_sched(xmm5, xmm6, xmm7, xmm4, rdi, rsi, r8,  r9,  r10, r11, rax, rbx,  8+2);
-  sha256_AVX2_one_round_and_sched(xmm5, xmm6, xmm7, xmm4, rbx, rdi, rsi, r8,  r9,  r10, r11, rax,  8+3);
+  sha256_AVX2_one_round_and_sched(xmm5, xmm6, xmm7, xmm4, r8,  r9,  r10, r11, rax, rbx, rdi, rsi, 8+0);
+  sha256_AVX2_one_round_and_sched(xmm5, xmm6, xmm7, xmm4, rsi, r8,  r9,  r10, r11, rax, rbx, rdi, 8+1);
+  sha256_AVX2_one_round_and_sched(xmm5, xmm6, xmm7, xmm4, rdi, rsi, r8,  r9,  r10, r11, rax, rbx, 8+2);
+  sha256_AVX2_one_round_and_sched(xmm5, xmm6, xmm7, xmm4, rbx, rdi, rsi, r8,  r9,  r10, r11, rax, 8+3);
 
   vpaddd(xmm9, xmm6, Address(TBL, SRND, Address::times_1, 2*32), AVX_256bit);
   vmovdqu(Address(rsp, SRND, Address::times_1, _XFER + 2*32), xmm9);
@@ -809,10 +809,10 @@ bind(loop1);
   vpaddd(xmm9, xmm7, Address(TBL, SRND, Address::times_1, 3*32), AVX_256bit);
   vmovdqu(Address(rsp, SRND, Address::times_1, _XFER + 3*32), xmm9);
 
-  sha256_AVX2_one_round_and_sched(xmm7, xmm4, xmm5, xmm6, r8,  r9,  r10, r11, rax, rbx, rdi, rsi,  24+0);
-  sha256_AVX2_one_round_and_sched(xmm7, xmm4, xmm5, xmm6, rsi, r8,  r9,  r10, r11, rax, rbx, rdi,  24+1);
-  sha256_AVX2_one_round_and_sched(xmm7, xmm4, xmm5, xmm6, rdi, rsi, r8,  r9,  r10, r11, rax, rbx,  24+2);
-  sha256_AVX2_one_round_and_sched(xmm7, xmm4, xmm5, xmm6, rbx, rdi, rsi, r8,  r9,  r10, r11, rax,  24+3);
+  sha256_AVX2_one_round_and_sched(xmm7, xmm4, xmm5, xmm6, r8,  r9,  r10, r11, rax, rbx, rdi, rsi, 24+0);
+  sha256_AVX2_one_round_and_sched(xmm7, xmm4, xmm5, xmm6, rsi, r8,  r9,  r10, r11, rax, rbx, rdi, 24+1);
+  sha256_AVX2_one_round_and_sched(xmm7, xmm4, xmm5, xmm6, rdi, rsi, r8,  r9,  r10, r11, rax, rbx, 24+2);
+  sha256_AVX2_one_round_and_sched(xmm7, xmm4, xmm5, xmm6, rbx, rdi, rsi, r8,  r9,  r10, r11, rax, 24+3);
 
   addq(SRND, 4*32);
   cmpq(SRND, 3 * 4*32);

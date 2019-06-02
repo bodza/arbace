@@ -36,7 +36,7 @@ inline name##Handle::name##Handle(Thread* thread, type* obj) : _value(obj), _thr
   if (obj != NULL) { \
     _thread->metadata_handles()->push((Metadata*)obj); \
   } \
-} \
+}
 
 DEF_METADATA_HANDLE_FN(method, Method)
 DEF_METADATA_HANDLE_FN(constantPool, ConstantPool)

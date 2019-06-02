@@ -164,8 +164,7 @@ class Metaspace : public AllStatic {
   static size_t commit_alignment()        { return _commit_alignment; }
   static size_t commit_alignment_words()  { return _commit_alignment / BytesPerWord; }
 
-  static MetaWord* allocate(ClassLoaderData* loader_data, size_t word_size,
-                            MetaspaceObj::Type type, TRAPS);
+  static MetaWord* allocate(ClassLoaderData* loader_data, size_t word_size, MetaspaceObj::Type type, TRAPS);
 
   static bool contains(const void* ptr);
   static bool contains_non_shared(const void* ptr);
@@ -174,8 +173,7 @@ class Metaspace : public AllStatic {
   static void purge(MetadataType mdtype);
   static void purge();
 
-  static void report_metadata_oome(ClassLoaderData* loader_data, size_t word_size,
-                                   MetaspaceObj::Type type, MetadataType mdtype, TRAPS);
+  static void report_metadata_oome(ClassLoaderData* loader_data, size_t word_size, MetaspaceObj::Type type, MetadataType mdtype, TRAPS);
 
   static const char* metadata_type_name(Metaspace::MetadataType mdtype);
 
@@ -416,10 +414,7 @@ class MetaspaceGC : AllStatic {
   static void post_initialize();
 
   static size_t capacity_until_GC();
-  static bool inc_capacity_until_GC(size_t v,
-                                    size_t* new_cap_until_GC = NULL,
-                                    size_t* old_cap_until_GC = NULL,
-                                    bool* can_retry = NULL);
+  static bool inc_capacity_until_GC(size_t v, size_t* new_cap_until_GC = NULL, size_t* old_cap_until_GC = NULL, bool* can_retry = NULL);
   static size_t dec_capacity_until_GC(size_t v);
 
   static bool should_concurrent_collect() { return _should_concurrent_collect; }

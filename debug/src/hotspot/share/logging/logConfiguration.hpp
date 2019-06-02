@@ -85,11 +85,7 @@ class LogConfiguration : public AllStatic {
   static bool parse_command_line_arguments(const char* opts = "all");
 
   // Parse separated configuration arguments (from JCmd/MBean and command line).
-  static bool parse_log_arguments(const char* outputstr,
-                                  const char* what,
-                                  const char* decoratorstr,
-                                  const char* output_options,
-                                  outputStream* errstream);
+  static bool parse_log_arguments(const char* outputstr, const char* what, const char* decoratorstr, const char* output_options, outputStream* errstream);
 
   // Prints log configuration to outputStream, used by JCmd/MBean.
   static void describe(outputStream* out);

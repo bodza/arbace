@@ -141,24 +141,7 @@ BytecodeClosure* BytecodeTracer::std_closure() {
   return &::std_closure;
 }
 
-void BytecodeTracer::trace(const methodHandle& method, address bcp, uintptr_t tos, uintptr_t tos2, outputStream* st) {
-  if (TraceBytecodes && BytecodeCounter::counter_value() >= TraceBytecodesAt) {
-    ttyLocker ttyl;  // 5065316: keep the following output coherent
-    // The ttyLocker also prevents races between two threads
-    // trying to use the single instance of BytecodePrinter.
-    // Using the ttyLocker prevents the system from coming to
-    // a safepoint within this code, which is sensitive to Method*
-    // movement.
-    //
-    // There used to be a leaf mutex here, but the ttyLocker will
-    // work just as well, as long as the printing operations never block.
-    //
-    // We put the locker on the static trace method, not the
-    // virtual one, because the clients of this module go through
-    // the static method.
-    _closure->trace(method, bcp, tos, tos2, st);
-  }
-}
+void BytecodeTracer::trace(const methodHandle& method, address bcp, uintptr_t tos, uintptr_t tos2, outputStream* st) { }
 
 void BytecodeTracer::trace(const methodHandle& method, address bcp, outputStream* st) {
   ttyLocker ttyl;  // 5065316: keep the following output coherent
@@ -218,7 +201,6 @@ bool BytecodePrinter::check_index(int i, int& cp_index, outputStream* st) {
 
   // check cp index
   if (cp_index >= 0 && cp_index < ilimit) {
-    if (WizardMode)  st->print(" cp[%d]", cp_index);
     return true;
   }
 

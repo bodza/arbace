@@ -111,13 +111,6 @@ void Exceptions::_throw(Thread* thread, const char* file, int line, Handle h_exc
 
   // set the pending exception
   thread->set_pending_exception(h_exception(), file, line);
-
-  // vm log
-  if (LogEvents) {
-    Events::log_exception(thread, "Exception <%s%s%s> (" INTPTR_FORMAT ") thrown at [%s, line %d]",
-                          h_exception->print_value_string(), message ? ": " : "", message ? message : "",
-                          p2i(h_exception()), file, line);
-  }
 }
 
 void Exceptions::_throw_msg(Thread* thread, const char* file, int line, Symbol* name, const char* message, Handle h_loader, Handle h_protection_domain) {
@@ -333,18 +326,10 @@ void Exceptions::wrap_dynamic_exception(Thread* THREAD) {
     if (exception->is_a(SystemDictionary::Error_klass())) {
       // Pass through an Error, including BootstrapMethodError, any other form
       // of linkage error, or say ThreadDeath/OutOfMemoryError
-      if (TraceMethodHandles) {
-        tty->print_cr("[constant/invoke]dynamic passes through an Error for " INTPTR_FORMAT, p2i((void *)exception));
-        exception->print();
-      }
       return;
     }
 
     // Otherwise wrap the exception in a BootstrapMethodError
-    if (TraceMethodHandles) {
-      tty->print_cr("[constant/invoke]dynamic throws BSME for " INTPTR_FORMAT, p2i((void *)exception));
-      exception->print();
-    }
     Handle nested_exception(THREAD, exception);
     THREAD->clear_pending_exception();
     THROW_CAUSE(vmSymbols::java_lang_BootstrapMethodError(), nested_exception)

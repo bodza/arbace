@@ -236,10 +236,6 @@ void C1_MacroAssembler::initialize_object(Register obj, Register klass, Register
 
   membar(StoreStore);
 
-  if (CURRENT_ENV->dtrace_alloc_probes()) {
-    far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::dtrace_object_alloc_id)));
-  }
-
   verify_oop(obj);
 }
 void C1_MacroAssembler::allocate_array(Register obj, Register len, Register t1, Register t2, int header_size, int f, Register klass, Label& slow_case) {
@@ -263,10 +259,6 @@ void C1_MacroAssembler::allocate_array(Register obj, Register len, Register t1, 
   initialize_body(obj, arr_size, header_size * BytesPerWord, len_zero);
 
   membar(StoreStore);
-
-  if (CURRENT_ENV->dtrace_alloc_probes()) {
-    far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::dtrace_object_alloc_id)));
-  }
 
   verify_oop(obj);
 }

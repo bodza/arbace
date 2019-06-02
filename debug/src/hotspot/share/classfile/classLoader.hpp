@@ -192,9 +192,7 @@ class ClassLoader: AllStatic {
   static void create_javabase();
 
   static void load_zip_library();
-  static ClassPathEntry* create_class_path_entry(const char *path, const struct stat* st,
-                                                 bool throw_exception,
-                                                 bool is_boot_append, TRAPS);
+  static ClassPathEntry* create_class_path_entry(const char *path, const struct stat* st, bool throw_exception, bool is_boot_append, TRAPS);
 
  public:
 
@@ -210,17 +208,13 @@ class ClassLoader: AllStatic {
   // Canonicalizes path names, so strcmp will work properly. This is mainly
   // to avoid confusing the zip library
   static bool get_canonical_path(const char* orig, char* out, int len);
-  static const char* file_name_for_class_name(const char* class_name,
-                                              int class_name_len);
+  static const char* file_name_for_class_name(const char* class_name, int class_name_len);
   static PackageEntry* get_package_entry(const char* class_name, ClassLoaderData* loader_data, TRAPS);
 
  public:
   static jboolean decompress(void *in, u8 inSize, void *out, u8 outSize, char **pmsg);
   static int crc32(int crc, const char* buf, int len);
-  static bool update_class_path_entry_list(const char *path,
-                                           bool check_for_duplicates,
-                                           bool is_boot_append,
-                                           bool throw_exception=true);
+  static bool update_class_path_entry_list(const char *path, bool check_for_duplicates, bool is_boot_append, bool throw_exception=true);
   static void print_bootclasspath();
 
   // Timing
@@ -292,9 +286,7 @@ class ClassLoader: AllStatic {
   static void add_to_exploded_build_list(Symbol* module_name, TRAPS);
 
   // Attempt load of individual class from either the patched or exploded modules build lists
-  static ClassFileStream* search_module_entries(const GrowableArray<ModuleClassPathList*>* const module_list,
-                                                const char* const class_name,
-                                                const char* const file_name, TRAPS);
+  static ClassFileStream* search_module_entries(const GrowableArray<ModuleClassPathList*>* const module_list, const char* const class_name, const char* const file_name, TRAPS);
 
   // Load individual .class file
   static InstanceKlass* load_class(Symbol* class_name, bool search_append_only, TRAPS);

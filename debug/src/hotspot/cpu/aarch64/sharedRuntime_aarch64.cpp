@@ -302,12 +302,7 @@ static void patch_callers_callsite(MacroAssembler *masm) {
   __ bind(L);
 }
 
-static void gen_c2i_adapter(MacroAssembler *masm,
-                            int total_args_passed,
-                            int comp_args_on_stack,
-                            const BasicType *sig_bt,
-                            const VMRegPair *regs,
-                            Label& skip_fixup) {
+static void gen_c2i_adapter(MacroAssembler *masm, int total_args_passed, int comp_args_on_stack, const BasicType *sig_bt, const VMRegPair *regs, Label& skip_fixup) {
   // Before we get into the guts of the C2I adapter, see if we should be here
   // at all.  We've come from compiled code and are attempting to jump to the
   // interpreter, which means the caller made a static call to get here
@@ -789,14 +784,7 @@ static void move32_64(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
 }
 
 // An oop arg. Must pass a handle not the oop itself
-static void object_move(MacroAssembler* masm,
-                        OopMap* map,
-                        int oop_handle_offset,
-                        int framesize_in_slots,
-                        VMRegPair src,
-                        VMRegPair dst,
-                        bool is_receiver,
-                        int* receiver_offset) {
+static void object_move(MacroAssembler* masm, OopMap* map, int oop_handle_offset, int framesize_in_slots, VMRegPair src, VMRegPair dst, bool is_receiver, int* receiver_offset) {
 
   // must pass a handle. First figure out the location we use as a handle
 
@@ -1167,12 +1155,7 @@ static void gen_special_dispatch(MacroAssembler* masm, const methodHandle& metho
 //    transition back to thread_in_Java
 //    return to caller
 //
-nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
-                                                const methodHandle& method,
-                                                int compile_id,
-                                                BasicType* in_sig_bt,
-                                                VMRegPair* in_regs,
-                                                BasicType ret_type) {
+nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const methodHandle& method, int compile_id, BasicType* in_sig_bt, VMRegPair* in_regs, BasicType ret_type) {
 #ifdef BUILTIN_SIM
   if (NotifySimulator) {
     // Names are up to 65536 chars long.  UTF8-coded strings are up to
@@ -1198,10 +1181,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
     // First instruction must be a nop as it may need to be patched on deoptimisation
     __ nop();
-    gen_special_dispatch(masm,
-                         method,
-                         in_sig_bt,
-                         in_regs);
+    gen_special_dispatch(masm, method, in_sig_bt, in_regs);
     int frame_complete = ((intptr_t)__ pc()) - start;  // not complete, period
     __ flush();
     int stack_slots = SharedRuntime::out_preserve_stack_slots();  // no out slots at all, actually
@@ -1599,7 +1579,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   Label dtrace_method_entry, dtrace_method_entry_done;
   {
     unsigned long offset;
-    __ adrp(rscratch1, ExternalAddress((address)&DTraceMethodProbes), offset);
+    __ adrp(rscratch1, ExternalAddress((address)&false), offset);
     __ ldrb(rscratch1, Address(rscratch1, offset));
     __ cbnzw(rscratch1, dtrace_method_entry);
     __ bind(dtrace_method_entry_done);
@@ -1831,7 +1811,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   Label dtrace_method_exit, dtrace_method_exit_done;
   {
     unsigned long offset;
-    __ adrp(rscratch1, ExternalAddress((address)&DTraceMethodProbes), offset);
+    __ adrp(rscratch1, ExternalAddress((address)&false), offset);
     __ ldrb(rscratch1, Address(rscratch1, offset));
     __ cbnzw(rscratch1, dtrace_method_exit);
     __ bind(dtrace_method_exit_done);
@@ -1842,11 +1822,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   // Unbox oop result, e.g. JNIHandles::resolve result.
   if (ret_type == T_OBJECT || ret_type == T_ARRAY) {
     __ resolve_jobject(r0, rthread, rscratch2);
-  }
-
-  if (CheckJNICalls) {
-    // clear_pending_jni_exception_check
-    __ str(zr, Address(rthread, JavaThread::pending_jni_exception_check_fn_offset()));
   }
 
   if (!is_critical_native) {

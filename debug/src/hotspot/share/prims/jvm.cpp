@@ -53,7 +53,6 @@
 #include "services/threadService.hpp"
 #include "utilities/copy.hpp"
 #include "utilities/defaultStream.hpp"
-#include "utilities/dtrace.hpp"
 #include "utilities/events.hpp"
 #include "utilities/histogram.hpp"
 #include "utilities/macros.hpp"
@@ -672,10 +671,7 @@ static void is_lock_held_by_thread(Handle loader, PerfCounter* counter, TRAPS) {
 }
 
 // common code for JVM_DefineClass() and JVM_DefineClassWithSource()
-static jclass jvm_define_class_common(JNIEnv *env, const char *name,
-                                      jobject loader, const jbyte *buf,
-                                      jsize len, jobject pd, const char *source,
-                                      TRAPS) {
+static jclass jvm_define_class_common(JNIEnv *env, const char *name, jobject loader, const jbyte *buf, jsize len, jobject pd, const char *source, TRAPS) {
   if (source == NULL)  source = "__JVM_DefineClass__";
 
   JavaThread* jt = (JavaThread*) THREAD;
@@ -2626,7 +2622,6 @@ JVM_END
 JVM_ENTRY(void, JVM_Yield(JNIEnv *env, jclass threadClass))
   JVMWrapper("JVM_Yield");
   if (os::dont_yield()) return;
-  HOTSPOT_THREAD_YIELD();
   os::naked_yield();
 JVM_END
 
@@ -2650,7 +2645,6 @@ JVM_ENTRY(void, JVM_Sleep(JNIEnv* env, jclass threadClass, jlong millis))
   // And set new thread state to SLEEPING.
   JavaThreadSleepState jtss(thread);
 
-  HOTSPOT_THREAD_SLEEP_BEGIN(millis);
   EventThreadSleep event;
 
   if (millis == 0) {
@@ -2665,7 +2659,6 @@ JVM_ENTRY(void, JVM_Sleep(JNIEnv* env, jclass threadClass, jlong millis))
         if (event.should_commit()) {
           post_thread_sleep_event(&event, millis);
         }
-        HOTSPOT_THREAD_SLEEP_END(1);
 
         // TODO-FIXME: THROW_MSG returns which means we will not call set_state()
         // to properly restore the thread state.  That's likely wrong.
@@ -2677,7 +2670,6 @@ JVM_ENTRY(void, JVM_Sleep(JNIEnv* env, jclass threadClass, jlong millis))
   if (event.should_commit()) {
     post_thread_sleep_event(&event, millis);
   }
-  HOTSPOT_THREAD_SLEEP_END(0);
 JVM_END
 
 JVM_ENTRY(jobject, JVM_CurrentThread(JNIEnv* env, jclass threadClass))

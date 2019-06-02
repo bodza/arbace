@@ -47,16 +47,11 @@
 #include "runtime/thread.inline.hpp"
 #include "services/classLoadingService.hpp"
 #include "services/threadService.hpp"
-#include "utilities/dtrace.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/stringUtils.hpp"
 #include "c1/c1_Compiler.hpp"
 
-#define DTRACE_CLASSINIT_PROBE(type, thread_type)
-#define DTRACE_CLASSINIT_PROBE_WAIT(type, thread_type, wait)
-
-static inline bool is_class_loader(const Symbol* class_name,
-                                   const ClassFileParser& parser) {
+static inline bool is_class_loader(const Symbol* class_name, const ClassFileParser& parser) {
 
   if (class_name == vmSymbols::java_lang_ClassLoader()) {
     return true;
@@ -531,18 +526,6 @@ bool InstanceKlass::link_class_or_fail(TRAPS) {
 }
 
 bool InstanceKlass::link_class_impl(bool throw_verifyerror, TRAPS) {
-  if (DumpSharedSpaces && is_in_error_state()) {
-    // This is for CDS dumping phase only -- we use the in_error_state to indicate that
-    // the class has failed verification. Throwing the NoClassDefFoundError here is just
-    // a convenient way to stop repeat attempts to verify the same (bad) class.
-    //
-    // Note that the NoClassDefFoundError is not part of the JLS, and should not be thrown
-    // if we are executing Java code. This is not a problem for CDS dumping phase since
-    // it doesn't execute any Java code.
-    ResourceMark rm(THREAD);
-    Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::java_lang_NoClassDefFoundError(), "Class %s, or one of its supertypes, failed class initialization", external_name());
-    return false;
-  }
   // return if already verified
   if (is_linked()) {
     return true;
@@ -698,8 +681,6 @@ void InstanceKlass::initialize_impl(TRAPS) {
   // A class could already be verified, since it has been reflected upon.
   link_class(CHECK);
 
-  DTRACE_CLASSINIT_PROBE(required, -1);
-
   bool wait = false;
 
   // refer to the JVM book page 47 for description of steps
@@ -721,19 +702,16 @@ void InstanceKlass::initialize_impl(TRAPS) {
 
     // Step 3
     if (is_being_initialized() && is_reentrant_initialization(self)) {
-      DTRACE_CLASSINIT_PROBE_WAIT(recursive, -1, wait);
       return;
     }
 
     // Step 4
     if (is_initialized()) {
-      DTRACE_CLASSINIT_PROBE_WAIT(concurrent, -1, wait);
       return;
     }
 
     // Step 5
     if (is_in_error_state()) {
-      DTRACE_CLASSINIT_PROBE_WAIT(erroneous, -1, wait);
       ResourceMark rm(THREAD);
       const char* desc = "Could not initialize class ";
       const char* className = external_name();
@@ -779,7 +757,6 @@ void InstanceKlass::initialize_impl(TRAPS) {
         set_initialization_state_and_notify(initialization_error, THREAD);
         CLEAR_PENDING_EXCEPTION;
       }
-      DTRACE_CLASSINIT_PROBE_WAIT(super__failed, -1, wait);
       THROW_OOP(e());
     }
   }
@@ -790,7 +767,6 @@ void InstanceKlass::initialize_impl(TRAPS) {
   // Step 8
   {
     JavaThread* jt = (JavaThread*)THREAD;
-    DTRACE_CLASSINIT_PROBE_WAIT(clinit, -1, wait);
     // Timer includes any side effects of class initialization (resolution,
     // etc), but not recursive entry into call_class_initializer().
     PerfClassTraceTime timer(ClassLoader::perf_class_init_time(),
@@ -814,7 +790,6 @@ void InstanceKlass::initialize_impl(TRAPS) {
       set_initialization_state_and_notify(initialization_error, THREAD);
       CLEAR_PENDING_EXCEPTION;   // ignore any exception thrown, class initialization error is thrown below
     }
-    DTRACE_CLASSINIT_PROBE_WAIT(error, -1, wait);
     if (e->is_a(SystemDictionary::Error_klass())) {
       THROW_OOP(e());
     } else {
@@ -822,7 +797,6 @@ void InstanceKlass::initialize_impl(TRAPS) {
       THROW_ARG(vmSymbols::java_lang_ExceptionInInitializerError(), vmSymbols::throwable_void_signature(), &args);
     }
   }
-  DTRACE_CLASSINIT_PROBE_WAIT(end, -1, wait);
 }
 
 void InstanceKlass::set_initialization_state_and_notify(ClassState state, TRAPS) {
@@ -993,11 +967,6 @@ objArrayOop InstanceKlass::allocate_objArray(int n, int length, TRAPS) {
 }
 
 instanceOop InstanceKlass::register_finalizer(instanceOop i, TRAPS) {
-  if (TraceFinalizerRegistration) {
-    tty->print("Registered ");
-    i->print_value_on(tty);
-    tty->print_cr(" (" INTPTR_FORMAT ") as finalizable", p2i(i));
-  }
   instanceHandle h_i(THREAD, i);
   // Pass the handle as argument, JavaCalls::call expects oop as jobjects
   JavaValue result(T_VOID);
@@ -2510,7 +2479,9 @@ nmethod* InstanceKlass::lookup_osr_nmethod(const Method* m, int bci, int comp_le
 }
 
 void InstanceKlass::print_value_on(outputStream* st) const {
-  if (Verbose || WizardMode)  access_flags().print_on(st);
+  if (Verbose) {
+    access_flags().print_on(st);
+  }
   name()->print_value_on(st);
 }
 
@@ -2651,7 +2622,7 @@ void InstanceKlass::verify_on(outputStream* st) {
   if (method_ordering() != NULL) {
     Array<int>* method_ordering = this->method_ordering();
     int length = method_ordering->length();
-    if ((UseSharedSpaces || DumpSharedSpaces) && length != 0) {
+    if (UseSharedSpaces && length != 0) {
       guarantee(length == methods()->length(), "invalid method ordering length");
       jlong sum = 0;
       for (int j = 0; j < length; j++) {

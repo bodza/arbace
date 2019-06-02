@@ -72,19 +72,6 @@ void CompileTask::initialize(int compile_id, const methodHandle& method, int osr
   _compile_reason = compile_reason;
   _failure_reason = NULL;
 
-  if (LogCompilation) {
-    _time_queued = os::elapsed_counter();
-    if (hot_method.not_null()) {
-      if (hot_method == method) {
-        _hot_method = _method;
-      } else {
-        _hot_method = hot_method();
-        // only add loader or mirror if different from _method_holder
-        _hot_method_holder = JNIHandles::make_global(Handle(thread, hot_method->method_holder()->klass_holder()));
-      }
-    }
-  }
-
   _next = NULL;
 }
 
@@ -150,10 +137,6 @@ void CompileTask::print_line_on_error(outputStream* st, char* buf, int buflen) {
 // CompileTask::print_tty
 void CompileTask::print_tty() {
   ttyLocker ttyl;  // keep the following output all in one block
-  // print compiler name if requested
-  if (CIPrintCompilerName) {
-    tty->print("%s:", CompileBroker::compiler_name(comp_level()));
-  }
   print(tty);
 }
 
@@ -162,10 +145,6 @@ void CompileTask::print_tty() {
 void CompileTask::print_impl(outputStream* st, Method* method, int compile_id, int comp_level, bool is_osr_method, int osr_bci, bool is_blocking, const char* msg, bool short_form, bool cr) {
   if (!short_form) {
     st->print("%7d ", (int) st->time_stamp().milliseconds());  // print timestamp
-  }
-  // print compiler name if requested
-  if (CIPrintCompilerName) {
-    st->print("%s:", CompileBroker::compiler_name(comp_level));
   }
   st->print("%4d ", compile_id);    // print compilation number
 

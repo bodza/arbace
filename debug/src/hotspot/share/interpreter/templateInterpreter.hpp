@@ -141,10 +141,7 @@ class TemplateInterpreter: public AbstractInterpreter {
 
   // Deoptimization support
   // Compute the entry address for continuation after
-  static address deopt_continue_after_entry(Method* method,
-                                            address bcp,
-                                            int callee_parameters,
-                                            bool is_top_frame);
+  static address deopt_continue_after_entry(Method* method, address bcp, int callee_parameters, bool is_top_frame);
   // Deoptimization should reexecute this bytecode
   static bool    bytecode_should_reexecute(Bytecodes::Code code);
   // Compute the address for reexecution

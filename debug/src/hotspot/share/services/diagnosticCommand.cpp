@@ -20,7 +20,6 @@
 #include "services/diagnosticArgument.hpp"
 #include "services/diagnosticCommand.hpp"
 #include "services/diagnosticFramework.hpp"
-#include "services/heapDumper.hpp"
 #include "services/management.hpp"
 #include "services/writeableFlags.hpp"
 #include "utilities/debug.hpp"
@@ -46,8 +45,8 @@ void DCmdRegistrant::register_dcmds() {
   // First argument specifies which interfaces will export the command
   // Second argument specifies if the command is enabled
   // Third  argument specifies if the command is hidden
-  uint32_t full_export = DCmd_Source_Internal | DCmd_Source_AttachAPI
-                         | DCmd_Source_MBean;
+  uint32_t full_export = DCmd_Source_Internal | DCmd_Source_AttachAPI | DCmd_Source_MBean;
+
   DCmdFactory::register_DCmdFactory(new DCmdFactoryImpl<HelpDCmd>(full_export, true, false));
   DCmdFactory::register_DCmdFactory(new DCmdFactoryImpl<VersionDCmd>(full_export, true, false));
   DCmdFactory::register_DCmdFactory(new DCmdFactoryImpl<CommandLineDCmd>(full_export, true, false));
@@ -728,30 +727,10 @@ void CompilerDirectivesClearDCmd::execute(DCmdSource source, TRAPS) {
   DirectivesStack::clear();
 }
 
-class VM_DumpTouchedMethods : public VM_Operation {
-private:
-  outputStream* _out;
-public:
-  VM_DumpTouchedMethods(outputStream* out) {
-    _out = out;
-  }
-
-  virtual VMOp_Type type() const { return VMOp_DumpTouchedMethods; }
-
-  virtual void doit() {
-    Method::print_touched_methods(_out);
-  }
-};
-
 TouchedMethodsDCmd::TouchedMethodsDCmd(outputStream* output, bool heap) : DCmdWithParser(output, heap) { }
 
 void TouchedMethodsDCmd::execute(DCmdSource source, TRAPS) {
-  if (!LogTouchedMethods) {
-    output()->print_cr("VM.print_touched_methods command requires -XX:+LogTouchedMethods");
-    return;
-  }
-  VM_DumpTouchedMethods dumper(output());
-  VMThread::execute(&dumper);
+  output()->print_cr("VM.print_touched_methods command requires -XX:+false");
 }
 
 int TouchedMethodsDCmd::num_arguments() {

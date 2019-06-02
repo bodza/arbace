@@ -84,31 +84,21 @@ class os: AllStatic {
     _page_sizes[1] = 0; // sentinel
   }
 
-  static char*  pd_reserve_memory(size_t bytes, char* addr = 0,
-                                  size_t alignment_hint = 0);
+  static char*  pd_reserve_memory(size_t bytes, char* addr = 0, size_t alignment_hint = 0);
   static char*  pd_attempt_reserve_memory_at(size_t bytes, char* addr);
   static char*  pd_attempt_reserve_memory_at(size_t bytes, char* addr, int file_desc);
-  static void   pd_split_reserved_memory(char *base, size_t size,
-                                      size_t split, bool realloc);
+  static void   pd_split_reserved_memory(char *base, size_t size, size_t split, bool realloc);
   static bool   pd_commit_memory(char* addr, size_t bytes, bool executable);
-  static bool   pd_commit_memory(char* addr, size_t size, size_t alignment_hint,
-                                 bool executable);
+  static bool   pd_commit_memory(char* addr, size_t size, size_t alignment_hint, bool executable);
   // Same as pd_commit_memory() that either succeeds or calls
   // vm_exit_out_of_memory() with the specified mesg.
-  static void   pd_commit_memory_or_exit(char* addr, size_t bytes,
-                                         bool executable, const char* mesg);
-  static void   pd_commit_memory_or_exit(char* addr, size_t size,
-                                         size_t alignment_hint,
-                                         bool executable, const char* mesg);
+  static void   pd_commit_memory_or_exit(char* addr, size_t bytes, bool executable, const char* mesg);
+  static void   pd_commit_memory_or_exit(char* addr, size_t size, size_t alignment_hint, bool executable, const char* mesg);
   static bool   pd_uncommit_memory(char* addr, size_t bytes);
   static bool   pd_release_memory(char* addr, size_t bytes);
 
-  static char*  pd_map_memory(int fd, const char* file_name, size_t file_offset,
-                           char *addr, size_t bytes, bool read_only = false,
-                           bool allow_exec = false);
-  static char*  pd_remap_memory(int fd, const char* file_name, size_t file_offset,
-                             char *addr, size_t bytes, bool read_only,
-                             bool allow_exec);
+  static char*  pd_map_memory(int fd, const char* file_name, size_t file_offset, char *addr, size_t bytes, bool read_only = false, bool allow_exec = false);
+  static char*  pd_remap_memory(int fd, const char* file_name, size_t file_offset, char *addr, size_t bytes, bool read_only, bool allow_exec);
   static bool   pd_unmap_memory(char *addr, size_t bytes);
   static void   pd_free_memory(char *addr, size_t bytes, size_t alignment_hint);
   static void   pd_realign_memory(char *addr, size_t bytes, size_t alignment_hint);
@@ -158,9 +148,7 @@ class os: AllStatic {
 
   // Returns real time in seconds since an arbitrary point
   // in the past.
-  static bool getTimesSecs(double* process_real_time,
-                           double* process_user_time,
-                           double* process_system_time);
+  static bool getTimesSecs(double* process_real_time, double* process_user_time, double* process_system_time);
 
   // Interface to the performance counter
   static jlong elapsed_counter();
@@ -198,7 +186,7 @@ class os: AllStatic {
     // the bootstrap routine for the stub generator needs to check
     // the processor count directly and leave the bootstrap routine
     // in place until called after initialization has ocurred.
-    return AssumeMP || (_processor_count != 1);
+    return true;
   }
   static julong available_memory();
   static julong physical_memory();
@@ -296,24 +284,17 @@ class os: AllStatic {
                                                   const size_t size);
 
   static int    vm_allocation_granularity();
-  static char*  reserve_memory(size_t bytes, char* addr = 0,
-                               size_t alignment_hint = 0, int file_desc = -1);
-  static char*  reserve_memory(size_t bytes, char* addr,
-                               size_t alignment_hint, MEMFLAGS flags);
+  static char*  reserve_memory(size_t bytes, char* addr = 0, size_t alignment_hint = 0, int file_desc = -1);
+  static char*  reserve_memory(size_t bytes, char* addr, size_t alignment_hint, MEMFLAGS flags);
   static char*  reserve_memory_aligned(size_t size, size_t alignment, int file_desc = -1);
   static char*  attempt_reserve_memory_at(size_t bytes, char* addr, int file_desc = -1);
-  static void   split_reserved_memory(char *base, size_t size,
-                                      size_t split, bool realloc);
+  static void   split_reserved_memory(char *base, size_t size, size_t split, bool realloc);
   static bool   commit_memory(char* addr, size_t bytes, bool executable);
-  static bool   commit_memory(char* addr, size_t size, size_t alignment_hint,
-                              bool executable);
+  static bool   commit_memory(char* addr, size_t size, size_t alignment_hint, bool executable);
   // Same as commit_memory() that either succeeds or calls
   // vm_exit_out_of_memory() with the specified mesg.
-  static void   commit_memory_or_exit(char* addr, size_t bytes,
-                                      bool executable, const char* mesg);
-  static void   commit_memory_or_exit(char* addr, size_t size,
-                                      size_t alignment_hint,
-                                      bool executable, const char* mesg);
+  static void   commit_memory_or_exit(char* addr, size_t bytes, bool executable, const char* mesg);
+  static void   commit_memory_or_exit(char* addr, size_t size, size_t alignment_hint, bool executable, const char* mesg);
   static bool   uncommit_memory(char* addr, size_t bytes);
   static bool   release_memory(char* addr, size_t bytes);
 
@@ -324,8 +305,7 @@ class os: AllStatic {
   static void   pretouch_memory(void* start, void* end, size_t page_size = vm_page_size());
 
   enum ProtType { MEM_PROT_NONE, MEM_PROT_READ, MEM_PROT_RW, MEM_PROT_RWX };
-  static bool   protect_memory(char* addr, size_t bytes, ProtType prot,
-                               bool is_committed = true);
+  static bool   protect_memory(char* addr, size_t bytes, ProtType prot, bool is_committed = true);
 
   static bool   guard_memory(char* addr, size_t bytes);
   static bool   unguard_memory(char* addr, size_t bytes);
@@ -341,12 +321,8 @@ class os: AllStatic {
   // Replace existing reserved memory with file mapping
   static char* replace_existing_mapping_with_file_mapping(char* base, size_t size, int fd);
 
-  static char*  map_memory(int fd, const char* file_name, size_t file_offset,
-                           char *addr, size_t bytes, bool read_only = false,
-                           bool allow_exec = false);
-  static char*  remap_memory(int fd, const char* file_name, size_t file_offset,
-                             char *addr, size_t bytes, bool read_only,
-                             bool allow_exec);
+  static char*  map_memory(int fd, const char* file_name, size_t file_offset, char *addr, size_t bytes, bool read_only = false, bool allow_exec = false);
+  static char*  remap_memory(int fd, const char* file_name, size_t file_offset, char *addr, size_t bytes, bool read_only, bool allow_exec);
   static bool   unmap_memory(char *addr, size_t bytes);
   static void   free_memory(char *addr, size_t bytes, size_t alignment_hint);
   static void   realign_memory(char *addr, size_t bytes, size_t alignment_hint);
@@ -371,8 +347,7 @@ class os: AllStatic {
 
   static char*  non_memory_address_word();
   // reserve, commit and pin the entire memory region
-  static char*  reserve_memory_special(size_t size, size_t alignment,
-                                       char* addr, bool executable);
+  static char*  reserve_memory_special(size_t size, size_t alignment, char* addr, bool executable);
   static bool   release_memory_special(char* addr, size_t bytes);
   static void   large_page_init();
   static size_t large_page_size();
@@ -450,9 +425,7 @@ class os: AllStatic {
     os_thread
   };
 
-  static bool create_thread(Thread* thread,
-                            ThreadType thr_type,
-                            size_t req_stack_size = 0);
+  static bool create_thread(Thread* thread, ThreadType thr_type, size_t req_stack_size = 0);
 
   // The "main thread", also known as "starting thread", is the thread
   // that loads/creates the JVM via JNI_CreateJavaVM.
@@ -500,16 +473,10 @@ class os: AllStatic {
   static frame      fetch_frame_from_ucontext(Thread* thread, void* ucVoid);
 
   static void breakpoint();
-  static bool start_debugging(char *buf, int buflen);
 
   static address current_stack_pointer();
   static address current_stack_base();
   static size_t current_stack_size();
-
-  static void verify_stack_alignment() { };
-
-  static bool message_box(const char* title, const char* message);
-  static char* do_you_want_to_debug(const char* message);
 
   // run cmd in a separate process and return its exit code; or -1 on failures
   static int fork_and_exec(char *cmd, bool use_vfork_if_available = false);
@@ -569,31 +536,26 @@ class os: AllStatic {
 
   // Builds the platform-specific name of a library.
   // Returns false if the buffer is too small.
-  static bool           dll_build_name(char* buffer, size_t size,
-                                       const char* fname);
+  static bool           dll_build_name(char* buffer, size_t size, const char* fname);
 
   // Builds a platform-specific full library path given an ld path and
   // unadorned library name. Returns true if the buffer contains a full
   // path to an existing file, false otherwise. If pathname is empty,
   // uses the path to the current directory.
-  static bool           dll_locate_lib(char* buffer, size_t size,
-                                       const char* pathname, const char* fname);
+  static bool           dll_locate_lib(char* buffer, size_t size, const char* pathname, const char* fname);
 
   // Symbol lookup, find nearest function name; basically it implements
   // dladdr() for all platforms. Name of the nearest function is copied
   // to buf. Distance from its base address is optionally returned as offset.
   // If function name is not found, buf[0] is set to '\0' and offset is
   // set to -1 (if offset is non-NULL).
-  static bool dll_address_to_function_name(address addr, char* buf,
-                                           int buflen, int* offset,
-                                           bool demangle = true);
+  static bool dll_address_to_function_name(address addr, char* buf, int buflen, int* offset, bool demangle = true);
 
   // Locate DLL/DSO. On success, full path of the library is copied to
   // buf, and offset is optionally set to be the distance between addr
   // and the library's base address. On failure, buf[0] is set to '\0'
   // and offset is set to -1 (if offset is non-NULL).
-  static bool dll_address_to_library_name(address addr, char* buf,
-                                          int buflen, int* offset);
+  static bool dll_address_to_library_name(address addr, char* buf, int buflen, int* offset);
 
   // Find out whether the pc is in the static code for jvm.dll/libjvm.so.
   static bool address_is_in_vm(address addr);
@@ -623,12 +585,10 @@ class os: AllStatic {
   static void* get_default_process_handle();
 
   // Check for static linked agent library
-  static bool find_builtin_agent(AgentLibrary *agent_lib, const char *syms[],
-                                 size_t syms_len);
+  static bool find_builtin_agent(AgentLibrary *agent_lib, const char *syms[], size_t syms_len);
 
   // Find agent entry point
-  static void *find_agent_function(AgentLibrary *agent_lib, bool check_lib,
-                                   const char *syms[], size_t syms_len);
+  static void *find_agent_function(AgentLibrary *agent_lib, bool check_lib, const char *syms[], size_t syms_len);
 
   // Provide C99 compliant versions of these functions, since some versions
   // of some platforms don't.
@@ -659,16 +619,14 @@ class os: AllStatic {
   static int get_last_error();
 
   // Replacement for strerror().
-  // Will return the english description of the error (e.g. "File not found", as
-  //  suggested in the POSIX standard.
+  // Will return the english description of the error (e.g. "File not found", as suggested in the POSIX standard.
   // Will return "Unknown error" for an unknown errno value.
   // Will not attempt to localize the returned string.
   // Will always return a valid string which is a static constant.
   // Will not change the value of errno.
   static const char* strerror(int e);
 
-  // Will return the literalized version of the given errno (e.g. "EINVAL"
-  //  for EINVAL).
+  // Will return the literalized version of the given errno (e.g. "EINVAL" for EINVAL).
   // Will return "Unknown error" for an unknown errno value.
   // Will always return a valid string which is a static constant.
   // Will not change the value of errno.
@@ -677,7 +635,7 @@ class os: AllStatic {
   // Determines whether the calling process is being debugged by a user-mode debugger.
   static bool is_debugger_attached();
 
-  // wait for a key press if PauseAtExit is set
+  // wait for a key press if false is set
   static void wait_for_keypress_at_exit(void);
 
   // The following two functions are used by fatal error handler to trace
@@ -695,7 +653,7 @@ class os: AllStatic {
   static frame get_sender_for_C_frame(frame *fr);
 
   // return current frame. pc() and sp() are set to NULL on failure.
-  static frame      current_frame();
+  static frame current_frame();
 
   static void print_hex_dump(outputStream* st, address start, address end, int unitsize);
 
@@ -707,14 +665,14 @@ class os: AllStatic {
   static int get_signal_number(const char* signal_name);
 
   // Returns native Java library, loads if necessary
-  static void*    native_java_library();
+  static void* native_java_library();
 
   // Fills in path to jvm.dll/libjvm.so (used by the Disassembler)
-  static void     jvm_path(char *buf, jint buflen);
+  static void jvm_path(char *buf, jint buflen);
 
   // JNI names
-  static void     print_jni_name_prefix_on(outputStream* st, int args_size);
-  static void     print_jni_name_suffix_on(outputStream* st, int args_size);
+  static void print_jni_name_prefix_on(outputStream* st, int args_size);
+  static void print_jni_name_suffix_on(outputStream* st, int args_size);
 
   // Init os specific system properties values
   static void init_system_properties_values();
@@ -737,12 +695,12 @@ class os: AllStatic {
   static int get_native_stack(address* stack, int size, int toSkip = 0);
 
   // General allocation (must be MT-safe)
-  static void* malloc  (size_t size, MEMFLAGS flags, const NativeCallStack& stack);
-  static void* malloc  (size_t size, MEMFLAGS flags);
-  static void* realloc (void *memblock, size_t size, MEMFLAGS flag, const NativeCallStack& stack);
-  static void* realloc (void *memblock, size_t size, MEMFLAGS flag);
+  static void* malloc(size_t size, MEMFLAGS flags, const NativeCallStack& stack);
+  static void* malloc(size_t size, MEMFLAGS flags);
+  static void* realloc(void *memblock, size_t size, MEMFLAGS flag, const NativeCallStack& stack);
+  static void* realloc(void *memblock, size_t size, MEMFLAGS flag);
 
-  static void  free    (void *memblock);
+  static void  free(void *memblock);
   static char* strdup(const char *, MEMFLAGS flags = mtInternal);  // Like strdup
   // Like strdup, but exit VM when strdup() returns NULL
   static char* strdup_check_oom(const char*, MEMFLAGS flags = mtInternal);
@@ -772,18 +730,6 @@ class os: AllStatic {
 
   // Structured OS Exception support
   static void os_exception_wrapper(java_call_t f, JavaValue* value, const methodHandle& method, JavaCallArguments* args, Thread* thread);
-
-  // On Posix compatible OS it will simply check core dump limits while on Windows
-  // it will check if dump file can be created. Check or prepare a core dump to be
-  // taken at a later point in the same thread in os::abort(). Use the caller
-  // provided buffer as a scratch buffer. The status message which will be written
-  // into the error log either is file location or a short error message, depending
-  // on the checking result.
-  static void check_dump_limit(char* buffer, size_t bufferSize);
-
-  // Get the default path to the core file
-  // Returns the length of the string
-  static int get_core_path(char* buffer, size_t bufferSize);
 
   // JVMTI & JVM monitoring and management support
   // The thread_cpu_time() and current_thread_cpu_time() are only
@@ -839,8 +785,7 @@ class os: AllStatic {
  public:
 #ifndef PLATFORM_PRINT_NATIVE_STACK
   // No platform-specific code for printing the native stack.
-  static bool platform_print_native_stack(outputStream* st, const void* context,
-                                          char *buf, int buf_size) {
+  static bool platform_print_native_stack(outputStream* st, const void* context, char *buf, int buf_size) {
     return false;
   }
 #endif
@@ -869,8 +814,7 @@ class os: AllStatic {
 
   // Builds a platform dependent Agent_OnLoad_<libname> function name
   // which is used to find statically linked in agents.
-  static char*  build_agent_function_name(const char *sym, const char *cname,
-                                          bool is_absolute_path);
+  static char*  build_agent_function_name(const char *sym, const char *cname, bool is_absolute_path);
 
   class SuspendedThreadTaskContext {
   public:
@@ -934,37 +878,15 @@ class os: AllStatic {
 
     State state() const { return _state; }
 
-    State request_suspend() {
-      return switch_state(SR_RUNNING, SR_SUSPEND_REQUEST);
-    }
+    State request_suspend() { return switch_state(SR_RUNNING, SR_SUSPEND_REQUEST); }
+    State cancel_suspend()  { return switch_state(SR_SUSPEND_REQUEST, SR_RUNNING); }
+    State suspended()       { return switch_state(SR_SUSPEND_REQUEST, SR_SUSPENDED); }
+    State request_wakeup()  { return switch_state(SR_SUSPENDED, SR_WAKEUP_REQUEST); }
+    State running()         { return switch_state(SR_WAKEUP_REQUEST, SR_RUNNING); }
 
-    State cancel_suspend() {
-      return switch_state(SR_SUSPEND_REQUEST, SR_RUNNING);
-    }
-
-    State suspended() {
-      return switch_state(SR_SUSPEND_REQUEST, SR_SUSPENDED);
-    }
-
-    State request_wakeup() {
-      return switch_state(SR_SUSPENDED, SR_WAKEUP_REQUEST);
-    }
-
-    State running() {
-      return switch_state(SR_WAKEUP_REQUEST, SR_RUNNING);
-    }
-
-    bool is_running() const {
-      return _state == SR_RUNNING;
-    }
-
-    bool is_suspend_request() const {
-      return _state == SR_SUSPEND_REQUEST;
-    }
-
-    bool is_suspended() const {
-      return _state == SR_SUSPENDED;
-    }
+    bool is_running() const { return _state == SR_RUNNING; }
+    bool is_suspend_request() const { return _state == SR_SUSPEND_REQUEST; }
+    bool is_suspended() const { return _state == SR_SUSPENDED; }
   };
 
  protected:
@@ -972,11 +894,7 @@ class os: AllStatic {
   static int _processor_count;                // number of processors
   static int _initial_active_processor_count; // number of active processors during initialization.
 
-  static char* format_boot_path(const char* format_string,
-                                const char* home,
-                                int home_len,
-                                char fileSep,
-                                char pathSep);
+  static char* format_boot_path(const char* format_string, const char* home, int home_len, char fileSep, char pathSep);
   static bool set_boot_path(char fileSep, char pathSep);
 };
 

@@ -22,30 +22,6 @@
 
 #include <stdio.h>
 
-#if 0
-static void metadata_oops_do(Metadata** metadata_begin, Metadata **metadata_end, OopClosure* f) {
-  // Visit the metadata/oops section
-  for (Metadata** p = metadata_begin; p < metadata_end; p++) {
-    Metadata* m = *p;
-
-    intptr_t meta = (intptr_t)m;
-    if ((meta & 1) == 1) {
-      // already resolved
-      m = (Metadata*)(meta & ~1);
-    } else {
-      continue;
-    }
-    if (m->is_method()) {
-      m = ((Method*)m)->method_holder();
-    }
-    oop o = ((Klass*)m)->klass_holder();
-    if (o != NULL) {
-      f->do_oop(&o);
-    }
-  }
-}
-#endif
-
 address* AOTCompiledMethod::orig_pc_addr(const frame* fr) {
   return (address*) ((address)fr->unextended_sp() + _meta->orig_pc_offset());
 }
@@ -162,12 +138,6 @@ bool AOTCompiledMethod::make_not_entrant_helper(int new_state) {
     }
   }
 
-  if (false) {
-    ResourceMark m;
-    const char *new_state_str = (new_state == not_entrant) ? "not entrant" : "not used";
-    tty->print_cr("aot method <" INTPTR_FORMAT "> %s code made %s", p2i(this), this->method() ? this->method()->name_and_sig_as_C_string() : "null", new_state_str);
-  }
-
   return true;
 }
 
@@ -193,11 +163,6 @@ bool AOTCompiledMethod::make_entrant() {
 
     // Log the transition once
     log_state_change();
-  }
-
-  if (false) {
-    ResourceMark m;
-    tty->print_cr("aot method <" INTPTR_FORMAT "> %s code made entrant", p2i(this), this->method() ? this->method()->name_and_sig_as_C_string() : "null");
   }
 
   return true;
@@ -307,34 +272,7 @@ void AOTCompiledMethod::log_identity(xmlStream* log) const {
   log->print(" aot='%2d'", _heap->dso_id());
 }
 
-void AOTCompiledMethod::log_state_change() const {
-  if (LogCompilation) {
-    ResourceMark m;
-    if (xtty != NULL) {
-      ttyLocker ttyl;  // keep the following output all in one block
-      if (*_state_adr == not_entrant) {
-        xtty->begin_elem("make_not_entrant thread='" UINTX_FORMAT "'", os::current_thread_id());
-      } else if (*_state_adr == not_used) {
-        xtty->begin_elem("make_not_used thread='" UINTX_FORMAT "'", os::current_thread_id());
-      } else if (*_state_adr == in_use) {
-        xtty->begin_elem("make_entrant thread='" UINTX_FORMAT "'", os::current_thread_id());
-      }
-      log_identity(xtty);
-      xtty->stamp();
-      xtty->end_elem();
-    }
-  }
-  if (PrintCompilation) {
-    ResourceMark m;
-    if (*_state_adr == not_entrant) {
-      print_on(tty, "made not entrant");
-    } else if (*_state_adr == not_used) {
-      print_on(tty, "made not used");
-    } else if (*_state_adr == in_use) {
-      print_on(tty, "made entrant");
-    }
-  }
-}
+void AOTCompiledMethod::log_state_change() const { }
 
 NativeInstruction* PltNativeCallWrapper::get_load_instruction(virtual_call_Relocation* r) const {
   return nativeLoadGot_at(_call->plt_load_got());

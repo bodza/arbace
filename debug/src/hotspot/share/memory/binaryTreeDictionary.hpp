@@ -329,21 +329,6 @@ class TreeSearchClosure : public StackObj {
   virtual bool do_tree(TreeList<Chunk_t, FreeList_t>* tl) = 0;
 };
 
-#if 0 //  Don't need this yet but here for symmetry.
-template <class Chunk_t, class FreeList_t>
-class AscendTreeSearchClosure : public TreeSearchClosure<Chunk_t> {
- public:
-  bool do_tree(TreeList<Chunk_t, FreeList_t>* tl) {
-    if (tl != NULL) {
-      if (do_tree(tl->left())) return true;
-      if (do_list(tl)) return true;
-      if (do_tree(tl->right())) return true;
-    }
-    return false;
-  }
-};
-#endif
-
 template <class Chunk_t, class FreeList_t>
 class DescendTreeSearchClosure : public TreeSearchClosure<Chunk_t, FreeList_t> {
  public:

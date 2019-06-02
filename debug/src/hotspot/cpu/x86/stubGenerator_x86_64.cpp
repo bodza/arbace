@@ -578,26 +578,6 @@ class StubGenerator: public StubCodeGenerator {
 
     const Address mxcsr_save(rsp, 0);
 
-    if (CheckJNICalls) {
-      Label ok_ret;
-      ExternalAddress mxcsr_std(StubRoutines::addr_mxcsr_std());
-      __ push(rax);
-      __ subptr(rsp, wordSize);      // allocate a temp location
-      __ stmxcsr(mxcsr_save);
-      __ movl(rax, mxcsr_save);
-      __ andl(rax, MXCSR_MASK);    // Only check control and mask bits
-      __ cmp32(rax, mxcsr_std);
-      __ jcc(Assembler::equal, ok_ret);
-
-      __ warn("MXCSR changed by native JNI code, use -XX:+RestoreMXCSROnJNICall");
-
-      __ ldmxcsr(mxcsr_std);
-
-      __ bind(ok_ret);
-      __ addptr(rsp, wordSize);
-      __ pop(rax);
-    }
-
     __ ret(0);
 
     return start;
@@ -2982,7 +2962,7 @@ class StubGenerator: public StubCodeGenerator {
   __ opc(xmm_result0, src_reg); \
   __ opc(xmm_result1, src_reg); \
   __ opc(xmm_result2, src_reg); \
-  __ opc(xmm_result3, src_reg); \
+  __ opc(xmm_result3, src_reg);
 
     for (int k = 0; k < 3; ++k) {
       __ BIND(L_multiBlock_loopTopHead[k]);
@@ -3446,7 +3426,7 @@ class StubGenerator: public StubCodeGenerator {
       inc_counter(rbx, xmm_result2, 0x02, L__incCounter[k][1]);
       inc_counter(rbx, xmm_result3, 0x03, L__incCounter[k][2]);
       inc_counter(rbx, xmm_result4, 0x04, L__incCounter[k][3]);
-      inc_counter(rbx, xmm_result5,  0x05, L__incCounter[k][4]);
+      inc_counter(rbx, xmm_result5, 0x05, L__incCounter[k][4]);
       inc_counter(rbx, xmm_curr_counter, 0x06, L__incCounter[k][5]);
       CTR_DoSix(pshufb, xmm_counter_shuf_mask); // after increased, shuffled counters back for PXOR
       CTR_DoSix(pxor, xmm_key_tmp0);   //PXOR with Round 0 key

@@ -131,8 +131,7 @@ static inline u_int64_t pick64(u_int64_t val, int hi = 31, int lo = 0)
 }
 
 // pick bits [hi,...,lo] from val and shift to [(hi-(newlo - lo)),newlo]
-static inline u_int32_t pickshift32(u_int32_t val, int hi = 31,
-                                    int lo = 0, int newlo = 0)
+static inline u_int32_t pickshift32(u_int32_t val, int hi = 31, int lo = 0, int newlo = 0)
 {
   u_int32_t bits = pick32(val, hi, lo);
   if (lo < newlo) {

@@ -543,7 +543,7 @@ jint universe_init() {
   }
 
   // Create memory for metadata.  Must be after initializing heap for
-  // DumpSharedSpaces.
+  // false.
   ClassLoaderData::init_null_class_loader_data();
 
   // We have a heap so create the Method* caches before
@@ -867,13 +867,7 @@ void Universe::print_on(outputStream* st) {
   heap()->print_on(st);
 }
 
-void Universe::print_heap_at_SIGBREAK() {
-  if (PrintHeapAtSIGBREAK) {
-    print_on(tty);
-    tty->cr();
-    tty->flush();
-  }
-}
+void Universe::print_heap_at_SIGBREAK() { }
 
 void Universe::print_heap_before_gc() {
   LogTarget(Debug, gc, heap) lt;

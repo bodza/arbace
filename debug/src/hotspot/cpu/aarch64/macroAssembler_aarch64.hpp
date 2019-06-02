@@ -643,43 +643,16 @@ public:
   // They make sure that the stack linkage is setup correctly. call_VM's correspond
   // to ENTRY/ENTRY_X entry points while call_VM_leaf's correspond to LEAF entry points.
 
-  void call_VM(Register oop_result,
-               address entry_point,
-               bool check_exceptions = true);
-  void call_VM(Register oop_result,
-               address entry_point,
-               Register arg_1,
-               bool check_exceptions = true);
-  void call_VM(Register oop_result,
-               address entry_point,
-               Register arg_1, Register arg_2,
-               bool check_exceptions = true);
-  void call_VM(Register oop_result,
-               address entry_point,
-               Register arg_1, Register arg_2, Register arg_3,
-               bool check_exceptions = true);
+  void call_VM(Register oop_result, address entry_point, bool check_exceptions = true);
+  void call_VM(Register oop_result, address entry_point, Register arg_1, bool check_exceptions = true);
+  void call_VM(Register oop_result, address entry_point, Register arg_1, Register arg_2, bool check_exceptions = true);
+  void call_VM(Register oop_result, address entry_point, Register arg_1, Register arg_2, Register arg_3, bool check_exceptions = true);
 
   // Overloadings with last_Java_sp
-  void call_VM(Register oop_result,
-               Register last_java_sp,
-               address entry_point,
-               int number_of_arguments = 0,
-               bool check_exceptions = true);
-  void call_VM(Register oop_result,
-               Register last_java_sp,
-               address entry_point,
-               Register arg_1, bool
-               check_exceptions = true);
-  void call_VM(Register oop_result,
-               Register last_java_sp,
-               address entry_point,
-               Register arg_1, Register arg_2,
-               bool check_exceptions = true);
-  void call_VM(Register oop_result,
-               Register last_java_sp,
-               address entry_point,
-               Register arg_1, Register arg_2, Register arg_3,
-               bool check_exceptions = true);
+  void call_VM(Register oop_result, Register last_java_sp, address entry_point, int number_of_arguments = 0, bool check_exceptions = true);
+  void call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1, bool check_exceptions = true);
+  void call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1, Register arg_2, bool check_exceptions = true);
+  void call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1, Register arg_2, Register arg_3, bool check_exceptions = true);
 
   void get_vm_result  (Register oop_result, Register thread);
   void get_vm_result_2(Register metadata_result, Register thread);
@@ -692,14 +665,10 @@ public:
   void super_call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1, Register arg_2, Register arg_3, bool check_exceptions = true);
   void super_call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1, Register arg_2, Register arg_3, Register arg_4, bool check_exceptions = true);
 
-  void call_VM_leaf(address entry_point,
-                    int number_of_arguments = 0);
-  void call_VM_leaf(address entry_point,
-                    Register arg_1);
-  void call_VM_leaf(address entry_point,
-                    Register arg_1, Register arg_2);
-  void call_VM_leaf(address entry_point,
-                    Register arg_1, Register arg_2, Register arg_3);
+  void call_VM_leaf(address entry_point, int number_of_arguments = 0);
+  void call_VM_leaf(address entry_point, Register arg_1);
+  void call_VM_leaf(address entry_point, Register arg_1, Register arg_2);
+  void call_VM_leaf(address entry_point, Register arg_1, Register arg_2, Register arg_3);
 
   // These always tightly bind to MacroAssembler::call_VM_leaf_base
   // bypassing the virtual implementation
@@ -1304,24 +1273,6 @@ public:
       spill(tmp1, true, dst_offset+8);
     }
   }
-};
-
-/**
- * class SkipIfEqual:
- *
- * Instantiating this class will result in assembly code being output that will
- * jump around any code emitted between the creation of the instance and it's
- * automatic destruction at the end of a scope block, depending on the value of
- * the flag passed to the constructor, which will be checked at run-time.
- */
-class SkipIfEqual {
- private:
-  MacroAssembler* _masm;
-  Label _label;
-
- public:
-   SkipIfEqual(MacroAssembler*, const bool* flag_addr, bool value);
-   ~SkipIfEqual();
 };
 
 struct tableswitch {

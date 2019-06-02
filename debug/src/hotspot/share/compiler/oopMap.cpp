@@ -522,11 +522,6 @@ intptr_t value_of_loc(oop *pointer) { return cast_from_oop<intptr_t>((*pointer))
 void DerivedPointerTable::add(oop *derived_loc, oop *base_loc) {
   if (_active) {
     intptr_t offset = value_of_loc(derived_loc) - value_of_loc(base_loc);
-    if (TraceDerivedPointers) {
-      tty->print_cr("Add derived pointer@" INTPTR_FORMAT " - Derived: " INTPTR_FORMAT " Base: " INTPTR_FORMAT " (@" INTPTR_FORMAT ") (Offset: " INTX_FORMAT ")",
-        p2i(derived_loc), p2i((address)*derived_loc), p2i((address)*base_loc), p2i(base_loc), offset
-      );
-    }
     // Set derived oop location to point to base.
     *derived_loc = (oop)base_loc;
     DerivedPointerEntry *entry = new DerivedPointerEntry(derived_loc, offset);
@@ -544,19 +539,11 @@ void DerivedPointerTable::update_pointers() {
 
     *derived_loc = (oop)(((address)base) + offset);
 
-    if (TraceDerivedPointers) {
-      tty->print_cr("Updating derived pointer@" INTPTR_FORMAT " - Derived: " INTPTR_FORMAT "  Base: " INTPTR_FORMAT " (Offset: " INTX_FORMAT ")",
-          p2i(derived_loc), p2i((address)*derived_loc), p2i((address)base), offset);
-    }
-
     // Delete entry
     delete entry;
     _list->at_put(i, NULL);
   }
   // Clear list, so it is ready for next traversal (this is an invariant)
-  if (TraceDerivedPointers && !_list->is_empty()) {
-    tty->print_cr("--------------------------");
-  }
   _list->clear();
   _active = false;
 }

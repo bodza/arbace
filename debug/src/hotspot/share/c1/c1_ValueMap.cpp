@@ -118,7 +118,7 @@ Value ValueMap::find_insert(Value x) {
         prev_entry = entry; \
       } \
     } \
-  } \
+  }
 
 #define MUST_KILL_MEMORY(must_kill, entry, value) \
   bool must_kill = value->as_LoadField() != NULL || value->as_LoadIndexed() != NULL;

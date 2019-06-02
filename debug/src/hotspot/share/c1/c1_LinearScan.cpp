@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "c1/c1_CFGPrinter.hpp"
 #include "c1/c1_CodeStubs.hpp"
 #include "c1/c1_Compilation.hpp"
 #include "c1/c1_FrameMap.hpp"
@@ -16,7 +15,7 @@
 #define TRACE_LINEAR_SCAN(level, code)
 
 // Map BasicType to spill size in 32-bit words, matching VMReg's notion of words
-static int type2spill_size[T_CONFLICT+1]={ -1, 0, 0, 0, 1, 1, 1, 2, 1, 1, 1, 2, 2, 2, 0, 2,  1, 2, 1, -1};
+static int type2spill_size[T_CONFLICT+1]={ -1, 0, 0, 0, 1, 1, 1, 2, 1, 1, 1, 2, 2, 2, 0, 2, 1, 2, 1, -1};
 
 // Implementation of LinearScan
 

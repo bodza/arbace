@@ -25,7 +25,6 @@
 #include "runtime/reflection.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/sweeper.hpp"
-#include "utilities/dtrace.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
 
@@ -383,13 +382,6 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
     // Encode the dependencies now, so we can check them right away.
     dependencies->encode_content_bytes();
 
-    // Record the dependencies for the current compile in the log
-    if (LogCompilation) {
-      for (Dependencies::DepStream deps(dependencies); deps.next(); ) {
-        deps.log_dependency();
-      }
-    }
-
     // Check for {class loads, evolution, breakpoints} during compilation
     result = validate_compile_task_dependencies(dependencies, compiled_code, env, &failure_detail);
     if (result != JVMCIEnv::ok) {
@@ -442,30 +434,13 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
             if (TieredCompilation) {
               // If there is an old version we're done with it
               CompiledMethod* old = method->code();
-              if (TraceMethodReplacement && old != NULL) {
-                ResourceMark rm;
-                char *method_name = method->name_and_sig_as_C_string();
-                tty->print_cr("Replacing method %s", method_name);
-              }
               if (old != NULL ) {
                 old->make_not_entrant();
               }
             }
-            if (TraceNMethodInstalls) {
-              ResourceMark rm;
-              char *method_name = method->name_and_sig_as_C_string();
-              ttyLocker ttyl;
-              tty->print_cr("Installing method (%d) %s [entry point: %p]", comp_level, method_name, nm->entry_point());
-            }
             // Allow the code to be executed
             method->set_code(method, nm);
           } else {
-            if (TraceNMethodInstalls ) {
-              ResourceMark rm;
-              char *method_name = method->name_and_sig_as_C_string();
-              ttyLocker ttyl;
-              tty->print_cr("Installing osr method (%d) %s @ %d", comp_level, method_name, entry_bci);
-            }
             InstanceKlass::cast(method->method_holder())->add_osr_nmethod(nm);
           }
         }

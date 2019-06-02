@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "classfile/systemDictionary.hpp"
-#include "gc/shared/allocTracer.hpp"
 #include "gc/shared/barrierSet.hpp"
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
@@ -22,7 +21,6 @@
 #include "runtime/thread.inline.hpp"
 #include "runtime/threadSMR.hpp"
 #include "runtime/vmThread.hpp"
-#include "services/heapDumper.hpp"
 #include "utilities/align.hpp"
 #include "utilities/copy.hpp"
 
@@ -165,16 +163,10 @@ CollectedHeap::CollectedHeap() :
 
     // create the gc cause jvmstat counters
     _perf_gc_cause = PerfDataManager::create_string_variable(SUN_GC, "cause", 80, GCCause::to_string(_gc_cause), CHECK);
-
     _perf_gc_lastcause = PerfDataManager::create_string_variable(SUN_GC, "lastCause", 80, GCCause::to_string(_gc_lastcause), CHECK);
   }
 
-  // Create the ring log
-  if (LogEvents) {
-    _gc_heap_log = new GCHeapLog();
-  } else {
-    _gc_heap_log = NULL;
-  }
+  _gc_heap_log = NULL;
 }
 
 // This interface assumes that it's being called by the
@@ -230,9 +222,6 @@ MetaWord* CollectedHeap::satisfy_failed_metadata_allocation(ClassLoaderData* loa
         // to the next iteration to get a full GC.
         continue;
       } else {
-        if (CheckJNICalls) {
-          fatal("Possible deadlock due to allocating while in jni critical section");
-        }
         return NULL;
       }
     }
@@ -244,12 +233,7 @@ MetaWord* CollectedHeap::satisfy_failed_metadata_allocation(ClassLoaderData* loa
     }
 
     // Generate a VM operation
-    VM_CollectForMetadataAllocation op(loader_data,
-                                       word_size,
-                                       mdtype,
-                                       gc_count,
-                                       full_gc_count,
-                                       GCCause::_metadata_GC_threshold);
+    VM_CollectForMetadataAllocation op(loader_data, word_size, mdtype, gc_count, full_gc_count, GCCause::_metadata_GC_threshold);
     VMThread::execute(&op);
 
     // If GC was locked out, try again. Check before checking success because the
@@ -374,24 +358,17 @@ void CollectedHeap::ensure_parsability(bool retire_tlabs) {
 
 void CollectedHeap::accumulate_statistics_all_tlabs() {
   if (UseTLAB) {
-
     ThreadLocalAllocBuffer::accumulate_statistics_before_gc();
   }
 }
 
 void CollectedHeap::resize_all_tlabs() {
   if (UseTLAB) {
-
     ThreadLocalAllocBuffer::resize_all_tlabs();
   }
 }
 
 void CollectedHeap::full_gc_dump(GCTimer* timer, bool before) {
-  if ((HeapDumpBeforeFullGC && before) || (HeapDumpAfterFullGC && !before)) {
-    GCTraceTime(Info, gc) tm(before ? "Heap Dump (before full gc)" : "Heap Dump (after full gc)", timer);
-    HeapDumper::dump_heap();
-  }
-
   LogTarget(Trace, gc, classhisto) lt;
   if (lt.is_enabled()) {
     GCTraceTime(Trace, gc, classhisto) tm(before ? "Class Histogram (before full gc)" : "Class Histogram (after full gc)", timer);

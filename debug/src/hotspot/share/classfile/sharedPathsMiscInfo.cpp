@@ -105,9 +105,7 @@ bool SharedPathsMiscInfo::check() {
       ls.cr();
     }
     if (!check(type, path)) {
-      if (!PrintSharedArchiveAndExit) {
-        return false;
-      }
+      return false;
     } else {
       ClassLoader::trace_class_path("ok");
     }

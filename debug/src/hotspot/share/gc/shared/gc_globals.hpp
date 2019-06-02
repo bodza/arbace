@@ -85,20 +85,16 @@
  \
   product(bool, UseDynamicNumberOfGCThreads, true, \
           "Dynamically choose the number of threads up to a maximum of " \
-          "ParallelGCThreads parallel collectors will use for garbage " \
-          "collection work") \
+          "ParallelGCThreads parallel collectors will use for garbage collection work") \
  \
   diagnostic(bool, InjectGCWorkerCreationFailure, false, \
-             "Inject thread creation failures for " \
-             "UseDynamicNumberOfGCThreads") \
+             "Inject thread creation failures for UseDynamicNumberOfGCThreads") \
  \
   diagnostic(bool, ForceDynamicNumberOfGCThreads, false, \
-          "Force dynamic selection of the number of " \
-          "parallel threads parallel gc will use to aid debugging") \
+          "Force dynamic selection of the number of parallel threads parallel gc will use to aid debugging") \
  \
   product(size_t, HeapSizePerGCThread, ScaleForWordSize(32*M), \
-          "Size of heap (bytes) per GC thread used in calculating the " \
-          "number of GC threads") \
+          "Size of heap (bytes) per GC thread used in calculating the number of GC threads") \
           range((size_t)os::vm_page_size(), (size_t)max_uintx) \
  \
   product(uint, ConcGCThreads, 0, \
@@ -113,8 +109,7 @@
           "Always tenure objects in eden (ParallelGC only)") \
  \
   product(bool, NeverTenure, false, \
-          "Never tenure objects in eden, may tenure on overflow " \
-          "(ParallelGC only)") \
+          "Never tenure objects in eden, may tenure on overflow (ParallelGC only)") \
  \
   product(bool, ScavengeBeforeFullGC, true, \
           "Scavenge youngest generation before each full GC.") \
@@ -128,13 +123,11 @@
           "also kicks off a background concurrent collection") \
  \
   product(uintx, GCLockerEdenExpansionPercent, 5, \
-          "How much the GC can expand the eden by while the GC locker " \
-          "is active (as a percentage)") \
+          "How much the GC can expand the eden by while the GC locker is active (as a percentage)") \
           range(0, 100) \
  \
   diagnostic(uintx, GCLockerRetryAllocationCount, 2, \
-          "Number of times to retry allocations when " \
-          "blocked by the GC locker") \
+          "Number of times to retry allocations when blocked by the GC locker") \
           range(0, max_uintx) \
  \
   product(uintx, ParallelGCBufferWastePct, 10, \
@@ -142,8 +135,7 @@
           range(0, 100) \
  \
   product(uintx, TargetPLABWastePct, 10, \
-          "Target wasted space in last buffer as percent of overall " \
-          "allocation") \
+          "Target wasted space in last buffer as percent of overall allocation") \
           range(1, 100) \
  \
   product(uintx, PLABWeight, 75, \
@@ -155,14 +147,12 @@
           "Dynamically resize (survivor space) promotion LAB's") \
  \
   product(int, ParGCArrayScanChunk, 50, \
-          "Scan a subset of object array and push remainder, if array is " \
-          "bigger than this") \
+          "Scan a subset of object array and push remainder, if array is bigger than this") \
           range(1, max_jint/3) \
  \
   product(uintx, OldPLABWeight, 50, \
           "Percentage (0-100) used to weight the current sample when " \
-          "computing exponentially decaying average for resizing " \
-          "OldPLABSize") \
+          "computing exponentially decaying average for resizing OldPLABSize") \
           range(0, 100) \
  \
   product(bool, ResizeOldPLAB, true, \
@@ -204,10 +194,8 @@
           "Enable balancing of reference processing queues") \
  \
   experimental(size_t, ReferencesPerThread, 1000, \
-               "Ergonomically start one thread for this amount of " \
-               "references for reference processing if " \
-               "ParallelRefProcEnabled is true. Specify 0 to disable and " \
-               "use all threads.") \
+               "Ergonomically start one thread for this amount of references for reference processing if " \
+               "ParallelRefProcEnabled is true. Specify 0 to disable and use all threads.") \
  \
   product(uintx, InitiatingHeapOccupancyPercent, 45, \
           "The percent occupancy (IHOP) of the current old generation " \
@@ -233,8 +221,7 @@
           "Enforce ScavengeALot/GCALot at all potential safepoints") \
  \
   notproduct(bool, PromotionFailureALot, false, \
-          "Use promotion failure handling on every youngest generation " \
-          "collection") \
+          "Use promotion failure handling on every youngest generation collection") \
  \
   develop(uintx, PromotionFailureALotCount, 1000, \
           "Number of promotion failures occurring at PLAB " \
@@ -251,8 +238,7 @@
           "Number of yields before a sleep is done during work stealing") \
  \
   experimental(uintx, WorkStealingHardSpins, 4096, \
-          "Number of iterations in a spin loop between checks on " \
-          "time out of hard spin") \
+          "Number of iterations in a spin loop between checks on time out of hard spin") \
  \
   experimental(uintx, WorkStealingSpinToYieldRatio, 10, \
           "Ratio of hard spins to calls to yield") \
@@ -302,13 +288,11 @@
           "Optimize heap options for long-running memory intensive apps") \
  \
   product(size_t, ErgoHeapSizeLimit, 0, \
-          "Maximum ergonomically set heap size (in bytes); zero means use " \
-          "MaxRAM * MaxRAMPercentage / 100") \
+          "Maximum ergonomically set heap size (in bytes); zero means use MaxRAM * MaxRAMPercentage / 100") \
           range(0, max_uintx) \
  \
   product(uintx, MaxRAMFraction, 4, \
-          "Maximum fraction (1/n) of real memory used for maximum heap " \
-          "size. " \
+          "Maximum fraction (1/n) of real memory used for maximum heap size. " \
           "Deprecated, use MaxRAMPercentage instead") \
           range(1, max_uintx) \
  \
@@ -387,7 +371,7 @@
           "Weight given to exponential resizing, between 0 and 100") \
           range(0, 100) \
  \
-  product(uintx, AdaptiveTimeWeight,       25, \
+  product(uintx, AdaptiveTimeWeight, 25, \
           "Weight given to time in adaptive policy, between 0 and 100") \
           range(0, 100) \
  \
@@ -408,8 +392,7 @@
           range(0, 100) \
  \
   product(uintx, AdaptiveSizePolicyCollectionCostMargin, 50, \
-          "If collection costs are within margin, reduce both by full " \
-          "delta") \
+          "If collection costs are within margin, reduce both by full delta") \
           range(0, 100) \
  \
   product(uintx, YoungGenerationSizeIncrement, 20, \
@@ -447,8 +430,7 @@
           constraint(GCPauseIntervalMillisConstraintFunc,AfterErgo) \
  \
   product(uintx, MaxGCMinorPauseMillis, max_uintx, \
-          "Adaptive size policy maximum GC minor pause time goal " \
-          "in millisecond") \
+          "Adaptive size policy maximum GC minor pause time goal in millisecond") \
           range(0, max_uintx) \
  \
   product(uintx, GCTimeRatio, 99, \
@@ -479,17 +461,14 @@
           range(0, max_uintx) \
  \
   product(bool, UseGCOverheadLimit, true, \
-          "Use policy to limit of proportion of time spent in GC " \
-          "before an OutOfMemory error is thrown") \
+          "Use policy to limit of proportion of time spent in GC before an OutOfMemory error is thrown") \
  \
   product(uintx, GCTimeLimit, 98, \
-          "Limit of the proportion of time spent in GC before " \
-          "an OutOfMemoryError is thrown (used with GCHeapFreeLimit)") \
+          "Limit of the proportion of time spent in GC before an OutOfMemoryError is thrown (used with GCHeapFreeLimit)") \
           range(0, 100) \
  \
   product(uintx, GCHeapFreeLimit, 2, \
-          "Minimum percentage of free space after a full GC before an " \
-          "OutOfMemoryError is thrown (used with GCTimeLimit)") \
+          "Minimum percentage of free space after a full GC before an OutOfMemoryError is thrown (used with GCTimeLimit)") \
           range(0, 100) \
  \
   develop(uintx, AdaptiveSizePolicyGCTimeLimitThreshold, 5, \
@@ -509,8 +488,7 @@
           range(-1, max_jint) \
  \
   diagnostic(bool, VerifyDuringStartup, false, \
-          "Verify memory system before executing any Java code " \
-          "during VM initialization") \
+          "Verify memory system before executing any Java code during VM initialization") \
  \
   diagnostic(bool, VerifyBeforeExit, trueInDebug, \
           "Verify system before exiting") \
@@ -540,8 +518,7 @@
           "Enable parallel memory system verification") \
  \
   diagnostic(bool, DeferInitialCardMark, false, \
-          "When +ReduceInitialCardMarks, explicitly defer any that " \
-          "may arise from new_pre_store_barrier") \
+          "When +ReduceInitialCardMarks, explicitly defer any that may arise from new_pre_store_barrier") \
  \
   product(bool, UseCondCardMark, false, \
           "Check for already marked card before updating card table") \
@@ -570,22 +547,20 @@
           "Deprecated, use -Xlog:gc* instead.") \
  \
   develop(intx, ConcGCYieldTimeout, 0, \
-          "If non-zero, assert that GC threads yield within this " \
-          "number of milliseconds") \
+          "If non-zero, assert that GC threads yield within this number of milliseconds") \
           range(0, max_intx) \
  \
-  notproduct(intx, ScavengeALotInterval,     1, \
+  notproduct(intx, ScavengeALotInterval, 1, \
           "Interval between which scavenge will occur with +ScavengeALot") \
  \
-  notproduct(intx, FullGCALotInterval,     1, \
+  notproduct(intx, FullGCALotInterval, 1, \
           "Interval between which full gc will occur with +FullGCALot") \
  \
-  notproduct(intx, FullGCALotStart,     0, \
+  notproduct(intx, FullGCALotStart, 0, \
           "For which invocation to start FullGCAlot") \
  \
-  notproduct(intx, FullGCALotDummies,  32*K, \
-          "Dummy object allocated with +FullGCALot, forcing all objects " \
-          "to move") \
+  notproduct(intx, FullGCALotDummies, 32*K, \
+          "Dummy object allocated with +FullGCALot, forcing all objects to move") \
  \
   /* gc parameters */ \
   product(size_t, InitialHeapSize, 0, \
@@ -605,8 +580,7 @@
           constraint(NewSizeConstraintFunc,AfterErgo) \
  \
   product(size_t, MaxNewSize, max_uintx, \
-          "Maximum new generation size (in bytes), max_uintx means set " \
-          "ergonomically") \
+          "Maximum new generation size (in bytes), max_uintx means set ergonomically") \
           range(0, max_uintx) \
  \
   product_pd(size_t, HeapBaseMinAddress, \
@@ -614,8 +588,7 @@
           constraint(HeapBaseMinAddressConstraintFunc,AfterErgo) \
  \
   product(size_t, PretenureSizeThreshold, 0, \
-          "Maximum size in bytes of objects allocated in DefNew " \
-          "generation; zero means no maximum") \
+          "Maximum size in bytes of objects allocated in DefNew generation; zero means no maximum") \
           range(0, max_uintx) \
  \
   product(size_t, MinTLABSize, 2*K, \
@@ -632,8 +605,7 @@
           constraint(YoungPLABSizeConstraintFunc,AfterMemoryInit) \
  \
   product(size_t, OldPLABSize, 1024, \
-          "Size of old gen promotion LAB's (in HeapWords), or Number " \
-          "of blocks to attempt to claim when refilling CMS LAB's") \
+          "Size of old gen promotion LAB's (in HeapWords), or Number of blocks to attempt to claim when refilling CMS LAB's") \
           constraint(OldPLABSizeConstraintFunc,AfterMemoryInit) \
  \
   product(uintx, TLABAllocationWeight, 35, \
@@ -646,11 +618,11 @@
           "Percentage of Eden that can be wasted") \
           range(1, 100) \
  \
-  product(uintx, TLABRefillWasteFraction,    64, \
+  product(uintx, TLABRefillWasteFraction, 64, \
           "Maximum TLAB waste at a refill (internal fragmentation)") \
           range(1, max_juint) \
  \
-  product(uintx, TLABWasteIncrement,    4, \
+  product(uintx, TLABWasteIncrement, 4, \
           "Increment allowed waste at slow allocation") \
           range(0, max_jint) \
           constraint(TLABWasteIncrementConstraintFunc,AfterMemoryInit) \
@@ -665,41 +637,38 @@
           range(0, max_uintx-1) \
  \
   product_pd(size_t, NewSizeThreadIncrease, \
-          "Additional size added to desired new generation size per " \
-          "non-daemon thread (in bytes)") \
+          "Additional size added to desired new generation size per non-daemon thread (in bytes)") \
           range(0, max_uintx) \
  \
   product(uintx, QueuedAllocationWarningCount, 0, \
-          "Number of times an allocation that queues behind a GC " \
-          "will retry before printing a warning") \
+          "Number of times an allocation that queues behind a GC will retry before printing a warning") \
           range(0, max_uintx) \
  \
-  diagnostic(uintx, VerifyGCStartAt,   0, \
+  diagnostic(uintx, VerifyGCStartAt, 0, \
           "GC invoke count where +VerifyBefore/AfterGC kicks in") \
           range(0, max_uintx) \
  \
-  diagnostic(intx, VerifyGCLevel,     0, \
+  diagnostic(intx, VerifyGCLevel, 0, \
           "Generation level at which to start +VerifyBefore/AfterGC") \
           range(0, 1) \
  \
-  product(uintx, MaxTenuringThreshold,    15, \
+  product(uintx, MaxTenuringThreshold, 15, \
           "Maximum value for tenuring threshold") \
           range(0, markOopDesc::max_age + 1) \
           constraint(MaxTenuringThresholdConstraintFunc,AfterErgo) \
  \
-  product(uintx, InitialTenuringThreshold,    7, \
+  product(uintx, InitialTenuringThreshold, 7, \
           "Initial value for tenuring threshold") \
           range(0, markOopDesc::max_age + 1) \
           constraint(InitialTenuringThresholdConstraintFunc,AfterErgo) \
  \
-  product(uintx, TargetSurvivorRatio,    50, \
+  product(uintx, TargetSurvivorRatio, 50, \
           "Desired percentage of survivor space used after scavenge") \
           range(0, 100) \
  \
-  product(uintx, MarkSweepDeadRatio,     5, \
+  product(uintx, MarkSweepDeadRatio, 5, \
           "Percentage (0-100) of the old gen allowed as dead wood. " \
-          "Serial mark sweep treats this as both the minimum and maximum " \
-          "value. " \
+          "Serial mark sweep treats this as both the minimum and maximum value. " \
           "CMS uses this value only if it falls back to mark sweep. " \
           "Par compact uses a variable scale based on the density of the " \
           "generation and treats this as the maximum value when the heap " \
@@ -707,17 +676,15 @@
           "also has a smaller default value; see arguments.cpp.") \
           range(0, 100) \
  \
-  product(uint, MarkSweepAlwaysCompactCount,     4, \
-          "How often should we fully compact the heap (ignoring the dead " \
-          "space parameters)") \
+  product(uint, MarkSweepAlwaysCompactCount, 4, \
+          "How often should we fully compact the heap (ignoring the dead space parameters)") \
           range(1, max_juint) \
  \
   develop(uintx, GCExpandToAllocateDelayMillis, 0, \
           "Delay between expansion and allocation (in milliseconds)") \
  \
   product(uintx, GCDrainStackTargetSize, 64, \
-          "Number of entries we will try to leave on the stack " \
-          "during parallel gc") \
+          "Number of entries we will try to leave on the stack during parallel gc") \
           range(0, max_juint)
 
 #endif

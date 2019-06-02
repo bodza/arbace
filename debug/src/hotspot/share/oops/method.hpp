@@ -83,12 +83,7 @@ class Method : public Metadata {
   Method(ConstMethod* xconst, AccessFlags access_flags);
  public:
 
-  static Method* allocate(ClassLoaderData* loader_data,
-                          int byte_code_size,
-                          AccessFlags access_flags,
-                          InlineTableSizes* sizes,
-                          ConstMethod::MethodType method_type,
-                          TRAPS);
+  static Method* allocate(ClassLoaderData* loader_data, int byte_code_size, AccessFlags access_flags, InlineTableSizes* sizes, ConstMethod::MethodType method_type, TRAPS);
 
   // CDS and vtbl checking can create an empty Method to get vtbl pointer.
   Method() { }
@@ -295,7 +290,7 @@ class Method : public Metadata {
     return (mcs == NULL) ? 0 : mcs->increment_interpreter_invocation_count();
   }
 
-  // for PrintMethodData in a product build
+  // for false in a product build
   int  compiled_invocation_count() const         { return 0; }
 
   // Clear (non-shared space) pointers which could not be relevant
@@ -621,8 +616,7 @@ class Method : public Metadata {
   void set_is_prefixed_native()                     { _access_flags.set_is_prefixed_native(); }
 
   // Rewriting support
-  static methodHandle clone_with_new_data(const methodHandle& m, u_char* new_code, int new_code_length,
-                                          u_char* new_compressed_linenumber_table, int new_compressed_linenumber_size, TRAPS);
+  static methodHandle clone_with_new_data(const methodHandle& m, u_char* new_code, int new_code_length, u_char* new_compressed_linenumber_table, int new_compressed_linenumber_size, TRAPS);
 
   // jmethodID handling
   // Because the useful life-span of a jmethodID cannot be determined,

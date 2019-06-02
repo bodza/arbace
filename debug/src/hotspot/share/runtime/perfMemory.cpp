@@ -81,18 +81,11 @@ void PerfMemory::initialize() {
     // on the C heap. When running in this mode, external monitoring
     // clients cannot attach to and monitor this JVM.
     //
-    // the warning is issued only in debug mode in order to avoid
-    // additional output to the stdout or stderr output streams.
-    //
-    if (PrintMiscellaneous && Verbose) {
-      warning("Could not create PerfData Memory region, reverting to malloc");
-    }
-
     _prologue = NEW_C_HEAP_OBJ(PerfDataPrologue, mtInternal);
   } else {
 
     // the PerfMemory region was created as expected.
-
+    //
     _prologue = (PerfDataPrologue *)_start;
     _end = _start + _capacity;
     _top = _start + sizeof(PerfDataPrologue);
@@ -122,29 +115,6 @@ void PerfMemory::initialize() {
 void PerfMemory::destroy() {
 
   if (!is_usable()) return;
-
-  if (_start != NULL && _prologue->overflow != 0) {
-
-    // This state indicates that the contiguous memory region exists and
-    // that it wasn't large enough to hold all the counters. In this case,
-    // we output a warning message to the user on exit if the -XX:+Verbose
-    // flag is set (a debug only flag). External monitoring tools can detect
-    // this condition by monitoring the _prologue->overflow word.
-    //
-    // There are two tunables that can help resolve this issue:
-    //   - increase the size of the PerfMemory with -XX:PerfDataMemorySize=<n>
-    //   - decrease the maximum string constant length with
-    //     -XX:PerfMaxStringConstLength=<n>
-    //
-    if (PrintMiscellaneous && Verbose) {
-      warning("PerfMemory Overflow Occurred.\n"
-              "\tCapacity = " SIZE_FORMAT " bytes  Used = " SIZE_FORMAT " bytes  Overflow = " INT32_FORMAT " bytes\n"
-              "\tUse -XX:PerfDataMemorySize=<size> to specify larger size.",
-              PerfMemory::capacity(),
-              PerfMemory::used(),
-              _prologue->overflow);
-    }
-  }
 
   if (_start != NULL) {
 
@@ -196,26 +166,9 @@ void PerfMemory::mark_updated() {
 // Caller is expected to release the allocated memory.
 char* PerfMemory::get_perfdata_file_path() {
   char* dest_file = NULL;
-
-  if (PerfDataSaveFile != NULL) {
-    // dest_file_name stores the validated file name if file_name
-    // contains %p which will be replaced by pid.
-    dest_file = NEW_C_HEAP_ARRAY(char, JVM_MAXPATHLEN, mtInternal);
-    if (!Arguments::copy_expand_pid(PerfDataSaveFile, strlen(PerfDataSaveFile),
-                                   dest_file, JVM_MAXPATHLEN)) {
-      FREE_C_HEAP_ARRAY(char, dest_file);
-      if (PrintMiscellaneous && Verbose) {
-        warning("Invalid performance data file path name specified, " \
-                "fall back to a default name");
-      }
-    } else {
-      return dest_file;
-    }
-  }
   // create the name of the file for retaining the instrumentation memory.
   dest_file = NEW_C_HEAP_ARRAY(char, PERFDATA_FILENAME_LEN, mtInternal);
-  jio_snprintf(dest_file, PERFDATA_FILENAME_LEN,
-               "%s_%d", PERFDATA_NAME, os::current_process_id());
+  jio_snprintf(dest_file, PERFDATA_FILENAME_LEN, "%s_%d", PERFDATA_NAME, os::current_process_id());
 
   return dest_file;
 }

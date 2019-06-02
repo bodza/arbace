@@ -331,9 +331,7 @@ public:
   }
 
   template <typename T>
-  static bool arraycopy(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
-                        arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw,
-                        size_t length);
+  static bool arraycopy(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw, arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw, size_t length);
 
   template <typename T>
   static void oop_store(void* addr, T value);
@@ -376,9 +374,7 @@ public:
   }
 
   template <typename T>
-  static bool oop_arraycopy(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
-                            arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw,
-                            size_t length);
+  static bool oop_arraycopy(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw, arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw, size_t length);
 
   static void clone(oop src, oop dst, size_t size);
 
@@ -541,16 +537,10 @@ namespace AccessInternal {
     typedef typename AccessFunction<decorators, T, BARRIER_ARRAYCOPY>::type func_t;
     static func_t _arraycopy_func;
 
-    static bool arraycopy_init(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
-                               arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw,
-                               size_t length);
+    static bool arraycopy_init(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw, arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw, size_t length);
 
-    static inline bool arraycopy(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
-                                 arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw,
-                                 size_t length) {
-      return _arraycopy_func(src_obj, src_offset_in_bytes, src_raw,
-                             dst_obj, dst_offset_in_bytes, dst_raw,
-                             length);
+    static inline bool arraycopy(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw, arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw, size_t length) {
+      return _arraycopy_func(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
     }
   };
 

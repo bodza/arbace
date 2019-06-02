@@ -72,9 +72,7 @@ class VtableStubs : AllStatic {
                                  address npe_addr, address ame_addr,   bool is_vtable_stub,
                                  int     index,    int     slop_bytes, int  index_dependent_slop);
   static int         code_size_limit(bool is_vtable_stub);
-  static void        check_and_set_size_limit(bool is_vtable_stub,
-                                              int   code_size,
-                                              int   padding);
+  static void        check_and_set_size_limit(bool is_vtable_stub, int   code_size, int   padding);
 
  public:
   static address     find_vtable_stub(int vtable_index) { return find_stub(true,  vtable_index); }

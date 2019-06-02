@@ -276,8 +276,7 @@ public:
   }
 
   // main method to invoke the framework
-  static void parse_and_execute(DCmdSource source, outputStream* out, const char* cmdline,
-                                char delim, TRAPS);
+  static void parse_and_execute(DCmdSource source, outputStream* out, const char* cmdline, char delim, TRAPS);
 };
 
 class DCmdWithParser : public DCmd {

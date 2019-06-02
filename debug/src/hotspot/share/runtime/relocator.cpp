@@ -123,33 +123,16 @@ methodHandle Relocator::insert_space_at(int bci, int size, u_char inst_buffer[],
   _changes = new GrowableArray<ChangeItem*> (10);
   _changes->push(new ChangeWiden(bci, size, inst_buffer));
 
-  if (TraceRelocator) {
-    tty->print_cr("Space at: %d Size: %d", bci, size);
-    _method->print();
-    _method->print_codes();
-    tty->print_cr("-------------------------------------------------");
-  }
-
   if (!handle_code_changes()) return methodHandle();
 
     // Construct the new method
-  methodHandle new_method = Method::clone_with_new_data(method(),
-                              code_array(), code_length(),
-                              compressed_line_number_table(),
-                              compressed_line_number_table_size(),
-                              CHECK_(methodHandle()));
+  methodHandle new_method = Method::clone_with_new_data(method(), code_array(), code_length(), compressed_line_number_table(), compressed_line_number_table_size(), CHECK_(methodHandle()));
 
   // Deallocate the old Method* from metadata
   ClassLoaderData* loader_data = method()->method_holder()->class_loader_data();
   loader_data->add_to_deallocate_list(method()());
 
     set_method(new_method);
-
-  if (TraceRelocator) {
-    tty->print_cr("-------------------------------------------------");
-    tty->print_cr("new method");
-    _method->print_codes();
-  }
 
   return new_method;
 }
@@ -159,10 +142,6 @@ bool Relocator::handle_code_changes() {
   while (!_changes->is_empty()) {
     // Inv: everything is aligned.
     ChangeItem* ci = _changes->first();
-
-    if (TraceRelocator) {
-      ci->print();
-    }
 
     // Execute operation
     if (!ci->handle_code_change(this)) return false;
@@ -419,8 +398,7 @@ void Relocator::adjust_local_var_table(int bci, int delta) {
 
 // Create a new array, copying the src array but adding a hole at
 // the specified location
-static Array<u1>* insert_hole_at(ClassLoaderData* loader_data,
-    size_t where, int hole_sz, Array<u1>* src) {
+static Array<u1>* insert_hole_at(ClassLoaderData* loader_data, size_t where, int hole_sz, Array<u1>* src) {
   Thread* THREAD = Thread::current();
   Array<u1>* dst = MetadataFactory::new_array<u1>(loader_data, src->length() + hole_sz, 0, CHECK_NULL);
 

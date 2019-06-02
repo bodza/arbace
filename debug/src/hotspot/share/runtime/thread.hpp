@@ -1103,8 +1103,7 @@ class JavaThread: public Thread {
     // Warning: is_ext_suspend_completed() may temporarily drop the
     // SR_lock to allow the thread to reach a stable thread state if
     // it is currently in a transient thread state.
-    return is_ext_suspend_completed(false /* !called_by_wait */,
-                                    SuspendRetryDelay, bits);
+    return is_ext_suspend_completed(false /* !called_by_wait */, SuspendRetryDelay, bits);
   }
 
   // We cannot allow wait_for_ext_suspend_completion() to run forever or
@@ -1920,17 +1919,14 @@ class Threads: AllStatic {
     print_on(tty, print_stacks, internal_format, false /* no concurrent lock printed */, false /* simple format */);
   }
   static void print_on_error(outputStream* st, Thread* current, char* buf, int buflen);
-  static void print_on_error(Thread* this_thread, outputStream* st, Thread* current, char* buf,
-                             int buflen, bool* found_current);
+  static void print_on_error(Thread* this_thread, outputStream* st, Thread* current, char* buf, int buflen, bool* found_current);
   static void print_threads_compiling(outputStream* st, char* buf, int buflen);
 
   // Get Java threads that are waiting to enter a monitor.
-  static GrowableArray<JavaThread*>* get_pending_threads(ThreadsList * t_list,
-                                                         int count, address monitor);
+  static GrowableArray<JavaThread*>* get_pending_threads(ThreadsList * t_list, int count, address monitor);
 
   // Get owning Java thread from the monitor's owner field.
-  static JavaThread *owning_thread_from_monitor_owner(ThreadsList * t_list,
-                                                      address owner);
+  static JavaThread *owning_thread_from_monitor_owner(ThreadsList * t_list, address owner);
 
   // Number of threads on the active threads list
   static int number_of_threads()                 { return _number_of_threads; }

@@ -171,10 +171,7 @@ public:
   static Symbol* lookup_unicode(const jchar* name, int len, TRAPS);
   static Symbol* lookup_only_unicode(const jchar* name, int len, unsigned int& hash);
 
-  static void add(ClassLoaderData* loader_data,
-                  const constantPoolHandle& cp, int names_count,
-                  const char** names, int* lengths, int* cp_indices,
-                  unsigned int* hashValues, TRAPS);
+  static void add(ClassLoaderData* loader_data, const constantPoolHandle& cp, int names_count, const char** names, int* lengths, int* cp_indices, unsigned int* hashValues, TRAPS);
 
   // Release any dead symbols
   static void unlink() {

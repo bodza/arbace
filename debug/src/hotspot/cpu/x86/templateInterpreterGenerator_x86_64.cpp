@@ -19,10 +19,7 @@ address TemplateInterpreterGenerator::generate_slow_signature_handler() {
   __ mov(c_rarg3, rsp);
   // adjust rsp
   __ subptr(rsp, 14 * wordSize);
-  __ call_VM(noreg,
-             CAST_FROM_FN_PTR(address,
-                              InterpreterRuntime::slow_signature_handler),
-             rbx, r14, c_rarg3);
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::slow_signature_handler), rbx, r14, c_rarg3);
 
   // rax: result handler
 

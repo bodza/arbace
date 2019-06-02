@@ -231,8 +231,7 @@ public:
 
   // Cleans up deoptimization bits on thread after unpacking or in the
   // case of an exception.
-  static void cleanup_deopt_info(JavaThread  *thread,
-                                 vframeArray * array);
+  static void cleanup_deopt_info(JavaThread  *thread, vframeArray * array);
 
   // Restores callee saved values from deoptimized frame into oldest interpreter frame
   // so caller of the deoptimized frame will get back the values it expects.
@@ -294,8 +293,7 @@ public:
     else
       return trap_request;
   }
-  static int make_trap_request(DeoptReason reason, DeoptAction action,
-                               int index = -1) {
+  static int make_trap_request(DeoptReason reason, DeoptAction action, int index = -1) {
     int trap_request;
     if (index != -1)
       trap_request = index;
@@ -316,8 +314,7 @@ public:
   static int  trap_state_add_reason(int trap_state, int reason);
   static bool trap_state_is_recompiled(int trap_state);
   static int  trap_state_set_recompiled(int trap_state, bool z);
-  static const char* format_trap_state(char* buf, size_t buflen,
-                                       int trap_state);
+  static const char* format_trap_state(char* buf, size_t buflen, int trap_state);
 
   static bool reason_is_recorded_per_bytecode(DeoptReason reason) {
     return reason > Reason_none && reason <= Reason_RECORDED_LIMIT;
@@ -369,8 +366,7 @@ public:
   static const char* trap_action_name(int action);
   // Format like reason='foo' action='bar' index='123'.
   // This is suitable both for XML and for tty output.
-  static const char* format_trap_request(char* buf, size_t buflen,
-                                         int trap_request);
+  static const char* format_trap_request(char* buf, size_t buflen, int trap_request);
 
   static jint total_deoptimization_count();
   static jint deoptimization_count(DeoptReason reason);

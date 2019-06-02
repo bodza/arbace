@@ -65,8 +65,7 @@ class RegisterSaver {
 
   public:
 
-  static OopMap* save_live_registers(MacroAssembler* masm, int additional_frame_words,
-                                     int* total_frame_words, bool verify_fpu = true, bool save_vectors = false);
+  static OopMap* save_live_registers(MacroAssembler* masm, int additional_frame_words, int* total_frame_words, bool verify_fpu = true, bool save_vectors = false);
   static void restore_live_registers(MacroAssembler* masm, bool restore_vectors = false);
 
   static int rax_offset() { return rax_off; }
@@ -1709,12 +1708,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   // We have all of the arguments setup at this point. We must not touch any register
   // argument registers at this point (what if we save/restore them there are no oop?
 
-  {
-    SkipIfEqual skip_if(masm, &DTraceMethodProbes, 0);
-    __ mov_metadata(rax, method());
-    __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_entry), thread, rax);
-  }
-
   // These are register definitions we need for locking/unlocking
   const Register swap_reg = rax;  // Must use rax, for cmpxchg instruction
   const Register obj_reg  = rcx;  // Will contain the oop
@@ -1958,29 +1951,13 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     __ bind(done);
   }
 
-  {
-    SkipIfEqual skip_if(masm, &DTraceMethodProbes, 0);
-    // Tell dtrace about this method exit
-    save_native_result(masm, ret_type, stack_slots);
-    __ mov_metadata(rax, method());
-    __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit), thread, rax);
-    restore_native_result(masm, ret_type, stack_slots);
-  }
-
   // We can finally stop using that last_Java_frame we setup ages ago
 
   __ reset_last_Java_frame(thread, false);
 
   // Unbox oop result, e.g. JNIHandles::resolve value.
   if (ret_type == T_OBJECT || ret_type == T_ARRAY) {
-    __ resolve_jobject(rax /* value */,
-                       thread /* thread */,
-                       rcx /* tmp */);
-  }
-
-  if (CheckJNICalls) {
-    // clear_pending_jni_exception_check
-    __ movptr(Address(thread, JavaThread::pending_jni_exception_check_fn_offset()), NULL_WORD);
+    __ resolve_jobject(rax /* value */, thread /* thread */, rcx /* tmp */);
   }
 
   if (!is_critical_native) {

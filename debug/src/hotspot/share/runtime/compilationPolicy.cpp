@@ -14,7 +14,6 @@
 #include "runtime/frame.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/rframe.hpp"
-#include "runtime/simpleThresholdPolicy.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.hpp"
 #include "runtime/timer.hpp"
@@ -49,9 +48,6 @@ void compilationPolicy_init() {
 }
 
 void CompilationPolicy::completed_vm_startup() {
-  if (TraceCompilationPolicy) {
-    tty->print("CompilationPolicy: completed vm startup.\n");
-  }
   _in_vm_startup = false;
 }
 

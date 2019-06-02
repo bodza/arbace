@@ -1422,7 +1422,7 @@
   /* forEachRemaining */ \
   do_intrinsic(_forEachRemaining, java_util_stream_StreamsRangeIntSpliterator, forEachRemaining_name, forEachRemaining_signature, F_R) \
    do_name(     forEachRemaining_name,    "forEachRemaining") \
-   do_name(     forEachRemaining_signature,                      "(Ljava/util/function/IntConsumer;)V") \
+   do_name(     forEachRemaining_signature,                      "(Ljava/util/function/IntConsumer;)V")
 
     /*end*/
 
@@ -1539,17 +1539,11 @@ public:
   static const char* name_at(ID id);
 
 private:
-  static ID find_id_impl(vmSymbols::SID holder,
-                         vmSymbols::SID name,
-                         vmSymbols::SID sig,
-                         jshort flags);
+  static ID find_id_impl(vmSymbols::SID holder, vmSymbols::SID name, vmSymbols::SID sig, jshort flags);
 
 public:
   // Given a method's class, name, signature, and access flags, report its ID.
-  static ID find_id(vmSymbols::SID holder,
-                    vmSymbols::SID name,
-                    vmSymbols::SID sig,
-                    jshort flags) {
+  static ID find_id(vmSymbols::SID holder, vmSymbols::SID name, vmSymbols::SID sig, jshort flags) {
     ID id = find_id_impl(holder, name, sig, flags);
     return id;
   }

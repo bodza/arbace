@@ -441,20 +441,6 @@ void VMError::report(outputStream* st, bool _verbose) {
        st->print_cr("#");
      }
 
-  STEP("printing core file information")
-    st->print("# ");
-    if (CreateCoredumpOnCrash) {
-      if (coredump_status) {
-        st->print("Core dump will be written. Default location: %s", coredump_message);
-      } else {
-        st->print("No core dump will be written. %s", coredump_message);
-      }
-    } else {
-      st->print("CreateCoredumpOnCrash turned off, no core file dumped");
-    }
-    st->cr();
-    st->print_cr("#");
-
   STEP("printing bug submit message")
 
      if (should_report_bug(_id) && _verbose) {
@@ -682,12 +668,6 @@ void VMError::report(outputStream* st, bool _verbose) {
        st->cr();
        st->print_cr("---------------  P R O C E S S  ---------------");
        st->cr();
-     }
-
-  STEP("printing user info")
-
-     if (ExtensiveErrorReports && _verbose) {
-       os::Posix::print_user_info(st);
      }
 
   STEP("printing all threads")
@@ -1173,7 +1153,7 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
   static bool transmit_report_done = false; // done error reporting
 
   if (SuppressFatalErrorMessage) {
-      os::abort(CreateCoredumpOnCrash);
+      os::abort(false);
   }
   intptr_t mytid = os::current_thread_id();
   if (first_error_tid == -1 && Atomic::cmpxchg(mytid, &first_error_tid, (intptr_t)-1) == -1) {
@@ -1198,16 +1178,6 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
 
     reporting_started();
     record_reporting_start_time();
-
-    if (ShowMessageBoxOnError || PauseAtExit) {
-      show_message_box(buffer, sizeof(buffer));
-
-      // User has asked JVM to abort. Reset ShowMessageBoxOnError so the
-      // WatcherThread can kill JVM if the error handler hangs.
-      ShowMessageBoxOnError = false;
-    }
-
-    os::check_dump_limit(buffer, sizeof(buffer));
 
     // reset signal handlers or exception filter; make sure recursive crashes
     // are handled properly.
@@ -1270,11 +1240,9 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
           ss.print(", %s (0x%x) at pc=" PTR_FORMAT, signal_name, id, p2i(pc));
         } else {
           if (should_report_bug(id)) {
-            ss.print(", Internal Error (%s:%d)",
-              filename == NULL ? "??" : filename, lineno);
+            ss.print(", Internal Error (%s:%d)", filename == NULL ? "??" : filename, lineno);
           } else {
-            ss.print(", Out of Memory Error (%s:%d)",
-              filename == NULL ? "??" : filename, lineno);
+            ss.print(", Out of Memory Error (%s:%d)", filename == NULL ? "??" : filename, lineno);
           }
         }
         ss.print("]");
@@ -1299,7 +1267,7 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
     // see if log file is already open
     if (!log.is_open()) {
       // open log file
-      int fd = prepare_log_file(ErrorFile, "hs_err_pid%p.log", buffer, sizeof(buffer));
+      int fd = prepare_log_file(NULL, "hs_err_pid%p.log", buffer, sizeof(buffer));
       if (fd != -1) {
         out.print_raw("# An error report file with more information is saved as:\n# ");
         out.print_raw_cr(buffer);
@@ -1408,7 +1376,7 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
     if (!skip_os_abort) {
       skip_os_abort = true;
       bool dump_core = should_report_bug(_id);
-      os::abort(dump_core && CreateCoredumpOnCrash, _siginfo, _context);
+      os::abort(false, _siginfo, _context);
     }
 
     // if os::abort() doesn't abort, try os::die();
@@ -1463,14 +1431,6 @@ void VMError::report_java_out_of_memory(const char* message) {
   }
 }
 
-void VMError::show_message_box(char *buf, int buflen) {
-  bool yes;
-  do {
-    error_string(buf, buflen);
-    yes = os::start_debugging(buf,buflen);
-  } while (yes);
-}
-
 // Timeout handling: check if a timeout happened (either a single step did
 // timeout or the whole of error reporting hit ErrorLogTimeout). Interrupt
 // the reporting thread if that is the case.
@@ -1482,7 +1442,7 @@ bool VMError::check_timeout() {
 
   // Do not check for timeouts if we still have a message box to show to the
   // user or if there are OnError handlers to be run.
-  if (ShowMessageBoxOnError || (OnError != NULL && OnError[0] != '\0') || Arguments::abort_hook() != NULL) {
+  if ((OnError != NULL && OnError[0] != '\0') || Arguments::abort_hook() != NULL) {
     return false;
   }
 

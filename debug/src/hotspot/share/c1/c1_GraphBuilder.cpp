@@ -1,10 +1,8 @@
 #include "precompiled.hpp"
 
-#include "c1/c1_CFGPrinter.hpp"
 #include "c1/c1_Canonicalizer.hpp"
 #include "c1/c1_Compilation.hpp"
 #include "c1/c1_GraphBuilder.hpp"
-#include "c1/c1_InstructionPrinter.hpp"
 #include "ci/ciCallSite.hpp"
 #include "ci/ciField.hpp"
 #include "ci/ciKlass.hpp"
@@ -1323,13 +1321,6 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
           x = append(new TypeCast(declared_ret_type->as_klass(), x, copy_state_before()));
         }
       }
-    }
-
-    if (compilation()->env()->dtrace_method_probes()) {
-      // Report exit from inline methods
-      Values* args = new Values(1);
-      args->push(append(new Constant(new MethodConstant(method()))));
-      append(new RuntimeCall(voidType, "dtrace_method_exit", CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit), args));
     }
 
     // If the inlined method is synchronized, the monitor must be
@@ -3278,13 +3269,6 @@ void GraphBuilder::fill_sync_handler(Value lock, BlockBegin* sync_handler, bool 
   Value exception = append_with_bci(new ExceptionObject(), SynchronizationEntryBCI);
 
   int bci = SynchronizationEntryBCI;
-  if (compilation()->env()->dtrace_method_probes()) {
-    // Report exit from inline methods.  We don't have a stream here
-    // so pass an explicit bci of SynchronizationEntryBCI.
-    Values* args = new Values(1);
-    args->push(append_with_bci(new Constant(new MethodConstant(method())), bci));
-    append_with_bci(new RuntimeCall(voidType, "dtrace_method_exit", CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit), args), bci);
-  }
 
   if (lock) {
     if (!lock->is_linked()) {
@@ -3476,12 +3460,6 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
                                : state()->local_at(0);
     sync_handler = new BlockBegin(SynchronizationEntryBCI);
     inline_sync_entry(lock, sync_handler);
-  }
-
-  if (compilation()->env()->dtrace_method_probes()) {
-    Values* args = new Values(1);
-    args->push(append(new Constant(new MethodConstant(method()))));
-    append(new RuntimeCall(voidType, "dtrace_method_entry", CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_entry), args));
   }
 
   if (profile_inlined_calls()) {
@@ -3816,13 +3794,7 @@ void GraphBuilder::append_char_access(ciMethod* callee, bool is_store) {
   }
 }
 
-static void post_inlining_event(EventCompilerInlining* event,
-                                int compile_id,
-                                const char* msg,
-                                bool success,
-                                int bci,
-                                ciMethod* caller,
-                                ciMethod* callee) {
+static void post_inlining_event(EventCompilerInlining* event, int compile_id, const char* msg, bool success, int bci, ciMethod* caller, ciMethod* callee) {
   JfrStructCalleeMethod callee_struct;
   callee_struct.set_type(callee->holder()->name()->as_utf8());
   callee_struct.set_name(callee->name()->as_utf8());
@@ -3862,9 +3834,6 @@ void GraphBuilder::print_inlining(ciMethod* callee, const char* msg, bool succes
     return;
   }
   CompileTask::print_inlining_tty(callee, scope()->level(), bci(), msg);
-  if (success && CIPrintMethodCodes) {
-    callee->print_codes();
-  }
 }
 
 void GraphBuilder::append_unsafe_get_and_set_obj(ciMethod* callee, bool is_add) {

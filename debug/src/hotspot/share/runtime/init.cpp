@@ -130,10 +130,6 @@ void exit_globals() {
   if (!destructorsCalled) {
     destructorsCalled = true;
     perfMemory_exit();
-    if (false) {
-      SymbolTable::dump(tty);
-      StringTable::dump(tty);
-    }
     ostream_exit();
   }
 }

@@ -141,8 +141,7 @@ define_pd_global(bool, ThreadLocalHandshakes, true);
           range(0, max_jint) \
  \
   experimental(int, RTMLockingThreshold, 10000, \
-          "Lock count at which to do RTM lock eliding without " \
-          "abort ratio calculation") \
+          "Lock count at which to do RTM lock eliding without abort ratio calculation") \
           range(0, max_jint) \
  \
   experimental(int, RTMAbortRatio, 50, \
@@ -155,8 +154,7 @@ define_pd_global(bool, ThreadLocalHandshakes, true);
           constraint(RTMTotalCountIncrRateConstraintFunc,AfterErgo) \
  \
   experimental(intx, RTMLockingCalculationDelay, 0, \
-          "Number of milliseconds to wait before start calculating aborts " \
-          "for RTM locking") \
+          "Number of milliseconds to wait before start calculating aborts for RTM locking") \
  \
   experimental(bool, UseRTMXendForLockBusy, true, \
           "Use RTM Xend instead of Xabort when lock busy") \

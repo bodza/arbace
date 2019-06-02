@@ -56,8 +56,7 @@ uintx hash_string(const jchar* s, int len, bool useAlt) {
 class StringTableConfig : public StringTableHash::BaseConfig {
  private:
  public:
-  static uintx get_hash(WeakHandle<vm_string_table_data> const& value,
-                        bool* is_dead) {
+  static uintx get_hash(WeakHandle<vm_string_table_data> const& value, bool* is_dead) {
     EXCEPTION_MARK;
     oop val_oop = value.peek();
     if (val_oop == NULL) {
@@ -76,13 +75,11 @@ class StringTableConfig : public StringTableHash::BaseConfig {
     return 0;
   }
   // We use default allocation/deallocation but counted
-  static void* allocate_node(size_t size,
-                             WeakHandle<vm_string_table_data> const& value) {
+  static void* allocate_node(size_t size, WeakHandle<vm_string_table_data> const& value) {
     StringTable::item_added();
     return StringTableHash::BaseConfig::allocate_node(size, value);
   }
-  static void free_node(void* memory,
-                        WeakHandle<vm_string_table_data> const& value) {
+  static void free_node(void* memory, WeakHandle<vm_string_table_data> const& value) {
     value.release();
     StringTableHash::BaseConfig::free_node(memory, value);
     StringTable::item_removed();

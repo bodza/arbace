@@ -882,9 +882,7 @@ public:
   // Sizing (in words)
   static int header_size()            { return sizeof(InstanceKlass)/wordSize; }
 
-  static int size(int vtable_length, int itable_length,
-                  int nonstatic_oop_map_size,
-                  bool is_interface, bool is_anonymous, bool has_stored_fingerprint) {
+  static int size(int vtable_length, int itable_length, int nonstatic_oop_map_size, bool is_interface, bool is_anonymous, bool has_stored_fingerprint) {
     return align_metadata_size(header_size() +
            vtable_length +
            itable_length +

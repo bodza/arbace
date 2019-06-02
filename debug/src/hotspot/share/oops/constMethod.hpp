@@ -209,11 +209,7 @@ private:
               int size);
 public:
 
-  static ConstMethod* allocate(ClassLoaderData* loader_data,
-                               int byte_code_size,
-                               InlineTableSizes* sizes,
-                               MethodType mt,
-                               TRAPS);
+  static ConstMethod* allocate(ClassLoaderData* loader_data, int byte_code_size, InlineTableSizes* sizes, MethodType mt, TRAPS);
 
   bool is_constMethod() const { return true; }
 

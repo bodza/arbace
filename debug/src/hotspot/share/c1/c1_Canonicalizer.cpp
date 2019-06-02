@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "c1/c1_Canonicalizer.hpp"
-#include "c1/c1_InstructionPrinter.hpp"
 #include "c1/c1_ValueStack.hpp"
 #include "ci/ciArray.hpp"
 #include "runtime/sharedRuntime.hpp"
@@ -887,10 +886,7 @@ static bool match_index_and_scale(Instruction* instr, Instruction** index, int* 
   return false;
 }
 
-static bool match(UnsafeRawOp* x,
-                  Instruction** base,
-                  Instruction** index,
-                  int*          log2_scale) {
+static bool match(UnsafeRawOp* x, Instruction** base, Instruction** index, int*          log2_scale) {
   ArithmeticOp* root = x->base()->as_ArithmeticOp();
   if (root == NULL) return false;
   // Limit ourselves to addition for now

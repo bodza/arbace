@@ -31,7 +31,6 @@
   template(UnlinkSymbols) \
   template(Verify) \
   template(PrintJNI) \
-  template(HeapDumper) \
   template(DeoptimizeTheWorld) \
   template(CollectForMetadataAllocation) \
   template(GC_HeapInspection) \
@@ -92,7 +91,7 @@
   template(ICBufferFull) \
   template(ScavengeMonitors) \
   template(PrintMetadata) \
-  template(GTestExecuteAtSafepoint) \
+  template(GTestExecuteAtSafepoint)
 
 class VM_Operation: public CHeapObj<mtInternal> {
  public:
@@ -317,7 +316,7 @@ class VM_PrintThreads: public VM_Operation {
   bool _print_extended_info;
  public:
   VM_PrintThreads()
-    : _out(tty), _print_concurrent_locks(PrintConcurrentLocks), _print_extended_info(false)
+    : _out(tty), _print_concurrent_locks(false), _print_extended_info(false)
   { }
   VM_PrintThreads(outputStream* out, bool print_concurrent_locks, bool print_extended_info)
     : _out(out), _print_concurrent_locks(print_concurrent_locks), _print_extended_info(print_extended_info)

@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "classfile/javaClasses.hpp"
-#include "gc/shared/allocTracer.hpp"
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/memAllocator.hpp"
 #include "gc/shared/threadLocalAllocBuffer.inline.hpp"
@@ -31,10 +30,7 @@ class MemAllocator::Allocation: StackObj {
   void verify_after();
   void notify_allocation();
   void notify_allocation_jvmti_allocation_event();
-  void notify_allocation_jvmti_sampler();
   void notify_allocation_low_memory_detector();
-  void notify_allocation_jfr_sampler();
-  void notify_allocation_dtrace_sampler();
   void check_for_bad_heap_word_value() const;
 
   class PreserveObj;
@@ -93,12 +89,12 @@ bool MemAllocator::Allocation::check_out_of_memory() {
   }
 
   if (!_overhead_limit_exceeded) {
-    // -XX:+HeapDumpOnOutOfMemoryError and -XX:OnOutOfMemoryError support
+    // -XX:+false and -XX:OnOutOfMemoryError support
     report_java_out_of_memory("Java heap space");
 
     THROW_OOP_(Universe::out_of_memory_error_java_heap(), true);
   } else {
-    // -XX:+HeapDumpOnOutOfMemoryError and -XX:OnOutOfMemoryError support
+    // -XX:+false and -XX:OnOutOfMemoryError support
     report_java_out_of_memory("GC overhead limit exceeded");
 
     THROW_OOP_(Universe::out_of_memory_error_gc_overhead_limit(), true);
@@ -116,56 +112,13 @@ void MemAllocator::Allocation::verify_after() { }
 
 void MemAllocator::Allocation::check_for_bad_heap_word_value() const { }
 
-void MemAllocator::Allocation::notify_allocation_jvmti_sampler() {
-  if (!ThreadHeapSampler::enabled()) {
-    // Sampling disabled
-    return;
-  }
-
-  if (!_allocated_outside_tlab && _allocated_tlab_size == 0 && !_tlab_end_reset_for_sample) {
-    // Sample if it's a non-TLAB allocation, or a TLAB allocation that either refills the TLAB
-    // or expands it due to taking a sampler induced slow path.
-    return;
-  }
-
-  if (_tlab_end_reset_for_sample || _allocated_tlab_size != 0) {
-    _thread->tlab().set_sample_end();
-  }
-}
-
 void MemAllocator::Allocation::notify_allocation_low_memory_detector() {
   // support low memory notifications (no-op if not enabled)
   LowMemoryDetector::detect_low_memory_for_collected_pools();
 }
 
-void MemAllocator::Allocation::notify_allocation_jfr_sampler() {
-  HeapWord* mem = (HeapWord*)obj();
-  size_t size_in_bytes = _allocator._word_size * HeapWordSize;
-
-  if (_allocated_outside_tlab) {
-    AllocTracer::send_allocation_outside_tlab(_allocator._klass, mem, size_in_bytes, _thread);
-  } else if (_allocated_tlab_size != 0) {
-    // TLAB was refilled
-    AllocTracer::send_allocation_in_new_tlab(_allocator._klass, mem, _allocated_tlab_size * HeapWordSize, size_in_bytes, _thread);
-  }
-}
-
-void MemAllocator::Allocation::notify_allocation_dtrace_sampler() {
-  if (DTraceAllocProbes) {
-    // support for Dtrace object alloc event (no-op most of the time)
-    Klass* klass = _allocator._klass;
-    size_t word_size = _allocator._word_size;
-    if (klass != NULL && klass->name() != NULL) {
-      SharedRuntime::dtrace_object_alloc(obj(), (int)word_size);
-    }
-  }
-}
-
 void MemAllocator::Allocation::notify_allocation() {
   notify_allocation_low_memory_detector();
-  notify_allocation_jfr_sampler();
-  notify_allocation_dtrace_sampler();
-  notify_allocation_jvmti_sampler();
 }
 
 HeapWord* MemAllocator::allocate_outside_tlab(Allocation& allocation) const {

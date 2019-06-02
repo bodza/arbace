@@ -1465,8 +1465,7 @@ void os::print_memory_info(outputStream* st) {
   st->cr();
 }
 
-static void print_signal_handler(outputStream* st, int sig,
-                                 char* buf, size_t buflen);
+static void print_signal_handler(outputStream* st, int sig, char* buf, size_t buflen);
 
 void os::print_signal_handlers(outputStream* st, char* buf, size_t buflen) {
   st->print_cr("Signal Handlers:");
@@ -2193,9 +2192,7 @@ static int prio_init() {
   if (ThreadPriorityPolicy == 1) {
     if (geteuid() != 0) {
       if (!FLAG_IS_DEFAULT(ThreadPriorityPolicy)) {
-        warning("-XX:ThreadPriorityPolicy=1 may require system level permission, " \
-                "e.g., being the root user. If the necessary permission is not " \
-                "possessed, changes to priority will be silently ignored.");
+        warning("-XX:ThreadPriorityPolicy=1 may require system level permission, e.g., being the root user. If the necessary permission is not possessed, changes to priority will be silently ignored.");
       }
     }
   }
@@ -2562,8 +2559,7 @@ struct sigaction* os::Bsd::get_chained_signal_action(int sig) {
   return actp;
 }
 
-static bool call_chained_handler(struct sigaction *actp, int sig,
-                                 siginfo_t *siginfo, void *context) {
+static bool call_chained_handler(struct sigaction *actp, int sig, siginfo_t *siginfo, void *context) {
   // Call the old signal handler
   if (actp->sa_handler == SIG_DFL) {
     // It's more reasonable to let jvm treat it as an unexpected exception
@@ -2754,23 +2750,6 @@ void os::Bsd::install_signal_handlers() {
       // Tell libjsig jvm finishes setting signal handlers
       (*end_signal_setting)();
     }
-
-    // We don't activate signal checker if libjsig is in place, we trust ourselves
-    // and if UserSignalHandler is installed all bets are off
-    if (CheckJNICalls) {
-      if (libjsig_is_loaded) {
-        if (PrintJNIResolving) {
-          tty->print_cr("Info: libjsig is activated, all active signal checking is disabled");
-        }
-        check_signals = false;
-      }
-      if (AllowUserSignalHandlers) {
-        if (PrintJNIResolving) {
-          tty->print_cr("Info: AllowUserSignalHandlers is activated, all active signal checking is disabled");
-        }
-        check_signals = false;
-      }
-    }
   }
 }
 
@@ -2785,8 +2764,7 @@ void os::Bsd::install_signal_handlers() {
 #endif
 #define SIGNIFICANT_SIGNAL_MASK (~0x04000000)
 
-static const char* get_signal_handler_name(address handler,
-                                           char* buf, int buflen) {
+static const char* get_signal_handler_name(address handler, char* buf, int buflen) {
   int offset;
   bool found = os::dll_address_to_library_name(handler, buf, buflen, &offset);
   if (found) {
@@ -2802,8 +2780,7 @@ static const char* get_signal_handler_name(address handler,
   return buf;
 }
 
-static void print_signal_handler(outputStream* st, int sig,
-                                 char* buf, size_t buflen) {
+static void print_signal_handler(outputStream* st, int sig, char* buf, size_t buflen) {
   struct sigaction sa;
 
   sigaction(sig, NULL, &sa);
@@ -3198,25 +3175,6 @@ void os::os_exception_wrapper(java_call_t f, JavaValue* value, const methodHandl
   f(value, method, args, thread);
 }
 
-bool os::message_box(const char* title, const char* message) {
-  int i;
-  fdStream err(defaultStream::error_fd());
-  for (i = 0; i < 78; i++) err.print_raw("=");
-  err.cr();
-  err.print_raw_cr(title);
-  for (i = 0; i < 78; i++) err.print_raw("-");
-  err.cr();
-  err.print_raw_cr(message);
-  for (i = 0; i < 78; i++) err.print_raw("=");
-  err.cr();
-
-  char buf[16];
-  // Prevent process from exiting upon "read error" without consuming all CPU
-  while (::read(0, buf, sizeof(buf)) <= 0) { ::sleep(100); }
-
-  return buf[0] == 'y' || buf[0] == 'Y';
-}
-
 static inline struct timespec get_mtime(const char* filename) {
   struct stat st;
   int ret = os::stat(filename, &st);
@@ -3582,40 +3540,4 @@ int os::fork_and_exec(char* cmd, bool use_vfork_if_available) {
       return status;
     }
   }
-}
-
-// Get the default path to the core file
-// Returns the length of the string
-int os::get_core_path(char* buffer, size_t bufferSize) {
-  int n = jio_snprintf(buffer, bufferSize, "/cores/core.%d", current_process_id());
-
-  // Truncate if theoretical string was longer than bufferSize
-  n = MIN2(n, (int)bufferSize);
-
-  return n;
-}
-
-bool os::start_debugging(char *buf, int buflen) {
-  int len = (int)strlen(buf);
-  char *p = &buf[len];
-
-  jio_snprintf(p, buflen-len,
-             "\n\n"
-             "Do you want to debug the problem?\n\n"
-             "To debug, run 'gdb /proc/%d/exe %d'; then switch to thread " INTX_FORMAT " (" INTPTR_FORMAT ")\n"
-             "Enter 'yes' to launch gdb automatically (PATH must include gdb)\n"
-             "Otherwise, press RETURN to abort...",
-             os::current_process_id(), os::current_process_id(),
-             os::current_thread_id(), os::current_thread_id());
-
-  bool yes = os::message_box("Unexpected Error", buf);
-
-  if (yes) {
-    // yes, user asked VM to launch debugger
-    jio_snprintf(buf, sizeof(buf), "gdb /proc/%d/exe %d", os::current_process_id(), os::current_process_id());
-
-    os::fork_and_exec(buf);
-    yes = false;
-  }
-  return yes;
 }

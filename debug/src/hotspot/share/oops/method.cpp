@@ -301,10 +301,6 @@ void Method::print_invocation_count() {
   name()->print_symbol_on(tty);
   signature()->print_symbol_on(tty);
 
-  if (WizardMode) {
-    // dump the size of the byte codes
-    tty->print(" {%d}", code_size());
-  }
   tty->cr();
 
   tty->print_cr("  interpreter_invocation_count: %8d ", interpreter_invocation_count());
@@ -335,13 +331,6 @@ void Method::build_interpreter_method_data(const methodHandle& method, TRAPS) {
     }
 
     method->set_method_data(method_data);
-    if (PrintMethodData && (Verbose || WizardMode)) {
-      ResourceMark rm(THREAD);
-      tty->print("build_interpreter_method_data for ");
-      method->print_name(tty);
-      tty->cr();
-      // At the end of the run, the MDO, full of data, will be dumped.
-    }
   }
 }
 
@@ -360,10 +349,6 @@ MethodCounters* Method::build_method_counters(Method* m, TRAPS) {
   }
   if (!mh->init_method_counters(counters)) {
     MetadataFactory::free_metadata(mh->method_holder()->class_loader_data(), counters);
-  }
-
-  if (LogTouchedMethods) {
-    mh->log_touched(CHECK_NULL);
   }
 
   return mh->method_counters();
@@ -673,39 +658,7 @@ void Method::set_signature_handler(address handler) {
   *signature_handler = handler;
 }
 
-void Method::print_made_not_compilable(int comp_level, bool is_osr, bool report, const char* reason) {
-  if (PrintCompilation && report) {
-    ttyLocker ttyl;
-    tty->print("made not %scompilable on ", is_osr ? "OSR " : "");
-    if (comp_level == CompLevel_all) {
-      tty->print("all levels ");
-    } else {
-      tty->print("levels ");
-      for (int i = (int)CompLevel_none; i <= comp_level; i++) {
-        tty->print("%d ", i);
-      }
-    }
-    this->print_short_name(tty);
-    int size = this->code_size();
-    if (size > 0) {
-      tty->print(" (%d bytes)", size);
-    }
-    if (reason != NULL) {
-      tty->print("   %s", reason);
-    }
-    tty->cr();
-  }
-  if ((TraceDeoptimization || LogCompilation) && (xtty != NULL)) {
-    ttyLocker ttyl;
-    xtty->begin_elem("make_not_compilable thread='" UINTX_FORMAT "' osr='%d' level='%d'", os::current_thread_id(), is_osr, comp_level);
-    if (reason != NULL) {
-      xtty->print(" reason=\'%s\'", reason);
-    }
-    xtty->method(this);
-    xtty->stamp();
-    xtty->end_elem();
-  }
-}
+void Method::print_made_not_compilable(int comp_level, bool is_osr, bool report, const char* reason) { }
 
 bool Method::is_always_compilable() const {
   // Generated adapters must be compiled
@@ -1075,9 +1028,6 @@ methodHandle Method::make_method_handle_intrinsic(vmIntrinsics::ID iid, Symbol* 
 
   InstanceKlass* holder = SystemDictionary::MethodHandle_klass();
   Symbol* name = MethodHandles::signature_polymorphic_intrinsic_name(iid);
-  if (TraceMethodHandles) {
-    tty->print_cr("make_method_handle_intrinsic MH.%s%s", name->as_C_string(), signature->as_C_string());
-  }
 
   // invariant:   cp->symbol_at_put is preceded by a refcount increment (more usually a lookup)
   name->increment_refcount();
@@ -1103,9 +1053,7 @@ methodHandle Method::make_method_handle_intrinsic(vmIntrinsics::ID iid, Symbol* 
   methodHandle m;
   {
     InlineTableSizes sizes;
-    Method* m_oop = Method::allocate(loader_data, 0,
-                                     accessFlags_from(flags_bits), &sizes,
-                                     ConstMethod::NORMAL, CHECK_(empty));
+    Method* m_oop = Method::allocate(loader_data, 0, accessFlags_from(flags_bits), &sizes, ConstMethod::NORMAL, CHECK_(empty));
     m = methodHandle(THREAD, m_oop);
   }
   m->set_constants(cp());
@@ -1119,11 +1067,6 @@ methodHandle Method::make_method_handle_intrinsic(vmIntrinsics::ID iid, Symbol* 
   // Finally, set up its entry points.
   m->set_vtable_index(Method::nonvirtual_vtable_index);
   m->link_method(m, CHECK_(empty));
-
-  if (TraceMethodHandles && (Verbose || WizardMode)) {
-    ttyLocker ttyl;
-    m->print_on(tty);
-  }
 
   return m;
 }
@@ -1370,9 +1313,9 @@ void Method::print_short_name(outputStream* st) {
   ResourceMark rm;
   st->print(" %s::", method_holder()->external_name());
   name()->print_symbol_on(st);
-  if (WizardMode) signature()->print_symbol_on(st);
-  else if (MethodHandles::is_signature_polymorphic(intrinsic_id()))
+  if (MethodHandles::is_signature_polymorphic(intrinsic_id())) {
     MethodHandles::print_as_basic_type_signature_on(st, signature(), true);
+  }
 }
 
 // Comparer for sorting an object array containing
@@ -1768,19 +1711,15 @@ void Method::print_value_on(outputStream* st) const {
   signature()->print_value_on(st);
   st->print(" in ");
   method_holder()->print_value_on(st);
-  if (WizardMode) st->print("#%d", _vtable_index);
-  if (WizardMode) st->print("[%d,%d]", size_of_parameters(), max_locals());
-  if (WizardMode && code() != NULL) st->print(" ((nmethod*)%p)", code());
 }
 
-// LogTouchedMethods and PrintTouchedMethods
+// false and PrintTouchedMethods
 
 // TouchedMethodRecord -- we can't use a HashtableEntry<Method*> because
 // the Method may be garbage collected. Let's roll our own hash table.
 class TouchedMethodRecord : CHeapObj<mtTracing> {
 public:
-  // It's OK to store Symbols here because they will NOT be GC'ed if
-  // LogTouchedMethods is enabled.
+  // It's OK to store Symbols here because they will NOT be GC'ed if false is enabled.
   TouchedMethodRecord* _next;
   Symbol* _class_name;
   Symbol* _method_name;

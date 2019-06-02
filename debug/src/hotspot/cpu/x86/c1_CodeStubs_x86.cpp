@@ -246,9 +246,6 @@ void PatchingStub::emit_code(LIR_Assembler* ce) {
   // check that this code is being executed by the initializing
   // thread.
   address being_initialized_entry = __ pc();
-  if (CommentedAssembly) {
-    __ block_comment(" patch template");
-  }
   if (_id == load_klass_id) {
     // produce a copy of the load klass instruction for use by the being initialized case
     Metadata* o = NULL;
@@ -272,9 +269,6 @@ void PatchingStub::emit_code(LIR_Assembler* ce) {
   int bytes_to_skip = 0;
   if (_id == load_mirror_id) {
     int offset = __ offset();
-    if (CommentedAssembly) {
-      __ block_comment(" being_initialized check");
-    }
     Register tmp = rax;
     Register tmp2 = rbx;
     __ push(tmp);
@@ -295,9 +289,6 @@ void PatchingStub::emit_code(LIR_Assembler* ce) {
 
     // make sure this extra code gets skipped
     bytes_to_skip += __ offset() - offset;
-  }
-  if (CommentedAssembly) {
-    __ block_comment("patch data encoded as movl");
   }
   // Now emit the patch record telling the runtime how to find the
   // pieces of the patch.  We only need 3 bytes but for readability of
@@ -329,9 +320,6 @@ void PatchingStub::emit_code(LIR_Assembler* ce) {
   }
   __ bind(call_patch);
 
-  if (CommentedAssembly) {
-    __ block_comment("patch entry point");
-  }
   __ call(RuntimeAddress(target));
   ce->add_call_info_here(_info);
   int jmp_off = __ offset();

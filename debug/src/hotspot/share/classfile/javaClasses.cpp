@@ -86,9 +86,7 @@ InjectedField* JavaClasses::get_injected(Symbol* class_name, int* field_count) {
 // Helpful routine for computing field offsets at run time rather than hardcoding them
 // Finds local fields only, including static fields.  Static field offsets are from the
 // beginning of the mirror.
-static void compute_offset(int &dest_offset,
-                           InstanceKlass* ik, Symbol* name_symbol, Symbol* signature_symbol,
-                           bool is_static = false) {
+static void compute_offset(int &dest_offset, InstanceKlass* ik, Symbol* name_symbol, Symbol* signature_symbol, bool is_static = false) {
   fieldDescriptor fd;
   if (ik == NULL) {
     ResourceMark rm;
@@ -103,9 +101,7 @@ static void compute_offset(int &dest_offset,
 }
 
 // Overloading to pass name as a string.
-static void compute_offset(int& dest_offset, InstanceKlass* ik,
-                           const char* name_string, Symbol* signature_symbol,
-                           bool is_static = false) {
+static void compute_offset(int& dest_offset, InstanceKlass* ik, const char* name_string, Symbol* signature_symbol, bool is_static = false) {
   TempNewSymbol name = SymbolTable::probe(name_string, (int)strlen(name_string));
   if (name == NULL) {
     ResourceMark rm;
@@ -648,15 +644,8 @@ static void initialize_static_field(fieldDescriptor* fd, Handle mirror, TRAPS) {
         break;
       case T_OBJECT:
         {
-          if (DumpSharedSpaces && MetaspaceShared::is_archive_object(mirror())) {
-            // Archive the String field and update the pointer.
-            oop s = mirror()->obj_field(fd->offset());
-            oop archived_s = StringTable::create_archived_string(s, CHECK);
-            mirror()->obj_field_put(fd->offset(), archived_s);
-          } else {
-            oop string = fd->string_initial_value(CHECK);
-            mirror()->obj_field_put(fd->offset(), string);
-          }
+          oop string = fd->string_initial_value(CHECK);
+          mirror()->obj_field_put(fd->offset(), string);
         }
         break;
       default:
@@ -1035,7 +1024,7 @@ int  java_lang_Class::classRedefinedCount_offset = -1;
   macro(_class_loader_offset,       k, "classLoader",         classloader_signature, false); \
   macro(_component_mirror_offset,   k, "componentType",       class_signature,       false); \
   macro(_module_offset,             k, "module",              module_signature,      false); \
-  macro(_name_offset,               k, "name",                string_signature,      false); \
+  macro(_name_offset,               k, "name",                string_signature,      false);
 
 void java_lang_Class::compute_offsets() {
   if (offsets_computed) {
@@ -1595,8 +1584,7 @@ class BacktraceIterator : public StackObj {
 };
 
 // Print stack trace element to resource allocated buffer
-static void print_stack_element_to_stream(outputStream* st, Handle mirror, int method_id,
-                                          int version, int bci, Symbol* name) {
+static void print_stack_element_to_stream(outputStream* st, Handle mirror, int method_id, int version, int bci, Symbol* name) {
   ResourceMark rm;
 
   // Get strings and string lengths
@@ -1660,9 +1648,6 @@ static void print_stack_element_to_stream(outputStream* st, Handle mirror, int m
         sprintf(buf + (int)strlen(buf), "Unknown Source)");
       }
       CompiledMethod* nm = method->code();
-      if (WizardMode && nm != NULL) {
-        sprintf(buf + (int)strlen(buf), "(nmethod " INTPTR_FORMAT ")", (intptr_t)nm);
-      }
     }
   }
 

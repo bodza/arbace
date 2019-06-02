@@ -752,20 +752,15 @@ class ConstantPool : public Metadata {
 
   // Implementation of methods that needs an exposed 'this' pointer, in order to
   // handle GC while executing the method
-  static Klass* klass_at_impl(const constantPoolHandle& this_cp, int which,
-                              bool save_resolution_error, TRAPS);
+  static Klass* klass_at_impl(const constantPoolHandle& this_cp, int which, bool save_resolution_error, TRAPS);
   static oop string_at_impl(const constantPoolHandle& this_cp, int which, int obj_index, TRAPS);
 
   // Resolve string constants (to prevent allocation during compilation)
   static void resolve_string_constants_impl(const constantPoolHandle& this_cp, TRAPS);
 
-  static oop resolve_constant_at_impl(const constantPoolHandle& this_cp, int index, int cache_index,
-                                      bool* status_return, TRAPS);
+  static oop resolve_constant_at_impl(const constantPoolHandle& this_cp, int index, int cache_index, bool* status_return, TRAPS);
   static oop resolve_bootstrap_specifier_at_impl(const constantPoolHandle& this_cp, int index, TRAPS);
-  static void copy_bootstrap_arguments_at_impl(const constantPoolHandle& this_cp, int index,
-                                               int start_arg, int end_arg,
-                                               objArrayHandle info, int pos,
-                                               bool must_resolve, Handle if_not_available, TRAPS);
+  static void copy_bootstrap_arguments_at_impl(const constantPoolHandle& this_cp, int index, int start_arg, int end_arg, objArrayHandle info, int pos, bool must_resolve, Handle if_not_available, TRAPS);
 
   // Exception handling
   static Symbol* exception_message(const constantPoolHandle& this_cp, int which, constantTag tag, oop pending_exception);

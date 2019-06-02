@@ -244,10 +244,6 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters, int calle
     }
   }
 
-  if (PrintDeoptimizationDetails) {
-    tty->print_cr("Expressions size: %d", expressions()->size());
-  }
-
   // Unpack expression stack
   // If this is an intermediate frame (i.e. not top frame) then this
   // only unpacks the part of the expression stack not used by callee

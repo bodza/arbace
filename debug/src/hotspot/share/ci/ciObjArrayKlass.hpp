@@ -26,8 +26,7 @@ protected:
   }
 
   static ciObjArrayKlass* make_impl(ciKlass* element_klass);
-  static ciSymbol* construct_array_name(ciSymbol* element_name,
-                                        int       dimension);
+  static ciSymbol* construct_array_name(ciSymbol* element_name, int       dimension);
 
   const char* type_string() { return "ciObjArrayKlass"; }
 

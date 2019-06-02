@@ -62,11 +62,6 @@ void CompiledDirectStaticCall::set_to_interpreted(const methodHandle& callee, ad
   address stub = find_stub(false /* is_aot */);
   guarantee(stub != NULL, "stub not found");
 
-  if (TraceICs) {
-    ResourceMark rm;
-    tty->print_cr("CompiledDirectStaticCall@" INTPTR_FORMAT ": set_to_interpreted %s", p2i(instruction_address()), callee->name_and_sig_as_C_string());
-  }
-
   // Creation also verifies the object.
   NativeMovConstReg* method_holder = nativeMovConstReg_at(stub);
   // Update stub.

@@ -223,7 +223,7 @@
   declare_constant(Generation::Other) \
  \
   declare_constant(Generation::LogOfGenGrain) \
-  declare_constant(Generation::GenGrain) \
+  declare_constant(Generation::GenGrain)
 
 #define VM_LONG_CONSTANTS_GC(declare_constant)
 

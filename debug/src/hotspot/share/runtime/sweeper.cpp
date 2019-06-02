@@ -120,9 +120,6 @@ CodeBlobClosure* NMethodSweeper::prepare_mark_active_nmethods() {
     _traversals += 1;
     _total_time_this_sweep = Tickspan();
 
-    if (PrintMethodFlushing) {
-      tty->print_cr("### Sweep: stack traversal %ld", _traversals);
-    }
     return &mark_activation_closure;
 
   } else {
@@ -192,9 +189,6 @@ void NMethodSweeper::force_sweep() {
  */
 void NMethodSweeper::handle_safepoint_request() {
   if (SafepointSynchronize::is_synchronizing()) {
-    if (PrintMethodFlushing && Verbose) {
-      tty->print_cr("### Sweep at %d out of %d, yielding to safepoint", _seen, CodeCache::nmethod_count());
-    }
     MutexUnlockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
 
     JavaThread* thread = JavaThread::current();
@@ -284,13 +278,7 @@ void NMethodSweeper::possibly_sweep() {
   }
 }
 
-static void post_sweep_event(EventSweepCodeCache* event,
-                             const Ticks& start,
-                             const Ticks& end,
-                             s4 traversals,
-                             int swept,
-                             int flushed,
-                             int zombified) {
+static void post_sweep_event(EventSweepCodeCache* event, const Ticks& start, const Ticks& end, s4 traversals, int swept, int flushed, int zombified) {
   event->set_starttime(start);
   event->set_endtime(end);
   event->set_sweepId(traversals);
@@ -307,10 +295,6 @@ void NMethodSweeper::sweep_code_cache() {
   int flushed_count                = 0;
   int zombified_count              = 0;
   int flushed_c2_count     = 0;
-
-  if (PrintMethodFlushing && Verbose) {
-    tty->print_cr("### Sweep at %d out of %d", _seen, CodeCache::nmethod_count());
-  }
 
   int swept_count = 0;
 
@@ -357,9 +341,6 @@ void NMethodSweeper::sweep_code_cache() {
             break;
           default:
            ShouldNotReachHere();
-        }
-        if (PrintMethodFlushing && Verbose && type != None) {
-          tty->print_cr("### %s nmethod %3d/" PTR_FORMAT " (%s) %s", is_osr ? "osr" : "", compile_id, address, state_before, state_after);
         }
       }
 
@@ -632,12 +613,6 @@ void NMethodSweeper::possibly_flush(nmethod* nm) {
 
       if (make_not_entrant) {
         nm->make_not_entrant();
-
-        // Code cache state change is tracked in make_not_entrant()
-        if (PrintMethodFlushing && Verbose) {
-          tty->print_cr("### Nmethod %d/" PTR_FORMAT "made not-entrant: hotness counter %d/%d threshold %f",
-              nm->compile_id(), p2i(nm), nm->hotness_counter(), reset_val, threshold);
-        }
       }
     }
   }
@@ -645,45 +620,7 @@ void NMethodSweeper::possibly_flush(nmethod* nm) {
 
 // Print out some state information about the current sweep and the
 // state of the code cache if it's requested.
-void NMethodSweeper::log_sweep(const char* msg, const char* format, ...) {
-  if (PrintMethodFlushing) {
-    ResourceMark rm;
-    stringStream s;
-    // Dump code cache state into a buffer before locking the tty,
-    // because log_state() will use locks causing lock conflicts.
-    CodeCache::log_state(&s);
-
-    ttyLocker ttyl;
-    tty->print("### sweeper: %s ", msg);
-    if (format != NULL) {
-      va_list ap;
-      va_start(ap, format);
-      tty->vprint(format, ap);
-      va_end(ap);
-    }
-    tty->print_cr("%s", s.as_string());
-  }
-
-  if (LogCompilation && (xtty != NULL)) {
-    ResourceMark rm;
-    stringStream s;
-    // Dump code cache state into a buffer before locking the tty,
-    // because log_state() will use locks causing lock conflicts.
-    CodeCache::log_state(&s);
-
-    ttyLocker ttyl;
-    xtty->begin_elem("sweeper state='%s' traversals='" INTX_FORMAT "' ", msg, (intx)traversal_count());
-    if (format != NULL) {
-      va_list ap;
-      va_start(ap, format);
-      xtty->vprint(format, ap);
-      va_end(ap);
-    }
-    xtty->print("%s", s.as_string());
-    xtty->stamp();
-    xtty->end_elem();
-  }
-}
+void NMethodSweeper::log_sweep(const char* msg, const char* format, ...) { }
 
 void NMethodSweeper::print(outputStream* out) {
   ttyLocker ttyl;

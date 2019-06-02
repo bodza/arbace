@@ -26,7 +26,6 @@
 #include "services/diagnosticCommand.hpp"
 #include "services/diagnosticFramework.hpp"
 #include "services/writeableFlags.hpp"
-#include "services/heapDumper.hpp"
 #include "services/lowMemoryDetector.hpp"
 #include "services/gcNotifier.hpp"
 #include "services/nmtDCmd.hpp"

@@ -55,22 +55,12 @@ bool VerificationType::is_reference_assignable_from(const VerificationType& from
       return true;
     }
 
-    if (DumpSharedSpaces && SystemDictionaryShared::add_verification_constraint(klass,
-              name(), from.name(), from_field_is_protected, from.is_array(),
-              from.is_object())) {
-      // If add_verification_constraint() returns true, the resolution/check should be
-      // delayed until runtime.
-      return true;
-    }
-
-    return resolve_and_check_assignability(klass, name(), from.name(),
-          from_field_is_protected, from.is_array(), from.is_object(), THREAD);
+    return resolve_and_check_assignability(klass, name(), from.name(), from_field_is_protected, from.is_array(), from.is_object(), THREAD);
   } else if (is_array() && from.is_array()) {
     VerificationType comp_this = get_component(context, CHECK_false);
     VerificationType comp_from = from.get_component(context, CHECK_false);
     if (!comp_this.is_bogus() && !comp_from.is_bogus()) {
-      return comp_this.is_component_assignable_from(comp_from, context,
-                                          from_field_is_protected, CHECK_false);
+      return comp_this.is_component_assignable_from(comp_from, context, from_field_is_protected, CHECK_false);
     }
   }
   return false;

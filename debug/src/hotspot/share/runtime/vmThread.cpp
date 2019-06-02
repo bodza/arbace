@@ -16,7 +16,6 @@
 #include "runtime/vmThread.hpp"
 #include "runtime/vm_operations.hpp"
 #include "services/runtimeService.hpp"
-#include "utilities/dtrace.hpp"
 #include "utilities/events.hpp"
 #include "utilities/vmError.hpp"
 #include "utilities/xmlstream.hpp"
@@ -110,11 +109,6 @@ void VMOperationQueue::drain_list_oops_do(OopClosure* f) {
 //-----------------------------------------------------------------
 // High-level interface
 bool VMOperationQueue::add(VM_Operation *op) {
-
-  HOTSPOT_VMOPS_REQUEST(
-    (char *) op->name(), strlen(op->name()),
-    op->evaluation_mode()
-  );
 
   // Encapsulates VM queue policy. Currently, that
   // only involves putting them on the right list
@@ -302,21 +296,12 @@ void VMThread::evaluate_operation(VM_Operation* op) {
 
   {
     PerfTraceTime vm_op_timer(perf_accumulated_vm_operation_time());
-    HOTSPOT_VMOPS_BEGIN(
-        (char *) op->name(), strlen(op->name()),
-        op->evaluation_mode()
-    );
 
     EventExecuteVMOperation event;
     op->evaluate();
     if (event.should_commit()) {
       post_vm_operation_event(&event, op);
     }
-
-    HOTSPOT_VMOPS_END(
-        (char *) op->name(), strlen(op->name()),
-        op->evaluation_mode()
-    );
   }
 
   // Last access of info in _cur_vm_operation!
@@ -366,13 +351,6 @@ void VMThread::loop() {
       // Look for new operation
       _cur_vm_operation = _vm_queue->remove_next();
 
-      // Stall time tracking code
-      if (PrintVMQWaitTime && _cur_vm_operation != NULL && !_cur_vm_operation->evaluate_concurrently()) {
-        long stall = os::javaTimeMillis() - _cur_vm_operation->timestamp();
-        if (stall > 0)
-          tty->print_cr("%s stall: %ld",  _cur_vm_operation->name(), stall);
-      }
-
       while (!should_terminate() && _cur_vm_operation == NULL) {
         // wait with a timeout to guarantee safepoints at regular intervals
         bool timedout = VMOperationQueue_lock->wait(Mutex::_no_safepoint_check_flag, GuaranteedSafepointInterval);
@@ -384,8 +362,7 @@ void VMThread::loop() {
         }
 
         if (timedout && VMThread::no_op_safepoint_needed(false)) {
-          MutexUnlockerEx mul(VMOperationQueue_lock,
-                              Mutex::_no_safepoint_check_flag);
+          MutexUnlockerEx mul(VMOperationQueue_lock, Mutex::_no_safepoint_check_flag);
           // Force a safepoint since we have not had one for at least
           // 'GuaranteedSafepointInterval' milliseconds.  This will run all
           // the clean-up processing that needs to be done regularly at a
@@ -438,9 +415,6 @@ void VMThread::loop() {
               _vm_queue->set_drain_list(next);
               evaluate_operation(_cur_vm_operation);
               _cur_vm_operation = next;
-              if (false) {
-                SafepointSynchronize::inc_vmop_coalesced_count();
-              }
             } while (_cur_vm_operation != NULL);
           }
           // There is a chance that a thread enqueued a safepoint op
@@ -455,8 +429,7 @@ void VMThread::loop() {
           // the lock.
           if (_vm_queue->peek_at_safepoint_priority()) {
             // must hold lock while draining queue
-            MutexLockerEx mu_queue(VMOperationQueue_lock,
-                                     Mutex::_no_safepoint_check_flag);
+            MutexLockerEx mu_queue(VMOperationQueue_lock, Mutex::_no_safepoint_check_flag);
             safepoint_ops = _vm_queue->drain_at_safepoint_priority();
           } else {
             safepoint_ops = NULL;
@@ -469,31 +442,17 @@ void VMThread::loop() {
         SafepointSynchronize::end();
 
       } else {  // not a safepoint operation
-        if (TraceLongCompiles) {
-          elapsedTimer t;
-          t.start();
-          evaluate_operation(_cur_vm_operation);
-          t.stop();
-          double secs = t.seconds();
-          if (secs * 1e3 > LongCompileThreshold) {
-            // XXX - _cur_vm_operation should not be accessed after
-            // the completed count has been incremented; the waiting
-            // thread may have already freed this memory.
-            tty->print_cr("vm %s: %3.7f secs]", _cur_vm_operation->name(), secs);
-          }
-        } else {
-          evaluate_operation(_cur_vm_operation);
-        }
+        evaluate_operation(_cur_vm_operation);
 
         _cur_vm_operation = NULL;
       }
     }
 
-    //
-    //  Notify (potential) waiting Java thread(s) - lock without safepoint
-    //  check so that sneaking is not possible
-    { MutexLockerEx mu(VMOperationRequest_lock,
-                       Mutex::_no_safepoint_check_flag);
+    {
+      // Notify (potential) waiting Java thread(s) - lock without safepoint
+      // check so that sneaking is not possible
+      //
+      MutexLockerEx mu(VMOperationRequest_lock, Mutex::_no_safepoint_check_flag);
       VMOperationRequest_lock->notify_all();
     }
 

@@ -789,10 +789,6 @@ size_t G1Policy::desired_survivor_size() const {
   return (size_t)((((double)survivor_capacity) * TargetSurvivorRatio) / 100);
 }
 
-void G1Policy::print_age_table() {
-  _survivors_age_table.print_age_table(_tenuring_threshold);
-}
-
 void G1Policy::update_max_gc_locker_expansion() {
   uint expansion_region_num = 0;
   if (GCLockerEdenExpansionPercent > 0) {

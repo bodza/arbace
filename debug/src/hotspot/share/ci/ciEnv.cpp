@@ -36,7 +36,6 @@
 #include "runtime/safepointVerifiers.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/thread.inline.hpp"
-#include "utilities/dtrace.hpp"
 #include "utilities/macros.hpp"
 #include "c1/c1_Runtime1.hpp"
 
@@ -158,22 +157,6 @@ ciEnv::~ciEnv() {
       // be reading it.
       current_thread->set_env(NULL);
   )
-}
-
-// ------------------------------------------------------------------
-// Cache DTrace flags
-void ciEnv::cache_dtrace_flags() {
-  // Need lock?
-  _dtrace_extended_probes = ExtendedDTraceProbes;
-  if (_dtrace_extended_probes) {
-    _dtrace_monitor_probes  = true;
-    _dtrace_method_probes   = true;
-    _dtrace_alloc_probes    = true;
-  } else {
-    _dtrace_monitor_probes  = DTraceMonitorProbes;
-    _dtrace_method_probes   = DTraceMethodProbes;
-    _dtrace_alloc_probes    = DTraceAllocProbes;
-  }
 }
 
 // ------------------------------------------------------------------
@@ -816,14 +799,6 @@ void ciEnv::register_method(ciMethod* target, int entry_bci, CodeOffsets* offset
     MutexLocker ml(Compile_lock);
     NoSafepointVerifier nsv;
 
-    // Change in DTrace flags may invalidate compilation.
-    if (!failing() &&
-        ( (!dtrace_extended_probes() && ExtendedDTraceProbes) ||
-          (!dtrace_method_probes() && DTraceMethodProbes) ||
-          (!dtrace_alloc_probes() && DTraceAllocProbes))) {
-      record_failure("DTrace flags change invalidated dependencies");
-    }
-
     if (!failing()) {
       if (log() != NULL) {
         // Log the dependencies which this compilation declares.
@@ -890,30 +865,13 @@ void ciEnv::register_method(ciMethod* target, int entry_bci, CodeOffsets* offset
         if (TieredCompilation) {
           // If there is an old version we're done with it
           CompiledMethod* old = method->code();
-          if (TraceMethodReplacement && old != NULL) {
-            ResourceMark rm;
-            char *method_name = method->name_and_sig_as_C_string();
-            tty->print_cr("Replacing method %s", method_name);
-          }
           if (old != NULL) {
             old->make_not_used();
           }
         }
-        if (TraceNMethodInstalls) {
-          ResourceMark rm;
-          char *method_name = method->name_and_sig_as_C_string();
-          ttyLocker ttyl;
-          tty->print_cr("Installing method (%d) %s ", task()->comp_level(), method_name);
-        }
         // Allow the code to be executed
         method->set_code(method, nm);
       } else {
-        if (TraceNMethodInstalls) {
-          ResourceMark rm;
-          char *method_name = method->name_and_sig_as_C_string();
-          ttyLocker ttyl;
-          tty->print_cr("Installing osr method (%d) %s @ %d", task()->comp_level(), method_name, entry_bci);
-        }
         method->method_holder()->add_osr_nmethod(nm);
       }
       nm->make_in_use();

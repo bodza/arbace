@@ -230,9 +230,6 @@ private:
     if (_oop != NULL) {
       f->do_oop(&_oop);
     }
-#if 0
-    metadata_oops_do(metadata_begin(), metadata_end(), f);
-#endif
   }
 
 protected:

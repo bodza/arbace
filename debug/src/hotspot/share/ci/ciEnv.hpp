@@ -43,12 +43,6 @@ private:
   char* _name_buffer;
   int   _name_buffer_len;
 
-  // Cache DTrace flags
-  bool  _dtrace_extended_probes;
-  bool  _dtrace_monitor_probes;
-  bool  _dtrace_method_probes;
-  bool  _dtrace_alloc_probes;
-
   // Distinguished instances of certain ciObjects..
   static ciObject*              _null_object_instance;
 
@@ -304,13 +298,6 @@ public:
 
   bool break_at_compile() { return _break_at_compile; }
   void set_break_at_compile(bool z) { _break_at_compile = z; }
-
-  // Cache DTrace flags
-  void  cache_dtrace_flags();
-  bool  dtrace_extended_probes() const { return _dtrace_extended_probes; }
-  bool  dtrace_monitor_probes()  const { return _dtrace_monitor_probes; }
-  bool  dtrace_method_probes()   const { return _dtrace_method_probes; }
-  bool  dtrace_alloc_probes()    const { return _dtrace_alloc_probes; }
 
   // The compiler task which has created this env.
   // May be useful to find out compile_id, comp_level, etc.

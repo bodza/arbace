@@ -206,15 +206,11 @@ class OopMapSet : public ResourceObj {
   // to closures.
 
   // Iterates through frame for a compiled method
-  static void oops_do            (const frame* fr,
-                                  const RegisterMap* reg_map, OopClosure* f);
+  static void oops_do            (const frame* fr, const RegisterMap* reg_map, OopClosure* f);
   static void update_register_map(const frame* fr, RegisterMap *reg_map);
 
   // Iterates through frame for a compiled method for dead ones and values, too
-  static void all_do(const frame* fr, const RegisterMap* reg_map,
-                     OopClosure* oop_fn,
-                     void derived_oop_fn(oop* base, oop* derived),
-                     OopClosure* value_fn);
+  static void all_do(const frame* fr, const RegisterMap* reg_map, OopClosure* oop_fn, void derived_oop_fn(oop* base, oop* derived), OopClosure* value_fn);
 
   // Printing
   void print_on(outputStream* st) const;

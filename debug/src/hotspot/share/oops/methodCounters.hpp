@@ -41,10 +41,6 @@ class MethodCounters : public Metadata {
     invocation_counter()->init();
     backedge_counter()->init();
 
-    if (StressCodeAging) {
-      set_nmethod_age(HotMethodDetectionLimit);
-    }
-
     // Set per-method thresholds.
     double scale = 1.0;
     CompilerOracle::has_option_value(mh, "CompileThresholdScaling", scale);

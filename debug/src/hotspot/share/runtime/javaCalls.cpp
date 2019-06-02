@@ -285,13 +285,6 @@ void JavaCalls::call_helper(JavaValue* result, const methodHandle& method, JavaC
 
   // Gets the nmethod (if any) that should be called instead of normal target
   nmethod* alternative_target = args->alternative_target();
-  if (alternative_target == NULL) {
-// Verify the arguments
-
-  if (CheckJNICalls)  {
-    args->verify(method, result->get_type());
-  }
-  }
 
   CompilationPolicy::compile_if_required(method, CHECK);
 

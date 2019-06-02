@@ -43,36 +43,36 @@ register %{
 // Turn off SOE in java-code due to frequent use of uncommon-traps.
 // Now that allocator is better, turn on RSI and RDI as SOE registers.
 
-reg_def RAX  (SOC, SOC, Op_RegI,  0, rax->as_VMReg());
-reg_def RAX_H(SOC, SOC, Op_RegI,  0, rax->as_VMReg()->next());
+reg_def RAX  (SOC, SOC, Op_RegI, 0, rax->as_VMReg());
+reg_def RAX_H(SOC, SOC, Op_RegI, 0, rax->as_VMReg()->next());
 
-reg_def RCX  (SOC, SOC, Op_RegI,  1, rcx->as_VMReg());
-reg_def RCX_H(SOC, SOC, Op_RegI,  1, rcx->as_VMReg()->next());
+reg_def RCX  (SOC, SOC, Op_RegI, 1, rcx->as_VMReg());
+reg_def RCX_H(SOC, SOC, Op_RegI, 1, rcx->as_VMReg()->next());
 
-reg_def RDX  (SOC, SOC, Op_RegI,  2, rdx->as_VMReg());
-reg_def RDX_H(SOC, SOC, Op_RegI,  2, rdx->as_VMReg()->next());
+reg_def RDX  (SOC, SOC, Op_RegI, 2, rdx->as_VMReg());
+reg_def RDX_H(SOC, SOC, Op_RegI, 2, rdx->as_VMReg()->next());
 
-reg_def RBX  (SOC, SOE, Op_RegI,  3, rbx->as_VMReg());
-reg_def RBX_H(SOC, SOE, Op_RegI,  3, rbx->as_VMReg()->next());
+reg_def RBX  (SOC, SOE, Op_RegI, 3, rbx->as_VMReg());
+reg_def RBX_H(SOC, SOE, Op_RegI, 3, rbx->as_VMReg()->next());
 
-reg_def RSP  (NS,  NS,  Op_RegI,  4, rsp->as_VMReg());
-reg_def RSP_H(NS,  NS,  Op_RegI,  4, rsp->as_VMReg()->next());
+reg_def RSP  (NS,  NS,  Op_RegI, 4, rsp->as_VMReg());
+reg_def RSP_H(NS,  NS,  Op_RegI, 4, rsp->as_VMReg()->next());
 
 // now that adapter frames are gone RBP is always saved and restored by the prolog/epilog code
-reg_def RBP  (NS, SOE, Op_RegI,  5, rbp->as_VMReg());
-reg_def RBP_H(NS, SOE, Op_RegI,  5, rbp->as_VMReg()->next());
+reg_def RBP  (NS, SOE, Op_RegI, 5, rbp->as_VMReg());
+reg_def RBP_H(NS, SOE, Op_RegI, 5, rbp->as_VMReg()->next());
 
-reg_def RSI  (SOC, SOC, Op_RegI,  6, rsi->as_VMReg());
-reg_def RSI_H(SOC, SOC, Op_RegI,  6, rsi->as_VMReg()->next());
+reg_def RSI  (SOC, SOC, Op_RegI, 6, rsi->as_VMReg());
+reg_def RSI_H(SOC, SOC, Op_RegI, 6, rsi->as_VMReg()->next());
 
-reg_def RDI  (SOC, SOC, Op_RegI,  7, rdi->as_VMReg());
-reg_def RDI_H(SOC, SOC, Op_RegI,  7, rdi->as_VMReg()->next());
+reg_def RDI  (SOC, SOC, Op_RegI, 7, rdi->as_VMReg());
+reg_def RDI_H(SOC, SOC, Op_RegI, 7, rdi->as_VMReg()->next());
 
-reg_def R8   (SOC, SOC, Op_RegI,  8, r8->as_VMReg());
-reg_def R8_H (SOC, SOC, Op_RegI,  8, r8->as_VMReg()->next());
+reg_def R8   (SOC, SOC, Op_RegI, 8, r8->as_VMReg());
+reg_def R8_H (SOC, SOC, Op_RegI, 8, r8->as_VMReg()->next());
 
-reg_def R9   (SOC, SOC, Op_RegI,  9, r9->as_VMReg());
-reg_def R9_H (SOC, SOC, Op_RegI,  9, r9->as_VMReg()->next());
+reg_def R9   (SOC, SOC, Op_RegI, 9, r9->as_VMReg());
+reg_def R9_H (SOC, SOC, Op_RegI, 9, r9->as_VMReg()->next());
 
 reg_def R10  (SOC, SOC, Op_RegI, 10, r10->as_VMReg());
 reg_def R10_H(SOC, SOC, Op_RegI, 10, r10->as_VMReg()->next());

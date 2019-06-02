@@ -162,28 +162,19 @@ class LinkResolver: AllStatic {
 
  private:
 
-  static Method* lookup_method_in_klasses(const LinkInfo& link_info,
-                                          bool checkpolymorphism,
-                                          bool in_imethod_resolve);
+  static Method* lookup_method_in_klasses(const LinkInfo& link_info, bool checkpolymorphism, bool in_imethod_resolve);
   static Method* lookup_method_in_interfaces(const LinkInfo& link_info);
 
-  static methodHandle lookup_polymorphic_method(const LinkInfo& link_info,
-                                                Handle *appendix_result_or_null,
-                                                Handle *method_type_result, TRAPS);
+  static methodHandle lookup_polymorphic_method(const LinkInfo& link_info, Handle *appendix_result_or_null, Handle *method_type_result, TRAPS);
  public: // Needed for CompilerToVM.resolveMethod()
   // Not Linktime so doesn't take LinkInfo
-  static methodHandle lookup_instance_method_in_klasses (Klass* klass, Symbol* name, Symbol* signature,
-                                                         Klass::PrivateLookupMode private_mode, TRAPS);
+  static methodHandle lookup_instance_method_in_klasses (Klass* klass, Symbol* name, Symbol* signature, Klass::PrivateLookupMode private_mode, TRAPS);
  private:
 
   // Similar loader constraint checking functions that throw
   // LinkageError with descriptive message.
-  static void check_method_loader_constraints(const LinkInfo& link_info,
-                                              const methodHandle& resolved_method,
-                                              const char* method_type, TRAPS);
-  static void check_field_loader_constraints(Symbol* field, Symbol* sig,
-                                             Klass* current_klass,
-                                             Klass* sel_klass, TRAPS);
+  static void check_method_loader_constraints(const LinkInfo& link_info, const methodHandle& resolved_method, const char* method_type, TRAPS);
+  static void check_field_loader_constraints(Symbol* field, Symbol* sig, Klass* current_klass, Klass* sel_klass, TRAPS);
 
   static methodHandle resolve_interface_method(const LinkInfo& link_info, Bytecodes::Code code, TRAPS);
   static methodHandle resolve_method          (const LinkInfo& link_info, Bytecodes::Code code, TRAPS);
@@ -211,32 +202,19 @@ class LinkResolver: AllStatic {
                                                  Klass* recv_klass,
                                                  bool check_null_and_abstract, TRAPS);
 
-  static void check_field_accessability(Klass* ref_klass,
-                                        Klass* resolved_klass,
-                                        Klass* sel_klass,
-                                        const fieldDescriptor& fd, TRAPS);
-  static void check_method_accessability(Klass* ref_klass,
-                                         Klass* resolved_klass,
-                                         Klass* sel_klass,
-                                         const methodHandle& sel_method, TRAPS);
+  static void check_field_accessability(Klass* ref_klass, Klass* resolved_klass, Klass* sel_klass, const fieldDescriptor& fd, TRAPS);
+  static void check_method_accessability(Klass* ref_klass, Klass* resolved_klass, Klass* sel_klass, const methodHandle& sel_method, TRAPS);
 
   // runtime resolving from constant pool
-  static void resolve_invokestatic   (CallInfo& result,
-                                      const constantPoolHandle& pool, int index, TRAPS);
-  static void resolve_invokespecial  (CallInfo& result, Handle recv,
-                                      const constantPoolHandle& pool, int index, TRAPS);
-  static void resolve_invokevirtual  (CallInfo& result, Handle recv,
-                                      const constantPoolHandle& pool, int index, TRAPS);
-  static void resolve_invokeinterface(CallInfo& result, Handle recv,
-                                      const constantPoolHandle& pool, int index, TRAPS);
-  static void resolve_invokedynamic  (CallInfo& result,
-                                      const constantPoolHandle& pool, int index, TRAPS);
-  static void resolve_invokehandle   (CallInfo& result,
-                                      const constantPoolHandle& pool, int index, TRAPS);
+  static void resolve_invokestatic   (CallInfo& result, const constantPoolHandle& pool, int index, TRAPS);
+  static void resolve_invokespecial  (CallInfo& result, Handle recv, const constantPoolHandle& pool, int index, TRAPS);
+  static void resolve_invokevirtual  (CallInfo& result, Handle recv, const constantPoolHandle& pool, int index, TRAPS);
+  static void resolve_invokeinterface(CallInfo& result, Handle recv, const constantPoolHandle& pool, int index, TRAPS);
+  static void resolve_invokedynamic  (CallInfo& result, const constantPoolHandle& pool, int index, TRAPS);
+  static void resolve_invokehandle   (CallInfo& result, const constantPoolHandle& pool, int index, TRAPS);
  public:
   // constant pool resolving
-  static void check_klass_accessability(Klass* ref_klass, Klass* sel_klass,
-                                        bool fold_type_to_class, TRAPS);
+  static void check_klass_accessability(Klass* ref_klass, Klass* sel_klass, bool fold_type_to_class, TRAPS);
   // The optional 'fold_type_to_class' means that a derived type (array)
   // is first converted to the class it is derived from (element type).
   // If this element type is not a class, then the check passes quietly.
@@ -248,66 +226,39 @@ class LinkResolver: AllStatic {
 
   // static resolving calls (will not run any Java code);
   // used only from Bytecode_invoke::static_target
-  static methodHandle resolve_method_statically(Bytecodes::Code code,
-                                                const constantPoolHandle& pool,
-                                                int index, TRAPS);
+  static methodHandle resolve_method_statically(Bytecodes::Code code, const constantPoolHandle& pool, int index, TRAPS);
 
-  static void resolve_field_access(fieldDescriptor& result,
-                                   const constantPoolHandle& pool,
-                                   int index,
-                                   const methodHandle& method,
-                                   Bytecodes::Code byte, TRAPS);
-  static void resolve_field(fieldDescriptor& result, const LinkInfo& link_info,
-                            Bytecodes::Code access_kind,
-                            bool initialize_class, TRAPS);
+  static void resolve_field_access(fieldDescriptor& result, const constantPoolHandle& pool, int index, const methodHandle& method, Bytecodes::Code byte, TRAPS);
+  static void resolve_field(fieldDescriptor& result, const LinkInfo& link_info, Bytecodes::Code access_kind, bool initialize_class, TRAPS);
 
-  static void resolve_static_call   (CallInfo& result,
-                                     const LinkInfo& link_info,
-                                     bool initialize_klass, TRAPS);
-  static void resolve_special_call  (CallInfo& result,
-                                     Handle recv,
-                                     const LinkInfo& link_info,
-                                     TRAPS);
-  static void resolve_virtual_call  (CallInfo& result, Handle recv, Klass* recv_klass,
-                                     const LinkInfo& link_info,
-                                     bool check_null_and_abstract, TRAPS);
-  static void resolve_interface_call(CallInfo& result, Handle recv, Klass* recv_klass,
-                                     const LinkInfo& link_info,
-                                     bool check_null_and_abstract, TRAPS);
-  static void resolve_handle_call   (CallInfo& result,
-                                     const LinkInfo& link_info, TRAPS);
-  static void resolve_dynamic_call  (CallInfo& result, int pool_index, Handle bootstrap_specifier,
-                                     Symbol* method_name, Symbol* method_signature,
-                                     Klass* current_klass, TRAPS);
+  static void resolve_static_call   (CallInfo& result, const LinkInfo& link_info, bool initialize_klass, TRAPS);
+  static void resolve_special_call  (CallInfo& result, Handle recv, const LinkInfo& link_info, TRAPS);
+  static void resolve_virtual_call  (CallInfo& result, Handle recv, Klass* recv_klass, const LinkInfo& link_info, bool check_null_and_abstract, TRAPS);
+  static void resolve_interface_call(CallInfo& result, Handle recv, Klass* recv_klass, const LinkInfo& link_info, bool check_null_and_abstract, TRAPS);
+  static void resolve_handle_call   (CallInfo& result, const LinkInfo& link_info, TRAPS);
+  static void resolve_dynamic_call  (CallInfo& result, int pool_index, Handle bootstrap_specifier, Symbol* method_name, Symbol* method_signature, Klass* current_klass, TRAPS);
 
   // same as above for compile-time resolution; but returns null handle instead of throwing
   // an exception on error also, does not initialize klass (i.e., no side effects)
-  static methodHandle resolve_virtual_call_or_null  (Klass* receiver_klass,
-                                                     const LinkInfo& link_info);
-  static methodHandle resolve_interface_call_or_null(Klass* receiver_klass,
-                                                     const LinkInfo& link_info);
+  static methodHandle resolve_virtual_call_or_null  (Klass* receiver_klass, const LinkInfo& link_info);
+  static methodHandle resolve_interface_call_or_null(Klass* receiver_klass, const LinkInfo& link_info);
   static methodHandle resolve_static_call_or_null   (const LinkInfo& link_info);
   static methodHandle resolve_special_call_or_null  (const LinkInfo& link_info);
 
   static int vtable_index_of_interface_method(Klass* klass, const methodHandle& resolved_method);
 
   // same as above for compile-time resolution; returns vtable_index if current_klass if linked
-  static int resolve_virtual_vtable_index  (Klass* receiver_klass,
-                                            const LinkInfo& link_info);
+  static int resolve_virtual_vtable_index  (Klass* receiver_klass, const LinkInfo& link_info);
 
   // static resolving for compiler (does not throw exceptions, returns null handle if unsuccessful)
   static methodHandle linktime_resolve_virtual_method_or_null  (const LinkInfo& link_info);
   static methodHandle linktime_resolve_interface_method_or_null(const LinkInfo& link_info);
 
   // runtime resolving from constant pool
-  static void resolve_invoke(CallInfo& result, Handle recv,
-                             const constantPoolHandle& pool, int index,
-                             Bytecodes::Code byte, TRAPS);
+  static void resolve_invoke(CallInfo& result, Handle recv, const constantPoolHandle& pool, int index, Bytecodes::Code byte, TRAPS);
 
   // runtime resolving from attached method
-  static void resolve_invoke(CallInfo& result, Handle& recv,
-                             const methodHandle& attached_method,
-                             Bytecodes::Code byte, TRAPS);
+  static void resolve_invoke(CallInfo& result, Handle& recv, const methodHandle& attached_method, Bytecodes::Code byte, TRAPS);
 
  public:
   // Only resolved method known.
@@ -319,8 +270,6 @@ class LinkResolver: AllStatic {
     throw_abstract_method_error(resolved_method, NULL, recv_klass, CHECK);
   }
   // Selected method is abstract.
-  static void throw_abstract_method_error(const methodHandle& resolved_method,
-                                          const methodHandle& selected_method,
-                                          Klass *recv_klass, TRAPS);
+  static void throw_abstract_method_error(const methodHandle& resolved_method, const methodHandle& selected_method, Klass *recv_klass, TRAPS);
 };
 #endif

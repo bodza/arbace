@@ -22,12 +22,7 @@ class WorkerManager : public AllStatic {
   // If initializing = false, there are already some number of worker
   // threads and a failure would not be optimal but should not be fatal.
   template <class WorkerType>
-  static uint add_workers (WorkerType* holder,
-                           uint active_workers,
-                           uint total_workers,
-                           uint created_workers,
-                           os::ThreadType worker_type,
-                           bool initializing) {
+  static uint add_workers (WorkerType* holder, uint active_workers, uint total_workers, uint created_workers, os::ThreadType worker_type, bool initializing) {
     uint start = created_workers;
     uint end = MIN2(active_workers, total_workers);
     for (uint worker_id = start; worker_id < end; worker_id += 1) {

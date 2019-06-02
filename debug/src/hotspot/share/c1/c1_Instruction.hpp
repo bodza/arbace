@@ -214,7 +214,7 @@ class InstructionVisitor: public StackObj {
     if (_v == NULL  ) return false; \
     if (f1 != _v->f1) return false; \
     return true; \
-  } \
+  }
 
 #define HASHING2(class_name, enabled, f1, f2) \
   virtual intx hash() const { \
@@ -227,7 +227,7 @@ class InstructionVisitor: public StackObj {
     if (f1 != _v->f1) return false; \
     if (f2 != _v->f2) return false; \
     return true; \
-  } \
+  }
 
 #define HASHING3(class_name, enabled, f1, f2, f3) \
   virtual intx hash() const { \
@@ -241,7 +241,7 @@ class InstructionVisitor: public StackObj {
     if (f2 != _v->f2) return false; \
     if (f3 != _v->f3) return false; \
     return true; \
-  } \
+  }
 
 // The mother of all instructions...
 
@@ -540,13 +540,13 @@ class Instruction: public CompilationResourceObj {
 #define BASE(class_name, super_class_name) \
   class class_name: public super_class_name { \
    public: \
-    virtual class_name* as_##class_name()        { return this; } \
+    virtual class_name* as_##class_name()        { return this; }
 
 #define LEAF(class_name, super_class_name) \
   BASE(class_name, super_class_name) \
    public: \
     virtual const char* name() const             { return #class_name; } \
-    virtual void visit(InstructionVisitor* v)    { v->do_##class_name(this); } \
+    virtual void visit(InstructionVisitor* v)    { v->do_##class_name(this); }
 
 // Debugging support
 

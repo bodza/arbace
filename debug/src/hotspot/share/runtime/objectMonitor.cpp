@@ -18,7 +18,6 @@
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.inline.hpp"
 #include "services/threadService.hpp"
-#include "utilities/dtrace.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/preserveException.hpp"
 
@@ -280,7 +279,7 @@ void ObjectMonitor::enter(TRAPS) {
   Self->_Stalled = 0;
 
   // The thread -- now the owner -- is back in vm mode.
-  // Report the glorious news via TI,DTrace and jvmstat.
+  // Report the glorious news via TI and jvmstat.
   // The probe effect is non-trivial.  All the reportage occurs
   // while we hold the monitor, increasing the length of the critical
   // section.  Amdahl's parallel speedup law comes vividly into play.
@@ -747,7 +746,7 @@ void ObjectMonitor::exit(bool not_suspended, TRAPS) {
       // see x86_32.ad Fast_Unlock() and the I1 and I2 properties.
       // Upon deeper reflection, however, in a properly run JVM the only
       // way we should encounter this situation is in the presence of
-      // unbalanced JNI locking. TODO: CheckJNICalls.
+      // unbalanced JNI locking.
       // See also: CR4414101
       TEVENT(Exit - Throw IMSX);
       ShouldNotReachHere();
@@ -1186,11 +1185,7 @@ static int Adjust(volatile int * adr, int dx) {
   return v;
 }
 
-static void post_monitor_wait_event(EventJavaMonitorWait* event,
-                                    ObjectMonitor* monitor,
-                                    jlong notifier_tid,
-                                    jlong timeout,
-                                    bool timedout) {
+static void post_monitor_wait_event(EventJavaMonitorWait* event, ObjectMonitor* monitor, jlong notifier_tid, jlong timeout, bool timedout) {
   event->set_monitorClass(((oop)monitor->object())->klass());
   event->set_timeout(timeout);
   event->set_address((uintptr_t)monitor->object_addr());

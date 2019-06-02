@@ -52,13 +52,11 @@ public:
   // thread. Before enqueuing, these functions apply the appropriate candidate
   // selection policy to filters out non-candidates.
   static void enqueue_from_mark(oop java_string, uint worker_id);
-  static void enqueue_from_evacuation(bool from_young, bool to_young,
-                                      unsigned int queue, oop java_string);
+  static void enqueue_from_evacuation(bool from_young, bool to_young, unsigned int queue, oop java_string);
 
   static void oops_do(OopClosure* keep_alive);
   static void parallel_unlink(G1StringDedupUnlinkOrOopsDoClosure* unlink, uint worker_id);
-  static void unlink_or_oops_do(BoolObjectClosure* is_alive, OopClosure* keep_alive,
-                                bool allow_resize_and_rehash, G1GCPhaseTimes* phase_times = NULL);
+  static void unlink_or_oops_do(BoolObjectClosure* is_alive, OopClosure* keep_alive, bool allow_resize_and_rehash, G1GCPhaseTimes* phase_times = NULL);
 };
 
 //

@@ -27,8 +27,7 @@ class MemTracker : AllStatic {
   static bool check_launcher_nmt_support(const char* value) { return true; }
   static bool verify_nmt_option() { return true; }
 
-  static inline void* record_malloc(void* mem_base, size_t size, MEMFLAGS flag,
-    const NativeCallStack& stack, NMT_TrackingLevel level) { return mem_base; }
+  static inline void* record_malloc(void* mem_base, size_t size, MEMFLAGS flag, const NativeCallStack& stack, NMT_TrackingLevel level) { return mem_base; }
   static inline size_t malloc_header_size(NMT_TrackingLevel level) { return 0; }
   static inline size_t malloc_header_size(void* memblock) { return 0; }
   static inline void* malloc_base(void* memblock) { return memblock; }
@@ -37,10 +36,8 @@ class MemTracker : AllStatic {
   static inline void record_new_arena(MEMFLAGS flag) { }
   static inline void record_arena_free(MEMFLAGS flag) { }
   static inline void record_arena_size_change(int diff, MEMFLAGS flag) { }
-  static inline void record_virtual_memory_reserve(void* addr, size_t size, const NativeCallStack& stack,
-                       MEMFLAGS flag = mtNone) { }
-  static inline void record_virtual_memory_reserve_and_commit(void* addr, size_t size,
-    const NativeCallStack& stack, MEMFLAGS flag = mtNone) { }
+  static inline void record_virtual_memory_reserve(void* addr, size_t size, const NativeCallStack& stack, MEMFLAGS flag = mtNone) { }
+  static inline void record_virtual_memory_reserve_and_commit(void* addr, size_t size, const NativeCallStack& stack, MEMFLAGS flag = mtNone) { }
   static inline void record_virtual_memory_commit(void* addr, size_t size, const NativeCallStack& stack) { }
   static inline void record_virtual_memory_type(void* addr, MEMFLAGS flag) { }
   static inline void record_thread_stack(void* addr, size_t size) { }

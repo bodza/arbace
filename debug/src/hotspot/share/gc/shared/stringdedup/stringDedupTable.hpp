@@ -181,10 +181,7 @@ private:
   // currently active hash function and hash seed.
   static unsigned int hash_code(typeArrayOop value, bool latin1);
 
-  static uintx unlink_or_oops_do(StringDedupUnlinkOrOopsDoClosure* cl,
-                                 size_t partition_begin,
-                                 size_t partition_end,
-                                 uint worker_id);
+  static uintx unlink_or_oops_do(StringDedupUnlinkOrOopsDoClosure* cl, size_t partition_begin, size_t partition_end, uint worker_id);
 
   static size_t claim_table_partition(size_t partition_size);
 

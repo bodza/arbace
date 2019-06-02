@@ -29,14 +29,6 @@ class Verifier : AllStatic {
   static void log_end_verification(outputStream* st, const char* klassName, Symbol* exception_name, TRAPS);
   static bool verify(InstanceKlass* klass, Mode mode, bool should_verify_class, TRAPS);
 
-  // Return false if the class is loaded by the bootstrap loader,
-  // or if defineClass was called requesting skipping verification
-  // -Xverify:all/none override this value
-  static bool should_verify_for(oop class_loader, bool should_verify_class);
-
-  // Relax certain access checks to enable some broken 1.1 apps to run on 1.2.
-  static bool relax_access_for(oop class_loader);
-
  private:
   static bool is_eligible_for_verification(InstanceKlass* klass, bool should_verify_class);
   static Symbol* inference_verify(InstanceKlass* klass, char* msg, size_t msg_len, TRAPS);

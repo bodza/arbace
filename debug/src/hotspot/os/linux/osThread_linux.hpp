@@ -93,8 +93,4 @@ private:
   void pd_initialize();
   void pd_destroy();
 
-// Reconciliation History
-// osThread_solaris.hpp 1.24 99/08/27 13:11:54
-// End
-
 #endif

@@ -56,10 +56,7 @@ address TemplateInterpreterGenerator::generate_slow_signature_handler() {
   // adjust sp
   __ sub(sp, c_rarg3, 18 * wordSize);
   __ str(lr, Address(__ pre(sp, -2 * wordSize)));
-  __ call_VM(noreg,
-             CAST_FROM_FN_PTR(address,
-                              InterpreterRuntime::slow_signature_handler),
-             rmethod, rlocals, c_rarg3);
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::slow_signature_handler), rmethod, rlocals, c_rarg3);
 
   // r0: result handler
 
@@ -288,9 +285,7 @@ address TemplateInterpreterGenerator::generate_abstract_entry(void) {
   __ restore_locals();   // make sure locals pointer is correct as well (was destroyed)
 
   // throw exception
-  __ call_VM(noreg, CAST_FROM_FN_PTR(address,
-                                     InterpreterRuntime::throw_AbstractMethodErrorWithMethod),
-                                     rmethod);
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_AbstractMethodErrorWithMethod), rmethod);
   // the call_VM checks for exception, so we should never return here.
   __ should_not_reach_here();
 
@@ -450,9 +445,7 @@ address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state, i
     Label L;
     __ ldr(rscratch1, Address(rthread, Thread::pending_exception_offset()));
     __ cbz(rscratch1, L);
-    __ call_VM(noreg,
-               CAST_FROM_FN_PTR(address,
-                                InterpreterRuntime::throw_pending_exception));
+    __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_pending_exception));
     __ should_not_reach_here();
     __ bind(L);
   }
@@ -591,10 +584,7 @@ void TemplateInterpreterGenerator::generate_counter_overflow(Label& do_continue)
   // compilation did not complete (either went background or bailed
   // out).
   __ mov(c_rarg1, 0);
-  __ call_VM(noreg,
-             CAST_FROM_FN_PTR(address,
-                              InterpreterRuntime::frequency_counter_overflow),
-             c_rarg1);
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::frequency_counter_overflow), c_rarg1);
 
   __ b(do_continue);
 }
@@ -1010,7 +1000,7 @@ void TemplateInterpreterGenerator::bang_stack_shadow_pages(bool native_call) {
 // native method than the typical interpreter frame setup.
 address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
   // determine code generation flags
-  bool inc_counter  = UseCompiler || CountCompiledCalls || LogTouchedMethods;
+  bool inc_counter  = UseCompiler || CountCompiledCalls;
 
   // r1: Method*
   // rscratch1: sender sp
@@ -1141,10 +1131,7 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
     __ ldr(rscratch2, rscratch2);
     __ cmp(r10, rscratch2);
     __ br(Assembler::NE, L);
-    __ call_VM(noreg,
-               CAST_FROM_FN_PTR(address,
-                                InterpreterRuntime::prepare_native_call),
-               rmethod);
+    __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::prepare_native_call), rmethod);
     __ get_method(rmethod);
     __ ldr(r10, Address(rmethod, Method::native_function_offset()));
     __ bind(L);
@@ -1229,11 +1216,6 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
   // reset_last_Java_frame
   __ reset_last_Java_frame(true);
 
-  if (CheckJNICalls) {
-    // clear_pending_jni_exception_check
-    __ str(zr, Address(rthread, JavaThread::pending_jni_exception_check_fn_offset()));
-  }
-
   // reset handle block
   __ ldr(t, Address(rthread, JavaThread::active_handles_offset()));
   __ str(zr, Address(t, JNIHandleBlock::top_offset_in_bytes()));
@@ -1288,9 +1270,7 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
     // used in call_VM_base(); i.e., we should use the
     // StubRoutines::forward_exception code. For now this doesn't work
     // here because the rsp is not correctly set at this point.
-    __ MacroAssembler::call_VM(noreg,
-                               CAST_FROM_FN_PTR(address,
-                               InterpreterRuntime::throw_pending_exception));
+    __ MacroAssembler::call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_pending_exception));
     __ should_not_reach_here();
     __ bind(L);
   }
@@ -1317,9 +1297,7 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
       __ cbnz(t, unlock);
 
       // Entry already unlocked, need to throw exception
-      __ MacroAssembler::call_VM(noreg,
-                                 CAST_FROM_FN_PTR(address,
-                   InterpreterRuntime::throw_illegal_monitor_state_exception));
+      __ MacroAssembler::call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_illegal_monitor_state_exception));
       __ should_not_reach_here();
 
       __ bind(unlock);
@@ -1369,15 +1347,14 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
 //
 address TemplateInterpreterGenerator::generate_normal_entry(bool synchronized) {
   // determine code generation flags
-  bool inc_counter  = UseCompiler || CountCompiledCalls || LogTouchedMethods;
+  bool inc_counter  = UseCompiler || CountCompiledCalls;
 
   // rscratch1: sender sp
   address entry_point = __ pc();
 
   const Address constMethod(rmethod, Method::const_offset());
   const Address access_flags(rmethod, Method::access_flags_offset());
-  const Address size_of_parameters(r3,
-                                   ConstMethod::size_of_parameters_offset());
+  const Address size_of_parameters(r3, ConstMethod::size_of_parameters_offset());
   const Address size_of_locals(r3, ConstMethod::size_of_locals_offset());
 
   // get parameter size (always needed)
@@ -1531,10 +1508,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
   // an exception
   __ empty_expression_stack();
   // find exception handler address and preserve exception oop
-  __ call_VM(r3,
-             CAST_FROM_FN_PTR(address,
-                          InterpreterRuntime::exception_handler_for_exception),
-             c_rarg1);
+  __ call_VM(r3, CAST_FROM_FN_PTR(address, InterpreterRuntime::exception_handler_for_exception), c_rarg1);
 
   // Calculate stack limit
   __ ldr(rscratch1, Address(rmethod, Method::const_offset()));
@@ -1664,9 +1638,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
   // rfp: fp of caller
   // FIXME: There's no point saving LR here because VM calls don't trash it
   __ stp(r0, lr, Address(__ pre(sp, -2 * wordSize)));  // save exception & return address
-  __ super_call_VM_leaf(CAST_FROM_FN_PTR(address,
-                          SharedRuntime::exception_handler_for_return_address),
-                        rthread, lr);
+  __ super_call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::exception_handler_for_return_address), rthread, lr);
   __ mov(r1, r0);                               // save exception handler
   __ ldp(r0, lr, Address(__ post(sp, 2 * wordSize)));  // restore exception & return address
   // We might be returning to a deopt handler that expects r3 to

@@ -238,10 +238,6 @@ void mutex_init() {
 
   def(ThreadHeapSampler_lock       , PaddedMutex,   nonleaf,     false, Monitor::_safepoint_check_never);
 
-  if (WhiteBoxAPI) {
-    def(Compilation_lock           , PaddedMonitor, leaf,        false, Monitor::_safepoint_check_never);
-  }
-
 #ifndef SUPPORTS_NATIVE_CX8
   def(UnsafeJlong_lock             , PaddedMutex  , special,     false, Monitor::_safepoint_check_never);
 #endif

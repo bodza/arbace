@@ -39,9 +39,6 @@ ciMethod::ciMethod(const methodHandle& h_m, ciInstanceKlass* holder) :
   ciMetadata(h_m()),
   _holder(holder)
 {
-  if (LogTouchedMethods) {
-    h_m()->log_touched(Thread::current());
-  }
   // These fields are always filled in in loaded methods.
   _flags = ciFlags(h_m()->access_flags());
 
@@ -163,10 +160,6 @@ void ciMethod::load_code() {
   // Put an entry at the end of our list to represent the possibility
   // of exceptional exit.
   _exception_handlers[_handler_count] = new (arena) ciExceptionHandler(holder(), 0, code_size(), -1, 0);
-
-  if (CIPrintMethodCodes) {
-    print_codes();
-  }
 }
 
 // ------------------------------------------------------------------
@@ -1216,8 +1209,6 @@ void ciMethod::print_short_name(outputStream* st) {
     holder()->print_name_on(st);
     st->print("::");
     name()->print_symbol_on(st);
-    if (WizardMode)
-      signature()->as_symbol()->print_symbol_on(st);
   }
 }
 

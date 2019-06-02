@@ -129,12 +129,6 @@ void RuntimeBlob::trace_new_stub(RuntimeBlob* stub, const char* name1, const cha
   if (stub != NULL) {
     char stub_id[256];
     jio_snprintf(stub_id, sizeof(stub_id), "%s%s", name1, name2);
-    if (PrintStubCode) {
-      ttyLocker ttyl;
-      tty->print_cr("Decoding %s " INTPTR_FORMAT, stub_id, (intptr_t) stub);
-      Disassembler::decode(stub->code_begin(), stub->code_end());
-      tty->cr();
-    }
     Forte::register_stub(stub_id, stub->code_begin(), stub->code_end());
   }
 

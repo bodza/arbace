@@ -129,8 +129,7 @@
           "Optimize field loads and stores") \
  \
   develop(bool, InlineMethodsWithExceptionHandlers, true, \
-          "Inline methods containing exception handlers " \
-          "(NOTE: does not work with current backend)") \
+          "Inline methods containing exception handlers (NOTE: does not work with current backend)") \
  \
   product(bool, InlineSynchronizedMethods, true, \
           "Inline synchronized methods") \
@@ -159,9 +158,6 @@
  \
   notproduct(bool, PrintLIRWithAssembly, false, \
           "Show LIR instruction with generated assembly") \
- \
-  develop(bool, CommentedAssembly, trueInDebug, \
-          "Show extra info in PrintNMethods output") \
  \
   develop(bool, LIRTracePeephole, false, \
           "Trace peephole optimizer") \
@@ -298,8 +294,8 @@
           "Update MethodData*s in Tier1-generated code") \
  \
   develop(bool, PrintCFGToFile, false, \
-          "print control flow graph to a separate file during compilation") \
- \
+          "print control flow graph to a separate file during compilation")
+
 // Read default values for c1 globals
 
 C1_FLAGS(DECLARE_DEVELOPER_FLAG, \

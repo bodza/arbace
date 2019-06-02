@@ -38,14 +38,7 @@ void Events::print() {
   print_all(tty);
 }
 
-void Events::init() {
-  if (LogEvents) {
-    _messages = new StringEventLog("Events");
-    _exceptions = new StringEventLog("Internal exceptions");
-    _redefinitions = new StringEventLog("Classes redefined");
-    _deopt_messages = new StringEventLog("Deoptimization events");
-  }
-}
+void Events::init() { }
 
 void eventlog_init() {
   Events::init();
@@ -54,21 +47,6 @@ void eventlog_init() {
 ///////////////////////////////////////////////////////////////////////////
 // EventMark
 
-EventMark::EventMark(const char* format, ...) {
-  if (LogEvents) {
-    va_list ap;
-    va_start(ap, format);
-    // Save a copy of begin message and log it.
-    _buffer.printv(format, ap);
-    Events::log(NULL, "%s", _buffer.buffer());
-    va_end(ap);
-  }
-}
+EventMark::EventMark(const char* format, ...) { }
 
-EventMark::~EventMark() {
-  if (LogEvents) {
-    // Append " done" to the begin message and log it
-    _buffer.append(" done");
-    Events::log(NULL, "%s", _buffer.buffer());
-  }
-}
+EventMark::~EventMark() { }

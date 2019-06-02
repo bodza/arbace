@@ -34,13 +34,10 @@
 #include "runtime/sweeper.hpp"
 #include "runtime/vmThread.hpp"
 #include "utilities/align.hpp"
-#include "utilities/dtrace.hpp"
 #include "utilities/events.hpp"
 #include "utilities/resourceHash.hpp"
 #include "utilities/xmlstream.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
-
-#define DTRACE_METHOD_UNLOAD_PROBE(method)
 
 //---------------------------------------------------------------------------------
 
@@ -232,7 +229,6 @@ nmethod* nmethod::new_native_nmethod(const methodHandle& method,
   }
 
   if (nm != NULL) {
-    nm->log_new_nmethod();
     nm->make_in_use();
   }
   return nm;
@@ -303,11 +299,6 @@ nmethod* nmethod::new_nmethod(const methodHandle& method,
       }
     }
   }
-  // Do verification and logging outside CodeCache_lock.
-  if (nm != NULL) {
-    // Safepoints in nmethod::verify aren't allowed because nm hasn't been installed yet.
-    nm->log_new_nmethod();
-  }
   return nm;
 }
 
@@ -370,7 +361,7 @@ nmethod::nmethod(
     CodeCache::commit(this);
   }
 
-  if (PrintNativeNMethods || PrintDebugInfo || PrintRelocations || PrintDependencies) {
+  if (PrintNativeNMethods) {
     ttyLocker ttyl;  // keep the following output all in one block
     // This output goes directly to the tty, not the compiler log.
     // To enable tools to match it up with the compilation activity,
@@ -389,9 +380,6 @@ nmethod::nmethod(
       if (oop_maps != NULL) {
         oop_maps->print();
       }
-    }
-    if (PrintRelocations) {
-      print_relocations();
     }
     if (xtty != NULL) {
       xtty->tail("print_native_nmethod");
@@ -531,56 +519,17 @@ void nmethod::log_identity(xmlStream* log) const {
   }
 }
 
-#define LOG_OFFSET(log, name) \
-  if (p2i(name##_end()) - p2i(name##_begin())) \
-    log->print(" " XSTR(name) "_offset='" INTX_FORMAT "'"    , \
-               p2i(name##_begin()) - p2i(this))
-
-void nmethod::log_new_nmethod() const {
-  if (LogCompilation && xtty != NULL) {
-    ttyLocker ttyl;
-    HandleMark hm;
-    xtty->begin_elem("nmethod");
-    log_identity(xtty);
-    xtty->print(" entry='" INTPTR_FORMAT "' size='%d'", p2i(code_begin()), size());
-    xtty->print(" address='" INTPTR_FORMAT "'", p2i(this));
-
-    LOG_OFFSET(xtty, relocation);
-    LOG_OFFSET(xtty, consts);
-    LOG_OFFSET(xtty, insts);
-    LOG_OFFSET(xtty, stub);
-    LOG_OFFSET(xtty, scopes_data);
-    LOG_OFFSET(xtty, scopes_pcs);
-    LOG_OFFSET(xtty, dependencies);
-    LOG_OFFSET(xtty, handler_table);
-    LOG_OFFSET(xtty, nul_chk_table);
-    LOG_OFFSET(xtty, oops);
-    LOG_OFFSET(xtty, metadata);
-
-    xtty->method(method());
-    xtty->stamp();
-    xtty->end_elem();
-  }
-}
-
-#undef LOG_OFFSET
-
 // Print out more verbose output usually for a newly created nmethod.
 void nmethod::print_on(outputStream* st, const char* msg) const {
   if (st != NULL) {
     ttyLocker ttyl;
-    if (WizardMode) {
-      CompileTask::print(st, this, msg, /*short_form:*/ true);
-      st->print_cr(" (" INTPTR_FORMAT ")", p2i(this));
-    } else {
-      CompileTask::print(st, this, msg, /*short_form:*/ false);
-    }
+    CompileTask::print(st, this, msg, /*short_form:*/ false);
   }
 }
 
 void nmethod::maybe_print_nmethod(DirectiveSet* directive) {
   bool printnmethods = directive->PrintAssemblyOption || directive->PrintNMethodsOption;
-  if (printnmethods || PrintDebugInfo || PrintRelocations || PrintDependencies || PrintExceptionHandlers) {
+  if (printnmethods) {
     print_nmethod(printnmethods);
   }
 }
@@ -602,20 +551,18 @@ void nmethod::print_nmethod(bool printmethod) {
       oop_maps()->print();
     }
   }
-  if (printmethod || PrintDebugInfo || CompilerOracle::has_option_string(_method, "PrintDebugInfo")) {
+  if (printmethod || CompilerOracle::has_option_string(_method, "false")) {
     print_scopes();
   }
-  if (printmethod || PrintRelocations || CompilerOracle::has_option_string(_method, "PrintRelocations")) {
+  if (printmethod || CompilerOracle::has_option_string(_method, "false")) {
     print_relocations();
   }
-  if (printmethod || PrintDependencies || CompilerOracle::has_option_string(_method, "PrintDependencies")) {
+  if (printmethod || CompilerOracle::has_option_string(_method, "false")) {
     print_dependencies();
   }
-  if (printmethod || PrintExceptionHandlers) {
+  if (printmethod) {
     print_handler_table();
     print_nul_chk_table();
-  }
-  if (printmethod) {
     print_recorded_oops();
     print_recorded_metadata();
   }
@@ -809,25 +756,8 @@ void nmethod::invalidate_osr_method() {
 }
 
 void nmethod::log_state_change() const {
-  if (LogCompilation) {
-    if (xtty != NULL) {
-      ttyLocker ttyl;  // keep the following output all in one block
-      if (_state == unloaded) {
-        xtty->begin_elem("make_unloaded thread='" UINTX_FORMAT "'", os::current_thread_id());
-      } else {
-        xtty->begin_elem("make_not_entrant thread='" UINTX_FORMAT "'%s", os::current_thread_id(), (_state == zombie ? " zombie='1'" : ""));
-      }
-      log_identity(xtty);
-      xtty->stamp();
-      xtty->end_elem();
-    }
-  }
-
   const char *state_msg = _state == zombie ? "made zombie" : "made not entrant";
   CompileTask::print_ul(this, state_msg);
-  if (PrintCompilation && _state != unloaded) {
-    print_on(tty, state_msg);
-  }
 }
 
 /**
@@ -954,11 +884,6 @@ bool nmethod::make_not_entrant_or_zombie(int state) {
     set_method(NULL);
   }
 
-  if (false) {
-    ResourceMark m;
-    tty->print_cr("nmethod <" INTPTR_FORMAT "> %s code made %s", p2i(this), this->method() ? this->method()->name_and_sig_as_C_string() : "null", (state == not_entrant) ? "not entrant" : "zombie");
-  }
-
   NMethodSweeper::report_state_change(this);
   return true;
 }
@@ -966,12 +891,6 @@ bool nmethod::make_not_entrant_or_zombie(int state) {
 void nmethod::flush() {
   // completely deallocate this method
   Events::log(JavaThread::current(), "flushing nmethod " INTPTR_FORMAT, p2i(this));
-  if (PrintMethodFlushing) {
-    tty->print_cr("*flushing %s nmethod %3d/" INTPTR_FORMAT ". Live blobs:" UINT32_FORMAT
-                  "/Free CodeCache:" SIZE_FORMAT "Kb",
-                  is_osr_method() ? "osr" : "",_compile_id, p2i(this), CodeCache::blob_count(),
-                  CodeCache::unallocated_capacity(CodeCache::get_code_blob_type(this))/1024);
-  }
 
   // We need to deallocate any ExceptionCache data.
   // Note that we do not need to grab the nmethod lock for this, it
@@ -1049,19 +968,7 @@ bool nmethod::can_unload(BoolObjectClosure* is_alive, oop* root) {
 // post_compiled_method_load_event
 // new method for install_code() path
 // Transfer information from compilation to jvmti
-void nmethod::post_compiled_method_load_event() {
-
-  Method* moop = method();
-  HOTSPOT_COMPILED_METHOD_LOAD(
-    (char *) moop->klass_name()->bytes(),
-    moop->klass_name()->utf8_length(),
-    (char *) moop->name()->bytes(),
-    moop->name()->utf8_length(),
-    (char *) moop->signature()->bytes(),
-    moop->signature()->utf8_length(),
-    insts_begin(), insts_size()
-  );
-}
+void nmethod::post_compiled_method_load_event() { }
 
 jmethodID nmethod::get_and_cache_jmethod_id() {
   if (_jmethod_id == NULL) {
@@ -1078,8 +985,6 @@ void nmethod::post_compiled_method_unload() {
     // and the unloading is reported during the first transition.
     return;
   }
-
-  DTRACE_METHOD_UNLOAD_PROBE(method());
 
   // The JVMTI CompiledMethodUnload event can be enabled or disabled at
   // any time. As the nmethod is being unloaded now we mark it has
@@ -1453,8 +1358,6 @@ bool nmethod::is_evol_dependent_on(Klass* dependee) {
       Method* method = deps.method_argument(0);
       for (int j = 0; j < dependee_methods->length(); j++) {
         if (dependee_methods->at(j) == method) {
-          if (TraceDependencies || LogCompilation)
-            deps.log_dependency(dependee);
           return true;
         }
       }
@@ -1656,14 +1559,6 @@ void nmethod::print() const {
 
   print_on(tty, NULL);
 
-  if (WizardMode) {
-    tty->print("((nmethod*) " INTPTR_FORMAT ") ", p2i(this));
-    tty->print(" for method " INTPTR_FORMAT , p2i(method()));
-    tty->print(" { ");
-    tty->print_cr("%s ", state());
-    if (on_scavenge_root_list())  tty->print("scavenge_root ");
-    tty->print_cr("}:");
-  }
   if (size              () > 0) tty->print_cr(" total in heap  [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(this), p2i(this) + size(), size());
   if (relocation_size   () > 0) tty->print_cr(" relocation     [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(relocation_begin()), p2i(relocation_end()), relocation_size());
   if (consts_size       () > 0) tty->print_cr(" constants      [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d", p2i(consts_begin()), p2i(consts_end()), consts_size());

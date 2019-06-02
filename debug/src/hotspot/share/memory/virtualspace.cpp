@@ -62,8 +62,7 @@ static void unmap_or_release_memory(char* base, size_t size, bool is_file_mapped
 }
 
 // Helper method.
-static bool failed_to_reserve_as_requested(char* base, char* requested_address,
-                                           const size_t size, bool special, bool is_file_mapped = false)
+static bool failed_to_reserve_as_requested(char* base, char* requested_address, const size_t size, bool special, bool is_file_mapped = false)
 {
   if (base == requested_address || requested_address == NULL)
     return false; // did not fail

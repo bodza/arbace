@@ -57,12 +57,7 @@ class G1RegionToSpaceMapper : public CHeapObj<mtGC> {
   // a single byte in the data structure this mapper is for.
   // Eg. in the card table, this value corresponds to the size a single card
   // table entry corresponds to in the heap.
-  static G1RegionToSpaceMapper* create_mapper(ReservedSpace rs,
-                                              size_t actual_size,
-                                              size_t page_size,
-                                              size_t region_granularity,
-                                              size_t byte_translation_factor,
-                                              MemoryType type);
+  static G1RegionToSpaceMapper* create_mapper(ReservedSpace rs, size_t actual_size, size_t page_size, size_t region_granularity, size_t byte_translation_factor, MemoryType type);
 };
 
 #endif

@@ -353,7 +353,6 @@ static bool can_relax_access_check_for(const Klass* accessor, const Klass* acces
     (accessor_ik->major_version() < Verifier::STRICTER_ACCESS_CTRL_CHECK_VERSION &&
     accessee_ik->major_version() < Verifier::STRICTER_ACCESS_CTRL_CHECK_VERSION)) {
     return classloader_only &&
-      Verifier::relax_access_for(accessor_ik->class_loader()) &&
       accessor_ik->protection_domain() == accessee_ik->protection_domain() &&
       accessor_ik->class_loader() == accessee_ik->class_loader();
   }
@@ -400,12 +399,6 @@ Reflection::VerifyClassAccessResults Reflection::verify_class_access(const Klass
 
   // module boundaries
   if (new_class->is_public()) {
-    // Ignore modules for DumpSharedSpaces because we do not have any package
-    // or module information for modules other than java.base.
-    if (DumpSharedSpaces) {
-      return ACCESS_OK;
-    }
-
     // Find the module entry for current_class, the accessor
     ModuleEntry* module_from = current_class->module();
     // Find the module entry for new_class, the accessee
@@ -847,19 +840,12 @@ oop Reflection::new_parameter(Handle method, int index, Symbol* sym,
   return rh();
 }
 
-static methodHandle resolve_interface_call(InstanceKlass* klass,
-                                           const methodHandle& method,
-                                           Klass* recv_klass,
-                                           Handle receiver,
-                                           TRAPS) {
+static methodHandle resolve_interface_call(InstanceKlass* klass, const methodHandle& method, Klass* recv_klass, Handle receiver, TRAPS) {
 
   CallInfo info;
   Symbol*  signature  = method->signature();
   Symbol*  name       = method->name();
-  LinkResolver::resolve_interface_call(info, receiver, recv_klass,
-                                       LinkInfo(klass, name, signature),
-                                       true,
-                                       CHECK_(methodHandle()));
+  LinkResolver::resolve_interface_call(info, receiver, recv_klass, LinkInfo(klass, name, signature), true, CHECK_(methodHandle()));
   return info.selected_method();
 }
 
@@ -892,15 +878,7 @@ static void narrow(jvalue* value, BasicType narrow_type, TRAPS) {
 }
 
 // Method call (shared by invoke_method and invoke_constructor)
-static oop invoke(InstanceKlass* klass,
-                  const methodHandle& reflected_method,
-                  Handle receiver,
-                  bool override,
-                  objArrayHandle ptypes,
-                  BasicType rtype,
-                  objArrayHandle args,
-                  bool is_method_invoke,
-                  TRAPS) {
+static oop invoke(InstanceKlass* klass, const methodHandle& reflected_method, Handle receiver, bool override, objArrayHandle ptypes, BasicType rtype, objArrayHandle args, bool is_method_invoke, TRAPS) {
 
   ResourceMark rm(THREAD);
 

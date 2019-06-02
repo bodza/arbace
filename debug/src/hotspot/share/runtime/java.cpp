@@ -41,7 +41,6 @@
 #include "runtime/timer.hpp"
 #include "runtime/vm_operations.hpp"
 #include "services/memTracker.hpp"
-#include "utilities/dtrace.hpp"
 #include "utilities/globalDefinitions.hpp"
 #include "utilities/histogram.hpp"
 #include "utilities/macros.hpp"
@@ -60,13 +59,13 @@ int compare_methods(Method** a, Method** b) {
 void collect_profiled_methods(Method* m) {
   Thread* thread = Thread::current();
   methodHandle mh(thread, m);
-  if ((m->method_data() != NULL) && (PrintMethodData || CompilerOracle::should_print(mh))) {
+  if ((m->method_data() != NULL) && CompilerOracle::should_print(mh)) {
     collected_profiled_methods->push(m);
   }
 }
 
 void print_method_profiling_data() {
-  if (ProfileInterpreter || C1UpdateMethodData && (PrintMethodData || CompilerOracle::should_print_methods())) {
+  if (ProfileInterpreter || C1UpdateMethodData && CompilerOracle::should_print_methods()) {
     ResourceMark rm;
     HandleMark hm;
     collected_profiled_methods = new GrowableArray<Method*>(1024);
@@ -139,11 +138,6 @@ void before_exit(JavaThread* thread) {
     java_lang_Throwable::java_printStackTrace(exception, THREAD);
   }
 
-  // Hang forever on exit if we're reporting an error.
-  if (ShowMessageBoxOnError && VMError::is_error_reported()) {
-    os::infinite_sleep();
-  }
-
   EventThreadEnd event;
   if (event.should_commit()) {
     event.set_thread(JFR_THREAD_ID(thread));
@@ -175,10 +169,6 @@ void before_exit(JavaThread* thread) {
     }
   }
 
-  if (PrintBytecodeHistogram) {
-    BytecodeHistogram::print();
-  }
-
   Threads::shutdown_vm_agents();
 
   // Terminate the signal thread
@@ -188,14 +178,6 @@ void before_exit(JavaThread* thread) {
   { MutexLocker ml(BeforeExit_lock);
     _before_exit_status = BEFORE_EXIT_DONE;
     BeforeExit_lock->notify_all();
-  }
-
-  if (VerifyStringTableAtExit) {
-    size_t fail_cnt = StringTable::verify_and_compare_entries();
-    if (fail_cnt != 0) {
-      tty->print_cr("ERROR: fail_cnt=" SIZE_FORMAT, fail_cnt);
-      guarantee(fail_cnt == 0, "unexpected StringTable verification failures");
-    }
   }
 
   #undef BEFORE_EXIT_NOT_RUN
@@ -225,11 +207,7 @@ void vm_exit(int code) {
   ShouldNotReachHere();
 }
 
-void notify_vm_shutdown() {
-  // For now, just a dtrace probe.
-  HOTSPOT_VM_SHUTDOWN();
-  HS_DTRACE_WORKAROUND_TAIL_CALL_BUG();
-}
+void notify_vm_shutdown() { }
 
 void vm_direct_exit(int code) {
   notify_vm_shutdown();
@@ -280,9 +258,6 @@ void vm_notify_during_shutdown(const char* error, const char* message) {
     } else {
       tty->cr();
     }
-  }
-  if (ShowMessageBoxOnError && WizardMode) {
-    fatal("Error occurred during initialization of VM");
   }
 }
 

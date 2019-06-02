@@ -39,10 +39,8 @@ class AgeTable {
 
   // Calculate new tenuring threshold based on age information.
   uint compute_tenuring_threshold(size_t desired_survivor_size);
-  void print_age_table(uint tenuring_threshold);
 
  private:
-
   PerfVariable* _perf_sizes[table_size];
 };
 

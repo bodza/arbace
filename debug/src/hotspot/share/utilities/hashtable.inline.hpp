@@ -4,7 +4,6 @@
 #include "memory/allocation.inline.hpp"
 #include "runtime/orderAccess.hpp"
 #include "utilities/hashtable.hpp"
-#include "utilities/dtrace.hpp"
 
 // Inline function definitions for hashtable.hpp.
 

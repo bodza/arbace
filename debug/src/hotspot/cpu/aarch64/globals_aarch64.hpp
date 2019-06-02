@@ -7,17 +7,17 @@
 // Sets the default values for platform dependent flags used by the runtime system.
 // (see globals.hpp)
 
-define_pd_global(bool, ShareVtableStubs,         true);
-define_pd_global(bool, NeedsDeoptSuspend,        false); // only register window machines need this
+define_pd_global(bool, ShareVtableStubs,    true);
+define_pd_global(bool, NeedsDeoptSuspend,   false); // only register window machines need this
 
-define_pd_global(bool, ImplicitNullChecks,       true);  // Generate code for implicit null checks
-define_pd_global(bool, TrapBasedNullChecks,  false);
-define_pd_global(bool, UncommonNullCast,         true);  // Uncommon-trap NULLs past to check cast
+define_pd_global(bool, ImplicitNullChecks,  true);  // Generate code for implicit null checks
+define_pd_global(bool, TrapBasedNullChecks, false);
+define_pd_global(bool, UncommonNullCast,    true);  // Uncommon-trap NULLs past to check cast
 
-define_pd_global(uintx, CodeCacheSegmentSize,    64); // Tiered compilation has large code-entry alignment.
-define_pd_global(intx, CodeEntryAlignment,       64);
-define_pd_global(intx, OptoLoopAlignment,        16);
-define_pd_global(intx, InlineFrequencyCount,     100);
+define_pd_global(uintx, CodeCacheSegmentSize, 64); // Tiered compilation has large code-entry alignment.
+define_pd_global(intx, CodeEntryAlignment,    64);
+define_pd_global(intx, OptoLoopAlignment,     16);
+define_pd_global(intx, InlineFrequencyCount, 100);
 
 #define DEFAULT_STACK_YELLOW_PAGES (2)
 #define DEFAULT_STACK_RED_PAGES (1)
@@ -56,7 +56,7 @@ define_pd_global(intx, InitArrayShortSize, BytesPerLong);
 
 define_pd_global(bool, ThreadLocalHandshakes, true);
 
-define_pd_global(intx, InlineSmallCode,          1000);
+define_pd_global(intx, InlineSmallCode,       1000);
 
 #ifdef BUILTIN_SIM
 #define UseBuiltinSim           true
@@ -88,7 +88,7 @@ define_pd_global(intx, InlineSmallCode,          1000);
           "Use CRC32 instructions for CRC32 computation") \
  \
   product(bool, UseLSE, false, \
-          "Use LSE instructions") \
+          "Use LSE instructions")
 
 // Don't attempt to use Neon on builtin sim until builtin sim supports it
 #define UseCRC32 false

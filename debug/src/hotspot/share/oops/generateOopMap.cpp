@@ -373,9 +373,6 @@ void GenerateOopMap::bb_mark_fct(GenerateOopMap *c, int bci, int *data) {
   if (c->is_bb_header(bci))
      return;
 
-  if (TraceNewOopMapGeneration) {
-     tty->print_cr("Basicblock#%d begins at: %d", c->_bb_count, bci);
-  }
   c->set_bbmark_bit(bci);
   c->_bb_count++;
 }
@@ -985,9 +982,6 @@ void GenerateOopMap::initialize_vars() {
 
 void GenerateOopMap::add_to_ref_init_set(int localNo) {
 
-  if (TraceNewOopMapGeneration)
-    tty->print_cr("Added init vars: %d", localNo);
-
   // Is it already in the set?
   if (_init_vars->contains(localNo))
     return;
@@ -1228,9 +1222,6 @@ void GenerateOopMap::print_current_state(outputStream *os, BytecodeStream *curre
 // Sets the current state to be the state after executing the
 // current instruction, starting in the current state.
 void GenerateOopMap::interp1(BytecodeStream *itr) {
-  if (TraceNewOopMapGeneration) {
-    print_current_state(tty, itr, TraceNewOopMapGenerationDetailed);
-  }
 
   // Should we report the results? Result is reported *before* the instruction at the current bci is executed.
   // However, not for calls. For calls we do not want to include the arguments, so we postpone the reporting until
@@ -1880,9 +1871,6 @@ void GenerateOopMap::ret_jump_targets_do(BytecodeStream *bcs, jmpFct_t jmpFct, i
     // Make sure a jrtRet does not set the changed bit for dead basicblock.
     BasicBlock* jsr_bb    = get_basic_block_containing(target_bci - 1);
     bool alive = jsr_bb->is_alive();
-    if (TraceNewOopMapGeneration) {
-      tty->print("pc = %d, ret -> %d alive: %s\n", bci, target_bci, alive ? "true" : "false");
-    }
     if (alive) jmpFct(this, target_bci, data);
   }
 }
@@ -1932,18 +1920,6 @@ void GenerateOopMap::compute_map(TRAPS) {
   _ret_adr_tos    = new GrowableArray<intptr_t>(5);  // 5 seems like a good number;
   _did_rewriting  = false;
   _did_relocation = false;
-
-  if (TraceNewOopMapGeneration) {
-    tty->print("Method name: %s\n", method()->name()->as_C_string());
-    if (Verbose) {
-      _method->print_codes();
-      tty->print_cr("Exception table:");
-      ExceptionTable excps(method());
-      for (int i = 0; i < excps.length(); i ++) {
-        tty->print_cr("[%d - %d] -> %d", excps.start_pc(i), excps.end_pc(i), excps.handler_pc(i));
-      }
-    }
-  }
 
   // if no code - do nothing
   // compiler needs info
@@ -2015,8 +1991,6 @@ void GenerateOopMap::verify_error(const char *format, ...) {
 //
 void GenerateOopMap::report_result() {
 
-  if (TraceNewOopMapGeneration) tty->print_cr("Report result pass");
-
   // We now want to report the result of the parse
   _report_result = true;
 
@@ -2043,7 +2017,6 @@ void GenerateOopMap::report_result() {
 }
 
 void GenerateOopMap::result_for_basicblock(int bci) {
- if (TraceNewOopMapGeneration) tty->print_cr("Report result pass for basicblock");
 
   // We now want to report the result of the parse
   _report_result = true;
@@ -2060,10 +2033,6 @@ void GenerateOopMap::result_for_basicblock(int bci) {
 //
 
 void GenerateOopMap::record_refval_conflict(int varNo) {
-
-  if (TraceOopMapRewrites) {
-     tty->print("### Conflict detected (local no: %d)\n", varNo);
-  }
 
   if (!_new_var_map) {
     _new_var_map = NEW_RESOURCE_ARRAY(int, _max_locals);
@@ -2123,19 +2092,10 @@ void GenerateOopMap::rewrite_refval_conflicts() {
   // Tracing flag
   _did_rewriting = true;
 
-  if (TraceOopMapRewrites) {
-    tty->print_cr("ref/value conflict for method %s - bytecodes are getting rewritten", method()->name()->as_C_string());
-    method()->print();
-    method()->print_codes();
-  }
-
   compute_ret_adr_at_TOS();
   if (!_got_error) {
     for (int k = 0; k < _max_locals && !_got_error; k++) {
       if (_new_var_map[k] != k) {
-        if (TraceOopMapRewrites) {
-          tty->print_cr("Rewriting: %d -> %d", k, _new_var_map[k]);
-        }
         rewrite_refval_conflict(k, _new_var_map[k]);
         if (_got_error) return;
         nof_conflicts++;
@@ -2184,22 +2144,12 @@ bool GenerateOopMap::rewrite_refval_conflict_inst(BytecodeStream *itr, int from,
   int bci = itr->bci();
 
   if (is_aload(itr, &index) && index == from) {
-    if (TraceOopMapRewrites) {
-      tty->print_cr("Rewriting aload at bci: %d", bci);
-    }
     return rewrite_load_or_store(itr, Bytecodes::_aload, Bytecodes::_aload_0, to);
   }
 
   if (is_astore(itr, &index) && index == from) {
     if (!stack_top_holds_ret_addr(bci)) {
-      if (TraceOopMapRewrites) {
-        tty->print_cr("Rewriting astore at bci: %d", bci);
-      }
       return rewrite_load_or_store(itr, Bytecodes::_astore, Bytecodes::_astore_0, to);
-    } else {
-      if (TraceOopMapRewrites) {
-        tty->print_cr("Supress rewriting of astore at bci: %d", bci);
-      }
     }
   }
 
@@ -2357,9 +2307,6 @@ void GenerateOopMap::compute_ret_adr_at_TOS() {
         // TDT: should this be is_good_address() ?
         if (_stack_top > 0 && stack()[_stack_top-1].is_address()) {
           _ret_adr_tos->append(bcs.bci());
-          if (TraceNewOopMapGeneration) {
-            tty->print_cr("Ret_adr TOS at bci: %d", bcs.bci());
-          }
         }
         interp1(&bcs);
       }

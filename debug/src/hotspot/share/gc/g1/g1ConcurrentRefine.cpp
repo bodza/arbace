@@ -229,10 +229,7 @@ void G1ConcurrentRefine::print_threads_on(outputStream* st) const {
   _thread_control.print_on(st);
 }
 
-static size_t calc_new_green_zone(size_t green,
-                                  double update_rs_time,
-                                  size_t update_rs_processed_buffers,
-                                  double goal_ms) {
+static size_t calc_new_green_zone(size_t green, double update_rs_time, size_t update_rs_processed_buffers, double goal_ms) {
   // Adjust green zone based on whether we're meeting the time goal.
   // Limit to max_green_zone.
   const double inc_k = 1.1, dec_k = 0.9;

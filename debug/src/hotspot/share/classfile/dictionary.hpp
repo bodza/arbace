@@ -45,7 +45,6 @@ public:
   void add_klass(unsigned int hash, Symbol* class_name, InstanceKlass* obj);
 
   InstanceKlass* find_class(int index, unsigned int hash, Symbol* name);
-
   InstanceKlass* find_shared_class(int index, unsigned int hash, Symbol* name);
 
   void classes_do(void f(InstanceKlass*));
@@ -58,12 +57,8 @@ public:
 
   // Protection domains
   InstanceKlass* find(unsigned int hash, Symbol* name, Handle protection_domain);
-  bool is_valid_protection_domain(unsigned int hash,
-                                  Symbol* name,
-                                  Handle protection_domain);
-  void add_protection_domain(int index, unsigned int hash,
-                             InstanceKlass* klass,
-                             Handle protection_domain, TRAPS);
+  bool is_valid_protection_domain(unsigned int hash, Symbol* name, Handle protection_domain);
+  void add_protection_domain(int index, unsigned int hash, InstanceKlass* klass, Handle protection_domain, TRAPS);
 
   // Sharing support
   void reorder_dictionary_for_sharing() { };
@@ -143,12 +138,7 @@ class DictionaryEntry : public HashtableEntry<InstanceKlass*, mtClass> {
 
   // Tells whether the initiating class' protection domain can access the klass in this entry
   bool is_valid_protection_domain(Handle protection_domain) {
-    if (!ProtectionDomainVerification) return true;
-    if (!SystemDictionary::has_checkPackageAccess()) return true;
-
-    return protection_domain() == NULL
-         ? true
-         : contains_protection_domain(protection_domain());
+    return true;
   }
 
   void verify_protection_domain_set() {

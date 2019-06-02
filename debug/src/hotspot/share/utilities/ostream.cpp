@@ -353,8 +353,7 @@ char* get_datetime_string(char *buf, size_t len) {
   return buf;
 }
 
-static const char* make_log_name_internal(const char* log_name, const char* force_directory,
-                                                int pid, const char* tms) {
+static const char* make_log_name_internal(const char* log_name, const char* force_directory, int pid, const char* tms) {
   const char* basename = log_name;
   char file_sep = os::file_separator()[0];
   const char* cp;
@@ -451,15 +450,14 @@ static const char* make_log_name_internal(const char* log_name, const char* forc
   return buf;
 }
 
-// log_name comes from -XX:LogFile=log_name or
+// log_name comes from -XX:NULL=log_name or
 // -XX:DumpLoadedClassList=<file_name>
 // in log_name, %p => pid1234 and
 //              %t => YYYY-MM-DD_HH-MM-SS
 static const char* make_log_name(const char* log_name, const char* force_directory) {
   char timestr[32];
   get_datetime_string(timestr, sizeof(timestr));
-  return make_log_name_internal(log_name, force_directory, os::current_process_id(),
-                                timestr);
+  return make_log_name_internal(log_name, force_directory, os::current_process_id(), timestr);
 }
 
 fileStream::fileStream(const char* file_name) {
@@ -552,17 +550,16 @@ FILE* defaultStream::_error_stream  = stderr;
 
 void defaultStream::init() {
   _inited = true;
-  if (LogVMOutput || LogCompilation) {
-    init_log();
-  }
 }
 
 bool defaultStream::has_log_file() {
-  // lazily create log file (at startup, LogVMOutput is false even
-  // if +LogVMOutput is used, because the flags haven't been parsed yet)
+  // lazily create log file (at startup, false is false even
+  // if +false is used, because the flags haven't been parsed yet)
   // For safer printing during fatal error handling, do not init logfile
   // if a VM error has been reported.
-  if (!_inited && !VMError::is_error_reported())  init();
+  if (!_inited && !VMError::is_error_reported()) {
+    init();
+  }
   return _log_file != NULL;
 }
 
@@ -589,7 +586,7 @@ fileStream* defaultStream::open_file(const char* log_name) {
     return NULL;
   }
 
-  jio_printf("Warning:  Forcing option -XX:LogFile=%s\n", try_name);
+  jio_printf("Warning:  Forcing option -XX:NULL=%s\n", try_name);
 
   file = new(ResourceObj::C_HEAP, mtInternal) fileStream(try_name);
   FREE_C_HEAP_ARRAY(char, try_name);
@@ -603,7 +600,7 @@ fileStream* defaultStream::open_file(const char* log_name) {
 
 void defaultStream::init_log() {
   // %%% Need a MutexLocker?
-  const char* log_name = LogFile != NULL ? LogFile : "hotspot_%p.log";
+  const char* log_name = "hotspot_%p.log";
   fileStream* file = open_file(log_name);
 
   if (file != NULL) {
@@ -612,9 +609,7 @@ void defaultStream::init_log() {
     start_log();
   } else {
     // and leave xtty as NULL
-    LogVMOutput = false;
     DisplayVMOutput = true;
-    LogCompilation = false;
   }
 }
 

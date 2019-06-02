@@ -144,7 +144,7 @@ class java_lang_String : AllStatic {
   macro(java_lang_Class, static_oop_field_count, int_signature,     false) \
   macro(java_lang_Class, protection_domain,      object_signature,  false) \
   macro(java_lang_Class, signers,                object_signature,  false) \
-  macro(java_lang_Class, source_file,            object_signature,  false) \
+  macro(java_lang_Class, source_file,            object_signature,  false)
 
 class java_lang_Class : AllStatic {
   friend class VMStructs;
@@ -185,8 +185,7 @@ class java_lang_Class : AllStatic {
   static void compute_offsets();
 
   // Instance creation
-  static void create_mirror(Klass* k, Handle class_loader, Handle module,
-                            Handle protection_domain, TRAPS);
+  static void create_mirror(Klass* k, Handle class_loader, Handle module, Handle protection_domain, TRAPS);
   static void fixup_mirror(Klass* k, TRAPS);
   static oop  create_basic_type_mirror(const char* basic_type_name, BasicType type, TRAPS);
 
@@ -194,11 +193,8 @@ class java_lang_Class : AllStatic {
   static void serialize(SerializeClosure* f) { };
   static void archive_basic_type_mirrors(TRAPS) { };
   static oop  archive_mirror(Klass* k, TRAPS) { return NULL; };
-  static oop  process_archived_mirror(Klass* k, oop mirror, oop archived_mirror, Thread *THREAD)
-                                      { return NULL; };
-  static bool restore_archived_mirror(Klass *k, Handle class_loader, Handle module,
-                                      Handle protection_domain,
-                                      TRAPS) { return false; };
+  static oop  process_archived_mirror(Klass* k, oop mirror, oop archived_mirror, Thread *THREAD) { return NULL; };
+  static bool restore_archived_mirror(Klass *k, Handle class_loader, Handle module, Handle protection_domain, TRAPS) { return false; };
 
   static void fixup_module_field(Klass* k, Handle module);
 
@@ -861,8 +857,7 @@ class java_lang_boxing_object: AllStatic {
   static void print(BasicType type, jvalue* value, outputStream* st);
 
   static int value_offset_in_bytes(BasicType type) {
-    return ( type == T_LONG || type == T_DOUBLE ) ? long_value_offset :
-                                                    value_offset;
+    return ( type == T_LONG || type == T_DOUBLE ) ? long_value_offset : value_offset;
   }
 
   // Debugging
@@ -1336,8 +1331,7 @@ class java_lang_StackTraceElement: AllStatic {
   // Create an instance of StackTraceElement
   static oop create(const methodHandle& method, int bci, TRAPS);
 
-  static void fill_in(Handle element, InstanceKlass* holder, const methodHandle& method,
-                      int version, int bci, Symbol* name, TRAPS);
+  static void fill_in(Handle element, InstanceKlass* holder, const methodHandle& method, int version, int bci, Symbol* name, TRAPS);
 
   static void compute_offsets();
   static void serialize(SerializeClosure* f) { };

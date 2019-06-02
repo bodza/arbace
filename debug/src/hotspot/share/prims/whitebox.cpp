@@ -183,8 +183,7 @@ WB_ENTRY(void, WB_ReadFromNoaccessArea(JNIEnv* env, jobject o))
   tty->print_cr("*(vs.low_boundary() - rhs.noaccess_prefix() / 2 ) = %c", *(vs.low_boundary() - rhs.noaccess_prefix() / 2 ));
 WB_END
 
-static jint wb_stress_virtual_space_resize(size_t reserved_space_size,
-                                           size_t magnitude, size_t iterations) {
+static jint wb_stress_virtual_space_resize(size_t reserved_space_size, size_t magnitude, size_t iterations) {
   size_t granularity = os::vm_allocation_granularity();
   ReservedHeapSpace rhs(reserved_space_size * granularity, granularity, false);
   VirtualSpace vs;
@@ -1067,7 +1066,7 @@ WB_ENTRY(jstring, WB_GetCPUFeatures(JNIEnv* env, jobject o))
 WB_END
 
 int WhiteBox::get_blob_type(const CodeBlob* code) {
-  guarantee(WhiteBoxAPI, "internal testing API :: WhiteBox has to be enabled");
+  guarantee(false, "internal testing API :: WhiteBox has to be enabled");
   if (code->is_aot()) {
     return -1;
   }
@@ -1075,7 +1074,7 @@ int WhiteBox::get_blob_type(const CodeBlob* code) {
 }
 
 CodeHeap* WhiteBox::get_code_heap(int blob_type) {
-  guarantee(WhiteBoxAPI, "internal testing API :: WhiteBox has to be enabled");
+  guarantee(false, "internal testing API :: WhiteBox has to be enabled");
   return CodeCache::get_code_heap(blob_type);
 }
 
@@ -1163,7 +1162,7 @@ WB_ENTRY(jobjectArray, WB_GetNMethod(JNIEnv* env, jobject o, jobject method, jbo
 WB_END
 
 CodeBlob* WhiteBox::allocate_code_blob(int size, int blob_type) {
-  guarantee(WhiteBoxAPI, "internal testing API :: WhiteBox has to be enabled");
+  guarantee(false, "internal testing API :: WhiteBox has to be enabled");
   BufferBlob* blob;
   int full_size = CodeBlob::align_code_offset(sizeof(BufferBlob));
   if (full_size < size) {
@@ -1847,15 +1846,6 @@ static JNINativeMethod methods[] = {
 #undef CC
 
 JVM_ENTRY(void, JVM_RegisterWhiteBoxMethods(JNIEnv* env, jclass wbclass))
-  {
-    if (WhiteBoxAPI) {
-      // Make sure that wbclass is loaded by the null classloader
-      InstanceKlass* ik = InstanceKlass::cast(JNIHandles::resolve(wbclass)->klass());
-      Handle loader(THREAD, ik->class_loader());
-      if (loader.is_null()) {
-        WhiteBox::register_methods(env, wbclass, thread, methods, sizeof(methods) / sizeof(methods[0]));
-        WhiteBox::set_used();
-      }
-    }
+  {
   }
 JVM_END

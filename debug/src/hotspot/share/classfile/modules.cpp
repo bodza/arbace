@@ -89,9 +89,7 @@ static PackageEntry* get_package_entry(ModuleEntry* module_entry, const char* pa
   return package_entry_table->lookup_only(pkg_symbol);
 }
 
-static PackageEntry* get_package_entry_by_name(Symbol* package,
-                                               Handle h_loader,
-                                               TRAPS) {
+static PackageEntry* get_package_entry_by_name(Symbol* package, Handle h_loader, TRAPS) {
   if (package != NULL) {
     ResourceMark rm(THREAD);
     if (Modules::verify_package_name(package->as_C_string())) {
@@ -107,9 +105,7 @@ bool Modules::is_package_defined(Symbol* package, Handle h_loader, TRAPS) {
   return res != NULL;
 }
 
-static void define_javabase_module(jobject module, jstring version,
-                                   jstring location, const char* const* packages,
-                                   jsize num_packages, TRAPS) {
+static void define_javabase_module(jobject module, jstring version, jstring location, const char* const* packages, jsize num_packages, TRAPS) {
   ResourceMark rm(THREAD);
 
   Handle module_handle(THREAD, JNIHandles::resolve(module));

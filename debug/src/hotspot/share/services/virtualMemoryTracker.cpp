@@ -310,7 +310,7 @@ bool VirtualMemoryTracker::add_reserved_region(address base_addr, size_t size, c
       // thread does not detach from VM before exits, and leads to
       // leak JavaThread object
       if (reserved_rgn->flag() == mtThreadStack) {
-        guarantee(!CheckJNICalls, "Attached JNI thread exited without being detached");
+        guarantee(true, "Attached JNI thread exited without being detached");
         // Overwrite with new region
 
         // Release old region

@@ -57,9 +57,7 @@ address TemplateInterpreterGenerator::generate_StackOverflowError_handler() {
   // exception happened
   __ empty_expression_stack();
   // throw exception
-  __ call_VM(noreg,
-             CAST_FROM_FN_PTR(address,
-                              InterpreterRuntime::throw_StackOverflowError));
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_StackOverflowError));
   return entry;
 }
 
@@ -73,9 +71,7 @@ address TemplateInterpreterGenerator::generate_ArrayIndexOutOfBounds_handler() {
   // ??? convention: expect aberrant index in register ebx/rbx.
   // Pass array to create more detailed exceptions.
   Register rarg = c_rarg1;
-  __ call_VM(noreg,
-             CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_ArrayIndexOutOfBoundsException),
-             rarg, rbx);
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_ArrayIndexOutOfBoundsException), rarg, rbx);
   return entry;
 }
 
@@ -90,9 +86,7 @@ address TemplateInterpreterGenerator::generate_ClassCastException_handler() {
   // exception happened
   __ empty_expression_stack();
 
-  __ call_VM(noreg,
-             CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_ClassCastException),
-             rarg);
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_ClassCastException), rarg);
   return entry;
 }
 
@@ -112,13 +106,10 @@ address TemplateInterpreterGenerator::generate_exception_handler_common(const ch
   // setup parameters
   __ lea(rarg, ExternalAddress((address)name));
   if (pass_oop) {
-    __ call_VM(rax, CAST_FROM_FN_PTR(address, InterpreterRuntime::create_klass_exception),
-               rarg, rarg2);
+    __ call_VM(rax, CAST_FROM_FN_PTR(address, InterpreterRuntime::create_klass_exception), rarg, rarg2);
   } else {
     __ lea(rarg2, ExternalAddress((address)message));
-    __ call_VM(rax,
-               CAST_FROM_FN_PTR(address, InterpreterRuntime::create_exception),
-               rarg, rarg2);
+    __ call_VM(rax, CAST_FROM_FN_PTR(address, InterpreterRuntime::create_exception), rarg, rarg2);
   }
   // throw exception
   __ jump(ExternalAddress(Interpreter::throw_exception_entry()));
@@ -183,9 +174,7 @@ address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state, i
     Label L;
     __ cmpptr(Address(thread, Thread::pending_exception_offset()), (int32_t) NULL_WORD);
     __ jcc(Assembler::zero, L);
-    __ call_VM(noreg,
-               CAST_FROM_FN_PTR(address,
-                                InterpreterRuntime::throw_pending_exception));
+    __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_pending_exception));
     __ should_not_reach_here();
     __ bind(L);
   }
@@ -582,7 +571,7 @@ void TemplateInterpreterGenerator::bang_stack_shadow_pages(bool native_call) {
 // native method than the typical interpreter frame setup.
 address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
   // determine code generation flags
-  bool inc_counter  = UseCompiler || CountCompiledCalls || LogTouchedMethods;
+  bool inc_counter  = UseCompiler || CountCompiledCalls;
 
   // rbx: Method*
   // rbcp: sender sp
@@ -684,10 +673,7 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
     __ movptr(t, Address(method, Method::signature_handler_offset()));
     __ testptr(t, t);
     __ jcc(Assembler::notZero, L);
-    __ call_VM(noreg,
-               CAST_FROM_FN_PTR(address,
-                                InterpreterRuntime::prepare_native_call),
-               method);
+    __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::prepare_native_call), method);
     __ get_method(method);
     __ movptr(t, Address(method, Method::signature_handler_offset()));
     __ bind(L);
@@ -730,10 +716,7 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
     ExternalAddress unsatisfied(SharedRuntime::native_method_throw_unsatisfied_link_error_entry());
     __ cmpptr(rax, unsatisfied.addr());
     __ jcc(Assembler::notEqual, L);
-    __ call_VM(noreg,
-               CAST_FROM_FN_PTR(address,
-                                InterpreterRuntime::prepare_native_call),
-               method);
+    __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::prepare_native_call), method);
     __ get_method(method);
     __ movptr(rax, Address(method, Method::native_function_offset()));
     __ bind(L);
@@ -820,11 +803,6 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
   // reset_last_Java_frame
   __ reset_last_Java_frame(thread, true);
 
-  if (CheckJNICalls) {
-    // clear_pending_jni_exception_check
-    __ movptr(Address(thread, JavaThread::pending_jni_exception_check_fn_offset()), NULL_WORD);
-  }
-
   // reset handle block
   __ movptr(t, Address(thread, JavaThread::active_handles_offset()));
   __ movl(Address(t, JNIHandleBlock::top_offset_in_bytes()), (int32_t)NULL_WORD);
@@ -885,9 +863,7 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
     // used in call_VM_base(); i.e., we should use the
     // StubRoutines::forward_exception code. For now this doesn't work
     // here because the rsp is not correctly set at this point.
-    __ MacroAssembler::call_VM(noreg,
-                               CAST_FROM_FN_PTR(address,
-                               InterpreterRuntime::throw_pending_exception));
+    __ MacroAssembler::call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_pending_exception));
     __ should_not_reach_here();
     __ bind(L);
   }
@@ -917,9 +893,7 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
       __ jcc(Assembler::notZero, unlock);
 
       // Entry already unlocked, need to throw exception
-      __ MacroAssembler::call_VM(noreg,
-                                 CAST_FROM_FN_PTR(address,
-                   InterpreterRuntime::throw_illegal_monitor_state_exception));
+      __ MacroAssembler::call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_illegal_monitor_state_exception));
       __ should_not_reach_here();
 
       __ bind(unlock);
@@ -989,7 +963,7 @@ address TemplateInterpreterGenerator::generate_abstract_entry(void) {
 //
 address TemplateInterpreterGenerator::generate_normal_entry(bool synchronized) {
   // determine code generation flags
-  bool inc_counter  = UseCompiler || CountCompiledCalls || LogTouchedMethods;
+  bool inc_counter  = UseCompiler || CountCompiledCalls;
 
   // ebx: Method*
   // rbcp: sender sp
@@ -1141,10 +1115,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
   // an exception
   __ empty_expression_stack();
   // find exception handler address and preserve exception oop
-  __ call_VM(rdx,
-             CAST_FROM_FN_PTR(address,
-                          InterpreterRuntime::exception_handler_for_exception),
-             rarg);
+  __ call_VM(rdx, CAST_FROM_FN_PTR(address, InterpreterRuntime::exception_handler_for_exception), rarg);
   // rax: exception handler entry point
   // rdx: preserved exception oop
   // r13/rsi: bcp for exception handler
@@ -1188,8 +1159,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
     Label caller_not_deoptimized;
     Register rarg = c_rarg1;
     __ movptr(rarg, Address(rbp, frame::return_addr_offset * wordSize));
-    __ super_call_VM_leaf(CAST_FROM_FN_PTR(address,
-                               InterpreterRuntime::interpreter_contains), rarg);
+    __ super_call_VM_leaf(CAST_FROM_FN_PTR(address, InterpreterRuntime::interpreter_contains), rarg);
     __ testl(rax, rax);
     __ jcc(Assembler::notZero, caller_not_deoptimized);
 
@@ -1281,9 +1251,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
   // rbp: ebp of caller
   __ push(rax);                                  // save exception
   __ push(rdx);                                  // save return address
-  __ super_call_VM_leaf(CAST_FROM_FN_PTR(address,
-                          SharedRuntime::exception_handler_for_return_address),
-                        thread, rdx);
+  __ super_call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::exception_handler_for_return_address), thread, rdx);
   __ mov(rbx, rax);                              // save exception handler
   __ pop(rdx);                                   // restore return address
   __ pop(rax);                                   // restore exception

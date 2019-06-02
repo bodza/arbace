@@ -222,8 +222,7 @@ bool os::committed_in_range(address start, size_t size, address& committed_start
 // Pass buffer and printbuffer as we already printed the path to buffer
 // when we called get_current_directory. This way we avoid another buffer
 // of size MAX_PATH.
-static bool conc_path_file_and_check(char *buffer, char *printbuffer, size_t printbuflen,
-                                     const char* pname, char lastchar, const char* fname) {
+static bool conc_path_file_and_check(char *buffer, char *printbuffer, size_t printbuflen, const char* pname, char lastchar, const char* fname) {
 
   // Concatenate path and file name, but don't print double path separators.
   const char *filesep = (lastchar == os::file_separator()[0]) ? "" : os::file_separator();
@@ -330,10 +329,6 @@ static void signal_thread_entry(JavaThread* thread, TRAPS) {
         VM_FindDeadlocks op1(tty);
         VMThread::execute(&op1);
         Universe::print_heap_at_SIGBREAK();
-        if (PrintClassHistogram) {
-          VM_GC_HeapInspection op1(tty, true /* force full GC before heap inspection */);
-          VMThread::execute(&op1);
-        }
         break;
       }
       default: {
@@ -706,7 +701,7 @@ void os::start_thread(Thread* thread) {
 }
 
 void os::abort(bool dump_core) {
-  abort(dump_core && CreateCoredumpOnCrash, NULL, NULL);
+  abort(false, NULL, NULL);
 }
 
 //---------------------------------------------------------------------------

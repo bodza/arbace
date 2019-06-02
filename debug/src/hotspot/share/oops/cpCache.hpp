@@ -383,10 +383,7 @@ class ConstantPoolCache: public MetaspaceObj {
                   const intArray& invokedynamic_inverse_index_map,
                   const intArray& invokedynamic_references_map);
  public:
-  static ConstantPoolCache* allocate(ClassLoaderData* loader_data,
-                                     const intStack& cp_cache_map,
-                                     const intStack& invokedynamic_cp_cache_map,
-                                     const intStack& invokedynamic_references_map, TRAPS);
+  static ConstantPoolCache* allocate(ClassLoaderData* loader_data, const intStack& cp_cache_map, const intStack& invokedynamic_cp_cache_map, const intStack& invokedynamic_references_map, TRAPS);
   bool is_constantPoolCache() const { return true; }
 
   int length() const                      { return _length; }

@@ -269,9 +269,7 @@ Method* interpretedVFrame::method() const {
   return fr().interpreter_frame_method();
 }
 
-static StackValue* create_stack_value_from_oop_map(const InterpreterOopMap& oop_mask,
-                                                   int index,
-                                                   const intptr_t* const addr) {
+static StackValue* create_stack_value_from_oop_map(const InterpreterOopMap& oop_mask, int index, const intptr_t* const addr) {
 
   // categorize using oop_mask
   if (oop_mask.is_oop(index)) {
@@ -295,10 +293,7 @@ static bool is_in_expression_stack(const frame& fr, const intptr_t* const addr) 
   return addr >= fr.interpreter_frame_tos_address();
 }
 
-static void stack_locals(StackValueCollection* result,
-                         int length,
-                         const InterpreterOopMap& oop_mask,
-                         const frame& fr) {
+static void stack_locals(StackValueCollection* result, int length, const InterpreterOopMap& oop_mask, const frame& fr) {
 
   for (int i = 0; i < length; ++i) {
     const intptr_t* const addr = fr.interpreter_frame_local_at(i);
@@ -309,11 +304,7 @@ static void stack_locals(StackValueCollection* result,
   }
 }
 
-static void stack_expressions(StackValueCollection* result,
-                              int length,
-                              int max_locals,
-                              const InterpreterOopMap& oop_mask,
-                              const frame& fr) {
+static void stack_expressions(StackValueCollection* result, int length, int max_locals, const InterpreterOopMap& oop_mask, const frame& fr) {
 
   for (int i = 0; i < length; ++i) {
     const intptr_t* addr = fr.interpreter_frame_expression_stack_at(i);

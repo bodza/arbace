@@ -283,14 +283,12 @@ class JRTLeafVerifier : public NoSafepointVerifier {
 
 #define VM_LEAF_BASE(result_type, header) \
   TRACE_CALL(result_type, header) \
-  os::verify_stack_alignment(); \
   /* begin of body */
 
 #define VM_ENTRY_BASE_FROM_LEAF(result_type, header, thread) \
   TRACE_CALL(result_type, header) \
   HandleMarkCleaner __hm(thread); \
   Thread* THREAD = thread; \
-  os::verify_stack_alignment(); \
   /* begin of body */
 
 // ENTRY routines may lock, GC and throw exceptions
@@ -299,7 +297,6 @@ class JRTLeafVerifier : public NoSafepointVerifier {
   TRACE_CALL(result_type, header) \
   HandleMarkCleaner __hm(thread); \
   Thread* THREAD = thread; \
-  os::verify_stack_alignment(); \
   /* begin of body */
 
 // QUICK_ENTRY routines behave like ENTRY but without a handle mark
@@ -307,7 +304,6 @@ class JRTLeafVerifier : public NoSafepointVerifier {
 #define VM_QUICK_ENTRY_BASE(result_type, header, thread) \
   TRACE_CALL(result_type, header) \
   Thread* THREAD = thread; \
-  os::verify_stack_alignment(); \
   /* begin of body */
 
 // Definitions for IRT (Interpreter Runtime)

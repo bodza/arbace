@@ -202,26 +202,14 @@ private:
   //
   // The following two define_shared_package() functions are used to define
   // package for shared APP and PLATFORM classes.
-  static void define_shared_package(Symbol*  class_name,
-                                    Handle class_loader,
-                                    Handle manifest,
-                                    Handle url,
-                                    TRAPS);
-  static void define_shared_package(Symbol* class_name,
-                                    Handle class_loader,
-                                    ModuleEntry* mod_entry,
-                                    TRAPS);
+  static void define_shared_package(Symbol*  class_name, Handle class_loader, Handle manifest, Handle url, TRAPS);
+  static void define_shared_package(Symbol* class_name, Handle class_loader, ModuleEntry* mod_entry, TRAPS);
 
   static Handle get_shared_jar_manifest(int shared_path_index, TRAPS);
   static Handle get_shared_jar_url(int shared_path_index, TRAPS);
-  static Handle get_protection_domain_from_classloader(Handle class_loader,
-                                                       Handle url, TRAPS);
-  static Handle get_shared_protection_domain(Handle class_loader,
-                                             int shared_path_index,
-                                             Handle url,
-                                             TRAPS);
-  static Handle get_shared_protection_domain(Handle class_loader,
-                                             ModuleEntry* mod, TRAPS);
+  static Handle get_protection_domain_from_classloader(Handle class_loader, Handle url, TRAPS);
+  static Handle get_shared_protection_domain(Handle class_loader, int shared_path_index, Handle url, TRAPS);
+  static Handle get_shared_protection_domain(Handle class_loader, ModuleEntry* mod, TRAPS);
   static Handle init_security_info(Handle class_loader, InstanceKlass* ik, TRAPS);
 
   static void atomic_set_array_index(objArrayOop array, int index, oop o) {
@@ -274,7 +262,7 @@ public:
   static Klass* dump_time_resolve_super_or_fail(Symbol* child_name, Symbol* class_name, Handle class_loader, Handle protection_domain, bool is_superclass, TRAPS);
 
   static size_t dictionary_entry_size() {
-    return (DumpSharedSpaces) ? sizeof(SharedDictionaryEntry) : sizeof(DictionaryEntry);
+    return sizeof(DictionaryEntry);
   }
   static void init_shared_dictionary_entry(Klass* k, DictionaryEntry* entry) { };
   static bool is_builtin(DictionaryEntry* ent) {
@@ -299,11 +287,7 @@ public:
 
   static void set_shared_class_misc_info(Klass* k, ClassFileStream* cfs);
 
-  static InstanceKlass* lookup_from_stream(const Symbol* class_name,
-                                           Handle class_loader,
-                                           Handle protection_domain,
-                                           const ClassFileStream* st,
-                                           TRAPS);
+  static InstanceKlass* lookup_from_stream(const Symbol* class_name, Handle class_loader, Handle protection_domain, const ClassFileStream* st, TRAPS);
   // "verification_constraints" are a set of checks performed by
   // VerificationType::is_reference_assignable_from when verifying a shared class during
   // dump time.
@@ -317,8 +301,7 @@ public:
                   Symbol* from_name, bool from_field_is_protected,
                   bool from_is_array, bool from_is_object) { return false; };
   static void finalize_verification_constraints() { };
-  static void check_verification_constraints(InstanceKlass* klass,
-                                              TRAPS) { };
+  static void check_verification_constraints(InstanceKlass* klass, TRAPS) { };
 };
 
 #endif

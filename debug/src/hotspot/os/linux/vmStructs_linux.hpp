@@ -11,11 +11,6 @@
 
 #define VM_TYPES_OS(declare_type, declare_toplevel_type, declare_oop_type, declare_integer_type, declare_unsigned_integer_type, declare_c1_toplevel_type, declare_c2_type, declare_c2_toplevel_type)
 
-#define VM_INT_CONSTANTS_OS(declare_constant, declare_preprocessor_constant, declare_c1_constant, declare_c2_constant, declare_c2_preprocessor_constant)
-
-#define VM_LONG_CONSTANTS_OS(declare_constant, declare_preprocessor_constant, declare_c1_constant, declare_c2_constant, declare_c2_preprocessor_constant)
-
-#define VM_ADDRESSES_OS(declare_address, declare_preprocessor_address, declare_function) \
-  declare_preprocessor_address("RTLD_DEFAULT", RTLD_DEFAULT)
+#define VM_ADDRESSES_OS(declare_address, declare_preprocessor_address, declare_function) declare_preprocessor_address("RTLD_DEFAULT", RTLD_DEFAULT)
 
 #endif

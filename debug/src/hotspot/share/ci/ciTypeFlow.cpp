@@ -91,34 +91,6 @@ bool ciTypeFlow::JsrSet::is_compatible_with(JsrSet* other) {
     }
     return true;
   }
-
-#if 0
-  int pos1 = 0;
-  int pos2 = 0;
-  int size1 = size();
-  int size2 = other->size();
-  while (pos1 < size1 && pos2 < size2) {
-    JsrRecord* record1 = record_at(pos1);
-    JsrRecord* record2 = other->record_at(pos2);
-    int entry1 = record1->entry_address();
-    int entry2 = record2->entry_address();
-    if (entry1 < entry2) {
-      pos1++;
-    } else if (entry1 > entry2) {
-      pos2++;
-    } else {
-      if (record1->return_address() == record2->return_address()) {
-        pos1++;
-        pos2++;
-      } else {
-        // These two JsrSets are incompatible.
-        return false;
-      }
-    }
-  }
-  // The two JsrSets agree.
-  return true;
-#endif
 }
 
 // ------------------------------------------------------------------
@@ -324,9 +296,6 @@ const ciTypeFlow::StateVector* ciTypeFlow::get_start_state() {
     int non_osr_start = non_osr_block->start();
     if (non_osr_start != start_bci()) {
       // must flow forward from it
-      if (CITraceTypeFlow) {
-        tty->print_cr(">> Interpreting pre-OSR block %d:", non_osr_start);
-      }
       Block* block = block_at(non_osr_start, jsrs);
       flow_block(block, state, jsrs);
     }
@@ -769,11 +738,6 @@ void ciTypeFlow::StateVector::do_null_assert(ciKlass* unloaded_klass) {
 bool ciTypeFlow::StateVector::apply_one_bytecode(ciBytecodeStream* str) {
   _trap_bci = -1;
   _trap_index = 0;
-
-  if (CITraceTypeFlow) {
-    tty->print_cr(">> Interpreting bytecode %d:%s", str->cur_bci(),
-                  Bytecodes::name(str->cur_bc()));
-  }
 
   switch(str->cur_bc()) {
   case Bytecodes::_aaload: do_aaload(str);                       break;
@@ -1371,10 +1335,6 @@ bool ciTypeFlow::StateVector::apply_one_bytecode(ciBytecodeStream* str) {
     }
   }
 
-  if (CITraceTypeFlow) {
-    print_on(tty);
-  }
-
   return (_trap_bci != -1);
 }
 
@@ -1442,11 +1402,6 @@ ciTypeFlow::Block::Block(ciTypeFlow* outer,
   _trap_bci = -1;
   _trap_index = 0;
   df_init();
-
-  if (CITraceTypeFlow) {
-    tty->print_cr(">> Created new block");
-    print_on(tty);
-  }
 }
 
 // ------------------------------------------------------------------
@@ -1463,16 +1418,8 @@ void ciTypeFlow::Block::df_init() {
 // ciTypeFlow::Block::successors
 //
 // Get the successors for this Block.
-GrowableArray<ciTypeFlow::Block*>*
-ciTypeFlow::Block::successors(ciBytecodeStream* str,
-                              ciTypeFlow::StateVector* state,
-                              ciTypeFlow::JsrSet* jsrs) {
+GrowableArray<ciTypeFlow::Block*>* ciTypeFlow::Block::successors(ciBytecodeStream* str, ciTypeFlow::StateVector* state, ciTypeFlow::JsrSet* jsrs) {
   if (_successors == NULL) {
-    if (CITraceTypeFlow) {
-      tty->print(">> Computing successors for block ");
-      print_value_on(tty);
-      tty->cr();
-    }
 
     ciTypeFlow* analyzer = outer();
     Arena* arena = analyzer->arena();
@@ -1601,12 +1548,6 @@ ciTypeFlow::Block::successors(ciBytecodeStream* str,
 // Compute the exceptional successors and types for this Block.
 void ciTypeFlow::Block::compute_exceptions() {
 
-  if (CITraceTypeFlow) {
-    tty->print(">> Computing exceptions for block ");
-    print_value_on(tty);
-    tty->cr();
-  }
-
   ciTypeFlow* analyzer = outer();
   Arena* arena = analyzer->arena();
 
@@ -1616,8 +1557,7 @@ void ciTypeFlow::Block::compute_exceptions() {
   // Allocate our growable arrays.
   int exc_count = str.count();
   _exceptions = new (arena) GrowableArray<Block*>(arena, exc_count, 0, NULL);
-  _exc_klasses = new (arena) GrowableArray<ciInstanceKlass*>(arena, exc_count,
-                                                             0, NULL);
+  _exc_klasses = new (arena) GrowableArray<ciInstanceKlass*>(arena, exc_count, 0, NULL);
 
   for ( ; !str.is_done(); str.next()) {
     ciExceptionHandler* handler = str.handler();
@@ -1730,12 +1670,6 @@ ciTypeFlow::Block* ciTypeFlow::work_list_next() {
 // List is sorted by decreasing postorder sort (same as increasing RPO)
 void ciTypeFlow::add_to_work_list(ciTypeFlow::Block* block) {
 
-  if (CITraceTypeFlow) {
-    tty->print(">> Adding block ");
-    block->print_value_on(tty);
-    tty->print_cr(" to the work list : ");
-  }
-
   block->set_on_work_list(true);
 
   // decreasing post order sort
@@ -1756,10 +1690,6 @@ void ciTypeFlow::add_to_work_list(ciTypeFlow::Block* block) {
     block->set_next(current);
     prev->set_next(block);
   }
-
-  if (CITraceTypeFlow) {
-    tty->cr();
-  }
 }
 
 // ------------------------------------------------------------------
@@ -1769,24 +1699,9 @@ void ciTypeFlow::add_to_work_list(ciTypeFlow::Block* block) {
 // with jsrs.
 ciTypeFlow::Block* ciTypeFlow::block_at(int bci, ciTypeFlow::JsrSet* jsrs, CreateOption option) {
   // First find the right ciBlock.
-  if (CITraceTypeFlow) {
-    tty->print(">> Requesting block for %d/", bci);
-    jsrs->print_on(tty);
-    tty->cr();
-  }
 
   ciBlock* ciblk = _methodBlocks->block_containing(bci);
   Block* block = get_block_for(ciblk->index(), jsrs, option);
-
-  if (CITraceTypeFlow) {
-    if (block != NULL) {
-      tty->print(">> Found block ");
-      block->print_value_on(tty);
-      tty->cr();
-    } else {
-      tty->print_cr(">> No such block.");
-    }
-  }
 
   return block;
 }
@@ -1796,13 +1711,9 @@ ciTypeFlow::Block* ciTypeFlow::block_at(int bci, ciTypeFlow::JsrSet* jsrs, Creat
 //
 // Make a JsrRecord for a given (entry, return) pair, if such a record
 // does not already exist.
-ciTypeFlow::JsrRecord* ciTypeFlow::make_jsr_record(int entry_address,
-                                                   int return_address) {
+ciTypeFlow::JsrRecord* ciTypeFlow::make_jsr_record(int entry_address, int return_address) {
   if (_jsr_records == NULL) {
-    _jsr_records = new (arena()) GrowableArray<JsrRecord*>(arena(),
-                                                           _jsr_count,
-                                                           0,
-                                                           NULL);
+    _jsr_records = new (arena()) GrowableArray<JsrRecord*>(arena(), _jsr_count, 0, NULL);
   }
   JsrRecord* record = NULL;
   int len = _jsr_records->length();
@@ -1972,11 +1883,6 @@ bool ciTypeFlow::clone_loop_heads(Loop* lp, StateVector* temp_vector, JsrSet* te
 ciTypeFlow::Block* ciTypeFlow::clone_loop_head(Loop* lp, StateVector* temp_vector, JsrSet* temp_set) {
   Block* head = lp->head();
   Block* tail = lp->tail();
-  if (CITraceTypeFlow) {
-    tty->print(">> Requesting clone of loop head "); head->print_value_on(tty);
-    tty->print("  for predecessor ");                tail->print_value_on(tty);
-    tty->cr();
-  }
   Block* clone = block_at(head->start(), head->jsrs(), create_backedge_copy);
 
   clone->set_next_pre_order();
@@ -2020,11 +1926,6 @@ ciTypeFlow::Block* ciTypeFlow::clone_loop_head(Loop* lp, StateVector* temp_vecto
 // vector of a basic block.  Push the changed state to succeeding
 // basic blocks.
 void ciTypeFlow::flow_block(ciTypeFlow::Block* block, ciTypeFlow::StateVector* state, ciTypeFlow::JsrSet* jsrs) {
-  if (CITraceTypeFlow) {
-    tty->print("\n>> ANALYZING BLOCK : ");
-    tty->cr();
-    block->print_on(tty);
-  }
 
   int start = block->start();
   int limit = block->limit();
@@ -2066,11 +1967,6 @@ void ciTypeFlow::flow_block(ciTypeFlow::Block* block, ciTypeFlow::StateVector* s
 
       // We have encountered a trap.  Record it in this block.
       block->set_trap(state->trap_bci(), state->trap_index());
-
-      if (CITraceTypeFlow) {
-        tty->print_cr(">> Found trap");
-        block->print_on(tty);
-      }
 
       // Save set of locals defined in this block
       block->def_locals()->add(state->def_locals());
@@ -2410,11 +2306,6 @@ void ciTypeFlow::flow_types() {
     }
   }
 
-  if (CITraceTypeFlow) {
-    tty->print_cr("\nLoop tree");
-    loop_tree_root()->print();
-  }
-
   // Continue flow analysis until fixed point reached
 
   while (!work_list_empty()) {
@@ -2447,11 +2338,6 @@ void ciTypeFlow::map_blocks() {
       for (int k = 0; k < l->length(); k++) {
         Block* s = l->at(k);
         if (!s->has_post_order()) {
-          if (CITraceTypeFlow) {
-            tty->print("Removing dead %s successor of #%d: ", (e? "exceptional":  "normal"), block->pre_order());
-            s->print_value_on(tty);
-            tty->cr();
-          }
           l->remove(s);
           --k;
         }
@@ -2525,17 +2411,6 @@ int ciTypeFlow::backedge_copy_count(int ciBlockIndex, ciTypeFlow::JsrSet* jsrs) 
 //
 // Perform type inference flow analysis.
 void ciTypeFlow::do_flow() {
-  if (CITraceTypeFlow) {
-    tty->print_cr("\nPerforming flow analysis on method");
-    method()->print();
-    if (is_osr_flow())  tty->print(" at OSR bci %d", start_bci());
-    tty->cr();
-    method()->print_codes();
-  }
-  if (CITraceTypeFlow) {
-    tty->print_cr("Initial CI Blocks");
-    print_on(tty);
-  }
   flow_types();
   // Watch for bailouts.
   if (failing()) {
@@ -2543,10 +2418,6 @@ void ciTypeFlow::do_flow() {
   }
 
   map_blocks();
-
-  if (CIPrintTypeFlow || CITraceTypeFlow) {
-    rpo_print_on(tty);
-  }
 }
 
 // ------------------------------------------------------------------

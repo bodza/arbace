@@ -147,17 +147,13 @@
  \
   product(uintx, HeapSearchSteps, 3, \
           "Heap allocation steps through preferred address regions to find" \
-          " where it can allocate the heap. Number of steps to take per " \
-          "region.") \
+          " where it can allocate the heap. Number of steps to take per region.") \
           range(1, max_uintx) \
  \
   lp64_product(intx, ObjectAlignmentInBytes, 8, \
           "Default object alignment in bytes, 8 is minimum") \
           range(8, 256) \
           constraint(ObjectAlignmentInBytesConstraintFunc,AtParse) \
- \
-  product(bool, AssumeMP, true, \
-          "(Deprecated) Instruct the VM to assume multiple processors are available") \
  \
   /* UseMembar is theoretically a temp flag used for memory barrier      */ \
   /* removal testing.  It was supposed to be removed before FCS but has  */ \
@@ -182,12 +178,7 @@
           "Enable normal processing of flags relating to field diagnostics") \
  \
   experimental(bool, UnlockExperimentalVMOptions, false, \
-          "Enable normal processing of flags relating to experimental " \
-          "features") \
- \
-  product(bool, JavaMonitorsInStackTrace, true, \
-          "Print information about Java monitor locks when the stacks are" \
-          "dumped") \
+          "Enable normal processing of flags relating to experimental features") \
  \
   product_pd(bool, UseLargePages, \
           "Use large page memory") \
@@ -217,8 +208,7 @@
  \
   product(uintx, NUMAChunkResizeWeight, 20, \
           "Percentage (0-100) used to weight the current sample when " \
-          "computing exponentially decaying average for " \
-          "AdaptiveNUMAChunkSizing") \
+          "computing exponentially decaying average for AdaptiveNUMAChunkSizing") \
           range(0, 100) \
  \
   product(size_t, NUMASpaceResizeRate, 1*G, \
@@ -268,26 +258,11 @@
   product(bool, ForceTimeHighResolution, false, \
           "Using high time resolution (for Win32 only)") \
  \
-  develop(bool, TracePcPatching, false, \
-          "Trace usage of frame::patch_pc") \
- \
-  develop(bool, TraceRelocator, false, \
-          "Trace the bytecode relocator") \
- \
-  develop(bool, TraceLongCompiles, false, \
-          "Print out every time compilation is longer than " \
-          "a given threshold") \
- \
   develop(bool, SafepointALot, false, \
-          "Generate a lot of safepoints. This works with " \
-          "GuaranteedSafepointInterval") \
+          "Generate a lot of safepoints. This works with GuaranteedSafepointInterval") \
  \
   product_pd(bool, BackgroundCompilation, \
-          "A thread requesting compilation is not blocked during " \
-          "compilation") \
- \
-  product(bool, PrintVMQWaitTime, false, \
-          "Print out the waiting time in VM operation queue") \
+          "A thread requesting compilation is not blocked during compilation") \
  \
   product(bool, MethodFlushing, true, \
           "Reclamation of zombie and not-entrant methods") \
@@ -296,35 +271,19 @@
           "Verify stack of each thread when it is entering a runtime call") \
  \
   diagnostic(bool, ForceUnreachable, false, \
-          "Make all non code cache addresses to be unreachable by " \
-          "forcing use of 64bit literal fixups") \
+          "Make all non code cache addresses to be unreachable by forcing use of 64bit literal fixups") \
  \
   notproduct(bool, StressDerivedPointers, false, \
-          "Force scavenge when a derived pointer is detected on stack " \
-          "after rtm call") \
- \
-  develop(bool, TraceDerivedPointers, false, \
-          "Trace traversal of derived pointers on stack") \
- \
-  notproduct(bool, TraceCodeBlobStacks, false, \
-          "Trace stack-walk of codeblobs") \
- \
-  product(bool, PrintJNIResolving, false, \
-          "Used to implement -v:jni") \
- \
-  notproduct(bool, PrintRewrites, false, \
-          "Print methods that are being rewritten") \
+          "Force scavenge when a derived pointer is detected on stack after rtm call") \
  \
   product(bool, UseInlineCaches, true, \
           "Use Inline Caches for virtual calls ") \
  \
   diagnostic(bool, InlineArrayCopy, true, \
-          "Inline arraycopy native that is known to be part of " \
-          "base library DLL") \
+          "Inline arraycopy native that is known to be part of base library DLL") \
  \
   diagnostic(bool, InlineObjectHash, true, \
-          "Inline Object::hashCode() native that is known to be part " \
-          "of base library DLL") \
+          "Inline Object::hashCode() native that is known to be part of base library DLL") \
  \
   diagnostic(bool, InlineNatives, true, \
           "Inline natives that are known to be part of base library DLL") \
@@ -343,9 +302,6 @@
  \
   product(bool, CriticalJNINatives, true, \
           "Check for critical JNI entry points") \
- \
-  notproduct(bool, StressCriticalJNINatives, false, \
-          "Exercise register saving code in critical natives") \
  \
   diagnostic(bool, UseAESIntrinsics, false, \
           "Use intrinsics for AES versions of crypto") \
@@ -380,9 +336,6 @@
   diagnostic(ccstrlist, DisableIntrinsic, "", \
          "do not expand intrinsics whose (internal) names appear here") \
  \
-  develop(bool, TraceCallFixup, false, \
-          "Trace all call fixups") \
- \
   develop(bool, DeoptimizeALot, false, \
           "Deoptimize at every exit from the runtime system") \
  \
@@ -401,13 +354,8 @@
   notproduct(bool, WalkStackALot, false, \
           "Trace stack (no print) at every exit from the runtime system") \
  \
-  product(bool, Debugging, false, \
-          "Set when executing debug methods in debug.cpp " \
-          "(to prevent triggering assertions)") \
- \
   notproduct(bool, StrictSafepointChecks, trueInDebug, \
-          "Enable strict checks that safepoints cannot happen for threads " \
-          "that use NoSafepointVerifier") \
+          "Enable strict checks that safepoints cannot happen for threads that use NoSafepointVerifier") \
  \
   notproduct(bool, VerifyLastFrame, false, \
           "Verify oops on last frame on entry to VM") \
@@ -416,8 +364,7 @@
           "Fail over to old verifier when split verifier fails") \
  \
   product(bool, SafepointTimeout, false, \
-          "Time out and warn or fail after SafepointTimeoutDelay " \
-          "milliseconds if failed to reach safepoint") \
+          "Time out and warn or fail after SafepointTimeoutDelay milliseconds if failed to reach safepoint") \
  \
   diagnostic(bool, AbortVMOnSafepointTimeout, false, \
           "Abort upon failure to reach safepoint (see SafepointTimeout)") \
@@ -432,27 +379,8 @@
           "Milliseconds to delay per retry (* current_retry_count)") \
           range(0, max_intx) \
  \
-  product(bool, AssertOnSuspendWaitFailure, false, \
-          "Assert/Guarantee on external suspend wait failure") \
- \
-  product(bool, TraceSuspendWaitFailures, false, \
-          "Trace external suspend wait failures") \
- \
   product(bool, MaxFDLimit, true, \
           "Bump the number of file descriptors to maximum in Solaris") \
- \
-  diagnostic(bool, LogEvents, true, \
-          "Enable the various ring buffer event logs") \
- \
-  diagnostic(uintx, LogEventsBufferEntries, 10, \
-          "Number of ring buffer event logs") \
-          range(1, 1*M) \
- \
-  product(bool, BytecodeVerificationRemote, true, \
-          "Enable the Java bytecode verifier for remote classes") \
- \
-  product(bool, BytecodeVerificationLocal, false, \
-          "Enable the Java bytecode verifier for local classes") \
  \
   develop(bool, ForceFloatExceptions, trueInDebug, \
           "Force exceptions on FP stack under/overflow") \
@@ -460,17 +388,11 @@
   develop(bool, VerifyStackAtCalls, false, \
           "Verify that the stack pointer is unchanged after calls") \
  \
-  develop(bool, TraceJavaAssertions, false, \
-          "Trace java language assertions") \
- \
   notproduct(bool, VerifyCodeCache, false, \
           "Verify code cache on memory allocation/deallocation") \
  \
   develop(bool, UseMallocOnly, false, \
           "Use only malloc/free for allocation (no resource area/arena)") \
- \
-  develop(bool, PrintMallocStatistics, false, \
-          "Print malloc/free statistics") \
  \
   develop(bool, ZapResourceArea, trueInDebug, \
           "Zap freed resource/arena space with 0xABABABAB") \
@@ -493,39 +415,11 @@
   develop(bool, PrintVMMessages, true, \
           "Print VM messages on console") \
  \
-  notproduct(uintx, ErrorHandlerTest, 0, \
-          "If > 0, provokes an error after VM initialization; the value " \
-          "determines which error to provoke. See test_error_handler() " \
-          "in vmError.cpp.") \
- \
-  notproduct(uintx, TestCrashInErrorHandler, 0, \
-          "If > 0, provokes an error inside VM error handler (a secondary " \
-          "crash). see test_error_handler() in vmError.cpp") \
- \
-  notproduct(bool, TestSafeFetchInErrorHandler, false, \
-          "If true, tests SafeFetch inside error handler.") \
- \
-  notproduct(bool, TestUnresponsiveErrorHandler, false, \
-          "If true, simulates an unresponsive error handler.") \
- \
   develop(bool, Verbose, false, \
           "Print additional debugging information from other modes") \
  \
-  develop(bool, PrintMiscellaneous, false, \
-          "Print uncategorized debugging information (requires +Verbose)") \
- \
-  develop(bool, WizardMode, false, \
-          "Print much more debugging information") \
- \
-  product(bool, ShowMessageBoxOnError, false, \
-          "Keep process alive on VM fatal error") \
- \
-  product(bool, CreateCoredumpOnCrash, true, \
-          "Create core/mini dump on VM fatal error") \
- \
   product(uint64_t, ErrorLogTimeout, 2 * 60, \
-          "Timeout, in seconds, to limit the time spent on writing an " \
-          "error log in case of a crash.") \
+          "Timeout, in seconds, to limit the time spent on writing an error log in case of a crash.") \
           range(0, (uint64_t)max_jlong/1000) \
  \
   product_pd(bool, UseOSErrorReporting, \
@@ -535,49 +429,16 @@
           "Report NO fatal error message (avoid deadlock)") \
  \
   product(ccstrlist, OnError, "", \
-          "Run user-defined commands on fatal error; see VMError.cpp " \
-          "for examples") \
+          "Run user-defined commands on fatal error; see VMError.cpp for examples") \
  \
   product(ccstrlist, OnOutOfMemoryError, "", \
           "Run user-defined commands on first java.lang.OutOfMemoryError") \
- \
-  manageable(bool, HeapDumpBeforeFullGC, false, \
-          "Dump heap to file before any major stop-the-world GC") \
- \
-  manageable(bool, HeapDumpAfterFullGC, false, \
-          "Dump heap to file after any major stop-the-world GC") \
- \
-  manageable(bool, HeapDumpOnOutOfMemoryError, false, \
-          "Dump heap to file when java.lang.OutOfMemoryError is thrown") \
- \
-  manageable(ccstr, HeapDumpPath, NULL, \
-          "When HeapDumpOnOutOfMemoryError is on, the path (filename or " \
-          "directory) of the dump file (defaults to java_pid<pid>.hprof " \
-          "in the working directory)") \
  \
   develop(bool, BreakAtWarning, false, \
           "Execute breakpoint upon encountering VM warning") \
  \
   develop(bool, UseFakeTimers, false, \
           "Tell whether the VM should use system time or a fake timer") \
- \
-  product(ccstr, NativeMemoryTracking, "off", \
-          "Native memory tracking options") \
- \
-  diagnostic(bool, PrintNMTStatistics, false, \
-          "Print native memory tracking summary data if it is on") \
- \
-  diagnostic(bool, LogCompilation, false, \
-          "Log compilation activity in detail to LogFile") \
- \
-  product(bool, PrintCompilation, false, \
-          "Print compilations") \
- \
-  product(bool, PrintExtendedThreadInfo, false, \
-          "Print more information in thread dump") \
- \
-  diagnostic(bool, TraceNMethodInstalls, false, \
-          "Trace nmethod installation") \
  \
   diagnostic(intx, ScavengeRootsInCode, 2, \
           "0: do not allow scavengable oops in the code cache; " \
@@ -587,12 +448,6 @@
  \
   product(bool, AlwaysRestoreFPU, false, \
           "Restore the FPU control word after every JNI call (expensive)") \
- \
-  diagnostic(bool, PrintCompilation2, false, \
-          "Print additional statistics per compilation") \
- \
-  diagnostic(bool, PrintAdapterHandlers, false, \
-          "Print code generated for i2c/c2i adapters") \
  \
   diagnostic(bool, VerifyAdapterCalls, trueInDebug, \
           "Verify that i2c/c2i adapters are called properly") \
@@ -606,46 +461,11 @@
   diagnostic(ccstr, PrintAssemblyOptions, NULL, \
           "Print options string passed to disassembler.so") \
  \
-  notproduct(bool, PrintNMethodStatistics, false, \
-          "Print a summary statistic for the generated nmethods") \
- \
-  diagnostic(bool, PrintNMethods, false, \
-          "Print assembly code for nmethods when generated") \
- \
   diagnostic(bool, PrintNativeNMethods, false, \
           "Print assembly code for native nmethods when generated") \
  \
-  develop(bool, PrintDebugInfo, false, \
-          "Print debug information for all nmethods when generated") \
- \
-  develop(bool, PrintRelocations, false, \
-          "Print relocation information for all nmethods when generated") \
- \
-  develop(bool, PrintDependencies, false, \
-          "Print dependency information for all nmethods when generated") \
- \
-  develop(bool, PrintExceptionHandlers, false, \
-          "Print exception handler tables for all nmethods when generated") \
- \
-  develop(bool, StressCompiledExceptionHandlers, false, \
-          "Exercise compiled exception handlers") \
- \
   develop(bool, InterceptOSException, false, \
-          "Start debugger when an implicit OS (e.g. NULL) " \
-          "exception happens") \
- \
-  product(bool, PrintCodeCache, false, \
-          "Print the code cache memory usage when exiting") \
- \
-  develop(bool, PrintCodeCache2, false, \
-          "Print detailed usage information on the code cache when exiting") \
- \
-  product(bool, PrintCodeCacheOnCompilation, false, \
-          "Print the code cache memory usage each time a method is " \
-          "compiled") \
- \
-  diagnostic(bool, PrintStubCode, false, \
-          "Print generated stub code") \
+          "Start debugger when an implicit OS (e.g. NULL) exception happens") \
  \
   product(bool, StackTraceInThrowable, true, \
           "Collect backtrace in throwable when exception happens") \
@@ -653,48 +473,21 @@
   product(bool, OmitStackTraceInFastThrow, true, \
           "Omit backtraces for some 'hot' exceptions in optimized code") \
  \
-  product(bool, ProfilerPrintByteCodeStatistics, false, \
-          "Print bytecode statistics when dumping profiler output") \
- \
-  product(bool, ProfilerRecordPC, false, \
-          "Collect ticks for each 16 byte interval of compiled code") \
- \
-  product(bool, ProfileVM, false, \
-          "Profile ticks that fall within VM (either in the VM Thread " \
-          "or VM code called through stubs)") \
- \
-  product(bool, ProfileIntervals, false, \
-          "Print profiles for each interval (see ProfileIntervalsTicks)") \
- \
-  notproduct(bool, ProfilerCheckIntervals, false, \
-          "Collect and print information on spacing of profiler ticks") \
- \
-  product(bool, PrintWarnings, true, \
-          "Print JVM warnings to output stream") \
- \
   notproduct(uintx, WarnOnStalledSpinLock, 0, \
           "Print warnings for stalled SpinLocks") \
  \
   product(bool, RegisterFinalizersAtInit, true, \
-          "Register finalizable objects at end of Object.<init> or " \
-          "after allocation") \
+          "Register finalizable objects at end of Object.<init> or after allocation") \
  \
   develop(bool, RegisterReferences, true, \
-          "Tell whether the VM should register soft/weak/final/phantom " \
-          "references") \
+          "Tell whether the VM should register soft/weak/final/phantom references") \
  \
   develop(bool, IgnoreRewrites, false, \
           "Suppress rewrites of bytecodes in the oopmap generator. " \
           "This is unsafe!") \
  \
-  develop(bool, PrintCodeCacheExtension, false, \
-          "Print extension of code cache") \
- \
   develop(bool, UsePrivilegedStack, true, \
           "Enable the security JVM functions") \
- \
-  develop(bool, ProtectionDomainVerification, true, \
-          "Verify protection domain before resolution in system dictionary") \
  \
   product(bool, ClassUnloading, true, \
           "Do unloading of classes") \
@@ -703,41 +496,32 @@
           "Do unloading of classes with a concurrent marking cycle") \
  \
   develop(bool, DisableStartThread, false, \
-          "Disable starting of additional Java threads " \
-          "(for debugging only)") \
+          "Disable starting of additional Java threads (for debugging only)") \
  \
   develop(bool, MemProfiling, false, \
           "Write memory usage profiling to log file") \
- \
-  notproduct(bool, PrintSystemDictionaryAtExit, false, \
-          "Print the system dictionary at exit") \
  \
   diagnostic(bool, DynamicallyResizeSystemDictionaries, true, \
           "Dynamically resize system dictionaries as needed") \
  \
   product(bool, AlwaysLockClassLoader, false, \
           "Require the VM to acquire the class loader lock before calling " \
-          "loadClass() even for class loaders registering " \
-          "as parallel capable") \
+          "loadClass() even for class loaders registering as parallel capable") \
  \
   product(bool, AllowParallelDefineClass, false, \
-          "Allow parallel defineClass requests for class loaders " \
-          "registering as parallel capable") \
+          "Allow parallel defineClass requests for class loaders registering as parallel capable") \
  \
   product_pd(bool, DontYieldALot, \
           "Throw away obvious excess yield calls") \
  \
   develop(bool, UseDetachedThreads, true, \
-          "Use detached threads that are recycled upon termination " \
-          "(for Solaris only)") \
+          "Use detached threads that are recycled upon termination (for Solaris only)") \
  \
   experimental(bool, DisablePrimordialThreadGuardPages, false, \
-               "Disable the use of stack guard pages if the JVM is loaded " \
-               "on the primordial process thread") \
+               "Disable the use of stack guard pages if the JVM is loaded on the primordial process thread") \
  \
   product(bool, UseLWPSynchronization, true, \
-          "Use LWP-based instead of libthread-based synchronization " \
-          "(SPARC only)") \
+          "Use LWP-based instead of libthread-based synchronization (SPARC only)") \
  \
   experimental(ccstr, SyncKnobs, NULL, \
                "(Unstable) Various monitor synchronization tunables") \
@@ -752,8 +536,7 @@
   product(bool, MonitorInUseLists, true, "Track Monitors for Deflation") \
  \
   experimental(intx, MonitorUsedDeflationThreshold, 90, \
-                "Percentage of used monitors before triggering cleanup " \
-                "safepoint which deflates monitors (0 is off). " \
+                "Percentage of used monitors before triggering cleanup safepoint which deflates monitors (0 is off). " \
                 "The check is performed on GuaranteedSafepointInterval.") \
                 range(0, 100) \
  \
@@ -766,12 +549,10 @@
                "(Unstable) select hashCode generation algorithm") \
  \
   product(bool, FilterSpuriousWakeups, true, \
-          "When true prevents OS-level spurious, or premature, wakeups " \
-          "from Object.wait (Ignored for Windows)") \
+          "When true prevents OS-level spurious, or premature, wakeups from Object.wait (Ignored for Windows)") \
  \
   develop(bool, UsePthreads, false, \
-          "Use pthread-based instead of libthread-based synchronization " \
-          "(SPARC only)") \
+          "Use pthread-based instead of libthread-based synchronization (SPARC only)") \
  \
   product(bool, ReduceSignalUsage, false, \
           "Reduce the use of OS signals in Java and/or the VM") \
@@ -790,39 +571,25 @@
           "tables") \
  \
   product(bool, AllowUserSignalHandlers, false, \
-          "Do not complain if the application installs signal handlers " \
-          "(Solaris & Linux only)") \
+          "Do not complain if the application installs signal handlers (Solaris & Linux only)") \
  \
   product(bool, UseSignalChaining, true, \
-          "Use signal-chaining to invoke signal handlers installed " \
-          "by the application (Solaris & Linux only)") \
- \
-  product(bool, AllowJNIEnvProxy, false, \
-          "Allow JNIEnv proxies for jdbx") \
+          "Use signal-chaining to invoke signal handlers installed by the application (Solaris & Linux only)") \
  \
   product(bool, RestoreMXCSROnJNICalls, false, \
           "Restore MXCSR when returning from JNI calls") \
- \
-  product(bool, CheckJNICalls, false, \
-          "Verify all arguments to JNI calls") \
  \
   product(bool, UseFastJNIAccessors, true, \
           "Use optimized versions of Get<Primitive>Field") \
  \
   product(intx, MaxJNILocalCapacity, 65536, \
-          "Maximum allowable local JNI handle capacity to " \
-          "EnsureLocalCapacity() and PushLocalFrame(), " \
+          "Maximum allowable local JNI handle capacity to EnsureLocalCapacity() and PushLocalFrame(), " \
           "where <= 0 is unlimited, default: 65536") \
           range(min_intx, max_intx) \
  \
   product(bool, EagerXrunInit, false, \
           "Eagerly initialize -Xrun libraries; allows startup profiling, " \
-          "but not all -Xrun libraries may support the state of the VM " \
-          "at this time") \
- \
-  product(bool, PreserveAllAnnotations, false, \
-          "Preserve RuntimeInvisibleAnnotations as well " \
-          "as RuntimeVisibleAnnotations") \
+          "but not all -Xrun libraries may support the state of the VM at this time") \
  \
   develop(uintx, PreallocatedOutOfMemoryErrorCount, 4, \
           "Number of OutOfMemoryErrors preallocated with backtrace") \
@@ -838,9 +605,6 @@
  \
   product(bool, CompactFields, true, \
           "Allocate nonstatic fields in gaps between previous fields") \
- \
-  notproduct(bool, PrintFieldLayout, false, \
-          "Print field layout for each class") \
  \
   /* Need to limit the extent of the padding to reasonable size.          */ \
   /* 8K is well beyond the reasonable HW cache line size, even with       */ \
@@ -893,31 +657,8 @@
           "JVM aborts, producing an error log and core/mini dump, on the " \
           "first occurrence of an out-of-memory error") \
  \
-  /* tracing */ \
- \
-  develop(bool, TraceBytecodes, false, \
-          "Trace bytecode execution") \
- \
-  develop(bool, TraceICs, false, \
-          "Trace inline cache changes") \
- \
-  notproduct(bool, TraceInvocationCounterOverflow, false, \
-          "Trace method invocation counter overflow") \
- \
-  develop(bool, TraceInlineCacheClearing, false, \
-          "Trace clearing of inline caches in nmethods") \
- \
-  develop(bool, TraceDependencies, false, \
-          "Trace dependencies") \
- \
   develop(bool, VerifyDependencies, trueInDebug, \
           "Exercise and verify the compilation dependency mechanism") \
- \
-  develop(bool, TraceNewOopMapGeneration, false, \
-          "Trace OopMapGeneration") \
- \
-  develop(bool, TraceNewOopMapGenerationDetailed, false, \
-          "Trace OopMapGeneration: print detailed cell states") \
  \
   develop(bool, TimeOopMap, false, \
           "Time calls to GenerateOopMap::compute_map() in sum") \
@@ -925,28 +666,12 @@
   develop(bool, TimeOopMap2, false, \
           "Time calls to GenerateOopMap::compute_map() individually") \
  \
-  develop(bool, TraceOopMapRewrites, false, \
-          "Trace rewriting of method oops during oop map generation") \
- \
-  develop(bool, TraceICBuffer, false, \
-          "Trace usage of IC buffer") \
- \
-  develop(bool, TraceCompiledIC, false, \
-          "Trace changes of compiled IC") \
- \
-  develop(bool, FLSVerifyDictionary, false, \
-          "Do lots of (expensive) FLS dictionary verification") \
- \
- \
   notproduct(bool, CheckMemoryInitialization, false, \
           "Check memory initialization") \
  \
   product(uintx, ProcessDistributionStride, 4, \
           "Stride through processors when distributing processes") \
           range(0, max_juint) \
- \
-  develop(bool, TraceFinalizerRegistration, false, \
-          "Trace registration of final references") \
  \
   product(bool, IgnoreEmptyClassPaths, false, \
           "Ignore empty path elements in -classpath") \
@@ -957,12 +682,6 @@
           range(30*K, max_uintx/BytesPerWord) \
           constraint(InitialBootClassLoaderMetaspaceSizeConstraintFunc, AfterErgo) \
  \
-  product(bool, PrintHeapAtSIGBREAK, true, \
-          "Print heap layout in response to SIGBREAK") \
- \
-  manageable(bool, PrintClassHistogram, false, \
-          "Print a histogram of class instances") \
- \
   develop(bool, IgnoreLibthreadGPFault, false, \
           "Suppress workaround for libthread GP fault") \
  \
@@ -972,16 +691,6 @@
           range(0.0, 100.0) \
  \
   /* compiler interface */ \
- \
-  develop(bool, CIPrintCompilerName, false, \
-          "when CIPrint is active, print the name of the active compiler") \
- \
-  diagnostic(bool, CIPrintCompileQueue, false, \
-          "display the contents of the compile queue whenever a " \
-          "compilation is enqueued") \
- \
-  develop(bool, CIPrintRequests, false, \
-          "display every request for compilation") \
  \
   product(bool, CITime, false, \
           "collect timing information for compilation") \
@@ -999,17 +708,7 @@
           "compile native methods if supported by the compiler") \
  \
   develop_pd(bool, CICompileOSR, \
-          "compile on stack replacement methods if supported by the " \
-          "compiler") \
- \
-  develop(bool, CIPrintMethodCodes, false, \
-          "print method bytecodes of the compiled code") \
- \
-  develop(bool, CIPrintTypeFlow, false, \
-          "print the results of ciTypeFlow analysis") \
- \
-  develop(bool, CITraceTypeFlow, false, \
-          "detailed per-bytecode tracing of ciTypeFlow analysis") \
+          "compile on stack replacement methods if supported by the compiler") \
  \
   develop(intx, OSROnlyBCI, -1, \
           "OSR only at this bci.  Negative values mean exclude that bci") \
@@ -1027,15 +726,7 @@
           "Dynamically choose the number of parallel compiler threads") \
  \
   diagnostic(bool, ReduceNumberOfCompilerThreads, true, \
-             "Reduce the number of parallel compiler threads when they " \
-             "are not used") \
- \
-  diagnostic(bool, TraceCompilerThreads, false, \
-             "Trace creation and removal of compiler threads") \
- \
-  develop(bool, InjectCompilerCreationFailure, false, \
-          "Inject thread creation failures for " \
-          "UseDynamicNumberOfCompilerThreads") \
+             "Reduce the number of parallel compiler threads when they are not used") \
  \
   product(intx, CompilationPolicyChoice, 0, \
           "which compilation policy (0-2)") \
@@ -1043,15 +734,13 @@
  \
   develop(bool, UseStackBanging, true, \
           "use stack banging for stack overflow checks (required for " \
-          "proper StackOverflow handling; disable only to measure cost " \
-          "of stackbanging)") \
+          "proper StackOverflow handling; disable only to measure cost of stackbanging)") \
  \
   develop(bool, UseStrictFP, true, \
           "use strict fp if modifier strictfp is set") \
  \
   develop(bool, GenerateSynchronizationCode, true, \
-          "generate locking/unlocking code for synchronized methods and " \
-          "monitors") \
+          "generate locking/unlocking code for synchronized methods and monitors") \
  \
   develop(bool, GenerateRangeChecks, true, \
           "Generate range checks for array accesses") \
@@ -1083,26 +772,11 @@
   product(bool, UseTypeProfile, true, \
           "Check interpreter profile for historically monomorphic calls") \
  \
-  diagnostic(bool, PrintInlining, false, \
-          "Print inlining optimizations") \
- \
   product(bool, UsePopCountInstruction, false, \
           "Use population count instruction") \
  \
   develop(bool, EagerInitialization, false, \
           "Eagerly initialize classes if possible") \
- \
-  diagnostic(bool, LogTouchedMethods, false, \
-          "Log methods which have been ever touched in runtime") \
- \
-  diagnostic(bool, PrintTouchedMethodsAtExit, false, \
-          "Print all methods that have been ever touched in runtime") \
- \
-  develop(bool, TraceMethodReplacement, false, \
-          "Print when methods are replaced do to recompilation") \
- \
-  develop(bool, PrintMethodFlushing, false, \
-          "Print the nmethods being flushed") \
  \
   diagnostic(intx, HotMethodDetectionLimit, 100000, \
           "Number of compiled code invocations after which " \
@@ -1110,22 +784,11 @@
           range(1, max_jint) \
  \
   diagnostic(intx, MinPassesBeforeFlush, 10, \
-          "Minimum number of sweeper passes before an nmethod " \
-          "can be flushed") \
+          "Minimum number of sweeper passes before an nmethod can be flushed") \
           range(0, max_intx) \
  \
   product(bool, UseCodeAging, true, \
           "Insert counter to detect warm methods") \
- \
-  diagnostic(bool, StressCodeAging, false, \
-          "Start with counters compiled in") \
- \
-  develop(bool, StressCodeBuffers, false, \
-          "Exercise code buffer expansion and other rare state changes") \
- \
-  diagnostic(bool, DebugNonSafepoints, trueInDebug, \
-          "Generate extra debugging information for non-safepoints in " \
-          "nmethods") \
  \
   product(bool, PrintVMOptions, false, \
           "Print flags that appeared on the command line") \
@@ -1143,32 +806,16 @@
           "Print all VM flags after argument and ergonomic processing") \
  \
   notproduct(bool, PrintFlagsWithComments, false, \
-          "Print all VM flags with default values and descriptions and " \
-          "exit") \
+          "Print all VM flags with default values and descriptions and exit") \
  \
   product(bool, PrintFlagsRanges, false, \
           "Print VM flags and their ranges and exit VM") \
  \
   diagnostic(bool, SerializeVMOutput, true, \
-          "Use a mutex to serialize output to tty and LogFile") \
+          "Use a mutex to serialize output to tty and NULL") \
  \
   diagnostic(bool, DisplayVMOutput, true, \
-          "Display all VM output on the tty, independently of LogVMOutput") \
- \
-  diagnostic(bool, LogVMOutput, false, \
-          "Save VM output to LogFile") \
- \
-  diagnostic(ccstr, LogFile, NULL, \
-          "If LogVMOutput or LogCompilation is on, save VM output to " \
-          "this file [default: ./hotspot_pid%p.log] (%p replaced with pid)") \
- \
-  product(ccstr, ErrorFile, NULL, \
-          "If an error occurs, save the error data to this file " \
-          "[default: ./hs_err_pid%p.log] (%p replaced with pid)") \
- \
-  product(bool, ExtensiveErrorReports, \
-                 false, \
-                 "Error reports are more extensive.") \
+          "Display all VM output on the tty, independently of false") \
  \
   product(bool, DisplayVMOutputToStderr, false, \
           "If DisplayVMOutput is true, display all VM output to stderr") \
@@ -1179,20 +826,11 @@
   product(bool, UseHeavyMonitors, false, \
           "use heavyweight instead of lightweight Java monitors") \
  \
-  diagnostic(bool, VerifyStringTableAtExit, false, \
-          "verify StringTable contents at exit") \
- \
-  notproduct(bool, ExitVMOnVerifyError, false, \
-          "standard exit from VM if bytecode verify error " \
-          "(only in debug mode)") \
- \
   diagnostic(ccstr, AbortVMOnException, NULL, \
-          "Call fatal if this exception is thrown.  Example: " \
-          "java -XX:AbortVMOnException=java.lang.NullPointerException Foo") \
+          "Call fatal if this exception is thrown.  Example: java -XX:AbortVMOnException=java.lang.NullPointerException Foo") \
  \
   diagnostic(ccstr, AbortVMOnExceptionMessage, NULL, \
-          "Call fatal if the exception pointed by AbortVMOnException " \
-          "has this message") \
+          "Call fatal if the exception pointed by AbortVMOnException has this message") \
  \
   notproduct(bool, IgnoreLockingAssertions, false, \
           "disable locking assertions (for speed)") \
@@ -1207,12 +845,10 @@
           "treat casts like calls for purposes of type profiling") \
  \
   develop(bool, DelayCompilationDuringStartup, true, \
-          "Delay invoking the compiler until main application class is " \
-          "loaded") \
+          "Delay invoking the compiler until main application class is loaded") \
  \
   develop(bool, CompileTheWorld, false, \
-          "Compile all methods in all classes in bootstrap class path " \
-            "(stress test)") \
+          "Compile all methods in all classes in bootstrap class path (stress test)") \
  \
   develop(bool, CompileTheWorldPreloadClasses, true, \
           "Preload all classes used by a class before start loading") \
@@ -1226,12 +862,6 @@
   develop(bool, TimeLivenessAnalysis, false, \
           "Time computation of bytecode liveness analysis") \
  \
-  develop(bool, TraceLivenessGen, false, \
-          "Trace the generation of liveness analysis information") \
- \
-  notproduct(bool, TraceLivenessQuery, false, \
-          "Trace queries of liveness analysis information") \
- \
   notproduct(bool, CollectIndexSetStatistics, false, \
           "Collect information about IndexSets") \
  \
@@ -1241,9 +871,6 @@
   develop(intx, FastAllocateSizeLimit, 128*K, \
           /* Note:  This value is zero mod 1<<13 for a cheap sparc set. */ \
           "Inline allocations larger than this in doublewords must go slow") \
- \
-  product(bool, AggressiveOpts, false, \
-          "(Deprecated) Enable aggressive optimizations - see arguments.cpp") \
  \
   product_pd(bool, CompactStrings, \
           "Enable Strings to use single byte chars in backing store") \
@@ -1255,13 +882,12 @@
           "X, Y and Z in 0=off ; 1=jsr292 only; 2=all methods") \
           constraint(TypeProfileLevelConstraintFunc, AfterErgo) \
  \
-  product(intx, TypeProfileArgsLimit,     2, \
+  product(intx, TypeProfileArgsLimit, 2, \
           "max number of call arguments to consider for type profiling") \
           range(0, 16) \
  \
-  product(intx, TypeProfileParmsLimit,    2, \
-          "max number of incoming parameters to consider for type profiling" \
-          ", -1 for all") \
+  product(intx, TypeProfileParmsLimit, 2, \
+          "max number of incoming parameters to consider for type profiling, -1 for all") \
           range(-1, 64) \
  \
   /* statistics */ \
@@ -1278,11 +904,7 @@
           "Count jvm method invocations") \
  \
   notproduct(bool, CountRemovableExceptions, false, \
-          "Count exceptions that could be replaced by branches due to " \
-          "inlining") \
- \
-  notproduct(bool, ICMissHistogram, false, \
-          "Produce histogram of IC misses") \
+          "Count exceptions that could be replaced by branches due to inlining") \
  \
   /* interpreter */ \
   product_pd(bool, RewriteBytecodes, \
@@ -1304,27 +926,13 @@
           "Increment invocation counter on backward branch") \
  \
   product_pd(bool, UseOnStackReplacement, \
-          "Use on stack replacement, calls runtime if invoc. counter " \
-          "overflows in loop") \
- \
-  notproduct(bool, TraceOnStackReplacement, false, \
-          "Trace on stack replacement") \
+          "Use on stack replacement, calls runtime if invoc. counter overflows in loop") \
  \
   product_pd(bool, PreferInterpreterNativeStubs, \
-          "Use always interpreter stubs for native methods invoked via " \
-          "interpreter") \
+          "Use always interpreter stubs for native methods invoked via interpreter") \
  \
   develop(bool, CountBytecodes, false, \
           "Count number of bytecodes executed") \
- \
-  develop(bool, PrintBytecodeHistogram, false, \
-          "Print histogram of the executed bytecodes") \
- \
-  develop(bool, PrintBytecodePairHistogram, false, \
-          "Print histogram of the executed bytecode pairs") \
- \
-  diagnostic(bool, PrintSignatureHandlers, false, \
-          "Print code generated for native method signature handlers") \
  \
   develop(bool, VerifyOops, false, \
           "Do plausibility checks for oops") \
@@ -1336,8 +944,7 @@
           "Verify jfieldIDs for instance fields") \
  \
   notproduct(bool, VerifyJNIEnvThread, false, \
-          "Verify JNIEnv.thread == Thread::current() when entering VM " \
-          "from JNI") \
+          "Verify JNIEnv.thread == Thread::current() when entering VM from JNI") \
  \
   develop(bool, VerifyFPU, false, \
           "Verify FPU state (check for NaN's, etc.)") \
@@ -1346,22 +953,13 @@
           "Watch the thread register for corruption (SPARC only)") \
  \
   develop(bool, VerifyActivationFrameSize, false, \
-          "Verify that activation frame didn't become smaller than its " \
-          "minimal size") \
- \
-  develop(bool, TraceFrequencyInlining, false, \
-          "Trace frequency based inlining") \
+          "Verify that activation frame didn't become smaller than its minimal size") \
  \
   develop_pd(bool, InlineIntrinsics, \
           "Inline intrinsics that can be statically resolved") \
  \
   product_pd(bool, ProfileInterpreter, \
           "Profile at the bytecode level during interpretation") \
- \
-  develop(bool, TraceProfileInterpreter, false, \
-          "Trace profiling at the bytecode level during interpretation. " \
-          "This outputs the profiling information collected to improve " \
-          "jit compilation.") \
  \
   develop_pd(bool, ProfileTraps, \
           "Profile deoptimization traps at the bytecode level") \
@@ -1371,9 +969,6 @@
           "CompileThreshold) before using the method's profile") \
           range(0, 100) \
  \
-  diagnostic(bool, PrintMethodData, false, \
-          "Print the results of +ProfileInterpreter at end of run") \
- \
   develop(bool, VerifyDataPointer, trueInDebug, \
           "Verify the method data pointer during interpreter profiling") \
  \
@@ -1381,16 +976,9 @@
           "Include miscellaneous runtime verifications in nmethod code; " \
           "default off because it disturbs nmethod size heuristics") \
  \
-  notproduct(bool, CrashGCForDumpingJavaThread, false, \
-          "Manually make GC thread crash then dump java stack trace;  " \
-          "Test only") \
- \
   /* compilation */ \
   product(bool, UseCompiler, true, \
           "Use Just-In-Time compilation") \
- \
-  develop(bool, TraceCompilationPolicy, false, \
-          "Trace compilation policy") \
  \
   develop(bool, TimeCompilationPolicy, false, \
           "Time the compilation policy") \
@@ -1398,16 +986,14 @@
   product(bool, UseCounterDecay, true, \
           "Adjust recompilation counters") \
  \
-  develop(intx, CounterHalfLifeTime,    30, \
+  develop(intx, CounterHalfLifeTime, 30, \
           "Half-life time of invocation counters (in seconds)") \
  \
-  develop(intx, CounterDecayMinIntervalLength,   500, \
-          "The minimum interval (in milliseconds) between invocation of " \
-          "CounterDecay") \
+  develop(intx, CounterDecayMinIntervalLength, 500, \
+          "The minimum interval (in milliseconds) between invocation of CounterDecay") \
  \
   product(bool, AlwaysCompileLoopMethods, false, \
-          "When using recompilation, never interpret methods " \
-          "containing loops") \
+          "When using recompilation, never interpret methods containing loops") \
  \
   product(bool, DontCompileHugeMethods, true, \
           "Do not compile methods > HugeMethodLimit") \
@@ -1417,8 +1003,7 @@
           "Analyze bytecodes to estimate escape state of arguments") \
  \
   product(intx, BCEATraceLevel, 0, \
-          "How much tracing to do of bytecode escape analysis estimates " \
-          "(0-3)") \
+          "How much tracing to do of bytecode escape analysis estimates (0-3)") \
           range(0, 3) \
  \
   product(intx, MaxBCEAEstimateLevel, 5, \
@@ -1446,8 +1031,7 @@
           range(1, 64) \
  \
   product(intx,  AllocateInstancePrefetchLines, 1, \
-          "Number of lines to prefetch ahead of instance allocation " \
-          "pointer") \
+          "Number of lines to prefetch ahead of instance allocation pointer") \
           range(1, 64) \
  \
   product(intx,  AllocatePrefetchStepSize, 16, \
@@ -1460,43 +1044,27 @@
           constraint(AllocatePrefetchInstrConstraintFunc, AfterMemoryInit) \
  \
   /* deoptimization */ \
-  develop(bool, TraceDeoptimization, false, \
-          "Trace deoptimization") \
- \
-  develop(bool, PrintDeoptimizationDetails, false, \
-          "Print more information about deoptimization") \
- \
-  develop(bool, DebugDeoptimization, false, \
-          "Tracing various information while debugging deoptimization") \
- \
   product(intx, SelfDestructTimer, 0, \
-          "Will cause VM to terminate after a given time (in minutes) " \
-          "(0 means off)") \
+          "Will cause VM to terminate after a given time (in minutes) (0 means off)") \
           range(0, max_intx) \
  \
   product(intx, MaxJavaStackTraceDepth, 1024, \
-          "The maximum number of lines in the stack trace for Java " \
-          "exceptions (0 means all)") \
+          "The maximum number of lines in the stack trace for Java exceptions (0 means all)") \
           range(0, max_jint/2) \
  \
   /* notice: the max range value here is max_jint, not max_intx  */ \
   /* because of overflow issue                                   */ \
   diagnostic(intx, GuaranteedSafepointInterval, 1000, \
-          "Guarantee a safepoint (at least) every so many milliseconds " \
-          "(0 means none)") \
+          "Guarantee a safepoint (at least) every so many milliseconds (0 means none)") \
           range(0, max_jint) \
  \
   product(intx, SafepointTimeoutDelay, 10000, \
           "Delay in milliseconds for option SafepointTimeout") \
-  range(0, max_intx/MICROUNITS) \
+          range(0, max_intx/MICROUNITS) \
  \
   product(intx, NmethodSweepActivity, 10, \
-          "Removes cold nmethods from code cache if > 0. Higher values " \
-          "result in more aggressive sweeping") \
+          "Removes cold nmethods from code cache if > 0. Higher values result in more aggressive sweeping") \
           range(0, 2000) \
- \
-  notproduct(bool, LogSweeper, false, \
-          "Keep a ring buffer of sweeper activity") \
  \
   notproduct(intx, SweeperLogEntries, 1024, \
           "Number of records in the ring buffer of sweeper activity") \
@@ -1506,9 +1074,6 @@
  \
   develop(intx, MallocCatchPtr, -1, \
           "Hit breakpoint when mallocing/freeing this pointer") \
- \
-  notproduct(ccstrlist, SuppressErrorAt, "", \
-          "List of assertions (file:line) to muzzle") \
  \
   develop(intx, StackPrintLimit, 100, \
           "number of stack frames to print in VM-level stack dump") \
@@ -1533,8 +1098,7 @@
           range(0, max_jint) \
  \
   product_pd(intx, InlineSmallCode, \
-          "Only inline already compiled methods if their code size is " \
-          "less than this") \
+          "Only inline already compiled methods if their code size is less than this") \
           range(0, max_jint) \
  \
   product(intx, MaxInlineSize, 35, \
@@ -1550,8 +1114,7 @@
           range(0, max_jint) \
  \
   product(intx, MinInliningThreshold, 250, \
-          "The minimum invocation count a method needs to have to be " \
-          "inlined") \
+          "The minimum invocation count a method needs to have to be inlined") \
           range(0, max_jint) \
  \
   develop(intx, MethodHistogramCutoff, 100, \
@@ -1570,32 +1133,30 @@
           "Number of runtime stub nodes to show in profile") \
  \
   product(intx, ProfileIntervalsTicks, 100, \
-          "Number of ticks between printing of interval profile " \
-          "(+ProfileIntervals)") \
+          "Number of ticks between printing of interval profile (+false)") \
           range(0, max_intx) \
  \
-  develop(intx, DontYieldALotInterval,    10, \
+  develop(intx, DontYieldALotInterval, 10, \
           "Interval between which yields will be dropped (milliseconds)") \
  \
-  develop(intx, ProfilerPCTickThreshold,    15, \
+  develop(intx, ProfilerPCTickThreshold, 15, \
           "Number of ticks in a PC buckets to be a hotspot") \
  \
-  notproduct(intx, DeoptimizeALotInterval,     5, \
+  notproduct(intx, DeoptimizeALotInterval, 5, \
           "Number of exits until DeoptimizeALot kicks in") \
  \
-  notproduct(intx, ZombieALotInterval,     5, \
+  notproduct(intx, ZombieALotInterval, 5, \
           "Number of exits until ZombieALot kicks in") \
  \
-  diagnostic(uintx, MallocMaxTestWords,     0, \
-          "If non-zero, maximum number of words that malloc/realloc can " \
-          "allocate (for testing only)") \
+  diagnostic(uintx, MallocMaxTestWords, 0, \
+          "If non-zero, maximum number of words that malloc/realloc can allocate (for testing only)") \
           range(0, max_uintx) \
  \
   product(intx, TypeProfileWidth, 2, \
           "Number of receiver types to record in call/cast profile") \
           range(0, 8) \
  \
-  develop(intx, BciProfileWidth,      2, \
+  develop(intx, BciProfileWidth, 2, \
           "Number of return bci's to record in ret profile") \
  \
   product(intx, PerMethodRecompilationCutoff, 400, \
@@ -1606,46 +1167,43 @@
           "Per-BCI limit on repeated recompilation (-1=>'Inf')") \
           range(-1, max_intx) \
  \
-  product(intx, PerMethodTrapLimit,  100, \
+  product(intx, PerMethodTrapLimit, 100, \
           "Limit on traps (of one kind) in a method (includes inlines)") \
           range(0, max_jint) \
  \
-  experimental(intx, PerMethodSpecTrapLimit,  5000, \
-          "Limit on speculative traps (of one kind) in a method " \
-          "(includes inlines)") \
+  experimental(intx, PerMethodSpecTrapLimit, 5000, \
+          "Limit on speculative traps (of one kind) in a method (includes inlines)") \
           range(0, max_jint) \
  \
-  product(intx, PerBytecodeTrapLimit,  4, \
+  product(intx, PerBytecodeTrapLimit, 4, \
           "Limit on traps (of one kind) at a particular BCI") \
           range(0, max_jint) \
  \
-  experimental(intx, SpecTrapLimitExtraEntries,  3, \
+  experimental(intx, SpecTrapLimitExtraEntries, 3, \
           "Extra method data trap entries for speculation") \
  \
-  develop(intx, InlineFrequencyRatio,    20, \
+  develop(intx, InlineFrequencyRatio, 20, \
           "Ratio of call site execution to caller method invocation") \
           range(0, max_jint) \
  \
   diagnostic_pd(intx, InlineFrequencyCount, \
-          "Count of call site execution necessary to trigger frequent " \
-          "inlining") \
+          "Count of call site execution necessary to trigger frequent inlining") \
           range(0, max_jint) \
  \
-  develop(intx, InlineThrowCount,    50, \
+  develop(intx, InlineThrowCount, 50, \
           "Force inlining of interpreted methods that throw this often") \
           range(0, max_jint) \
  \
-  develop(intx, InlineThrowMaxSize,   200, \
+  develop(intx, InlineThrowMaxSize, 200, \
           "Force inlining of throwing methods smaller than this") \
           range(0, max_jint) \
  \
-  develop(intx, ProfilerNodeSize,  1024, \
+  develop(intx, ProfilerNodeSize, 1024, \
           "Size in K to allocate for the Profile Nodes of each thread") \
           range(0, 1024) \
  \
   product_pd(size_t, MetaspaceSize, \
-          "Initial threshold (in bytes) at which a garbage collection " \
-          "is done to reduce Metaspace usage") \
+          "Initial threshold (in bytes) at which a garbage collection is done to reduce Metaspace usage") \
           constraint(MetaspaceSizeConstraintFunc,AfterErgo) \
  \
   product(size_t, MaxMetaspaceSize, max_uintx, \
@@ -1653,21 +1211,18 @@
           constraint(MaxMetaspaceSizeConstraintFunc,AfterErgo) \
  \
   product(size_t, CompressedClassSpaceSize, 1*G, \
-          "Maximum size of class area in Metaspace when compressed " \
-          "class pointers are used") \
+          "Maximum size of class area in Metaspace when compressed class pointers are used") \
           range(1*M, 3*G) \
  \
   manageable(uintx, MinHeapFreeRatio, 40, \
           "The minimum percentage of heap free after GC to avoid expansion." \
-          " For most GCs this applies to the old generation. In G1 and" \
-          " ParallelGC it applies to the whole heap.") \
+          " For most GCs this applies to the old generation. In G1 and ParallelGC it applies to the whole heap.") \
           range(0, 100) \
           constraint(MinHeapFreeRatioConstraintFunc,AfterErgo) \
  \
   manageable(uintx, MaxHeapFreeRatio, 70, \
           "The maximum percentage of heap free after GC to avoid shrinking." \
-          " For most GCs this applies to the old generation. In G1 and" \
-          " ParallelGC it applies to the whole heap.") \
+          " For most GCs this applies to the old generation. In G1 and ParallelGC it applies to the whole heap.") \
           range(0, 100) \
           constraint(MaxHeapFreeRatioConstraintFunc,AfterErgo) \
  \
@@ -1689,15 +1244,13 @@
           "The minimum expansion of Metaspace (in bytes)") \
           range(0, max_uintx) \
  \
-  product(uintx, MaxMetaspaceFreeRatio,    70, \
-          "The maximum percentage of Metaspace free after GC to avoid " \
-          "shrinking") \
+  product(uintx, MaxMetaspaceFreeRatio, 70, \
+          "The maximum percentage of Metaspace free after GC to avoid shrinking") \
           range(0, 100) \
           constraint(MaxMetaspaceFreeRatioConstraintFunc,AfterErgo) \
  \
-  product(uintx, MinMetaspaceFreeRatio,    40, \
-          "The minimum percentage of Metaspace free after GC to avoid " \
-          "expansion") \
+  product(uintx, MinMetaspaceFreeRatio, 40, \
+          "The minimum percentage of Metaspace free after GC to avoid expansion") \
           range(0, 99) \
           constraint(MinMetaspaceFreeRatioConstraintFunc,AfterErgo) \
  \
@@ -1748,8 +1301,7 @@
  \
   /* code cache parameters                                    */ \
   develop_pd(uintx, CodeCacheSegmentSize, \
-          "Code cache segment size (in bytes) - smallest unit of " \
-          "allocation") \
+          "Code cache segment size (in bytes) - smallest unit of allocation") \
           range(1, 1024) \
           constraint(CodeCacheSegmentSizeConstraintFunc, AfterErgo) \
  \
@@ -1816,22 +1368,12 @@
   product(ccstrlist, AOTLibrary, NULL, \
           "AOT library") \
  \
-  product(bool, PrintAOT, false, \
-          "Print used AOT klasses and methods") \
- \
-  notproduct(bool, PrintAOTStatistics, false, \
-          "Print AOT statistics") \
- \
   diagnostic(bool, UseAOTStrictLoading, false, \
           "Exit the VM if any of the AOT libraries has invalid config") \
  \
-  product(bool, CalculateClassFingerprint, false, \
-          "Calculate class fingerprint") \
- \
   /* interpreter debugging */ \
   develop(intx, BinarySwitchThreshold, 5, \
-          "Minimal number of lookupswitch entries for rewriting to binary " \
-          "switch") \
+          "Minimal number of lookupswitch entries for rewriting to binary switch") \
  \
   develop(intx, StopInterpreterAt, 0, \
           "Stop interpreter execution at specified bytecode number") \
@@ -1847,12 +1389,10 @@
           "The id of the last compilation to permit") \
  \
   develop(intx, CIStartOSR, 0, \
-          "The id of the first osr compilation to permit " \
-          "(CICountOSR must be on)") \
+          "The id of the first osr compilation to permit (CICountOSR must be on)") \
  \
   develop(intx, CIStopOSR, max_jint, \
-          "The id of the last osr compilation to permit " \
-          "(CICountOSR must be on)") \
+          "The id of the last osr compilation to permit (CICountOSR must be on)") \
  \
   develop(intx, CIBreakAtOSR, -1, \
           "The id of osr compilation to break at") \
@@ -1903,8 +1443,7 @@
  \
   develop(intx, CIFireOOMAt,    -1, \
           "Fire OutOfMemoryErrors throughout CI for testing the compiler " \
-          "(non-negative value throws OOM after this many CI accesses " \
-          "in each compile)") \
+          "(non-negative value throws OOM after this many CI accesses in each compile)") \
   notproduct(intx, CICrashAt, -1, \
           "id of compilation to trigger assert in compiler thread for " \
           "the purpose of testing, e.g. generation of replay data") \
@@ -2007,27 +1546,19 @@
   experimental(bool, UseCriticalCompilerThreadPriority, false, \
           "Compiler thread(s) run at critical scheduling priority") \
  \
-  experimental(bool, UseCriticalCMSThreadPriority, false, \
-          "ConcurrentMarkSweep thread runs at critical scheduling priority") \
- \
   /* compiler debugging */ \
-  notproduct(intx, CompileTheWorldStartAt,     1, \
+  notproduct(intx, CompileTheWorldStartAt, 1, \
           "First class to consider when using +CompileTheWorld") \
  \
   notproduct(intx, CompileTheWorldStopAt, max_jint, \
           "Last class to consider when using +CompileTheWorld") \
  \
-  develop(intx, NewCodeParameter,      0, \
-          "Testing Only: Create a dedicated integer parameter before " \
-          "putback") \
+  develop(intx, NewCodeParameter, 0, \
+          "Testing Only: Create a dedicated integer parameter before putback") \
  \
   /* new oopmap storage allocation */ \
-  develop(intx, MinOopMapAllocation,     8, \
+  develop(intx, MinOopMapAllocation, 8, \
           "Minimum number of OopMap entries in an OopMapSet") \
- \
-  /* Background Compilation */ \
-  develop(intx, LongCompileThreshold,     50, \
-          "Used with +TraceLongCompiles") \
  \
   /* recompilation */ \
   product_pd(intx, CompileThreshold, \
@@ -2057,8 +1588,7 @@
           range(0, 30) \
  \
   product(intx, Tier3InvokeNotifyFreqLog, 10, \
-          "C1 with MDO profiling (tier 3) invocation notification " \
-          "frequency") \
+          "C1 with MDO profiling (tier 3) invocation notification frequency") \
           range(0, 30) \
  \
   product(intx, Tier23InlineeNotifyFreqLog, 20, \
@@ -2074,8 +1604,7 @@
           range(0, 30) \
  \
   product(intx, Tier3BackedgeNotifyFreqLog, 13, \
-          "C1 with MDO profiling (tier 3) invocation notification " \
-          "frequency") \
+          "C1 with MDO profiling (tier 3) invocation notification frequency") \
           range(0, 30) \
  \
   product(intx, Tier2CompileThreshold, 0, \
@@ -2087,8 +1616,7 @@
           range(0, max_jint) \
  \
   product(intx, Tier3InvocationThreshold, 200, \
-          "Compile if number of method invocations crosses this " \
-          "threshold") \
+          "Compile if number of method invocations crosses this threshold") \
           range(0, max_jint) \
  \
   product(intx, Tier3MinInvocationThreshold, 100, \
@@ -2096,17 +1624,15 @@
           range(0, max_jint) \
  \
   product(intx, Tier3CompileThreshold, 2000, \
-          "Threshold at which tier 3 compilation is invoked (invocation " \
-          "minimum must be satisfied)") \
+          "Threshold at which tier 3 compilation is invoked (invocation minimum must be satisfied)") \
           range(0, max_jint) \
  \
-  product(intx, Tier3BackEdgeThreshold,  60000, \
+  product(intx, Tier3BackEdgeThreshold, 60000, \
           "Back edge threshold at which tier 3 OSR compilation is invoked") \
           range(0, max_jint) \
  \
   product(intx, Tier3AOTInvocationThreshold, 10000, \
-          "Compile if number of method invocations crosses this " \
-          "threshold if coming from AOT") \
+          "Compile if number of method invocations crosses this threshold if coming from AOT") \
           range(0, max_jint) \
  \
   product(intx, Tier3AOTMinInvocationThreshold, 1000, \
@@ -2114,18 +1640,15 @@
           range(0, max_jint) \
  \
   product(intx, Tier3AOTCompileThreshold, 15000, \
-          "Threshold at which tier 3 compilation is invoked (invocation " \
-          "minimum must be satisfied) if coming from AOT") \
+          "Threshold at which tier 3 compilation is invoked (invocation minimum must be satisfied) if coming from AOT") \
           range(0, max_jint) \
  \
-  product(intx, Tier3AOTBackEdgeThreshold,  120000, \
-          "Back edge threshold at which tier 3 OSR compilation is invoked " \
-          "if coming from AOT") \
+  product(intx, Tier3AOTBackEdgeThreshold, 120000, \
+          "Back edge threshold at which tier 3 OSR compilation is invoked if coming from AOT") \
           range(0, max_jint) \
  \
   product(intx, Tier4InvocationThreshold, 5000, \
-          "Compile if number of method invocations crosses this " \
-          "threshold") \
+          "Compile if number of method invocations crosses this threshold") \
           range(0, max_jint) \
  \
   product(intx, Tier4MinInvocationThreshold, 600, \
@@ -2133,8 +1656,7 @@
           range(0, max_jint) \
  \
   product(intx, Tier4CompileThreshold, 15000, \
-          "Threshold at which tier 4 compilation is invoked (invocation " \
-          "minimum must be satisfied") \
+          "Threshold at which tier 4 compilation is invoked (invocation minimum must be satisfied") \
           range(0, max_jint) \
  \
   product(intx, Tier4BackEdgeThreshold, 40000, \
@@ -2162,8 +1684,7 @@
           range(0, max_jint) \
  \
   product(intx, TieredCompileTaskTimeout, 50, \
-          "Kill compile task if method was not used within " \
-          "given timeout in milliseconds") \
+          "Kill compile task if method was not used within given timeout in milliseconds") \
           range(0, max_intx) \
  \
   product(intx, TieredStopAtLevel, 4, \
@@ -2191,9 +1712,6 @@
   product_pd(bool, TieredCompilation, \
           "Enable tiered compilation") \
  \
-  product(bool, PrintTieredEvents, false, \
-          "Print tiered events notifications") \
- \
   product_pd(intx, OnStackReplacePercentage, \
           "NON_TIERED number of method invocations/branches (expressed as " \
           "% of CompileThreshold) before (re-)compiling OSR code") \
@@ -2204,20 +1722,17 @@
           "% of CompileThreshold) before profiling in the interpreter") \
           range(0, 100) \
  \
-  develop(intx, MaxRecompilationSearchLength,    10, \
-          "The maximum number of frames to inspect when searching for " \
-          "recompilee") \
+  develop(intx, MaxRecompilationSearchLength, 10, \
+          "The maximum number of frames to inspect when searching for recompilee") \
  \
-  develop(intx, MaxInterpretedSearchLength,     3, \
-          "The maximum number of interpreted frames to skip when searching " \
-          "for recompilee") \
+  develop(intx, MaxInterpretedSearchLength, 3, \
+          "The maximum number of interpreted frames to skip when searching for recompilee") \
  \
-  develop(intx, DesiredMethodLimit,  8000, \
+  develop(intx, DesiredMethodLimit, 8000, \
           "The desired maximum method size (in bytecodes) after inlining") \
  \
-  develop(intx, HugeMethodLimit,  8000, \
-          "Don't compile methods larger than this if " \
-          "+DontCompileHugeMethods") \
+  develop(intx, HugeMethodLimit, 8000, \
+          "Don't compile methods larger than this if +DontCompileHugeMethods") \
  \
   /* New JDK 1.4 reflection implementation */ \
  \
@@ -2244,16 +1759,7 @@
   /* flags for performance data collection */ \
  \
   product(bool, UsePerfData, true, \
-          "Flag to disable jvmstat instrumentation for performance testing " \
-          "and problem isolation purposes") \
- \
-  product(bool, PerfDataSaveToFile, false, \
-          "Save PerfData memory to hsperfdata_<pid> file on exit") \
- \
-  product(ccstr, PerfDataSaveFile, NULL, \
-          "Save PerfData memory to the specified absolute pathname. " \
-          "The string %p in the file name (if present) " \
-          "will be replaced by pid") \
+          "Flag to disable jvmstat instrumentation for performance testing and problem isolation purposes") \
  \
   product(intx, PerfDataSamplingInterval, 50, \
           "Data sampling interval (in milliseconds)") \
@@ -2264,8 +1770,7 @@
           "Store performance data in standard memory") \
  \
   product(intx, PerfDataMemorySize, 32*K, \
-          "Size of performance data memory region. Will be rounded " \
-          "up to a multiple of the native os page size.") \
+          "Size of performance data memory region. Will be rounded up to a multiple of the native os page size.") \
           range(128, 32*64*K) \
  \
   product(intx, PerfMaxStringConstLength, 1024, \
@@ -2285,9 +1790,6 @@
  \
   /* Serviceability Support */ \
  \
-  product(bool, ManagementServer, false, \
-          "Create JMX Management Server") \
- \
   product(bool, DisableAttachMechanism, false, \
           "Disable mechanism that allows tools to attach to this VM") \
  \
@@ -2297,15 +1799,6 @@
   product(bool, EnableDynamicAgentLoading, true, \
           "Allow tools to load agents with the attach mechanism") \
  \
-  manageable(bool, PrintConcurrentLocks, false, \
-          "Print java.util.concurrent locks in thread dump") \
- \
-  product(bool, TransmitErrorReport, false, \
-          "Enable error report transmission on erroneous termination") \
- \
-  product(ccstr, ErrorReportServer, NULL, \
-          "Override built-in error report server address") \
- \
   /* Shared spaces */ \
  \
   product(bool, UseSharedSpaces, true, \
@@ -2314,21 +1807,6 @@
   product(bool, VerifySharedSpaces, false, \
           "Verify shared spaces (false for default archive, true for " \
           "archive specified by -XX:SharedArchiveFile)") \
- \
-  product(bool, RequireSharedSpaces, false, \
-          "Require shared spaces for metadata") \
- \
-  product(bool, DumpSharedSpaces, false, \
-          "Special mode: JVM reads a class list, loads classes, builds " \
-          "shared spaces, and dumps the shared spaces to a file to be " \
-          "used in future JVM runs") \
- \
-  product(bool, PrintSharedArchiveAndExit, false, \
-          "Print shared archive file contents") \
- \
-  product(bool, PrintSharedDictionary, false, \
-          "If PrintSharedArchiveAndExit is true, also print the shared " \
-          "dictionary") \
  \
   product(size_t, SharedBaseAddress, 32*G, \
           "Address to allocate shared memory region for class data") \
@@ -2345,12 +1823,6 @@
           "Do not quit -Xshare:dump even if we encounter unverifiable " \
           "classes. Just exclude them from the shared dictionary.") \
  \
-  diagnostic(bool, PrintMethodHandleStubs, false, \
-          "Print generated stub code for method handles") \
- \
-  develop(bool, TraceMethodHandles, false, \
-          "trace internal method handle operations") \
- \
   diagnostic(bool, VerifyMethodHandles, trueInDebug, \
           "perform extra checks when constructing method handles") \
  \
@@ -2362,9 +1834,6 @@
  \
   diagnostic(bool, FoldStableValues, true, \
           "Optimize loads from stable fields (marked w/ @Stable)") \
- \
-  develop(bool, TraceInvokeDynamic, false, \
-          "trace internal invoke dynamic operations") \
  \
   diagnostic(int, UseBootstrapCallInfo, 1, \
           "0: when resolving InDy or ConDy, force all BSM arguments to be " \
@@ -2381,21 +1850,6 @@
   diagnostic(ccstr, PauseAtStartupFile, NULL, \
           "The file to create and for whose removal to await when pausing " \
           "at startup. (default: ./vm.paused.<pid>)") \
- \
-  diagnostic(bool, PauseAtExit, false, \
-          "Pause and wait for keypress on exit if a debugger is attached") \
- \
-  product(bool, ExtendedDTraceProbes,    false, \
-          "Enable performance-impacting dtrace probes") \
- \
-  product(bool, DTraceMethodProbes, false, \
-          "Enable dtrace probes for method-entry and method-exit") \
- \
-  product(bool, DTraceAllocProbes, false, \
-          "Enable dtrace probes for object allocation") \
- \
-  product(bool, DTraceMonitorProbes, false, \
-          "Enable dtrace probes for monitor events") \
  \
   product(bool, RelaxAccessControlCheck, false, \
           "Relax the access control checks in the verifier") \
@@ -2423,14 +1877,11 @@
   diagnostic(bool, StringDeduplicationRehashALot, false, \
           "Force table rehash every time the table is scanned") \
  \
-  diagnostic(bool, WhiteBoxAPI, false, \
-          "Enable internal testing APIs") \
- \
   experimental(intx, SurvivorAlignmentInBytes, 0, \
            "Default survivor space alignment in bytes") \
            constraint(SurvivorAlignmentInBytesConstraintFunc,AfterErgo) \
  \
-  product(bool , AllowNonVirtualCalls, false, \
+  product(bool, AllowNonVirtualCalls, false, \
           "Obey the ACC_SUPER flag and allow invokenonvirtual calls") \
  \
   product(ccstr, DumpLoadedClassList, NULL, \
@@ -2476,8 +1927,7 @@
  \
   diagnostic_pd(intx, InitArrayShortSize, \
           "Threshold small size (in bytes) for clearing arrays. " \
-          "Anything this size or smaller may get converted to discrete " \
-          "scalar stores.") \
+          "Anything this size or smaller may get converted to discrete scalar stores.") \
           range(0, max_intx) \
           constraint(InitArrayShortSizeConstraintFunc, AfterErgo) \
  \
@@ -2550,7 +2000,7 @@
     lp64_product, \
     range, \
     constraint, \
-    writeable) \
+    writeable)
 
 /*
  *  Macros for factoring of globals

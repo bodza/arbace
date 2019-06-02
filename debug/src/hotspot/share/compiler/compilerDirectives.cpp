@@ -75,8 +75,8 @@ void CompilerDirectives::finalize(outputStream* st) {
 
 void DirectiveSet::finalize(outputStream* st) {
   // Check LogOption and warn
-  if (LogOption && !LogCompilation) {
-    st->print_cr("Warning:  +LogCompilation must be set to enable compilation logging from directives");
+  if (LogOption) {
+    st->print_cr("Warning:  +false must be set to enable compilation logging from directives");
   }
 
   // if any flag has been modified - set directive as enabled

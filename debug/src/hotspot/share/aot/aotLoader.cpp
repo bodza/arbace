@@ -95,18 +95,12 @@ void AOTLoader::initialize() {
   if (UseAOT) {
     // EagerInitialization is not compatible with AOT
     if (EagerInitialization) {
-      if (PrintAOT) {
-        warning("EagerInitialization is not compatible with AOT (switching AOT off)");
-      }
       FLAG_SET_DEFAULT(UseAOT, false);
       return;
     }
 
     // -Xint is not compatible with AOT
     if (Arguments::is_interpreter_only()) {
-      if (PrintAOT) {
-        warning("-Xint is not compatible with AOT (switching AOT off)");
-      }
       FLAG_SET_DEFAULT(UseAOT, false);
       return;
     }
@@ -216,9 +210,6 @@ void AOTLoader::load_library(const char* name, bool exit_on_error) {
     start = strrchr(lib_name, file_separator);
     const char* old_name = (start == NULL) ? lib_name : (start + 1);
     if (strcmp(old_name, new_name) == 0) {
-      if (PrintAOT) {
-        warning("AOT library %s is already loaded as %s.", name, lib_name);
-      }
       return;
     }
   }

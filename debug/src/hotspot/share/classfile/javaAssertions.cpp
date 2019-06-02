@@ -56,13 +56,6 @@ void JavaAssertions::addOption(const char* name, bool enable) {
     if (name_copy[i] == '.') name_copy[i] = '/';
   }
 
-  if (TraceJavaAssertions) {
-    tty->print_cr("JavaAssertions: adding %s %s=%d",
-      head == &_classes ? "class" : "package",
-      name_copy[0] != '\0' ? name_copy : "'default'",
-      enable);
-  }
-
   // Prepend a new item to the list.  Items added later take precedence, so
   // prepending allows us to stop searching the list after the first match.
   *head = new OptionList(name_copy, enable, *head);
@@ -151,13 +144,7 @@ JavaAssertions::match_package(const char* classname) {
   return 0;
 }
 
-inline void JavaAssertions::trace(const char* name,
-const char* typefound, const char* namefound, bool enabled) {
-  if (TraceJavaAssertions) {
-    tty->print_cr("JavaAssertions:  search for %s found %s %s=%d",
-      name, typefound, namefound[0] != '\0' ? namefound : "'default'", enabled);
-  }
-}
+inline void JavaAssertions::trace(const char* name, const char* typefound, const char* namefound, bool enabled) { }
 
 bool JavaAssertions::enabled(const char* classname, bool systemClass) {
 

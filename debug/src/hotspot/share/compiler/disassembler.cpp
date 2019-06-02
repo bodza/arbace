@@ -96,13 +96,11 @@ bool Disassembler::load_library() {
     _library = os::dll_load(buf, ebuf, sizeof ebuf);
   }
   if (_library != NULL) {
-    _decode_instructions_virtual = CAST_TO_FN_PTR(Disassembler::decode_func_virtual,
-                                          os::dll_lookup(_library, decode_instructions_virtual_name));
+    _decode_instructions_virtual = CAST_TO_FN_PTR(Disassembler::decode_func_virtual, os::dll_lookup(_library, decode_instructions_virtual_name));
   }
   if (_decode_instructions_virtual == NULL && _library != NULL) {
     // could not spot in new version, try old version
-    _decode_instructions = CAST_TO_FN_PTR(Disassembler::decode_func,
-                                          os::dll_lookup(_library, decode_instructions_name));
+    _decode_instructions = CAST_TO_FN_PTR(Disassembler::decode_func, os::dll_lookup(_library, decode_instructions_name));
     use_new_version = false;
   } else {
     use_new_version = true;
@@ -112,7 +110,7 @@ bool Disassembler::load_library() {
     tty->print_cr("Could not load %s; %s; %s", buf,
                   ((_library != NULL)
                    ? "entry point is missing"
-                   : (WizardMode || PrintMiscellaneous)
+                   : false
                    ? (const char*)ebuf
                    : "library not loadable"),
                   "PrintAssembly is disabled");
@@ -287,8 +285,6 @@ void decode_env::print_address(address adr) {
         st->print("Stub::%s", desc->name());
         if (desc->begin() != adr) {
           st->print(INTX_FORMAT_W(+) " " PTR_FORMAT, adr - desc->begin(), p2i(adr));
-        } else if (WizardMode) {
-          st->print(" " PTR_FORMAT, p2i(adr));
         }
         return;
       }
@@ -299,7 +295,6 @@ void decode_env::print_address(address adr) {
     BarrierSet* bs = BarrierSet::barrier_set();
     if (bs->is_a(BarrierSet::CardTableBarrierSet) && adr == ci_card_table_address_as<address>()) {
       st->print("word_map_base");
-      if (WizardMode) st->print(" " INTPTR_FORMAT, p2i(adr));
       return;
     }
   }

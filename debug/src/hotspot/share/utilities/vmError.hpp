@@ -70,18 +70,13 @@ class VMError : public AllStatic {
   // on Windows, to handle recursive crashes.
   static void reset_signal_handlers();
 
-  // handle -XX:+ShowMessageBoxOnError. buf is used to format the message string
-  static void show_message_box(char* buf, int buflen);
-
   // generate an error report
   static void report(outputStream* st, bool verbose);
 
   // generate a stack trace
-  static void print_stack_trace(outputStream* st, JavaThread* jt,
-                                char* buf, int buflen, bool verbose = false);
+  static void print_stack_trace(outputStream* st, JavaThread* jt, char* buf, int buflen, bool verbose = false);
 
-  static void print_native_stack(outputStream* st, frame fr, Thread* t,
-                                 char* buf, int buf_size);
+  static void print_native_stack(outputStream* st, frame fr, Thread* t, char* buf, int buf_size);
 
   static bool should_report_bug(unsigned int id) {
     return (id != OOM_MALLOC_ERROR) && (id != OOM_MMAP_ERROR);
@@ -91,8 +86,7 @@ class VMError : public AllStatic {
   // and the offending address points into CDS store.
   static void check_failing_cds_access(outputStream* st, const void* siginfo);
 
-  static void report_and_die(Thread* thread, unsigned int sig, address pc, void* siginfo,
-                             void* context, const char* detail_fmt, ...) ATTRIBUTE_PRINTF(6, 7);
+  static void report_and_die(Thread* thread, unsigned int sig, address pc, void* siginfo, void* context, const char* detail_fmt, ...) ATTRIBUTE_PRINTF(6, 7);
   static void report_and_die(const char* message, const char* detail_fmt, ...) ATTRIBUTE_PRINTF(2, 3);
 
   static fdStream out;

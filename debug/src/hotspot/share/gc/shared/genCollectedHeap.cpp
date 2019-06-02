@@ -279,9 +279,6 @@ HeapWord* GenCollectedHeap::mem_allocate_work(size_t size, bool is_tlab, bool* g
           gclocker_stalled_count += 1;
           continue;
         } else {
-          if (CheckJNICalls) {
-            fatal("Possible deadlock due to allocating while in jni critical section");
-          }
           return NULL;
         }
       }

@@ -2042,15 +2042,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   // We have all of the arguments setup at this point. We must not touch any register
   // argument registers at this point (what if we save/restore them there are no oop?
 
-  {
-    SkipIfEqual skip(masm, &DTraceMethodProbes, false);
-    // protect the args we've loaded
-    save_args(masm, total_c_args, c_arg, out_regs);
-    __ mov_metadata(c_rarg1, method());
-    __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_entry), r15_thread, c_rarg1);
-    restore_args(masm, total_c_args, c_arg, out_regs);
-  }
-
   // Lock a synchronized method
 
   // Register definitions used by locking and unlocking
@@ -2277,26 +2268,12 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
     __ bind(done);
   }
-  {
-    SkipIfEqual skip(masm, &DTraceMethodProbes, false);
-    save_native_result(masm, ret_type, stack_slots);
-    __ mov_metadata(c_rarg1, method());
-    __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit), r15_thread, c_rarg1);
-    restore_native_result(masm, ret_type, stack_slots);
-  }
 
   __ reset_last_Java_frame(false);
 
   // Unbox oop result, e.g. JNIHandles::resolve value.
   if (ret_type == T_OBJECT || ret_type == T_ARRAY) {
-    __ resolve_jobject(rax /* value */,
-                       r15_thread /* thread */,
-                       rcx /* tmp */);
-  }
-
-  if (CheckJNICalls) {
-    // clear_pending_jni_exception_check
-    __ movptr(Address(r15_thread, JavaThread::pending_jni_exception_check_fn_offset()), NULL_WORD);
+    __ resolve_jobject(rax /* value */, r15_thread /* thread */, rcx /* tmp */);
   }
 
   if (!is_critical_native) {

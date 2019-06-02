@@ -998,17 +998,6 @@ void LIRGenerator::do_IfInstanceOf(IfInstanceOf* x) {
 }
 
 void LIRGenerator::do_Return(Return* x) {
-  if (compilation()->env()->dtrace_method_probes()) {
-    BasicTypeList signature;
-    signature.append(T_LONG);    // thread
-    signature.append(T_METADATA); // Method*
-    LIR_OprList* args = new LIR_OprList();
-    args->append(getThreadPointer());
-    LIR_Opr meth = new_register(T_METADATA);
-    __ metadata2reg(method()->constant_encoding(), meth);
-    args->append(meth);
-    call_runtime(&signature, args, CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit), voidType, NULL);
-  }
 
   if (x->type()->is_void()) {
     __ return_op(LIR_OprFact::illegalOpr);
@@ -2282,18 +2271,6 @@ void LIRGenerator::do_Base(Base* x) {
     local->set_operand(dest);
     _instruction_for_operand.at_put_grow(dest->vreg_number(), local, NULL);
     java_index += type2size[t];
-  }
-
-  if (compilation()->env()->dtrace_method_probes()) {
-    BasicTypeList signature;
-    signature.append(T_LONG);    // thread
-    signature.append(T_METADATA); // Method*
-    LIR_OprList* args = new LIR_OprList();
-    args->append(getThreadPointer());
-    LIR_Opr meth = new_register(T_METADATA);
-    __ metadata2reg(method()->constant_encoding(), meth);
-    args->append(meth);
-    call_runtime(&signature, args, CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_entry), voidType, NULL);
   }
 
   if (method()->is_synchronized()) {

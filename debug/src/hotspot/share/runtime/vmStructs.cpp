@@ -22,7 +22,6 @@
 #include "compiler/compileBroker.hpp"
 #include "compiler/oopMap.hpp"
 #include "gc/shared/vmStructs_gc.hpp"
-#include "interpreter/bytecodeInterpreter.hpp"
 #include "interpreter/bytecodes.hpp"
 #include "interpreter/interpreter.hpp"
 #include "memory/allocation.hpp"
@@ -2717,23 +2716,11 @@ VMIntConstantEntry VMStructs::localHotSpotVMIntConstants[] = {
                    GENERATE_C2_VM_INT_CONSTANT_ENTRY,
                    GENERATE_C2_PREPROCESSOR_VM_INT_CONSTANT_ENTRY)
 
-  VM_INT_CONSTANTS_OS(GENERATE_VM_INT_CONSTANT_ENTRY,
-                      GENERATE_PREPROCESSOR_VM_INT_CONSTANT_ENTRY,
-                      GENERATE_C1_VM_INT_CONSTANT_ENTRY,
-                      GENERATE_C2_VM_INT_CONSTANT_ENTRY,
-                      GENERATE_C2_PREPROCESSOR_VM_INT_CONSTANT_ENTRY)
-
   VM_INT_CONSTANTS_CPU(GENERATE_VM_INT_CONSTANT_ENTRY,
                        GENERATE_PREPROCESSOR_VM_INT_CONSTANT_ENTRY,
                        GENERATE_C1_VM_INT_CONSTANT_ENTRY,
                        GENERATE_C2_VM_INT_CONSTANT_ENTRY,
                        GENERATE_C2_PREPROCESSOR_VM_INT_CONSTANT_ENTRY)
-
-  VM_INT_CONSTANTS_OS_CPU(GENERATE_VM_INT_CONSTANT_ENTRY,
-                          GENERATE_PREPROCESSOR_VM_INT_CONSTANT_ENTRY,
-                          GENERATE_C1_VM_INT_CONSTANT_ENTRY,
-                          GENERATE_C2_VM_INT_CONSTANT_ENTRY,
-                          GENERATE_C2_PREPROCESSOR_VM_INT_CONSTANT_ENTRY)
 
   GENERATE_VM_INT_CONSTANT_LAST_ENTRY()
 };
@@ -2750,23 +2737,11 @@ VMLongConstantEntry VMStructs::localHotSpotVMLongConstants[] = {
                     GENERATE_C2_VM_LONG_CONSTANT_ENTRY,
                     GENERATE_C2_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY)
 
-  VM_LONG_CONSTANTS_OS(GENERATE_VM_LONG_CONSTANT_ENTRY,
-                       GENERATE_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY,
-                       GENERATE_C1_VM_LONG_CONSTANT_ENTRY,
-                       GENERATE_C2_VM_LONG_CONSTANT_ENTRY,
-                       GENERATE_C2_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY)
-
   VM_LONG_CONSTANTS_CPU(GENERATE_VM_LONG_CONSTANT_ENTRY,
                         GENERATE_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY,
                         GENERATE_C1_VM_LONG_CONSTANT_ENTRY,
                         GENERATE_C2_VM_LONG_CONSTANT_ENTRY,
                         GENERATE_C2_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY)
-
-  VM_LONG_CONSTANTS_OS_CPU(GENERATE_VM_LONG_CONSTANT_ENTRY,
-                           GENERATE_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY,
-                           GENERATE_C1_VM_LONG_CONSTANT_ENTRY,
-                           GENERATE_C2_VM_LONG_CONSTANT_ENTRY,
-                           GENERATE_C2_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY)
 
   GENERATE_VM_LONG_CONSTANT_LAST_ENTRY()
 };

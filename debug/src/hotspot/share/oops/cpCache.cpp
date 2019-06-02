@@ -295,17 +295,6 @@ void ConstantPoolCacheEntry::set_method_handle_common(const constantPoolHandle& 
                    (                   1      << is_final_shift       ),
                    adapter->size_of_parameters());
 
-  if (TraceInvokeDynamic) {
-    ttyLocker ttyl;
-    tty->print_cr("set_method_handle bc=%d appendix=" PTR_FORMAT "%s method_type=" PTR_FORMAT "%s method=" PTR_FORMAT " ",
-                  invoke_code,
-                  p2i(appendix()),    (has_appendix    ? "" : " (unused)"),
-                  p2i(method_type()), (has_method_type ? "" : " (unused)"),
-                  p2i(adapter()));
-    adapter->print();
-    if (has_appendix)  appendix()->print();
-  }
-
   // Method handle invokes and invokedynamic sites use both cp cache words.
   // refs[f2], if not null, contains a value passed as a trailing argument to the adapter.
   // In the general case, this could be the call site's MethodType,
@@ -342,10 +331,6 @@ void ConstantPoolCacheEntry::set_method_handle_common(const constantPoolHandle& 
   // The interpreter assembly code does not check byte_2,
   // but it is used by is_resolved, method_if_resolved, etc.
   set_bytecode_1(invoke_code);
-  if (TraceInvokeDynamic) {
-    ttyLocker ttyl;
-    this->print(tty, 0);
-  }
 }
 
 bool ConstantPoolCacheEntry::save_and_throw_indy_exc(const constantPoolHandle& cpool, int cpool_index, int index, constantTag tag, TRAPS) {

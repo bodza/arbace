@@ -511,13 +511,8 @@ class MacroAssembler: public Assembler {
   // prints msg and continues
   void warn(const char* msg);
 
-  // dumps registers and other state
-  void print_state();
-
   static void debug32(int rdi, int rsi, int rbp, int rsp, int rbx, int rdx, int rcx, int rax, int eip, char* msg);
   static void debug64(char* msg, int64_t pc, int64_t regs[]);
-  static void print_state32(int rdi, int rsi, int rbp, int rsp, int rbx, int rdx, int rcx, int rax, int eip);
-  static void print_state64(int64_t pc, int64_t regs[]);
 
   void os_breakpoint();
 
@@ -1490,24 +1485,6 @@ public:
   // Inflate byte[] array to char[].
   void byte_array_inflate(Register src, Register dst, Register len,
                           XMMRegister tmp1, Register tmp2);
-};
-
-/**
- * class SkipIfEqual:
- *
- * Instantiating this class will result in assembly code being output that will
- * jump around any code emitted between the creation of the instance and it's
- * automatic destruction at the end of a scope block, depending on the value of
- * the flag passed to the constructor, which will be checked at run-time.
- */
-class SkipIfEqual {
- private:
-  MacroAssembler* _masm;
-  Label _label;
-
- public:
-   SkipIfEqual(MacroAssembler*, const bool* flag_addr, bool value);
-   ~SkipIfEqual();
 };
 
 #endif

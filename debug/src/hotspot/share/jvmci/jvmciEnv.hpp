@@ -57,15 +57,9 @@ public:
   static Klass* get_klass_by_name(Klass* accessing_klass, Symbol* klass_name, bool require_local);
 
   // Constant pool access.
-  static Klass* get_klass_by_index(const constantPoolHandle& cpool,
-                                   int klass_index,
-                                   bool& is_accessible,
-                                   Klass* loading_klass);
-  static void   get_field_by_index(InstanceKlass* loading_klass, fieldDescriptor& fd,
-                                   int field_index);
-  static methodHandle  get_method_by_index(const constantPoolHandle& cpool,
-                                    int method_index, Bytecodes::Code bc,
-                                    InstanceKlass* loading_klass);
+  static Klass* get_klass_by_index(const constantPoolHandle& cpool, int klass_index, bool& is_accessible, Klass* loading_klass);
+  static void   get_field_by_index(InstanceKlass* loading_klass, fieldDescriptor& fd, int field_index);
+  static methodHandle  get_method_by_index(const constantPoolHandle& cpool, int method_index, Bytecodes::Code bc, InstanceKlass* loading_klass);
 
   JVMCIEnv(CompileTask* task, int system_dictionary_modification_counter);
 
@@ -78,19 +72,10 @@ private:
   bool             _retryable;
 
   // Implementation methods for loading and constant pool access.
-  static Klass* get_klass_by_name_impl(Klass* accessing_klass,
-                                  const constantPoolHandle& cpool,
-                                  Symbol* klass_name,
-                                  bool require_local);
-  static Klass* get_klass_by_index_impl(const constantPoolHandle& cpool,
-                                     int klass_index,
-                                     bool& is_accessible,
-                                     Klass* loading_klass);
-  static void   get_field_by_index_impl(InstanceKlass* loading_klass, fieldDescriptor& fd,
-                                     int field_index);
-  static methodHandle  get_method_by_index_impl(const constantPoolHandle& cpool,
-                                      int method_index, Bytecodes::Code bc,
-                                      InstanceKlass* loading_klass);
+  static Klass* get_klass_by_name_impl(Klass* accessing_klass, const constantPoolHandle& cpool, Symbol* klass_name, bool require_local);
+  static Klass* get_klass_by_index_impl(const constantPoolHandle& cpool, int klass_index, bool& is_accessible, Klass* loading_klass);
+  static void   get_field_by_index_impl(InstanceKlass* loading_klass, fieldDescriptor& fd, int field_index);
+  static methodHandle  get_method_by_index_impl(const constantPoolHandle& cpool, int method_index, Bytecodes::Code bc, InstanceKlass* loading_klass);
 
   // Helper methods
   static bool       check_klass_accessibility(Klass* accessing_klass, Klass* resolved_klass);
@@ -108,8 +93,7 @@ private:
 
   // Helper routine for determining the validity of a compilation
   // with respect to concurrent class loading.
-  static JVMCIEnv::CodeInstallResult validate_compile_task_dependencies(Dependencies* target, Handle compiled_code,
-                                                                        JVMCIEnv* env, char** failure_detail);
+  static JVMCIEnv::CodeInstallResult validate_compile_task_dependencies(Dependencies* target, Handle compiled_code, JVMCIEnv* env, char** failure_detail);
 
 public:
   CompileTask* task() { return _task; }

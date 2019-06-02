@@ -134,11 +134,6 @@ address VtableStubs::find_stub(bool is_vtable_stub, int vtable_index) {
     }
 
     enter(is_vtable_stub, vtable_index, s);
-    if (PrintAdapterHandlers) {
-      tty->print_cr("Decoding VtableStub %s[%d]@" INTX_FORMAT,
-                    is_vtable_stub? "vtbl": "itbl", vtable_index, p2i(VtableStub::receiver_location()));
-      Disassembler::decode(s->code_begin(), s->code_end());
-    }
   }
   return s->entry_point();
 }

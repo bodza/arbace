@@ -317,13 +317,11 @@ class ConcurrentHashTable : public CHeapObj<F> {
   // case without prefect and one for pointer with prefect.
   template <bool b, typename EVALUATE_FUNC>
   struct HaveDeletables {
-    static bool have_deletable(Bucket* bucket, EVALUATE_FUNC& eval_f,
-                               Bucket* prefetch_bucket);
+    static bool have_deletable(Bucket* bucket, EVALUATE_FUNC& eval_f, Bucket* prefetch_bucket);
   };
   template<typename EVALUATE_FUNC>
   struct HaveDeletables<true, EVALUATE_FUNC> {
-    static bool have_deletable(Bucket* bucket, EVALUATE_FUNC& eval_f,
-                               Bucket* prefetch_bucket);
+    static bool have_deletable(Bucket* bucket, EVALUATE_FUNC& eval_f, Bucket* prefetch_bucket);
   };
 
   // Check for dead items in this table with range. During shrink/grow we cannot

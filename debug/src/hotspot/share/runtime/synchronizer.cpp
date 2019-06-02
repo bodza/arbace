@@ -24,7 +24,6 @@
 #include "runtime/vframe.hpp"
 #include "runtime/vmThread.hpp"
 #include "utilities/align.hpp"
-#include "utilities/dtrace.hpp"
 #include "utilities/events.hpp"
 #include "utilities/preserveException.hpp"
 
@@ -1145,9 +1144,7 @@ void ObjectSynchronizer::omFlush(Thread * Self) {
   TEVENT(omFlush);
 }
 
-static void post_monitor_inflate_event(EventJavaMonitorInflate* event,
-                                       const oop obj,
-                                       ObjectSynchronizer::InflateCause cause) {
+static void post_monitor_inflate_event(EventJavaMonitorInflate* event, const oop obj, ObjectSynchronizer::InflateCause cause) {
   event->set_monitorClass(obj->klass());
   event->set_address((uintptr_t)(void*)obj);
   event->set_cause((u1)cause);

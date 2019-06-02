@@ -85,8 +85,7 @@ class Runtime1: public AllStatic {
   static void       generate_unwind_exception(StubAssembler *sasm);
   static OopMapSet* generate_patching(StubAssembler* sasm, address target);
 
-  static OopMapSet* generate_stub_call(StubAssembler* sasm, Register result, address entry,
-                                       Register arg1 = noreg, Register arg2 = noreg, Register arg3 = noreg);
+  static OopMapSet* generate_stub_call(StubAssembler* sasm, Register result, address entry, Register arg1 = noreg, Register arg2 = noreg, Register arg3 = noreg);
 
   // runtime entry points
   static void new_instance    (JavaThread* thread, Klass* klass);

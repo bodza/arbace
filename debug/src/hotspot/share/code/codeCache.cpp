@@ -463,24 +463,12 @@ CodeBlob* CodeCache::allocate(int size, int code_blob_type, int orig_code_blob_t
           break;
         }
         if (type != code_blob_type && type != orig_code_blob_type && heap_available(type)) {
-          if (PrintCodeCacheExtension) {
-            tty->print_cr("Extension of %s failed. Trying to allocate in %s.", heap->name(), get_code_heap(type)->name());
-          }
           return allocate(size, type, orig_code_blob_type);
         }
       }
       MutexUnlockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
       CompileBroker::handle_full_code_cache(orig_code_blob_type);
       return NULL;
-    }
-    if (PrintCodeCacheExtension) {
-      ResourceMark rm;
-      if (_nmethod_heaps->length() >= 1) {
-        tty->print("%s", heap->name());
-      } else {
-        tty->print("CodeCache");
-      }
-      tty->print_cr(" extended to [" INTPTR_FORMAT ", " INTPTR_FORMAT "] (" SSIZE_FORMAT " bytes)", (intptr_t)heap->low_boundary(), (intptr_t)heap->high(), (address)heap->high() - (address)heap->low_boundary());
     }
   }
   print_trace("allocation", cb, size);

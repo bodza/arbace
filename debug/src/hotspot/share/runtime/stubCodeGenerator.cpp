@@ -41,7 +41,7 @@ void StubCodeDesc::print_on(outputStream* st) const {
 
 StubCodeGenerator::StubCodeGenerator(CodeBuffer* code, bool print_code) {
   _masm = new MacroAssembler(code );
-  _print_code = PrintStubCode || print_code;
+  _print_code = print_code;
 }
 
 StubCodeGenerator::~StubCodeGenerator() {

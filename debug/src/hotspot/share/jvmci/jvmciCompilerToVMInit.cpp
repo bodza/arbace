@@ -190,7 +190,6 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
   do_bool_flag(JVMCIUseFastLocking) \
   do_intx_flag(MethodProfileWidth) \
   do_intx_flag(ObjectAlignmentInBytes) \
-  do_bool_flag(PrintInlining) \
   do_bool_flag(ReduceInitialCardMarks) \
   do_bool_flag(RestrictContended) \
   do_intx_flag(StackReservedPages) \
@@ -220,7 +219,7 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
   do_intx_flag(UseSSE) \
   do_bool_flag(UseStackBanging) \
   do_bool_flag(UseTLAB) \
-  do_bool_flag(VerifyOops) \
+  do_bool_flag(VerifyOops)
 
 #define BOXED_BOOLEAN(name, value) oop name = ((jboolean)(value) ? boxedTrue() : boxedFalse())
 #define BOXED_DOUBLE(name, value) oop name; do { jvalue p; p.d = (jdouble) (value); name = java_lang_boxing_object::create(T_DOUBLE, &p, CHECK_NULL); } while(0)

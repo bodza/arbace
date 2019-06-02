@@ -1405,8 +1405,7 @@ void TemplateTable::fop2(Operation op)
   case rem:
     __ fmovs(v1, v0);
     __ pop_f(v0);
-    __ call_VM_leaf_base1(CAST_FROM_FN_PTR(address, SharedRuntime::frem),
-                         0, 2, MacroAssembler::ret_type_float);
+    __ call_VM_leaf_base1(CAST_FROM_FN_PTR(address, SharedRuntime::frem), 0, 2, MacroAssembler::ret_type_float);
     break;
   default:
     ShouldNotReachHere();
@@ -1438,8 +1437,7 @@ void TemplateTable::dop2(Operation op)
   case rem:
     __ fmovd(v1, v0);
     __ pop_d(v0);
-    __ call_VM_leaf_base1(CAST_FROM_FN_PTR(address, SharedRuntime::drem),
-                         0, 2, MacroAssembler::ret_type_double);
+    __ call_VM_leaf_base1(CAST_FROM_FN_PTR(address, SharedRuntime::drem), 0, 2, MacroAssembler::ret_type_double);
     break;
   default:
     ShouldNotReachHere();
@@ -1536,8 +1534,7 @@ void TemplateTable::convert()
     __ fcvtzsw(r0, v0);
     __ get_fpsr(r1);
     __ cbzw(r1, L_Okay);
-    __ call_VM_leaf_base1(CAST_FROM_FN_PTR(address, SharedRuntime::f2i),
-                         0, 1, MacroAssembler::ret_type_integral);
+    __ call_VM_leaf_base1(CAST_FROM_FN_PTR(address, SharedRuntime::f2i), 0, 1, MacroAssembler::ret_type_integral);
     __ bind(L_Okay);
   }
     break;
@@ -1548,8 +1545,7 @@ void TemplateTable::convert()
     __ fcvtzs(r0, v0);
     __ get_fpsr(r1);
     __ cbzw(r1, L_Okay);
-    __ call_VM_leaf_base1(CAST_FROM_FN_PTR(address, SharedRuntime::f2l),
-                         0, 1, MacroAssembler::ret_type_integral);
+    __ call_VM_leaf_base1(CAST_FROM_FN_PTR(address, SharedRuntime::f2l), 0, 1, MacroAssembler::ret_type_integral);
     __ bind(L_Okay);
   }
     break;
@@ -1563,8 +1559,7 @@ void TemplateTable::convert()
     __ fcvtzdw(r0, v0);
     __ get_fpsr(r1);
     __ cbzw(r1, L_Okay);
-    __ call_VM_leaf_base1(CAST_FROM_FN_PTR(address, SharedRuntime::d2i),
-                         0, 1, MacroAssembler::ret_type_integral);
+    __ call_VM_leaf_base1(CAST_FROM_FN_PTR(address, SharedRuntime::d2i), 0, 1, MacroAssembler::ret_type_integral);
     __ bind(L_Okay);
   }
     break;
@@ -1575,8 +1570,7 @@ void TemplateTable::convert()
     __ fcvtzd(r0, v0);
     __ get_fpsr(r1);
     __ cbzw(r1, L_Okay);
-    __ call_VM_leaf_base1(CAST_FROM_FN_PTR(address, SharedRuntime::d2l),
-                         0, 1, MacroAssembler::ret_type_integral);
+    __ call_VM_leaf_base1(CAST_FROM_FN_PTR(address, SharedRuntime::d2l), 0, 1, MacroAssembler::ret_type_integral);
     __ bind(L_Okay);
   }
     break;
@@ -1703,8 +1697,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
     __ push(r0);
     __ push(r1);
     __ push(r2);
-    __ call_VM(noreg, CAST_FROM_FN_PTR(address,
-            InterpreterRuntime::build_method_counters), rmethod);
+    __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::build_method_counters), rmethod);
     __ pop(r2);
     __ pop(r1);
     __ pop(r0);
@@ -1807,10 +1800,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
       __ neg(r2, r2);
       __ add(r2, r2, rbcp);     // branch bcp
       // IcoResult frequency_counter_overflow([JavaThread*], address branch_bcp)
-      __ call_VM(noreg,
-                 CAST_FROM_FN_PTR(address,
-                                  InterpreterRuntime::frequency_counter_overflow),
-                 r2);
+      __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::frequency_counter_overflow), r2);
       __ load_unsigned_byte(r1, Address(rbcp, 0));  // restore target bytecode
 
       // r0: osr nmethod (osr ok) or NULL (osr not possible)
@@ -3052,8 +3042,7 @@ void TemplateTable::invokeinterface(int byte_no) {
   __ restore_bcp();      // bcp must be correct for exception handler   (was destroyed)
   __ restore_locals();   // make sure locals pointer is correct as well (was destroyed)
   // Pass arguments for generating a verbose error message.
-  __ call_VM(noreg, CAST_FROM_FN_PTR(address,
-                   InterpreterRuntime::throw_IncompatibleClassChangeErrorVerbose), r3, r0);
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_IncompatibleClassChangeErrorVerbose), r3, r0);
   // the call_VM checks for exception, so we should never return here.
   __ should_not_reach_here();
   return;
@@ -3200,13 +3189,6 @@ void TemplateTable::_new() {
     __ store_klass_gap(r0, zr);  // zero klass gap for compressed oops
     __ store_klass(r0, r4);      // store klass last
 
-    {
-      SkipIfEqual skip(_masm, &DTraceAllocProbes, false);
-      // Trigger dtrace event for fastpath
-      __ push(atos); // save the return value
-      __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_object_alloc), r0);
-      __ pop(atos); // restore the return value
-    }
     __ b(done);
   }
 
@@ -3227,8 +3209,7 @@ void TemplateTable::newarray() {
   transition(itos, atos);
   __ load_unsigned_byte(c_rarg1, at_bcp(1));
   __ mov(c_rarg2, r0);
-  call_VM(r0, CAST_FROM_FN_PTR(address, InterpreterRuntime::newarray),
-          c_rarg1, c_rarg2);
+  call_VM(r0, CAST_FROM_FN_PTR(address, InterpreterRuntime::newarray), c_rarg1, c_rarg2);
   // Must prevent reordering of stores for object initialization with stores that publish the new object.
   __ membar(Assembler::StoreStore);
 }
@@ -3238,8 +3219,7 @@ void TemplateTable::anewarray() {
   __ get_unsigned_2_byte_index_at_bcp(c_rarg2, 1);
   __ get_constant_pool(c_rarg1);
   __ mov(c_rarg3, r0);
-  call_VM(r0, CAST_FROM_FN_PTR(address, InterpreterRuntime::anewarray),
-          c_rarg1, c_rarg2, c_rarg3);
+  call_VM(r0, CAST_FROM_FN_PTR(address, InterpreterRuntime::anewarray), c_rarg1, c_rarg2, c_rarg3);
   // Must prevent reordering of stores for object initialization with stores that publish the new object.
   __ membar(Assembler::StoreStore);
 }
@@ -3371,16 +3351,11 @@ void TemplateTable::_breakpoint() {
 
   // get the unpatched byte code
   __ get_method(c_rarg1);
-  __ call_VM(noreg,
-             CAST_FROM_FN_PTR(address,
-                              InterpreterRuntime::get_original_bytecode_at),
-             c_rarg1, rbcp);
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::get_original_bytecode_at), c_rarg1, rbcp);
   __ mov(r19, r0);
 
   // post the breakpoint event
-  __ call_VM(noreg,
-             CAST_FROM_FN_PTR(address, InterpreterRuntime::_breakpoint),
-             rmethod, rbcp);
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::_breakpoint), rmethod, rbcp);
 
   // complete the execution of original bytecode
   __ mov(rscratch1, r19);
@@ -3547,8 +3522,7 @@ void TemplateTable::monitorexit()
   }
 
   // error handling. Unlocking was not block-structured
-  __ call_VM(noreg, CAST_FROM_FN_PTR(address,
-                   InterpreterRuntime::throw_illegal_monitor_state_exception));
+  __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_illegal_monitor_state_exception));
   __ should_not_reach_here();
 
   // call run-time routine
@@ -3575,9 +3549,7 @@ void TemplateTable::multianewarray() {
   // first_addr = last_addr + (ndims - 1) * wordSize
   __ lea(c_rarg1, Address(esp, r0, Address::uxtw(3)));
   __ sub(c_rarg1, c_rarg1, wordSize);
-  call_VM(r0,
-          CAST_FROM_FN_PTR(address, InterpreterRuntime::multianewarray),
-          c_rarg1);
+  call_VM(r0, CAST_FROM_FN_PTR(address, InterpreterRuntime::multianewarray), c_rarg1);
   __ load_unsigned_byte(r1, at_bcp(3));
   __ lea(esp, Address(esp, r1, Address::uxtw(3)));
 }

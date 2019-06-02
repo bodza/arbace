@@ -13,7 +13,6 @@
 #include "services/memoryPool.hpp"
 #include "services/memoryService.hpp"
 #include "services/gcNotifier.hpp"
-#include "utilities/dtrace.hpp"
 
 MemoryManager::MemoryManager(const char* name) : _name(name) {
   _num_pools = 0;
@@ -198,7 +197,6 @@ void GCMemoryManager::gc_begin(bool recordGCBeginTime, bool recordPreGCUsage, bo
       MemoryPool* pool = MemoryService::get_memory_pool(i);
       MemoryUsage usage = pool->get_memory_usage();
       _current_gc_stat->set_before_gc_usage(i, usage);
-      HOTSPOT_MEM_POOL_GC_BEGIN((char *) name(), strlen(name()), (char *) pool->name(), strlen(pool->name()), usage.init_size(), usage.used(), usage.committed(), usage.max_size());
     }
   }
 }
@@ -220,8 +218,6 @@ void GCMemoryManager::gc_end(bool recordPostGCUsage, bool recordAccumulatedGCTim
     for (i = 0; i < MemoryService::num_memory_pools(); i++) {
       MemoryPool* pool = MemoryService::get_memory_pool(i);
       MemoryUsage usage = pool->get_memory_usage();
-
-      HOTSPOT_MEM_POOL_GC_END((char *) name(), strlen(name()), (char *) pool->name(), strlen(pool->name()), usage.init_size(), usage.used(), usage.committed(), usage.max_size());
 
       _current_gc_stat->set_after_gc_usage(i, usage);
     }

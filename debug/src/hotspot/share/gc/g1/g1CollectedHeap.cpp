@@ -798,8 +798,7 @@ public:
     return false;
   }
 
-  PostCompactionPrinterClosure(G1HRPrinter* hr_printer)
-    : _hr_printer(hr_printer) { }
+  PostCompactionPrinterClosure(G1HRPrinter* hr_printer) : _hr_printer(hr_printer) { }
 };
 
 void G1CollectedHeap::print_hrm_post_compaction() {
@@ -2677,10 +2676,6 @@ public:
   }
 };
 
-void G1CollectedHeap::print_termination_stats_hdr() { }
-
-void G1CollectedHeap::print_termination_stats(uint worker_id, double elapsed_ms, double strong_roots_ms, double term_ms, size_t term_attempts, size_t alloc_buffer_waste, size_t undo_waste) const { }
-
 class G1StringAndSymbolCleaningTask : public AbstractGangTask {
 private:
   BoolObjectClosure* _is_alive;
@@ -3407,8 +3402,6 @@ void G1CollectedHeap::evacuate_collection_set(G1ParScanThreadStateSet* per_threa
     G1RootProcessor root_processor(this, n_workers);
     G1ParTask g1_par_task(this, per_thread_states, _task_queues, &root_processor, n_workers);
 
-    print_termination_stats_hdr();
-
     workers()->run_task(&g1_par_task);
     end_par_time_sec = os::elapsedTime();
 
@@ -3486,14 +3479,12 @@ void G1CollectedHeap::post_evacuate_collection_set(EvacuationInfo& evacuation_in
   double start = os::elapsedTime();
   DerivedPointerTable::update_pointers();
   g1_policy()->phase_times()->record_derived_pointer_table_update_time((os::elapsedTime() - start) * 1000.0);
-  g1_policy()->print_age_table();
 }
 
 void G1CollectedHeap::record_obj_copy_mem_stats() {
   g1_policy()->add_bytes_allocated_in_old_since_last_gc(_old_evac_stats.allocated() * HeapWordSize);
 
-  _gc_tracer_stw->report_evacuation_statistics(create_g1_evac_summary(&_survivor_evac_stats),
-                                               create_g1_evac_summary(&_old_evac_stats));
+  _gc_tracer_stw->report_evacuation_statistics(create_g1_evac_summary(&_survivor_evac_stats), create_g1_evac_summary(&_old_evac_stats));
 }
 
 void G1CollectedHeap::free_region(HeapRegion* hr, FreeRegionList* free_list, bool skip_remset, bool skip_hot_card_cache, bool locked) {

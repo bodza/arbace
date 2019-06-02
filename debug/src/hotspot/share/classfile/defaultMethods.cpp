@@ -718,10 +718,8 @@ static void generate_erased_defaults(InstanceKlass* klass, GrowableArray<EmptyVt
   }
 }
 
-static void merge_in_new_methods(InstanceKlass* klass,
-    GrowableArray<Method*>* new_methods, TRAPS);
-static void create_default_methods( InstanceKlass* klass,
-    GrowableArray<Method*>* new_methods, TRAPS);
+static void merge_in_new_methods(InstanceKlass* klass, GrowableArray<Method*>* new_methods, TRAPS);
+static void create_default_methods( InstanceKlass* klass, GrowableArray<Method*>* new_methods, TRAPS);
 
 // This is the guts of the default methods implementation.  This is called just
 // after the classfile has been parsed if some ancestor has default methods.
@@ -823,8 +821,7 @@ static Method* new_method(BytecodeConstantPool* cp, BytecodeBuffer* bytecodes, S
   return m;
 }
 
-static void switchover_constant_pool(BytecodeConstantPool* bpool,
-    InstanceKlass* klass, GrowableArray<Method*>* new_methods, TRAPS) {
+static void switchover_constant_pool(BytecodeConstantPool* bpool, InstanceKlass* klass, GrowableArray<Method*>* new_methods, TRAPS) {
 
   if (new_methods->length() > 0) {
     ConstantPool* cp = bpool->create_constant_pool(CHECK);
@@ -913,8 +910,7 @@ static void create_defaults_and_exceptions(GrowableArray<EmptyVtableSlot*>* slot
   }
 }
 
-static void create_default_methods( InstanceKlass* klass,
-    GrowableArray<Method*>* new_methods, TRAPS) {
+static void create_default_methods( InstanceKlass* klass, GrowableArray<Method*>* new_methods, TRAPS) {
 
   int new_size = new_methods->length();
   Array<Method*>* total_default_methods = MetadataFactory::new_array<Method*>(klass->class_loader_data(), new_size, NULL, CHECK);
@@ -945,8 +941,7 @@ static void sort_methods(GrowableArray<Method*>* methods) {
   }
 }
 
-static void merge_in_new_methods(InstanceKlass* klass,
-    GrowableArray<Method*>* new_methods, TRAPS) {
+static void merge_in_new_methods(InstanceKlass* klass, GrowableArray<Method*>* new_methods, TRAPS) {
 
   enum { ANNOTATIONS, PARAMETERS, DEFAULTS, NUM_ARRAYS };
 
@@ -959,9 +954,6 @@ static void merge_in_new_methods(InstanceKlass* klass,
   Array<Method*>* merged_methods = MetadataFactory::new_array<Method*>(klass->class_loader_data(), new_size, NULL, CHECK);
 
   // original_ordering might be empty if this class has no methods of its own
-  if (DumpSharedSpaces) {
-    merged_ordering = MetadataFactory::new_array<int>(klass->class_loader_data(), new_size, CHECK);
-  }
   int method_order_index = klass->methods()->length();
 
   sort_methods(new_methods);

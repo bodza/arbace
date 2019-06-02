@@ -128,9 +128,7 @@ class vframeArray: public CHeapObj<mtCompiler> {
   // Accessories for instance variable
   int frames() const                            { return _frames; }
 
-  static vframeArray* allocate(JavaThread* thread, int frame_size, GrowableArray<compiledVFrame*>* chunk,
-                               RegisterMap* reg_map, frame sender, frame caller, frame self,
-                               bool realloc_failures);
+  static vframeArray* allocate(JavaThread* thread, int frame_size, GrowableArray<compiledVFrame*>* chunk, RegisterMap* reg_map, frame sender, frame caller, frame self, bool realloc_failures);
 
   vframeArrayElement* element(int index)        { return &_elements[index]; }
 

@@ -46,8 +46,7 @@
           range(1, max_jint) \
  \
   product(intx, MaxVectorSize, 64, \
-          "Max vector size in bytes, " \
-          "actual size could be less depending on elements type") \
+          "Max vector size in bytes, actual size could be less depending on elements type") \
  \
   product(bool, ReduceInitialCardMarks, true, \
           "Defer write barriers of young objects") \

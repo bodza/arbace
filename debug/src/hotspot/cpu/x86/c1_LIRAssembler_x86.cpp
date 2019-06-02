@@ -363,7 +363,7 @@ int LIR_Assembler::emit_unwind_handler() {
 
   __ bind(_unwind_handler_entry);
   __ verify_not_null_oop(rax);
-  if (method()->is_synchronized() || compilation()->env()->dtrace_method_probes()) {
+  if (method()->is_synchronized()) {
     __ mov(rbx, rax);  // Preserve the exception (rbx is always callee-saved)
   }
 
@@ -376,13 +376,7 @@ int LIR_Assembler::emit_unwind_handler() {
     __ bind(*stub->continuation());
   }
 
-  if (compilation()->env()->dtrace_method_probes()) {
-    __ mov(rdi, r15_thread);
-    __ mov_metadata(rsi, method()->constant_encoding());
-    __ call(RuntimeAddress(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit)));
-  }
-
-  if (method()->is_synchronized() || compilation()->env()->dtrace_method_probes()) {
+  if (method()->is_synchronized()) {
     __ mov(rax, rbx);  // Restore the exception
   }
 

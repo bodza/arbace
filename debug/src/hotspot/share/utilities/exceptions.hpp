@@ -96,49 +96,26 @@ class Exceptions {
   static void _throw(Thread* thread, const char* file, int line, Handle exception, const char* msg = NULL);
 
   static void _throw_msg(Thread* thread, const char* file, int line, Symbol* name, const char* message);
-  static void _throw_msg(Thread* thread, const char* file, int line, Symbol* name, const char* message,
-                         Handle loader, Handle protection_domain);
+  static void _throw_msg(Thread* thread, const char* file, int line, Symbol* name, const char* message, Handle loader, Handle protection_domain);
 
   static void _throw_msg_cause(Thread* thread, const char* file, int line, Symbol* name, const char* message, Handle h_cause);
-  static void _throw_msg_cause(Thread* thread, const char* file, int line, Symbol* name, const char* message, Handle h_cause,
-                               Handle h_loader, Handle h_protection_domain);
+  static void _throw_msg_cause(Thread* thread, const char* file, int line, Symbol* name, const char* message, Handle h_cause, Handle h_loader, Handle h_protection_domain);
 
   static void _throw_cause(Thread* thread, const char* file, int line, Symbol* name, Handle h_cause);
-  static void _throw_cause(Thread* thread, const char* file, int line, Symbol* name, Handle h_cause,
-                           Handle h_loader, Handle h_protection_domain);
+  static void _throw_cause(Thread* thread, const char* file, int line, Symbol* name, Handle h_cause, Handle h_loader, Handle h_protection_domain);
 
-  static void _throw_args(Thread* thread, const char* file, int line,
-                          Symbol* name, Symbol* signature,
-                          JavaCallArguments* args);
+  static void _throw_args(Thread* thread, const char* file, int line, Symbol* name, Symbol* signature, JavaCallArguments* args);
 
   // There is no THROW... macro for this method. Caller should remember
   // to do a return after calling it.
-  static void fthrow(Thread* thread, const char* file, int line, Symbol* name,
-                     const char* format, ...) ATTRIBUTE_PRINTF(5, 6);
+  static void fthrow(Thread* thread, const char* file, int line, Symbol* name, const char* format, ...) ATTRIBUTE_PRINTF(5, 6);
 
   // Create and initialize a new exception
-  static Handle new_exception(Thread* thread, Symbol* name,
-                              Symbol* signature, JavaCallArguments* args,
-                              Handle loader, Handle protection_domain);
-
-  static Handle new_exception(Thread* thread, Symbol* name,
-                              Symbol* signature, JavaCallArguments* args,
-                              Handle cause,
-                              Handle loader, Handle protection_domain);
-
-  static Handle new_exception(Thread* thread, Symbol* name,
-                              Handle cause,
-                              Handle loader, Handle protection_domain,
-                              ExceptionMsgToUtf8Mode to_utf8_safe = safe_to_utf8);
-
-  static Handle new_exception(Thread* thread, Symbol* name,
-                              const char* message, Handle cause,
-                              Handle loader, Handle protection_domain,
-                              ExceptionMsgToUtf8Mode to_utf8_safe = safe_to_utf8);
-
-  static Handle new_exception(Thread* thread, Symbol* name,
-                              const char* message,
-                              ExceptionMsgToUtf8Mode to_utf8_safe = safe_to_utf8);
+  static Handle new_exception(Thread* thread, Symbol* name, Symbol* signature, JavaCallArguments* args, Handle loader, Handle protection_domain);
+  static Handle new_exception(Thread* thread, Symbol* name, Symbol* signature, JavaCallArguments* args, Handle cause, Handle loader, Handle protection_domain);
+  static Handle new_exception(Thread* thread, Symbol* name, Handle cause, Handle loader, Handle protection_domain, ExceptionMsgToUtf8Mode to_utf8_safe = safe_to_utf8);
+  static Handle new_exception(Thread* thread, Symbol* name, const char* message, Handle cause, Handle loader, Handle protection_domain, ExceptionMsgToUtf8Mode to_utf8_safe = safe_to_utf8);
+  static Handle new_exception(Thread* thread, Symbol* name, const char* message, ExceptionMsgToUtf8Mode to_utf8_safe = safe_to_utf8);
 
   static void throw_stack_overflow_exception(Thread* thread, const char* file, int line, const methodHandle& method);
 

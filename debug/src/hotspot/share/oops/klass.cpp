@@ -507,11 +507,6 @@ void Klass::oop_print_on(oop obj, outputStream* st) {
   st->print_cr("%s ", internal_name());
   obj->print_address_on(st);
 
-  if (WizardMode) {
-     // print header
-     obj->mark()->print_on(st);
-  }
-
   // print class
   st->print(" - klass: ");
   obj->klass()->print_value_on(st);

@@ -79,8 +79,7 @@ public:
   static Handle get_current_contended_monitor(JavaThread* thread);
 
   // This function is called by JVM_DumpThreads.
-  static Handle dump_stack_traces(GrowableArray<instanceHandle>* threads,
-                                  int num_threads, TRAPS);
+  static Handle dump_stack_traces(GrowableArray<instanceHandle>* threads, int num_threads, TRAPS);
 
   static void   reset_peak_thread_count();
   static void   reset_contention_count_stat(JavaThread* thread);

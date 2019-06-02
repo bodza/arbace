@@ -38,58 +38,11 @@
 #define check_with_errno(check_type, cond, msg) \
   do { \
     int err = errno; \
-    check_type(cond, "%s; error='%s' (errno=%s)", msg, os::strerror(err), \
-               os::errno_name(err)); \
+    check_type(cond, "%s; error='%s' (errno=%s)", msg, os::strerror(err), os::errno_name(err)); \
 } while (false)
 
 #define assert_with_errno(cond, msg)    check_with_errno(assert, cond, msg)
 #define guarantee_with_errno(cond, msg) check_with_errno(guarantee, cond, msg)
-
-// Check core dump limit and report possible place where core can be found
-void os::check_dump_limit(char* buffer, size_t bufferSize) {
-  if (!FLAG_IS_DEFAULT(CreateCoredumpOnCrash) && !CreateCoredumpOnCrash) {
-    jio_snprintf(buffer, bufferSize, "CreateCoredumpOnCrash is disabled from command line");
-    VMError::record_coredump_status(buffer, false);
-    return;
-  }
-
-  int n;
-  struct rlimit rlim;
-  bool success;
-
-  char core_path[PATH_MAX];
-  n = get_core_path(core_path, PATH_MAX);
-
-  if (n <= 0) {
-    jio_snprintf(buffer, bufferSize, "core.%d (may not exist)", current_process_id());
-    success = true;
-#ifdef LINUX
-  } else if (core_path[0] == '"') { // redirect to user process
-    jio_snprintf(buffer, bufferSize, "Core dumps may be processed with %s", core_path);
-    success = true;
-#endif
-  } else if (getrlimit(RLIMIT_CORE, &rlim) != 0) {
-    jio_snprintf(buffer, bufferSize, "%s (may not exist)", core_path);
-    success = true;
-  } else {
-    switch(rlim.rlim_cur) {
-      case RLIM_INFINITY:
-        jio_snprintf(buffer, bufferSize, "%s", core_path);
-        success = true;
-        break;
-      case 0:
-        jio_snprintf(buffer, bufferSize, "Core dumps have been disabled. To enable core dumping, try \"ulimit -c unlimited\" before starting Java again");
-        success = false;
-        break;
-      default:
-        jio_snprintf(buffer, bufferSize, "%s (max size " UINT64_FORMAT " kB). To ensure a full core dump, try \"ulimit -c unlimited\" before starting Java again", core_path, uint64_t(rlim.rlim_cur) / 1024);
-        success = true;
-        break;
-    }
-  }
-
-  VMError::record_coredump_status(buffer, success);
-}
 
 int os::get_native_stack(address* stack, int frames, int toSkip) {
   int frame_idx = 0;
@@ -1574,8 +1527,7 @@ os::PlatformEvent::PlatformEvent() {
 // Calculate a new absolute time that is "timeout" nanoseconds from "now".
 // "unit" indicates the unit of "now_part_sec" (may be nanos or micros depending
 // on which clock is being used).
-static void calc_rel_time(timespec* abstime, jlong timeout, jlong now_sec,
-                          jlong now_part_sec, jlong unit) {
+static void calc_rel_time(timespec* abstime, jlong timeout, jlong now_sec, jlong now_part_sec, jlong unit) {
   time_t max_secs = now_sec + MAX_SECS;
 
   jlong seconds = timeout / NANOUNITS;

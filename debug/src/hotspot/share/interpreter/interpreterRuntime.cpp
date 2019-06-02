@@ -967,20 +967,6 @@ void SignatureHandlerLibrary::add(const methodHandle& method) {
         if (handler == NULL) {
           // use slow signature handler (without memorizing it in the fingerprints)
         } else {
-          // debugging suppport
-          if (PrintSignatureHandlers && (handler != Interpreter::slow_signature_handler())) {
-            ttyLocker ttyl;
-            tty->cr();
-            tty->print_cr("argument handler #%d for: %s %s (fingerprint = " UINT64_FORMAT ", %d bytes generated)",
-                          _handlers->length(),
-                          (method->is_static() ? "static" : "receiver"),
-                          method->name_and_sig_as_C_string(),
-                          fingerprint,
-                          buffer.insts_size());
-            if (buffer.insts_size() > 0) {
-              Disassembler::decode(handler, handler + buffer.insts_size());
-            }
-          }
           // add handler to library
           _fingerprints->append(fingerprint);
           _handlers->append(handler);
@@ -1014,24 +1000,8 @@ void SignatureHandlerLibrary::add(uint64_t fingerprint, address handler) {
   handler_index = _fingerprints->find(fingerprint);
   // create handler if necessary
   if (handler_index < 0) {
-    if (PrintSignatureHandlers && (handler != Interpreter::slow_signature_handler())) {
-      tty->cr();
-      tty->print_cr("argument handler #%d at " PTR_FORMAT " for fingerprint " UINT64_FORMAT,
-                    _handlers->length(),
-                    p2i(handler),
-                    fingerprint);
-    }
     _fingerprints->append(fingerprint);
     _handlers->append(handler);
-  } else {
-    if (PrintSignatureHandlers) {
-      tty->cr();
-      tty->print_cr("duplicate argument handler #%d for fingerprint " UINT64_FORMAT "(old: " PTR_FORMAT ", new : " PTR_FORMAT ")",
-                    _handlers->length(),
-                    fingerprint,
-                    p2i(_handlers->at(handler_index)),
-                    p2i(handler));
-    }
   }
 }
 

@@ -98,9 +98,6 @@ ICStub* InlineCacheBuffer::new_ic_stub() {
 
 void InlineCacheBuffer::update_inline_caches() {
   if (buffer()->number_of_stubs() > 1) {
-    if (TraceICBuffer) {
-      tty->print_cr("[updating inline caches with %d stubs]", buffer()->number_of_stubs());
-    }
     buffer()->remove_all();
     init_next_stub();
   }
@@ -120,10 +117,6 @@ void InlineCacheBuffer_init() {
 }
 
 void InlineCacheBuffer::create_transition_stub(CompiledIC *ic, void* cached_value, address entry) {
-  if (TraceICBuffer) {
-    tty->print_cr("  create transition stub for " INTPTR_FORMAT " destination " INTPTR_FORMAT " cached value " INTPTR_FORMAT,
-                  p2i(ic->instruction_address()), p2i(entry), p2i(cached_value));
-  }
 
   // If an transition stub is already associate with the inline cache, then we remove the association.
   if (ic->is_in_transition_state()) {
@@ -171,7 +164,4 @@ void InlineCacheBuffer::queue_for_release(CompiledICHolder* icholder) {
   icholder->set_next(_pending_released);
   _pending_released = icholder;
   _pending_count++;
-  if (TraceICBuffer) {
-    tty->print_cr("enqueueing icholder " INTPTR_FORMAT " to be freed", p2i(icholder));
-  }
 }

@@ -57,14 +57,10 @@ class Reflection: public AllStatic {
   static arrayOop reflect_new_multi_array(oop element_mirror, typeArrayOop dimensions, TRAPS);
 
   // Verification
-  static VerifyClassAccessResults verify_class_access(const Klass* current_class,
-                                                      const InstanceKlass* new_class,
-                                                      bool classloader_only);
+  static VerifyClassAccessResults verify_class_access(const Klass* current_class, const InstanceKlass* new_class, bool classloader_only);
   // Return an error message specific to the specified Klass*'s and result.
   // This function must be called from within a block containing a ResourceMark.
-  static char*    verify_class_access_msg(const Klass* current_class,
-                                          const InstanceKlass* new_class,
-                                          const VerifyClassAccessResults result);
+  static char*    verify_class_access_msg(const Klass* current_class, const InstanceKlass* new_class, const VerifyClassAccessResults result);
 
   static bool     verify_member_access(const Klass* current_class,
                                        const Klass* resolved_class,
@@ -80,10 +76,7 @@ class Reflection: public AllStatic {
   // If inner_is_member, require the inner to be a member of the outer.
   // If !inner_is_member, require the inner to be anonymous (a non-member).
   // Caller is responsible for figuring out in advance which case must be true.
-  static void check_for_inner_class(const InstanceKlass* outer,
-                                    const InstanceKlass* inner,
-                                    bool inner_is_member,
-                                    TRAPS);
+  static void check_for_inner_class(const InstanceKlass* outer, const InstanceKlass* inner, bool inner_is_member, TRAPS);
 
   //
   // Support for reflection based on dynamic bytecode generation (JDK 1.4)
@@ -97,13 +90,9 @@ class Reflection: public AllStatic {
   static oop new_field(fieldDescriptor* fd, TRAPS);
   // Create a java.lang.reflect.Parameter object based on a
   // MethodParameterElement
-  static oop new_parameter(Handle method, int index, Symbol* sym,
-                           int flags, TRAPS);
+  static oop new_parameter(Handle method, int index, Symbol* sym, int flags, TRAPS);
   // Method invocation through java.lang.reflect.Method
-  static oop      invoke_method(oop method_mirror,
-                               Handle receiver,
-                               objArrayHandle args,
-                               TRAPS);
+  static oop      invoke_method(oop method_mirror, Handle receiver, objArrayHandle args, TRAPS);
   // Method invocation through java.lang.reflect.Constructor
   static oop      invoke_constructor(oop method_mirror, objArrayHandle args, TRAPS);
 };

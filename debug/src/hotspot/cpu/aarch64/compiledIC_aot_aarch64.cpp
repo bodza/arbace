@@ -3,10 +3,6 @@
 #include "memory/resourceArea.hpp"
 
 void CompiledDirectStaticCall::set_to_far(const methodHandle& callee, address entry) {
-  if (TraceICs) {
-    ResourceMark rm;
-    tty->print_cr("CompiledDirectStaticCall@" INTPTR_FORMAT ": set_to_far %s", p2i(instruction_address()), callee->name_and_sig_as_C_string());
-  }
 
   set_destination_mt_safe(entry);
 }
@@ -14,10 +10,6 @@ void CompiledDirectStaticCall::set_to_far(const methodHandle& callee, address en
 void CompiledPltStaticCall::set_to_interpreted(const methodHandle& callee, address entry) {
   address stub = find_stub();
   guarantee(stub != NULL, "stub not found");
-  if (TraceICs) {
-    ResourceMark rm;
-    tty->print_cr("CompiledPltStaticCall@" INTPTR_FORMAT ": set_to_interpreted %s", p2i(instruction_address()), callee->name_and_sig_as_C_string());
-  }
 
   // Creation also verifies the object.
   NativeLoadGot* method_loader = nativeLoadGot_at(stub);

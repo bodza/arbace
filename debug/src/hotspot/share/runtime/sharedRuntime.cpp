@@ -43,7 +43,6 @@
 #include "runtime/vframe.inline.hpp"
 #include "runtime/vframeArray.hpp"
 #include "utilities/copy.hpp"
-#include "utilities/dtrace.hpp"
 #include "utilities/events.hpp"
 #include "utilities/hashtable.inline.hpp"
 #include "utilities/macros.hpp"
@@ -739,35 +738,14 @@ int SharedRuntime::dtrace_object_alloc(oopDesc* o, int size) {
 }
 
 int SharedRuntime::dtrace_object_alloc_base(Thread* thread, oopDesc* o, int size) {
-  Klass* klass = o->klass();
-  Symbol* name = klass->name();
-  HOTSPOT_OBJECT_ALLOC(get_java_tid(thread), (char *) name->bytes(), name->utf8_length(), size * HeapWordSize);
   return 0;
 }
 
-JRT_LEAF(int, SharedRuntime::dtrace_method_entry(
-    JavaThread* thread, Method* method))
-  Symbol* kname = method->klass_name();
-  Symbol* name = method->name();
-  Symbol* sig = method->signature();
-  HOTSPOT_METHOD_ENTRY(
-      get_java_tid(thread),
-      (char *) kname->bytes(), kname->utf8_length(),
-      (char *) name->bytes(), name->utf8_length(),
-      (char *) sig->bytes(), sig->utf8_length());
+JRT_LEAF(int, SharedRuntime::dtrace_method_entry(JavaThread* thread, Method* method))
   return 0;
 JRT_END
 
-JRT_LEAF(int, SharedRuntime::dtrace_method_exit(
-    JavaThread* thread, Method* method))
-  Symbol* kname = method->klass_name();
-  Symbol* name = method->name();
-  Symbol* sig = method->signature();
-  HOTSPOT_METHOD_RETURN(
-      get_java_tid(thread),
-      (char *) kname->bytes(), kname->utf8_length(),
-      (char *) name->bytes(), name->utf8_length(),
-      (char *) sig->bytes(), sig->utf8_length());
+JRT_LEAF(int, SharedRuntime::dtrace_method_exit(JavaThread* thread, Method* method))
   return 0;
 JRT_END
 
@@ -1143,15 +1121,6 @@ methodHandle SharedRuntime::handle_ic_miss_helper(JavaThread *thread, TRAPS) {
   //
   if (call_info.resolved_method()->can_be_statically_bound()) {
     methodHandle callee_method = SharedRuntime::reresolve_call_site(thread, CHECK_(methodHandle()));
-    if (TraceCallFixup) {
-      RegisterMap reg_map(thread, false);
-      frame caller_frame = thread->last_frame().sender(&reg_map);
-      ResourceMark rm(thread);
-      tty->print("converting IC miss to reresolve (%s) call to", Bytecodes::name(bc));
-      callee_method->print_short_name(tty);
-      tty->print_cr(" from pc: " INTPTR_FORMAT, p2i(caller_frame.pc()));
-      tty->print_cr(" code: " INTPTR_FORMAT, p2i(callee_method->code()));
-    }
     return callee_method;
   }
 
@@ -1169,12 +1138,6 @@ methodHandle SharedRuntime::handle_ic_miss_helper(JavaThread *thread, TRAPS) {
       CompiledIC* inline_cache = CompiledIC_before(((CompiledMethod*)cb), caller_frame.pc());
       bool should_be_mono = false;
       if (inline_cache->is_optimized()) {
-        if (TraceCallFixup) {
-          ResourceMark rm(thread);
-          tty->print("OPTIMIZED IC miss (%s) call to", Bytecodes::name(bc));
-          callee_method->print_short_name(tty);
-          tty->print_cr(" code: " INTPTR_FORMAT, p2i(callee_method->code()));
-        }
         should_be_mono = true;
       } else if (inline_cache->is_icholder_call()) {
         CompiledICHolder* ic_oop = inline_cache->cached_icholder();
@@ -1186,12 +1149,6 @@ methodHandle SharedRuntime::handle_ic_miss_helper(JavaThread *thread, TRAPS) {
             // monomorphic compiled call site.
             // We can't assert for callee_method->code() != NULL because it
             // could have been deoptimized in the meantime
-            if (TraceCallFixup) {
-              ResourceMark rm(thread);
-              tty->print("FALSE IC miss (%s) converting to compiled call to", Bytecodes::name(bc));
-              callee_method->print_short_name(tty);
-              tty->print_cr(" code: " INTPTR_FORMAT, p2i(callee_method->code()));
-            }
             should_be_mono = true;
           }
         }
@@ -1337,24 +1294,7 @@ bool SharedRuntime::should_fixup_call_destination(address destination, address e
     // callee == cb seems weird. It means calling interpreter thru stub.
     if (callee != NULL && (callee == cb || callee->is_adapter_blob())) {
       // static call or optimized virtual
-      if (TraceCallFixup) {
-        tty->print("fixup callsite           at " INTPTR_FORMAT " to compiled code for", p2i(caller_pc));
-        moop->print_short_name(tty);
-        tty->print_cr(" to " INTPTR_FORMAT, p2i(entry_point));
-      }
       return true;
-    } else {
-      if (TraceCallFixup) {
-        tty->print("failed to fixup callsite at " INTPTR_FORMAT " to compiled code for", p2i(caller_pc));
-        moop->print_short_name(tty);
-        tty->print_cr(" to " INTPTR_FORMAT, p2i(entry_point));
-      }
-    }
-  } else {
-    if (TraceCallFixup) {
-      tty->print("already patched callsite at " INTPTR_FORMAT " to compiled code for", p2i(caller_pc));
-      moop->print_short_name(tty);
-      tty->print_cr(" to " INTPTR_FORMAT, p2i(entry_point));
     }
   }
   return false;
@@ -1717,15 +1657,12 @@ class AdapterHandlerTable : public BasicHashtable<mtCode> {
 
  public:
   AdapterHandlerTable()
-    : BasicHashtable<mtCode>(293, (DumpSharedSpaces ? sizeof(CDSAdapterHandlerEntry) : sizeof(AdapterHandlerEntry))) { }
+    : BasicHashtable<mtCode>(293, sizeof(AdapterHandlerEntry)) { }
 
   // Create a new entry suitable for insertion in the table
   AdapterHandlerEntry* new_entry(AdapterFingerPrint* fingerprint, address i2c_entry, address c2i_entry, address c2i_unverified_entry) {
     AdapterHandlerEntry* entry = (AdapterHandlerEntry*)BasicHashtable<mtCode>::new_entry(fingerprint->compute_hash());
     entry->init(fingerprint, i2c_entry, c2i_entry, c2i_unverified_entry);
-    if (DumpSharedSpaces) {
-      ((CDSAdapterHandlerEntry*)entry)->init();
-    }
     return entry;
   }
 
@@ -2043,10 +1980,6 @@ void AdapterHandlerLibrary::create_native_wrapper(const methodHandle& method) {
   if (nm != NULL) {
     const char *msg = method->is_static() ? "(static)" : "";
     CompileTask::print_ul(nm, msg);
-    if (PrintCompilation) {
-      ttyLocker ttyl;
-      CompileTask::print(tty, nm, msg);
-    }
     nm->post_compiled_method_load_event();
   }
 }

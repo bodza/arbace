@@ -86,13 +86,7 @@ class klassVtable {
   int  initialize_from_super(Klass* super);
   int  index_of(Method* m, int len) const; // same as index_of, but search only up to len
   void put_method_at(Method* m, int index);
-  static bool needs_new_vtable_entry(const methodHandle& m,
-                                     const Klass* super,
-                                     Handle classloader,
-                                     Symbol* classname,
-                                     AccessFlags access_flags,
-                                     u2 major_version,
-                                     TRAPS);
+  static bool needs_new_vtable_entry(const methodHandle& m, const Klass* super, Handle classloader, Symbol* classname, AccessFlags access_flags, u2 major_version, TRAPS);
 
   bool update_inherited_vtable(InstanceKlass* klass, const methodHandle& target_method, int super_vtable_len, int default_index, bool checkconstraints, TRAPS);
  InstanceKlass* find_transitive_override(InstanceKlass* initialsuper, const methodHandle& target_method, int vtable_index,

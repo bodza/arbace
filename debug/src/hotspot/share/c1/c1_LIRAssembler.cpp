@@ -3,7 +3,6 @@
 #include "asm/assembler.inline.hpp"
 #include "c1/c1_Compilation.hpp"
 #include "c1/c1_Instruction.hpp"
-#include "c1/c1_InstructionPrinter.hpp"
 #include "c1/c1_LIRAssembler.hpp"
 #include "c1/c1_MacroAssembler.hpp"
 #include "c1/c1_ValueStack.hpp"
@@ -108,9 +107,6 @@ void LIR_Assembler::emit_exception_entries(ExceptionInfoList* info_list) {
         // entry code not emitted yet
         if (handler->entry_code() != NULL && handler->entry_code()->instructions_list()->length() > 1) {
           handler->set_entry_pco(code_offset());
-          if (CommentedAssembly) {
-            _masm->block_comment("Exception adapter block");
-          }
           emit_lir_list(handler->entry_code());
         } else {
           handler->set_entry_pco(handler->entry_block()->exception_handler_pco());

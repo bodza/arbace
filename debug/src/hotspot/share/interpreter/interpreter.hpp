@@ -2,7 +2,6 @@
 #define SHARE_VM_INTERPRETER_INTERPRETER_HPP
 
 #include "code/stubs.hpp"
-#include "interpreter/cppInterpreter.hpp"
 #include "interpreter/templateInterpreter.hpp"
 #include "memory/resourceArea.hpp"
 #include "utilities/align.hpp"

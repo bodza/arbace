@@ -27,10 +27,7 @@ class outputStream : public ResourceObj {
    size_t _scratch_len; // size of internal scratch buffer
 
    void update_position(const char* s, size_t len);
-   static const char* do_vsnprintf(char* buffer, size_t buflen,
-                                   const char* format, va_list ap,
-                                   bool add_cr,
-                                   size_t& result_len)  ATTRIBUTE_PRINTF(3, 0);
+   static const char* do_vsnprintf(char* buffer, size_t buflen, const char* format, va_list ap, bool add_cr, size_t& result_len)  ATTRIBUTE_PRINTF(3, 0);
 
    // calls do_vsnprintf and writes output to stream; uses an on-stack buffer.
    void do_vsnprintf_and_write_with_automatic_buffer(const char* format, va_list ap, bool add_cr) ATTRIBUTE_PRINTF(2, 0);

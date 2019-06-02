@@ -190,14 +190,6 @@ int PerfString::format(char* buffer, int length) {
 
 PerfStringConstant::PerfStringConstant(CounterNS ns, const char* namep, const char* initial_value)
     : PerfString(ns, namep, V_Constant, initial_value == NULL ? 1 : MIN2((jint)(strlen((char*)initial_value)+1), (jint)(PerfMaxStringConstLength+1)), initial_value) {
-
-  if (PrintMiscellaneous && Verbose) {
-    if (is_valid() && initial_value != NULL && ((jint)strlen(initial_value) > (jint)PerfMaxStringConstLength)) {
-
-      warning("Truncating PerfStringConstant: name = %s, length = " INT32_FORMAT ", PerfMaxStringConstLength = " INT32_FORMAT "\n",
-              namep, (jint)strlen(initial_value), (jint)PerfMaxStringConstLength);
-    }
-  }
 }
 
 void PerfDataManager::destroy() {

@@ -2,7 +2,6 @@
 
 #include "classfile/classLoader.hpp"
 #include "classfile/javaClasses.hpp"
-#include "gc/shared/allocTracer.hpp"
 #include "gc/shared/gcId.hpp"
 #include "gc/shared/gcLocker.hpp"
 #include "gc/shared/genCollectedHeap.hpp"
@@ -12,7 +11,6 @@
 #include "memory/oopFactory.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/init.hpp"
-#include "utilities/dtrace.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/preserveException.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
@@ -26,15 +24,9 @@ VM_GC_Operation::~VM_GC_Operation() {
 // The same dtrace probe can't be inserted in two different files, so we
 // have to call it here, so it's only in one file.  Can't create new probes
 // for the other file anymore.   The dtrace probes have to remain stable.
-void VM_GC_Operation::notify_gc_begin(bool full) {
-  HOTSPOT_GC_BEGIN(full);
-  HS_DTRACE_WORKAROUND_TAIL_CALL_BUG();
-}
+void VM_GC_Operation::notify_gc_begin(bool full) { }
 
-void VM_GC_Operation::notify_gc_end() {
-  HOTSPOT_GC_END();
-  HS_DTRACE_WORKAROUND_TAIL_CALL_BUG();
-}
+void VM_GC_Operation::notify_gc_end() { }
 
 // Allocations may fail in several threads at about the same time,
 // resulting in multiple gc requests.  We only want to do one of them.
@@ -149,7 +141,6 @@ VM_CollectForMetadataAllocation::VM_CollectForMetadataAllocation(ClassLoaderData
                                                                  GCCause::Cause gc_cause)
     : VM_GC_Operation(gc_count_before, gc_cause, full_gc_count_before, true),
       _loader_data(loader_data), _size(size), _mdtype(mdtype), _result(NULL) {
-  AllocTracer::send_allocation_requiring_gc_event(_size * HeapWordSize, GCId::peek());
 }
 
 // Returns true iff concurrent GCs unloads metadata.
@@ -232,8 +223,4 @@ void VM_CollectForMetadataAllocation::doit() {
 
 VM_CollectForAllocation::VM_CollectForAllocation(size_t word_size, uint gc_count_before, GCCause::Cause cause)
     : VM_GC_Operation(gc_count_before, cause), _result(NULL), _word_size(word_size) {
-  // Only report if operation was really caused by an allocation.
-  if (_word_size != 0) {
-    AllocTracer::send_allocation_requiring_gc_event(_word_size * HeapWordSize, GCId::peek());
-  }
 }

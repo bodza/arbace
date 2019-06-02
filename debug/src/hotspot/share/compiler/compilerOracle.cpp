@@ -267,8 +267,8 @@ static bool check_predicate(OracleCommand command, const methodHandle& method) {
 }
 
 static void add_predicate(OracleCommand command, BasicMatcher* bm) {
-  if (command == LogCommand && !LogCompilation && lists[LogCommand] == NULL) {
-    tty->print_cr("Warning:  +LogCompilation must be enabled in order for individual methods to be logged.");
+  if (command == LogCommand && lists[LogCommand] == NULL) {
+    tty->print_cr("Warning:  +false must be enabled in order for individual methods to be logged.");
   }
   bm->set_next(lists[command]);
   lists[command] = bm;
@@ -334,9 +334,7 @@ bool CompilerOracle::should_print_methods() {
 }
 
 bool CompilerOracle::should_log(const methodHandle& method) {
-  if (!LogCompilation)            return false;
-  if (lists[LogCommand] == NULL)  return true;  // by default, log all
-  return (check_predicate(LogCommand, method));
+  return false;
 }
 
 bool CompilerOracle::should_break_at(const methodHandle& method) {
@@ -409,9 +407,7 @@ static void usage() {
 // Scan next flag and value in line, return MethodMatcher object on success, NULL on failure.
 // On failure, error_msg contains description for the first error.
 // For future extensions: set error_msg on first error.
-static void scan_flag_and_value(const char* type, const char* line, int& total_bytes_read,
-                                            TypedMethodOptionMatcher* matcher,
-                                            char* errorbuf, const int buf_size) {
+static void scan_flag_and_value(const char* type, const char* line, int& total_bytes_read, TypedMethodOptionMatcher* matcher, char* errorbuf, const int buf_size) {
   total_bytes_read = 0;
   int bytes_read = 0;
   char flag[256];
@@ -731,9 +727,9 @@ void compilerOracle_init() {
   if (lists[PrintCommand] != NULL) {
     if (PrintAssembly) {
       warning("CompileCommand and/or %s file contains 'print' commands, but PrintAssembly is also enabled", default_cc_file);
-    } else if (FLAG_IS_DEFAULT(DebugNonSafepoints)) {
-      warning("printing of assembly code is enabled; turning on DebugNonSafepoints to gain additional output");
-      DebugNonSafepoints = true;
+    } else if (FLAG_IS_DEFAULT(false)) {
+      warning("printing of assembly code is enabled; turning on false to gain additional output");
+      false = true;
     }
   }
 }

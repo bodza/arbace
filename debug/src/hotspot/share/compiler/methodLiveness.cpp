@@ -379,10 +379,6 @@ MethodLiveness::BasicBlock *MethodLiveness::BasicBlock::split(int split_bci) {
   int start = _start_bci;
   int limit = _limit_bci;
 
-  if (TraceLivenessGen) {
-    tty->print_cr(" ** Splitting block (%d,%d) at %d", start, limit, split_bci);
-  }
-
   GrowableArray<BasicBlock*>* save_predecessors = _normal_predecessors;
 
   // Make a new block to cover the first half of the range.
@@ -737,11 +733,6 @@ void MethodLiveness::BasicBlock::propagate(MethodLiveness *ml) {
   // Note that we merge information from our exceptional successors
   // just once, rather than at individual bytecodes.
   _entry.set_union(_exception_exit);
-
-  if (TraceLivenessGen) {
-    tty->print_cr(" ** Visiting block at %d **", start_bci());
-    print_on(tty);
-  }
 
   int i;
   for (i=_normal_predecessors->length()-1; i>=0; i--) {

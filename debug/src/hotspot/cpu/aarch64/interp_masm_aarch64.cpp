@@ -128,8 +128,7 @@ void InterpreterMacroAssembler::get_method_counters(Register method, Register mc
   Label has_counters;
   ldr(mcs, Address(method, Method::method_counters_offset()));
   cbnz(mcs, has_counters);
-  call_VM(noreg, CAST_FROM_FN_PTR(address,
-          InterpreterRuntime::build_method_counters), method);
+  call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::build_method_counters), method);
   ldr(mcs, Address(method, Method::method_counters_offset()));
   cbz(mcs, skip); // No MethodCounters allocated, OutOfMemory
   bind(has_counters);
@@ -403,16 +402,14 @@ void InterpreterMacroAssembler::remove_activation(TosState state, bool throw_mon
   pop(state);
   if (throw_monitor_exception) {
     // Entry already unlocked, need to throw exception
-    call_VM(noreg, CAST_FROM_FN_PTR(address,
-                   InterpreterRuntime::throw_illegal_monitor_state_exception));
+    call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::throw_illegal_monitor_state_exception));
     should_not_reach_here();
   } else {
     // Monitor already unlocked during a stack unroll. If requested,
     // install an illegal_monitor_state_exception.  Continue with
     // stack unrolling.
     if (install_monitor_exception) {
-      call_VM(noreg, CAST_FROM_FN_PTR(address,
-                     InterpreterRuntime::new_illegal_monitor_state_exception));
+      call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::new_illegal_monitor_state_exception));
     }
     b(unlocked);
   }
@@ -525,9 +522,7 @@ void InterpreterMacroAssembler::remove_activation(TosState state, bool throw_mon
 void InterpreterMacroAssembler::lock_object(Register lock_reg)
 {
   if (UseHeavyMonitors) {
-    call_VM(noreg,
-            CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorenter),
-            lock_reg);
+    call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorenter), lock_reg);
   } else {
     Label done;
 
@@ -596,9 +591,7 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg)
     bind(slow_case);
 
     // Call the runtime routine for slow case
-    call_VM(noreg,
-            CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorenter),
-            lock_reg);
+    call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorenter), lock_reg);
 
     bind(done);
   }
@@ -618,9 +611,7 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg)
 void InterpreterMacroAssembler::unlock_object(Register lock_reg)
 {
   if (UseHeavyMonitors) {
-    call_VM(noreg,
-            CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorexit),
-            lock_reg);
+    call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorexit), lock_reg);
   } else {
     Label done;
 
@@ -656,9 +647,7 @@ void InterpreterMacroAssembler::unlock_object(Register lock_reg)
 
     // Call the runtime routine for slow case.
     str(obj_reg, Address(lock_reg, BasicObjectLock::obj_offset_in_bytes())); // restore obj
-    call_VM(noreg,
-            CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorexit),
-            lock_reg);
+    call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorexit), lock_reg);
 
     bind(done);
 
@@ -782,9 +771,7 @@ void InterpreterMacroAssembler::update_mdp_by_constant(Register mdp_in, int cons
 void InterpreterMacroAssembler::update_mdp_for_ret(Register return_bci) {
   // save/restore across call_VM
   stp(zr, return_bci, Address(pre(sp, -2 * wordSize)));
-  call_VM(noreg,
-          CAST_FROM_FN_PTR(address, InterpreterRuntime::update_mdp_for_ret),
-          return_bci);
+  call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::update_mdp_for_ret), return_bci);
   ldp(zr, return_bci, Address(post(sp, 2 * wordSize)));
 }
 
@@ -1161,23 +1148,9 @@ void InterpreterMacroAssembler::verify_oop(Register reg, TosState state) {
 
 void InterpreterMacroAssembler::verify_FPU(int stack_depth, TosState state) { }
 
-void InterpreterMacroAssembler::notify_method_entry() {
-  {
-    SkipIfEqual skip(this, &DTraceMethodProbes, false);
-    get_method(c_rarg1);
-    call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_entry), rthread, c_rarg1);
-  }
-}
+void InterpreterMacroAssembler::notify_method_entry() { }
 
-void InterpreterMacroAssembler::notify_method_exit(TosState state, NotifyMethodExitMode mode) {
-  {
-    SkipIfEqual skip(this, &DTraceMethodProbes, false);
-    push(state);
-    get_method(c_rarg1);
-    call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit), rthread, c_rarg1);
-    pop(state);
-  }
-}
+void InterpreterMacroAssembler::notify_method_exit(TosState state, NotifyMethodExitMode mode) { }
 
 // Jump if ((*counter_addr += increment) & mask) satisfies the condition.
 void InterpreterMacroAssembler::increment_mask_and_jump(Address counter_addr, int increment, Address mask, Register scratch, Register scratch2, bool preloaded, Condition cond, Label* where) {

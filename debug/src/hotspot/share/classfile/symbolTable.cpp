@@ -33,9 +33,6 @@ Symbol* SymbolTable::allocate_symbol(const u1* name, int len, bool c_heap, TRAPS
 
   Symbol* sym;
 
-  if (DumpSharedSpaces) {
-    c_heap = false;
-  }
   if (c_heap) {
     // refcount starts as 1
     sym = new (len, THREAD) Symbol(name, len, 1);
@@ -150,13 +147,7 @@ void SymbolTable::possibly_parallel_unlink(int* processed, int* removed) {
 // Create a new table and using alternate hash code, populate the new table
 // with the existing strings.   Set flag to use the alternate hash code afterwards.
 void SymbolTable::rehash_table() {
-  if (DumpSharedSpaces) {
-    tty->print_cr("Warning: rehash_table should not be called while dumping archive");
-    return;
-  }
 
-  // This should never happen with -Xshare:dump but it might in testing mode.
-  if (DumpSharedSpaces) return;
   // Create a new symbol table
   SymbolTable* new_table = new SymbolTable();
 

@@ -27,8 +27,7 @@ class TypeArrayKlass : public ArrayKlass {
   void set_max_length(jint m)           { _max_length = m; }
 
   // klass allocation
-  static TypeArrayKlass* create_klass(BasicType type, const char* name_str,
-                               TRAPS);
+  static TypeArrayKlass* create_klass(BasicType type, const char* name_str, TRAPS);
   static inline Klass* create_klass(BasicType type, int scale, TRAPS) {
     TypeArrayKlass* tak = create_klass(type, external_name(type), CHECK_NULL);
     return tak;

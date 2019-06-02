@@ -77,12 +77,6 @@ Klass* AOTCodeHeap::lookup_klass(const char* name, int len, const Method* method
 }
 
 void AOTLib::handle_config_error(const char* format, ...) {
-  if (PrintAOT) {
-    va_list ap;
-    va_start(ap, format);
-    tty->vprint_cr(format, ap);
-    va_end(ap);
-  }
   if (UseAOTStrictLoading) {
     vm_exit(1);
   }
@@ -190,11 +184,6 @@ AOTLib::AOTLib(void* handle, const char* name, int dso_id) : _valid(true), _dl_h
   _header = (AOTHeader*) load_symbol("A.header");
 
   verify_config();
-
-  if (!_valid && PrintAOT) {
-      tty->print("%7d ", (int) tty->time_stamp().milliseconds());
-      tty->print_cr("%4d     skipped %s  aot library", _dso_id, _name);
-  }
 }
 
 AOTCodeHeap::AOTCodeHeap(AOTLib* lib) :
@@ -253,11 +242,6 @@ AOTCodeHeap::AOTCodeHeap(AOTLib* lib) :
 
   // Register aot stubs
   register_stubs();
-
-  if (PrintAOT || (PrintCompilation && PrintAOT)) {
-    tty->print("%7d ", (int) tty->time_stamp().milliseconds());
-    tty->print_cr("%4d     loaded    %s  aot library", _lib->id(), _lib->name());
-  }
 }
 
 void AOTCodeHeap::publish_aot(const methodHandle& mh, AOTMethodData* method_data, int code_id) {
@@ -292,12 +276,9 @@ void AOTCodeHeap::publish_aot(const methodHandle& mh, AOTMethodData* method_data
   _code_to_aot[code_id]._aot = aot; // Should set this first
   if (Atomic::cmpxchg(in_use, &_code_to_aot[code_id]._state, not_set) != not_set) {
     _code_to_aot[code_id]._aot = NULL; // Clean
-  } else { // success
+  } else {
     // Publish method
     Method::set_code(mh, aot);
-    if (PrintAOT || (PrintCompilation && PrintAOT)) {
-      aot->print_on(tty, NULL);
-    }
     // Publish oop only after we are visible to CompiledMethodIterator
     aot->set_oop(mh()->method_holder()->klass_holder());
   }
@@ -315,9 +296,6 @@ void AOTCodeHeap::link_primitive_array_klasses() {
         // _got_index points to second cell - resolved klass pointer.
         _klasses_got[klass_data->_got_index-1] = (Metadata*)arr_klass; // Initialized
         _klasses_got[klass_data->_got_index  ] = (Metadata*)arr_klass; // Resolved
-        if (PrintAOT) {
-          tty->print_cr("[Found  %s  in  %s]", arr_klass->internal_name(), _lib->name());
-        }
       }
     }
   }
@@ -352,9 +330,6 @@ void AOTCodeHeap::register_stubs() {
     }
     // Adjust code buffer boundaries only for stubs because they are last in the buffer.
     adjust_boundaries(aot);
-    if (PrintAOT && Verbose) {
-      aot->print_on(tty, NULL);
-    }
   }
 }
 

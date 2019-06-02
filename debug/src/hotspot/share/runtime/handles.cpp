@@ -44,7 +44,7 @@ inline void name##Handle::remove() { \
     _thread->metadata_handles()->remove_at(i); \
   } \
 } \
-name##Handle::~name##Handle () { remove(); } \
+name##Handle::~name##Handle () { remove(); }
 
 DEF_METADATA_HANDLE_FN_NOINLINE(method, Method)
 DEF_METADATA_HANDLE_FN_NOINLINE(constantPool, ConstantPool)

@@ -17,7 +17,7 @@
 #define IS_IN_VM \
   ciEnv::is_in_vm()
 
-#define ASSERT_IN_VM \
+#define ASSERT_IN_VM
 
 inline const char* bool_to_str(bool b) {
   return ((b) ? "true" : "false");

@@ -685,7 +685,7 @@ public:
   INSN(andw, 0b000, true);
   INSN(orrw, 0b001, true);
   INSN(eorw, 0b010, true);
-  INSN(andr,  0b100, false);
+  INSN(andr, 0b100, false);
   INSN(orr,  0b101, false);
   INSN(eor,  0b110, false);
 
@@ -1313,7 +1313,7 @@ public:
 #define INSN(NAME, size, op) \
   void NAME(Register Rt, const Address &adr) { \
     ld_st2(Rt, adr, size, op); \
-  } \
+  }
 
   INSN(str, 0b11, 0b00);
   INSN(strw, 0b10, 0b00);
@@ -1559,14 +1559,14 @@ void mvnw(Register Rd, Register Rm, enum shift_kind kind = LSL, unsigned shift =
     conditional_select(op, op2, Rd, Rn, Rm, cond); \
   }
 
-  INSN(cselw, 0b000, 0b00);
+  INSN(cselw,  0b000, 0b00);
   INSN(csincw, 0b000, 0b01);
   INSN(csinvw, 0b010, 0b00);
   INSN(csnegw, 0b010, 0b01);
-  INSN(csel, 0b100, 0b00);
-  INSN(csinc, 0b100, 0b01);
-  INSN(csinv, 0b110, 0b00);
-  INSN(csneg, 0b110, 0b01);
+  INSN(csel,   0b100, 0b00);
+  INSN(csinc,  0b100, 0b01);
+  INSN(csinv,  0b110, 0b00);
+  INSN(csneg,  0b110, 0b01);
 
 #undef INSN
 
@@ -1840,13 +1840,13 @@ public:
     float_compare(op31, type, op, op2, Vn); \
   }
 
-  INSN(fcmps, 0b000, 0b00, 0b00, 0b00000);
+  INSN(fcmps,  0b000, 0b00, 0b00, 0b00000);
   INSN1(fcmps, 0b000, 0b00, 0b00, 0b01000);
   // INSN(fcmpes, 0b000, 0b00, 0b00, 0b10000);
   // INSN1(fcmpes, 0b000, 0b00, 0b00, 0b11000);
 
-  INSN(fcmpd, 0b000,   0b01, 0b00, 0b00000);
-  INSN1(fcmpd, 0b000,  0b01, 0b00, 0b01000);
+  INSN(fcmpd,  0b000, 0b01, 0b00, 0b00000);
+  INSN1(fcmpd, 0b000, 0b01, 0b00, 0b01000);
   // INSN(fcmped, 0b000,  0b01, 0b00, 0b10000);
   // INSN1(fcmped, 0b000, 0b01, 0b00, 0b11000);
 
@@ -1952,7 +1952,7 @@ public:
 #define INSN(NAME, op) \
   void NAME(FloatRegister Rt, SIMD_RegVariant T, const Address &adr) { \
     ld_st2((Register)Rt, adr, (int)T & 3, op + ((T==Q) ? 0b10:0b00), 1); \
-  } \
+  }
 
   INSN(ldr, 1);
   INSN(str, 0);
@@ -2094,13 +2094,13 @@ public:
     rf(Vn, 5), rf(Vd, 0); \
   }
 
-  INSN(absr,  0, 0b100000101110);
-  INSN(negr,  1, 0b100000101110);
-  INSN(notr,  1, 0b100000010110);
-  INSN(addv,  0, 0b110001101110);
-  INSN(cls,   0, 0b100000010010);
-  INSN(clz,   1, 0b100000010010);
-  INSN(cnt,   0, 0b100000010110);
+  INSN(absr, 0, 0b100000101110);
+  INSN(negr, 1, 0b100000101110);
+  INSN(notr, 1, 0b100000010110);
+  INSN(addv, 0, 0b110001101110);
+  INSN(cls,  0, 0b100000010010);
+  INSN(clz,  1, 0b100000010010);
+  INSN(cnt,  0, 0b100000010110);
 
 #undef INSN
 

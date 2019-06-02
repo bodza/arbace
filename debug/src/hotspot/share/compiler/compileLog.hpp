@@ -13,7 +13,7 @@ class ciSymbol;
 //
 // An open stream for logging information about activities in a
 // compiler thread.  There is exactly one per CompilerThread,
-// if the +LogCompilation switch is enabled.
+// if the +false switch is enabled.
 class CompileLog : public xmlStream {
  private:
   const char*   _file;           // name of file where XML goes

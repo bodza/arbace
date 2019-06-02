@@ -636,7 +636,7 @@ typedef struct {
 } JVM_DTraceProbe;
 
 /**
- * Encapsulates the stability ratings for a DTrace provider field
+ * Encapsulates the stability ratings for a DTrace provider field
  */
 typedef struct {
     jint nameStability;
@@ -687,7 +687,7 @@ JNIEXPORT void JNICALL
 JVM_DTraceDispose(JNIEnv* env, jlong activation_handle);
 
 /*
- * Check to see if DTrace is supported by OS
+ * Check to see if DTrace is supported by OS
  */
 JNIEXPORT jboolean JNICALL
 JVM_DTraceIsSupported(JNIEnv* env);

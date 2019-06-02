@@ -22,11 +22,7 @@
 bool Dictionary::_some_dictionary_needs_resizing = false;
 
 size_t Dictionary::entry_size() {
-  if (DumpSharedSpaces) {
-    return SystemDictionaryShared::dictionary_entry_size();
-  } else {
-    return sizeof(DictionaryEntry);
-  }
+  return sizeof(DictionaryEntry);
 }
 
 Dictionary::Dictionary(ClassLoaderData* loader_data, int table_size, bool resizable)
@@ -54,9 +50,6 @@ Dictionary::~Dictionary() {
 DictionaryEntry* Dictionary::new_entry(unsigned int hash, InstanceKlass* klass) {
   DictionaryEntry* entry = (DictionaryEntry*)Hashtable<InstanceKlass*, mtClass>::allocate_new_entry(hash, klass);
   entry->set_pd_set(NULL);
-  if (DumpSharedSpaces) {
-    SystemDictionaryShared::init_shared_dictionary_entry(klass, entry);
-  }
   return entry;
 }
 
@@ -278,9 +271,7 @@ void Dictionary::add_klass(unsigned int hash, Symbol* class_name, InstanceKlass*
 DictionaryEntry* Dictionary::get_entry(int index, unsigned int hash, Symbol* class_name) {
   for (DictionaryEntry* entry = bucket(index); entry != NULL; entry = entry->next()) {
     if (entry->hash() == hash && entry->equals(class_name)) {
-      if (!DumpSharedSpaces || SystemDictionaryShared::is_builtin(entry)) {
         return entry;
-      }
     }
   }
   return NULL;
@@ -413,7 +404,7 @@ void Dictionary::verify() {
   ClassLoaderData* cld = loader_data();
   // class loader must be present;  a null class loader is the
   // boostrap loader
-  guarantee(cld != NULL || DumpSharedSpaces || cld->class_loader() == NULL || cld->class_loader()->is_instance(), "checking type of class_loader");
+  guarantee(cld != NULL || cld->class_loader() == NULL || cld->class_loader()->is_instance(), "checking type of class_loader");
 
   ResourceMark rm;
   stringStream tempst;

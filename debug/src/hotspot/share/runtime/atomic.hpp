@@ -281,10 +281,7 @@ private:
   // translated back.  Type is the parameter / return type of the
   // helper function.
   template<typename Type, typename Fn, typename T>
-  static T cmpxchg_using_helper(Fn fn,
-                                T exchange_value,
-                                T volatile* dest,
-                                T compare_value);
+  static T cmpxchg_using_helper(Fn fn, T exchange_value, T volatile* dest, T compare_value);
 
   // Support platforms that do not provide Read-Modify-Write
   // byte-level atomic access. To use, derive PlatformCmpxchg<1> from
@@ -328,9 +325,7 @@ private:
   // translated back.  Type is the parameter / return type of the
   // helper function.
   template<typename Type, typename Fn, typename T>
-  static T xchg_using_helper(Fn fn,
-                             T exchange_value,
-                             T volatile* dest);
+  static T xchg_using_helper(Fn fn, T exchange_value, T volatile* dest);
 };
 
 template<typename From, typename To>

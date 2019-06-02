@@ -76,12 +76,10 @@ class AdaptiveWeightedAverage : public CHeapObj<mtGC> {
   // Update data with a new sample.
   void sample(float new_sample);
 
-  static inline float exp_avg(float avg, float sample,
-                               unsigned int weight) {
+  static inline float exp_avg(float avg, float sample, unsigned int weight) {
     return (100.0F - weight) * avg / 100.0F + weight * sample / 100.0F;
   }
-  static inline size_t exp_avg(size_t avg, size_t sample,
-                               unsigned int weight) {
+  static inline size_t exp_avg(size_t avg, size_t sample, unsigned int weight) {
     // Convert to float and back to avoid integer overflow.
     return (size_t)exp_avg((float)avg, (float)sample, weight);
   }

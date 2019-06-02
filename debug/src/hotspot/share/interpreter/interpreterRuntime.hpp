@@ -20,8 +20,7 @@ class InterpreterRuntime: AllStatic {
  private:
 
   static void      set_bcp_and_mdp(address bcp, JavaThread*thread);
-  static void      note_trap_inner(JavaThread* thread, int reason,
-                                   const methodHandle& trap_method, int trap_bci, TRAPS);
+  static void      note_trap_inner(JavaThread* thread, int reason, const methodHandle& trap_method, int trap_bci, TRAPS);
   static void      note_trap(JavaThread *thread, int reason, TRAPS);
 
   // Inner work method for Interpreter's frequency counter overflow.
@@ -45,14 +44,10 @@ class InterpreterRuntime: AllStatic {
   // Exceptions thrown by the interpreter
   static void    throw_AbstractMethodError(JavaThread* thread);
   static void    throw_AbstractMethodErrorWithMethod(JavaThread* thread, Method* oop);
-  static void    throw_AbstractMethodErrorVerbose(JavaThread* thread,
-                                                  Klass* recvKlass,
-                                                  Method* missingMethod);
+  static void    throw_AbstractMethodErrorVerbose(JavaThread* thread, Klass* recvKlass, Method* missingMethod);
 
   static void    throw_IncompatibleClassChangeError(JavaThread* thread);
-  static void    throw_IncompatibleClassChangeErrorVerbose(JavaThread* thread,
-                                                           Klass* resc,
-                                                           Klass* interfaceKlass);
+  static void    throw_IncompatibleClassChangeErrorVerbose(JavaThread* thread, Klass* resc, Klass* interfaceKlass);
   static void    throw_StackOverflowError(JavaThread* thread);
   static void    throw_delayed_StackOverflowError(JavaThread* thread);
   static void    throw_ArrayIndexOutOfBoundsException(JavaThread* thread, arrayOopDesc* a, jint index);
@@ -101,7 +96,7 @@ class InterpreterRuntime: AllStatic {
   static void popframe_move_outgoing_args(JavaThread* thread, void* src_address, void* dest_address);
 #endif
 
-  // bytecode tracing is only used by the TraceBytecodes
+  // bytecode tracing is only used by the false
   static intptr_t trace_bytecode(JavaThread* thread, intptr_t preserve_this_value, intptr_t tos, intptr_t tos2) { return 0; };
 
   // Platform dependent stuff

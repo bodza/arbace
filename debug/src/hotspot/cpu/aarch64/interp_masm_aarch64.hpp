@@ -18,19 +18,12 @@ class InterpreterMacroAssembler: public MacroAssembler {
   // Interpreter specific version of call_VM_base
   using MacroAssembler::call_VM_leaf_base;
 
-  virtual void call_VM_leaf_base(address entry_point,
-                                 int number_of_arguments);
+  virtual void call_VM_leaf_base(address entry_point, int number_of_arguments);
 
-  virtual void call_VM_base(Register oop_result,
-                            Register java_thread,
-                            Register last_java_sp,
-                            address  entry_point,
-                            int number_of_arguments,
-                            bool check_exceptions);
+  virtual void call_VM_base(Register oop_result, Register java_thread, Register last_java_sp, address  entry_point, int number_of_arguments, bool check_exceptions);
 
   // base routine for all dispatches
-  void dispatch_base(TosState state, address* table,
-                     bool verifyoop = true, bool generate_poll = false);
+  void dispatch_base(TosState state, address* table, bool verifyoop = true, bool generate_poll = false);
 
  public:
   InterpreterMacroAssembler(CodeBuffer* code) : MacroAssembler(code) { }

@@ -109,8 +109,7 @@ private:
   static void unlink(BoolObjectClosure* cl) {
     unlink_or_oops_do(cl);
   }
-  static void unlink_or_oops_do(BoolObjectClosure* is_alive, OopClosure* f = NULL,
-                                int* processed = NULL, int* removed = NULL);
+  static void unlink_or_oops_do(BoolObjectClosure* is_alive, OopClosure* f = NULL, int* processed = NULL, int* removed = NULL);
 
   // Serially invoke "f->do_oop" on the locations of all oops in the table.
   static void oops_do(OopClosure* f);

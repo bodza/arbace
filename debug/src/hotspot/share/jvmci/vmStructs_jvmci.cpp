@@ -310,7 +310,7 @@
  \
   static_field(vmSymbols,                   _symbols[0],                                      Symbol*) \
  \
-  nonstatic_field(vtableEntry,              _method,                                          Method*) \
+  nonstatic_field(vtableEntry,              _method,                                          Method*)
 
 #define VM_TYPES(declare_type, declare_toplevel_type, declare_integer_type, declare_unsigned_integer_type) \
   declare_integer_type(bool) \
@@ -337,7 +337,7 @@
     declare_type(Metadata, MetaspaceObj) \
     declare_type(Klass, Metadata) \
       declare_type(InstanceKlass, Klass) \
-    declare_type(ConstantPool, Metadata) \
+    declare_type(ConstantPool, Metadata)
 
 #define VM_INT_CONSTANTS(declare_constant, declare_constant_with_value, declare_preprocessor_constant) \
   declare_preprocessor_constant("FIELDINFO_TAG_SIZE", FIELDINFO_TAG_SIZE) \
@@ -551,7 +551,7 @@
   declare_constant(vmIntrinsics::_linkToInterface) \
  \
   declare_constant(vmSymbols::FIRST_SID) \
-  declare_constant(vmSymbols::SID_LIMIT) \
+  declare_constant(vmSymbols::SID_LIMIT)
 
 #define VM_LONG_CONSTANTS(declare_constant, declare_preprocessor_constant) \
   declare_constant(InvocationCounter::count_increment) \
@@ -569,7 +569,7 @@
   declare_constant(markOopDesc::biased_lock_pattern) \
  \
   declare_constant(markOopDesc::no_hash_in_place) \
-  declare_constant(markOopDesc::no_lock_in_place) \
+  declare_constant(markOopDesc::no_lock_in_place)
 
 #define VM_ADDRESSES(declare_address, declare_preprocessor_address, declare_function) \
   declare_function(SharedRuntime::register_finalizer) \
@@ -740,14 +740,6 @@
 #define VM_TYPES_OS(declare_type, declare_toplevel_type, declare_oop_type, declare_integer_type, declare_unsigned_integer_type, declare_c1_toplevel_type, declare_c2_type, declare_c2_toplevel_type)
 #endif
 
-#ifndef VM_INT_CONSTANTS_OS
-#define VM_INT_CONSTANTS_OS(declare_constant, declare_preprocessor_constant, declare_c1_constant, declare_c2_constant, declare_c2_preprocessor_constant)
-#endif
-
-#ifndef VM_LONG_CONSTANTS_OS
-#define VM_LONG_CONSTANTS_OS(declare_constant, declare_preprocessor_constant, declare_c1_constant, declare_c2_constant, declare_c2_preprocessor_constant)
-#endif
-
 #ifndef VM_ADDRESSES_OS
 #define VM_ADDRESSES_OS(declare_address, declare_preprocessor_address, declare_function)
 #endif
@@ -820,12 +812,6 @@ VMIntConstantEntry JVMCIVMStructs::localHotSpotVMIntConstants[] = {
                    GENERATE_VM_INT_CONSTANT_WITH_VALUE_ENTRY,
                    GENERATE_PREPROCESSOR_VM_INT_CONSTANT_ENTRY)
 
-  VM_INT_CONSTANTS_OS(GENERATE_VM_INT_CONSTANT_ENTRY,
-                      GENERATE_PREPROCESSOR_VM_INT_CONSTANT_ENTRY,
-                      GENERATE_C1_VM_INT_CONSTANT_ENTRY,
-                      GENERATE_C2_VM_INT_CONSTANT_ENTRY,
-                      GENERATE_C2_PREPROCESSOR_VM_INT_CONSTANT_ENTRY)
-
   VM_INT_CONSTANTS_CPU(GENERATE_VM_INT_CONSTANT_ENTRY,
                        GENERATE_PREPROCESSOR_VM_INT_CONSTANT_ENTRY,
                        GENERATE_C1_VM_INT_CONSTANT_ENTRY,
@@ -842,12 +828,6 @@ VMIntConstantEntry JVMCIVMStructs::localHotSpotVMIntConstants[] = {
 VMLongConstantEntry JVMCIVMStructs::localHotSpotVMLongConstants[] = {
   VM_LONG_CONSTANTS(GENERATE_VM_LONG_CONSTANT_ENTRY,
                     GENERATE_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY)
-
-  VM_LONG_CONSTANTS_OS(GENERATE_VM_LONG_CONSTANT_ENTRY,
-                       GENERATE_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY,
-                       GENERATE_C1_VM_LONG_CONSTANT_ENTRY,
-                       GENERATE_C2_VM_LONG_CONSTANT_ENTRY,
-                       GENERATE_C2_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY)
 
   VM_LONG_CONSTANTS_CPU(GENERATE_VM_LONG_CONSTANT_ENTRY,
                         GENERATE_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY,

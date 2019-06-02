@@ -314,15 +314,7 @@ address NativeLookup::lookup_base(const methodHandle& method, bool& in_base_libr
 address NativeLookup::lookup(const methodHandle& method, bool& in_base_library, TRAPS) {
   if (!method->has_native_function()) {
     address entry = lookup_base(method, in_base_library, CHECK_NULL);
-    method->set_native_function(entry,
-      Method::native_bind_event_is_interesting);
-    // -verbose:jni printing
-    if (PrintJNIResolving) {
-      ResourceMark rm(THREAD);
-      tty->print_cr("[Dynamic-linking native method %s.%s ... JNI]",
-        method->method_holder()->external_name(),
-        method->name()->as_C_string());
-    }
+    method->set_native_function(entry, Method::native_bind_event_is_interesting);
   }
   return method->native_function();
 }

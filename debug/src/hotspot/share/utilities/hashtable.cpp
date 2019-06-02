@@ -15,7 +15,6 @@
 #include "oops/oop.inline.hpp"
 #include "oops/weakHandle.inline.hpp"
 #include "runtime/safepoint.hpp"
-#include "utilities/dtrace.hpp"
 #include "utilities/hashtable.hpp"
 #include "utilities/hashtable.inline.hpp"
 #include "utilities/numberSeq.hpp"

@@ -195,10 +195,6 @@ void C1_MacroAssembler::initialize_object(Register obj, Register klass, Register
     }
   }
 
-  if (CURRENT_ENV->dtrace_alloc_probes()) {
-    call(RuntimeAddress(Runtime1::entry_for(Runtime1::dtrace_object_alloc_id)));
-  }
-
   verify_oop(obj);
 }
 
@@ -220,10 +216,6 @@ void C1_MacroAssembler::allocate_array(Register obj, Register len, Register t1, 
   // clear rest of allocated space
   const Register len_zero = len;
   initialize_body(obj, arr_size, header_size * BytesPerWord, len_zero);
-
-  if (CURRENT_ENV->dtrace_alloc_probes()) {
-    call(RuntimeAddress(Runtime1::entry_for(Runtime1::dtrace_object_alloc_id)));
-  }
 
   verify_oop(obj);
 }

@@ -64,20 +64,6 @@ static void* verify_byte_codes_fn() {
 
 // Methods in Verifier
 
-bool Verifier::should_verify_for(oop class_loader, bool should_verify_class) {
-  return (class_loader == NULL || !should_verify_class) ? BytecodeVerificationLocal : BytecodeVerificationRemote;
-}
-
-bool Verifier::relax_access_for(oop loader) {
-  bool trusted = java_lang_ClassLoader::is_trusted_loader(loader);
-  bool need_verify =
-    // verifyAll
-    (BytecodeVerificationLocal && BytecodeVerificationRemote) ||
-    // verifyRemote
-    (!BytecodeVerificationLocal && BytecodeVerificationRemote && !trusted);
-  return !need_verify;
-}
-
 // Prints the end-verification message to the appropriate output.
 void Verifier::log_end_verification(outputStream* st, const char* klassName, Symbol* exception_name, TRAPS) {
   if (HAS_PENDING_EXCEPTION) {
@@ -186,7 +172,7 @@ bool Verifier::is_eligible_for_verification(InstanceKlass* klass, bool should_ve
 
   bool is_reflect = refl_magic_klass != NULL && klass->is_subtype_of(refl_magic_klass);
 
-  return (should_verify_for(klass->class_loader(), should_verify_class) &&
+  return (false &&
     // return if the class is a bootstrapping class
     // or defineClass specified not to verify by default (flags override passed arg)
     // We need to skip the following four for bootstraping

@@ -280,7 +280,7 @@ class relocInfo {
     visitor(poll) \
     visitor(poll_return) \
     visitor(section_word) \
-    visitor(trampoline_stub) \
+    visitor(trampoline_stub)
 
  public:
   enum {

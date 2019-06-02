@@ -1805,8 +1805,7 @@ void MacroAssembler::resolve_jobject(Register value, Register thread, Register t
   tbz(r0, 0, not_weak);    // Test for jweak tag.
 
   // Resolve jweak.
-  access_load_at(T_OBJECT, IN_NATIVE | ON_PHANTOM_OOP_REF, value,
-                 Address(value, -JNIHandles::weak_tag_value), tmp, thread);
+  access_load_at(T_OBJECT, IN_NATIVE | ON_PHANTOM_OOP_REF, value, Address(value, -JNIHandles::weak_tag_value), tmp, thread);
   verify_oop(value);
   b(done);
 
@@ -2120,55 +2119,8 @@ ATOMIC_XCHG(xchgalw, swpal, ldaxrw, stlxrw, Assembler::word)
 
 #undef ATOMIC_XCHG
 
-void MacroAssembler::debug64(char* msg, int64_t pc, int64_t regs[])
-{
-  // In order to get locks to work, we need to fake a in_VM state
-  if (ShowMessageBoxOnError ) {
-    JavaThread* thread = JavaThread::current();
-    JavaThreadState saved_state = thread->thread_state();
-    thread->set_thread_state(_thread_in_vm);
-    if (os::message_box(msg, "Execution stopped, print registers?")) {
-      ttyLocker ttyl;
-      tty->print_cr(" pc = 0x%016lx", pc);
-      tty->print_cr(" r0 = 0x%016lx", regs[0]);
-      tty->print_cr(" r1 = 0x%016lx", regs[1]);
-      tty->print_cr(" r2 = 0x%016lx", regs[2]);
-      tty->print_cr(" r3 = 0x%016lx", regs[3]);
-      tty->print_cr(" r4 = 0x%016lx", regs[4]);
-      tty->print_cr(" r5 = 0x%016lx", regs[5]);
-      tty->print_cr(" r6 = 0x%016lx", regs[6]);
-      tty->print_cr(" r7 = 0x%016lx", regs[7]);
-      tty->print_cr(" r8 = 0x%016lx", regs[8]);
-      tty->print_cr(" r9 = 0x%016lx", regs[9]);
-      tty->print_cr("r10 = 0x%016lx", regs[10]);
-      tty->print_cr("r11 = 0x%016lx", regs[11]);
-      tty->print_cr("r12 = 0x%016lx", regs[12]);
-      tty->print_cr("r13 = 0x%016lx", regs[13]);
-      tty->print_cr("r14 = 0x%016lx", regs[14]);
-      tty->print_cr("r15 = 0x%016lx", regs[15]);
-      tty->print_cr("r16 = 0x%016lx", regs[16]);
-      tty->print_cr("r17 = 0x%016lx", regs[17]);
-      tty->print_cr("r18 = 0x%016lx", regs[18]);
-      tty->print_cr("r19 = 0x%016lx", regs[19]);
-      tty->print_cr("r20 = 0x%016lx", regs[20]);
-      tty->print_cr("r21 = 0x%016lx", regs[21]);
-      tty->print_cr("r22 = 0x%016lx", regs[22]);
-      tty->print_cr("r23 = 0x%016lx", regs[23]);
-      tty->print_cr("r24 = 0x%016lx", regs[24]);
-      tty->print_cr("r25 = 0x%016lx", regs[25]);
-      tty->print_cr("r26 = 0x%016lx", regs[26]);
-      tty->print_cr("r27 = 0x%016lx", regs[27]);
-      tty->print_cr("r28 = 0x%016lx", regs[28]);
-      tty->print_cr("r30 = 0x%016lx", regs[30]);
-      tty->print_cr("r31 = 0x%016lx", regs[31]);
-      BREAKPOINT;
-    }
-    ThreadStateTransition::transition(thread, _thread_in_vm, saved_state);
-  } else {
-    ttyLocker ttyl;
-    ::tty->print_cr("=============== DEBUG MESSAGE: %s ================\n", msg);
-    ShouldNotReachHere();
-  }
+void MacroAssembler::debug64(char* msg, int64_t pc, int64_t regs[]) {
+  ShouldNotReachHere();
 }
 
 #ifdef BUILTIN_SIM
@@ -2188,9 +2140,7 @@ void aarch64_prolog();
 
 void MacroAssembler::c_stub_prolog(int gp_arg_count, int fp_arg_count, int ret_type, address *prolog_ptr)
 {
-  int calltype = (((ret_type & 0x3) << 8) |
-                  ((fp_arg_count & 0xf) << 4) |
-                  (gp_arg_count & 0xf));
+  int calltype = (((ret_type & 0x3) << 8) | ((fp_arg_count & 0xf) << 4) | (gp_arg_count & 0xf));
 
   // the addresses for the x86 to ARM entry code we need to use
   address start = pc();
@@ -2460,11 +2410,11 @@ void MacroAssembler::multiply_64_x_64_loop(Register x, Register xstart, Register
   b(L_first_loop);
 
   bind(L_one_y);
-  ldrw(y_idx, Address(y,  0));
+  ldrw(y_idx, Address(y, 0));
   b(L_multiply);
 
   bind(L_one_x);
-  ldrw(x_xstart, Address(x,  0));
+  ldrw(x_xstart, Address(x, 0));
   b(L_first_loop);
 
   bind(L_first_loop_exit);
@@ -2656,7 +2606,7 @@ void MacroAssembler::multiply_to_len(Register x, Register xlen, Register y, Regi
 
   // Next infrequent code is moved outside loops.
   bind(L_last_x);
-  ldrw(product_hi, Address(x,  0));
+  ldrw(product_hi, Address(x, 0));
   b(L_third_loop_prologue);
 
   bind(L_done);
@@ -3144,18 +3094,6 @@ void MacroAssembler::kernel_crc32c_using_crc32c(Register crc, Register buf, Regi
  */
 void MacroAssembler::kernel_crc32c(Register crc, Register buf, Register len, Register table0, Register table1, Register table2, Register table3, Register tmp, Register tmp2, Register tmp3) {
   kernel_crc32c_using_crc32c(crc, buf, len, table0, table1, table2, table3);
-}
-
-SkipIfEqual::SkipIfEqual(MacroAssembler* masm, const bool* flag_addr, bool value) {
-  _masm = masm;
-  unsigned long offset;
-  _masm->adrp(rscratch1, ExternalAddress((address)flag_addr), offset);
-  _masm->ldrb(rscratch1, Address(rscratch1, offset));
-  _masm->cbzw(rscratch1, _label);
-}
-
-SkipIfEqual::~SkipIfEqual() {
-  _masm->bind(_label);
 }
 
 void MacroAssembler::addptr(const Address &dst, int32_t src) {
