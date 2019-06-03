@@ -1,7 +1,5 @@
 #include "precompiled.hpp"
 
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/metaspace/metachunk.hpp"
 #include "memory/metaspace.hpp"
 #include "memory/metaspace/chunkManager.hpp"
@@ -16,7 +14,6 @@
 #include "utilities/globalDefinitions.hpp"
 
 namespace metaspace {
-
 // Decide if large pages should be committed when the memory is reserved.
 static bool should_commit_large_pages_when_reserving(size_t bytes) {
   if (UseLargePages && UseLargePagesInMetaspace && !os::can_commit_large_page_memory()) {
@@ -53,7 +50,6 @@ void VirtualSpaceNode::purge(ChunkManager* chunk_manager) {
 }
 
 void VirtualSpaceNode::print_map(outputStream* st, bool is_class) const {
-
   if (bottom() == top()) {
     return;
   }
@@ -163,7 +159,6 @@ size_t VirtualSpaceNode::free_words_in_vs() const {
 
 // Given an address larger than top(), allocate padding chunks until top is at the given address.
 void VirtualSpaceNode::allocate_padding_chunks_until_top_is_at(MetaWord* target_top) {
-
   // Padding chunks are added to the freelist.
   ChunkManager* const chunk_manager = Metaspace::get_chunk_manager(this->is_class());
 
@@ -173,7 +168,6 @@ void VirtualSpaceNode::allocate_padding_chunks_until_top_is_at(MetaWord* target_
   const size_t med_word_size = chunk_manager->medium_chunk_word_size();
 
   while (top() < target_top) {
-
     // We could make this coding more generic, but right now we only deal with two possible chunk sizes
     // for padding chunks, so it is not worth it.
     size_t padding_chunk_word_size = small_word_size;
@@ -244,7 +238,7 @@ Metachunk* VirtualSpaceNode::take_from_committed(size_t chunk_word_size) {
   // We only need to do this for small or medium chunks: specialized chunks are the
   // smallest size, hence always aligned. Homungous chunks are allocated unaligned
   // (implicitly, also aligned to smallest chunk size).
-  if ((chunk_word_size == med_word_size || chunk_word_size == small_word_size) && next_aligned > top())  {
+  if ((chunk_word_size == med_word_size || chunk_word_size == small_word_size) && next_aligned > top()) {
     allocate_padding_chunks_until_top_is_at(next_aligned);
   }
 
@@ -252,13 +246,6 @@ Metachunk* VirtualSpaceNode::take_from_committed(size_t chunk_word_size) {
   MetaWord* chunk_limit = top();
 
   if (!is_available(chunk_word_size)) {
-    LogTarget(Trace, gc, metaspace, freelist) lt;
-    if (lt.is_enabled()) {
-      LogStream ls(lt);
-      ls.print("VirtualSpaceNode::take_from_committed() not available " SIZE_FORMAT " words ", chunk_word_size);
-      // Dump some information about the virtual space that is nearly full
-      print_on(&ls);
-    }
     return NULL;
   }
 
@@ -301,7 +288,6 @@ Metachunk* VirtualSpaceNode::get_chunk_vs(size_t chunk_word_size) {
 }
 
 bool VirtualSpaceNode::initialize() {
-
   if (!_rs.is_reserved()) {
     return false;
   }

@@ -44,7 +44,6 @@ class ConcurrentHashTable : public CHeapObj<F> {
   // of InternalTable.
   class Bucket {
    private:
-
     // Embedded state in two low bits in first pointer is a spinlock with 3
     // states, unlocked, locked, redirect. You must never busy-spin on trylock()
     // or call lock() without _resize_lock, that would deadlock. Redirect can
@@ -328,18 +327,14 @@ class ConcurrentHashTable : public CHeapObj<F> {
   // guarantee that we only visit nodes once. To keep it simple caller will
   // have locked _resize_lock.
   template <typename EVALUATE_FUNC, typename DELETE_FUNC>
-  void do_bulk_delete_locked_for(Thread* thread, size_t start_idx,
-                                 size_t stop_idx, EVALUATE_FUNC& eval_f,
-                                 DELETE_FUNC& del_f, bool is_mt = false);
+  void do_bulk_delete_locked_for(Thread* thread, size_t start_idx, size_t stop_idx, EVALUATE_FUNC& eval_f, DELETE_FUNC& del_f, bool is_mt = false);
 
   // Method to delete one items.
   template <typename LOOKUP_FUNC>
   void delete_in_bucket(Thread* thread, Bucket* bucket, LOOKUP_FUNC& lookup_f);
 
  public:
-  ConcurrentHashTable(size_t log2size = DEFAULT_START_SIZE_LOG2,
-                      size_t log2size_limit = DEFAULT_MAX_SIZE_LOG2,
-                      size_t grow_hint = DEFAULT_GROW_HINT);
+  ConcurrentHashTable(size_t log2size = DEFAULT_START_SIZE_LOG2, size_t log2size_limit = DEFAULT_MAX_SIZE_LOG2, size_t grow_hint = DEFAULT_GROW_HINT);
 
   ~ConcurrentHashTable();
 
@@ -450,8 +445,7 @@ class ConcurrentHashTable : public CHeapObj<F> {
   // Writes statistics to the outputStream. Item sizes are calculated with
   // VALUE_SIZE_FUNC.
   template <typename VALUE_SIZE_FUNC>
-  void statistics_to(Thread* thread, VALUE_SIZE_FUNC& vs_f, outputStream* st,
-                     const char* table_name);
+  void statistics_to(Thread* thread, VALUE_SIZE_FUNC& vs_f, outputStream* st, const char* table_name);
 
   // Moves all nodes from this table to to_cht
   bool try_move_nodes_to(Thread* thread, ConcurrentHashTable<VALUE, CONFIG, F>* to_cht);

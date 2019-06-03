@@ -7,11 +7,9 @@
 #include "gc/shared/gcLocker.inline.hpp"
 #include "gc/shared/gcHeapSummary.hpp"
 #include "gc/shared/gcTrace.hpp"
-#include "gc/shared/gcTraceTime.inline.hpp"
 #include "gc/shared/gcWhen.hpp"
 #include "gc/shared/memAllocator.hpp"
 #include "gc/shared/vmGCOperations.hpp"
-#include "logging/log.hpp"
 #include "memory/metaspace.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/instanceMirrorKlass.hpp"
@@ -32,25 +30,6 @@ template <>
 void EventLogBase<GCMessage>::print(outputStream* st, GCMessage& m) {
   st->print_cr("GC heap %s", m.is_before ? "before" : "after");
   st->print_raw(m);
-}
-
-void GCHeapLog::log_heap(CollectedHeap* heap, bool before) {
-  if (!should_log()) {
-    return;
-  }
-
-  double timestamp = fetch_timestamp();
-  MutexLockerEx ml(&_mutex, Mutex::_no_safepoint_check_flag);
-  int index = compute_log_index();
-  _records[index].thread = NULL; // Its the GC thread so it's not that interesting.
-  _records[index].timestamp = timestamp;
-  _records[index].data.is_before = before;
-  stringStream st(_records[index].data.buffer(), _records[index].data.size());
-
-  st.print_cr("{Heap %s GC invocations=%u (full %u):", before ? "before" : "after", heap->total_collections(), heap->total_full_collections());
-
-  heap->print_on(&st);
-  st.print_cr("}");
 }
 
 VirtualSpaceSummary CollectedHeap::create_heap_space_summary() {
@@ -271,7 +250,6 @@ size_t CollectedHeap::filler_array_min_size() {
 }
 
 void CollectedHeap::fill_with_array(HeapWord* start, size_t words, bool zap) {
-
   const size_t payload_size = words - filler_array_hdr_size();
   const size_t len = payload_size * HeapWordSize / sizeof(jint);
 
@@ -280,7 +258,6 @@ void CollectedHeap::fill_with_array(HeapWord* start, size_t words, bool zap) {
 }
 
 void CollectedHeap::fill_with_object_impl(HeapWord* start, size_t words, bool zap) {
-
   if (words >= filler_array_min_size()) {
     fill_with_array(start, words, zap);
   } else if (words > 0) {
@@ -368,16 +345,7 @@ void CollectedHeap::resize_all_tlabs() {
   }
 }
 
-void CollectedHeap::full_gc_dump(GCTimer* timer, bool before) {
-  LogTarget(Trace, gc, classhisto) lt;
-  if (lt.is_enabled()) {
-    GCTraceTime(Trace, gc, classhisto) tm(before ? "Class Histogram (before full gc)" : "Class Histogram (after full gc)", timer);
-    ResourceMark rm;
-    LogStream ls(lt);
-    VM_GC_HeapInspection inspector(&ls, false /* ! full gc */);
-    inspector.doit();
-  }
-}
+void CollectedHeap::full_gc_dump(GCTimer* timer, bool before) { }
 
 void CollectedHeap::pre_full_gc_dump(GCTimer* timer) {
   full_gc_dump(timer, true);

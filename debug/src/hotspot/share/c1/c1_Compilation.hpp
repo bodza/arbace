@@ -44,7 +44,6 @@ class Compilation: public StackObj {
   AbstractCompiler*  _compiler;
   DirectiveSet*      _directive;
   ciEnv*             _env;
-  CompileLog*        _log;
   ciMethod*          _method;
   int                _osr_bci;
   IR*                _hir;
@@ -87,12 +86,10 @@ class Compilation: public StackObj {
   LinearScan* allocator()                          { return _allocator; }
   void        set_allocator(LinearScan* allocator) { _allocator = allocator; }
 
-  Instruction*       _current_instruction;       // the instruction currently being processed
+  Instruction* _current_instruction;       // the instruction currently being processed
 
  public:
-  // creation
-  Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* method,
-              int osr_bci, BufferBlob* buffer_blob, DirectiveSet* directive);
+  Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* method, int osr_bci, BufferBlob* buffer_blob, DirectiveSet* directive);
   ~Compilation();
 
   static Compilation* current() {
@@ -102,7 +99,6 @@ class Compilation: public StackObj {
   // accessors
   ciEnv* env() const                             { return _env; }
   DirectiveSet* directive() const                { return _directive; }
-  CompileLog* log() const                        { return _log; }
   AbstractCompiler* compiler() const             { return _compiler; }
   bool has_exception_handlers() const            { return _has_exception_handlers; }
   bool has_fpu_code() const                      { return _has_fpu_code; }
@@ -208,7 +204,7 @@ class Compilation: public StackObj {
 
   // will compilation make optimistic assumptions that might lead to
   // deoptimization and that the runtime will account for?
-  bool is_optimistic() const                             {
+  bool is_optimistic() const {
     return !TieredCompilation && (RangeCheckElimination || UseLoopInvariantCodeMotion) && method()->method_data()->trap_count(Deoptimization::Reason_none) == 0;
   }
 

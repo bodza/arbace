@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "logging/log.hpp"
 #include "memory/metaspace.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/os.hpp"
@@ -80,7 +79,6 @@ static bool try_merge_with(LinkedListNode<CommittedMemoryRegion>* node, LinkedLi
 }
 
 bool ReservedMemoryRegion::add_committed_region(address addr, size_t size, const NativeCallStack& stack) {
-
   // Find the region that fully precedes the [addr, addr + size) region.
   LinkedListNode<CommittedMemoryRegion>* prev = find_preceding_node_from(_committed_regions.head(), addr);
   LinkedListNode<CommittedMemoryRegion>* next = (prev != NULL ? prev->next() : _committed_regions.head());
@@ -130,7 +128,6 @@ bool ReservedMemoryRegion::add_committed_region(address addr, size_t size, const
 }
 
 bool ReservedMemoryRegion::remove_uncommitted_region(LinkedListNode<CommittedMemoryRegion>* node, address addr, size_t size) {
-
   CommittedMemoryRegion* rgn = node->data();
 
   if (rgn->base() == addr || rgn->end() == addr + size) {
@@ -156,7 +153,6 @@ bool ReservedMemoryRegion::remove_uncommitted_region(LinkedListNode<CommittedMem
 }
 
 bool ReservedMemoryRegion::remove_uncommitted_region(address addr, size_t sz) {
-
   CommittedMemoryRegion del_rgn(addr, sz, *call_stack());
   address end = addr + sz;
 
@@ -183,7 +179,6 @@ bool ReservedMemoryRegion::remove_uncommitted_region(address addr, size_t sz) {
 
     // Found addr in the current crgn. There are 2 subcases:
     if (crgn->contain_address(addr)) {
-
       // (1) Found addr+size in current crgn as well. (del_rgn is contained in crgn)
       if (crgn->contain_address(end - 1)) {
         VirtualMemorySummary::record_uncommitted_memory(sz, flag());
@@ -194,7 +189,6 @@ bool ReservedMemoryRegion::remove_uncommitted_region(address addr, size_t sz) {
         crgn->exclude_region(addr, size);
         VirtualMemorySummary::record_uncommitted_memory(size, flag());
       }
-
     } else if (crgn->contain_address(end - 1)) {
       // Found del_rgn's end, but not its base addr.
       size_t size = del_rgn.end() - crgn->base();
@@ -211,7 +205,6 @@ bool ReservedMemoryRegion::remove_uncommitted_region(address addr, size_t sz) {
 }
 
 void ReservedMemoryRegion::move_committed_regions(address addr, ReservedMemoryRegion& rgn) {
-
   // split committed regions
   LinkedListNode<CommittedMemoryRegion>* head = _committed_regions.head();
   LinkedListNode<CommittedMemoryRegion>* prev = NULL;
@@ -344,7 +337,6 @@ bool VirtualMemoryTracker::add_reserved_region(address base_addr, size_t size, c
 }
 
 void VirtualMemoryTracker::set_reserved_region_type(address addr, MEMFLAGS flag) {
-
   ReservedMemoryRegion   rgn(addr, 1);
   ReservedMemoryRegion*  reserved_rgn = _reserved_regions->find(rgn);
   if (reserved_rgn != NULL) {
@@ -355,7 +347,6 @@ void VirtualMemoryTracker::set_reserved_region_type(address addr, MEMFLAGS flag)
 }
 
 bool VirtualMemoryTracker::add_committed_region(address addr, size_t size, const NativeCallStack& stack) {
-
   ReservedMemoryRegion  rgn(addr, size);
   ReservedMemoryRegion* reserved_rgn = _reserved_regions->find(rgn);
 
@@ -364,7 +355,6 @@ bool VirtualMemoryTracker::add_committed_region(address addr, size_t size, const
 }
 
 bool VirtualMemoryTracker::remove_uncommitted_region(address addr, size_t size) {
-
   ReservedMemoryRegion  rgn(addr, size);
   ReservedMemoryRegion* reserved_rgn = _reserved_regions->find(rgn);
   bool result = reserved_rgn->remove_uncommitted_region(addr, size);
@@ -372,7 +362,6 @@ bool VirtualMemoryTracker::remove_uncommitted_region(address addr, size_t size) 
 }
 
 bool VirtualMemoryTracker::remove_released_region(address addr, size_t size) {
-
   ReservedMemoryRegion  rgn(addr, size);
   ReservedMemoryRegion* reserved_rgn = _reserved_regions->find(rgn);
 
@@ -438,7 +427,6 @@ bool RegionIterator::next_committed(address& committed_start, size_t& committed_
 
   const size_t page_sz = os::vm_page_size();
   if (os::committed_in_range(_current_start, _current_size, committed_start, committed_size)) {
-
     size_t remaining_size = (_current_start + _current_size) - (committed_start + committed_size);
     _current_start = committed_start + committed_size;
     _current_size = remaining_size;

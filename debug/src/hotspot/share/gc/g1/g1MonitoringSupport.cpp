@@ -62,7 +62,6 @@ G1MonitoringSupport::G1MonitoringSupport(G1CollectedHeap* g1h) :
   _eden_committed(0),       _eden_used(0),
   _survivor_committed(0),   _survivor_used(0),
   _old_committed(0),        _old_used(0) {
-
   _overall_reserved = g1h->max_capacity();
   recalculate_sizes();
 

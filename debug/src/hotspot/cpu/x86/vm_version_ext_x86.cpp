@@ -80,7 +80,6 @@ static getCPUIDBrandString_stub_t getCPUIDBrandString_stub = NULL;
 
 class VM_Version_Ext_StubGenerator: public StubCodeGenerator {
  public:
-
   VM_Version_Ext_StubGenerator(CodeBuffer *c) : StubCodeGenerator(c) { }
 
   address generate_getCPUIDBrandString(void) {
@@ -316,7 +315,6 @@ bool VM_Version_Ext::supports_tscinv_ext(void) {
 }
 
 void VM_Version_Ext::resolve_cpu_information_details(void) {
-
   // in future we want to base this information on proper cpu
   // and cache topology enumeration such as:
   // Intel 64 Architecture Processor Topology Enumeration
@@ -383,7 +381,6 @@ const char* VM_Version_Ext::cpu_family_description(void) {
 }
 
 int VM_Version_Ext::cpu_type_description(char* const buf, size_t buf_len) {
-
   const char* cpu_type = NULL;
   const char* x64 = NULL;
 
@@ -415,7 +412,6 @@ int VM_Version_Ext::cpu_type_description(char* const buf, size_t buf_len) {
 }
 
 int VM_Version_Ext::cpu_extended_brand_string(char* const buf, size_t buf_len) {
-
   // invoke newly generated asm code to fetch CPU Brand String
   getCPUIDBrandString_stub(&_cpuid_info);
 
@@ -498,7 +494,6 @@ size_t VM_Version_Ext::cpu_write_support_string(char* const buf, size_t buf_len)
  * feature set.
  */
 int VM_Version_Ext::cpu_detailed_description(char* const buf, size_t buf_len) {
-
   static const char* unknown = "<unknown>";
   char               vendor_id[VENDOR_LENGTH];
   const char*        family = NULL;

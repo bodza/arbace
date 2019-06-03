@@ -7,7 +7,6 @@ enum /* platform_dependent_constants */ {
 };
 
 public:
-
   static void load_klass_from_Class(MacroAssembler* _masm, Register klass_reg);
 
   static void verify_klass(MacroAssembler* _masm, Register obj, SystemDictionary::WKID klass_id, const char* error_message = "wrong klass") { };

@@ -3,8 +3,6 @@
 #include "classfile/javaClasses.hpp"
 #include "classfile/javaClasses.inline.hpp"
 #include "classfile/vmSymbols.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/oopFactory.hpp"
 #include "oops/oop.inline.hpp"
 #include "oops/objArrayOop.inline.hpp"
@@ -90,27 +88,11 @@ int StackWalk::fill_in_frames(jlong mode, BaseFrameStream& stream, int max_nfram
     // not set) and when StackWalker::getCallerClass is called
     if (!ShowHiddenFrames && (skip_hidden_frames(mode) || get_caller_class(mode))) {
       if (method->is_hidden()) {
-        LogTarget(Debug, stackwalk) lt;
-        if (lt.is_enabled()) {
-          ResourceMark rm(THREAD);
-          LogStream ls(lt);
-          ls.print("  hidden method: ");
-          method->print_short_name(&ls);
-          ls.cr();
-        }
         continue;
       }
     }
 
     int index = end_index++;
-    LogTarget(Debug, stackwalk) lt;
-    if (lt.is_enabled()) {
-      ResourceMark rm(THREAD);
-      LogStream ls(lt);
-      ls.print("  %d: frame method: ", index);
-      method->print_short_name(&ls);
-      ls.print_cr(" bci=%d", stream.bci());
-    }
 
     if (!need_method_info(mode) && get_caller_class(mode) && index == start_index && method->caller_sensitive()) {
       ResourceMark rm(THREAD);
@@ -294,18 +276,14 @@ oop StackWalk::walk(Handle stackStream, jlong mode,
   if (live_frame_info(mode)) {
     RegisterMap regMap(jt, true);
     LiveFrameStream stream(jt, &regMap);
-    return fetchFirstBatch(stream, stackStream, mode, skip_frames, frame_count,
-                           start_index, frames_array, THREAD);
+    return fetchFirstBatch(stream, stackStream, mode, skip_frames, frame_count, start_index, frames_array, THREAD);
   } else {
     JavaFrameStream stream(jt, mode);
-    return fetchFirstBatch(stream, stackStream, mode, skip_frames, frame_count,
-                           start_index, frames_array, THREAD);
+    return fetchFirstBatch(stream, stackStream, mode, skip_frames, frame_count, start_index, frames_array, THREAD);
   }
 }
 
-oop StackWalk::fetchFirstBatch(BaseFrameStream& stream, Handle stackStream,
-                               jlong mode, int skip_frames, int frame_count,
-                               int start_index, objArrayHandle frames_array, TRAPS) {
+oop StackWalk::fetchFirstBatch(BaseFrameStream& stream, Handle stackStream, jlong mode, int skip_frames, int frame_count, int start_index, objArrayHandle frames_array, TRAPS) {
   methodHandle m_doStackWalk(THREAD, Universe::do_stack_walk_method());
 
   {
@@ -313,40 +291,22 @@ oop StackWalk::fetchFirstBatch(BaseFrameStream& stream, Handle stackStream,
     Klass* abstractStackWalker_klass = SystemDictionary::AbstractStackWalker_klass();
     while (!stream.at_end()) {
       InstanceKlass* ik = stream.method()->method_holder();
-      if (ik != stackWalker_klass && ik != abstractStackWalker_klass && ik->super() != abstractStackWalker_klass)  {
+      if (ik != stackWalker_klass && ik != abstractStackWalker_klass && ik->super() != abstractStackWalker_klass) {
         break;
-      }
-
-      LogTarget(Debug, stackwalk) lt;
-      if (lt.is_enabled()) {
-        ResourceMark rm(THREAD);
-        LogStream ls(lt);
-        ls.print("  skip ");
-        stream.method()->print_short_name(&ls);
-        ls.cr();
       }
       stream.next();
     }
 
     // stack frame has been traversed individually and resume stack walk
     // from the stack frame at depth == skip_frames.
-    for (int n=0; n < skip_frames && !stream.at_end(); stream.next(), n++) {
-      LogTarget(Debug, stackwalk) lt;
-      if (lt.is_enabled()) {
-        ResourceMark rm(THREAD);
-        LogStream ls(lt);
-        ls.print("  skip ");
-        stream.method()->print_short_name(&ls);
-        ls.cr();
-      }
+    for (int n = 0; n < skip_frames && !stream.at_end(); stream.next(), n++) {
     }
   }
 
   int end_index = start_index;
   int numFrames = 0;
   if (!stream.at_end()) {
-    numFrames = fill_in_frames(mode, stream, frame_count, start_index,
-                               frames_array, end_index, CHECK_NULL);
+    numFrames = fill_in_frames(mode, stream, frame_count, start_index, frames_array, end_index, CHECK_NULL);
     if (numFrames < 1) {
       THROW_MSG_(vmSymbols::java_lang_InternalError(), "stack walk: decode failed", NULL);
     }

@@ -117,7 +117,6 @@ void InlineCacheBuffer_init() {
 }
 
 void InlineCacheBuffer::create_transition_stub(CompiledIC *ic, void* cached_value, address entry) {
-
   // If an transition stub is already associate with the inline cache, then we remove the association.
   if (ic->is_in_transition_state()) {
     ICStub* old_stub = ICStub_from_destination_address(ic->stub_address());

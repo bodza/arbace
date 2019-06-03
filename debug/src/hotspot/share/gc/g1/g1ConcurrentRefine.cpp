@@ -3,7 +3,6 @@
 #include "gc/g1/g1BarrierSet.hpp"
 #include "gc/g1/g1ConcurrentRefine.hpp"
 #include "gc/g1/g1ConcurrentRefineThread.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "runtime/java.hpp"
 #include "runtime/thread.hpp"
@@ -109,11 +108,9 @@ void G1ConcurrentRefineThreadControl::stop() {
 //   MIN2(x OP y, max_XXX_zone)
 // without needing to check for overflow in "x OP y", because the
 // ranges for x and y have been restricted.
-STATIC_ASSERT(sizeof(jint) <= (sizeof(size_t)/2));
 const size_t max_yellow_zone = max_jint;
 const size_t max_green_zone = max_yellow_zone / 2;
 const size_t max_red_zone = INT_MAX; // For dcqs.set_max_completed_queue.
-STATIC_ASSERT(max_yellow_zone <= max_red_zone);
 
 // Package for pair of refinement thread activation and deactivation
 // thresholds.  The activation and deactivation levels are resp. the first
@@ -272,7 +269,6 @@ void G1ConcurrentRefine::adjust(double update_rs_time, size_t update_rs_processe
       dcqs.set_process_completed_threshold(INT_MAX);
     } else {
       // Worker 0 is the primary; wakeup is via dcqs notification.
-      STATIC_ASSERT(max_yellow_zone <= INT_MAX);
       size_t activate = activation_threshold(0);
       dcqs.set_process_completed_threshold((int)activate);
     }

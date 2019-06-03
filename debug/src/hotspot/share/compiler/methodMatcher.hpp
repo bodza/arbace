@@ -48,7 +48,6 @@ class BasicMatcher : public MethodMatcher {
 private:
   BasicMatcher* _next;
 public:
-
   BasicMatcher() : MethodMatcher(),
     _next(NULL) {
   }

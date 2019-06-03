@@ -89,8 +89,7 @@ public:
 
   // Refine the card corresponding to "card_ptr". Safe to be called concurrently
   // to the mutator.
-  void refine_card_concurrently(jbyte* card_ptr,
-                                uint worker_i);
+  void refine_card_concurrently(jbyte* card_ptr, uint worker_i);
 
   // Refine the card corresponding to "card_ptr", applying the given closure to
   // all references found. Must only be called during gc.

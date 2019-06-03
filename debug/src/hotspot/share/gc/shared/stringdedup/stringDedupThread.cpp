@@ -7,7 +7,6 @@
 #include "gc/shared/stringdedup/stringDedupTable.hpp"
 #include "gc/shared/stringdedup/stringDedupThread.hpp"
 #include "gc/shared/suspendibleThreadSet.hpp"
-#include "logging/log.hpp"
 #include "oops/access.inline.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/atomic.hpp"

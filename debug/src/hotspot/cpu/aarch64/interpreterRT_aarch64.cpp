@@ -136,7 +136,6 @@ void InterpreterRuntime::SignatureHandlerGenerator::pass_double() {
 }
 
 void InterpreterRuntime::SignatureHandlerGenerator::pass_object() {
-
   switch (_num_int_args) {
   case 0:
     __ add(c_rarg1, from(), Interpreter::local_offset_in_bytes(offset()));

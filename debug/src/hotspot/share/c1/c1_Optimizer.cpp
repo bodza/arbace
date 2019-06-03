@@ -7,7 +7,6 @@
 #include "c1/c1_ValueStack.hpp"
 #include "memory/resourceArea.hpp"
 #include "utilities/bitMap.inline.hpp"
-#include "compiler/compileLog.hpp"
 
 typedef GrowableArray<ValueSet*> ValueSetList;
 
@@ -18,8 +17,8 @@ Optimizer::Optimizer(IR* ir) {
 class CE_Eliminator: public BlockClosure {
  private:
   IR* _hir;
-  int _cee_count;                                // the number of CEs successfully eliminated
-  int _ifop_count;                               // the number of IfOps successfully simplified
+  int _cee_count;  // the number of CEs successfully eliminated
+  int _ifop_count; // the number of IfOps successfully simplified
   int _has_substitution;
 
  public:
@@ -30,20 +29,12 @@ class CE_Eliminator: public BlockClosure {
       // substituted some ifops/phis, so resolve the substitution
       SubstitutionResolver sr(_hir);
     }
-
-    CompileLog* log = _hir->compilation()->log();
-    if (log != NULL)
-      log->set_context("optimize name='cee'");
   }
 
-  ~CE_Eliminator() {
-    CompileLog* log = _hir->compilation()->log();
-    if (log != NULL)
-      log->clear_context(); // skip marker if nothing was printed
-  }
+  ~CE_Eliminator() { }
 
-  int cee_count() const                          { return _cee_count; }
-  int ifop_count() const                         { return _ifop_count; }
+  int cee_count() const  { return _cee_count; }
+  int ifop_count() const { return _ifop_count; }
 
   void adjust_exception_edges(BlockBegin* block, BlockBegin* sux) {
     int e = sux->number_of_exception_handlers();
@@ -277,21 +268,11 @@ class BlockMerger: public BlockClosure {
   int _merge_count;              // the number of block pairs successfully merged
 
  public:
-  BlockMerger(IR* hir)
-  : _hir(hir)
-  , _merge_count(0)
-  {
+  BlockMerger(IR* hir) : _hir(hir) , _merge_count(0) {
     _hir->iterate_preorder(this);
-    CompileLog* log = _hir->compilation()->log();
-    if (log != NULL)
-      log->set_context("optimize name='eliminate_blocks'");
   }
 
-  ~BlockMerger() {
-    CompileLog* log = _hir->compilation()->log();
-    if (log != NULL)
-      log->clear_context(); // skip marker if nothing was printed
-  }
+  ~BlockMerger() { }
 
   bool try_merge(BlockBegin* block) {
     BlockEnd* end = block->end();
@@ -525,16 +506,9 @@ class NullCheckEliminator: public ValueVisitor {
     , _work_list(new BlockList()) {
     _visitable_instructions = new ValueSet();
     _visitor.set_eliminator(this);
-    CompileLog* log = _opt->ir()->compilation()->log();
-    if (log != NULL)
-      log->set_context("optimize name='null_check_elimination'");
   }
 
-  ~NullCheckEliminator() {
-    CompileLog* log = _opt->ir()->compilation()->log();
-    if (log != NULL)
-      log->clear_context(); // skip marker if nothing was printed
-  }
+  ~NullCheckEliminator() { }
 
   Optimizer*  opt()                               { return _opt; }
   IR*         ir ()                               { return opt()->ir(); }
@@ -553,9 +527,7 @@ class NullCheckEliminator: public ValueVisitor {
   // throwing instruction, as well as in some other cases.
   void        set_last_explicit_null_check(NullCheck* check) { _last_explicit_null_check = check; }
   NullCheck*  last_explicit_null_check()                     { return _last_explicit_null_check; }
-  Value       last_explicit_null_check_obj()                 { return (_last_explicit_null_check
-                                                                         ? _last_explicit_null_check->obj()
-                                                                         : NULL); }
+  Value       last_explicit_null_check_obj()                 { return (_last_explicit_null_check ? _last_explicit_null_check->obj() : NULL); }
   NullCheck*  consume_last_explicit_null_check() {
     _last_explicit_null_check->unpin(Instruction::PinExplicitNullCheck);
     _last_explicit_null_check->set_can_trap(false);

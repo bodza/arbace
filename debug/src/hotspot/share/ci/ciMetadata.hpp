@@ -38,36 +38,16 @@ class ciMetadata: public ciBaseObject {
   virtual bool is_type_array_klass() const  { return false; }
   virtual void dump_replay_data(outputStream* st) { /* do nothing */ }
 
-  ciMethod*                as_method() {
-    return (ciMethod*)this;
-  }
-  ciMethodData*            as_method_data() {
-    return (ciMethodData*)this;
-  }
-  ciSymbol*                as_symbol() {
-    return (ciSymbol*)this;
-  }
-  ciType*                  as_type() {
-    return (ciType*)this;
-  }
-  ciReturnAddress*         as_return_address() {
-    return (ciReturnAddress*)this;
-  }
-  ciKlass*                 as_klass() {
-    return (ciKlass*)this;
-  }
-  ciInstanceKlass*         as_instance_klass() {
-    return (ciInstanceKlass*)this;
-  }
-  ciArrayKlass*            as_array_klass() {
-    return (ciArrayKlass*)this;
-  }
-  ciObjArrayKlass*         as_obj_array_klass() {
-    return (ciObjArrayKlass*)this;
-  }
-  ciTypeArrayKlass*        as_type_array_klass() {
-    return (ciTypeArrayKlass*)this;
-  }
+  ciMethod*         as_method()           { return (ciMethod*)this; }
+  ciMethodData*     as_method_data()      { return (ciMethodData*)this; }
+  ciSymbol*         as_symbol()           { return (ciSymbol*)this; }
+  ciType*           as_type()             { return (ciType*)this; }
+  ciReturnAddress*  as_return_address()   { return (ciReturnAddress*)this; }
+  ciKlass*          as_klass()            { return (ciKlass*)this; }
+  ciInstanceKlass*  as_instance_klass()   { return (ciInstanceKlass*)this; }
+  ciArrayKlass*     as_array_klass()      { return (ciArrayKlass*)this; }
+  ciObjArrayKlass*  as_obj_array_klass()  { return (ciObjArrayKlass*)this; }
+  ciTypeArrayKlass* as_type_array_klass() { return (ciTypeArrayKlass*)this; }
 
   Metadata* constant_encoding() { return _metadata; }
 

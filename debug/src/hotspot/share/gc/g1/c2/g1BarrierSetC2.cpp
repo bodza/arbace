@@ -78,9 +78,7 @@ bool G1BarrierSetC2::g1_can_remove_pre_barrier(GraphKit* kit, PhaseTransform* ph
   Node* mem = kit->memory(adr_idx); // start searching here...
 
   for (int cnt = 0; cnt < 50; cnt++) {
-
     if (mem->is_Store()) {
-
       Node* st_adr = mem->in(MemNode::Address);
       intptr_t st_offset = 0;
       Node* st_base = AddPNode::Ideal_base_and_offset(st_adr, phase, st_offset);
@@ -113,7 +111,6 @@ bool G1BarrierSetC2::g1_can_remove_pre_barrier(GraphKit* kit, PhaseTransform* ph
         continue; // advance through independent store memory
       }
     } else if (mem->is_Proj() && mem->in(0)->is_Initialize()) {
-
       InitializeNode* st_init = mem->in(0)->as_Initialize();
       AllocateNode* st_alloc = st_init->allocation();
 
@@ -148,7 +145,6 @@ void G1BarrierSetC2::pre_barrier(GraphKit* kit, bool do_load, Node* ctl, Node* o
     if (use_ReduceInitialCardMarks() && g1_can_remove_pre_barrier(kit, &kit->gvn(), adr, bt, alias_idx)) {
       return;
     }
-
   } else {
     // In this case both val_type and alias_idx are unused.
     // Nothing to be done if pre_val is null.
@@ -198,7 +194,6 @@ void G1BarrierSetC2::pre_barrier(GraphKit* kit, bool do_load, Node* ctl, Node* o
 
       // is the queue for this thread full?
       __ if_then(index, BoolTest::ne, zeroX, likely); {
-
         // decrement the index
         Node* next_index = kit->gvn().transform(new SubXNode(index, __ ConX(sizeof(intptr_t))));
 
@@ -207,9 +202,7 @@ void G1BarrierSetC2::pre_barrier(GraphKit* kit, bool do_load, Node* ctl, Node* o
         __ store(__ ctrl(), log_addr, pre_val, T_OBJECT, Compile::AliasIdxRaw, MemNode::unordered);
         // update the index
         __ store(__ ctrl(), index_adr, next_index, index_bt, Compile::AliasIdxRaw, MemNode::unordered);
-
       } __ else_(); {
-
         // logging buffer is full, call the runtime
         const TypeFunc *tf = write_ref_field_pre_entry_Type();
         __ make_leaf_call(tf, CAST_FROM_FN_PTR(address, G1BarrierSetRuntime::write_ref_field_pre_entry), "write_ref_field_pre_entry", pre_val, tls);
@@ -266,7 +259,6 @@ bool G1BarrierSetC2::g1_can_remove_post_barrier(GraphKit* kit, PhaseTransform* p
   // Start search from Store node
   Node* mem = store->in(MemNode::Control);
   if (mem->is_Proj() && mem->in(0)->is_Initialize()) {
-
     InitializeNode* st_init = mem->in(0)->as_Initialize();
     AllocateNode*  st_alloc = st_init->allocation();
 
@@ -292,14 +284,12 @@ void G1BarrierSetC2::g1_mark_card(GraphKit* kit, IdealKit& ideal, Node* card_adr
 
   //  Now do the queue work
   __ if_then(index, BoolTest::ne, zeroX); {
-
     Node* next_index = kit->gvn().transform(new SubXNode(index, __ ConX(sizeof(intptr_t))));
     Node* log_addr = __ AddP(no_base, buffer, next_index);
 
     // Order, see storeCM.
     __ store(__ ctrl(), log_addr, card_adr, T_ADDRESS, Compile::AliasIdxRaw, MemNode::unordered);
     __ store(__ ctrl(), index_adr, next_index, TypeX_X->basic_type(), Compile::AliasIdxRaw, MemNode::unordered);
-
   } __ else_(); {
     __ make_leaf_call(tf, CAST_FROM_FN_PTR(address, G1BarrierSetRuntime::write_ref_field_post_entry), "write_ref_field_post_entry", card_adr, __ thread());
   } __ end_if();
@@ -383,10 +373,8 @@ void G1BarrierSetC2::post_barrier(GraphKit* kit, Node* ctl, Node* oop_store, Nod
 
     // if (xor_res == 0) same region so skip
     __ if_then(xor_res, BoolTest::ne, zeroX); {
-
       // No barrier if we are storing a NULL
       __ if_then(val, BoolTest::ne, kit->null(), unlikely); {
-
         // Ok must mark the card if not already dirty
 
         // load the original value of the card
@@ -485,7 +473,6 @@ void G1BarrierSetC2::insert_pre_barrier(GraphKit* kit, Node* base_oop, Node* off
       Node* one = __ ConI(1);
       // is_instof == 0 if base_oop == NULL
       __ if_then(is_instof, BoolTest::eq, one, unlikely); {
-
         // Update graphKit from IdeakKit.
         kit->sync_kit(ideal);
 
@@ -502,7 +489,6 @@ void G1BarrierSetC2::insert_pre_barrier(GraphKit* kit, Node* base_oop, Node* off
         }
         // Update IdealKit from graphKit.
         __ sync_kit(kit);
-
       } __ end_if(); // _ref_type != ref_none
   } __ end_if(); // offset == referent_offset
 

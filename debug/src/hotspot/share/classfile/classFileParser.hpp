@@ -26,7 +26,6 @@ class TempNewSymbol;
 // The bytes describing the class file structure is read from a Stream object
 
 class ClassFileParser {
-
  class ClassAnnotationCollector;
  class FieldAllocationCount;
  class FieldAnnotationCollector;
@@ -170,7 +169,7 @@ class ClassFileParser {
   // Interface parsing
   void parse_interfaces(const ClassFileStream* const stream, const int itfs_len, ConstantPool* const cp, bool* has_nonstatic_concrete_methods, TRAPS);
 
-  const InstanceKlass* parse_super_class(ConstantPool* const cp, const int super_class_index, const bool need_verify, TRAPS);
+  const InstanceKlass* parse_super_class(ConstantPool* const cp, const int super_class_index, TRAPS);
 
   // Field parsing
   void parse_field_attributes(const ClassFileStream* const cfs,
@@ -222,13 +221,7 @@ class ClassFileParser {
                                             u4 method_attribute_length,
                                             TRAPS);
 
-  void parse_type_array(u2 array_length,
-                        u4 code_length,
-                        u4* const u1_index,
-                        u4* const u2_index,
-                        u1* const u1_array,
-                        u2* const u2_array,
-                        TRAPS);
+  void parse_type_array(u2 array_length, u4 code_length, u4* const u1_index, u4* const u2_index, u1* const u1_array, u2* const u2_array, TRAPS);
 
   // Classfile attribute parsing
   u2 parse_generic_signature_attribute(const ClassFileStream* const cfs, TRAPS);
@@ -330,11 +323,7 @@ class ClassFileParser {
                                TRAPS);
 
   // lays out fields in class and returns the total oopmap count
-  void layout_fields(ConstantPool* cp,
-                     const FieldAllocationCount* fac,
-                     const ClassAnnotationCollector* parsed_annotations,
-                     FieldLayoutInfo* info,
-                     TRAPS);
+  void layout_fields(ConstantPool* cp, const FieldAllocationCount* fac, const ClassAnnotationCollector* parsed_annotations, FieldLayoutInfo* info, TRAPS);
 
  public:
   ClassFileParser(ClassFileStream* stream,

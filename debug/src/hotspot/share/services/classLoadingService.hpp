@@ -1,7 +1,6 @@
 #ifndef SHARE_VM_SERVICES_CLASSLOADINGSERVICE_HPP
 #define SHARE_VM_SERVICES_CLASSLOADINGSERVICE_HPP
 
-#include "logging/log.hpp"
 #include "runtime/handles.hpp"
 #include "runtime/perfData.hpp"
 #include "utilities/growableArray.hpp"

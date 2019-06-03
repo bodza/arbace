@@ -35,7 +35,7 @@ public:
   VectorSet(const VectorSet &s) : Set(s._set_arena) { slamin(s); } // Set clone; deep-copy guts
   Set &operator =(const Set &s);                // Set clone; deep-copy guts
   VectorSet &operator =(const VectorSet &s)     // Set clone; deep-copy guts
-  { if( &s != this ) { slamin(s); } return *this; }
+  { if ( &s != this ) { slamin(s); } return *this; }
   ~VectorSet() { }
   Set &clone(void) const { return *(new VectorSet(*this)); }
 
@@ -88,10 +88,10 @@ public:
   uint32_t* EXPOSE() const { return data; }
 
   // Fast inlined "test and set".  Replaces the idiom:
-  //     if( visited[idx] ) return;
+  //     if ( visited[idx] ) return;
   //     visited <<= idx;
   // With:
-  //     if( visited.test_set(idx)) return;
+  //     if ( visited.test_set(idx)) return;
   //
   int test_set( uint elem ) {
     uint word = elem >> 5;           // Get the longword offset
@@ -134,7 +134,7 @@ private:
 // Loop thru all elements of the set, setting "elem" to the element numbers
 // in random order.  Inserted or deleted elements during this operation may
 // or may not be iterated over; untouched elements will be affected once.
-// Usage:  for( VectorSetI i(s); i.test(); i++ ) { body = i.elem; }
+// Usage:  for ( VectorSetI i(s); i.test(); i++ ) { body = i.elem; }
 
 class VectorSetI : public StackObj {
   friend class VectorSet;

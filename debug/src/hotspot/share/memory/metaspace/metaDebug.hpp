@@ -4,13 +4,11 @@
 #include "memory/allocation.hpp"
 
 namespace metaspace {
-
 class Metadebug : AllStatic {
   // Debugging support for Metaspaces
   static int _allocation_fail_alot_count;
 
  public:
-
   static void init_allocation_fail_alot_count();
 };
 }

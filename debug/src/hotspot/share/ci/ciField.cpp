@@ -224,7 +224,7 @@ void ciField::initialize_from(fieldDescriptor* fd) {
       // java.lang.System.out, and java.lang.System.err.
       if (k == SystemDictionary::System_klass()) {
         // Check offsets for case 2: System.in, System.out, or System.err
-        if (_offset == java_lang_System::in_offset_in_bytes()  || _offset == java_lang_System::out_offset_in_bytes() || _offset == java_lang_System::err_offset_in_bytes()) {
+        if (_offset == java_lang_System::in_offset_in_bytes() || _offset == java_lang_System::out_offset_in_bytes() || _offset == java_lang_System::err_offset_in_bytes()) {
           _is_constant = false;
           return;
         }

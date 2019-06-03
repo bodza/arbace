@@ -20,15 +20,13 @@ JVMCI_FLAGS(MATERIALIZE_DEVELOPER_FLAG, \
 
 // Return true if jvmci flags are consistent.
 bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
-
 #define JVMCI_FLAG_CHECKED(name)
 
   // Checks that a given flag is not set if a given guard flag is false.
 #define CHECK_NOT_SET(FLAG, GUARD) \
   JVMCI_FLAG_CHECKED(FLAG) \
   if (!GUARD && !FLAG_IS_DEFAULT(FLAG)) { \
-    jio_fprintf(defaultStream::error_stream(), \
-        "Improperly specified VM option '%s': '%s' must be enabled\n", #FLAG, #GUARD); \
+    jio_fprintf(defaultStream::error_stream(), "Improperly specified VM option '%s': '%s' must be enabled\n", #FLAG, #GUARD); \
     return false; \
   }
 

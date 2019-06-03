@@ -10,7 +10,6 @@ class StackValue : public ResourceObj {
   intptr_t  _integer_value; // Blank java stack slot value
   Handle    _handle_value;  // Java stack slot value interpreted as a Handle
  public:
-
   StackValue(intptr_t value) {
     _type              = T_INT;
     _integer_value     = value;

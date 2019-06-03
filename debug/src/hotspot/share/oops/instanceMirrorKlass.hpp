@@ -88,7 +88,6 @@ class InstanceMirrorKlass: public InstanceKlass {
   inline void oop_oop_iterate_bounded(oop obj, OopClosureType* closure, MemRegion mr);
 
  private:
-
   // Iterate over the static fields.
   template <typename T, class OopClosureType>
   inline void oop_oop_iterate_statics_bounded(oop obj, OopClosureType* closure, MemRegion mr);

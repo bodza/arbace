@@ -26,11 +26,11 @@ public:
 
   // Longs are stored in native format in one JavaCallArgument slot at
   // *(to+1).
-  static inline void put_long(jlong  from, intptr_t *to) {
+  static inline void put_long(jlong from, intptr_t *to) {
     *(jlong*) (to + 1) = from;
   }
 
-  static inline void put_long(jlong  from, intptr_t *to, int& pos) {
+  static inline void put_long(jlong from, intptr_t *to, int& pos) {
     *(jlong*) (to + 1 + pos) = from;
     pos += 2;
   }
@@ -54,11 +54,11 @@ public:
 #define _JNI_SLOT_OFFSET 1
   // Doubles are stored in native word format in one JavaCallArgument
   // slot at *(to+1).
-  static inline void put_double(jdouble  from, intptr_t *to) {
+  static inline void put_double(jdouble from, intptr_t *to) {
     *(jdouble*) (to + 1) = from;
   }
 
-  static inline void put_double(jdouble  from, intptr_t *to, int& pos) {
+  static inline void put_double(jdouble from, intptr_t *to, int& pos) {
     *(jdouble*) (to + 1 + pos) = from;
     pos += 2;
   }

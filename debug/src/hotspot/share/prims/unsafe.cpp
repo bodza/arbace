@@ -402,7 +402,6 @@ UNSAFE_LEAF(jint, Unsafe_PageSize()) {
 } UNSAFE_END
 
 static jlong find_field_offset(jclass clazz, jstring name, TRAPS) {
-
   ResourceMark rm(THREAD);
   char *utf_name = java_lang_String::as_utf8_string(JNIHandles::resolve_non_null(name));
 
@@ -423,7 +422,6 @@ static jlong find_field_offset(jclass clazz, jstring name, TRAPS) {
 }
 
 static jlong find_field_offset(jobject field, int must_be_static, TRAPS) {
-
   oop reflected   = JNIHandles::resolve_non_null(field);
   oop mirror      = java_lang_reflect_Field::clazz(reflected);
   Klass* k        = java_lang_Class::as_Klass(mirror);
@@ -454,7 +452,6 @@ UNSAFE_ENTRY(jlong, Unsafe_StaticFieldOffset0(JNIEnv *env, jobject unsafe, jobje
 } UNSAFE_END
 
 UNSAFE_ENTRY(jobject, Unsafe_StaticFieldBase0(JNIEnv *env, jobject unsafe, jobject field)) {
-
   // Note:  In this VM implementation, a field address is always a short
   // offset from the base of a a klass metaobject.  Thus, the full dynamic
   // range of the return type is never used.  However, some implementations
@@ -475,7 +472,6 @@ UNSAFE_ENTRY(jobject, Unsafe_StaticFieldBase0(JNIEnv *env, jobject unsafe, jobje
 } UNSAFE_END
 
 UNSAFE_ENTRY(void, Unsafe_EnsureClassInitialized0(JNIEnv *env, jobject unsafe, jobject clazz)) {
-
   oop mirror = JNIHandles::resolve_non_null(clazz);
 
   Klass* klass = java_lang_Class::as_Klass(mirror);
@@ -487,7 +483,6 @@ UNSAFE_ENTRY(void, Unsafe_EnsureClassInitialized0(JNIEnv *env, jobject unsafe, j
 UNSAFE_END
 
 UNSAFE_ENTRY(jboolean, Unsafe_ShouldBeInitialized0(JNIEnv *env, jobject unsafe, jobject clazz)) {
-
   oop mirror = JNIHandles::resolve_non_null(clazz);
   Klass* klass = java_lang_Class::as_Klass(mirror);
 
@@ -500,7 +495,6 @@ UNSAFE_ENTRY(jboolean, Unsafe_ShouldBeInitialized0(JNIEnv *env, jobject unsafe, 
 UNSAFE_END
 
 static void getBaseAndScale(int& base, int& scale, jclass clazz, TRAPS) {
-
   oop mirror = JNIHandles::resolve_non_null(clazz);
   Klass* k = java_lang_Class::as_Klass(mirror);
 
@@ -673,7 +667,6 @@ UNSAFE_ENTRY(jclass, Unsafe_DefineClass0(JNIEnv *env, jobject unsafe, jstring na
 
 static InstanceKlass*
 Unsafe_DefineAnonymousClass_impl(JNIEnv *env, jclass host_class, jbyteArray data, jobjectArray cp_patches_jh, u1** temp_alloc, TRAPS) {
-
   if (UsePerfData) {
     ClassLoader::unsafe_defineClassCallCounter()->inc();
   }

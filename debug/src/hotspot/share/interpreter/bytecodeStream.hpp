@@ -48,7 +48,7 @@ class BaseBytecodeStream: StackObj {
     _next_bci = beg_bci;
     _end_bci  = end_bci;
   }
-  void set_start   (int beg_bci) {
+  void set_start (int beg_bci) {
     set_interval(beg_bci, _method->code_size());
   }
 

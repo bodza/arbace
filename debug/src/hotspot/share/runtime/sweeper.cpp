@@ -5,8 +5,6 @@
 #include "code/icBuffer.hpp"
 #include "code/nmethod.hpp"
 #include "compiler/compileBroker.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/method.hpp"
@@ -121,7 +119,6 @@ CodeBlobClosure* NMethodSweeper::prepare_mark_active_nmethods() {
     _total_time_this_sweep = Tickspan();
 
     return &mark_activation_closure;
-
   } else {
     // Only set hotness counter
     return &set_hotness_closure;
@@ -367,11 +364,6 @@ void NMethodSweeper::sweep_code_cache() {
     post_sweep_event(&event, sweep_start_counter, sweep_end_counter, (s4)_traversals, swept_count, flushed_count, zombified_count);
   }
 
-  Log(codecache, sweep) log;
-  if (log.is_debug()) {
-    LogStream ls(log.debug());
-    CodeCache::print_summary(&ls, false);
-  }
   log_sweep("finished");
 
   // Sweeper is the only case where memory is released, check here if it
@@ -385,7 +377,6 @@ void NMethodSweeper::sweep_code_cache() {
   // cache. As a result, 'freed_memory' > 0 to restart the compiler.
   if (!CompileBroker::should_compile_new_jobs() && (freed_memory > 0)) {
     CompileBroker::set_should_compile_new_jobs(CompileBroker::run_compilation);
-    log.debug("restart compiler");
     log_sweep("restart_compiler");
   }
 }
@@ -454,7 +445,6 @@ void NMethodSweeper::release_compiled_method(CompiledMethod* nm) {
 }
 
 NMethodSweeper::MethodStateChange NMethodSweeper::process_compiled_method(CompiledMethod* cm) {
-
   MethodStateChange result = None;
   // Make sure this nmethod doesn't get unloaded during the scan,
   // since safepoints may happen during acquired below locks.

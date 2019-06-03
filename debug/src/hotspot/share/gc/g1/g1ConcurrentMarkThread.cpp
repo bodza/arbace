@@ -12,19 +12,13 @@
 #include "gc/shared/concurrentGCPhaseManager.hpp"
 #include "gc/shared/gcId.hpp"
 #include "gc/shared/gcTrace.hpp"
-#include "gc/shared/gcTraceTime.inline.hpp"
 #include "gc/shared/suspendibleThreadSet.hpp"
-#include "logging/log.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/vmThread.hpp"
 #include "utilities/debug.hpp"
 
 // ======= Concurrent Mark Thread ========
-
-// Check order in EXPAND_CURRENT_PHASES
-STATIC_ASSERT(ConcurrentGCPhaseManager::UNCONSTRAINED_PHASE <
-              ConcurrentGCPhaseManager::IDLE_PHASE);
 
 #define EXPAND_CONCURRENT_PHASES(expander) \
   expander(ANY, = ConcurrentGCPhaseManager::UNCONSTRAINED_PHASE, NULL) \
@@ -60,7 +54,6 @@ G1ConcurrentMarkThread::G1ConcurrentMarkThread(G1ConcurrentMark* cm) :
   _phase_manager_stack(),
   _vtime_accum(0.0),
   _vtime_mark_accum(0.0) {
-
   set_name("G1 Main Marker");
   create_and_start();
 }
@@ -113,30 +106,12 @@ void G1ConcurrentMarkThread::delay_to_keep_mmu(G1Policy* g1_policy, bool remark)
   }
 }
 
-class G1ConcPhaseTimer : public GCTraceConcTimeImpl<LogLevel::Info, LOG_TAGS(gc, marking)> {
-  G1ConcurrentMark* _cm;
-
- public:
-  G1ConcPhaseTimer(G1ConcurrentMark* cm, const char* title) :
-    GCTraceConcTimeImpl<LogLevel::Info,  LogTag::_gc, LogTag::_marking>(title),
-    _cm(cm)
-  {
-    _cm->gc_timer_cm()->register_gc_concurrent_start(title);
-  }
-
-  ~G1ConcPhaseTimer() {
-    _cm->gc_timer_cm()->register_gc_concurrent_end();
-  }
-};
-
 static const char* const concurrent_phase_names[] = {
 #define CONCURRENT_PHASE_NAME(tag, ignore_value, ignore_title) XSTR(tag),
   EXPAND_CONCURRENT_PHASES(CONCURRENT_PHASE_NAME)
 #undef CONCURRENT_PHASE_NAME
   NULL                          // terminator
 };
-// Verify dense enum assumption.  +1 for terminator.
-STATIC_ASSERT(G1ConcurrentPhase::PHASE_ID_LIMIT + 1 == ARRAY_SIZE(concurrent_phase_names));
 
 // Returns the phase number for name, or a negative value if unknown.
 static int lookup_concurrent_phase(const char* name) {
@@ -156,8 +131,6 @@ static const char* lookup_concurrent_phase_title(int phase) {
     EXPAND_CONCURRENT_PHASES(CONCURRENT_PHASE_TITLE)
 #undef CONCURRENT_PHASE_TITLE
   };
-  // Verify dense enum assumption.
-  STATIC_ASSERT(G1ConcurrentPhase::PHASE_ID_LIMIT == ARRAY_SIZE(titles));
 
   const char* title = titles[phase];
   return title;
@@ -188,12 +161,10 @@ public:
 
 // Combine phase management and timing into one convenient utility.
 class G1ConcPhase : public StackObj {
-  G1ConcPhaseTimer _timer;
   G1ConcPhaseManager _manager;
 
 public:
   G1ConcPhase(int phase, G1ConcurrentMarkThread* thread) :
-    _timer(thread->cm(), lookup_concurrent_phase_title(phase)),
     _manager(phase, thread)
   { }
 };
@@ -206,8 +177,7 @@ bool G1ConcurrentMarkThread::request_concurrent_phase(const char* phase_name) {
   int phase = lookup_concurrent_phase(phase_name);
   if (phase < 0) return false;
 
-  while (!ConcurrentGCPhaseManager::wait_for_phase(phase,
-                                                   phase_manager_stack())) {
+  while (!ConcurrentGCPhaseManager::wait_for_phase(phase, phase_manager_stack())) {
     if ((phase != G1ConcurrentPhase::IDLE) && !during_cycle()) {
       // If idle and the goal is !idle, start a collection.
       G1CollectedHeap::heap()->collect(GCCause::_wb_conc_mark);
@@ -237,7 +207,6 @@ void G1ConcurrentMarkThread::run_service() {
 
     _cm->concurrent_cycle_start();
 
-    GCTraceConcTime(Info, gc) tt("Concurrent Cycle");
     {
       ResourceMark rm;
       HandleMark   hm;

@@ -34,7 +34,6 @@ class TreeList : public FreeList_t {
   TreeList<Chunk_t, FreeList_t>* _right;
 
  protected:
-
   TreeList<Chunk_t, FreeList_t>* parent() const { return _parent; }
   TreeList<Chunk_t, FreeList_t>* left()   const { return _left;   }
   TreeList<Chunk_t, FreeList_t>* right()  const { return _right;  }
@@ -179,7 +178,6 @@ class BinaryTreeDictionary: public CHeapObj<mtGC> {
   // Add this free chunk to the tree.
   void       insert_chunk_in_tree(Chunk_t* freeChunk);
  public:
-
   // Return a list of the specified size or NULL from the tree.
   // The list is not removed from the tree.
   TreeList<Chunk_t, FreeList_t>* find_list (size_t size) const;

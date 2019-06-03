@@ -109,7 +109,7 @@ template <class E, ResourceObj::allocation_type T = ResourceObj::C_HEAP,
   }
 
   // Add an entry to the linked list
-  virtual LinkedListNode<E>* add(const E& e)  {
+  virtual LinkedListNode<E>* add(const E& e) {
     LinkedListNode<E>* node = this->new_node(e);
     if (node != NULL) {
       this->add(node);

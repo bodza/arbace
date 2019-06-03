@@ -2616,7 +2616,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
 // These initializers are allowed to access private fields in classes
 // as long as class VMStructs is a friend
 VMStructEntry VMStructs::localHotSpotVMStructs[] = {
-
   VM_STRUCTS(GENERATE_NONSTATIC_VM_STRUCT_ENTRY,
              GENERATE_STATIC_VM_STRUCT_ENTRY,
              GENERATE_STATIC_PTR_VOLATILE_VM_STRUCT_ENTRY,
@@ -2663,7 +2662,6 @@ size_t VMStructs::localHotSpotVMStructsLength() {
 }
 
 VMTypeEntry VMStructs::localHotSpotVMTypes[] = {
-
   VM_TYPES(GENERATE_VM_TYPE_ENTRY,
            GENERATE_TOPLEVEL_VM_TYPE_ENTRY,
            GENERATE_OOP_VM_TYPE_ENTRY,
@@ -2708,7 +2706,6 @@ size_t VMStructs::localHotSpotVMTypesLength() {
 }
 
 VMIntConstantEntry VMStructs::localHotSpotVMIntConstants[] = {
-
   VM_INT_CONSTANTS(GENERATE_VM_INT_CONSTANT_ENTRY,
                    GENERATE_VM_INT_CONSTANT_WITH_VALUE_ENTRY,
                    GENERATE_PREPROCESSOR_VM_INT_CONSTANT_ENTRY,
@@ -2730,7 +2727,6 @@ size_t VMStructs::localHotSpotVMIntConstantsLength() {
 }
 
 VMLongConstantEntry VMStructs::localHotSpotVMLongConstants[] = {
-
   VM_LONG_CONSTANTS(GENERATE_VM_LONG_CONSTANT_ENTRY,
                     GENERATE_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY,
                     GENERATE_C1_VM_LONG_CONSTANT_ENTRY,
@@ -2812,7 +2808,6 @@ VMStructs::init() {
 }
 
 extern "C" {
-
 #define STRIDE(array) ((char*)&array[1] - (char*)&array[0])
 
 JNIEXPORT VMStructEntry* gHotSpotVMStructs = VMStructs::localHotSpotVMStructs;

@@ -284,7 +284,6 @@ class BitMapView : public BitMap {
 
 // A BitMap with storage in a ResourceArea.
 class ResourceBitMap : public BitMap {
-
  public:
   ResourceBitMap() : BitMap(NULL, 0) { }
   // Clears the bitmap memory.
@@ -322,7 +321,6 @@ class ArenaBitMap : public BitMap {
 
 // A BitMap with storage in the CHeap.
 class CHeapBitMap : public BitMap {
-
  private:
   // Don't allow copy or assignment, to prevent the
   // allocated memory from leaking out to other instances.

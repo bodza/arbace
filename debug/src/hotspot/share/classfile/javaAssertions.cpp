@@ -29,7 +29,6 @@ int JavaAssertions::OptionList::count(OptionList* p) {
 }
 
 void JavaAssertions::addOption(const char* name, bool enable) {
-
   // Copy the name.  The storage needs to exist for the the lifetime of the vm;
   // it is never freed, so will be leaked (along with other option strings -
   // e.g., bootclasspath) if a process creates/destroys multiple VMs.
@@ -147,7 +146,6 @@ JavaAssertions::match_package(const char* classname) {
 inline void JavaAssertions::trace(const char* name, const char* typefound, const char* namefound, bool enabled) { }
 
 bool JavaAssertions::enabled(const char* classname, bool systemClass) {
-
   // This will be slow if the number of assertion options on the command line is
   // large--it traverses two lists, one of them multiple times.  Could use a
   // single n-ary tree instead of lists if someone ever notices.

@@ -42,10 +42,6 @@
 // CodeBlobs of the given type. For example, iteration over the
 // CodeBlobs of a specific type can be done by using CodeCache::first_blob(..)
 // and CodeCache::next_blob(..) and providing the corresponding CodeBlobType.
-//
-// IMPORTANT: If you add new CodeHeaps to the code cache or change the
-// existing ones, make sure to adapt the dtrace scripts (jhelper.d) for
-// Solaris and BSD.
 
 class OopClosure;
 class KlassDepChange;
@@ -326,7 +322,6 @@ template <class T, class Filter> class CodeBlobIterator : public StackObj {
   T* method() const   { return (T*)_code_blob; }
 
 private:
-
   // Advance iterator to the next blob in the current code heap
   bool next_blob() {
     if (_heap == _end) {

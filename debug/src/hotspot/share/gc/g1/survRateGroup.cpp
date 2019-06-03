@@ -4,7 +4,6 @@
 #include "gc/g1/g1Predictions.hpp"
 #include "gc/g1/heapRegion.hpp"
 #include "gc/g1/survRateGroup.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.hpp"
 
 SurvRateGroup::SurvRateGroup() :

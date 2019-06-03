@@ -5,7 +5,6 @@
 #include "utilities/ostream.hpp"
 
 namespace metaspace {
-
 void SmallBlocks::print_on(outputStream* st) const {
   st->print_cr("SmallBlocks:");
   for (uint i = _small_block_min_size; i < _small_block_max_size; i++) {

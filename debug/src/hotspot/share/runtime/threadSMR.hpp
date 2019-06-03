@@ -98,12 +98,6 @@ class ThreadsSMRSupport : AllStatic {
   static void remove_thread(JavaThread *thread);
   static void smr_delete(JavaThread *thread);
   static void update_tlh_stats(uint millis);
-
-  // Logging and printing support:
-  static void log_statistics();
-  static void print_info_elements_on(outputStream* st, ThreadsList* t_list);
-  static void print_info_on(outputStream* st);
-  static void print_info_on(const Thread* thread, outputStream* st);
 };
 
 // A fast list of JavaThreads.

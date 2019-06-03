@@ -298,7 +298,7 @@ class OopMapStream : public StackObj {
  public:
   OopMapStream(OopMap* oop_map, int oop_types_mask = OopMapValue::type_mask_in_place);
   OopMapStream(const ImmutableOopMap* oop_map, int oop_types_mask = OopMapValue::type_mask_in_place);
-  bool is_done()                        { if(!_valid_omv) { find_next(); } return !_valid_omv; }
+  bool is_done()                        { if (!_valid_omv) { find_next(); } return !_valid_omv; }
   void next()                           { find_next(); }
   OopMapValue current()                 { return _omv; }
 };

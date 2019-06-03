@@ -9,13 +9,11 @@
 #include "utilities/globalDefinitions.hpp"
 
 namespace metaspace {
-
 typedef BinaryTreeDictionary<Metablock, FreeList<Metablock> > BlockTreeDictionary;
 
 // Used to manage the free list of Metablocks (a block corresponds
 // to the allocation of a quantum of metadata).
 class BlockFreelist : public CHeapObj<mtClass> {
-
   BlockTreeDictionary* const _dictionary;
   SmallBlocks* _small_blocks;
 
@@ -33,7 +31,6 @@ class BlockFreelist : public CHeapObj<mtClass> {
   }
 
  public:
-
   BlockFreelist();
   ~BlockFreelist();
 
@@ -42,7 +39,7 @@ class BlockFreelist : public CHeapObj<mtClass> {
   void return_block(MetaWord* p, size_t word_size);
 
   // Returns the total size, in words, of all blocks kept in this structure.
-  size_t total_size() const  {
+  size_t total_size() const {
     size_t result = dictionary()->total_size();
     if (_small_blocks != NULL) {
       result = result + _small_blocks->total_size();

@@ -3,7 +3,6 @@
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/plab.inline.hpp"
 #include "gc/shared/threadLocalAllocBuffer.hpp"
-#include "logging/log.hpp"
 #include "oops/arrayOop.hpp"
 #include "oops/oop.inline.hpp"
 

@@ -119,7 +119,6 @@ void SATBMarkQueue::filter() {
 // instead of replacing it.
 
 bool SATBMarkQueue::should_enqueue_buffer() {
-
   // If G1SATBBufferEnqueueingThresholdPercent == 0 we could skip filtering.
 
   // This method should only be called if there is a non-NULL buffer

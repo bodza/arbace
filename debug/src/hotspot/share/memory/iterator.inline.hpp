@@ -74,8 +74,6 @@ call_do_oop(void (Receiver::*)(T*), void (Base::*)(T*), OopClosureType* closure,
 template <typename T, typename Receiver, typename Base, typename OopClosureType>
 static typename EnableIf<!IsSame<Receiver, Base>::value, void>::type
 call_do_oop(void (Receiver::*)(T*), void (Base::*)(T*), OopClosureType* closure, T* p) {
-  // Sanity check
-  STATIC_ASSERT((!IsSame<OopClosureType, OopIterateClosure>::value));
   closure->OopClosureType::do_oop(p);
 }
 
@@ -204,7 +202,6 @@ private:
     void set_resolve_function() {
       // Size requirement to prevent word tearing
       // when functions pointers are updated.
-      STATIC_ASSERT(sizeof(_function[0]) == sizeof(void*));
       if (UseCompressedOops) {
         _function[KlassType::ID] = &oop_oop_iterate<KlassType, narrowOop>;
       } else {
@@ -233,7 +230,6 @@ private:
 
   static Table _table;
 public:
-
   static void (*function(Klass* klass))(OopClosureType*, oop, Klass*) {
     return _table._function[klass->id()];
   }
@@ -292,7 +288,6 @@ private:
 
   static Table _table;
 public:
-
   static void (*function(Klass* klass))(OopClosureType*, oop, Klass*, MemRegion) {
     return _table._function[klass->id()];
   }
@@ -351,7 +346,6 @@ private:
 
   static Table _table;
 public:
-
   static void (*function(Klass* klass))(OopClosureType*, oop, Klass*) {
     return _table._function[klass->id()];
   }

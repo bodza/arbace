@@ -3,7 +3,6 @@
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1HeapSizingPolicy.hpp"
 #include "gc/g1/g1Analytics.hpp"
-#include "logging/log.hpp"
 #include "runtime/globals.hpp"
 #include "utilities/debug.hpp"
 #include "utilities/globalDefinitions.hpp"
@@ -12,7 +11,6 @@ G1HeapSizingPolicy::G1HeapSizingPolicy(const G1CollectedHeap* g1h, const G1Analy
   _g1h(g1h),
   _analytics(analytics),
   _num_prev_pauses_for_heuristics(analytics->number_of_recorded_pause_times()) {
-
   clear_ratio_check_data();
 }
 

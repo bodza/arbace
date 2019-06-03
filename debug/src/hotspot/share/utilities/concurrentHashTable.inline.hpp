@@ -251,7 +251,7 @@ inline void ConcurrentHashTable<VALUE, CONFIG, F>::lock_resize_lock(Thread* lock
     } else {
       break;
     }
-  } while(true);
+  } while (true);
   _resize_lock_owner = locker;
   _invisible_epoch = 0;
 }
@@ -644,7 +644,6 @@ inline bool ConcurrentHashTable<VALUE, CONFIG, F>::internal_grow_prolog(Thread* 
 
 template <typename VALUE, typename CONFIG, MEMFLAGS F>
 inline void ConcurrentHashTable<VALUE, CONFIG, F>::internal_grow_epilog(Thread* thread) {
-
   InternalTable* old_table = set_table_from_new();
   unlock_resize_lock(thread);
   // ABA safe, old_table not visible to any other threads.

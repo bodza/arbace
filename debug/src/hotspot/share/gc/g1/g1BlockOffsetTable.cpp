@@ -4,7 +4,6 @@
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/heapRegion.hpp"
 #include "gc/shared/space.hpp"
-#include "logging/log.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/java.hpp"
 #include "services/memTracker.hpp"
@@ -15,7 +14,6 @@
 
 G1BlockOffsetTable::G1BlockOffsetTable(MemRegion heap, G1RegionToSpaceMapper* storage) :
   _reserved(heap), _offset_array(NULL) {
-
   MemRegion bot_reserved = storage->reserved();
 
   _offset_array = (u_char*)bot_reserved.start();
@@ -41,7 +39,6 @@ G1BlockOffsetTablePart::G1BlockOffsetTablePart(G1BlockOffsetTable* array, G1Cont
 // The arguments follow the normal convention of denoting
 // a right-open interval: [start, end)
 void G1BlockOffsetTablePart::set_remainder_to_point_to_start(HeapWord* start, HeapWord* end) {
-
   if (start >= end) {
     // The start address is equal to the end address (or to
     // the right of the end address) so there are not cards
@@ -116,7 +113,6 @@ void G1BlockOffsetTablePart::set_remainder_to_point_to_start_incl(size_t start_c
 // is an expensive check -- use with care and only under protection of
 // suitable flag.
 void G1BlockOffsetTablePart::check_all_cards(size_t start_card, size_t end_card) const {
-
   if (end_card < start_card) {
     return;
   }
@@ -182,7 +178,6 @@ void G1BlockOffsetTablePart::alloc_block_work(HeapWord** threshold_, size_t* ind
   // For efficiency, do copy-in/copy-out.
   HeapWord* threshold = *threshold_;
   size_t    index = *index_;
-
 
   // Mark the card that holds the offset into the block.  Note
   // that _next_offset_index and _next_offset_threshold are not

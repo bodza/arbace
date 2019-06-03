@@ -45,7 +45,6 @@ volatile int MallocSiteTable::_access_count = 0;
  * time, it is in single-threaded mode from JVM perspective.
  */
 bool MallocSiteTable::initialize() {
-
   // Create pseudo call stack for hashtable entry allocation
   address pc[3];
   if (NMT_TrackingStackDepth >= 3) {

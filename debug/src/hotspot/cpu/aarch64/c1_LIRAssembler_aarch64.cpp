@@ -146,7 +146,7 @@ Address LIR_Assembler::as_Address(LIR_Address* addr, Register tmp) {
       default:
         ShouldNotReachHere();
       }
-  } else  {
+  } else {
     intptr_t addr_offset = intptr_t(addr->disp());
     if (Address::offset_ok_for_immed(addr_offset, addr->scale()))
       return Address(base, addr_offset, Address::lsl(addr->scale()));
@@ -336,7 +336,6 @@ int LIR_Assembler::emit_exception_handler() {
 // Emit the code to remove the frame from the stack in the exception
 // unwind path.
 int LIR_Assembler::emit_unwind_handler() {
-
   int offset = code_offset();
 
   // Fetch the exception from TLS and clear out exception related thread state
@@ -413,7 +412,6 @@ void LIR_Assembler::add_debug_info_for_branch(address adr, CodeEmitInfo* info) {
 }
 
 void LIR_Assembler::return_op(LIR_Opr result) {
-
   // Pop the stack before the safepoint code
   __ remove_frame(initial_frame_size_in_bytes());
 
@@ -543,12 +541,10 @@ void LIR_Assembler::const2stack(LIR_Opr src, LIR_Opr dest) {
     {
       Register reg = zr;
       if (c->as_jlong_bits() == 0)
-        __ str(zr, frame_map()->address_for_slot(dest->double_stack_ix(),
-                                                 lo_word_offset_in_bytes));
+        __ str(zr, frame_map()->address_for_slot(dest->double_stack_ix(), lo_word_offset_in_bytes));
       else {
         __ mov(rscratch1, (intptr_t)c->as_jlong_bits());
-        __ str(rscratch1, frame_map()->address_for_slot(dest->double_stack_ix(),
-                                                        lo_word_offset_in_bytes));
+        __ str(rscratch1, frame_map()->address_for_slot(dest->double_stack_ix(), lo_word_offset_in_bytes));
       }
     }
     break;
@@ -599,7 +595,6 @@ void LIR_Assembler::const2mem(LIR_Opr src, LIR_Opr dest, BasicType type, CodeEmi
 }
 
 void LIR_Assembler::reg2reg(LIR_Opr src, LIR_Opr dest) {
-
   // move between cpu-registers
   if (dest->is_single_cpu()) {
     if (src->type() == T_LONG) {
@@ -611,7 +606,6 @@ void LIR_Assembler::reg2reg(LIR_Opr src, LIR_Opr dest) {
       __ verify_oop(src->as_register());
     }
     move_regs(src->as_register(), dest->as_register());
-
   } else if (dest->is_double_cpu()) {
     if (src->type() == T_OBJECT || src->type() == T_ARRAY) {
       // Surprising to me but we can see move of a long to t_object
@@ -624,13 +618,10 @@ void LIR_Assembler::reg2reg(LIR_Opr src, LIR_Opr dest) {
     Register t_lo = dest->as_register_lo();
     Register t_hi = dest->as_register_hi();
     move_regs(f_lo, t_lo);
-
   } else if (dest->is_single_fpu()) {
     __ fmovs(dest->as_float_reg(), src->as_float_reg());
-
   } else if (dest->is_double_fpu()) {
     __ fmovd(dest->as_double_reg(), src->as_double_reg());
-
   } else {
     ShouldNotReachHere();
   }
@@ -646,19 +637,15 @@ void LIR_Assembler::reg2stack(LIR_Opr src, LIR_Opr dest, BasicType type, bool po
     } else {
       __ strw(src->as_register(), frame_map()->address_for_slot(dest->single_stack_ix()));
     }
-
   } else if (src->is_double_cpu()) {
     Address dest_addr_LO = frame_map()->address_for_slot(dest->double_stack_ix(), lo_word_offset_in_bytes);
     __ str(src->as_register_lo(), dest_addr_LO);
-
   } else if (src->is_single_fpu()) {
     Address dest_addr = frame_map()->address_for_slot(dest->single_stack_ix());
     __ strs(src->as_float_reg(), dest_addr);
-
   } else if (src->is_double_fpu()) {
     Address dest_addr = frame_map()->address_for_slot(dest->double_stack_ix());
     __ strd(src->as_double_reg(), dest_addr);
-
   } else {
     ShouldNotReachHere();
   }
@@ -744,7 +731,6 @@ void LIR_Assembler::reg2mem(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
 }
 
 void LIR_Assembler::stack2reg(LIR_Opr src, LIR_Opr dest, BasicType type) {
-
   if (dest->is_single_cpu()) {
     if (type == T_ARRAY || type == T_OBJECT) {
       __ ldr(dest->as_register(), frame_map()->address_for_slot(src->single_stack_ix()));
@@ -754,19 +740,15 @@ void LIR_Assembler::stack2reg(LIR_Opr src, LIR_Opr dest, BasicType type) {
     } else {
       __ ldrw(dest->as_register(), frame_map()->address_for_slot(src->single_stack_ix()));
     }
-
   } else if (dest->is_double_cpu()) {
     Address src_addr_LO = frame_map()->address_for_slot(src->double_stack_ix(), lo_word_offset_in_bytes);
     __ ldr(dest->as_register_lo(), src_addr_LO);
-
   } else if (dest->is_single_fpu()) {
     Address src_addr = frame_map()->address_for_slot(src->single_stack_ix());
     __ ldrs(dest->as_float_reg(), src_addr);
-
   } else if (dest->is_double_fpu()) {
     Address src_addr = frame_map()->address_for_slot(src->double_stack_ix());
     __ ldrd(dest->as_double_reg(), src_addr);
-
   } else {
     ShouldNotReachHere();
   }
@@ -801,7 +783,6 @@ void LIR_Assembler::klass2reg_with_patching(Register reg, CodeEmitInfo* info) {
 }
 
 void LIR_Assembler::stack2stack(LIR_Opr src, LIR_Opr dest, BasicType type) {
-
   LIR_Opr temp;
   if (type == T_LONG || type == T_DOUBLE)
     temp = FrameMap::rscratch1_long_opr;
@@ -942,23 +923,16 @@ void LIR_Assembler::emit_op3(LIR_Op3* op) {
     arithmetic_idiv(op, true);
     break;
   case lir_fmad:
-    __ fmaddd(op->result_opr()->as_double_reg(),
-              op->in_opr1()->as_double_reg(),
-              op->in_opr2()->as_double_reg(),
-              op->in_opr3()->as_double_reg());
+    __ fmaddd(op->result_opr()->as_double_reg(), op->in_opr1()->as_double_reg(), op->in_opr2()->as_double_reg(), op->in_opr3()->as_double_reg());
     break;
   case lir_fmaf:
-    __ fmadds(op->result_opr()->as_float_reg(),
-              op->in_opr1()->as_float_reg(),
-              op->in_opr2()->as_float_reg(),
-              op->in_opr3()->as_float_reg());
+    __ fmadds(op->result_opr()->as_float_reg(), op->in_opr1()->as_float_reg(), op->in_opr2()->as_float_reg(), op->in_opr3()->as_float_reg());
     break;
   default:      ShouldNotReachHere(); break;
   }
 }
 
 void LIR_Assembler::emit_opBranch(LIR_OpBranch* op) {
-
   if (op->cond() == lir_cond_always) {
     if (op->info() != NULL) add_debug_info_for_branch(op->info());
     __ b(*(op->label()));
@@ -1086,8 +1060,7 @@ void LIR_Assembler::emit_opConvert(LIR_OpConvert* op) {
 
 void LIR_Assembler::emit_alloc_obj(LIR_OpAllocObj* op) {
   if (op->init_check()) {
-    __ ldrb(rscratch1, Address(op->klass()->as_register(),
-                               InstanceKlass::init_state_offset()));
+    __ ldrb(rscratch1, Address(op->klass()->as_register(), InstanceKlass::init_state_offset()));
     __ cmpw(rscratch1, InstanceKlass::fully_initialized);
     add_debug_info_for_null_check_here(op->stub()->info());
     __ br(Assembler::NE, *op->stub()->entry());
@@ -1145,8 +1118,7 @@ void LIR_Assembler::type_profile_helper(Register mdo, ciMethodData *md, ciProfil
   // Didn't find receiver; find next empty slot and fill it in
   for (uint i = 0; i < ReceiverTypeData::row_limit(); i++) {
     Label next_test;
-    __ lea(rscratch2,
-           Address(mdo, md->byte_offset_of_slot(data, ReceiverTypeData::receiver_offset(i))));
+    __ lea(rscratch2, Address(mdo, md->byte_offset_of_slot(data, ReceiverTypeData::receiver_offset(i))));
     Address recv_addr(rscratch2);
     __ ldr(rscratch1, recv_addr);
     __ cbnz(rscratch1, next_test);
@@ -1432,7 +1404,6 @@ void LIR_Assembler::emit_compare_and_swap(LIR_OpCompareAndSwap* op) {
 }
 
 void LIR_Assembler::cmove(LIR_Condition condition, LIR_Opr opr1, LIR_Opr opr2, LIR_Opr result, BasicType type) {
-
   Assembler::Condition acond, ncond;
   switch (condition) {
   case lir_cond_equal:        acond = Assembler::EQ; ncond = Assembler::NE; break;
@@ -1496,7 +1467,6 @@ void LIR_Assembler::cmove(LIR_Condition condition, LIR_Opr opr1, LIR_Opr opr2, L
 }
 
 void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr dest, CodeEmitInfo* info, bool pop_fpu_stack) {
-
   if (left->is_single_cpu()) {
     Register lreg = left->as_register();
     Register dreg = as_reg(dest);
@@ -1511,7 +1481,6 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
       case lir_mul: __ mulw (dest->as_register(), lreg, rreg); break;
       default:      ShouldNotReachHere();
       }
-
     } else if (right->is_double_cpu()) {
       Register rreg = right->as_register_lo();
       switch (code) {
@@ -1563,7 +1532,6 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
     } else {
       ShouldNotReachHere();
     }
-
   } else if (left->is_double_cpu()) {
     Register lreg_lo = left->as_register_lo();
 
@@ -1579,7 +1547,6 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
       default:
         ShouldNotReachHere();
       }
-
     } else if (right->is_constant()) {
       jlong c = right->as_constant_ptr()->as_jlong_bits();
       Register dreg = as_reg(dest);
@@ -1640,7 +1607,6 @@ void LIR_Assembler::intrinsic_op(LIR_Code code, LIR_Opr value, LIR_Opr unused, L
 }
 
 void LIR_Assembler::logic_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr dst) {
-
   Register Rleft = left->is_single_cpu() ? left->as_register() :
                                            left->as_register_lo();
    if (dst->is_single_cpu()) {
@@ -1832,7 +1798,6 @@ void LIR_Assembler::emit_static_call_stub() {
 }
 
 void LIR_Assembler::throw_op(LIR_Opr exceptionPC, LIR_Opr exceptionOop, CodeEmitInfo* info) {
-
   // exception object is not added to oop map by LinearScan
   // (LinearScan assumes that no oops are in fixed registers)
   info->add_register_oop(exceptionOop);
@@ -1859,7 +1824,6 @@ void LIR_Assembler::throw_op(LIR_Opr exceptionPC, LIR_Opr exceptionOop, CodeEmit
 }
 
 void LIR_Assembler::unwind_op(LIR_Opr exceptionOop) {
-
   __ b(_unwind_handler_entry);
 }
 
@@ -2375,7 +2339,6 @@ void LIR_Assembler::emit_profile_type(LIR_OpProfileType* op) {
           __ cbz(rscratch1, next);
         }
       } else {
-
         __ ldr(tmp, mdo_addr);
         __ tbnz(tmp, exact_log2(TypeEntries::type_unknown), next); // already unknown. Nothing to do anymore.
       }
@@ -2402,7 +2365,6 @@ void LIR_Assembler::emit_profile_type(LIR_OpProfileType* op) {
         // first time here. Set profile type.
         __ ldr(tmp, mdo_addr);
       } else {
-
         __ ldr(tmp, mdo_addr);
         __ tbnz(tmp, exact_log2(TypeEntries::type_unknown), next); // already unknown. Nothing to do anymore.
 
@@ -2436,7 +2398,6 @@ void LIR_Assembler::leal(LIR_Opr addr, LIR_Opr dest, LIR_PatchCode patch_code, C
 }
 
 void LIR_Assembler::rt_call(LIR_Opr result, address dest, const LIR_OprList* args, LIR_Opr tmp, CodeEmitInfo* info) {
-
   CodeBlob *cb = CodeCache::find_blob(dest);
   if (cb) {
     __ far_call(RuntimeAddress(dest));

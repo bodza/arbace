@@ -10,7 +10,6 @@ int PeriodicTask::_num_tasks = 0;
 PeriodicTask* PeriodicTask::_tasks[PeriodicTask::max_tasks];
 
 void PeriodicTask::real_time_tick(int delay_time) {
-
   {
     // The WatcherThread does not participate in the safepoint protocol
     // for the PeriodicTask_lock because it is not a JavaThread.
@@ -28,7 +27,6 @@ void PeriodicTask::real_time_tick(int delay_time) {
 }
 
 int PeriodicTask::time_to_wait() {
-
   if (_num_tasks == 0) {
     return 0; // sleep until shutdown or a task is enrolled
   }

@@ -9,9 +9,7 @@
 class outputStream;
 
 namespace metaspace {
-
 class SmallBlocks : public CHeapObj<mtClass> {
-
   const static uint _small_block_max_size = sizeof(TreeChunk<Metablock,  FreeList<Metablock> >)/HeapWordSize;
   // Note: this corresponds to the imposed miminum allocation size, see SpaceManager::get_allocation_word_size()
   const static uint _small_block_min_size = sizeof(Metablock)/HeapWordSize;

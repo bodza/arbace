@@ -12,7 +12,6 @@
 #include "gc/shared/generation.hpp"
 #include "gc/shared/space.inline.hpp"
 #include "gc/shared/spaceDecorator.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/java.hpp"
@@ -129,7 +128,6 @@ bool Generation::promotion_attempt_is_safe(size_t max_promotion_in_bytes) const 
 
 // Ignores "ref" and calls allocate().
 oop Generation::promote(oop obj, size_t obj_size) {
-
   HeapWord* result = allocate(obj_size, false);
   if (result != NULL) {
     Copy::aligned_disjoint_words((HeapWord*)obj, result, obj_size);

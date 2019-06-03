@@ -6,7 +6,6 @@
 #include "runtime/os.hpp"
 
 CollectorCounters::CollectorCounters(const char* name, int ordinal) {
-
   if (UsePerfData) {
     EXCEPTION_MARK;
     ResourceMark rm;
@@ -48,7 +47,6 @@ CollectorCounters::~CollectorCounters() {
 TraceCollectorStats::TraceCollectorStats(CollectorCounters* c) :
     PerfTraceTimedEvent(c->time_counter(), c->invocation_counter()),
     _c(c) {
-
   if (UsePerfData) {
      _c->last_entry_counter()->set_value(os::elapsed_counter());
   }

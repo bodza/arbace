@@ -39,7 +39,6 @@ protected:
   ~BasicHashtableEntry() { ShouldNotReachHere(); }
 
 public:
-
   unsigned int hash() const             { return _hash; }
   void set_hash(unsigned int hash)      { _hash = hash; }
   unsigned int* hash_addr()             { return &_hash; }
@@ -138,7 +137,6 @@ private:
   volatile int      _number_of_entries;
 
 protected:
-
   void initialize(int table_size, int entry_size, int number_of_entries);
 
   // Accessor
@@ -233,7 +231,6 @@ public:
   void print_table_statistics(outputStream* st, const char *table_name, T (*literal_load_barrier)(HashtableEntry<T, F>*) = NULL);
 
  protected:
-
   // Table entry management
   HashtableEntry<T, F>* new_entry(unsigned int hashValue, T obj);
   // Don't create and use freelist of HashtableEntry.
@@ -253,7 +250,6 @@ public:
 template <class T, MEMFLAGS F> class RehashableHashtable : public Hashtable<T, F> {
  friend class VMStructs;
  protected:
-
   enum {
     rehash_count = 100,
     rehash_multiple = 60

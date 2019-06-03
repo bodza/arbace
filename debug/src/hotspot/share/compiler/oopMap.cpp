@@ -89,13 +89,12 @@ int OopMap::heap_size() const {
 // frame_size units are stack-slots (4 bytes) NOT intptr_t; we can name odd
 // slots to hold 4-byte values like ints and floats in the LP64 build.
 void OopMap::set_xxx(VMReg reg, OopMapValue::oop_types x, VMReg optional) {
-
   OopMapValue o(reg, x);
 
   if (x == OopMapValue::callee_saved_value) {
     // This can never be a stack location, so we don't need to transform it.
     o.set_content_reg(optional);
-  } else if(x == OopMapValue::derived_oop_value) {
+  } else if (x == OopMapValue::derived_oop_value) {
     o.set_content_reg(optional);
   }
 
@@ -146,7 +145,6 @@ void OopMapSet::grow_om_data() {
 }
 
 void OopMapSet::add_gc_map(int pc_offset, OopMap *map ) {
-
   if (om_count() >= om_size()) {
     grow_om_data();
   }
@@ -164,7 +162,7 @@ int OopMapSet::heap_size() const {
   size += om_count() * sizeof(OopMap*);
 
   // Now add in the space needed for the indivdiual OopMaps
-  for (int i=0; i < om_count(); i++) {
+  for (int i = 0; i < om_count(); i++) {
     size += at(i)->heap_size();
   }
   // We don't need to align this, it will be naturally pointer aligned

@@ -14,8 +14,6 @@
 #include "classfile/symbolTable.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/instanceKlass.hpp"
 #include "runtime/arguments.hpp"
@@ -158,7 +156,6 @@ static void define_javabase_module(jobject module, jstring version, jstring loca
     if (ModuleEntryTable::javabase_defined()) {
       duplicate_javabase = true;
     } else {
-
       // Verify that all java.base packages created during bootstrapping are in
       // pkg_list.  If any are not in pkg_list, than a non-java.base class was
       // loaded erroneously pre java.base module definition.
@@ -360,16 +357,6 @@ void Modules::define_module(jobject module, jboolean is_open, jstring version, j
       throw_dup_pkg_exception(module_name, existing_pkg, CHECK);
   }
 
-  LogTarget(Debug, module) lt;
-  if (lt.is_enabled()) {
-    LogStream ls(lt);
-    ls.print("define_module(): creation of module: %s, version: %s, location: %s, ",
-                 module_name, module_version != NULL ? module_version : "NULL",
-                 module_location != NULL ? module_location : "NULL");
-    loader_data->print_value_on(&ls);
-    ls.print_cr(", package #: %d", pkg_list->length());
-  }
-
   // If the module is defined to the boot loader and an exploded build is being
   // used, prepend <java.home>/modules/modules_name to the system boot class path.
   if (loader == NULL && !ClassLoader::has_jrt_entry()) {
@@ -490,7 +477,6 @@ void Modules::add_reads_module(jobject from_module, jobject to_module, TRAPS) {
 
 // This method is called by JFR and JNI.
 jobject Modules::get_module(jclass clazz, TRAPS) {
-
   if (clazz == NULL) {
     THROW_MSG_(vmSymbols::java_lang_NullPointerException(), "class is null", JNI_FALSE);
   }
@@ -504,30 +490,10 @@ jobject Modules::get_module(jclass clazz, TRAPS) {
 
   oop module = java_lang_Class::module(mirror);
 
-  LogTarget(Debug,module) lt;
-  if (lt.is_enabled()) {
-    ResourceMark rm(THREAD);
-    LogStream ls(lt);
-    Klass* klass = java_lang_Class::as_Klass(mirror);
-    oop module_name = java_lang_Module::name(module);
-    if (module_name != NULL) {
-      ls.print("get_module(): module ");
-      java_lang_String::print(module_name, tty);
-    } else {
-      ls.print("get_module(): Unamed Module");
-    }
-    if (klass != NULL) {
-      ls.print_cr(" for class %s", klass->external_name());
-    } else {
-      ls.print_cr(" for primitive class");
-    }
-  }
-
   return JNIHandles::make_local(THREAD, module);
 }
 
 jobject Modules::get_named_module(Handle h_loader, const char* package_name, TRAPS) {
-
   if (strlen(package_name) == 0) {
     return NULL;
   }

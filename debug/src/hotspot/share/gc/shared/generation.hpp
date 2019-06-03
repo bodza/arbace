@@ -3,7 +3,6 @@
 
 #include "gc/shared/collectorCounters.hpp"
 #include "gc/shared/referenceProcessor.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.hpp"
 #include "memory/memRegion.hpp"
 #include "memory/universe.hpp"
@@ -299,9 +298,7 @@ class Generation: public CHeapObj<mtGC> {
   // will be full if the flag is set).
   // Thus, older generations which collect younger generations should
   // test this flag and collect if it is set.
-  virtual bool should_collect(bool   full,
-                              size_t word_size,
-                              bool   is_tlab) {
+  virtual bool should_collect(bool full, size_t word_size, bool is_tlab) {
     return (full || should_allocate(word_size, is_tlab));
   }
 
@@ -319,19 +316,14 @@ class Generation: public CHeapObj<mtGC> {
   // If full is true attempt a full garbage collection of this generation.
   // Otherwise, attempting to (at least) free enough space to support an
   // allocation of the given "word_size".
-  virtual void collect(bool   full,
-                       bool   clear_all_soft_refs,
-                       size_t word_size,
-                       bool   is_tlab) = 0;
+  virtual void collect(bool full, bool clear_all_soft_refs, size_t word_size, bool is_tlab) = 0;
 
   // Perform a heap collection, attempting to create (at least) enough
   // space to support an allocation of the given "word_size".  If
   // successful, perform the allocation and return the resulting
   // "oop" (initializing the allocated block). If the allocation is
   // still unsuccessful, return "NULL".
-  virtual HeapWord* expand_and_allocate(size_t word_size,
-                                        bool is_tlab,
-                                        bool parallel = false) = 0;
+  virtual HeapWord* expand_and_allocate(size_t word_size, bool is_tlab, bool parallel = false) = 0;
 
   // Some generations may require some cleanup or preparation actions before
   // allowing a collection.  The default is to do nothing.
@@ -358,7 +350,7 @@ class Generation: public CHeapObj<mtGC> {
     return _time_of_last_gc;
   }
 
-  virtual void update_time_of_last_gc(jlong now)  {
+  virtual void update_time_of_last_gc(jlong now) {
     _time_of_last_gc = now;
   }
 

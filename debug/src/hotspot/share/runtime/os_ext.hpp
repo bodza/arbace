@@ -10,5 +10,4 @@ public:
                                     // See os.hpp/cpp and init.cpp.
 
  private:
-
 #endif

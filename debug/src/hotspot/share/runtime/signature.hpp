@@ -190,7 +190,6 @@ class Fingerprinter: public SignatureIterator {
   methodHandle mh;
 
  public:
-
   void do_bool()    { _fingerprint |= (((uint64_t)bool_parm) << _shift_count); _shift_count += parameter_feature_size; }
   void do_char()    { _fingerprint |= (((uint64_t)char_parm) << _shift_count); _shift_count += parameter_feature_size; }
   void do_byte()    { _fingerprint |= (((uint64_t)byte_parm) << _shift_count); _shift_count += parameter_feature_size; }
@@ -293,7 +292,6 @@ class NativeSignatureIterator: public SignatureIterator {
 
   // Optimized path if we have the bitvector form of signature
   void iterate( uint64_t fingerprint ) {
-
     if (!is_static()) {
       // handle receiver (not handled by iterate because not in signature)
       pass_object(); _jni_offset++; _offset++;
@@ -372,7 +370,6 @@ class SignatureVerifier : public StackObj {
     static bool is_valid_method_signature(Symbol* sig);
     static bool is_valid_type_signature(Symbol* sig);
   private:
-
     static ssize_t is_valid_type(const char*, ssize_t);
     static bool invalid_name_char(char);
 };

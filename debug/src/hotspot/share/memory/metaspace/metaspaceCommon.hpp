@@ -7,7 +7,6 @@
 class outputStream;
 
 namespace metaspace {
-
 enum ChunkSizes {    // in words.
   ClassSpecializedChunk = 128,
   SpecializedChunk = 128,

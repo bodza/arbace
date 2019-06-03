@@ -239,7 +239,6 @@ protected:
   static Klass* handle_resolution_exception(Symbol* class_name, bool throw_error, Klass* klass, TRAPS);
 
 public:
-
   // Returns a class with a given class name and class loader.
   // Loads the class if needed. If not found NULL is returned.
   static Klass* resolve_or_null(Symbol* class_name, Handle class_loader, Handle protection_domain, TRAPS);
@@ -515,7 +514,6 @@ public:
   static ProtectionDomainCacheEntry* cache_get(Handle protection_domain);
 
  protected:
-
   enum Constants {
     _loader_constraint_size = 107,                     // number of entries in constraint table
     _resolution_error_size  = 107,                     // number of entries in resolution error table

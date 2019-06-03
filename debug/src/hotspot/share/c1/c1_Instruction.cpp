@@ -636,7 +636,6 @@ bool BlockBegin::try_merge(ValueStack* new_state) {
     // Use method liveness to invalidate dead locals
     MethodLivenessResult liveness = new_state->scope()->method()->liveness_at_bci(bci());
     if (liveness.is_valid()) {
-
       for_each_local_value(new_state, index, new_value) {
         if (!liveness.at(index) || new_value->type()->is_illegal()) {
           new_state->invalidate_local(index);
@@ -666,7 +665,6 @@ bool BlockBegin::try_merge(ValueStack* new_state) {
 
     // initialize state of block
     set_state(new_state);
-
   } else if (existing_state->is_same(new_state)) {
     TRACE_PHI(tty->print_cr("exisiting state found"));
 
@@ -693,7 +691,6 @@ bool BlockBegin::try_merge(ValueStack* new_state) {
           TRACE_PHI(tty->print_cr("invalidating local %d because of type mismatch", index));
         }
       }
-
     } else {
       TRACE_PHI(tty->print_cr("creating phi functions on demand"));
 
@@ -722,7 +719,6 @@ bool BlockBegin::try_merge(ValueStack* new_state) {
         }
       }
     }
-
   } else {
     ShouldNotReachHere();
     return false;

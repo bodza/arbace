@@ -119,7 +119,7 @@ void LowMemoryDetector::detect_after_gc_memory(MemoryPool* pool) {
 void LowMemoryDetector::recompute_enabled_for_collected_pools() {
   bool enabled = false;
   int num_memory_pools = MemoryService::num_memory_pools();
-  for (int i=0; i<num_memory_pools; i++) {
+  for (int i = 0; i<num_memory_pools; i++) {
     MemoryPool* pool = MemoryService::get_memory_pool(i);
     if (pool->is_collected_pool() && is_enabled(pool)) {
       enabled = true;
@@ -173,7 +173,6 @@ SensorInfo::SensorInfo() {
 // If the current level is between high and low threshold, no change.
 //
 void SensorInfo::set_gauge_sensor_level(MemoryUsage usage, ThresholdSupport* high_low_threshold) {
-
   bool is_over_high = high_low_threshold->is_high_threshold_crossed(usage);
   bool is_below_low = high_low_threshold->is_low_threshold_crossed(usage);
 
@@ -220,7 +219,6 @@ void SensorInfo::set_gauge_sensor_level(MemoryUsage usage, ThresholdSupport* hig
 //      the sensor will be on (i.e. sensor is currently off
 //      and has pending trigger requests).
 void SensorInfo::set_counter_sensor_level(MemoryUsage usage, ThresholdSupport* counter_threshold) {
-
   bool is_over_high = counter_threshold->is_high_threshold_crossed(usage);
   bool is_below_low = counter_threshold->is_low_threshold_crossed(usage);
 

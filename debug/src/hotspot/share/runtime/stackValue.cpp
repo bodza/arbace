@@ -102,7 +102,6 @@ StackValue* StackValue::create_stack_value(const frame* fr, const RegisterMap* r
     default:
       ShouldNotReachHere();
     }
-
   } else if (sv->is_constant_int()) {
     // Constant int: treat same as register int.
     union { intptr_t p; jint ji; } value;

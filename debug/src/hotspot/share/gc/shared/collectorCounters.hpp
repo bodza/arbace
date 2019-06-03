@@ -22,24 +22,17 @@ class CollectorCounters: public CHeapObj<mtGC> {
     char*             _name_space;
 
   public:
-
     CollectorCounters(const char* name, int ordinal);
-
     ~CollectorCounters();
 
     inline PerfCounter* invocation_counter() const  { return _invocations; }
-
     inline PerfCounter* time_counter() const        { return _time; }
-
     inline PerfVariable* last_entry_counter() const { return _last_entry_time; }
-
     inline PerfVariable* last_exit_counter() const  { return _last_exit_time; }
-
     const char* name_space() const                  { return _name_space; }
 };
 
 class TraceCollectorStats: public PerfTraceTimedEvent {
-
   protected:
     CollectorCounters* _c;
 

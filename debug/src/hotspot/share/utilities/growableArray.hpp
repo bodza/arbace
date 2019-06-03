@@ -250,28 +250,28 @@ template<class E> class GrowableArray : public GenericGrowableArray {
     return false;
   }
 
-  int  find(const E& elem) const {
+  int find(const E& elem) const {
     for (int i = 0; i < _len; i++) {
       if (_data[i] == elem) return i;
     }
     return -1;
   }
 
-  int  find_from_end(const E& elem) const {
+  int find_from_end(const E& elem) const {
     for (int i = _len-1; i >= 0; i--) {
       if (_data[i] == elem) return i;
     }
     return -1;
   }
 
-  int  find(void* token, bool f(void*, E)) const {
+  int find(void* token, bool f(void*, E)) const {
     for (int i = 0; i < _len; i++) {
       if (f(token, _data[i])) return i;
     }
     return -1;
   }
 
-  int  find_from_end(void* token, bool f(void*, E)) const {
+  int find_from_end(void* token, bool f(void*, E)) const {
     // start at the end of the array
     for (int i = _len-1; i >= 0; i--) {
       if (f(token, _data[i])) return i;
@@ -425,7 +425,8 @@ template<class E> void GrowableArray<E>::clear_and_deallocate() {
 template<class E> void GrowableArray<E>::print() {
     tty->print("Growable Array " INTPTR_FORMAT, this);
     tty->print(": length %ld (_max %ld) { ", _len, _max);
-    for (int i = 0; i < _len; i++) tty->print(INTPTR_FORMAT " ", *(intptr_t*)&(_data[i]));
+    for (int i = 0; i < _len; i++)
+        tty->print(INTPTR_FORMAT " ", *(intptr_t*)&(_data[i]));
     tty->print("}\n");
 }
 
@@ -447,13 +448,8 @@ template<class E> class GrowableArrayIterator : public StackObj {
   GrowableArrayIterator<E>& operator++()  { ++_position; return *this; }
   E operator*()                           { return _array->at(_position); }
 
-  bool operator==(const GrowableArrayIterator<E>& rhs)  {
-    return _position == rhs._position;
-  }
-
-  bool operator!=(const GrowableArrayIterator<E>& rhs)  {
-    return _position != rhs._position;
-  }
+  bool operator==(const GrowableArrayIterator<E>& rhs) { return _position == rhs._position; }
+  bool operator!=(const GrowableArrayIterator<E>& rhs) { return _position != rhs._position; }
 };
 
 // Custom STL-style iterator to iterate over elements of a GrowableArray that satisfy a given predicate
@@ -478,27 +474,17 @@ template<class E, class UnaryPredicate> class GrowableArrayFilterIterator : publ
     do {
       // Advance to next element satisfying the predicate
       ++_position;
-    } while(_position != _array->length() && !_predicate(_array->at(_position)));
+    } while (_position != _array->length() && !_predicate(_array->at(_position)));
     return *this;
   }
 
   E operator*()   { return _array->at(_position); }
 
-  bool operator==(const GrowableArrayIterator<E>& rhs)  {
-    return _position == rhs._position;
-  }
+  bool operator==(const GrowableArrayIterator<E>& rhs) { return _position == rhs._position; }
+  bool operator!=(const GrowableArrayIterator<E>& rhs) { return _position != rhs._position; }
 
-  bool operator!=(const GrowableArrayIterator<E>& rhs)  {
-    return _position != rhs._position;
-  }
-
-  bool operator==(const GrowableArrayFilterIterator<E, UnaryPredicate>& rhs)  {
-    return _position == rhs._position;
-  }
-
-  bool operator!=(const GrowableArrayFilterIterator<E, UnaryPredicate>& rhs)  {
-    return _position != rhs._position;
-  }
+  bool operator==(const GrowableArrayFilterIterator<E, UnaryPredicate>& rhs)  { return _position == rhs._position; }
+  bool operator!=(const GrowableArrayFilterIterator<E, UnaryPredicate>& rhs)  { return _position != rhs._position; }
 };
 
 // Arrays for basic types

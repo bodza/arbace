@@ -52,7 +52,6 @@ volatile bool             ciObjectFactory::_initialized = false;
 // ciObjectFactory::ciObjectFactory
 ciObjectFactory::ciObjectFactory(Arena* arena,
                                  int expected_size) {
-
   for (int i = 0; i < NON_PERM_BUCKETS; i++) {
     _non_perm_bucket[i] = NULL;
   }
@@ -95,7 +94,6 @@ void ciObjectFactory::initialize() {
 }
 
 void ciObjectFactory::init_shared_objects() {
-
   _next_ident = 1;  // start numbering CI objects at 1
 
   {
@@ -375,7 +373,7 @@ ciKlass* ciObjectFactory::get_unloaded_klass(ciKlass* accessing_klass, ciSymbol*
     loader = accessing_klass->loader();
     domain = accessing_klass->protection_domain();
   }
-  for (int i=0; i<_unloaded_klasses->length(); i++) {
+  for (int i = 0; i<_unloaded_klasses->length(); i++) {
     ciKlass* entry = _unloaded_klasses->at(i);
     if (entry->name()->equals(name) && oopDesc::equals(entry->loader(), loader) && oopDesc::equals(entry->protection_domain(), domain)) {
       // We've found a match.
@@ -409,7 +407,6 @@ ciKlass* ciObjectFactory::get_unloaded_klass(ciKlass* accessing_klass, ciSymbol*
       ciSymbol* ci_name = env->get_symbol(fd.object_key());
       element_klass = env->get_klass_by_name(accessing_klass, ci_name, false)->as_instance_klass();
     } else {
-
       // The type array itself takes care of one of the dimensions.
       dimension--;
 
@@ -438,7 +435,7 @@ ciKlass* ciObjectFactory::get_unloaded_klass(ciKlass* accessing_klass, ciSymbol*
 // Get a ciInstance representing an as-yet undetermined instance of a given class.
 //
 ciInstance* ciObjectFactory::get_unloaded_instance(ciInstanceKlass* instance_klass) {
-  for (int i=0; i<_unloaded_instances->length(); i++) {
+  for (int i = 0; i<_unloaded_instances->length(); i++) {
     ciInstance* entry = _unloaded_instances->at(i);
     if (entry->klass()->equals(instance_klass)) {
       // We've found a match.
@@ -472,7 +469,7 @@ ciInstance* ciObjectFactory::get_unloaded_klass_mirror(ciKlass* type) {
 // Get a ciInstance representing an unresolved method handle constant.
 //
 // Currently, this ignores the parameters and returns a unique unloaded instance.
-ciInstance* ciObjectFactory::get_unloaded_method_handle_constant(ciKlass*  holder, ciSymbol* name, ciSymbol* signature, int       ref_kind) {
+ciInstance* ciObjectFactory::get_unloaded_method_handle_constant(ciKlass* holder, ciSymbol* name, ciSymbol* signature, int ref_kind) {
   if (ciEnv::_MethodHandle_klass == NULL)  return NULL;
   return get_unloaded_instance(ciEnv::_MethodHandle_klass->as_instance_klass());
 }
@@ -509,7 +506,7 @@ ciMethodData* ciObjectFactory::get_empty_methodData() {
 //
 // Get a ciReturnAddress for a specified bci.
 ciReturnAddress* ciObjectFactory::get_return_address(int bci) {
-  for (int i=0; i<_return_addresses->length(); i++) {
+  for (int i = 0; i<_return_addresses->length(); i++) {
     ciReturnAddress* entry = _return_addresses->at(i);
     if (entry->bci() == bci) {
       // We've found a match.
@@ -586,7 +583,7 @@ void ciObjectFactory::metadata_do(void f(Metadata*)) {
 void ciObjectFactory::print_contents_impl() {
   int len = _ci_metadata->length();
   tty->print_cr("ciObjectFactory (%d) meta data contents:", len);
-  for (int i=0; i<len; i++) {
+  for (int i = 0; i<len; i++) {
     _ci_metadata->at(i)->print();
     tty->cr();
   }

@@ -239,7 +239,6 @@ void LIRGenerator::do_MonitorEnter(MonitorEnter* x) {
 }
 
 void LIRGenerator::do_MonitorExit(MonitorExit* x) {
-
   LIRItem obj(x->obj(), this);
   obj.dont_load_item();
 
@@ -328,7 +327,6 @@ void LIRGenerator::do_ArithmeticOp_FPU(ArithmeticOp* x) {
     __ move(left.result(), fpu0);
     __ rem (fpu0, fpu1, fpu0);
     __ move(fpu0, reg);
-
   } else {
     arithmetic_op_fpu(x->op(), reg, left.result(), right.result(), x->is_strictfp(), tmp);
   }
@@ -606,8 +604,7 @@ LIR_Opr LIRGenerator::atomic_cmpxchg(BasicType type, LIR_Opr addr, LIRItem& cmp_
     Unimplemented();
   }
   LIR_Opr result = new_register(T_INT);
-  __ cmove(lir_cond_equal, LIR_OprFact::intConst(1), LIR_OprFact::intConst(0),
-           result, type);
+  __ cmove(lir_cond_equal, LIR_OprFact::intConst(1), LIR_OprFact::intConst(0), result, type);
   return result;
 }
 
@@ -654,7 +651,6 @@ void LIRGenerator::do_FmaIntrinsic(Intrinsic* x) {
 }
 
 void LIRGenerator::do_MathIntrinsic(Intrinsic* x) {
-
   if (x->id() == vmIntrinsics::_dexp || x->id() == vmIntrinsics::_dlog ||
       x->id() == vmIntrinsics::_dpow || x->id() == vmIntrinsics::_dcos ||
       x->id() == vmIntrinsics::_dsin || x->id() == vmIntrinsics::_dtan ||
@@ -774,7 +770,6 @@ void LIRGenerator::do_LibmIntrinsic(Intrinsic* x) {
 }
 
 void LIRGenerator::do_ArrayCopy(Intrinsic* x) {
-
   // Make all state_for calls early since they can emit code
   CodeEmitInfo* info = state_for(x, x->state());
 
@@ -887,7 +882,6 @@ void LIRGenerator::do_update_CRC32C(Intrinsic* x) {
 }
 
 void LIRGenerator::do_vectorizedMismatch(Intrinsic* x) {
-
   // Make all state_for calls early since they can emit code
   LIR_Opr result = rlock_result(x);
 
@@ -1137,9 +1131,7 @@ void LIRGenerator::do_NewMultiArray(NewMultiArray* x) {
   args->append(rank);
   args->append(varargs);
   LIR_Opr reg = result_register_for(x->type());
-  __ call_runtime(Runtime1::entry_for(Runtime1::new_multi_array_id),
-                  LIR_OprFact::illegalOpr,
-                  reg, args, info);
+  __ call_runtime(Runtime1::entry_for(Runtime1::new_multi_array_id), LIR_OprFact::illegalOpr, reg, args, info);
 
   LIR_Opr result = rlock_result(x);
   __ move(reg, result);
@@ -1176,10 +1168,7 @@ void LIRGenerator::do_CheckCast(CheckCast* x) {
   if (!x->klass()->is_loaded() || UseCompressedClassPointers) {
     tmp3 = new_register(objectType);
   }
-  __ checkcast(reg, obj.result(), x->klass(),
-               new_register(objectType), new_register(objectType), tmp3,
-               x->direct_compare(), info_for_exception, patching_info, stub,
-               x->profiled_method(), x->profiled_bci());
+  __ checkcast(reg, obj.result(), x->klass(), new_register(objectType), new_register(objectType), tmp3, x->direct_compare(), info_for_exception, patching_info, stub, x->profiled_method(), x->profiled_bci());
 }
 
 void LIRGenerator::do_InstanceOf(InstanceOf* x) {
@@ -1197,9 +1186,7 @@ void LIRGenerator::do_InstanceOf(InstanceOf* x) {
   if (!x->klass()->is_loaded() || UseCompressedClassPointers) {
     tmp3 = new_register(objectType);
   }
-  __ instanceof(reg, obj.result(), x->klass(),
-                new_register(objectType), new_register(objectType), tmp3,
-                x->direct_compare(), patching_info, x->profiled_method(), x->profiled_bci());
+  __ instanceof(reg, obj.result(), x->klass(), new_register(objectType), new_register(objectType), tmp3, x->direct_compare(), patching_info, x->profiled_method(), x->profiled_bci());
 }
 
 void LIRGenerator::do_If(If* x) {

@@ -27,10 +27,9 @@ class ClassFileStream: public ResourceObj {
   const char* const clone_source() const;
 
  public:
-  static const bool no_verification;
   static const bool verify;
 
-  ClassFileStream(const u1* buffer, int length, const char* source, bool verify_stream = verify); // to be verified by default
+  ClassFileStream(const u1* buffer, int length, const char* source);
 
   virtual const ClassFileStream* clone() const;
 
@@ -38,9 +37,7 @@ class ClassFileStream: public ResourceObj {
   const u1* buffer() const { return _buffer_start; }
   int length() const { return _buffer_end - _buffer_start; }
   const u1* current() const { return _current; }
-  void set_current(const u1* pos) const {
-    _current = pos;
-  }
+  void set_current(const u1* pos) const { _current = pos; }
 
   // for relative positioning
   juint current_offset() const {

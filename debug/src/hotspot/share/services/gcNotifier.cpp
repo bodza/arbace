@@ -55,7 +55,6 @@ bool GCNotifier::has_event() {
 }
 
 static Handle getGcInfoBuilder(GCMemoryManager *gcManager,TRAPS) {
-
   Klass* gcMBeanKlass = Management::com_sun_management_internal_GarbageCollectorExtImpl_klass(CHECK_NH);
 
   instanceOop i = gcManager->get_memory_manager_instance(THREAD);
@@ -74,7 +73,6 @@ static Handle getGcInfoBuilder(GCMemoryManager *gcManager,TRAPS) {
 }
 
 static Handle createGcInfo(GCMemoryManager *gcManager, GCStatInfo *gcStatInfo,TRAPS) {
-
   // Fill the arrays of MemoryUsage objects with before and after GC
   // per pool memory usage
 

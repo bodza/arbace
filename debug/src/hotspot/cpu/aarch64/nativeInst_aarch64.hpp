@@ -72,7 +72,6 @@ class NativeInstruction {
   void wrote(int offset);
 
  public:
-
   // unit test stuff
   static void test() { }                 // override for testing
 
@@ -244,8 +243,8 @@ class NativeMovConstReg: public NativeInstruction {
     displacement_offset         =    0,
   };
 
-  address instruction_address() const       { return addr_at(instruction_offset); }
-  address next_instruction_address() const  {
+  address instruction_address() const      { return addr_at(instruction_offset); }
+  address next_instruction_address() const {
     if (nativeInstruction_at(instruction_address())->is_movz())
       // Assume movz, movk, movk
       return addr_at(instruction_size);
@@ -541,7 +540,6 @@ inline bool NativeInstruction::is_jump_or_nop() {
 // Call trampoline stubs.
 class NativeCallTrampolineStub : public NativeInstruction {
  public:
-
   enum AArch64_specific_constants {
     instruction_size            =    4 * 4,
     instruction_offset          =    0,
@@ -612,11 +610,9 @@ public:
   size_t size_in_bytes() { return 1 << size(); }
   bool is_not_pre_post_index() { return (is_ldst_ur() || is_ldst_unsigned_offset()); }
   bool is_load() {
-
     return Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b01;
   }
   bool is_store() {
-
     return Instruction_aarch64::extract(uint_at(0), 23, 22) == 0b00;
   }
 };

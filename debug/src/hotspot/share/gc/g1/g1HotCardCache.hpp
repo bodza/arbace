@@ -30,7 +30,6 @@ class HeapRegion;
 // code, increasing throughput.
 
 class G1HotCardCache: public CHeapObj<mtGC> {
-
   G1CollectedHeap*  _g1h;
 
   bool              _use_cache;

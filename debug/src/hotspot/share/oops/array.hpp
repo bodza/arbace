@@ -30,8 +30,7 @@ protected:
 
   void* operator new(size_t size, ClassLoaderData* loader_data, int length, TRAPS) throw() {
     size_t word_size = Array::size(length);
-    return (void*) Metaspace::allocate(loader_data, word_size,
-                                       MetaspaceObj::array_type(sizeof(T)), THREAD);
+    return (void*) Metaspace::allocate(loader_data, word_size, MetaspaceObj::array_type(sizeof(T)), THREAD);
   }
 
   static size_t byte_sizeof(int length, size_t elm_byte_size) {
@@ -42,18 +41,14 @@ protected:
   // WhiteBox API helper.
   // Can't distinguish between array of length 0 and length 1,
   // will always return 0 in those cases.
-  static int bytes_to_length(size_t bytes)       {
-
+  static int bytes_to_length(size_t bytes) {
     if (sizeof(Array<T>) >= bytes) {
       return 0;
     }
 
     size_t left = bytes - sizeof(Array<T>);
-
     size_t elements = left / sizeof(T);
-
     int length = (int)elements;
-
     return length;
   }
 
@@ -66,7 +61,6 @@ protected:
   }
 
  public:
-
   // standard operations
   int  length() const                 { return _length; }
   T* data()                           { return _data; }

@@ -168,7 +168,6 @@ void NativeCall::insert(address code_pos, address entry) {
 // selfs (spinlock). Then patches the last byte, and then atomicly replaces
 // the jmp's with the first 4 byte of the new instruction.
 void NativeCall::replace_mt_safe(address instr_addr, address code_buffer) {
-
   NativeCall* n_call =  nativeCall_at (instr_addr); // checking that it is a call
   if (os::is_MP()) {
     guarantee((intptr_t)instr_addr % BytesPerWord == 0, "must be aligned");

@@ -1,5 +1,4 @@
 #include "jvm.h"
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "utilities/globalDefinitions.hpp"
 #include "runtime/frame.inline.hpp"
@@ -83,13 +82,7 @@ bool os::is_debugger_attached() {
   return false;
 }
 
-void os::wait_for_keypress_at_exit(void) {
-  // don't do anything on posix platforms
-  return;
-}
-
 int os::create_file_for_heap(const char* dir) {
-
   const char name_template[] = "/jvmheap.XXXXXX";
 
   char *fullname = (char*)os::malloc((strlen(dir) + strlen(name_template) + 1), mtInternal);
@@ -167,7 +160,6 @@ static int util_posix_fallocate(int fd, off_t offset, off_t len) {
 
 // Map the given address range to the provided file descriptor.
 char* os::map_memory_to_file(char* base, size_t size, int fd) {
-
   // allocate space for the file
   int ret = util_posix_fallocate(fd, 0, (off_t)size);
   if (ret != 0) {
@@ -196,7 +188,6 @@ char* os::map_memory_to_file(char* base, size_t size, int fd) {
 }
 
 char* os::replace_existing_mapping_with_file_mapping(char* base, size_t size, int fd) {
-
   return map_memory_to_file(base, size, fd);
 }
 
@@ -204,7 +195,6 @@ char* os::replace_existing_mapping_with_file_mapping(char* base, size_t size, in
 // so on posix, unmap the section at the start and at the end of the chunk that we mapped
 // rather than unmapping and remapping the whole chunk to get requested alignment.
 char* os::reserve_memory_aligned(size_t size, size_t alignment, int file_desc) {
-
   size_t extra_size = size + alignment;
 
   char* extra_base;
@@ -453,7 +443,6 @@ char* os::build_agent_function_name(const char *sym_name, const char *lib_name,
 }
 
 int os::sleep(Thread* thread, jlong millis, bool interruptible) {
-
   ParkEvent * const slp = thread->_SleepEvent;
   slp->reset();
   OrderAccess::fence();
@@ -521,7 +510,6 @@ int os::sleep(Thread* thread, jlong millis, bool interruptible) {
 // interrupt support
 
 void os::interrupt(Thread* thread) {
-
   OSThread* osthread = thread->osthread();
 
   if (!osthread->interrupted()) {
@@ -543,7 +531,6 @@ void os::interrupt(Thread* thread) {
 }
 
 bool os::is_interrupted(Thread* thread, bool clear_interrupted) {
-
   OSThread* osthread = thread->osthread();
 
   bool interrupted = osthread->interrupted();
@@ -731,7 +718,6 @@ static const struct {
 
 // Returned string is a constant. For unknown signals "UNKNOWN" is returned.
 const char* os::Posix::get_signal_name(int sig, char* out, size_t outlen) {
-
   const char* ret = NULL;
 
 #ifdef SIGRTMIN
@@ -926,7 +912,6 @@ struct enum_sigcode_desc_t {
 };
 
 static bool get_signal_code_description(const siginfo_t* si, enum_sigcode_desc_t* out) {
-
   const struct {
     int sig; int code; const char* s_code; const char* s_desc;
   } t1 [] = {
@@ -1041,7 +1026,6 @@ static bool get_signal_code_description(const siginfo_t* si, enum_sigcode_desc_t
 }
 
 void os::print_siginfo(outputStream* os, const void* si0) {
-
   const siginfo_t* const si = (const siginfo_t*) si0;
 
   char buf[20];
@@ -1134,7 +1118,6 @@ char* os::Posix::describe_pthread_attr(char* buf, size_t buflen, const pthread_a
 }
 
 char* os::Posix::realpath(const char* filename, char* outbuf, size_t outbuflen) {
-
   if (filename == NULL || outbuf == NULL || outbuflen < 1) {
     ShouldNotReachHere();
     errno = EINVAL;
@@ -1348,9 +1331,7 @@ void os::ThreadCrashProtection::restore() {
 }
 
 void os::ThreadCrashProtection::check_crash_protection(int sig, Thread* thread) {
-
   if (thread != NULL && thread == _protected_thread && _crash_protection != NULL) {
-
     if (sig == SIGSEGV || sig == SIGBUS) {
       _crash_protection->restore();
     }
@@ -1403,7 +1384,6 @@ static bool _use_clock_monotonic_condattr;
 // Determine what POSIX API's are present and do appropriate
 // configuration.
 void os::Posix::init(void) {
-
   // NOTE: no logging available when this is called. Put logging
   // statements in init_2().
 
@@ -1567,7 +1547,6 @@ static void unpack_abs_time(timespec* abstime, jlong deadline, jlong now_sec) {
 }
 
 static void to_abstime(timespec* abstime, jlong timeout, bool isAbsolute) {
-
   if (timeout < 0) {
     timeout = 0;
   }
@@ -1580,7 +1559,6 @@ static void to_abstime(timespec* abstime, jlong timeout, bool isAbsolute) {
     assert_status(status == 0, status, "clock_gettime");
     calc_rel_time(abstime, timeout, now.tv_sec, now.tv_nsec, NANOUNITS);
   } else {
-
 #else
 
   { // Match the block scope.
@@ -1767,7 +1745,6 @@ void os::PlatformEvent::unpark() {
 // is no need to track notifications.
 
 void Parker::park(bool isAbsolute, jlong time) {
-
   // Optional fast-path check:
   // Return immediately if a permit is available.
   // We depend on Atomic::xchg() having full barrier semantics

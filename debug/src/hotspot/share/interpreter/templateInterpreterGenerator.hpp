@@ -6,7 +6,6 @@
 
 class TemplateInterpreterGenerator: public AbstractInterpreterGenerator {
  protected:
-
   // entry points for shared code sequence
   address _unimplemented_bytecode;
   address _illegal_bytecode_sequence;
@@ -45,14 +44,6 @@ class TemplateInterpreterGenerator: public AbstractInterpreterGenerator {
   void set_unimplemented(int i);
   void set_entry_points_for_all_bytes();
   void set_safepoints_for_all_bytes();
-
-  // Helpers for generate_and_dispatch
-  address generate_trace_code(TosState state)   { return 0; };
-  void count_bytecode()                         { };
-  void histogram_bytecode(Template* t)          { };
-  void histogram_bytecode_pair(Template* t)     { };
-  void trace_bytecode(Template* t)              { };
-  void stop_interpreter_at()                    { };
 
   void generate_all();
 

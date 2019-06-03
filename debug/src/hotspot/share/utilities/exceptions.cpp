@@ -3,8 +3,6 @@
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "compiler/compileBroker.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/handles.inline.hpp"
@@ -32,13 +30,6 @@ void ThreadShadow::set_pending_exception(oop exception, const char* file, int li
 }
 
 void ThreadShadow::clear_pending_exception() {
-  LogTarget(Debug, exceptions) lt;
-  if (_pending_exception != NULL && lt.is_enabled()) {
-    ResourceMark rm;
-    LogStream ls(lt);
-    ls.print("Thread::clear_pending_exception: cleared exception:");
-    _pending_exception->print_on(&ls);
-  }
   _pending_exception = NULL;
   _exception_file    = NULL;
   _exception_line    = 0;
@@ -191,7 +182,6 @@ void Exceptions::fthrow(Thread* thread, const char* file, int line, Symbol* h_na
 // Creates an exception oop, calls the <init> method with the given signature.
 // and returns a Handle
 Handle Exceptions::new_exception(Thread *thread, Symbol* name, Symbol* signature, JavaCallArguments *args, Handle h_loader, Handle h_protection_domain) {
-
   Handle h_exception;
 
   // Resolve exception klass, and check for pending exception below.
@@ -304,7 +294,6 @@ Handle Exceptions::new_exception(Thread* thread, Symbol* name, const char* messa
 // point is to push this flag down to class java_lang_String since other
 // classes may need similar functionalities.
 Handle Exceptions::new_exception(Thread* thread, Symbol* name, const char* message, ExceptionMsgToUtf8Mode to_utf8_safe) {
-
   Handle       h_loader(thread, NULL);
   Handle       h_prot(thread, NULL);
   Handle       h_cause(thread, NULL);

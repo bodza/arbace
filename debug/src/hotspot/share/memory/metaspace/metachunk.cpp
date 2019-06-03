@@ -9,14 +9,10 @@
 #include "utilities/debug.hpp"
 
 namespace metaspace {
-
 size_t Metachunk::object_alignment() {
   // Must align pointers and sizes to 8,
   // so that 64 bit types get correctly aligned.
   const size_t alignment = 8;
-
-  // Make sure that the Klass alignment also agree.
-  STATIC_ASSERT(alignment == (size_t)KlassAlignmentInBytes);
 
   return alignment;
 }

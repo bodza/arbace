@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "gc/shared/stringdedup/stringDedupStat.hpp"
-#include "logging/log.hpp"
 
 StringDedupStat::StringDedupStat() :
   _inspected(0),

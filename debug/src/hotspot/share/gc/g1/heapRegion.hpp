@@ -169,7 +169,6 @@ class HeapRegion: public G1ContiguousSpace {
   template <typename SpaceType>
   friend void CompactibleSpace::scan_and_forward(SpaceType* space, CompactPoint* cp);
  private:
-
   // The remembered set for this region.
   // (Might want to make this "inline" later, to avoid some alloc failure
   // issues.)
@@ -483,15 +482,13 @@ class HeapRegion: public G1ContiguousSpace {
 
   // Notify the region that we are about to start processing
   // self-forwarded objects during evac failure handling.
-  void note_self_forwarding_removal_start(bool during_initial_mark,
-                                          bool during_conc_mark);
+  void note_self_forwarding_removal_start(bool during_initial_mark, bool during_conc_mark);
 
   // Notify the region that we have finished processing self-forwarded
   // objects during evac failure handling.
   void note_self_forwarding_removal_end(size_t marked_bytes);
 
   void reset_during_compaction() {
-
     zero_marked_bytes();
     init_top_at_mark_start();
   }
@@ -525,14 +522,12 @@ class HeapRegion: public G1ContiguousSpace {
   }
 
   void install_surv_rate_group(SurvRateGroup* surv_rate_group) {
-
     _surv_rate_group = surv_rate_group;
     _age_index = surv_rate_group->next_age_index();
   }
 
   void uninstall_surv_rate_group() {
     if (_surv_rate_group != NULL) {
-
       _surv_rate_group = NULL;
       _age_index = -1;
     }

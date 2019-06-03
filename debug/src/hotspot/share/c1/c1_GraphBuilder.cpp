@@ -106,7 +106,6 @@ void BlockListBuilder::set_entries(int osr_bci) {
 }
 
 BlockBegin* BlockListBuilder::make_block_at(int cur_bci, BlockBegin* predecessor) {
-
   BlockBegin* block = _bci2block->at(cur_bci);
   if (block == NULL) {
     block = new BlockBegin(cur_bci);
@@ -1308,10 +1307,9 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
   // Check to see whether we are inlining. If so, Return
   // instructions become Gotos to the continuation point.
   if (continuation() != NULL) {
-
     int invoke_bci = state()->caller_state()->bci();
 
-    if (x != NULL  && !ignore_return) {
+    if (x != NULL && !ignore_return) {
       ciMethod* caller = state()->scope()->caller()->method();
       Bytecodes::Code invoke_raw_bc = caller->raw_code_at_bci(invoke_bci);
       if (invoke_raw_bc == Bytecodes::_invokehandle || invoke_raw_bc == Bytecodes::_invokedynamic) {
@@ -1600,10 +1598,6 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
   ciInstanceKlass* callee_holder = ciEnv::get_instance_klass_for_declared_method_holder(holder);
   ciInstanceKlass* actual_recv = callee_holder;
 
-  CompileLog* log = compilation()->log();
-  if (log != NULL)
-      log->elem("call method='%d' instr='%s'", log->identify(target), Bytecodes::name(code));
-
   // invoke-special-super
   if (bc_raw == Bytecodes::_invokespecial && !target->is_object_initializer()) {
     ciInstanceKlass* sender_klass = calling_klass->is_anonymous() ? calling_klass->host_klass() : calling_klass;
@@ -1766,7 +1760,7 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
   // check if we could do inlining
   if (!PatchALot && Inline && target->is_loaded() && (klass->is_initialized() || (klass->is_interface() && target->holder()->is_initialized())) && !patch_for_appendix) {
     // callee is known => check if we have static binding
-    if (code == Bytecodes::_invokestatic  || code == Bytecodes::_invokespecial || (code == Bytecodes::_invokevirtual && target->is_final_method()) || code == Bytecodes::_invokedynamic) {
+    if (code == Bytecodes::_invokestatic || code == Bytecodes::_invokespecial || (code == Bytecodes::_invokevirtual && target->is_final_method()) || code == Bytecodes::_invokedynamic) {
       ciMethod* inline_target = (cha_monomorphic_target != NULL) ? cha_monomorphic_target : target;
       // static binding => check if callee is ok
       bool success = try_inline(inline_target, (cha_monomorphic_target != NULL) || (exact_target != NULL), false, code, better_receiver);
@@ -2206,7 +2200,6 @@ Value PhiSimplifier::simplify(Value v) {
   } else if (phi->type()->is_illegal()) {
     // illegal phi functions are ignored anyway
     return phi;
-
   } else {
     // mark phi function as processed to break cycles in phi functions
     phi->set(Phi::visited);
@@ -2270,7 +2263,6 @@ void GraphBuilder::connect_to_end(BlockBegin* beg) {
 
 BlockEnd* GraphBuilder::iterate_bytecodes_for_block(int bci) {
   _skip_block = false;
-  CompileLog* log = compilation()->log();
   ciBytecodeStream s(method());
   s.reset_to_bci(bci);
   int prev_bci = bci;
@@ -2287,10 +2279,6 @@ BlockEnd* GraphBuilder::iterate_bytecodes_for_block(int bci) {
   bool ignore_return = scope_data()->ignore_return();
 
   while (!bailed_out() && last()->as_BlockEnd() == NULL && (code = stream()->next()) != ciBytecodeStream::EOBC() && (block_at(s.cur_bci()) == NULL || block_at(s.cur_bci()) == block())) {
-
-    if (log != NULL)
-      log->set_context("bc code='%d' bci='%d'", (int)code, s.cur_bci());
-
     // Check for active jsr during OSR compilation
     if (compilation()->is_osr_compile() && scope()->is_top_scope() && parsing_jsr() && s.cur_bci() == compilation()->osr_bci()) {
       bailout("OSR not supported while a jsr is active");
@@ -2509,9 +2497,6 @@ BlockEnd* GraphBuilder::iterate_bytecodes_for_block(int bci) {
       default                         : ShouldNotReachHere(); break;
     }
 
-    if (log != NULL)
-      log->clear_context(); // skip marker if nothing was printed
-
     // save current bci to setup Goto at the end
     prev_bci = s.cur_bci();
   }
@@ -2684,7 +2669,6 @@ BlockBegin* GraphBuilder::setup_start_block(int osr_bci, BlockBegin* std_entry, 
 }
 
 void GraphBuilder::setup_osr_entry_block() {
-
   int osr_bci = compilation()->osr_bci();
   ciBytecodeStream s(method());
   s.reset_to_bci(osr_bci);
@@ -3238,7 +3222,6 @@ bool GraphBuilder::try_inline_jsr(int jsr_dest_bci) {
 // guaranteed to be non-null by the explicit null check at the
 // beginning of inlining.
 void GraphBuilder::inline_sync_entry(Value lock, BlockBegin* sync_handler) {
-
   monitorenter(lock, SynchronizationEntryBCI);
   _last->set_needs_null_check(false);
 
@@ -3484,14 +3467,9 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
   scope_data()->set_stream(NULL);
   scope_data()->set_ignore_return(ignore_return);
 
-  CompileLog* log = compilation()->log();
-  if (log != NULL) log->head("parse method='%d'", log->identify(callee));
-
   // Ready to resume parsing in callee (either in the same block we
   // were in before or in the callee's start block)
   iterate_all_blocks(callee_start_block == NULL);
-
-  if (log != NULL) log->done("parse");
 
   // If we bailed out during parsing, return immediately (this is bad news)
   if (bailed_out())
@@ -3809,20 +3787,6 @@ static void post_inlining_event(EventCompilerInlining* event, int compile_id, co
 }
 
 void GraphBuilder::print_inlining(ciMethod* callee, const char* msg, bool success) {
-  CompileLog* log = compilation()->log();
-  if (log != NULL) {
-    if (success) {
-      if (msg != NULL)
-        log->inline_success(msg);
-      else
-        log->inline_success("receiver is statically known");
-    } else {
-      if (msg != NULL)
-        log->inline_fail(msg);
-      else
-        log->inline_fail("reason unknown");
-    }
-  }
   EventCompilerInlining event;
   if (event.should_commit()) {
     post_inlining_event(&event, compilation()->env()->task()->compile_id(), msg, success, bci(), method(), callee);

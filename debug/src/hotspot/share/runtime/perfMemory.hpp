@@ -53,7 +53,6 @@ typedef struct {
  * structure changes.
  */
 typedef struct {
-
   jint entry_length;      // entry length in bytes
   jint name_offset;       // offset of the data item name
   jint vector_length;     // length of the vector. If 0, then scalar

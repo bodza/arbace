@@ -2,8 +2,6 @@
 
 #include "aot/aotLoader.hpp"
 #include "gc/shared/collectedHeap.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/filemap.hpp"
 #include "memory/metaspace.hpp"
 #include "memory/metaspace/chunkManager.hpp"
@@ -426,7 +424,6 @@ void MetaspaceUtils::print_vs(outputStream* out, size_t scale) {
 // This will print out a basic metaspace usage report but
 // unlike print_report() is guaranteed not to lock or to walk the CLDG.
 void MetaspaceUtils::print_basic_report(outputStream* out, size_t scale) {
-
   out->cr();
   out->print_cr("Usage:");
 
@@ -506,7 +503,6 @@ void MetaspaceUtils::print_basic_report(outputStream* out, size_t scale) {
 }
 
 void MetaspaceUtils::print_report(outputStream* out, size_t scale, int flags) {
-
   const bool print_loaders = (flags & rf_show_loaders) > 0;
   const bool print_classes = (flags & rf_show_classes) > 0;
   const bool print_by_chunktype = (flags & rf_break_down_by_chunktype) > 0;
@@ -775,7 +771,7 @@ void Metaspace::set_narrow_klass_base_and_shift(address metaspace_base, address 
   // with zero-shift mode also, to be consistent with AOT it uses
   // LogKlassAlignmentInBytes for klass shift so archived java heap objects
   // can be used at same time as AOT code.
-  if (!UseSharedSpaces && (uint64_t)(higher_address - lower_base) <= UnscaledClassSpaceMax) {
+  if ((uint64_t)(higher_address - lower_base) <= UnscaledClassSpaceMax) {
     Universe::set_narrow_klass_shift(0);
   } else {
     Universe::set_narrow_klass_shift(LogKlassAlignmentInBytes);
@@ -837,16 +833,9 @@ void Metaspace::allocate_metaspace_compressed_klass_ptrs(char* requested_addr, a
   // If we got here then the metaspace got allocated.
   MemTracker::record_virtual_memory_type((address)metaspace_rs.base(), mtClass);
 
-  set_narrow_klass_base_and_shift((address)metaspace_rs.base(), UseSharedSpaces ? (address)cds_base : 0);
+  set_narrow_klass_base_and_shift((address)metaspace_rs.base(), 0);
 
   initialize_class_space(metaspace_rs);
-
-  LogTarget(Trace, gc, metaspace) lt;
-  if (lt.is_enabled()) {
-    ResourceMark rm;
-    LogStream ls(lt);
-    print_compressed_class_space(&ls, requested_addr);
-  }
 }
 
 void Metaspace::print_compressed_class_space(outputStream* st, const char* requested_addr) {
@@ -873,11 +862,6 @@ void Metaspace::initialize_class_space(ReservedSpace rs) {
 }
 
 void Metaspace::ergo_initialize() {
-  if (false) {
-    // Using large pages when dumping the shared archive is currently not implemented.
-    FLAG_SET_ERGO(bool, UseLargePagesInMetaspace, false);
-  }
-
   size_t page_size = os::vm_page_size();
   if (UseLargePages && UseLargePagesInMetaspace) {
     page_size = os::large_page_size();
@@ -910,7 +894,7 @@ void Metaspace::ergo_initialize() {
   // Initial virtual space size will be calculated at global_initialize()
   size_t min_metaspace_sz = VIRTUALSPACEMULTIPLIER * InitialBootClassLoaderMetaspaceSize;
   if (UseCompressedClassPointers) {
-    if ((min_metaspace_sz + CompressedClassSpaceSize) >  MaxMetaspaceSize) {
+    if ((min_metaspace_sz + CompressedClassSpaceSize) > MaxMetaspaceSize) {
       if (min_metaspace_sz >= MaxMetaspaceSize) {
         vm_exit_during_initialization("MaxMetaspaceSize is too small.");
       } else {
@@ -966,7 +950,6 @@ void Metaspace::post_initialize() {
 }
 
 void Metaspace::verify_global_initialization() {
-
   if (using_class_space()) {
   }
 }
@@ -991,7 +974,7 @@ MetaWord* Metaspace::allocate(ClassLoaderData* loader_data, size_t word_size, Me
     tracer()->report_metaspace_allocation_failure(loader_data, word_size, type, mdtype);
 
     // Allocation failed.
-    if (is_init_completed() && !(false && THREAD->is_VM_thread())) {
+    if (is_init_completed()) {
       // Only start a GC if the bootstrapping has completed.
       // Also, we cannot GC if we are at the end of the CDS dumping stage which runs inside
       // the VM thread.
@@ -1002,14 +985,6 @@ MetaWord* Metaspace::allocate(ClassLoaderData* loader_data, size_t word_size, Me
   }
 
   if (result == NULL) {
-    if (false) {
-      // CDS dumping keeps loading classes, so if we hit an OOM we probably will keep hitting OOM.
-      // We should abort to avoid generating a potentially bad archive.
-      tty->print_cr("Failed allocating metaspace object type %s of size " SIZE_FORMAT ". CDS dump aborted.",
-          MetaspaceObj::type_name(type), word_size * BytesPerWord);
-      tty->print_cr("Please increase MaxMetaspaceSize (currently " SIZE_FORMAT " bytes).", MaxMetaspaceSize);
-      vm_exit(1);
-    }
     report_metadata_oome(loader_data, word_size, type, mdtype, THREAD);
     return NULL;
   }
@@ -1023,30 +998,13 @@ MetaWord* Metaspace::allocate(ClassLoaderData* loader_data, size_t word_size, Me
 void Metaspace::report_metadata_oome(ClassLoaderData* loader_data, size_t word_size, MetaspaceObj::Type type, MetadataType mdtype, TRAPS) {
   tracer()->report_metadata_oom(loader_data, word_size, type, mdtype);
 
-  // If result is still null, we are out of memory.
-  Log(gc, metaspace, freelist, oom) log;
-  if (log.is_info()) {
-    log.info("Metaspace (%s) allocation failed for size " SIZE_FORMAT,
-             is_class_space_allocation(mdtype) ? "class" : "data", word_size);
-    ResourceMark rm;
-    if (log.is_debug()) {
-      if (loader_data->metaspace_or_null() != NULL) {
-        LogStream ls(log.debug());
-        loader_data->print_value_on(&ls);
-      }
-    }
-    LogStream ls(log.info());
-    // In case of an OOM, log out a short but still useful report.
-    MetaspaceUtils::print_basic_report(&ls, 0);
-  }
-
   bool out_of_compressed_class_space = false;
   if (is_class_space_allocation(mdtype)) {
     ClassLoaderMetaspace* metaspace = loader_data->metaspace_non_null();
     out_of_compressed_class_space = MetaspaceUtils::committed_bytes(Metaspace::ClassType) + (metaspace->class_chunk_size(word_size) * BytesPerWord) > CompressedClassSpaceSize;
   }
 
-  // -XX:+false and -XX:OnOutOfMemoryError support
+  // -XX:OnOutOfMemoryError support
   const char* space_string = out_of_compressed_class_space ? "Compressed class space" : "Metaspace";
 
   report_java_out_of_memory(space_string);

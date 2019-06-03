@@ -46,7 +46,7 @@ bool MachODecoder::decode(address addr, char *buf, int buflen, int *offset, cons
   int32_t found_strx = 0;
   int32_t found_symval = 0;
 
-  for (uint32_t i=0; i < nsyms; i++) {
+  for (uint32_t i = 0; i < nsyms; i++) {
     uint32_t this_value = cur_nlist->n_value;
 
     if (addr_relative == this_value) {
@@ -94,7 +94,6 @@ void* MachODecoder::mach_find_command(struct mach_header_64 * mach_base, uint32_
 }
 
 char* MachODecoder::mach_find_in_stringtable(char *strtab, uint32_t tablesize, int strx_wanted) {
-
   if (strx_wanted == 0) {
     return NULL;
   }

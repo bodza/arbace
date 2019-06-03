@@ -15,11 +15,9 @@
 #include "gc/g1/g1Policy.hpp"
 #include "gc/g1/g1StringDedup.hpp"
 #include "gc/shared/adaptiveSizePolicy.hpp"
-#include "gc/shared/gcTraceTime.inline.hpp"
 #include "gc/shared/preservedMarks.hpp"
 #include "gc/shared/referenceProcessor.hpp"
 #include "gc/shared/weakProcessor.hpp"
-#include "logging/log.hpp"
 #include "runtime/biasedLocking.hpp"
 #include "runtime/handles.inline.hpp"
 #include "utilities/debug.hpp"
@@ -83,7 +81,6 @@ G1FullCollector::G1FullCollector(G1CollectedHeap* heap, GCMemoryManager* memory_
     _is_alive_mutator(heap->ref_processor_stw(), &_is_alive),
     _always_subject_to_discovery(),
     _is_subject_mutator(heap->ref_processor_stw(), &_always_subject_to_discovery) {
-
   _preserved_marks_set.init(_num_workers);
   _markers = NEW_C_HEAP_ARRAY(G1FullGCMarker*, _num_workers, mtGC);
   _compaction_points = NEW_C_HEAP_ARRAY(G1FullGCCompactionPoint*, _num_workers, mtGC);
@@ -168,7 +165,6 @@ void G1FullCollector::complete_collection() {
 
 void G1FullCollector::phase1_mark_live_objects() {
   // Recursively traverse all live objects and mark them.
-  GCTraceTime(Info, gc, phases) info("Phase 1: Mark live objects", scope()->timer());
 
   // Do the actual marking.
   G1FullGCMarkTask marking_task(this);
@@ -179,19 +175,14 @@ void G1FullCollector::phase1_mark_live_objects() {
   reference_processing.execute(scope()->timer(), scope()->tracer());
 
   // Weak oops cleanup.
-  {
-    GCTraceTime(Debug, gc, phases) trace("Phase 1: Weak Processing", scope()->timer());
-    WeakProcessor::weak_oops_do(&_is_alive, &do_nothing_cl);
-  }
+  WeakProcessor::weak_oops_do(&_is_alive, &do_nothing_cl);
 
   // Class unloading and cleanup.
   if (ClassUnloading) {
-    GCTraceTime(Debug, gc, phases) debug("Phase 1: Class Unloading and Cleanup", scope()->timer());
     // Unload classes and purge the SystemDictionary.
     bool purged_class = SystemDictionary::do_unloading(scope()->timer());
     _heap->complete_cleaning(&_is_alive, purged_class);
   } else {
-    GCTraceTime(Debug, gc, phases) debug("Phase 1: String and Symbol Tables Cleanup", scope()->timer());
     // If no class unloading just clean out strings and symbols.
     _heap->partial_cleaning(&_is_alive, true, true, G1StringDedup::is_enabled());
   }
@@ -200,7 +191,6 @@ void G1FullCollector::phase1_mark_live_objects() {
 }
 
 void G1FullCollector::phase2_prepare_compaction() {
-  GCTraceTime(Info, gc, phases) info("Phase 2: Prepare for compaction", scope()->timer());
   G1FullGCPrepareTask task(this);
   run_task(&task);
 
@@ -212,15 +202,12 @@ void G1FullCollector::phase2_prepare_compaction() {
 
 void G1FullCollector::phase3_adjust_pointers() {
   // Adjust the pointers to reflect the new locations
-  GCTraceTime(Info, gc, phases) info("Phase 3: Adjust pointers", scope()->timer());
-
   G1FullGCAdjustTask task(this);
   run_task(&task);
 }
 
 void G1FullCollector::phase4_do_compaction() {
   // Compact the heap using the compaction queues created in phase 2.
-  GCTraceTime(Info, gc, phases) info("Phase 4: Compact heap", scope()->timer());
   G1FullGCCompactTask task(this);
   run_task(&task);
 
@@ -259,6 +246,5 @@ void G1FullCollector::verify_after_marking() {
   // fail. At the end of the GC, the original mark word values
   // (including hash values) are restored to the appropriate
   // objects.
-  GCTraceTime(Info, gc, verify)("Verifying During GC (full)");
   _heap->verify(VerifyOption_G1UseFullMarking);
 }

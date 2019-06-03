@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "logging/log.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/virtualspace.hpp"
 #include "oops/markOop.hpp"
@@ -110,7 +109,6 @@ void ReservedSpace::initialize(size_t size, size_t alignment, bool large, char* 
   char* base = NULL;
 
   if (special) {
-
     base = os::reserve_memory_special(size, alignment, requested_address, executable);
 
     if (base != NULL) {
@@ -399,7 +397,6 @@ void ReservedHeapSpace::initialize_compressed_heap(const size_t size, size_t ali
 
   // Keep heap at HeapBaseMinAddress.
   if (_base == NULL) {
-
     // Try to allocate the heap at addresses that allow efficient oop compression.
     // Different schemes are tried, in order of decreasing optimization potential.
     //
@@ -412,12 +409,10 @@ void ReservedHeapSpace::initialize_compressed_heap(const size_t size, size_t ali
     // Attempt to allocate so that we can run without base and scale (32-Bit unscaled compressed oops).
     // Give it several tries from top of range to bottom.
     if (aligned_heap_base_min_address + size <= (char *)UnscaledOopHeapMax) {
-
       // Calc address range within we try to attach (range of possible start addresses).
       char* const highest_start = align_down((char *)UnscaledOopHeapMax - size, attach_point_alignment);
       char* const lowest_start  = align_up(aligned_heap_base_min_address, attach_point_alignment);
-      try_reserve_range(highest_start, lowest_start, attach_point_alignment,
-                        aligned_heap_base_min_address, (char *)UnscaledOopHeapMax, size, alignment, large);
+      try_reserve_range(highest_start, lowest_start, attach_point_alignment, aligned_heap_base_min_address, (char *)UnscaledOopHeapMax, size, alignment, large);
     }
 
     // zerobased: Attempt to allocate in the lower 32G.
@@ -427,9 +422,7 @@ void ReservedHeapSpace::initialize_compressed_heap(const size_t size, size_t ali
     const size_t class_space = align_up(CompressedClassSpaceSize, alignment);
     // For small heaps, save some space for compressed class pointer
     // space so it can be decoded with no base.
-    if (UseCompressedClassPointers && !UseSharedSpaces &&
-        OopEncodingHeapMax <= KlassEncodingMetaspaceMax &&
-        (uint64_t)(aligned_heap_base_min_address + size + class_space) <= KlassEncodingMetaspaceMax) {
+    if (UseCompressedClassPointers && OopEncodingHeapMax <= KlassEncodingMetaspaceMax && (uint64_t)(aligned_heap_base_min_address + size + class_space) <= KlassEncodingMetaspaceMax) {
       zerobased_max = (char *)OopEncodingHeapMax - class_space;
     }
 
@@ -448,8 +441,7 @@ void ReservedHeapSpace::initialize_compressed_heap(const size_t size, size_t ali
         lowest_start = MAX2(lowest_start, (char*)unscaled_end);
       }
       lowest_start = align_up(lowest_start, attach_point_alignment);
-      try_reserve_range(highest_start, lowest_start, attach_point_alignment,
-                        aligned_heap_base_min_address, zerobased_max, size, alignment, large);
+      try_reserve_range(highest_start, lowest_start, attach_point_alignment, aligned_heap_base_min_address, zerobased_max, size, alignment, large);
     }
 
     // Now we go for heaps with base != 0.  We need a noaccess prefix to efficiently
@@ -476,7 +468,6 @@ void ReservedHeapSpace::initialize_compressed_heap(const size_t size, size_t ali
 }
 
 ReservedHeapSpace::ReservedHeapSpace(size_t size, size_t alignment, bool large, const char* heap_allocation_directory) : ReservedSpace() {
-
   if (size == 0) {
     return;
   }
@@ -643,7 +634,6 @@ bool VirtualSpace::contains(const void* p) const {
 }
 
 static void pretouch_expanded_memory(void* start, void* end) {
-
   os::pretouch_memory(start, end);
 }
 

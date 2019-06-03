@@ -40,7 +40,6 @@ void G1RemSetTrackingPolicy::update_at_free(HeapRegion* r) {
 static void print_before_rebuild(HeapRegion* r, bool selected_for_rebuild, size_t total_live_bytes, size_t live_bytes) { }
 
 bool G1RemSetTrackingPolicy::update_humongous_before_rebuild(HeapRegion* r, bool is_live) {
-
   if (r->is_archive()) {
     return false;
   }
@@ -61,7 +60,6 @@ bool G1RemSetTrackingPolicy::update_humongous_before_rebuild(HeapRegion* r, bool
 }
 
 bool G1RemSetTrackingPolicy::update_before_rebuild(HeapRegion* r, size_t live_bytes) {
-
   // Only consider updating the remembered set for old gen regions - excluding archive regions
   // which never move (but are "Old" regions).
   if (!r->is_old() || r->is_archive()) {
@@ -78,7 +76,6 @@ bool G1RemSetTrackingPolicy::update_before_rebuild(HeapRegion* r, size_t live_by
   // - Otherwise only add those old gen regions which occupancy is low enough that there
   // is a chance that we will ever evacuate them in the mixed gcs.
   if ((total_live_bytes > 0) && CollectionSetChooser::region_occupancy_low_enough_for_evac(total_live_bytes) && !r->rem_set()->is_tracked()) {
-
     r->rem_set()->set_state_updating();
     selected_for_rebuild = true;
   }
@@ -89,7 +86,6 @@ bool G1RemSetTrackingPolicy::update_before_rebuild(HeapRegion* r, size_t live_by
 }
 
 void G1RemSetTrackingPolicy::update_after_rebuild(HeapRegion* r) {
-
   if (r->is_old_or_humongous()) {
     if (r->rem_set()->is_updating()) {
       r->rem_set()->set_state_complete();
@@ -107,6 +103,5 @@ void G1RemSetTrackingPolicy::update_after_rebuild(HeapRegion* r) {
         cur->rem_set()->clear_locked(true /* only_cardset */);
       }
     }
-    G1ConcurrentMark* cm = G1CollectedHeap::heap()->concurrent_mark();
   }
 }

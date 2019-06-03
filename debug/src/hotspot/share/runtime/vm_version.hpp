@@ -91,7 +91,7 @@ class Abstract_VM_Version: AllStatic {
   }
 
   // does HW support an 8-byte compare-exchange operation?
-  static bool supports_cx8()  {
+  static bool supports_cx8() {
 #ifdef SUPPORTS_NATIVE_CX8
     return true;
 #else

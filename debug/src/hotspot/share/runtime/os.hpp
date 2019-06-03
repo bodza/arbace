@@ -264,25 +264,6 @@ class os: AllStatic {
   // Return a lower bound for page sizes. Also works before os::init completed.
   static size_t min_page_size() { return 4 * K; }
 
-  // Methods for tracing page sizes returned by the above method.
-  // The region_{min,max}_size parameters should be the values
-  // passed to page_size_for_region() and page_size should be the result of that
-  // call.  The (optional) base and size parameters should come from the
-  // ReservedSpace base() and size() methods.
-  static void trace_page_sizes(const char* str, const size_t* page_sizes, int count);
-  static void trace_page_sizes(const char* str,
-                               const size_t region_min_size,
-                               const size_t region_max_size,
-                               const size_t page_size,
-                               const char* base,
-                               const size_t size);
-  static void trace_page_sizes_for_requested_size(const char* str,
-                                                  const size_t requested_size,
-                                                  const size_t page_size,
-                                                  const size_t alignment,
-                                                  const char* base,
-                                                  const size_t size);
-
   static int    vm_allocation_granularity();
   static char*  reserve_memory(size_t bytes, char* addr = 0, size_t alignment_hint = 0, int file_desc = -1);
   static char*  reserve_memory(size_t bytes, char* addr, size_t alignment_hint, MEMFLAGS flags);
@@ -377,7 +358,7 @@ class os: AllStatic {
     return SerializePageShiftCount;
   }
 
-  static void     set_serialize_page_mask(uintptr_t mask) {
+  static void    set_serialize_page_mask(uintptr_t mask) {
     _serialize_page_mask = mask;
   }
 
@@ -392,9 +373,7 @@ class os: AllStatic {
   }
 
   static inline void write_memory_serialize_page(JavaThread *thread) {
-    uintptr_t page_offset = ((uintptr_t)thread >>
-                            get_serialize_page_shift_count()) &
-                            get_serialize_page_mask();
+    uintptr_t page_offset = ((uintptr_t)thread >> get_serialize_page_shift_count()) & get_serialize_page_mask();
     *(volatile int32_t *)((uintptr_t)_mem_serialize_page+page_offset) = 1;
   }
 
@@ -634,9 +613,6 @@ class os: AllStatic {
 
   // Determines whether the calling process is being debugged by a user-mode debugger.
   static bool is_debugger_attached();
-
-  // wait for a key press if false is set
-  static void wait_for_keypress_at_exit(void);
 
   // The following two functions are used by fatal error handler to trace
   // native (C) frames. They are not part of frame.hpp/frame.cpp because

@@ -29,7 +29,6 @@ class Bsd {
   static GrowableArray<int>* _cpu_to_node;
 
  protected:
-
   static julong _physical_memory;
   static pthread_t _main_thread;
   static int _page_size;
@@ -44,7 +43,6 @@ class Bsd {
   static bool hugetlbfs_sanity_check(bool warn, size_t page_size);
 
  public:
-
   static void init_thread_fpu_state();
   static pthread_t main_thread(void)                                { return _main_thread; }
 

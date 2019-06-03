@@ -128,9 +128,6 @@ bool AOTCompiledMethod::make_not_entrant_helper(int new_state) {
     OrderAccess::storestore();
     *_state_adr = new_state;
 
-    // Log the transition once
-    log_state_change();
-
     // Remove AOTCompiledMethod from method.
     if (method() != NULL && (method()->code() == this || method()->from_compiled_entry() == verified_entry_point())) {
       HandleMark hm;
@@ -142,7 +139,6 @@ bool AOTCompiledMethod::make_not_entrant_helper(int new_state) {
 }
 
 bool AOTCompiledMethod::make_entrant() {
-
   // Make sure the method is not flushed in case of a safepoint in code below.
   methodHandle the_method(method());
   NoSafepointVerifier nsv;
@@ -160,9 +156,6 @@ bool AOTCompiledMethod::make_entrant() {
     // Change state
     OrderAccess::storestore();
     *_state_adr = in_use;
-
-    // Log the transition once
-    log_state_change();
   }
 
   return true;
@@ -264,15 +257,6 @@ void AOTCompiledMethod::print_value_on(outputStream* st) const {
   st->print("AOTCompiledMethod ");
   print_on(st, NULL);
 }
-
-// Print a short set of xml attributes to identify this aot method.  The
-// output should be embedded in some other element.
-void AOTCompiledMethod::log_identity(xmlStream* log) const {
-  log->print(" aot_id='%d'", _aot_id);
-  log->print(" aot='%2d'", _heap->dso_id());
-}
-
-void AOTCompiledMethod::log_state_change() const { }
 
 NativeInstruction* PltNativeCallWrapper::get_load_instruction(virtual_call_Relocation* r) const {
   return nativeLoadGot_at(_call->plt_load_got());

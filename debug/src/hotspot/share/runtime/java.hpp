@@ -37,7 +37,6 @@ class JDK_Version {
   friend class Universe;
   friend void JDK_Version_init();
  private:
-
   static JDK_Version _current;
   static const char* _runtime_name;
   static const char* _runtime_version;
@@ -59,7 +58,6 @@ class JDK_Version {
   static void initialize();
 
  public:
-
   JDK_Version() : _major(0), _minor(0), _security(0), _patch(0), _build(0),
                   _thread_park_blocker(false), _post_vm_init_hook_enabled(false)
                   { }

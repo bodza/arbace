@@ -31,7 +31,6 @@ void vframeArrayElement::free_monitors(JavaThread* jt) {
 }
 
 void vframeArrayElement::fill_in(compiledVFrame* vf, bool realloc_failures) {
-
 // Copy the information from the compiled vframe to the
 // interpreter frame we will be creating to replace vf
 
@@ -47,7 +46,6 @@ void vframeArrayElement::fill_in(compiledVFrame* vf, bool realloc_failures) {
   if (list->is_empty()) {
     _monitors = NULL;
   } else {
-
     // Allocate monitor chunk
     _monitors = new MonitorChunk(list->length());
     vf->thread()->add_monitor_chunk(_monitors);
@@ -315,7 +313,6 @@ intptr_t* vframeArray::unextended_sp() const {
 vframeArray* vframeArray::allocate(JavaThread* thread, int frame_size, GrowableArray<compiledVFrame*>* chunk,
                                    RegisterMap *reg_map, frame sender, frame caller, frame self,
                                    bool realloc_failures) {
-
   // Allocate the vframeArray
   vframeArray * result = (vframeArray*) AllocateHeap(sizeof(vframeArray) + // fixed part
                                                      sizeof(vframeArrayElement) * (chunk->length() - 1), // variable part

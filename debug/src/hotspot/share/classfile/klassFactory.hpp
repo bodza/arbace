@@ -37,7 +37,6 @@ class TempNewSymbol;
  */
 
 class KlassFactory : AllStatic {
-
   // approved clients
   friend class ClassLoader;
   friend class ClassLoaderExt;

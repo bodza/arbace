@@ -33,7 +33,6 @@ PerfDataList*                 StatSampler::_sampled = NULL;
  * and is responsible for initializing various global variables.
  */
 void StatSampler::initialize() {
-
   if (!UsePerfData) return;
 
   // create performance data that could not be created prior
@@ -51,11 +50,9 @@ void StatSampler::initialize() {
  * register it with the WatcherThread as a periodic task.
  */
 void StatSampler::engage() {
-
   if (!UsePerfData) return;
 
   if (!is_active()) {
-
     initialize();
 
     // start up the periodic task
@@ -71,7 +68,6 @@ void StatSampler::engage() {
  * after the WatcherThread has been stopped.
  */
 void StatSampler::disengage() {
-
   if (!UsePerfData) return;
 
   if (!is_active())
@@ -93,7 +89,6 @@ void StatSampler::disengage() {
  * has stopped.
  */
 void StatSampler::destroy() {
-
   if (!UsePerfData) return;
 
   if (_sampled != NULL) {
@@ -107,7 +102,6 @@ void StatSampler::destroy() {
  * the data value for each PerfData instance in the given list.
  */
 void StatSampler::sample_data(PerfDataList* list) {
-
   for (int index = 0; index < list->length(); index++) {
     PerfData* item = list->at(index);
     item->sample();
@@ -125,7 +119,6 @@ void StatSampler::sample_data(PerfDataList* list) {
  * rows of data have been logged.
  */
 void StatSampler::collect_sample() {
-
   // future - check for new PerfData objects. PerfData objects might
   // get added to the PerfDataManager lists after we have already
   // built our local copies.
@@ -149,7 +142,6 @@ void StatSampler::collect_sample() {
  * the utf8 strings.
  */
 const char* StatSampler::get_system_property(const char* name, TRAPS) {
-
   // setup the arguments to getProperty
   Handle key_str   = java_lang_String::create_from_str(name, CHECK_NULL);
 
@@ -236,7 +228,6 @@ void StatSampler::create_system_property_instrumentation(TRAPS) {
   ResourceMark rm;
 
   for (int i = 0; property_counters[i].property_list != NULL; i++) {
-
     for (int j = 0; property_counters[i].property_list[j] != NULL; j++) {
       const char* property_name = property_counters[i].property_list[j];
       const char* value = get_system_property(property_name, CHECK);
@@ -255,7 +246,6 @@ void StatSampler::create_system_property_instrumentation(TRAPS) {
  * to exist.
  */
 void StatSampler::create_misc_perfdata() {
-
   ResourceMark rm;
   EXCEPTION_MARK;
 
@@ -300,7 +290,6 @@ class HighResTimeSampler : public PerfSampleHelper {
  * to exist.
  */
 void StatSampler::create_sampled_perfdata() {
-
   EXCEPTION_MARK;
 
   // setup sampling of the elapsed time counter maintained in the
@@ -315,7 +304,6 @@ void StatSampler::create_sampled_perfdata() {
  * exit of the vm.
  */
 void statSampler_exit() {
-
   if (!UsePerfData) return;
 
   StatSampler::destroy();

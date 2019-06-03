@@ -11,7 +11,6 @@ class nmethod;
 class G1CodeRootSet {
   friend class G1CodeRootSetTest;
  private:
-
   const static size_t SmallSize = 32;
   const static size_t Threshold = 24;
   const static size_t LargeSize = 512;

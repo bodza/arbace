@@ -1,8 +1,6 @@
 #include "precompiled.hpp"
 
 #include "interpreter/oopMapCache.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oop.inline.hpp"
@@ -194,8 +192,8 @@ class MaskFillerForNative: public NativeSignatureIterator {
   void pass_object()                             { set_one(offset()); }
 
   MaskFillerForNative(const methodHandle& method, uintptr_t* mask, int size) : NativeSignatureIterator(method) {
-    _mask   = mask;
-    _size   = size;
+    _mask = mask;
+    _size = size;
     // initialize with 0
     int i = (size + BitsPerWord - 1) / BitsPerWord;
     while (i-- > 0) _mask[i] = 0;
@@ -211,34 +209,12 @@ bool OopMapCacheEntry::verify_mask(CellTypeState* vars, CellTypeState* stack, in
   VerifyClosure blk(this);
   iterate_oop(&blk);
   if (blk.failed()) return false;
-
-  // Check if map is generated correctly
-  // (Use ?: operator to make sure all 'true' & 'false' are represented exactly the same so we can use == afterwards)
-  Log(interpreter, oopmap) logv;
-  LogStream st(logv.trace());
-
-  st.print("Locals (%d): ", max_locals);
-  for (int i = 0; i < max_locals; i++) {
-    bool v1 = is_oop(i)               ? true : false;
-    bool v2 = vars[i].is_reference()  ? true : false;
-    st.print("%d", v1 ? 1 : 0);
-  }
-  st.cr();
-
-  st.print("Stack (%d): ", stack_top);
-  for (int j = 0; j < stack_top; j++) {
-    bool v1 = is_oop(max_locals + j)  ? true : false;
-    bool v2 = stack[j].is_reference() ? true : false;
-    st.print("%d", v1 ? 1 : 0);
-  }
-  st.cr();
   return true;
 }
 
 void OopMapCacheEntry::allocate_bit_mask() {
   if (mask_size() > small_mask_limit) {
-    _bit_mask[0] = (intptr_t)
-      NEW_C_HEAP_ARRAY(uintptr_t, mask_word_size(), mtClass);
+    _bit_mask[0] = (intptr_t) NEW_C_HEAP_ARRAY(uintptr_t, mask_word_size(), mtClass);
   }
 }
 
@@ -323,7 +299,6 @@ void OopMapCacheEntry::flush() {
 // Implementation of OopMapCache
 
 void InterpreterOopMap::resource_copy(OopMapCacheEntry* from) {
-
   set_method(from->method());
   set_bci(from->bci());
   set_mask_size(from->mask_size());

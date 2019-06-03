@@ -123,7 +123,6 @@ class Address {
   Address(int disp, address loc, RelocationHolder spec);
 
  public:
-
  int disp() { return _disp; }
   // creation
   Address()
@@ -269,7 +268,6 @@ class AddressLiteral {
   AddressLiteral() : _is_lval(false), _target(NULL) { }
 
   public:
-
   AddressLiteral(address target, relocInfo::relocType rtype);
 
   AddressLiteral(address target, RelocationHolder const& rspec) : _rspec(rspec), _is_lval(false), _target(target) { }
@@ -281,7 +279,6 @@ class AddressLiteral {
   }
 
  private:
-
   address target() { return _target; }
   bool is_lval() { return _is_lval; }
 
@@ -296,9 +293,7 @@ class AddressLiteral {
 
 // Convience classes
 class RuntimeAddress: public AddressLiteral {
-
   public:
-
   RuntimeAddress(address target) : AddressLiteral(target, relocInfo::runtime_call_type) { }
 };
 
@@ -313,14 +308,11 @@ class ExternalAddress: public AddressLiteral {
   }
 
  public:
-
   ExternalAddress(address target) : AddressLiteral(target, reloc_for_target(target)) { }
 };
 
 class InternalAddress: public AddressLiteral {
-
   public:
-
   InternalAddress(address target) : AddressLiteral(target, relocInfo::internal_word_type) { }
 };
 
@@ -330,12 +322,10 @@ class InternalAddress: public AddressLiteral {
 
 class ArrayAddress {
   private:
-
   AddressLiteral _base;
   Address        _index;
 
   public:
-
   ArrayAddress() { };
   ArrayAddress(AddressLiteral base, Address index) : _base(base), _index(index) { };
   AddressLiteral base() { return _base; }
@@ -509,7 +499,6 @@ class Assembler : public AbstractAssembler {
   // in a 32bit vm. This is somewhat unfortunate but keeps the ifdef noise down.
 
 private:
-
   bool _legacy_mode_bw;
   bool _legacy_mode_dq;
   bool _legacy_mode_vl;
@@ -542,33 +531,20 @@ private:
 
   void prefetch_prefix(Address src);
 
-  void rex_prefix(Address adr, XMMRegister xreg,
-                  VexSimdPrefix pre, VexOpcode opc, bool rex_w);
-  int  rex_prefix_and_encode(int dst_enc, int src_enc,
-                             VexSimdPrefix pre, VexOpcode opc, bool rex_w);
+  void rex_prefix(Address adr, XMMRegister xreg, VexSimdPrefix pre, VexOpcode opc, bool rex_w);
+  int  rex_prefix_and_encode(int dst_enc, int src_enc, VexSimdPrefix pre, VexOpcode opc, bool rex_w);
 
   void vex_prefix(bool vex_r, bool vex_b, bool vex_x, int nds_enc, VexSimdPrefix pre, VexOpcode opc);
+  void evex_prefix(bool vex_r, bool vex_b, bool vex_x, bool evex_r, bool evex_v, int nds_enc, VexSimdPrefix pre, VexOpcode opc);
 
-  void evex_prefix(bool vex_r, bool vex_b, bool vex_x, bool evex_r, bool evex_v,
-                   int nds_enc, VexSimdPrefix pre, VexOpcode opc);
+  void vex_prefix(Address adr, int nds_enc, int xreg_enc, VexSimdPrefix pre, VexOpcode opc, InstructionAttr *attributes);
+  int  vex_prefix_and_encode(int dst_enc, int nds_enc, int src_enc, VexSimdPrefix pre, VexOpcode opc, InstructionAttr *attributes);
 
-  void vex_prefix(Address adr, int nds_enc, int xreg_enc,
-                  VexSimdPrefix pre, VexOpcode opc,
-                  InstructionAttr *attributes);
-
-  int  vex_prefix_and_encode(int dst_enc, int nds_enc, int src_enc,
-                             VexSimdPrefix pre, VexOpcode opc,
-                             InstructionAttr *attributes);
-
-  void simd_prefix(XMMRegister xreg, XMMRegister nds, Address adr, VexSimdPrefix pre,
-                   VexOpcode opc, InstructionAttr *attributes);
-
-  int simd_prefix_and_encode(XMMRegister dst, XMMRegister nds, XMMRegister src, VexSimdPrefix pre,
-                             VexOpcode opc, InstructionAttr *attributes);
+  void simd_prefix(XMMRegister xreg, XMMRegister nds, Address adr, VexSimdPrefix pre, VexOpcode opc, InstructionAttr *attributes);
+  int simd_prefix_and_encode(XMMRegister dst, XMMRegister nds, XMMRegister src, VexSimdPrefix pre, VexOpcode opc, InstructionAttr *attributes);
 
   // Helper functions for groups of instructions
   void emit_arith_b(int op1, int op2, Register dst, int imm8);
-
   void emit_arith(int op1, int op2, Register dst, int32_t imm32);
   // Force generation of a 4 byte immediate value even if it fits into 8bit
   void emit_arith_imm32(int op1, int op2, Register dst, int32_t imm32);
@@ -576,28 +552,15 @@ private:
 
   bool emit_compressed_disp_byte(int &disp);
 
-  void emit_operand(Register reg,
-                    Register base, Register index, Address::ScaleFactor scale,
-                    int disp,
-                    RelocationHolder const& rspec,
-                    int rip_relative_correction = 0);
-
-  void emit_operand(XMMRegister reg, Register base, XMMRegister index,
-                    Address::ScaleFactor scale,
-                    int disp, RelocationHolder const& rspec);
-
+  void emit_operand(Register reg, Register base, Register index, Address::ScaleFactor scale, int disp, RelocationHolder const& rspec, int rip_relative_correction = 0);
+  void emit_operand(XMMRegister reg, Register base, XMMRegister index, Address::ScaleFactor scale, int disp, RelocationHolder const& rspec);
   void emit_operand(Register reg, Address adr, int rip_relative_correction = 0);
 
   // operands that only take the original 32bit registers
   void emit_operand32(Register reg, Address adr);
 
-  void emit_operand(XMMRegister reg,
-                    Register base, Register index, Address::ScaleFactor scale,
-                    int disp,
-                    RelocationHolder const& rspec);
-
+  void emit_operand(XMMRegister reg, Register base, Register index, Address::ScaleFactor scale, int disp, RelocationHolder const& rspec);
   void emit_operand(XMMRegister reg, Address adr);
-
   void emit_operand(MMXRegister reg, Address adr);
 
   // workaround gcc (3.2.1-7) bug
@@ -609,7 +572,6 @@ private:
   void emit_farith(int b1, int b2, int i);
 
  protected:
-
   void emit_data(jint data, relocInfo::relocType    rtype, int format);
   void emit_data(jint data, RelocationHolder const& rspec, int format);
   void emit_data64(jlong data, relocInfo::relocType rtype, int format = 0);
@@ -684,7 +646,6 @@ private:
   void prefix(Prefix p);
 
   public:
-
   // Creation
   Assembler(CodeBuffer* code) : AbstractAssembler(code) {
     init_attributes();

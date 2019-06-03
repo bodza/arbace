@@ -121,7 +121,6 @@ XMMRegister FrameMap::nr2xmmreg(int rnr) {
 //--------------------------------------------------------
 
 void FrameMap::initialize() {
-
   map_register(0, rsi);  rsi_opr = LIR_OprFact::single_cpu(0);
   map_register(1, rdi);  rdi_opr = LIR_OprFact::single_cpu(1);
   map_register(2, rbx);  rbx_opr = LIR_OprFact::single_cpu(2);

@@ -2,8 +2,6 @@
 #define SHARE_VM_MEMORY_BINARYTREEDICTIONARY_INLINE_HPP
 
 #include "gc/shared/spaceDecorator.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/binaryTreeDictionary.hpp"
 #include "memory/freeList.inline.hpp"
 #include "memory/resourceArea.hpp"
@@ -75,7 +73,6 @@ TreeList<Chunk_t, FreeList_t>::get_better_list(BinaryTreeDictionary<Chunk_t, Fre
 
 template <class Chunk_t, class FreeList_t>
 TreeList<Chunk_t, FreeList_t>* TreeList<Chunk_t, FreeList_t>::remove_chunk_replace_if_needed(TreeChunk<Chunk_t, FreeList_t>* tc) {
-
   TreeList<Chunk_t, FreeList_t>* retTL = this;
   Chunk_t* list = head();
 
@@ -159,7 +156,6 @@ void TreeList<Chunk_t, FreeList_t>::return_chunk_at_tail(TreeChunk<Chunk_t, Free
 // list.  See the definition of TreeChunk<Chunk_t, FreeList_t>.
 template <class Chunk_t, class FreeList_t>
 void TreeList<Chunk_t, FreeList_t>::return_chunk_at_head(TreeChunk<Chunk_t, FreeList_t>* chunk) {
-
   Chunk_t* fc = head()->next();
   if (fc != NULL) {
     chunk->link_after(fc);
@@ -216,7 +212,6 @@ TreeChunk<Chunk_t, FreeList_t>* TreeList<Chunk_t, FreeList_t>::largest_address()
 
 template <class Chunk_t, class FreeList_t>
 BinaryTreeDictionary<Chunk_t, FreeList_t>::BinaryTreeDictionary(MemRegion mr) {
-
   reset(mr);
 }
 
@@ -280,7 +275,6 @@ BinaryTreeDictionary<Chunk_t, FreeList_t>::get_chunk_from_tree(size_t size)
     }
   }
   if (curTL != NULL) {
-
     curTL = curTL->get_better_list(this);
 
     retTC = curTL->first_available();
@@ -336,7 +330,6 @@ Chunk_t* BinaryTreeDictionary<Chunk_t, FreeList_t>::find_largest_dict() const {
 template <class Chunk_t, class FreeList_t>
 TreeChunk<Chunk_t, FreeList_t>*
 BinaryTreeDictionary<Chunk_t, FreeList_t>::remove_chunk_from_tree(TreeChunk<Chunk_t, FreeList_t>* tc) {
-
   TreeList<Chunk_t, FreeList_t> *newTL, *parentTL;
   TreeChunk<Chunk_t, FreeList_t>* retTC;
   TreeList<Chunk_t, FreeList_t>* tl = tc->list();
@@ -615,7 +608,6 @@ class PrintFreeListsClosure : public AscendTreeCensusClosure<Chunk_t, FreeList_t
 
 template <class Chunk_t, class FreeList_t>
 void BinaryTreeDictionary<Chunk_t, FreeList_t>::print_free_lists(outputStream* st) const {
-
   FreeList_t::print_labels_on(st, "size");
   PrintFreeListsClosure<Chunk_t, FreeList_t> pflc(st);
   pflc.do_tree(root());

@@ -8,7 +8,6 @@
 // ofs and limit are used for multi-block byte array.
 // int com.sun.security.provider.DigestBase.implCompressMultiBlock(byte[] b, int ofs, int limit)
 void MacroAssembler::fast_sha1(XMMRegister abcd, XMMRegister e0, XMMRegister e1, XMMRegister msg0, XMMRegister msg1, XMMRegister msg2, XMMRegister msg3, XMMRegister shuf_mask, Register buf, Register state, Register ofs, Register limit, Register rsp, bool multi_block) {
-
   Label start, done_hash, loop0;
 
   address upper_word_mask = StubRoutines::x86::upper_word_mask_addr();
@@ -620,7 +619,6 @@ void MacroAssembler::addmq(int disp, Register r1, Register r2) {
 }
 
 void MacroAssembler::sha256_AVX2(XMMRegister msg, XMMRegister state0, XMMRegister state1, XMMRegister msgtmp0, XMMRegister msgtmp1, XMMRegister msgtmp2, XMMRegister msgtmp3, XMMRegister msgtmp4, Register buf, Register state, Register ofs, Register limit, Register rsp, bool multi_block, XMMRegister shuf_mask) {
-
   Label loop0, loop1, loop2, loop3,
         last_block_enter, do_last_block, only_one_block, done_hash,
         compute_size, compute_size_end,
@@ -703,7 +701,6 @@ enum {
 
   /** NUM_BLK is the length of message, need to set it from ofs and limit  */
   if (multi_block) {
-
     // Win64: cannot directly update NUM_BLKS, since NUM_BLKS = ofs = r8
     // on entry r8 = ofs
     // on exit  r8 = NUM_BLKS
@@ -722,8 +719,7 @@ enum {
 
     cmpq(NUM_BLKS, 0);
     jcc(Assembler::equal, done_hash);
-
-    } else {
+  } else {
     xorq(NUM_BLKS, NUM_BLKS);
     addq(NUM_BLKS, 64);
   }//if (!multi_block)
@@ -1038,7 +1034,6 @@ void MacroAssembler::sha512_AVX2_one_round_and_schedule(
       vpor(xmm3, xmm3, xmm2, AVX_256bit); //xmm3 = W[-15] ror 1
       // Calculate w[t - 15] shr 7
       vpsrlq(xmm8, xmm1, 7, AVX_256bit); //xmm8 = W[-15] >> 7
-
     } else if (iteration % 4 == 1) {
       //Calculate w[t - 15] ror 8
       vpsrlq(xmm2, xmm1, 8, AVX_256bit);
@@ -1061,7 +1056,6 @@ void MacroAssembler::sha512_AVX2_one_round_and_schedule(
       //Calculate sigma1 for w[16] and w[17] on both 128 bit lanes
       vperm2f128(xmm2, xmm7, xmm7, 17); //xmm2 = W[-2] {BABA}
       vpsrlq(xmm8, xmm2, 6, AVX_256bit); //xmm8 = W[-2] >> 6 {BABA}
-
     } else if (iteration % 4 == 2) {
       vpsrlq(xmm3, xmm2, 19, AVX_256bit); //xmm3 = W[-2] >> 19 {BABA}
       vpsllq(xmm1, xmm2, (64 - 19), AVX_256bit); //xmm1 = W[-2] << 19 {BABA}
@@ -1077,7 +1071,6 @@ void MacroAssembler::sha512_AVX2_one_round_and_schedule(
 
       //Calculate sigma1 for w[18] and w[19] for upper 128 bit lane
       vpsrlq(xmm8, xmm4, 6, AVX_256bit); //xmm8 = W[-2] >> 6 {DC--}
-
     } else if (iteration % 4 == 3) {
       vpsrlq(xmm3, xmm4, 19, AVX_256bit); //xmm3 = W[-2] >> 19 {DC--}
       vpsllq(xmm1, xmm4, (64 - 19), AVX_256bit); //xmm1 = W[-2] << 19 {DC--}
@@ -1135,7 +1128,6 @@ void MacroAssembler::sha512_AVX2_one_round_and_schedule(
 }
 
 void MacroAssembler::sha512_AVX2(XMMRegister msg, XMMRegister state0, XMMRegister state1, XMMRegister msgtmp0, XMMRegister msgtmp1, XMMRegister msgtmp2, XMMRegister msgtmp3, XMMRegister msgtmp4, Register buf, Register state, Register ofs, Register limit, Register rsp, bool multi_block, XMMRegister shuf_mask) {
-
     Label loop0, loop1, loop2, done_hash,
     compute_block_size, compute_size,
     compute_block_size_end, compute_size_end;

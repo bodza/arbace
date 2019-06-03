@@ -6,7 +6,6 @@
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
-#include "logging/log.hpp"
 #include "memory/heapInspection.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceClosure.hpp"
@@ -159,7 +158,6 @@ jint Klass::array_layout_helper(BasicType etype) {
   int  tag   =  isobj ? _lh_array_tag_obj_value : _lh_array_tag_type_value;
   int lh = array_layout_helper(tag, hsize, etype, exact_log2(esize));
 
-
   return lh;
 }
 
@@ -203,7 +201,6 @@ void Klass::initialize_supers(Klass* k, Array<Klass*>* transitive_interfaces, TR
   }
 
   if (secondary_supers() == NULL) {
-
     // Now compute the list of secondary supertypes.
     // Secondaries can occasionally be on the super chain,
     // if the inline "_primary_supers" array overflows.
@@ -340,7 +337,6 @@ void Klass::clean_weak_klass_links(bool unloading_occurred, bool clean_alive_kla
 }
 
 void Klass::metaspace_pointers_do(MetaspaceClosure* it) {
-
   it->push(&_name);
   it->push(&_secondary_super_cache);
   it->push(&_secondary_supers);
@@ -353,13 +349,12 @@ void Klass::metaspace_pointers_do(MetaspaceClosure* it) {
   it->push(&_next_link);
 
   vtableEntry* vt = start_of_vtable();
-  for (int i=0; i<vtable_length(); i++) {
+  for (int i = 0; i<vtable_length(); i++) {
     it->push(vt[i].method_addr());
   }
 }
 
 void Klass::remove_unshareable_info() {
-
   set_subklass(NULL);
   set_next_sibling(NULL);
   set_next_link(NULL);
@@ -375,7 +370,6 @@ void Klass::remove_java_mirror() {
 }
 
 void Klass::restore_unshareable_info(ClassLoaderData* loader_data, Handle protection_domain, TRAPS) {
-
   // If an exception happened during CDS restore, some of these fields may already be
   // set.  We leave the class on the CLD list, even if incomplete so that we don't
   // modify the CLD list outside a safepoint.
@@ -523,7 +517,6 @@ void Klass::oop_print_value_on(oop obj, outputStream* st) {
 // Verification
 
 void Klass::verify_on(outputStream* st) {
-
   guarantee(this->is_klass(),"should be klass");
 
   if (super() != NULL) {
@@ -573,7 +566,7 @@ vtableEntry* Klass::start_of_vtable() const {
   return (vtableEntry*) ((address)this + in_bytes(vtable_start_offset()));
 }
 
-Method* Klass::method_at_vtable(int index)  {
+Method* Klass::method_at_vtable(int index) {
   return start_of_vtable()[index].method();
 }
 

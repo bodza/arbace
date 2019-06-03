@@ -4,8 +4,7 @@
 
 // Catch-all file for utility classes
 
-float AdaptiveWeightedAverage::compute_adaptive_average(float new_sample,
-                                                        float average) {
+float AdaptiveWeightedAverage::compute_adaptive_average(float new_sample, float average) {
   // We smooth the samples by not using weight() directly until we've
   // had enough data to make it meaningful. We'd like the first weight
   // used to be 1, the second to be 1/2, etc until we have

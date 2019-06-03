@@ -40,8 +40,7 @@ void AbstractInterpreter::layout_activation(Method* method,
   // skeletal state
 
   int max_locals = method->max_locals() * Interpreter::stackElementWords;
-  int extra_locals = (method->max_locals() - method->size_of_parameters()) *
-    Interpreter::stackElementWords;
+  int extra_locals = (method->max_locals() - method->size_of_parameters()) * Interpreter::stackElementWords;
 
   interpreter_frame->interpreter_frame_set_method(method);
   // NOTE the difference in using sender_sp and

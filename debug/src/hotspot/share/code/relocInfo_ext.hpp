@@ -15,7 +15,6 @@
 // to avoid confusion between the relocType enum and the
 // symbolic_reference enum.
 class symbolic_Relocation : AllStatic {
-
  public:
   enum symbolic_reference {
     card_table_reference,

@@ -7,8 +7,6 @@
 #include "utilities/copy.hpp"
 #include "utilities/debug.hpp"
 
-STATIC_ASSERT(sizeof(BitMap::bm_word_t) == BytesPerWord); // "Implementation assumption."
-
 typedef BitMap::bm_word_t bm_word_t;
 typedef BitMap::idx_t     idx_t;
 
@@ -95,7 +93,6 @@ void BitMap::resize(const Allocator& allocator, idx_t new_size_in_bits) {
 
 template <class Allocator>
 void BitMap::initialize(const Allocator& allocator, idx_t size_in_bits) {
-
   resize(allocator, size_in_bits);
 }
 
@@ -222,7 +219,6 @@ bool BitMap::is_small_range_of_words(idx_t beg_full_word, idx_t end_full_word) {
   // There is little point to call large version on small ranges.
   // Need to check carefully, keeping potential idx_t underflow in mind.
   // The threshold should be at least one word.
-  STATIC_ASSERT(small_range_words >= 1);
   return (beg_full_word + small_range_words >= end_full_word);
 }
 

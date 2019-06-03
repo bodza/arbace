@@ -2,7 +2,6 @@
 #define CPU_AARCH64_VM_JAVAFRAMEANCHOR_AARCH64_HPP
 
 private:
-
   // FP value associated with _last_Java_sp:
   intptr_t* volatile        _last_Java_fp;           // pointer is volatile not what it points to
 
@@ -48,11 +47,9 @@ public:
   address last_Java_pc(void)                     { return _last_Java_pc; }
 
 private:
-
   static ByteSize last_Java_fp_offset()          { return byte_offset_of(JavaFrameAnchor, _last_Java_fp); }
 
 public:
-
   void set_last_Java_sp(intptr_t* sp)            { _last_Java_sp = sp; OrderAccess::release(); }
 
   intptr_t*   last_Java_fp(void)                     { return _last_Java_fp; }

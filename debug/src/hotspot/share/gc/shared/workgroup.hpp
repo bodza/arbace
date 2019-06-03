@@ -5,7 +5,6 @@
 #include "runtime/globals.hpp"
 #include "runtime/thread.hpp"
 #include "gc/shared/gcId.hpp"
-#include "logging/log.hpp"
 #include "utilities/debug.hpp"
 #include "utilities/globalDefinitions.hpp"
 

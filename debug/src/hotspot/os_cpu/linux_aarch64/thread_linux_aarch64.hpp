@@ -2,7 +2,6 @@
 #define OS_CPU_LINUX_AARCH64_VM_THREAD_LINUX_AARCH64_HPP
 
  private:
-
   void pd_initialize() {
     _anchor.clear();
   }
@@ -33,7 +32,6 @@
 private:
   bool pd_get_top_frame(frame* fr_addr, void* ucontext, bool isInJava);
 public:
-
   static Thread *aarch64_get_thread_helper();
 
   // These routines are only used on cpu architectures that

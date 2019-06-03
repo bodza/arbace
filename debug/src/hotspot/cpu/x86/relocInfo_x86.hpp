@@ -17,7 +17,6 @@
   };
 
  public:
-
   // Instruct loadConP of x86_64.ad places oops in code that are not also
   // listed in the oop section.
   static bool mustIterateImmediateOopsInCode() { return true; }

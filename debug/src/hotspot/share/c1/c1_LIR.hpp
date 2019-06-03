@@ -72,36 +72,36 @@ class LIR_Const: public LIR_OprPtr {
     _value.set_jlong((jlong)m);
   }
 
-  virtual BasicType type()       const { return _value.get_type(); }
-  virtual LIR_Const* as_constant()     { return this; }
+  virtual BasicType type() const    { return _value.get_type(); }
+  virtual LIR_Const* as_constant()  { return this; }
 
-  jint      as_jint()    const         { type_check(T_INT, T_ADDRESS); return _value.get_jint(); }
-  jlong     as_jlong()   const         { type_check(T_LONG  ); return _value.get_jlong(); }
-  jfloat    as_jfloat()  const         { type_check(T_FLOAT ); return _value.get_jfloat(); }
-  jdouble   as_jdouble() const         { type_check(T_DOUBLE); return _value.get_jdouble(); }
-  jobject   as_jobject() const         { type_check(T_OBJECT); return _value.get_jobject(); }
-  jint      as_jint_lo() const         { type_check(T_LONG  ); return low(_value.get_jlong()); }
-  jint      as_jint_hi() const         { type_check(T_LONG  ); return high(_value.get_jlong()); }
+  jint      as_jint()    const      { type_check(T_INT, T_ADDRESS); return _value.get_jint(); }
+  jlong     as_jlong()   const      { type_check(T_LONG  ); return _value.get_jlong(); }
+  jfloat    as_jfloat()  const      { type_check(T_FLOAT ); return _value.get_jfloat(); }
+  jdouble   as_jdouble() const      { type_check(T_DOUBLE); return _value.get_jdouble(); }
+  jobject   as_jobject() const      { type_check(T_OBJECT); return _value.get_jobject(); }
+  jint      as_jint_lo() const      { type_check(T_LONG  ); return low(_value.get_jlong()); }
+  jint      as_jint_hi() const      { type_check(T_LONG  ); return high(_value.get_jlong()); }
 
-  address   as_pointer() const         { type_check(T_LONG  ); return (address)_value.get_jlong(); }
-  Metadata* as_metadata() const        { type_check(T_METADATA); return (Metadata*)_value.get_jlong(); }
+  address   as_pointer() const      { type_check(T_LONG  ); return (address)_value.get_jlong(); }
+  Metadata* as_metadata() const     { type_check(T_METADATA); return (Metadata*)_value.get_jlong(); }
 
-  jint      as_jint_bits() const       { type_check(T_FLOAT, T_INT, T_ADDRESS); return _value.get_jint(); }
-  jint      as_jint_lo_bits() const    {
+  jint      as_jint_bits() const    { type_check(T_FLOAT, T_INT, T_ADDRESS); return _value.get_jint(); }
+  jint      as_jint_lo_bits() const {
     if (type() == T_DOUBLE) {
       return low(jlong_cast(_value.get_jdouble()));
     } else {
       return as_jint_lo();
     }
   }
-  jint      as_jint_hi_bits() const    {
+  jint      as_jint_hi_bits() const {
     if (type() == T_DOUBLE) {
       return high(jlong_cast(_value.get_jdouble()));
     } else {
       return as_jint_hi();
     }
   }
-  jlong      as_jlong_bits() const    {
+  jlong      as_jlong_bits() const {
     if (type() == T_DOUBLE) {
       return jlong_cast(_value.get_jdouble());
     } else {
@@ -287,13 +287,13 @@ class LIR_OprDesc: public CompilationResourceObj {
     return as_BasicType(type_field());
   }
 
-  ValueType* value_type() const                  { return as_ValueType(type()); }
+  ValueType* value_type() const        { return as_ValueType(type()); }
 
-  char type_char() const                         { return type_char((is_pointer()) ? pointer()->type() : type()); }
+  char type_char() const               { return type_char((is_pointer()) ? pointer()->type() : type()); }
 
-  bool is_equal(LIR_Opr opr) const         { return this == opr; }
+  bool is_equal(LIR_Opr opr) const     { return this == opr; }
   // checks whether types are same
-  bool is_same_type(LIR_Opr opr) const     {
+  bool is_same_type(LIR_Opr opr) const {
     return type_field() == opr->type_field();
   }
   bool is_same_register(LIR_Opr opr) {
@@ -505,7 +505,6 @@ class LIR_Address: public LIR_OprPtr {
 // operand factory
 class LIR_OprFact: public AllStatic {
  public:
-
   static LIR_Opr illegalOpr;
 
   static LIR_Opr single_cpu(int reg) {
@@ -1166,14 +1165,13 @@ private:
   LIR_Opr   _val;
 
 public:
-
   LIR_OpUpdateCRC32(LIR_Opr crc, LIR_Opr val, LIR_Opr res);
 
-  LIR_Opr crc() const                            { return _crc; }
-  LIR_Opr val() const                            { return _val; }
+  LIR_Opr crc() const { return _crc; }
+  LIR_Opr val() const { return _val; }
 
   virtual void emit_code(LIR_Assembler* masm);
-  virtual LIR_OpUpdateCRC32* as_OpUpdateCRC32()  { return this; }
+  virtual LIR_OpUpdateCRC32* as_OpUpdateCRC32() { return this; }
   void print_instr(outputStream* out) const { };
 };
 
@@ -1185,10 +1183,10 @@ class LIR_Op0: public LIR_Op {
 
  public:
   LIR_Op0(LIR_Code code)
-   : LIR_Op(code, LIR_OprFact::illegalOpr, NULL)  {
+   : LIR_Op(code, LIR_OprFact::illegalOpr, NULL) {
     }
   LIR_Op0(LIR_Code code, LIR_Opr result, CodeEmitInfo* info = NULL)
-   : LIR_Op(code, result, info)  {
+   : LIR_Op(code, result, info) {
     }
 
   virtual void emit_code(LIR_Assembler* masm);
@@ -1219,14 +1217,14 @@ class LIR_Op1: public LIR_Op {
     : LIR_Op(code, result, info)
     , _opr(opr)
     , _patch(patch)
-    , _type(type)                      {
-        }
+    , _type(type) {
+  }
 
   LIR_Op1(LIR_Code code, LIR_Opr opr, LIR_Opr result, BasicType type, LIR_PatchCode patch, CodeEmitInfo* info, LIR_MoveKind kind)
     : LIR_Op(code, result, info)
     , _opr(opr)
     , _patch(patch)
-    , _type(type)                      {
+    , _type(type) {
     set_kind(kind);
   }
 
@@ -1234,12 +1232,12 @@ class LIR_Op1: public LIR_Op {
     : LIR_Op(code, LIR_OprFact::illegalOpr, info)
     , _opr(opr)
     , _patch(lir_patch_none)
-    , _type(T_ILLEGAL)                 {
-        }
+    , _type(T_ILLEGAL) {
+  }
 
-  LIR_Opr in_opr()           const               { return _opr; }
-  LIR_PatchCode patch_code() const               { return _patch; }
-  BasicType type()           const               { return _type; }
+  LIR_Opr in_opr()           const { return _opr; }
+  LIR_PatchCode patch_code() const { return _patch; }
+  BasicType type()           const { return _type; }
 
   LIR_MoveKind move_kind() const {
     return (LIR_MoveKind)_flags;
@@ -1532,26 +1530,26 @@ class LIR_Op2: public LIR_Op {
     , _tmp5(tmp5) {
   }
 
-  LIR_Opr in_opr1() const                        { return _opr1; }
-  LIR_Opr in_opr2() const                        { return _opr2; }
-  BasicType type()  const                        { return _type; }
-  LIR_Opr tmp1_opr() const                       { return _tmp1; }
-  LIR_Opr tmp2_opr() const                       { return _tmp2; }
-  LIR_Opr tmp3_opr() const                       { return _tmp3; }
-  LIR_Opr tmp4_opr() const                       { return _tmp4; }
-  LIR_Opr tmp5_opr() const                       { return _tmp5; }
-  LIR_Condition condition() const  {
+  LIR_Opr in_opr1() const         { return _opr1; }
+  LIR_Opr in_opr2() const         { return _opr2; }
+  BasicType type()  const         { return _type; }
+  LIR_Opr tmp1_opr() const        { return _tmp1; }
+  LIR_Opr tmp2_opr() const        { return _tmp2; }
+  LIR_Opr tmp3_opr() const        { return _tmp3; }
+  LIR_Opr tmp4_opr() const        { return _tmp4; }
+  LIR_Opr tmp5_opr() const        { return _tmp5; }
+  LIR_Condition condition() const {
     return _condition;
   }
   void set_condition(LIR_Condition condition) {
     _condition = condition;
   }
 
-  void set_fpu_stack_size(int size)              { _fpu_stack_size = size; }
-  int  fpu_stack_size() const                    { return _fpu_stack_size; }
+  void set_fpu_stack_size(int size) { _fpu_stack_size = size; }
+  int  fpu_stack_size() const       { return _fpu_stack_size; }
 
-  void set_in_opr1(LIR_Opr opr)                  { _opr1 = opr; }
-  void set_in_opr2(LIR_Opr opr)                  { _opr2 = opr; }
+  void set_in_opr1(LIR_Opr opr)     { _opr1 = opr; }
+  void set_in_opr2(LIR_Opr opr)     { _opr2 = opr; }
 
   virtual void emit_code(LIR_Assembler* masm);
   virtual LIR_Op2* as_Op2() { return this; }
@@ -1583,15 +1581,15 @@ class LIR_OpAllocArray : public LIR_Op {
     , _type(type)
     , _stub(stub) { }
 
-  LIR_Opr   klass()   const                      { return _klass;       }
-  LIR_Opr   len()     const                      { return _len;         }
-  LIR_Opr   obj()     const                      { return result_opr(); }
-  LIR_Opr   tmp1()    const                      { return _tmp1;        }
-  LIR_Opr   tmp2()    const                      { return _tmp2;        }
-  LIR_Opr   tmp3()    const                      { return _tmp3;        }
-  LIR_Opr   tmp4()    const                      { return _tmp4;        }
-  BasicType type()    const                      { return _type;        }
-  CodeStub* stub()    const                      { return _stub;        }
+  LIR_Opr   klass()   const { return _klass;       }
+  LIR_Opr   len()     const { return _len;         }
+  LIR_Opr   obj()     const { return result_opr(); }
+  LIR_Opr   tmp1()    const { return _tmp1;        }
+  LIR_Opr   tmp2()    const { return _tmp2;        }
+  LIR_Opr   tmp3()    const { return _tmp3;        }
+  LIR_Opr   tmp4()    const { return _tmp4;        }
+  BasicType type()    const { return _type;        }
+  CodeStub* stub()    const { return _stub;        }
 
   virtual void emit_code(LIR_Assembler* masm);
   virtual LIR_OpAllocArray * as_OpAllocArray () { return this; }
@@ -1610,11 +1608,11 @@ class LIR_Op3: public LIR_Op {
     : LIR_Op(code, result, info)
     , _opr1(opr1)
     , _opr2(opr2)
-    , _opr3(opr3)                                {
-        }
-  LIR_Opr in_opr1() const                        { return _opr1; }
-  LIR_Opr in_opr2() const                        { return _opr2; }
-  LIR_Opr in_opr3() const                        { return _opr3; }
+    , _opr3(opr3)         {
+  }
+  LIR_Opr in_opr1() const { return _opr1; }
+  LIR_Opr in_opr2() const { return _opr2; }
+  LIR_Opr in_opr3() const { return _opr3; }
 
   virtual void emit_code(LIR_Assembler* masm);
   virtual LIR_Op3* as_Op3() { return this; }
@@ -1626,8 +1624,8 @@ class LabelObj: public CompilationResourceObj {
  private:
   Label _label;
  public:
-  LabelObj()                                     { }
-  Label* label()                                 { return &_label; }
+  LabelObj()     { }
+  Label* label() { return &_label; }
 };
 
 class LIR_OpLock: public LIR_Op {
@@ -1646,13 +1644,14 @@ class LIR_OpLock: public LIR_Op {
     , _obj(obj)
     , _lock(lock)
     , _scratch(scratch)
-    , _stub(stub)                      { }
+    , _stub(stub) {
+  }
 
-  LIR_Opr hdr_opr() const                        { return _hdr; }
-  LIR_Opr obj_opr() const                        { return _obj; }
-  LIR_Opr lock_opr() const                       { return _lock; }
-  LIR_Opr scratch_opr() const                    { return _scratch; }
-  CodeStub* stub() const                         { return _stub; }
+  LIR_Opr hdr_opr() const     { return _hdr; }
+  LIR_Opr obj_opr() const     { return _obj; }
+  LIR_Opr lock_opr() const    { return _lock; }
+  LIR_Opr scratch_opr() const { return _scratch; }
+  CodeStub* stub() const      { return _stub; }
 
   virtual void emit_code(LIR_Assembler* masm);
   virtual LIR_OpLock* as_OpLock() { return this; }
@@ -1835,25 +1834,19 @@ class LIR_List: public CompilationResourceObj {
   void print_instructions() { };
 
   //---------- instructions -------------
-  void call_opt_virtual(ciMethod* method, LIR_Opr receiver, LIR_Opr result,
-                        address dest, LIR_OprList* arguments,
-                        CodeEmitInfo* info) {
+  void call_opt_virtual(ciMethod* method, LIR_Opr receiver, LIR_Opr result, address dest, LIR_OprList* arguments, CodeEmitInfo* info) {
     append(new LIR_OpJavaCall(lir_optvirtual_call, method, receiver, result, dest, arguments, info));
   }
-  void call_static(ciMethod* method, LIR_Opr result,
-                   address dest, LIR_OprList* arguments, CodeEmitInfo* info) {
+  void call_static(ciMethod* method, LIR_Opr result, address dest, LIR_OprList* arguments, CodeEmitInfo* info) {
     append(new LIR_OpJavaCall(lir_static_call, method, LIR_OprFact::illegalOpr, result, dest, arguments, info));
   }
-  void call_icvirtual(ciMethod* method, LIR_Opr receiver, LIR_Opr result,
-                      address dest, LIR_OprList* arguments, CodeEmitInfo* info) {
+  void call_icvirtual(ciMethod* method, LIR_Opr receiver, LIR_Opr result, address dest, LIR_OprList* arguments, CodeEmitInfo* info) {
     append(new LIR_OpJavaCall(lir_icvirtual_call, method, receiver, result, dest, arguments, info));
   }
-  void call_virtual(ciMethod* method, LIR_Opr receiver, LIR_Opr result,
-                    intptr_t vtable_offset, LIR_OprList* arguments, CodeEmitInfo* info) {
+  void call_virtual(ciMethod* method, LIR_Opr receiver, LIR_Opr result, intptr_t vtable_offset, LIR_OprList* arguments, CodeEmitInfo* info) {
     append(new LIR_OpJavaCall(lir_virtual_call, method, receiver, result, vtable_offset, arguments, info));
   }
-  void call_dynamic(ciMethod* method, LIR_Opr receiver, LIR_Opr result,
-                    address dest, LIR_OprList* arguments, CodeEmitInfo* info) {
+  void call_dynamic(ciMethod* method, LIR_Opr receiver, LIR_Opr result, address dest, LIR_OprList* arguments, CodeEmitInfo* info) {
     append(new LIR_OpJavaCall(lir_dynamic_call, method, receiver, result, dest, arguments, info));
   }
 
@@ -1952,12 +1945,9 @@ class LIR_List: public CompilationResourceObj {
     append(new LIR_Op2(lir_cmove, condition, src1, src2, dst, type));
   }
 
-  void cas_long(LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value,
-                LIR_Opr t1, LIR_Opr t2, LIR_Opr result = LIR_OprFact::illegalOpr);
-  void cas_obj(LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value,
-               LIR_Opr t1, LIR_Opr t2, LIR_Opr result = LIR_OprFact::illegalOpr);
-  void cas_int(LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value,
-               LIR_Opr t1, LIR_Opr t2, LIR_Opr result = LIR_OprFact::illegalOpr);
+  void cas_long(LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value, LIR_Opr t1, LIR_Opr t2, LIR_Opr result = LIR_OprFact::illegalOpr);
+  void cas_obj(LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value, LIR_Opr t1, LIR_Opr t2, LIR_Opr result = LIR_OprFact::illegalOpr);
+  void cas_int(LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value, LIR_Opr t1, LIR_Opr t2, LIR_Opr result = LIR_OprFact::illegalOpr);
 
   void abs (LIR_Opr from, LIR_Opr to, LIR_Opr tmp)                { append(new LIR_Op2(lir_abs , from, tmp, to)); }
   void negate(LIR_Opr from, LIR_Opr to, LIR_Opr tmp = LIR_OprFact::illegalOpr)              { append(new LIR_Op2(lir_neg, from, tmp, to)); }
@@ -1995,40 +1985,30 @@ class LIR_List: public CompilationResourceObj {
   void allocate_array(LIR_Opr dst, LIR_Opr len, LIR_Opr t1,LIR_Opr t2, LIR_Opr t3,LIR_Opr t4, BasicType type, LIR_Opr klass, CodeStub* stub);
 
   // jump is an unconditional branch
-  void jump(BlockBegin* block) {
-    append(new LIR_OpBranch(lir_cond_always, T_ILLEGAL, block));
-  }
-  void jump(CodeStub* stub) {
-    append(new LIR_OpBranch(lir_cond_always, T_ILLEGAL, stub));
-  }
-  void branch(LIR_Condition cond, BasicType type, Label* lbl)        { append(new LIR_OpBranch(cond, type, lbl)); }
-  void branch(LIR_Condition cond, BasicType type, BlockBegin* block) {
-    append(new LIR_OpBranch(cond, type, block));
-  }
-  void branch(LIR_Condition cond, BasicType type, CodeStub* stub)    {
-    append(new LIR_OpBranch(cond, type, stub));
-  }
-  void branch(LIR_Condition cond, BasicType type, BlockBegin* block, BlockBegin* unordered) {
-    append(new LIR_OpBranch(cond, type, block, unordered));
-  }
+  void jump(BlockBegin* block) { append(new LIR_OpBranch(lir_cond_always, T_ILLEGAL, block)); }
+  void jump(CodeStub* stub)    { append(new LIR_OpBranch(lir_cond_always, T_ILLEGAL, stub)); }
+
+  void branch(LIR_Condition cond, BasicType type, Label* lbl)                               { append(new LIR_OpBranch(cond, type, lbl)); }
+  void branch(LIR_Condition cond, BasicType type, BlockBegin* block)                        { append(new LIR_OpBranch(cond, type, block)); }
+  void branch(LIR_Condition cond, BasicType type, CodeStub* stub)                           { append(new LIR_OpBranch(cond, type, stub)); }
+  void branch(LIR_Condition cond, BasicType type, BlockBegin* block, BlockBegin* unordered) { append(new LIR_OpBranch(cond, type, block, unordered)); }
 
   void shift_left(LIR_Opr value, LIR_Opr count, LIR_Opr dst, LIR_Opr tmp);
   void shift_right(LIR_Opr value, LIR_Opr count, LIR_Opr dst, LIR_Opr tmp);
   void unsigned_shift_right(LIR_Opr value, LIR_Opr count, LIR_Opr dst, LIR_Opr tmp);
 
-  void shift_left(LIR_Opr value, int count, LIR_Opr dst)       { shift_left(value, LIR_OprFact::intConst(count), dst, LIR_OprFact::illegalOpr); }
-  void shift_right(LIR_Opr value, int count, LIR_Opr dst)      { shift_right(value, LIR_OprFact::intConst(count), dst, LIR_OprFact::illegalOpr); }
+  void shift_left(LIR_Opr value, int count, LIR_Opr dst)           { shift_left(value, LIR_OprFact::intConst(count), dst, LIR_OprFact::illegalOpr); }
+  void shift_right(LIR_Opr value, int count, LIR_Opr dst)          { shift_right(value, LIR_OprFact::intConst(count), dst, LIR_OprFact::illegalOpr); }
   void unsigned_shift_right(LIR_Opr value, int count, LIR_Opr dst) { unsigned_shift_right(value, LIR_OprFact::intConst(count), dst, LIR_OprFact::illegalOpr); }
 
-  void lcmp2int(LIR_Opr left, LIR_Opr right, LIR_Opr dst)        { append(new LIR_Op2(lir_cmp_l2i,  left, right, dst)); }
+  void lcmp2int(LIR_Opr left, LIR_Opr right, LIR_Opr dst)          { append(new LIR_Op2(lir_cmp_l2i,  left, right, dst)); }
   void fcmp2int(LIR_Opr left, LIR_Opr right, LIR_Opr dst, bool is_unordered_less);
 
   void call_runtime_leaf(address routine, LIR_Opr tmp, LIR_Opr result, LIR_OprList* arguments) {
     append(new LIR_OpRTCall(routine, tmp, result, arguments));
   }
 
-  void call_runtime(address routine, LIR_Opr tmp, LIR_Opr result,
-                    LIR_OprList* arguments, CodeEmitInfo* info) {
+  void call_runtime(address routine, LIR_Opr tmp, LIR_Opr result, LIR_OprList* arguments, CodeEmitInfo* info) {
     append(new LIR_OpRTCall(routine, tmp, result, arguments, info));
   }
 
@@ -2036,15 +2016,15 @@ class LIR_List: public CompilationResourceObj {
   void unlock_object(LIR_Opr hdr, LIR_Opr obj, LIR_Opr lock, LIR_Opr scratch, CodeStub* stub);
   void lock_object(LIR_Opr hdr, LIR_Opr obj, LIR_Opr lock, LIR_Opr scratch, CodeStub* stub, CodeEmitInfo* info);
 
-  void set_24bit_fpu()                                               { append(new LIR_Op0(lir_24bit_FPU )); }
-  void restore_fpu()                                                 { append(new LIR_Op0(lir_reset_FPU )); }
-  void breakpoint()                                                  { append(new LIR_Op0(lir_breakpoint)); }
+  void set_24bit_fpu() { append(new LIR_Op0(lir_24bit_FPU )); }
+  void restore_fpu()   { append(new LIR_Op0(lir_reset_FPU )); }
+  void breakpoint()    { append(new LIR_Op0(lir_breakpoint)); }
 
   void arraycopy(LIR_Opr src, LIR_Opr src_pos, LIR_Opr dst, LIR_Opr dst_pos, LIR_Opr length, LIR_Opr tmp, ciArrayKlass* expected_type, int flags, CodeEmitInfo* info) { append(new LIR_OpArrayCopy(src, src_pos, dst, dst_pos, length, tmp, expected_type, flags, info)); }
 
   void update_crc32(LIR_Opr crc, LIR_Opr val, LIR_Opr res)  { append(new LIR_OpUpdateCRC32(crc, val, res)); }
 
-  void fpop_raw()                                { append(new LIR_Op0(lir_fpop_raw)); }
+  void fpop_raw()      { append(new LIR_Op0(lir_fpop_raw)); }
 
   void instanceof(LIR_Opr result, LIR_Opr object, ciKlass* klass, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, bool fast_check, CodeEmitInfo* info_for_patch, ciMethod* profiled_method, int profiled_bci);
   void store_check(LIR_Opr object, LIR_Opr array, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, CodeEmitInfo* info_for_exception, ciMethod* profiled_method, int profiled_bci);
@@ -2142,10 +2122,8 @@ class LIR_OpVisitState: public StackObj {
   // addresses are decomposed to the base and index registers
   // constants and stack operands are ignored
   void append(LIR_Opr& opr, OprMode mode) {
-
     if (opr->is_register()) {
       _oprs_new[mode][_oprs_len[mode]++] = &opr;
-
     } else if (opr->is_pointer()) {
       LIR_Address* address = opr->as_address_ptr();
       if (address != NULL) {

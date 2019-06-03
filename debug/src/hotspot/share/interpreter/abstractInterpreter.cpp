@@ -192,7 +192,6 @@ bool AbstractInterpreter::is_not_reached(const methodHandle& method, int bci) {
  * If a deoptimization happens, this function returns the point of next bytecode to continue execution.
  */
 address AbstractInterpreter::deopt_continue_after_entry(Method* method, address bcp, int callee_parameters, bool is_top_frame) {
-
   // Get the original and rewritten bytecode.
   Bytecodes::Code code = Bytecodes::java_code_at(method, bcp);
 

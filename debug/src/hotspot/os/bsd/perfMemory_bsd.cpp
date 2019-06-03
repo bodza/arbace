@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "classfile/vmSymbols.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oop.inline.hpp"
@@ -30,7 +29,6 @@ static char* backing_store_file_name = NULL;  // name of the backing store
 // create the PerfData memory region in standard memory.
 //
 static char* create_standard_memory(size_t size) {
-
   // allocate an aligned chuck of memory
   char* mapAddress = os::reserve_memory(size);
 
@@ -50,7 +48,6 @@ static char* create_standard_memory(size_t size) {
 // delete the PerfData memory region
 //
 static void delete_standard_memory(char* addr, size_t size) {
-
   // there are no persistent external resources to cleanup for standard
   // memory. since DestroyJavaVM does not support unloading of the JVM,
   // cleanup of the memory resource is not performed. The memory will be
@@ -65,7 +62,6 @@ static void delete_standard_memory(char* addr, size_t size) {
 // don't allocate heap memory.
 //
 static void save_memory_to_file(char* addr, size_t size) {
-
  const char* destfile = PerfMemory::get_perfdata_file_path();
 
   int result;
@@ -75,7 +71,6 @@ static void save_memory_to_file(char* addr, size_t size) {
     int fd = result;
 
     for (size_t remaining = size; remaining > 0;) {
-
       RESTARTABLE(::write(fd, addr, remaining), result);
       if (result == OS_ERR) {
         break;
@@ -109,7 +104,6 @@ static void save_memory_to_file(char* addr, size_t size) {
 // the caller is expected to free the allocated memory.
 //
 static char* get_user_tmp_dir(const char* user) {
-
   const char* tmpdir = os::get_temp_directory();
   const char* perfdir = PERFDATA_NAME;
   size_t nbytes = strlen(tmpdir) + strlen(perfdir) + strlen(user) + 3;
@@ -125,7 +119,6 @@ static char* get_user_tmp_dir(const char* user) {
 // does not meet the file naming constraints, return 0.
 //
 static pid_t filename_to_pid(const char* filename) {
-
   // a filename that doesn't begin with a digit is not a
   // candidate for conversion.
   //
@@ -303,7 +296,6 @@ static DIR *open_directory_secure(const char* dirname) {
 // Return a DIR * of the open directory and the saved cwd fd.
 //
 static DIR *open_directory_secure_cwd(const char* dirname, int *saved_cwd_fd) {
-
   // Open the directory.
   DIR* dirp = open_directory_secure(dirname);
   if (dirp == NULL) {
@@ -340,7 +332,6 @@ static DIR *open_directory_secure_cwd(const char* dirname, int *saved_cwd_fd) {
 // Close the directory and restore the current working directory.
 //
 static void close_directory_secure_cwd(DIR* dirp, int saved_cwd_fd) {
-
   int result;
   // If we have a saved cwd change back to it and close the fd.
   if (saved_cwd_fd != -1) {
@@ -355,7 +346,6 @@ static void close_directory_secure_cwd(DIR* dirp, int saved_cwd_fd) {
 // Check if the given file descriptor is considered a secure.
 //
 static bool is_file_secure(int fd, const char *filename) {
-
   int result;
   struct stat statbuf;
 
@@ -376,7 +366,6 @@ static bool is_file_secure(int fd, const char *filename) {
 // the caller is expected to free the allocated memory.
 //
 static char* get_user_name(uid_t uid) {
-
   struct passwd pwent;
 
   // determine the max pwbuf size from sysconf, and hardcode
@@ -413,7 +402,6 @@ static char* get_user_name(uid_t uid) {
 // the caller is expected to free the allocated memory.
 //
 static char* get_user_name_slow(int vmid, TRAPS) {
-
   // short circuit the directory search if the process doesn't even exist.
   if (kill(vmid, 0) == OS_ERR) {
     if (errno == ESRCH) {
@@ -447,7 +435,6 @@ static char* get_user_name_slow(int vmid, TRAPS) {
   char* tdbuf = NEW_C_HEAP_ARRAY(char, os::readdir_buf_size(tmpdirname), mtInternal);
   errno = 0;
   while ((dentry = os::readdir(tmpdirp, (struct dirent *)tdbuf)) != NULL) {
-
     // check if the directory entry is a hsperfdata file
     if (strncmp(dentry->d_name, PERFDATA_NAME, strlen(PERFDATA_NAME)) != 0) {
       continue;
@@ -471,7 +458,6 @@ static char* get_user_name_slow(int vmid, TRAPS) {
     char* udbuf = NEW_C_HEAP_ARRAY(char, os::readdir_buf_size(usrdir_name), mtInternal);
     errno = 0;
     while ((udentry = os::readdir(subdirp, (struct dirent *)udbuf)) != NULL) {
-
       if (filename_to_pid(udentry->d_name) == vmid) {
         struct stat statbuf;
         int result;
@@ -498,7 +484,6 @@ static char* get_user_name_slow(int vmid, TRAPS) {
 
         // compare and save filename with latest creation time
         if (statbuf.st_size > 0 && statbuf.st_ctime > oldest_ctime) {
-
           if (statbuf.st_ctime > oldest_ctime) {
             char* user = strchr(dentry->d_name, '_') + 1;
 
@@ -535,7 +520,6 @@ static char* get_user_name(int vmid, TRAPS) {
 // the caller is expected to free the allocated memory.
 //
 static char* get_sharedmem_filename(const char* dirname, int vmid) {
-
   // add 2 for the file separator and a null terminator.
   size_t nbytes = strlen(dirname) + UINT_CHARS + 2;
 
@@ -550,7 +534,6 @@ static char* get_sharedmem_filename(const char* dirname, int vmid) {
 // this method removes the file specified by the given path
 //
 static void remove_file(const char* path) {
-
   int result;
 
   // if the file is a directory, the following unlink will fail. since
@@ -571,7 +554,6 @@ static void remove_file(const char* path) {
 // any stale file resources are removed.
 //
 static void cleanup_sharedmem_resources(const char* dirname) {
-
   int saved_cwd_fd;
   // open the directory and set the current working directory to it
   DIR* dirp = open_directory_secure_cwd(dirname, &saved_cwd_fd);
@@ -593,13 +575,10 @@ static void cleanup_sharedmem_resources(const char* dirname) {
 
   errno = 0;
   while ((entry = os::readdir(dirp, (struct dirent *)dbuf)) != NULL) {
-
     pid_t pid = filename_to_pid(entry->d_name);
 
     if (pid == 0) {
-
       if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-
         // attempt to remove all unexpected files, except "." and ".."
         unlink(entry->d_name);
       }
@@ -622,7 +601,6 @@ static void cleanup_sharedmem_resources(const char* dirname) {
     // process should be in a different user specific directory.
     //
     if ((pid == os::current_process_id()) || (kill(pid, 0) == OS_ERR && (errno == ESRCH || errno == EPERM))) {
-
         unlink(entry->d_name);
     }
     errno = 0;
@@ -640,7 +618,6 @@ static void cleanup_sharedmem_resources(const char* dirname) {
 // insecure, or if an error occurred.
 //
 static bool make_user_tmp_dir(const char* dirname) {
-
   // create the directory with 0755 permissions. note that the directory
   // will be owned by euid::egid, which may not be the same as uid::gid.
   //
@@ -669,7 +646,6 @@ static bool make_user_tmp_dir(const char* dirname) {
 // it does not yet exist.
 //
 static int create_sharedmem_resources(const char* dirname, const char* filename, size_t size) {
-
   // make the user temporary directory
   if (!make_user_tmp_dir(dirname)) {
     // could not make/find the directory or the found directory
@@ -752,7 +728,6 @@ static int create_sharedmem_resources(const char* dirname, const char* filename,
 // be opened.
 //
 static int open_sharedmem_file(const char* filename, int oflags, TRAPS) {
-
   // open the file
   int result;
   RESTARTABLE(::open(filename, oflags), result);
@@ -790,7 +765,6 @@ static int open_sharedmem_file(const char* filename, int oflags, TRAPS) {
 // for files being created or removed.
 //
 static char* mmap_create_shared(size_t size) {
-
   int result;
   int fd;
   char* mapAddress;
@@ -857,7 +831,6 @@ static void unmap_shared(char* addr, size_t bytes) {
 // create the PerfData memory region in shared memory.
 //
 static char* create_shared_memory(size_t size) {
-
   // create the shared memory region.
   return mmap_create_shared(size);
 }
@@ -865,7 +838,6 @@ static char* create_shared_memory(size_t size) {
 // delete the shared PerfData memory region
 //
 static void delete_shared_memory(char* addr, size_t size) {
-
   // cleanup the persistent shared memory resources. since DestroyJavaVM does
   // not support unloading of the JVM, unmapping of the memory resource is
   // not performed. The memory will be reclaimed by the OS upon termination of
@@ -884,7 +856,6 @@ static void delete_shared_memory(char* addr, size_t size) {
 // or 0 if it is not a valid size for a shared memory file
 //
 static size_t sharedmem_filesize(int fd, TRAPS) {
-
   struct stat statbuf;
   int result;
 
@@ -903,7 +874,6 @@ static size_t sharedmem_filesize(int fd, TRAPS) {
 // attach to a named shared memory region.
 //
 static void mmap_attach_shared(const char* user, int vmid, PerfMemory::PerfMemoryMode mode, char** addr, size_t* sizep, TRAPS) {
-
   char* mapAddress;
   int result;
   int fd;
@@ -1003,14 +973,12 @@ static void mmap_attach_shared(const char* user, int vmid, PerfMemory::PerfMemor
 // shared memory.
 //
 void PerfMemory::create_memory_region(size_t size) {
-
   if (PerfDisableSharedMem) {
     // do not share the memory for the performance data.
     _start = create_standard_memory(size);
   } else {
     _start = create_shared_memory(size);
     if (_start == NULL) {
-
       // creation of the shared memory region failed, attempt
       // to create a contiguous, non-shared memory region instead.
       //
@@ -1029,7 +997,6 @@ void PerfMemory::create_memory_region(size_t size) {
 // tuple will be inaccessible after a call to this method.
 //
 void PerfMemory::delete_memory_region() {
-
   if (PerfDisableSharedMem) {
     delete_standard_memory(start(), capacity());
   } else {
@@ -1053,7 +1020,6 @@ void PerfMemory::delete_memory_region() {
 // address space.
 //
 void PerfMemory::attach(const char* user, int vmid, PerfMemoryMode mode, char** addrp, size_t* sizep, TRAPS) {
-
   if (vmid == 0 || vmid == os::current_process_id()) {
      *addrp = start();
      *sizep = capacity();
@@ -1080,7 +1046,6 @@ void PerfMemory::attach(const char* user, int vmid, PerfMemoryMode mode, char** 
 // process's address space.
 //
 void PerfMemory::detach(char* addr, size_t bytes, TRAPS) {
-
   if (PerfMemory::contains(addr) || PerfMemory::contains(addr + bytes - 1)) {
     // prevent accidental detachment of this process's PerfMemory region
     return;

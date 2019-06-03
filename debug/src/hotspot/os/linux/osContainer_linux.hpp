@@ -8,7 +8,6 @@
 #define OSCONTAINER_ERROR (-2)
 
 class OSContainer: AllStatic {
-
  private:
   static bool   _is_initialized;
   static bool   _is_containerized;

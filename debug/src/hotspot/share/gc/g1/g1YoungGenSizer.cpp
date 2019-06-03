@@ -2,7 +2,6 @@
 
 #include "gc/g1/g1YoungGenSizer.hpp"
 #include "gc/g1/heapRegion.hpp"
-#include "logging/log.hpp"
 
 G1YoungGenSizer::G1YoungGenSizer() : _sizer_kind(SizerDefaults), _adaptive_size(true), _min_desired_young_length(0), _max_desired_young_length(0) {
   if (FLAG_IS_CMDLINE(NewRatio)) {
@@ -44,7 +43,6 @@ uint G1YoungGenSizer::calculate_default_max_length(uint new_number_of_heap_regio
 }
 
 void G1YoungGenSizer::recalculate_min_max_young_length(uint number_of_heap_regions, uint* min_young_length, uint* max_young_length) {
-
   switch (_sizer_kind) {
     case SizerDefaults:
       *min_young_length = calculate_default_min_length(number_of_heap_regions);
@@ -71,7 +69,6 @@ void G1YoungGenSizer::recalculate_min_max_young_length(uint number_of_heap_regio
 }
 
 void G1YoungGenSizer::adjust_max_new_size(uint number_of_heap_regions) {
-
   // We need to pass the desired values because recalculation may not update these
   // values in some cases.
   uint temp = _min_desired_young_length;

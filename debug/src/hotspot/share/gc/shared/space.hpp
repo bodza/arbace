@@ -598,8 +598,7 @@ class ContiguousSpace: public CompactibleSpace {
 class FilteringDCTOC : public DirtyCardToOopClosure {
 protected:
   // Override.
-  void walk_mem_region(MemRegion mr,
-                       HeapWord* bottom, HeapWord* top);
+  void walk_mem_region(MemRegion mr, HeapWord* bottom, HeapWord* top);
 
   // Walk the given memory region, from bottom to top, applying
   // the given oop closure to (possibly) all objects found. The

@@ -707,9 +707,7 @@ public:
   // trying not to exceed the given duration. However, it might exit
   // prematurely, according to some conditions (i.e. SATB buffers are
   // available for processing).
-  void do_marking_step(double target_ms,
-                       bool do_termination,
-                       bool is_serial);
+  void do_marking_step(double target_ms, bool do_termination, bool is_serial);
 
   // These two calls start and stop the timer
   void record_start_time() {

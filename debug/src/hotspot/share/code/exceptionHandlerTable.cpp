@@ -139,7 +139,7 @@ void ImplicitExceptionTable::append( uint exec_off, uint cont_off ) {
 
 uint ImplicitExceptionTable::at( uint exec_off ) const {
   uint l = len();
-  for ( uint i=0; i<l; i++ )
+  for ( uint i = 0; i<l; i++ )
     if (*adr(i) == exec_off )
       return *(adr(i)+1);
   return 0;                     // Failed to find any execption offset
@@ -147,7 +147,7 @@ uint ImplicitExceptionTable::at( uint exec_off ) const {
 
 void ImplicitExceptionTable::print(address base) const {
   tty->print("{");
-  for ( uint i=0; i<len(); i++ )
+  for ( uint i = 0; i<len(); i++ )
     tty->print("< " INTPTR_FORMAT ", " INTPTR_FORMAT " > ", p2i(base + *adr(i)), p2i(base + *(adr(i)+1)));
   tty->print_cr("}");
 }

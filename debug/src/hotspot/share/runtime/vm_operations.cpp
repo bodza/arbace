@@ -5,8 +5,6 @@
 #include "code/codeCache.hpp"
 #include "compiler/compileBroker.hpp"
 #include "gc/shared/isGCActiveMark.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/heapInspection.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/symbol.hpp"
@@ -32,20 +30,7 @@ void VM_Operation::set_calling_thread(Thread* thread, ThreadPriority priority) {
 
 void VM_Operation::evaluate() {
   ResourceMark rm;
-  LogTarget(Debug, vmoperation) lt;
-  if (lt.is_enabled()) {
-    LogStream ls(lt);
-    ls.print("begin ");
-    print_on_error(&ls);
-    ls.cr();
-  }
   doit();
-  if (lt.is_enabled()) {
-    LogStream ls(lt);
-    ls.print("end ");
-    print_on_error(&ls);
-    ls.cr();
-  }
 }
 
 const char* VM_Operation::mode_to_string(Mode mode) {
@@ -244,7 +229,7 @@ void VM_ThreadDump::doit() {
 
     for (uint i = 0; i < _result->t_list()->length(); i++) {
       JavaThread* jt = _result->t_list()->thread_at(i);
-      if (jt->is_exiting() || jt->is_hidden_from_external_view())  {
+      if (jt->is_exiting() || jt->is_hidden_from_external_view()) {
         // skip terminating threads and hidden threads
         continue;
       }
@@ -279,7 +264,7 @@ void VM_ThreadDump::doit() {
       }
       if (jt == NULL || /* thread not alive */
           jt->is_exiting() ||
-          jt->is_hidden_from_external_view())  {
+          jt->is_hidden_from_external_view()) {
         // add a NULL snapshot if skipped
         _result->add_thread_snapshot(new ThreadSnapshot());
         continue;
@@ -305,7 +290,6 @@ volatile bool VM_Exit::_vm_exited = false;
 Thread * volatile VM_Exit::_shutdown_thread = NULL;
 
 int VM_Exit::set_vm_exited() {
-
   Thread * thr_cur = Thread::current();
 
   int num_active = 0;

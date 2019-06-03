@@ -117,48 +117,48 @@ private:
   elapsedTimer  _perf_timers[6];
 
   // utility functions
-  void  check_and_reset_count()            {
-                                             if (!_count_pending_reset) return;
-                                             _contended_enter_count = 0;
-                                             _monitor_wait_count = 0;
-                                             _sleep_count = 0;
-                                             _count_pending_reset = 0;
-                                           }
-  void  check_and_reset_timer()            {
-                                             if (!_timer_pending_reset) return;
-                                             _contended_enter_timer.reset();
-                                             _monitor_wait_timer.reset();
-                                             _sleep_timer.reset();
-                                             _timer_pending_reset = 0;
-                                           }
+  void  check_and_reset_count()     {
+                                      if (!_count_pending_reset) return;
+                                      _contended_enter_count = 0;
+                                      _monitor_wait_count = 0;
+                                      _sleep_count = 0;
+                                      _count_pending_reset = 0;
+                                    }
+  void  check_and_reset_timer()     {
+                                      if (!_timer_pending_reset) return;
+                                      _contended_enter_timer.reset();
+                                      _monitor_wait_timer.reset();
+                                      _sleep_timer.reset();
+                                      _timer_pending_reset = 0;
+                                    }
 
 public:
   ThreadStatistics();
 
-  jlong contended_enter_count()            { return (_count_pending_reset ? 0 : _contended_enter_count); }
-  jlong contended_enter_ticks()            { return (_timer_pending_reset ? 0 : _contended_enter_timer.active_ticks()); }
-  jlong monitor_wait_count()               { return (_count_pending_reset ? 0 : _monitor_wait_count); }
-  jlong monitor_wait_ticks()               { return (_timer_pending_reset ? 0 : _monitor_wait_timer.active_ticks()); }
-  jlong sleep_count()                      { return (_count_pending_reset ? 0 : _sleep_count); }
-  jlong sleep_ticks()                      { return (_timer_pending_reset ? 0 : _sleep_timer.active_ticks()); }
+  jlong contended_enter_count()     { return (_count_pending_reset ? 0 : _contended_enter_count); }
+  jlong contended_enter_ticks()     { return (_timer_pending_reset ? 0 : _contended_enter_timer.active_ticks()); }
+  jlong monitor_wait_count()        { return (_count_pending_reset ? 0 : _monitor_wait_count); }
+  jlong monitor_wait_ticks()        { return (_timer_pending_reset ? 0 : _monitor_wait_timer.active_ticks()); }
+  jlong sleep_count()               { return (_count_pending_reset ? 0 : _sleep_count); }
+  jlong sleep_ticks()               { return (_timer_pending_reset ? 0 : _sleep_timer.active_ticks()); }
 
-  void monitor_wait()                      { check_and_reset_count(); _monitor_wait_count++; }
-  void monitor_wait_begin()                { check_and_reset_timer(); _monitor_wait_timer.start(); }
-  void monitor_wait_end()                  { _monitor_wait_timer.stop(); check_and_reset_timer(); }
+  void monitor_wait()               { check_and_reset_count(); _monitor_wait_count++; }
+  void monitor_wait_begin()         { check_and_reset_timer(); _monitor_wait_timer.start(); }
+  void monitor_wait_end()           { _monitor_wait_timer.stop(); check_and_reset_timer(); }
 
-  void thread_sleep()                      { check_and_reset_count(); _sleep_count++; }
-  void thread_sleep_begin()                { check_and_reset_timer(); _sleep_timer.start(); }
-  void thread_sleep_end()                  { _sleep_timer.stop(); check_and_reset_timer(); }
+  void thread_sleep()               { check_and_reset_count(); _sleep_count++; }
+  void thread_sleep_begin()         { check_and_reset_timer(); _sleep_timer.start(); }
+  void thread_sleep_end()           { _sleep_timer.stop(); check_and_reset_timer(); }
 
-  void contended_enter()                   { check_and_reset_count(); _contended_enter_count++; }
-  void contended_enter_begin()             { check_and_reset_timer(); _contended_enter_timer.start(); }
-  void contended_enter_end()               { _contended_enter_timer.stop(); check_and_reset_timer(); }
+  void contended_enter()            { check_and_reset_count(); _contended_enter_count++; }
+  void contended_enter_begin()      { check_and_reset_timer(); _contended_enter_timer.start(); }
+  void contended_enter_end()        { _contended_enter_timer.stop(); check_and_reset_timer(); }
 
-  void reset_count_stat()                  { _count_pending_reset = true; }
-  void reset_time_stat()                   { _timer_pending_reset = true; }
+  void reset_count_stat()           { _count_pending_reset = true; }
+  void reset_time_stat()            { _timer_pending_reset = true; }
 
-  int* perf_recursion_counts_addr()        { return _perf_recursion_counts; }
-  elapsedTimer* perf_timers_addr()         { return _perf_timers; }
+  int* perf_recursion_counts_addr() { return _perf_recursion_counts; }
+  elapsedTimer* perf_timers_addr()  { return _perf_timers; }
 };
 
 // Thread snapshot to represent the thread state and statistics
@@ -231,7 +231,6 @@ class ThreadStackTrace : public CHeapObj<mtInternal> {
   GrowableArray<oop>*             _jni_locked_monitors;
 
  public:
-
   ThreadStackTrace(JavaThread* thread, bool with_locked_monitors);
   ~ThreadStackTrace();
 
@@ -264,7 +263,6 @@ class StackFrameInfo : public CHeapObj<mtInternal> {
   oop                 _class_holder;
 
  public:
-
   StackFrameInfo(javaVFrame* jvf, bool with_locked_monitors);
   ~StackFrameInfo() {
     if (_locked_monitors != NULL) {

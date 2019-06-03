@@ -24,5 +24,5 @@ void PrivilegedElement::oops_do(OopClosure* f) {
   do {
     f->do_oop((oop*) &cur->_privileged_context);
     cur = cur->_next;
-  } while(cur != NULL);
+  } while (cur != NULL);
 }

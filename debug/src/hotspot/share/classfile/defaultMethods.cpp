@@ -4,8 +4,6 @@
 #include "classfile/defaultMethods.hpp"
 #include "classfile/symbolTable.hpp"
 #include "classfile/systemDictionary.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/resourceArea.hpp"
@@ -39,7 +37,6 @@ class PseudoScope : public ResourceObj {
  private:
   GrowableArray<PseudoScopeMark*> _marks;
  public:
-
   static PseudoScope* cast(void* data) {
     return static_cast<PseudoScope*>(data);
   }
@@ -98,7 +95,6 @@ static void print_method(outputStream* str, Method* mo, bool with_class=true) {
 template <class ALGO>
 class HierarchyVisitor : StackObj {
  private:
-
   class Node : public ResourceObj {
    public:
     InstanceKlass* _class;
@@ -160,7 +156,6 @@ class HierarchyVisitor : StackObj {
   }
 
  protected:
-
   // Accessors available to the algorithm
   int current_depth() const { return _path.length() - 1; }
 
@@ -179,7 +174,6 @@ class HierarchyVisitor : StackObj {
   void cancel_iteration() { _cancelled = true; }
 
  public:
-
   void run(InstanceKlass* root) {
     ALGO* algo = static_cast<ALGO*>(this);
 
@@ -295,7 +289,6 @@ class KeepAliveVisitor : public HierarchyVisitor<KeepAliveVisitor> {
 
 class MethodFamily : public ResourceObj {
  private:
-
   GrowableArray<Pair<Method*,QualifiedState> > _members;
   ResourceHashtable<Method*, int> _member_index;
 
@@ -325,7 +318,6 @@ class MethodFamily : public ResourceObj {
   Symbol* generate_conflicts_message(GrowableArray<Method*>* methods, TRAPS) const;
 
  public:
-
   MethodFamily()
       : _selected_target(NULL), _exception_message(NULL), _exception_name(NULL) { }
 
@@ -400,16 +392,9 @@ class MethodFamily : public ResourceObj {
     // If only one qualified method is default, select that
     } else if (num_defaults == 1) {
         _selected_target = qualified_methods.at(default_index);
-
     } else if (num_defaults > 1) {
       _exception_message = generate_conflicts_message(&qualified_methods,CHECK);
       _exception_name = vmSymbols::java_lang_IncompatibleClassChangeError();
-      LogTarget(Debug, defaultmethods) lt;
-      if (lt.is_enabled()) {
-        LogStream ls(lt);
-        _exception_message->print_value_on(&ls);
-        ls.cr();
-      }
     }
   }
 
@@ -571,7 +556,6 @@ static bool already_in_vtable_slots(GrowableArray<EmptyVtableSlot*>* slots, Meth
 }
 
 static GrowableArray<EmptyVtableSlot*>* find_empty_vtable_slots(InstanceKlass* klass, const GrowableArray<Method*>* mirandas, TRAPS) {
-
   GrowableArray<EmptyVtableSlot*>* slots = new GrowableArray<EmptyVtableSlot*>();
 
   // All miranda methods are obvious candidates
@@ -619,19 +603,6 @@ static GrowableArray<EmptyVtableSlot*>* find_empty_vtable_slots(InstanceKlass* k
       }
     }
     super = super->java_super();
-  }
-
-  LogTarget(Debug, defaultmethods) lt;
-  if (lt.is_enabled()) {
-    lt.print("Slots that need filling:");
-    ResourceMark rm;
-    LogStream ls(lt);
-    streamIndentor si(&ls);
-    for (int i = 0; i < slots->length(); ++i) {
-      ls.indent();
-      slots->at(i)->print_on(&ls);
-      ls.cr();
-    }
   }
 
   return slots;
@@ -705,7 +676,6 @@ class FindMethodsByErasedSig : public HierarchyVisitor<FindMethodsByErasedSig> {
 static void create_defaults_and_exceptions(GrowableArray<EmptyVtableSlot*>* slots, InstanceKlass* klass, TRAPS);
 
 static void generate_erased_defaults(InstanceKlass* klass, GrowableArray<EmptyVtableSlot*>* empty_slots, EmptyVtableSlot* slot, bool is_intf, TRAPS) {
-
   // sets up a set of methods with the same exact erased signature
   FindMethodsByErasedSig visitor(slot->name(), slot->signature(), is_intf);
   visitor.run(klass);
@@ -734,7 +704,6 @@ static void create_default_methods( InstanceKlass* klass, GrowableArray<Method*>
 // overpass method that throws an exception and add it to the klass methods list.
 // The JVM does not create bridges nor handle generic signatures here.
 void DefaultMethods::generate_default_methods(InstanceKlass* klass, const GrowableArray<Method*>* mirandas, TRAPS) {
-
   // This resource mark is the bound for all memory allocation that takes
   // place during default method processing.  After this goes out of scope,
   // all (Resource) objects' memory will be reclaimed.  Be careful if adding an
@@ -748,36 +717,16 @@ void DefaultMethods::generate_default_methods(InstanceKlass* klass, const Growab
   KeepAliveVisitor loadKeepAlive(&keepAlive);
   loadKeepAlive.run(klass);
 
-  LogTarget(Debug, defaultmethods) lt;
-  if (lt.is_enabled()) {
-    ResourceMark rm;
-    lt.print("%s %s requires default method processing",
-             klass->is_interface() ? "Interface" : "Class",
-             klass->name()->as_klass_external_name());
-    LogStream ls(lt);
-    PrintHierarchy printer(&ls);
-    printer.run(klass);
-  }
-
   GrowableArray<EmptyVtableSlot*>* empty_slots = find_empty_vtable_slots(klass, mirandas, CHECK);
 
   for (int i = 0; i < empty_slots->length(); ++i) {
     EmptyVtableSlot* slot = empty_slots->at(i);
-    LogTarget(Debug, defaultmethods) lt;
-    if (lt.is_enabled()) {
-      LogStream ls(lt);
-      streamIndentor si(&ls, 2);
-      ls.indent().print("Looking for default methods for slot ");
-      slot->print_on(&ls);
-      ls.cr();
-    }
     generate_erased_defaults(klass, empty_slots, slot, klass->is_interface(), CHECK);
   }
   create_defaults_and_exceptions(empty_slots, klass, CHECK);
 }
 
 static int assemble_method_error(BytecodeConstantPool* cp, BytecodeBuffer* buffer, Symbol* errorName, Symbol* message, TRAPS) {
-
   Symbol* init = vmSymbols::object_initializer_name();
   Symbol* sig = vmSymbols::string_void_signature();
 
@@ -793,7 +742,6 @@ static int assemble_method_error(BytecodeConstantPool* cp, BytecodeBuffer* buffe
 }
 
 static Method* new_method(BytecodeConstantPool* cp, BytecodeBuffer* bytecodes, Symbol* name, Symbol* sig, AccessFlags flags, int max_stack, int params, ConstMethod::MethodType mt, TRAPS) {
-
   address code_start = 0;
   int code_length = 0;
   InlineTableSizes sizes;
@@ -822,7 +770,6 @@ static Method* new_method(BytecodeConstantPool* cp, BytecodeBuffer* bytecodes, S
 }
 
 static void switchover_constant_pool(BytecodeConstantPool* bpool, InstanceKlass* klass, GrowableArray<Method*>* new_methods, TRAPS) {
-
   if (new_methods->length() > 0) {
     ConstantPool* cp = bpool->create_constant_pool(CHECK);
     if (cp != klass->constants()) {
@@ -857,7 +804,6 @@ static void switchover_constant_pool(BytecodeConstantPool* bpool, InstanceKlass*
 // itable creation needs to be changed to check loader constraints for the
 // overpass methods that do not throw exceptions.
 static void create_defaults_and_exceptions(GrowableArray<EmptyVtableSlot*>* slots, InstanceKlass* klass, TRAPS) {
-
   GrowableArray<Method*> overpasses;
   GrowableArray<Method*> defaults;
   BytecodeConstantPool bpool(klass->constants());
@@ -868,20 +814,6 @@ static void create_defaults_and_exceptions(GrowableArray<EmptyVtableSlot*>* slot
     if (slot->is_bound()) {
       MethodFamily* method = slot->get_binding();
       BytecodeBuffer buffer;
-
-      LogTarget(Debug, defaultmethods) lt;
-      if (lt.is_enabled()) {
-        ResourceMark rm(THREAD);
-        LogStream ls(lt);
-        ls.print("for slot: ");
-        slot->print_on(&ls);
-        ls.cr();
-        if (method->has_target()) {
-          method->print_selected(&ls, 1);
-        } else if (method->throws_exception()) {
-          method->print_exception(&ls, 1);
-        }
-      }
 
       if (method->has_target()) {
         Method* selected = method->get_selected_target();
@@ -911,7 +843,6 @@ static void create_defaults_and_exceptions(GrowableArray<EmptyVtableSlot*>* slot
 }
 
 static void create_default_methods( InstanceKlass* klass, GrowableArray<Method*>* new_methods, TRAPS) {
-
   int new_size = new_methods->length();
   Array<Method*>* total_default_methods = MetadataFactory::new_array<Method*>(klass->class_loader_data(), new_size, NULL, CHECK);
   for (int index = 0; index < new_size; index++ ) {
@@ -942,7 +873,6 @@ static void sort_methods(GrowableArray<Method*>* methods) {
 }
 
 static void merge_in_new_methods(InstanceKlass* klass, GrowableArray<Method*>* new_methods, TRAPS) {
-
   enum { ANNOTATIONS, PARAMETERS, DEFAULTS, NUM_ARRAYS };
 
   Array<Method*>* original_methods = klass->methods();

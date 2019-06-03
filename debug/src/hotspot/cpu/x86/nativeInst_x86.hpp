@@ -68,7 +68,6 @@ class NativeInstruction {
   void wrote(int offset);
 
  public:
-
   // unit test stuff
   static void test() { }                 // override for testing
 
@@ -140,7 +139,7 @@ class NativeCall: public NativeInstruction {
   address displacement_address() const      { return addr_at(displacement_offset); }
   address return_address() const            { return addr_at(return_address_offset); }
   address destination() const;
-  void  set_destination(address dest) {
+  void set_destination(address dest) {
 #ifdef AMD64
     intptr_t disp = dest - return_address();
     guarantee(disp == (intptr_t)(jint)disp, "must be 32-bit offset");
@@ -194,7 +193,7 @@ class NativeCallReg: public NativeInstruction {
     return_address_offset_rex   =    3
   };
 
-  int next_instruction_offset() const  {
+  int next_instruction_offset() const {
     if (ubyte_at(0) == NativeCallReg::instruction_code) {
       return return_address_offset_norex;
     } else {
@@ -426,10 +425,10 @@ class NativeJump: public NativeInstruction {
     next_instruction_offset     =    5
   };
 
-  address instruction_address() const       { return addr_at(instruction_offset); }
-  address next_instruction_address() const  { return addr_at(next_instruction_offset); }
-  address jump_destination() const          {
-     address dest = (int_at(data_offset)+next_instruction_address());
+  address instruction_address() const      { return addr_at(instruction_offset); }
+  address next_instruction_address() const { return addr_at(next_instruction_offset); }
+  address jump_destination() const         {
+     address dest = int_at(data_offset) + next_instruction_address();
      // 32bit used to encode unresolved jmp as jmp -1
      // 64bit can't produce this so it used jump to self.
      // Now 32bit and 64bit use jump to self as the unresolved address
@@ -440,13 +439,11 @@ class NativeJump: public NativeInstruction {
     return dest;
   }
 
-  void  set_jump_destination(address dest) {
+  void set_jump_destination(address dest) {
     intptr_t val = dest - next_instruction_address();
     if (dest == (address) -1) {
       val = -5; // jump to self
     }
-#ifdef AMD64
-#endif
     set_int_at(data_offset, (jint)val);
   }
 

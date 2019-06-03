@@ -1,7 +1,5 @@
 #include "precompiled.hpp"
 
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/universe.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/arguments.hpp"
@@ -87,15 +85,9 @@ const char* Abstract_VM_Version::vm_vendor() {
 const char* Abstract_VM_Version::vm_info_string() {
   switch (Arguments::mode()) {
     case Arguments::_int:
-      return UseSharedSpaces ? "interpreted mode, sharing" : "interpreted mode";
+      return "interpreted mode";
     case Arguments::_mixed:
-      if (UseSharedSpaces) {
-        if (UseAOT) {
-          return "mixed mode, aot, sharing";
-        } else {
-          return "mixed mode, sharing";
-         }
-      } else {
+      {
         if (UseAOT) {
           return "mixed mode, aot";
         } else {
@@ -103,7 +95,7 @@ const char* Abstract_VM_Version::vm_info_string() {
         }
       }
     case Arguments::_comp:
-      return UseSharedSpaces ? "compiled mode, sharing"    : "compiled mode";
+      return "compiled mode";
   };
   ShouldNotReachHere();
   return "";

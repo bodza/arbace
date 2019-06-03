@@ -242,7 +242,7 @@ void ObjectMonitor::enter(TRAPS) {
     OSThreadContendState osts(Self->osthread());
     ThreadBlockInVM tbivm(jt);
 
-    // TODO-FIXME: change the following for(;;) loop to straight-line code.
+    // TODO-FIXME: change the following for (;;) loop to straight-line code.
     for (;;) {
       jt->set_suspend_equivalent();
       // cleared by handle_special_suspend_equivalent_condition()
@@ -411,7 +411,6 @@ void ObjectMonitor::EnterI(TRAPS) {
   int recheckInterval = 1;
 
   for (;;) {
-
     if (TryLock(Self) > 0) break;
 
     if ((SyncFlags & 2) && _Responsible == NULL) {
@@ -628,7 +627,6 @@ void ObjectMonitor::ReenterI(Thread * Self, ObjectWaiter * SelfNode) {
 // unlinking the thread until ::exit()-time.
 
 void ObjectMonitor::UnlinkAfterAcquire(Thread *Self, ObjectWaiter *SelfNode) {
-
   if (SelfNode->TState == ObjectWaiter::TS_ENTER) {
     // Normal case: remove Self from the DLL EntryList .
     // This is a constant-time operation.
@@ -767,7 +765,6 @@ void ObjectMonitor::exit(bool not_suspended, TRAPS) {
   }
 
   for (;;) {
-
     if (Knob_ExitPolicy == 0) {
       // release semantics: prior loads and stores from within the critical section
       // must not float (reorder) past the following store that drops the lock.
@@ -1080,7 +1077,6 @@ bool ObjectMonitor::ExitSuspendEquivalent(JavaThread * jSelf) {
 }
 
 void ObjectMonitor::ExitEpilog(Thread * Self, ObjectWaiter * Wakee) {
-
   // Exit protocol:
   // 1. ST _succ = wakee
   // 2. membar #loadstore|#storestore;
@@ -1285,7 +1281,6 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
         // TODO-FIXME: add -- if succ == Self then succ = null.
         jt->java_suspend_self();
       }
-
     } // Exit thread safepoint: transition _thread_blocked -> _thread_in_vm
 
     // Node may be on the WaitSet, the EntryList (or cxq), or in transition
@@ -1670,7 +1665,6 @@ int ObjectMonitor::TrySpin(Thread * Self) {
   // 3.  Spin failure without prejudice
 
   while (--ctr >= 0) {
-
     // Periodic polling -- Check for pending GC
     // Threads may spin while they're unsafe.
     // We don't want spinning threads to delay the JVM from reaching
@@ -1962,13 +1956,11 @@ void ObjectMonitor::Initialize() {
     EXCEPTION_MARK;
 #define NEWPERFCOUNTER(n) \
   { \
-    n = PerfDataManager::create_counter(SUN_RT, #n, PerfData::U_Events, \
-                                        CHECK); \
+    n = PerfDataManager::create_counter(SUN_RT, #n, PerfData::U_Events, CHECK); \
   }
 #define NEWPERFVARIABLE(n) \
   { \
-    n = PerfDataManager::create_variable(SUN_RT, #n, PerfData::U_Events, \
-                                         CHECK); \
+    n = PerfDataManager::create_variable(SUN_RT, #n, PerfData::U_Events, CHECK); \
   }
     NEWPERFCOUNTER(_sync_Inflations);
     NEWPERFCOUNTER(_sync_Deflations);
@@ -1989,7 +1981,7 @@ static char * kvGet(char * kvList, const char * Key) {
   for (Search = kvList; *Search; Search += strlen(Search) + 1) {
     if (strncmp (Search, Key, n) == 0) {
       if (Search[n] == '=') return Search + n + 1;
-      if (Search[n] == 0)   return(char *) "1";
+      if (Search[n] == 0)   return (char *) "1";
     }
   }
   return NULL;

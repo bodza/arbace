@@ -6,7 +6,6 @@
 #include "utilities/globalDefinitions.hpp"
 
 namespace metaspace {
-
 class Metachunk;
 class ChunkManager;
 

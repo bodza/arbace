@@ -115,7 +115,6 @@ private:
     _metadata_size(metadata_size),
     _method_index(method_index),
     _aot_id(aot_id) {
-
     _is_far_code = CodeCache::is_far_target(code) || CodeCache::is_far_target(code + meta->code_size());
     _exception_cache = NULL;
 
@@ -165,8 +164,6 @@ private:
 
   virtual int comp_level() const { return CompLevel_aot; }
   virtual address verified_entry_point() const { return _code + _meta->verified_entry_offset(); }
-  virtual void log_identity(xmlStream* stream) const;
-  virtual void log_state_change() const;
   virtual bool make_entrant();
   virtual bool make_not_entrant() { return make_not_entrant_helper(not_entrant); }
   virtual bool make_not_used() { return make_not_entrant_helper(not_used); }
@@ -181,8 +178,6 @@ private:
   virtual bool is_dependent_on_method(Method* dependee) { return true; }
 
   virtual void clear_inline_caches();
-
-  virtual void print_pcs() { }
 
   virtual address scopes_data_end() const { return _meta->scopes_data_end(); }
 

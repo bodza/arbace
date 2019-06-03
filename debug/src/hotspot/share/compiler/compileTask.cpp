@@ -1,11 +1,8 @@
 #include "precompiled.hpp"
 
 #include "compiler/compileTask.hpp"
-#include "compiler/compileLog.hpp"
 #include "compiler/compileBroker.hpp"
 #include "compiler/compilerDirectives.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/handles.inline.hpp"
 
@@ -49,7 +46,6 @@ void CompileTask::free(CompileTask* task) {
 }
 
 void CompileTask::initialize(int compile_id, const methodHandle& method, int osr_bci, int comp_level, const methodHandle& hot_method, int hot_count, CompileTask::CompileReason compile_reason, bool is_blocking) {
-
   Thread* thread = Thread::current();
   _compile_id = compile_id;
   _method = method();
@@ -268,45 +264,6 @@ void CompileTask::log_task_queued() {
 }
 
 // ------------------------------------------------------------------
-// CompileTask::log_task_start
-void CompileTask::log_task_start(CompileLog* log) {
-  log->begin_head("task");
-  log_task(log);
-  log->end_head();
-}
-
-// ------------------------------------------------------------------
-// CompileTask::log_task_done
-void CompileTask::log_task_done(CompileLog* log) {
-  Thread* thread = Thread::current();
-  methodHandle method(thread, this->method());
-  ResourceMark rm(thread);
-
-  if (!_is_success) {
-    const char* reason = _failure_reason != NULL ? _failure_reason : "unknown";
-    log->elem("failure reason='%s'", reason);
-  }
-
-  // <task_done ... stamp='1.234'>  </task>
-  nmethod* nm = code();
-  log->begin_elem("task_done success='%d' nmsize='%d' count='%d'", _is_success, nm == NULL ? 0 : nm->content_size(), method->invocation_count());
-  int bec = method->backedge_count();
-  if (bec != 0)  log->print(" backedge_count='%d'", bec);
-  // Note:  "_is_complete" is about to be set, but is not.
-  if (_num_inlined_bytecodes != 0) {
-    log->print(" inlined_bytes='%d'", _num_inlined_bytecodes);
-  }
-  log->stamp();
-  log->end_elem();
-  log->clear_identities();   // next task will have different CI
-  log->tail("task");
-  if (log->unflushed_count() > 2000) {
-    log->flush();
-  }
-  log->mark_file_end();
-}
-
-// ------------------------------------------------------------------
 // CompileTask::check_break_at_flags
 bool CompileTask::check_break_at_flags() {
   int compile_id = this->_compile_id;
@@ -361,30 +318,6 @@ void CompileTask::print_inlining_inner(outputStream* st, ciMethod* method, int i
   st->cr();
 }
 
-void CompileTask::print_ul(const char* msg) {
-  LogTarget(Debug, jit, compilation) lt;
-  if (lt.is_enabled()) {
-    LogStream ls(lt);
-    print(&ls, msg, /* short form */ true, /* cr */ true);
-  }
-}
-
-void CompileTask::print_ul(const nmethod* nm, const char* msg) {
-  LogTarget(Debug, jit, compilation) lt;
-  if (lt.is_enabled()) {
-    LogStream ls(lt);
-    print_impl(&ls, nm->method(), nm->compile_id(),
-               nm->comp_level(), nm->is_osr_method(),
-               nm->is_osr_method() ? nm->osr_entry_bci() : -1,
-               /*is_blocking*/ false,
-               msg, /* short form */ true, /* cr */ true);
-  }
-}
-
-void CompileTask::print_inlining_ul(ciMethod* method, int inline_level, int bci, const char* msg) {
-  LogTarget(Debug, jit, inlining) lt;
-  if (lt.is_enabled()) {
-    LogStream ls(lt);
-    print_inlining_inner(&ls, method, inline_level, bci, msg);
-  }
-}
+void CompileTask::print_ul(const char* msg) { }
+void CompileTask::print_ul(const nmethod* nm, const char* msg) { }
+void CompileTask::print_inlining_ul(ciMethod* method, int inline_level, int bci, const char* msg) { }

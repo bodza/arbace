@@ -20,11 +20,9 @@ void ConversionStub::emit_code(LIR_Assembler* ce) {
   __ bind(_entry);
 
   if (input()->is_single_xmm()) {
-    __ comiss(input()->as_xmm_float_reg(),
-              ExternalAddress((address)&float_zero));
+    __ comiss(input()->as_xmm_float_reg(), ExternalAddress((address)&float_zero));
   } else if (input()->is_double_xmm()) {
-    __ comisd(input()->as_xmm_double_reg(),
-              ExternalAddress((address)&double_zero));
+    __ comisd(input()->as_xmm_double_reg(), ExternalAddress((address)&double_zero));
   } else {
     ShouldNotReachHere();
     __ push(rax);
@@ -238,7 +236,6 @@ void PatchingStub::align_patch_site(MacroAssembler* masm) {
 }
 
 void PatchingStub::emit_code(LIR_Assembler* ce) {
-
   Label call_patch;
 
   // static field accesses have special semantics while the class
@@ -361,7 +358,6 @@ void ImplicitNullCheckStub::emit_code(LIR_Assembler* ce) {
 }
 
 void SimpleExceptionStub::emit_code(LIR_Assembler* ce) {
-
   __ bind(_entry);
   // pass the object on stack because all registers must be preserved
   if (_obj->is_cpu_register()) {

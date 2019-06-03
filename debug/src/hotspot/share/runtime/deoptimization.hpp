@@ -124,7 +124,6 @@ class Deoptimization : AllStatic {
   static void revoke_biases_of_monitors(CodeBlob* cb);
 
 public:
-
   // Support for restoring non-escaping objects
   static bool realloc_objects(JavaThread* thread, frame* fr, GrowableArray<ScopeValue*>* objects, TRAPS);
   static void reassign_type_array_elements(frame* fr, RegisterMap* reg_map, ObjectValue* sv, typeArrayOop obj, BasicType type);
@@ -314,7 +313,6 @@ public:
   static int  trap_state_add_reason(int trap_state, int reason);
   static bool trap_state_is_recompiled(int trap_state);
   static int  trap_state_set_recompiled(int trap_state, bool z);
-  static const char* format_trap_state(char* buf, size_t buflen, int trap_state);
 
   static bool reason_is_recorded_per_bytecode(DeoptReason reason) {
     return reason > Reason_none && reason <= Reason_RECORDED_LIMIT;
@@ -364,9 +362,6 @@ public:
 
   static const char* trap_reason_name(int reason);
   static const char* trap_action_name(int action);
-  // Format like reason='foo' action='bar' index='123'.
-  // This is suitable both for XML and for tty output.
-  static const char* format_trap_request(char* buf, size_t buflen, int trap_request);
 
   static jint total_deoptimization_count();
   static jint deoptimization_count(DeoptReason reason);

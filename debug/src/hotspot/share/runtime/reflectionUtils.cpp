@@ -26,7 +26,7 @@ bool KlassStream::eos() {
     // go up superclass chain (not for interfaces)
     _klass = InstanceKlass::cast(_klass->super());
   // Next for method walks, walk default methods
-  } else if (_walk_defaults && (_defaults_checked == false)  && (_base_klass->default_methods() != NULL)) {
+  } else if (_walk_defaults && (_defaults_checked == false) && (_base_klass->default_methods() != NULL)) {
       _base_class_search_defaults = true;
       _klass = _base_klass;
       _defaults_checked = true;

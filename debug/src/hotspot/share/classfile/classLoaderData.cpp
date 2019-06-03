@@ -33,8 +33,6 @@
 #include "classfile/packageEntry.hpp"
 #include "classfile/symbolTable.hpp"
 #include "classfile/systemDictionary.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceShared.hpp"
@@ -61,18 +59,8 @@ volatile size_t ClassLoaderDataGraph::_num_instance_classes = 0;
 ClassLoaderData * ClassLoaderData::_the_null_class_loader_data = NULL;
 
 void ClassLoaderData::init_null_class_loader_data() {
-
   _the_null_class_loader_data = new ClassLoaderData(Handle(), false);
   ClassLoaderDataGraph::_head = _the_null_class_loader_data;
-
-  LogTarget(Debug, class, loader, data) lt;
-  if (lt.is_enabled()) {
-    ResourceMark rm;
-    LogStream ls(lt);
-    ls.print("create ");
-    _the_null_class_loader_data->print_value_on(&ls);
-    ls.cr();
-  }
 }
 
 // Obtain and set the class loader's name within the ClassLoaderData so
@@ -122,7 +110,6 @@ ClassLoaderData::ClassLoaderData(Handle h_class_loader, bool is_anonymous) :
   _class_loader_klass(NULL), _name(NULL), _name_and_id(NULL),
   _metaspace_lock(new Mutex(Monitor::leaf+1, "Metaspace allocation lock", true,
                             Monitor::_safepoint_check_never)) {
-
   if (!h_class_loader.is_null()) {
     _class_loader = _handles.add(h_class_loader());
     _class_loader_klass = h_class_loader->klass();
@@ -330,7 +317,6 @@ void ClassLoaderData::packages_do(void f(PackageEntry*)) {
 }
 
 void ClassLoaderData::record_dependency(const Klass* k) {
-
   ClassLoaderData * const from_cld = this;
   ClassLoaderData * const to_cld = k->class_loader_data();
 
@@ -365,16 +351,6 @@ void ClassLoaderData::record_dependency(const Klass* k) {
 
   // It's a dependency we won't find through GC, add it.
   if (!_handles.contains(to)) {
-    LogTarget(Trace, class, loader, data) lt;
-    if (lt.is_enabled()) {
-      ResourceMark rm;
-      LogStream ls(lt);
-      ls.print("adding dependency from ");
-      print_value_on(&ls);
-      ls.print(" to ");
-      to_cld->print_value_on(&ls);
-      ls.cr();
-    }
     Handle dependency(Thread::current(), to);
     add_handle(dependency);
     // Added a potentially young gen oop to the ClassLoaderData
@@ -402,17 +378,6 @@ void ClassLoaderData::add_class(Klass* k, bool publicize /* true */) {
       ClassLoaderDataGraph::inc_instance_classes(1);
     }
   }
-
-  if (publicize) {
-    LogTarget(Trace, class, loader, data) lt;
-    if (lt.is_enabled()) {
-      ResourceMark rm;
-      LogStream ls(lt);
-      ls.print("Adding k: " PTR_FORMAT " %s to ", p2i(k), k->external_name());
-      print_value_on(&ls);
-      ls.cr();
-    }
-  }
 }
 
 // Class iterator used by the compiler.  It gets some number of classes at
@@ -421,13 +386,11 @@ class ClassLoaderDataGraphKlassIteratorStatic {
   ClassLoaderData* _current_loader_data;
   Klass*           _current_class_entry;
  public:
-
   ClassLoaderDataGraphKlassIteratorStatic() : _current_loader_data(NULL), _current_class_entry(NULL) { }
 
   InstanceKlass* try_get_next_class() {
     size_t max_classes = ClassLoaderDataGraph::num_instance_classes();
     for (size_t i = 0; i < max_classes; ) {
-
       if (_current_class_entry != NULL) {
         Klass* k = _current_class_entry;
         _current_class_entry = _current_class_entry->next_link();
@@ -492,7 +455,6 @@ void ClassLoaderData::initialize_holder(Handle loader_or_mirror) {
 // Remove a klass from the _klasses list for scratch_class during redefinition
 // or parsed class in the case of an error.
 void ClassLoaderData::remove_class(Klass* scratch_class) {
-
   // Adjust global class iterator.
   static_klass_iterator.adjust_saved_class(scratch_class);
 
@@ -521,15 +483,6 @@ void ClassLoaderData::remove_class(Klass* scratch_class) {
 
 void ClassLoaderData::unload() {
   _unloading = true;
-
-  LogTarget(Debug, class, loader, data) lt;
-  if (lt.is_enabled()) {
-    ResourceMark rm;
-    LogStream ls(lt);
-    ls.print("unload");
-    print_value_on(&ls);
-    ls.cr();
-  }
 
   // Some items on the _deallocate_list need to free their C heap structures
   // if they are not already on the _klasses list.
@@ -581,7 +534,7 @@ Dictionary* ClassLoaderData::create_dictionary() {
     size = _default_loader_dictionary_size;
     resizable = true;
   }
-  if (!DynamicallyResizeSystemDictionaries || UseSharedSpaces) {
+  if (!DynamicallyResizeSystemDictionaries) {
     resizable = false;
   }
   return new Dictionary(this, size, resizable);
@@ -947,14 +900,6 @@ ClassLoaderData* ClassLoaderDataGraph::add_to_graph(Handle loader, bool is_anony
     cld->set_next(next);
     ClassLoaderData* exchanged = Atomic::cmpxchg(cld, list_head, next);
     if (exchanged == next) {
-      LogTarget(Debug, class, loader, data) lt;
-      if (lt.is_enabled()) {
-        ResourceMark rm;
-        LogStream ls(lt);
-        ls.print("create ");
-        cld->print_value_on(&ls);
-        ls.cr();
-      }
       return cld;
     }
     next = exchanged;
@@ -1008,7 +953,7 @@ void ClassLoaderDataGraph::cld_unloading_do(CLDClosure* cl) {
 }
 
 void ClassLoaderDataGraph::roots_cld_do(CLDClosure* strong, CLDClosure* weak) {
-  for (ClassLoaderData* cld = _head;  cld != NULL; cld = cld->_next) {
+  for (ClassLoaderData* cld = _head; cld != NULL; cld = cld->_next) {
     CLDClosure* closure = cld->keep_alive() ? strong : weak;
     if (closure != NULL) {
       closure->do_cld(cld);
@@ -1157,7 +1102,6 @@ void ClassLoaderDataGraph::print_dictionary_statistics(outputStream* st) {
 }
 
 GrowableArray<ClassLoaderData*>* ClassLoaderDataGraph::new_clds() {
-
   GrowableArray<ClassLoaderData*>* array = new GrowableArray<ClassLoaderData*>();
 
   // The CLDs in [_head, _saved_head] were all added during last call to remember_new_clds(true);
@@ -1165,13 +1109,6 @@ GrowableArray<ClassLoaderData*>* ClassLoaderDataGraph::new_clds() {
   while (curr != _saved_head) {
     if (!curr->claimed()) {
       array->push(curr);
-      LogTarget(Debug, class, loader, data) lt;
-      if (lt.is_enabled()) {
-        LogStream ls(lt);
-        ls.print("found new CLD: ");
-        curr->print_value_on(&ls);
-        ls.cr();
-      }
     }
 
     curr = curr->_next;
@@ -1197,7 +1134,6 @@ bool ClassLoaderDataGraph::is_valid(ClassLoaderData* loader_data) {
 // Move class loader data from main list to the unloaded list for unloading
 // and deallocation later.
 bool ClassLoaderDataGraph::do_unloading(bool clean_previous_versions) {
-
   ClassLoaderData* data = _head;
   ClassLoaderData* prev = NULL;
   bool seen_dead_loader = false;

@@ -84,7 +84,6 @@ class ClassFileStream;
 // Archived classes need extra information not needed by traditionally loaded classes.
 // To keep footprint small, we add these in the dictionary entry instead of the InstanceKlass.
 class SharedDictionaryEntry : public DictionaryEntry {
-
 public:
   enum LoaderType {
     LT_BUILTIN,
@@ -97,11 +96,11 @@ public:
     FROM_IS_OBJECT          = 1 << 2
   };
 
-  int             _id;
-  int             _clsfile_size;
-  int             _clsfile_crc32;
-  void*           _verifier_constraints; // FIXME - use a union here to avoid type casting??
-  void*           _verifier_constraint_flags;
+  int   _id;
+  int   _clsfile_size;
+  int   _clsfile_crc32;
+  void* _verifier_constraints; // FIXME - use a union here to avoid type casting??
+  void* _verifier_constraint_flags;
 
   // See "Identifying the loader_type of archived classes" comments above.
   LoaderType loader_type() const {
@@ -125,8 +124,7 @@ public:
     return loader_type() == LT_UNREGISTERED;
   }
 
-  void add_verification_constraint(Symbol* name,
-         Symbol* from_name, bool from_field_is_protected, bool from_is_array, bool from_is_object);
+  void add_verification_constraint(Symbol* name, Symbol* from_name, bool from_field_is_protected, bool from_is_array, bool from_is_object);
   int finalize_verification_constraints();
   void check_verification_constraints(InstanceKlass* klass, TRAPS);
   void metaspace_pointers_do(MetaspaceClosure* it) { };
@@ -134,9 +132,7 @@ public:
 
 class SharedDictionary : public Dictionary {
   SharedDictionaryEntry* get_entry_for_builtin_loader(const Symbol* name) const;
-  SharedDictionaryEntry* get_entry_for_unregistered_loader(const Symbol* name,
-                                                           int clsfile_size,
-                                                           int clsfile_crc32) const;
+  SharedDictionaryEntry* get_entry_for_unregistered_loader(const Symbol* name, int clsfile_size, int clsfile_crc32) const;
 
   // Convenience functions
   SharedDictionaryEntry* bucket(int index) const {
@@ -147,16 +143,12 @@ public:
   SharedDictionaryEntry* find_entry_for(Klass* klass);
   void finalize_verification_constraints();
 
-  bool add_non_builtin_klass(const Symbol* class_name,
-                             ClassLoaderData* loader_data,
-                             InstanceKlass* obj);
+  bool add_non_builtin_klass(const Symbol* class_name, ClassLoaderData* loader_data, InstanceKlass* obj);
 
   void update_entry(Klass* klass, int id);
 
   Klass* find_class_for_builtin_loader(const Symbol* name) const;
-  Klass* find_class_for_unregistered_loader(const Symbol* name,
-                                            int clsfile_size,
-                                            int clsfile_crc32) const;
+  Klass* find_class_for_unregistered_loader(const Symbol* name, int clsfile_size, int clsfile_crc32) const;
   bool class_exists_for_unregistered_loader(const Symbol* name) {
     return (get_entry_for_unregistered_loader(name, -1, -1) != NULL);
   }
@@ -172,7 +164,6 @@ private:
   static objArrayOop _shared_jar_urls;
   static objArrayOop _shared_jar_manifests;
 
-  static InstanceKlass* load_shared_class_for_builtin_loader(Symbol* class_name, Handle class_loader, TRAPS);
   static Handle get_package_name(Symbol*  class_name, TRAPS);
 
   // Package handling:
@@ -238,9 +229,6 @@ private:
   static InstanceKlass* acquire_class_for_current_thread(InstanceKlass *ik, Handle class_loader, Handle protection_domain, TRAPS);
 
 public:
-  // Called by PLATFORM/APP loader only
-  static InstanceKlass* find_or_load_shared_class(Symbol* class_name, Handle class_loader, TRAPS);
-
   static void allocate_shared_data_arrays(int size, TRAPS);
   static void oops_do(OopClosure* f);
   static void roots_oops_do(OopClosure* f) {
@@ -249,7 +237,6 @@ public:
 
   // Check if sharing is supported for the class loader.
   static bool is_sharing_possible(ClassLoaderData* loader_data);
-  static bool is_shared_class_visible_for_classloader(InstanceKlass* ik, Handle class_loader, const char* pkg_string, Symbol* pkg_name, PackageEntry* pkg_entry, ModuleEntry* mod_entry, TRAPS);
   static PackageEntry* get_package_entry(Symbol* pkg, ClassLoaderData *loader_data) {
     if (loader_data != NULL) {
       PackageEntryTable* pkgEntryTable = loader_data->packages();
@@ -297,9 +284,7 @@ public:
   // ensures that you cannot load a shared class if its super type(s) are changed. However,
   // we need an additional check to ensure that the verification_constraints did not change
   // between dump time and runtime.
-  static bool add_verification_constraint(Klass* k, Symbol* name,
-                  Symbol* from_name, bool from_field_is_protected,
-                  bool from_is_array, bool from_is_object) { return false; };
+  static bool add_verification_constraint(Klass* k, Symbol* name, Symbol* from_name, bool from_field_is_protected, bool from_is_array, bool from_is_object) { return false; };
   static void finalize_verification_constraints() { };
   static void check_verification_constraints(InstanceKlass* klass, TRAPS) { };
 };

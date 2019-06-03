@@ -119,12 +119,10 @@ intptr_t* os::Linux::ucontext_get_fp(const ucontext_t * uc) {
 // frames. Currently we don't do that on Linux, so it's the same as
 // os::fetch_frame_from_context().
 ExtendedPC os::Linux::fetch_frame_from_ucontext(Thread* thread, const ucontext_t* uc, intptr_t** ret_sp, intptr_t** ret_fp) {
-
   return os::fetch_frame_from_context(uc, ret_sp, ret_fp);
 }
 
 ExtendedPC os::fetch_frame_from_context(const void* ucVoid, intptr_t** ret_sp, intptr_t** ret_fp) {
-
   ExtendedPC  epc;
   const ucontext_t* uc = (const ucontext_t*)ucVoid;
 
@@ -276,7 +274,7 @@ JVM_handle_linux_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unr
     if (t != NULL ) {
       if (t->is_Java_thread()) {
         thread = (JavaThread*)t;
-      } else if(t->is_VM_thread()) {
+      } else if (t->is_VM_thread()) {
         vmthread = (VMThread *)t;
       }
     }
@@ -388,7 +386,7 @@ JVM_handle_linux_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unr
           address next_pc = pc + NativeCall::instruction_size;
           stub = SharedRuntime::handle_unsafe_access(thread, next_pc);
         }
-      } else if (sig == SIGFPE  && (info->si_code == FPE_INTDIV || info->si_code == FPE_FLTDIV)) {
+      } else if (sig == SIGFPE && (info->si_code == FPE_INTDIV || info->si_code == FPE_FLTDIV)) {
         stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime::IMPLICIT_DIVIDE_BY_ZERO);
       } else if (sig == SIGSEGV && !MacroAssembler::needs_explicit_null_check((intptr_t)info->si_addr)) {
           // Determination of interpreter/vtable stub/compiled code null exception
@@ -636,24 +634,8 @@ extern "C" {
     }
   }
 
-  void _Copy_arrayof_conjoint_bytes(HeapWord* from,
-                                    HeapWord* to,
-                                    size_t    count) {
-    memmove(to, from, count);
-  }
-  void _Copy_arrayof_conjoint_jshorts(HeapWord* from,
-                                      HeapWord* to,
-                                      size_t    count) {
-    memmove(to, from, count * 2);
-  }
-  void _Copy_arrayof_conjoint_jints(HeapWord* from,
-                                    HeapWord* to,
-                                    size_t    count) {
-    memmove(to, from, count * 4);
-  }
-  void _Copy_arrayof_conjoint_jlongs(HeapWord* from,
-                                     HeapWord* to,
-                                     size_t    count) {
-    memmove(to, from, count * 8);
-  }
+  void _Copy_arrayof_conjoint_bytes(HeapWord* from, HeapWord* to, size_t count)   { memmove(to, from, count); }
+  void _Copy_arrayof_conjoint_jshorts(HeapWord* from, HeapWord* to, size_t count) { memmove(to, from, count * 2); }
+  void _Copy_arrayof_conjoint_jints(HeapWord* from, HeapWord* to, size_t count)   { memmove(to, from, count * 4); }
+  void _Copy_arrayof_conjoint_jlongs(HeapWord* from, HeapWord* to, size_t count)  { memmove(to, from, count * 8); }
 };

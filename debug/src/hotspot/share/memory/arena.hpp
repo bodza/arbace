@@ -19,7 +19,6 @@
 //------------------------------Chunk------------------------------------------
 // Linked list of raw memory chunks
 class Chunk: CHeapObj<mtChunk> {
-
  private:
   Chunk*       _next;     // Next Chunk in list
   const size_t _len;      // Size of this Chunk
@@ -154,8 +153,7 @@ protected:
     if (((char*)ptr) + size == _hwm) _hwm = (char*)ptr;
   }
 
-  void *Arealloc( void *old_ptr, size_t old_size, size_t new_size,
-      AllocFailType alloc_failmode = AllocFailStrategy::EXIT_OOM);
+  void *Arealloc( void *old_ptr, size_t old_size, size_t new_size, AllocFailType alloc_failmode = AllocFailStrategy::EXIT_OOM);
 
   // Move contents of this arena into an empty arena
   Arena *move_contents(Arena *empty_arena);
@@ -175,7 +173,7 @@ protected:
 
 private:
   // Reset this Arena to empty, access will trigger grow if necessary
-  void   reset(void) {
+  void reset(void) {
     _first = _chunk = NULL;
     _hwm = _max = NULL;
     set_size_in_bytes(0);
@@ -188,8 +186,7 @@ private:
   (type*) (arena)->Amalloc((size) * sizeof(type))
 
 #define REALLOC_ARENA_ARRAY(arena, type, old, old_size, new_size) \
-  (type*) (arena)->Arealloc((char*)(old), (old_size) * sizeof(type), \
-                            (new_size) * sizeof(type))
+  (type*) (arena)->Arealloc((char*)(old), (old_size) * sizeof(type), (new_size) * sizeof(type))
 
 #define FREE_ARENA_ARRAY(arena, type, old, size) \
   (arena)->Afree((char*)(old), (size) * sizeof(type))

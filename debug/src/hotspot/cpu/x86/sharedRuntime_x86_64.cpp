@@ -9,7 +9,6 @@
 #include "code/vtableStubs.hpp"
 #include "gc/shared/gcLocker.hpp"
 #include "interpreter/interpreter.hpp"
-#include "logging/log.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/compiledICHolder.hpp"
 #include "runtime/safepointMechanism.hpp"
@@ -27,9 +26,7 @@
 const int StackAlignmentInSlots = StackAlignmentInBytes / VMRegImpl::stack_slot_size;
 
 class SimpleRuntimeFrame {
-
   public:
-
   // Most of the runtime stubs have this simple frame layout.
   // This class exists to make the layout shared in one place.
   // Offsets are for compiler stack slots, which are jints.
@@ -326,7 +323,6 @@ void RegisterSaver::restore_live_registers(MacroAssembler* masm, bool restore_ve
 }
 
 void RegisterSaver::restore_result_registers(MacroAssembler* masm) {
-
   // Just restore result register. Only used by deoptimization. By
   // now any callee save register that needs to be restored to a c2
   // caller of the deoptee has been extracted into the vframeArray
@@ -393,15 +389,13 @@ static int reg2offset_out(VMReg r) {
 // advantage out of it.
 
 int SharedRuntime::java_calling_convention(const BasicType *sig_bt, VMRegPair *regs, int total_args_passed, int is_outgoing) {
-
   // Create the mapping between argument positions and
   // registers.
   static const Register INT_ArgReg[Argument::n_int_register_parameters_j] = {
     j_rarg0, j_rarg1, j_rarg2, j_rarg3, j_rarg4, j_rarg5
   };
   static const XMMRegister FP_ArgReg[Argument::n_float_register_parameters_j] = {
-    j_farg0, j_farg1, j_farg2, j_farg3,
-    j_farg4, j_farg5, j_farg6, j_farg7
+    j_farg0, j_farg1, j_farg2, j_farg3, j_farg4, j_farg5, j_farg6, j_farg7
   };
 
   uint int_args = 0;
@@ -576,9 +570,7 @@ static void gen_c2i_adapter(MacroAssembler *masm,
         // sign extend??
         __ movl(rax, Address(rsp, ld_off));
         __ movptr(Address(rsp, st_off), rax);
-
       } else {
-
         __ movq(rax, Address(rsp, ld_off));
 
         // Two VMREgs|OptoRegs can be T_OBJECT, T_ADDRESS, T_DOUBLE, T_LONG
@@ -634,7 +626,6 @@ static void range_check(MacroAssembler* masm, Register pc_reg, Register temp_reg
 }
 
 void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed, int comp_args_on_stack, const BasicType *sig_bt, const VMRegPair *regs) {
-
   // Note: r13 contains the senderSP on entry. We must preserve it since
   // we may do a i2c -> c2i transition if we lose a race where compiled
   // code goes non-entrant while we get args ready.
@@ -1000,7 +991,6 @@ static void object_move(MacroAssembler* masm,
                         VMRegPair dst,
                         bool is_receiver,
                         int* receiver_offset) {
-
   // must pass a handle. First figure out the location we use as a handle
 
   Register rHandle = dst.first()->is_stack() ? rax : dst.first()->as_Register();
@@ -1008,7 +998,6 @@ static void object_move(MacroAssembler* masm,
   // See if oop is NULL if it is we need no handle
 
   if (src.first()->is_stack()) {
-
     // Oop is already on the stack as an argument
     int offset_in_older_frame = src.first()->reg2stack() + SharedRuntime::out_preserve_stack_slots();
     map->set_oop(VMRegImpl::stack2reg(offset_in_older_frame + framesize_in_slots));
@@ -1021,7 +1010,6 @@ static void object_move(MacroAssembler* masm,
     // conditionally move a NULL
     __ cmovptr(Assembler::equal, rHandle, Address(rbp, reg2offset_in(src.first())));
   } else {
-
     // Oop is in an a register we must store it to the space we reserve
     // on the stack for oop_handles and pass a handle if oop is non-NULL
 
@@ -1065,7 +1053,6 @@ static void object_move(MacroAssembler* masm,
 
 // A float arg may have to do float reg int reg conversion
 static void float_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
-
   // The calling conventions assures us that each VMregpair is either
   // all really one physical register or adjacent stack slots.
   // This greatly simplifies the cases here compared to sparc.
@@ -1092,7 +1079,6 @@ static void float_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
 
 // A long move
 static void long_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
-
   // The calling conventions assures us that each VMregpair is either
   // all really one physical register or adjacent stack slots.
   // This greatly simplifies the cases here compared to sparc.
@@ -1115,7 +1101,6 @@ static void long_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
 
 // A double move
 static void double_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
-
   // The calling conventions assures us that each VMregpair is either
   // all really one physical register or adjacent stack slots.
   // This greatly simplifies the cases here compared to sparc.
@@ -2009,7 +1994,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     c_arg = total_c_args - total_in_args;
 
     if (method->is_static()) {
-
       //  load oop into a register
       __ movoop(oop_handle_reg, JNIHandles::make_local(method->method_holder()->java_mirror()));
 
@@ -2055,7 +2039,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   Label lock_done;
 
   if (method->is_synchronized()) {
-
     const int mark_word_offset = BasicLock::displaced_header_offset_in_bytes();
 
     // Get the handle (the 2nd argument)
@@ -2228,7 +2211,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   Label unlock_done;
   Label slow_path_unlock;
   if (method->is_synchronized()) {
-
     // Get locked oop from the handle we passed to jni
     __ movptr(obj_reg, Address(oop_handle_reg, 0));
 
@@ -2308,7 +2290,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
   // Slow path locking & unlocking
   if (method->is_synchronized()) {
-
     // BEGIN Slow path lock
     __ bind(slow_path_lock);
 
@@ -2736,7 +2717,6 @@ void SharedRuntime::generate_deopt_blob() {
 // and setup oopmap.
 //
 SafepointBlob* SharedRuntime::generate_handler_blob(address call_ptr, int poll_type) {
-
   ResourceMark rm;
   OopMapSet *oop_maps = new OopMapSet();
   OopMap* map;
@@ -2878,7 +2858,6 @@ SafepointBlob* SharedRuntime::generate_handler_blob(address call_ptr, int poll_t
 // must do any gc of the args.
 //
 RuntimeStub* SharedRuntime::generate_resolve_blob(address destination, const char* name) {
-
   // allocate space for the code
   ResourceMark rm;
 
@@ -3000,7 +2979,7 @@ do { \
   __asm__ ("mul %5; add %%rax, %2; adc %%rdx, %3; adc $0, %4" \
            : "=&d"(hi), "=a"(lo), "+r"(T0), "+r"(T1), "+g"(T2) \
            : "r"(A), "a"(B) : "cc"); \
- } while(0)
+ } while (false)
 
 // As above, but add twice the double-length result into the
 // accumulator.
@@ -3011,7 +2990,7 @@ do { \
            "add %%rax, %2; adc %%rdx, %3; adc $0, %4" \
            : "=&d"(hi), "=a"(lo), "+r"(T0), "+r"(T1), "+g"(T2) \
            : "r"(A), "a"(B) : "cc"); \
- } while(0)
+ } while (false)
 
 // Fast Montgomery multiplication.  The derivation of the algorithm is
 // in  A Cryptographic Library for the Motorola DSP56000,

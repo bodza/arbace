@@ -85,7 +85,6 @@ private:
   static void print_safepoint_timeout(SafepointTimeoutReason timeout_reason);
 
 public:
-
   // Main entry points
 
   // Roll all threads forward to safepoint. Must be called by the

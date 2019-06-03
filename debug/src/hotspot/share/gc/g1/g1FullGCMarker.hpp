@@ -62,9 +62,7 @@ public:
   inline void follow_cld(ClassLoaderData* cld);
 
   inline void drain_stack();
-  void complete_marking(OopQueueSet* oop_stacks,
-                        ObjArrayTaskQueueSet* array_stacks,
-                        ParallelTaskTerminator* terminator);
+  void complete_marking(OopQueueSet* oop_stacks, ObjArrayTaskQueueSet* array_stacks, ParallelTaskTerminator* terminator);
 
   // Closure getters
   CLDToOopClosure*      cld_closure()   { return &_cld_closure; }

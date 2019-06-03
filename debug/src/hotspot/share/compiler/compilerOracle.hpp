@@ -14,7 +14,6 @@ class CompilerOracle : AllStatic {
   static void print_parse_error(const char*&  error_msg, char* original_line);
 
  public:
-
   // True if the command file has been specified or is implicit
   static bool has_command_file();
 
@@ -33,9 +32,6 @@ class CompilerOracle : AllStatic {
 
   // Tells whether we should print the assembly for this method
   static bool should_print(const methodHandle& method);
-
-  // Tells whether we should log the compilation data for this method
-  static bool should_log(const methodHandle& method);
 
   // Tells whether to break when compiling method
   static bool should_break_at(const methodHandle& method);

@@ -18,7 +18,6 @@ NullDecoder       Decoder::_do_nothing_decoder;
 Mutex*            Decoder::_shared_decoder_lock = new Mutex(Mutex::native, "SharedDecoderLock", false, Monitor::_safepoint_check_never);
 
 AbstractDecoder* Decoder::get_shared_instance() {
-
   if (_shared_decoder == NULL) {
     _shared_decoder = create_decoder();
   }

@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "classfile/vmSymbols.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/metaspaceShared.hpp"
 #include "memory/padded.hpp"
@@ -1161,7 +1160,6 @@ ObjectMonitor* ObjectSynchronizer::inflate_helper(oop obj) {
 }
 
 ObjectMonitor* ObjectSynchronizer::inflate(Thread * Self, oop object, const InflateCause cause) {
-
   EventJavaMonitorInflate event;
 
   for (;;) {
@@ -1465,7 +1463,6 @@ void ObjectSynchronizer::deflate_idle_monitors(DeflateMonitorCounters* counters)
       counters->nScavenged += deflated_count;
       counters->nInuse += gOmInUseCount;
     }
-
   } else {
     PaddedEnd<ObjectMonitor> * block = OrderAccess::load_acquire(&gBlockList);
     for (; block != NULL; block = next(block)) {

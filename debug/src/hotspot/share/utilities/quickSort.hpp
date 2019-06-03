@@ -6,7 +6,6 @@
 #include "utilities/debug.hpp"
 
 class QuickSort : AllStatic {
-
  private:
   template<class T>
   static void swap(T* array, size_t x, size_t y) {
@@ -23,7 +22,6 @@ class QuickSort : AllStatic {
   // A side effect of this is that arrays of length <= 3 are sorted.
   template<class T, class C>
   static size_t find_pivot(T* array, size_t length, C comparator) {
-
     size_t middle_index = length / 2;
     size_t last_index = length - 1;
 

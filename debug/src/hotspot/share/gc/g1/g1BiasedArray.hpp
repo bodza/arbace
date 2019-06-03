@@ -19,7 +19,6 @@ protected:
   uint _shift_by;         // the amount of bits to shift right when mapping to an index of the array.
 
 protected:
-
   G1BiasedMappedArrayBase() : _base(NULL), _length(0), _biased_base(NULL),
     _bias(0), _shift_by(0) { }
 

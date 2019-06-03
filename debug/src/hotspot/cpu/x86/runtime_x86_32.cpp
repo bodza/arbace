@@ -28,7 +28,6 @@
 //
 
 void OptoRuntime::generate_exception_blob() {
-
   // Capture info about frame layout
   enum layout {
     thread_off,                 // last_java_sp

@@ -59,7 +59,6 @@ static getPsrInfo_stub_t getPsrInfo_stub = NULL;
 
 class VM_Version_StubGenerator: public StubCodeGenerator {
  public:
-
   VM_Version_StubGenerator(CodeBuffer *c) : StubCodeGenerator(c) { }
 
   address generate_getPsrInfo() {

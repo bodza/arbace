@@ -162,7 +162,7 @@ void Assembler::emit_data(jint data, relocInfo::relocType rtype, int format) {
 }
 
 void Assembler::emit_data(jint data, RelocationHolder const& rspec, int format) {
-  if (rspec.type() !=  relocInfo::none) {
+  if (rspec.type() != relocInfo::none) {
     // Do not use AbstractAssembler::relocate, which is not intended for
     // embedded words.  Instead, relocate to the enclosing instruction.
 
@@ -409,7 +409,7 @@ void Assembler::emit_operand(Register reg, Register base, Register index, Addres
   if (base->is_valid()) {
     if (index->is_valid()) {
       // [base + index*scale + disp]
-      if (disp == 0 && rtype == relocInfo::none  && base != rbp && base != r13) {
+      if (disp == 0 && rtype == relocInfo::none && base != rbp && base != r13) {
         // [base + index*scale]
         // [00 reg 100][ss index base]
         emit_int8(0x04 | regenc);
@@ -488,7 +488,6 @@ void Assembler::emit_operand(Register reg, Register base, Register index, Addres
       // Do rip-rel adjustment for 64bit
       adjusted -=  (next_ip - inst_mark());
       emit_data((int32_t) adjusted, rspec, disp32_operand);
-
     } else {
       // 32bit never did this, did everything as the rip-rel/disp code above
       // [disp] ABSOLUTE
@@ -547,7 +546,6 @@ address Assembler::locate_operand(address inst, WhichOperand which) {
 
   again_after_prefix:
   switch (0xFF & *ip++) {
-
   // These convenience macros generate groups of "case" labels for the switch.
 #define REP4(x) (x)+0: case (x)+1: case (x)+2: case (x)+3
 #define REP8(x) (x)+0: case (x)+1: case (x)+2: case (x)+3: case (x)+4: case (x)+5: case (x)+6: case (x)+7
@@ -2644,7 +2642,6 @@ void Assembler::negl(Register dst) {
 }
 
 void Assembler::nop(int i) {
-
   if (UseAddressNop && VM_Version::is_intel()) {
     //
     // Using multi-bytes nops "0x0F 0x1F [address]" for Intel

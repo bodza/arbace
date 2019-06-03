@@ -122,45 +122,16 @@ class MethodCounters : public Metadata {
   static bool is_nmethod_warm(int age)      { return age < HotMethodDetectionLimit; }
   static bool is_nmethod_age_unset(int age) { return age > HotMethodDetectionLimit; }
 
-  static ByteSize nmethod_age_offset() {
-    return byte_offset_of(MethodCounters, _nmethod_age);
-  }
-
-  static ByteSize interpreter_invocation_counter_offset() {
-    return byte_offset_of(MethodCounters, _interpreter_invocation_count);
-  }
-
-  static int interpreter_invocation_counter_offset_in_bytes() {
-    return offset_of(MethodCounters, _interpreter_invocation_count);
-  }
-
-  static ByteSize invocation_counter_offset()    {
-    return byte_offset_of(MethodCounters, _invocation_counter);
-  }
-
-  static ByteSize backedge_counter_offset()      {
-    return byte_offset_of(MethodCounters, _backedge_counter);
-  }
-
-  static ByteSize interpreter_invocation_limit_offset() {
-    return byte_offset_of(MethodCounters, _interpreter_invocation_limit);
-  }
-
-  static ByteSize interpreter_backward_branch_limit_offset() {
-    return byte_offset_of(MethodCounters, _interpreter_backward_branch_limit);
-  }
-
-  static ByteSize interpreter_profile_limit_offset() {
-    return byte_offset_of(MethodCounters, _interpreter_profile_limit);
-  }
-
-  static ByteSize invoke_mask_offset() {
-    return byte_offset_of(MethodCounters, _invoke_mask);
-  }
-
-  static ByteSize backedge_mask_offset() {
-    return byte_offset_of(MethodCounters, _backedge_mask);
-  }
+  static ByteSize nmethod_age_offset()                        { return byte_offset_of(MethodCounters, _nmethod_age); }
+  static ByteSize interpreter_invocation_counter_offset()     { return byte_offset_of(MethodCounters, _interpreter_invocation_count); }
+  static int interpreter_invocation_counter_offset_in_bytes() { return offset_of(MethodCounters, _interpreter_invocation_count); }
+  static ByteSize invocation_counter_offset()                 { return byte_offset_of(MethodCounters, _invocation_counter); }
+  static ByteSize backedge_counter_offset()                   { return byte_offset_of(MethodCounters, _backedge_counter); }
+  static ByteSize interpreter_invocation_limit_offset()       { return byte_offset_of(MethodCounters, _interpreter_invocation_limit); }
+  static ByteSize interpreter_backward_branch_limit_offset()  { return byte_offset_of(MethodCounters, _interpreter_backward_branch_limit); }
+  static ByteSize interpreter_profile_limit_offset()          { return byte_offset_of(MethodCounters, _interpreter_profile_limit); }
+  static ByteSize invoke_mask_offset()                        { return byte_offset_of(MethodCounters, _invoke_mask); }
+  static ByteSize backedge_mask_offset()                      { return byte_offset_of(MethodCounters, _backedge_mask); }
 
   virtual const char* internal_name() const { return "{method counters}"; }
   virtual void print_value_on(outputStream* st) const;

@@ -2,7 +2,6 @@
 
 #include "gc/g1/g1MMUTracker.hpp"
 #include "gc/shared/gcTrace.hpp"
-#include "logging/log.hpp"
 #include "runtime/mutexLocker.hpp"
 #include "utilities/ostream.hpp"
 

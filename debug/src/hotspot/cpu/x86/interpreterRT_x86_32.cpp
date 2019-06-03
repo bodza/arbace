@@ -61,8 +61,7 @@ void InterpreterRuntime::SignatureHandlerGenerator::generate( uint64_t fingerpri
   // generate code to handle arguments
   iterate(fingerprint);
   // return result handler
-  __ lea(rax,
-         ExternalAddress((address)Interpreter::result_handler(method()->result_type())));
+  __ lea(rax, ExternalAddress((address)Interpreter::result_handler(method()->result_type())));
   // return
   __ ret(0);
   __ flush();

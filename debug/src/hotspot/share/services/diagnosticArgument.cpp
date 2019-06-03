@@ -11,7 +11,7 @@ StringArrayArgument::StringArrayArgument() {
 }
 
 StringArrayArgument::~StringArrayArgument() {
-  for (int i=0; i<_array->length(); i++) {
+  for (int i = 0; i<_array->length(); i++) {
     if (_array->at(i) != NULL) { // Safety check
       FREE_C_HEAP_ARRAY(char, _array->at(i));
     }

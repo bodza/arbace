@@ -2,7 +2,6 @@
 
 #include "classfile/moduleEntry.hpp"
 #include "classfile/packageEntry.hpp"
-#include "logging/log.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/symbol.hpp"
 #include "runtime/handles.inline.hpp"

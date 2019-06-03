@@ -79,7 +79,6 @@ ciSymbol* ciObjArrayKlass::construct_array_name(ciSymbol* element_name, int dime
   if (base_name_sym->byte_at(0) == '[' ||
       (base_name_sym->byte_at(0) == 'L' &&  // watch package name 'Lxx'
        base_name_sym->byte_at(element_len-1) == ';')) {
-
     int new_len = element_len + dimension + 1; // for the ['s and '\0'
     name = CURRENT_THREAD_ENV->name_buffer(new_len);
 
@@ -112,7 +111,6 @@ ciSymbol* ciObjArrayKlass::construct_array_name(ciSymbol* element_name, int dime
 //
 // Implementation of make.
 ciObjArrayKlass* ciObjArrayKlass::make_impl(ciKlass* element_klass) {
-
   if (element_klass->is_loaded()) {
     EXCEPTION_CONTEXT;
     // The element klass is loaded

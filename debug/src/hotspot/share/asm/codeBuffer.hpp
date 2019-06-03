@@ -159,12 +159,8 @@ class CodeSection {
   void    set_mark()                { _mark = _end; }
   void    clear_mark()              { _mark = NULL; }
 
-  void    set_locs_end(relocInfo* p) {
-    _locs_end = p;
-  }
-  void    set_locs_point(address pc) {
-    _locs_point = pc;
-  }
+  void    set_locs_end(relocInfo* p) { _locs_end = p; }
+  void    set_locs_point(address pc) { _locs_point = pc; }
 
   // Code emission
   void emit_int8 ( int8_t  x)  { *((int8_t*)  end()) = x; set_end(end() + sizeof(int8_t)); }
@@ -522,7 +518,7 @@ class CodeBuffer: public StackObj {
   void relocate(address at, RelocationHolder const& rspec, int format = 0) {
     _insts.relocate(at, rspec, format);
   }
-  void relocate(address at,    relocInfo::relocType rtype, int format = 0) {
+  void relocate(address at, relocInfo::relocType rtype, int format = 0) {
     _insts.relocate(at, rtype, format);
   }
 

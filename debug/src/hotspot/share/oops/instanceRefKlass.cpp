@@ -17,12 +17,8 @@ void InstanceRefKlass::update_nonstatic_oop_maps(Klass* k) {
   const int new_offset = java_lang_ref_Reference::queue_offset;
   const unsigned int new_count = 2; // queue and next
 
-  // Verify existing map is as expected, and update if needed.
-  if (UseSharedSpaces) {
-  } else {
-    map->set_offset(new_offset);
-    map->set_count(new_count);
-  }
+  map->set_offset(new_offset);
+  map->set_count(new_count);
 }
 
 // Verification

@@ -3,8 +3,6 @@
 #include "jvm.h"
 #include "asm/macroAssembler.hpp"
 #include "asm/macroAssembler.inline.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/java.hpp"
 #include "runtime/os.hpp"
@@ -31,7 +29,6 @@ static get_cpu_info_stub_t get_cpu_info_stub = NULL;
 
 class VM_Version_StubGenerator: public StubCodeGenerator {
  public:
-
   VM_Version_StubGenerator(CodeBuffer *c) : StubCodeGenerator(c) { }
 
   address generate_get_cpu_info() {
@@ -472,7 +469,6 @@ class VM_Version_StubGenerator: public StubCodeGenerator {
 };
 
 void VM_Version::get_processor_features() {
-
   _cpu = 4; // 486 by default
   _model = 0;
   _stepping = 0;

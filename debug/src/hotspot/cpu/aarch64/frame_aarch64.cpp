@@ -67,7 +67,6 @@ bool frame::safe_for_sender(JavaThread *thread) {
   // toward eliminating issues when we get in frame construction code
 
   if (_cb != NULL ) {
-
     // First check if frame is complete and tester is reliable
     // Unfortunately we can only check frame complete for runtime stubs and nmethod
     // other generic buffer blobs are more problematic so we just assume they are
@@ -108,7 +107,6 @@ bool frame::safe_for_sender(JavaThread *thread) {
       sender_sp = (intptr_t*) addr_at(sender_sp_offset);
       sender_unextended_sp = (intptr_t*) this->fp()[interpreter_frame_sender_sp_offset];
       saved_fp = (intptr_t*) this->fp()[link_offset];
-
     } else {
       // must be some sort of compiled/runtime frame
       // fp does not have to be safe (although it could be check for c1?)
@@ -131,7 +129,6 @@ bool frame::safe_for_sender(JavaThread *thread) {
 
     // If the potential sender is the interpreter then we can do some more checking
     if (Interpreter::contains(sender_pc)) {
-
       // fp is always saved in a recognizable place in any code we generate. However
       // only if the sender is interpreted/call_stub (c1 too?) are we certain that the saved fp
       // is really a frame pointer.
@@ -151,7 +148,7 @@ bool frame::safe_for_sender(JavaThread *thread) {
 
     // We must always be able to find a recognizable pc
     CodeBlob* sender_blob = CodeCache::find_blob_unsafe(sender_pc);
-    if (sender_pc == NULL ||  sender_blob == NULL) {
+    if (sender_pc == NULL || sender_blob == NULL) {
       return false;
     }
 
@@ -506,8 +503,8 @@ BasicType frame::interpreter_frame_result(oop* oop_result, jvalue* value_result)
   }
 
   switch (type) {
-    case T_OBJECT  :
-    case T_ARRAY   : {
+    case T_OBJECT:
+    case T_ARRAY: {
       oop obj;
       if (method->is_native()) {
         obj = cast_to_oop(at(interpreter_frame_oop_temp_offset));
@@ -518,19 +515,16 @@ BasicType frame::interpreter_frame_result(oop* oop_result, jvalue* value_result)
       *oop_result = obj;
       break;
     }
-    case T_BOOLEAN : value_result->z = *(jboolean*)tos_addr; break;
-    case T_BYTE    : value_result->b = *(jbyte*)tos_addr; break;
-    case T_CHAR    : value_result->c = *(jchar*)tos_addr; break;
-    case T_SHORT   : value_result->s = *(jshort*)tos_addr; break;
-    case T_INT     : value_result->i = *(jint*)tos_addr; break;
-    case T_LONG    : value_result->j = *(jlong*)tos_addr; break;
-    case T_FLOAT   : {
-        value_result->f = *(jfloat*)tos_addr;
-      break;
-    }
-    case T_DOUBLE  : value_result->d = *(jdouble*)tos_addr; break;
-    case T_VOID    : /* Nothing to do */ break;
-    default        : ShouldNotReachHere();
+    case T_BOOLEAN: value_result->z = *(jboolean*)tos_addr; break;
+    case T_BYTE:    value_result->b = *(jbyte*)tos_addr; break;
+    case T_CHAR:    value_result->c = *(jchar*)tos_addr; break;
+    case T_SHORT:   value_result->s = *(jshort*)tos_addr; break;
+    case T_INT:     value_result->i = *(jint*)tos_addr; break;
+    case T_LONG:    value_result->j = *(jlong*)tos_addr; break;
+    case T_FLOAT:   value_result->f = *(jfloat*)tos_addr; break;
+    case T_DOUBLE:  value_result->d = *(jdouble*)tos_addr; break;
+    case T_VOID: /* Nothing to do */ break;
+    default: ShouldNotReachHere();
   }
 
   return type;
@@ -563,8 +557,7 @@ intptr_t* frame::real_fp() const {
 #define DESCRIBE_FP_OFFSET(name) \
   { \
     unsigned long *p = (unsigned long *)fp; \
-    printf("0x%016lx 0x%016lx %s\n", (unsigned long)(p + frame::name##_offset), \
-           p[frame::name##_offset], #name); \
+    printf("0x%016lx 0x%016lx %s\n", (unsigned long)(p + frame::name##_offset), p[frame::name##_offset], #name); \
   }
 
 static __thread unsigned long nextfp;

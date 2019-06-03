@@ -65,7 +65,7 @@ public:
     bool operator==(const CompactHashtableWriter::Entry& other) {
       return (_value == other._value && _hash == other._hash);
     }
-  }; // class CompactHashtableWriter::Entry
+  };
 
 private:
   int _num_entries;

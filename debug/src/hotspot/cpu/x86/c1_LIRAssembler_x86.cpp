@@ -157,7 +157,6 @@ void LIR_Assembler::push(LIR_Opr opr) {
     } else {
       ShouldNotReachHere();
     }
-
   } else {
     ShouldNotReachHere();
   }
@@ -672,7 +671,6 @@ void LIR_Assembler::const2mem(LIR_Opr src, LIR_Opr dest, BasicType type, CodeEmi
 }
 
 void LIR_Assembler::reg2reg(LIR_Opr src, LIR_Opr dest) {
-
   // move between cpu-registers
   if (dest->is_single_cpu()) {
     if (src->type() == T_LONG) {
@@ -684,7 +682,6 @@ void LIR_Assembler::reg2reg(LIR_Opr src, LIR_Opr dest) {
       __ verify_oop(src->as_register());
     }
     move_regs(src->as_register(), dest->as_register());
-
   } else if (dest->is_double_cpu()) {
     if (src->type() == T_OBJECT || src->type() == T_ARRAY) {
       // Surprising to me but we can see move of a long to t_object
@@ -727,7 +724,6 @@ void LIR_Assembler::reg2reg(LIR_Opr src, LIR_Opr dest) {
 }
 
 void LIR_Assembler::reg2stack(LIR_Opr src, LIR_Opr dest, BasicType type, bool pop_fpu_stack) {
-
   if (src->is_single_cpu()) {
     Address dst = frame_map()->address_for_slot(dest->single_stack_ix());
     if (type == T_OBJECT || type == T_ARRAY) {
@@ -738,30 +734,24 @@ void LIR_Assembler::reg2stack(LIR_Opr src, LIR_Opr dest, BasicType type, bool po
     } else {
       __ movl (dst, src->as_register());
     }
-
   } else if (src->is_double_cpu()) {
     Address dstLO = frame_map()->address_for_slot(dest->double_stack_ix(), lo_word_offset_in_bytes);
     Address dstHI = frame_map()->address_for_slot(dest->double_stack_ix(), hi_word_offset_in_bytes);
     __ movptr (dstLO, src->as_register_lo());
-
   } else if (src->is_single_xmm()) {
     Address dst_addr = frame_map()->address_for_slot(dest->single_stack_ix());
     __ movflt(dst_addr, src->as_xmm_float_reg());
-
   } else if (src->is_double_xmm()) {
     Address dst_addr = frame_map()->address_for_slot(dest->double_stack_ix());
     __ movdbl(dst_addr, src->as_xmm_double_reg());
-
   } else if (src->is_single_fpu()) {
     Address dst_addr = frame_map()->address_for_slot(dest->single_stack_ix());
     if (pop_fpu_stack)     __ fstp_s (dst_addr);
     else                   __ fst_s  (dst_addr);
-
   } else if (src->is_double_fpu()) {
     Address dst_addr = frame_map()->address_for_slot(dest->double_stack_ix());
     if (pop_fpu_stack)     __ fstp_d (dst_addr);
     else                   __ fst_d  (dst_addr);
-
   } else {
     ShouldNotReachHere();
   }
@@ -866,7 +856,6 @@ void LIR_Assembler::reg2mem(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
 }
 
 void LIR_Assembler::stack2reg(LIR_Opr src, LIR_Opr dest, BasicType type) {
-
   if (dest->is_single_cpu()) {
     if (type == T_ARRAY || type == T_OBJECT) {
       __ movptr(dest->as_register(), frame_map()->address_for_slot(src->single_stack_ix()));
@@ -876,28 +865,22 @@ void LIR_Assembler::stack2reg(LIR_Opr src, LIR_Opr dest, BasicType type) {
     } else {
       __ movl(dest->as_register(), frame_map()->address_for_slot(src->single_stack_ix()));
     }
-
   } else if (dest->is_double_cpu()) {
     Address src_addr_LO = frame_map()->address_for_slot(src->double_stack_ix(), lo_word_offset_in_bytes);
     Address src_addr_HI = frame_map()->address_for_slot(src->double_stack_ix(), hi_word_offset_in_bytes);
     __ movptr(dest->as_register_lo(), src_addr_LO);
-
   } else if (dest->is_single_xmm()) {
     Address src_addr = frame_map()->address_for_slot(src->single_stack_ix());
     __ movflt(dest->as_xmm_float_reg(), src_addr);
-
   } else if (dest->is_double_xmm()) {
     Address src_addr = frame_map()->address_for_slot(src->double_stack_ix());
     __ movdbl(dest->as_xmm_double_reg(), src_addr);
-
   } else if (dest->is_single_fpu()) {
     Address src_addr = frame_map()->address_for_slot(src->single_stack_ix());
     __ fld_s(src_addr);
-
   } else if (dest->is_double_fpu()) {
     Address src_addr = frame_map()->address_for_slot(src->double_stack_ix());
     __ fld_d(src_addr);
-
   } else {
     ShouldNotReachHere();
   }
@@ -913,18 +896,15 @@ void LIR_Assembler::stack2stack(LIR_Opr src, LIR_Opr dest, BasicType type) {
       __ movl(rscratch1, frame_map()->address_for_slot(src ->single_stack_ix()));
       __ movl(frame_map()->address_for_slot(dest->single_stack_ix()), rscratch1);
     }
-
   } else if (src->is_double_stack()) {
     __ pushptr(frame_map()->address_for_slot(src ->double_stack_ix()));
     __ popptr (frame_map()->address_for_slot(dest->double_stack_ix()));
-
   } else {
     ShouldNotReachHere();
   }
 }
 
 void LIR_Assembler::mem2reg(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_PatchCode patch_code, CodeEmitInfo* info, bool wide, bool /* unaligned */) {
-
   LIR_Address* addr = src->as_address_ptr();
   Address from_addr = as_Address(addr);
 
@@ -1082,23 +1062,16 @@ void LIR_Assembler::emit_op3(LIR_Op3* op) {
       arithmetic_idiv(op->code(), op->in_opr1(), op->in_opr2(), op->in_opr3(), op->result_opr(), op->info());
       break;
     case lir_fmad:
-      __ fmad(op->result_opr()->as_xmm_double_reg(),
-              op->in_opr1()->as_xmm_double_reg(),
-              op->in_opr2()->as_xmm_double_reg(),
-              op->in_opr3()->as_xmm_double_reg());
+      __ fmad(op->result_opr()->as_xmm_double_reg(), op->in_opr1()->as_xmm_double_reg(), op->in_opr2()->as_xmm_double_reg(), op->in_opr3()->as_xmm_double_reg());
       break;
     case lir_fmaf:
-      __ fmaf(op->result_opr()->as_xmm_float_reg(),
-              op->in_opr1()->as_xmm_float_reg(),
-              op->in_opr2()->as_xmm_float_reg(),
-              op->in_opr3()->as_xmm_float_reg());
+      __ fmaf(op->result_opr()->as_xmm_float_reg(), op->in_opr1()->as_xmm_float_reg(), op->in_opr2()->as_xmm_float_reg(), op->in_opr3()->as_xmm_float_reg());
       break;
     default:      ShouldNotReachHere(); break;
   }
 }
 
 void LIR_Assembler::emit_opBranch(LIR_OpBranch* op) {
-
   if (op->cond() == lir_cond_always) {
     if (op->info() != NULL) add_debug_info_for_branch(op->info());
     __ jmp (*(op->label()));
@@ -1226,18 +1199,10 @@ void LIR_Assembler::emit_opConvert(LIR_OpConvert* op) {
 void LIR_Assembler::emit_alloc_obj(LIR_OpAllocObj* op) {
   if (op->init_check()) {
     add_debug_info_for_null_check_here(op->stub()->info());
-    __ cmpb(Address(op->klass()->as_register(),
-                    InstanceKlass::init_state_offset()),
-                    InstanceKlass::fully_initialized);
+    __ cmpb(Address(op->klass()->as_register(), InstanceKlass::init_state_offset()), InstanceKlass::fully_initialized);
     __ jcc(Assembler::notEqual, *op->stub()->entry());
   }
-  __ allocate_object(op->obj()->as_register(),
-                     op->tmp1()->as_register(),
-                     op->tmp2()->as_register(),
-                     op->header_size(),
-                     op->object_size(),
-                     op->klass()->as_register(),
-                     *op->stub()->entry());
+  __ allocate_object(op->obj()->as_register(), op->tmp1()->as_register(), op->tmp2()->as_register(), op->header_size(), op->object_size(), op->klass()->as_register(), *op->stub()->entry());
   __ bind(*op->stub()->continuation());
 }
 
@@ -1262,14 +1227,7 @@ void LIR_Assembler::emit_alloc_array(LIR_OpAllocArray* op) {
     } else {
       __ mov(tmp3, len);
     }
-    __ allocate_array(op->obj()->as_register(),
-                      len,
-                      tmp1,
-                      tmp2,
-                      arrayOopDesc::header_size(op->type()),
-                      array_element_size(op->type()),
-                      op->klass()->as_register(),
-                      *op->stub()->entry());
+    __ allocate_array(op->obj()->as_register(), len, tmp1, tmp2, arrayOopDesc::header_size(op->type()), array_element_size(op->type()), op->klass()->as_register(), *op->stub()->entry());
   }
   __ bind(*op->stub()->continuation());
 }
@@ -1549,8 +1507,7 @@ void LIR_Assembler::emit_compare_and_swap(LIR_OpCompareAndSwap* op) {
         }
         // cmpval (rax) is implicitly used by this instruction
         __ cmpxchgl(rscratch1, Address(addr, 0));
-      } else
-      {
+      } else {
         if (os::is_MP()) {
           __ lock();
         }
@@ -1613,7 +1570,6 @@ void LIR_Assembler::cmove(LIR_Condition condition, LIR_Opr opr1, LIR_Opr opr2, L
     } else {
       ShouldNotReachHere();
     }
-
   } else {
     Label skip;
     __ jcc (acond, skip);
@@ -1631,7 +1587,6 @@ void LIR_Assembler::cmove(LIR_Condition condition, LIR_Opr opr1, LIR_Opr opr2, L
 }
 
 void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr dest, CodeEmitInfo* info, bool pop_fpu_stack) {
-
   if (left->is_single_cpu()) {
     Register lreg = left->as_register();
 
@@ -1644,7 +1599,6 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
         case lir_mul: __ imull(lreg, rreg); break;
         default:      ShouldNotReachHere();
       }
-
     } else if (right->is_stack()) {
       // cpu register - stack
       Address raddr = frame_map()->address_for_slot(right->single_stack_ix());
@@ -1653,7 +1607,6 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
         case lir_sub: __ subl(lreg, raddr); break;
         default:      ShouldNotReachHere();
       }
-
     } else if (right->is_constant()) {
       // cpu register - constant
       jint c = right->as_constant_ptr()->as_jint();
@@ -1668,11 +1621,9 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
         }
         default: ShouldNotReachHere();
       }
-
     } else {
       ShouldNotReachHere();
     }
-
   } else if (left->is_double_cpu()) {
     Register lreg_lo = left->as_register_lo();
     Register lreg_hi = left->as_register_hi();
@@ -1694,7 +1645,6 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
         default:
           ShouldNotReachHere();
       }
-
     } else if (right->is_constant()) {
       // cpu register - constant
       jlong c = right->as_constant_ptr()->as_jlong_bits();
@@ -1709,11 +1659,9 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
         default:
           ShouldNotReachHere();
       }
-
     } else {
       ShouldNotReachHere();
     }
-
   } else if (left->is_single_xmm()) {
     XMMRegister lreg = left->as_xmm_float_reg();
 
@@ -1748,9 +1696,7 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
         default: ShouldNotReachHere();
       }
     }
-
   } else if (left->is_double_xmm()) {
-
     XMMRegister lreg = left->as_xmm_double_reg();
     if (right->is_double_xmm()) {
       XMMRegister rreg = right->as_xmm_double_reg();
@@ -1783,14 +1729,10 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
         default: ShouldNotReachHere();
       }
     }
-
   } else if (left->is_single_fpu()) {
-
     if (right->is_single_fpu()) {
       arith_fpu_implementation(code, left->fpu_regnr(), right->fpu_regnr(), dest->fpu_regnr(), pop_fpu_stack);
-
     } else {
-
       Address raddr;
       if (right->is_single_stack()) {
         raddr = frame_map()->address_for_slot(right->single_stack_ix());
@@ -1812,9 +1754,7 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
         default:      ShouldNotReachHere();
       }
     }
-
   } else if (left->is_double_fpu()) {
-
     if (code == lir_mul_strictfp || code == lir_div_strictfp) {
       // Double values require special handling for strictfp mul/div on x86
       __ fld_x(ExternalAddress(StubRoutines::addr_fpu_subnormal_bias1()));
@@ -1823,9 +1763,7 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
 
     if (right->is_double_fpu()) {
       arith_fpu_implementation(code, left->fpu_regnrLo(), right->fpu_regnrLo(), dest->fpu_regnrLo(), pop_fpu_stack);
-
     } else {
-
       Address raddr;
       if (right->is_double_stack()) {
         raddr = frame_map()->address_for_slot(right->double_stack_ix());
@@ -1852,9 +1790,7 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
       __ fld_x(ExternalAddress(StubRoutines::addr_fpu_subnormal_bias2()));
       __ fmulp(dest->fpu_regnrLo() + 1);
     }
-
   } else if (left->is_single_stack() || left->is_address()) {
-
     Address laddr;
     if (left->is_single_stack()) {
       laddr = frame_map()->address_for_slot(left->single_stack_ix());
@@ -1887,14 +1823,12 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
     } else {
       ShouldNotReachHere();
     }
-
   } else {
     ShouldNotReachHere();
   }
 }
 
 void LIR_Assembler::arith_fpu_implementation(LIR_Code code, int left_index, int right_index, int dest_index, bool pop_fpu_stack) {
-
   bool left_is_tos = (left_index == 0);
   bool dest_is_tos = (dest_index == 0);
   int non_tos_index = (left_is_tos ? right_index : left_index);
@@ -1954,8 +1888,7 @@ void LIR_Assembler::intrinsic_op(LIR_Code code, LIR_Opr value, LIR_Opr tmp, LIR_
         {
           if (UseAVX > 2 && !VM_Version::supports_avx512vl()) {
             __ vpandn(dest->as_xmm_double_reg(), tmp->as_xmm_double_reg(), value->as_xmm_double_reg(), 2);
-          } else
-          {
+          } else {
             if (dest->as_xmm_double_reg() != value->as_xmm_double_reg()) {
               __ movdbl(dest->as_xmm_double_reg(), value->as_xmm_double_reg());
             }
@@ -1968,7 +1901,6 @@ void LIR_Assembler::intrinsic_op(LIR_Code code, LIR_Opr value, LIR_Opr tmp, LIR_
       // all other intrinsics are not available in the SSE instruction set, so FPU is used
       default      : ShouldNotReachHere();
     }
-
   } else if (value->is_double_fpu()) {
     switch(code) {
       case lir_abs   : __ fabs(); break;
@@ -2057,7 +1989,6 @@ void LIR_Assembler::logic_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
 
 // we assume that rax, and rdx can be overwritten
 void LIR_Assembler::arithmetic_idiv(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr temp, LIR_Opr result, CodeEmitInfo* info) {
-
   Register lreg = left->as_register();
   Register dreg = result->as_register();
 
@@ -2144,7 +2075,6 @@ void LIR_Assembler::comp_op(LIR_Condition condition, LIR_Opr opr1, LIR_Opr opr2,
     } else {
       ShouldNotReachHere();
     }
-
   } else if (opr1->is_double_cpu()) {
     Register xlo = opr1->as_register_lo();
     Register xhi = opr1->as_register_hi();
@@ -2156,7 +2086,6 @@ void LIR_Assembler::comp_op(LIR_Condition condition, LIR_Opr opr1, LIR_Opr opr2,
     } else {
       ShouldNotReachHere();
     }
-
   } else if (opr1->is_single_xmm()) {
     XMMRegister reg1 = opr1->as_xmm_float_reg();
     if (opr2->is_single_xmm()) {
@@ -2177,7 +2106,6 @@ void LIR_Assembler::comp_op(LIR_Condition condition, LIR_Opr opr1, LIR_Opr opr2,
     } else {
       ShouldNotReachHere();
     }
-
   } else if (opr1->is_double_xmm()) {
     XMMRegister reg1 = opr1->as_xmm_double_reg();
     if (opr2->is_double_xmm()) {
@@ -2198,10 +2126,8 @@ void LIR_Assembler::comp_op(LIR_Condition condition, LIR_Opr opr1, LIR_Opr opr2,
     } else {
       ShouldNotReachHere();
     }
-
   } else if (opr1->is_single_fpu() || opr1->is_double_fpu()) {
     __ fcmp(noreg, opr2->fpu(), op->fpu_pop_count() > 0, op->fpu_pop_count() > 1);
-
   } else if (opr1->is_address() && opr2->is_constant()) {
     LIR_Const* c = opr2->as_constant_ptr();
     if (c->type() == T_OBJECT || c->type() == T_ARRAY) {
@@ -2221,7 +2147,6 @@ void LIR_Assembler::comp_op(LIR_Condition condition, LIR_Opr opr1, LIR_Opr opr2,
     } else {
       ShouldNotReachHere();
     }
-
   } else {
     ShouldNotReachHere();
   }
@@ -2233,9 +2158,7 @@ void LIR_Assembler::comp_fl2i(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Op
       __ cmpss2int(left->as_xmm_float_reg(), right->as_xmm_float_reg(), dst->as_register(), code == lir_ucmp_fd2i);
     } else if (left->is_double_xmm()) {
       __ cmpsd2int(left->as_xmm_double_reg(), right->as_xmm_double_reg(), dst->as_register(), code == lir_ucmp_fd2i);
-
     } else {
-
       __ fcmp2int(dst->as_register(), code == lir_ucmp_fd2i, right->fpu(), op->fpu_pop_count() > 0, op->fpu_pop_count() > 1);
     }
   } else {
@@ -2313,7 +2236,6 @@ void LIR_Assembler::emit_static_call_stub() {
 }
 
 void LIR_Assembler::throw_op(LIR_Opr exceptionPC, LIR_Opr exceptionOop, CodeEmitInfo* info) {
-
   // exception object is not added to oop map by LinearScan
   // (LinearScan assumes that no oops are in fixed registers)
   info->add_register_oop(exceptionOop);
@@ -2340,12 +2262,10 @@ void LIR_Assembler::throw_op(LIR_Opr exceptionPC, LIR_Opr exceptionOop, CodeEmit
 }
 
 void LIR_Assembler::unwind_op(LIR_Opr exceptionOop) {
-
   __ jmp(_unwind_handler_entry);
 }
 
 void LIR_Assembler::shift_op(LIR_Code code, LIR_Opr left, LIR_Opr count, LIR_Opr dest, LIR_Opr tmp) {
-
   // optimized version for linear scan:
   // * count must be already in ECX (guaranteed by LinearScan)
   // * left and dest must be equal
@@ -2863,7 +2783,6 @@ void LIR_Assembler::emit_profile_type(LIR_OpProfileType* op) {
           __ jccb(Assembler::zero, next);
         }
       } else {
-
         __ movptr(tmp, mdo_addr);
         __ testptr(tmp, TypeEntries::type_unknown);
         __ jccb(Assembler::notZero, next); // already unknown. Nothing to do anymore.
@@ -2888,7 +2807,6 @@ void LIR_Assembler::emit_profile_type(LIR_OpProfileType* op) {
         // first time here. Set profile type.
         __ movptr(mdo_addr, tmp);
       } else {
-
         __ movptr(tmp, mdo_addr);
         __ testptr(tmp, TypeEntries::type_unknown);
         __ jccb(Assembler::notZero, next); // already unknown. Nothing to do anymore.
@@ -2917,13 +2835,11 @@ void LIR_Assembler::negate(LIR_Opr left, LIR_Opr dest, LIR_Opr tmp) {
   if (left->is_single_cpu()) {
     __ negl(left->as_register());
     move_regs(left->as_register(), dest->as_register());
-
   } else if (left->is_double_cpu()) {
     Register lo = left->as_register_lo();
     Register dst = dest->as_register_lo();
     __ movptr(dst, lo);
     __ negptr(dst);
-
   } else if (dest->is_single_xmm()) {
     if (UseAVX > 2 && !VM_Version::supports_avx512vl()) {
       __ vpxor(dest->as_xmm_float_reg(), tmp->as_xmm_float_reg(), left->as_xmm_float_reg(), 2);
@@ -2944,14 +2860,12 @@ void LIR_Assembler::negate(LIR_Opr left, LIR_Opr dest, LIR_Opr tmp) {
     }
   } else if (left->is_single_fpu() || left->is_double_fpu()) {
     __ fchs();
-
   } else {
     ShouldNotReachHere();
   }
 }
 
 void LIR_Assembler::leal(LIR_Opr src, LIR_Opr dest, LIR_PatchCode patch_code, CodeEmitInfo* info) {
-
   PatchingStub* patch = NULL;
   if (patch_code != lir_patch_none) {
     patch = new PatchingStub(_masm, PatchingStub::access_field_id);
@@ -2974,7 +2888,6 @@ void LIR_Assembler::rt_call(LIR_Opr result, address dest, const LIR_OprList* arg
 }
 
 void LIR_Assembler::volatile_move_op(LIR_Opr src, LIR_Opr dest, BasicType type, CodeEmitInfo* info) {
-
   if (info != NULL) {
     add_debug_info_for_null_check_here(info);
   }
@@ -2989,7 +2902,6 @@ void LIR_Assembler::volatile_move_op(LIR_Opr src, LIR_Opr dest, BasicType type, 
     } else {
       ShouldNotReachHere();
     }
-
   } else if (dest->is_double_xmm()) {
     if (src->is_double_stack()) {
       __ movdbl(dest->as_xmm_double_reg(), frame_map()->address_for_slot(src->double_stack_ix()));
@@ -2998,7 +2910,6 @@ void LIR_Assembler::volatile_move_op(LIR_Opr src, LIR_Opr dest, BasicType type, 
     } else {
       ShouldNotReachHere();
     }
-
   } else if (src->is_double_fpu()) {
     if (dest->is_double_stack()) {
       __ fistp_d(frame_map()->address_for_slot(dest->double_stack_ix()));
@@ -3007,7 +2918,6 @@ void LIR_Assembler::volatile_move_op(LIR_Opr src, LIR_Opr dest, BasicType type, 
     } else {
       ShouldNotReachHere();
     }
-
   } else if (dest->is_double_fpu()) {
     if (src->is_double_stack()) {
       __ fild_d(frame_map()->address_for_slot(src->double_stack_ix()));
@@ -3067,7 +2977,6 @@ void LIR_Assembler::peephole(LIR_List*) {
 }
 
 void LIR_Assembler::atomic_op(LIR_Code code, LIR_Opr src, LIR_Opr data, LIR_Opr dest, LIR_Opr tmp) {
-
   if (data->type() == T_INT) {
     if (code == lir_xadd) {
       if (os::is_MP()) {

@@ -14,7 +14,6 @@ class Thread;
 // will use this implementation for all TLS access - see thread.hpp/cpp
 
 class ThreadLocalStorage : AllStatic {
-
  // Exported API
  public:
   static Thread* thread(); // return current thread, if attached

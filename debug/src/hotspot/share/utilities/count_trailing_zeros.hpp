@@ -17,7 +17,6 @@
 #if defined(TARGET_COMPILER_gcc)
 
 inline unsigned count_trailing_zeros(uintx x) {
-  STATIC_ASSERT(sizeof(unsigned long) == sizeof(uintx));
   return __builtin_ctzl(x);
 }
 

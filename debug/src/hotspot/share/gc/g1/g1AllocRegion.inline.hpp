@@ -9,7 +9,6 @@ inline void G1AllocRegion::reset_alloc_region() {
 }
 
 inline HeapWord* G1AllocRegion::allocate(HeapRegion* alloc_region, size_t word_size) {
-
   if (!_bot_updates) {
     return alloc_region->allocate_no_bot_updates(word_size);
   } else {
@@ -23,7 +22,6 @@ inline HeapWord* G1AllocRegion::par_allocate(HeapRegion* alloc_region, size_t wo
 }
 
 inline HeapWord* G1AllocRegion::par_allocate(HeapRegion* alloc_region, size_t min_word_size, size_t desired_word_size, size_t* actual_word_size) {
-
   if (!_bot_updates) {
     return alloc_region->par_allocate_no_bot_updates(min_word_size, desired_word_size, actual_word_size);
   } else {

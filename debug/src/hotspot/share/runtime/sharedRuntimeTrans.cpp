@@ -95,7 +95,7 @@ static double __ieee754_log(double x) {
   hx = high(x);               /* high word of x */
   lx = low(x);                /* low  word of x */
 
-  k=0;
+  k = 0;
   if (hx < 0x00100000) {                   /* x < 2**-1022  */
     if (((hx&0x7fffffff)|lx)==0)
       return -two54/zero;             /* log(+-0)=-inf */
@@ -152,7 +152,7 @@ JRT_END
  *        ivln10   = 1/log(10) rounded.
  *    Then
  *            n = ilogb(x),
- *            if(n<0)  n = n+1;
+ *            if (n<0)  n = n+1;
  *            x = scalbn(x,-n);
  *            log10(x) := n*log10_2hi + (n*log10_2lo + ivln10*log(x))
  *
@@ -189,7 +189,7 @@ static double __ieee754_log10(double x) {
   hx = high(x);       /* high word of x */
   lx = low(x);        /* low word of x */
 
-  k=0;
+  k = 0;
   if (hx < 0x00100000) {                  /* x < 2**-1022  */
     if (((hx&0x7fffffff)|lx)==0)
       return -two54/zero;             /* log(+-0)=-inf */
@@ -293,7 +293,7 @@ one     = 1.0,
 
 static double __ieee754_exp(double x) {
   double y,hi=0,lo=0,c,t;
-  int k=0,xsb;
+  int k = 0,xsb;
   unsigned hx;
 
   hx  = high(x);                /* high word of x */
@@ -443,12 +443,12 @@ double __ieee754_pow(double x, double y) {
   yisint  = 0;
   if (hx<0) {
     if (iy>=0x43400000) yisint = 2; /* even integer y */
-    else if(iy>=0x3ff00000) {
+    else if (iy>=0x3ff00000) {
       k = (iy>>20)-0x3ff;          /* exponent */
       if (k>20) {
         j = ly>>(52-k);
         if ((unsigned)(j<<(52-k))==ly) yisint = 2-(j&1);
-      } else if(ly==0) {
+      } else if (ly==0) {
         j = iy>>(20-k);
         if ((j<<(20-k))==iy) yisint = 2-(j&1);
       }
@@ -488,7 +488,7 @@ double __ieee754_pow(double x, double y) {
 #else
           z = (z-z)/(z-z); /* (-1)**non-int is NaN */
 #endif
-        } else if(yisint==1)
+        } else if (yisint==1)
           z = -1.0*z;           /* (x<0)**odd = -(|x|**odd) */
       }
       return z;
@@ -536,9 +536,9 @@ double __ieee754_pow(double x, double y) {
     j  = ix&0x000fffff;
     /* determine interval */
     ix = j|0x3ff00000;          /* normalize ix */
-    if (j<=0x3988E) k=0;         /* |x|<sqrt(3/2) */
-    else if(j<0xBB67A) k=1;     /* |x|<sqrt(3)   */
-    else { k=0;n+=1;ix -= 0x00100000; }
+    if (j<=0x3988E) k = 0;         /* |x|<sqrt(3/2) */
+    else if (j<0xBB67A) k = 1;     /* |x|<sqrt(3)   */
+    else { k = 0;n+=1;ix -= 0x00100000; }
     set_high(&ax, ix);
 
     /* compute ss = s_h+s_l = (x-1)/(x+1) or (x-1.5)/(x+1.5) */
@@ -590,7 +590,7 @@ double __ieee754_pow(double x, double y) {
     else {
       if (p_l+ovt>z-p_h) return s*hugeX*hugeX;   /* overflow */
     }
-  } else if((j&0x7fffffff)>=0x4090cc00 ) {      /* z <= -1075 */
+  } else if ((j&0x7fffffff)>=0x4090cc00 ) {      /* z <= -1075 */
     if (((j-0xc090cc00)|i)!=0)           /* z < -1075 */
       return s*tiny*tiny;               /* underflow */
     else {

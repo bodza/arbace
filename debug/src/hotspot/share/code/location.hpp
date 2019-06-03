@@ -59,7 +59,6 @@ class Location {
   }
 
  public:
-
   // Stack location Factory.  Offset is 4-byte aligned; remove low bits
   static Location new_stk_loc( Type t, int offset ) { return Location(on_stack,t,offset>>LogBytesPerInt); }
   // Register location Factory

@@ -137,22 +137,16 @@ class YoungGCTracer : public GCTracer {
   bool should_report_promotion_events() const;
   bool should_report_promotion_in_new_plab_event() const;
   bool should_report_promotion_outside_plab_event() const;
-  void report_promotion_in_new_plab_event(Klass* klass, size_t obj_size,
-                                          uint age, bool tenured,
-                                          size_t plab_size) const;
-  void report_promotion_outside_plab_event(Klass* klass, size_t obj_size,
-                                           uint age, bool tenured) const;
+  void report_promotion_in_new_plab_event(Klass* klass, size_t obj_size, uint age, bool tenured, size_t plab_size) const;
+  void report_promotion_outside_plab_event(Klass* klass, size_t obj_size, uint age, bool tenured) const;
 
  private:
   void send_young_gc_event() const;
   void send_promotion_failed_event(const PromotionFailedInfo& pf_info) const;
   bool should_send_promotion_in_new_plab_event() const;
   bool should_send_promotion_outside_plab_event() const;
-  void send_promotion_in_new_plab_event(Klass* klass, size_t obj_size,
-                                        uint age, bool tenured,
-                                        size_t plab_size) const;
-  void send_promotion_outside_plab_event(Klass* klass, size_t obj_size,
-                                         uint age, bool tenured) const;
+  void send_promotion_in_new_plab_event(Klass* klass, size_t obj_size, uint age, bool tenured, size_t plab_size) const;
+  void send_promotion_outside_plab_event(Klass* klass, size_t obj_size, uint age, bool tenured) const;
 };
 
 class OldGCTracer : public GCTracer {

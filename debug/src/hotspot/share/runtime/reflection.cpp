@@ -9,7 +9,6 @@
 #include "classfile/verifier.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "interpreter/linkResolver.hpp"
-#include "logging/log.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
@@ -276,7 +275,6 @@ arrayOop Reflection::reflect_new_array(oop element_mirror, jint length, TRAPS) {
 }
 
 arrayOop Reflection::reflect_new_multi_array(oop element_mirror, typeArrayOop dim_array, TRAPS) {
-
   if (element_mirror == NULL) {
     THROW_0(vmSymbols::java_lang_NullPointerException());
   }
@@ -338,7 +336,6 @@ static bool under_host_klass(const InstanceKlass* ik, const InstanceKlass* host_
 }
 
 static bool can_relax_access_check_for(const Klass* accessor, const Klass* accessee, bool classloader_only) {
-
   const InstanceKlass* accessor_ik = InstanceKlass::cast(accessor);
   const InstanceKlass* accessee_ik = InstanceKlass::cast(accessee);
 
@@ -384,7 +381,6 @@ static bool can_relax_access_check_for(const Klass* accessor, const Klass* acces
  Note: a loose module is a module that can read all current and future unnamed modules.
 */
 Reflection::VerifyClassAccessResults Reflection::verify_class_access(const Klass* current_class, const InstanceKlass* new_class, bool classloader_only) {
-
   // Verify that current_class can access new_class.  If the classloader_only
   // flag is set, we automatically allow any accesses in which current_class
   // doesn't have a classloader.
@@ -494,7 +490,6 @@ char* Reflection::verify_class_access_msg(const Klass* current_class,
           current_class_name, module_from_name, new_class_name, uintx(identity_hash),
           module_from_name, uintx(identity_hash));
       }
-
     } else if (result == TYPE_NOT_EXPORTED) {
       const char * package_name = new_class->package()->name()->as_klass_external_name();
       if (module_from->is_named()) {
@@ -639,7 +634,6 @@ void Reflection::check_for_inner_class(const InstanceKlass* outer, const Instanc
 
 // Utility method converting a single SignatureStream element into java.lang.Class instance
 static oop get_mirror_from_signature(const methodHandle& method, SignatureStream* ss, TRAPS) {
-
   if (T_OBJECT == ss->type() || T_ARRAY == ss->type()) {
     Symbol* name = ss->as_symbol(CHECK_NULL);
     oop loader = method->method_holder()->class_loader();
@@ -748,7 +742,6 @@ oop Reflection::new_method(const methodHandle& method, bool for_constant_pool_ac
 }
 
 oop Reflection::new_constructor(const methodHandle& method, TRAPS) {
-
   InstanceKlass* holder = method->method_holder();
   int slot = method->method_idnum();
 
@@ -824,7 +817,6 @@ oop Reflection::new_field(fieldDescriptor* fd, TRAPS) {
 
 oop Reflection::new_parameter(Handle method, int index, Symbol* sym,
                               int flags, TRAPS) {
-
   Handle rh = java_lang_reflect_Parameter::create(CHECK_NULL);
 
   if (NULL != sym) {
@@ -841,7 +833,6 @@ oop Reflection::new_parameter(Handle method, int index, Symbol* sym,
 }
 
 static methodHandle resolve_interface_call(InstanceKlass* klass, const methodHandle& method, Klass* recv_klass, Handle receiver, TRAPS) {
-
   CallInfo info;
   Symbol*  signature  = method->signature();
   Symbol*  name       = method->name();
@@ -879,7 +870,6 @@ static void narrow(jvalue* value, BasicType narrow_type, TRAPS) {
 
 // Method call (shared by invoke_method and invoke_constructor)
 static oop invoke(InstanceKlass* klass, const methodHandle& reflected_method, Handle receiver, bool override, objArrayHandle ptypes, BasicType rtype, objArrayHandle args, bool is_method_invoke, TRAPS) {
-
   ResourceMark rm(THREAD);
 
   methodHandle method;      // actual method to invoke
@@ -924,7 +914,7 @@ static oop invoke(InstanceKlass* klass, const methodHandle& reflected_method, Ha
                       vmSymbols::throwable_void_signature(),
                       &args);
         }
-      }  else {
+      } else {
         // if the method can be overridden, we resolve using the vtable index.
         int index = reflected_method->vtable_index();
         method = reflected_method;

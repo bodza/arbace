@@ -237,7 +237,7 @@ typedef enum {
     if (FLAG_IS_DEFAULT(name)) { \
       FLAG_SET_ERGO(type, name, value); \
     } \
-  } while (0)
+  } while (false)
 
 // Can't put the following in JVMFlags because
 // of a circular dependency on the enum definition.

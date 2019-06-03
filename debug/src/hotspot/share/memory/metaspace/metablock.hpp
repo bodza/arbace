@@ -5,7 +5,6 @@
 #include "utilities/globalDefinitions.hpp"
 
 namespace metaspace {
-
 // Metablock is the unit of allocation from a Chunk.
 //
 // A Metablock may be reused by its SpaceManager but are never moved between

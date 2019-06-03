@@ -56,7 +56,6 @@ class InstanceRefKlass: public InstanceKlass {
   inline void oop_oop_iterate_bounded(oop obj, OopClosureType* closure, MemRegion mr);
 
   private:
-
   // Reference processing part of the iterators.
 
   template <typename T, class OopClosureType, class Contains>

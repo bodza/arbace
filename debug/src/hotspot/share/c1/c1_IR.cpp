@@ -84,7 +84,6 @@ bool XHandlers::equals(XHandlers* others) const {
 }
 
 bool XHandler::equals(XHandler* other) const {
-
   if (entry_pco() != other->entry_pco()) return false;
   if (scope_count() != other->scope_count()) return false;
   if (_desc != other->_desc) return false;
@@ -164,7 +163,6 @@ CodeEmitInfo::CodeEmitInfo(CodeEmitInfo* info, ValueStack* stack)
   , _stack(stack == NULL ? info->_stack : stack)
   , _is_method_handle_invoke(info->_is_method_handle_invoke)
   , _deoptimize_on_exception(info->_deoptimize_on_exception) {
-
   // deep copy of exception handlers
   if (info->_exception_handlers != NULL) {
     _exception_handlers = new XHandlers(info->_exception_handlers);
@@ -179,7 +177,6 @@ void CodeEmitInfo::record_debug_info(DebugInformationRecorder* recorder, int pc_
 }
 
 void CodeEmitInfo::add_register_oop(LIR_Opr opr) {
-
   VMReg name = frame_map()->regname(opr);
   _oop_map->set_oop(name);
 }
@@ -648,7 +645,6 @@ void ComputeLinearScanOrder::assign_loop_depth(BlockBegin* start_block) {
 }
 
 BlockBegin* ComputeLinearScanOrder::common_dominator(BlockBegin* a, BlockBegin* b) {
-
   _dominator_blocks.clear();
   while (a != NULL) {
     _dominator_blocks.set_bit(a->block_id());
@@ -673,7 +669,6 @@ void ComputeLinearScanOrder::compute_dominator_impl(BlockBegin* cur, BlockBegin*
   if (cur->dominator() == NULL) {
     TRACE_LINEAR_SCAN(4, tty->print_cr("DOM: initializing dominator of B%d to B%d", cur->block_id(), parent->block_id()));
     cur->set_dominator(parent);
-
   } else if (!(cur->is_set(BlockBegin::linear_scan_loop_header_flag) && parent->is_set(BlockBegin::linear_scan_loop_end_flag))) {
     TRACE_LINEAR_SCAN(4, tty->print_cr("DOM: computing dominator of B%d: common dominator of B%d and B%d is B%d", cur->block_id(), parent->block_id(), cur->dominator()->block_id(), common_dominator(cur->dominator(), parent)->block_id()));
     // Does not hold for exception blocks
@@ -747,7 +742,6 @@ bool ComputeLinearScanOrder::ready_for_processing(BlockBegin* cur) {
 }
 
 void ComputeLinearScanOrder::sort_into_work_list(BlockBegin* cur) {
-
   int cur_weight = compute_weight(cur);
 
   // the linear_scan_number is used to cache the weight of a block
@@ -852,7 +846,6 @@ bool ComputeLinearScanOrder::compute_dominators_iter() {
     TRACE_LINEAR_SCAN(4, tty->print_cr("DOM: Processing B%d", block->block_id()));
 
     for (int j = 0; j < num_preds; j++) {
-
       BlockBegin *pred = block->pred_at(j);
       TRACE_LINEAR_SCAN(4, tty->print_cr("   DOM: Subrocessing B%d", pred->block_id()));
 
@@ -905,7 +898,6 @@ void ComputeLinearScanOrder::compute_dominators() {
 }
 
 void IR::compute_code() {
-
   ComputeLinearScanOrder compute_order(compilation(), start());
   _num_loops = compute_order.num_loops();
   _code = compute_order.linear_scan_order();

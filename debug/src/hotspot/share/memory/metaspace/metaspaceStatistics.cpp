@@ -8,7 +8,6 @@
 #include "utilities/ostream.hpp"
 
 namespace metaspace {
-
 // FreeChunksStatistics methods
 
 FreeChunksStatistics::FreeChunksStatistics()

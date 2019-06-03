@@ -57,7 +57,6 @@ void GCTracer::report_metaspace_summary(GCWhen::Type when, const MetaspaceSummar
 }
 
 void YoungGCTracer::report_gc_end_impl(const Ticks& timestamp, TimePartitions* time_partitions) {
-
   GCTracer::report_gc_end_impl(timestamp, time_partitions);
   send_young_gc_event();
 

@@ -26,8 +26,7 @@ class ICStub: public Stub {
  protected:
   friend class ICStubInterface;
   // This will be called only by ICStubInterface
-  void    initialize(int size,
-                     CodeStrings strings)        { _size = size; _ic_site = NULL; }
+  void    initialize(int size, CodeStrings strings)        { _size = size; _ic_site = NULL; }
   void    finalize(); // called when a method is removed
 
   // General info
@@ -92,7 +91,6 @@ class InlineCacheBuffer: public AllStatic {
   static void*   ic_buffer_cached_value (address code_begin);
 
  public:
-
     // Initialization; must be called before first usage
   static void initialize();
 

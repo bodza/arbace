@@ -8,12 +8,9 @@
 #include "code/codeHeapState.hpp"
 #include "code/dependencyContext.hpp"
 #include "compiler/compileBroker.hpp"
-#include "compiler/compileLog.hpp"
 #include "compiler/compilerOracle.hpp"
 #include "compiler/directivesParser.hpp"
 #include "interpreter/linkResolver.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/methodData.hpp"
@@ -59,9 +56,6 @@ int CompileBroker::_c2_count = 0;
 // An array of compiler names as Java String objects
 jobject* CompileBroker::_compiler1_objects = NULL;
 jobject* CompileBroker::_compiler2_objects = NULL;
-
-CompileLog** CompileBroker::_compiler1_logs = NULL;
-CompileLog** CompileBroker::_compiler2_logs = NULL;
 
 // These counters are used to assign an unique ID to each compilation.
 volatile jint CompileBroker::_compilation_id     = 0;
@@ -161,7 +155,6 @@ class CompilationLog : public StringEventLog {
 static CompilationLog* _compilation_log = NULL;
 
 bool compileBroker_init() {
-
   // init directives stack, adding default directive
   DirectivesStack::init();
 
@@ -181,15 +174,11 @@ CompileTaskWrapper::CompileTaskWrapper(CompileTask* task) {
   if (task->is_blocking() && CompileBroker::compiler(task->comp_level())->is_jvmci()) {
     task->set_jvmci_compiler_thread(thread);
   }
-  CompileLog*     log  = thread->log();
-  if (log != NULL)  task->log_task_start(log);
 }
 
 CompileTaskWrapper::~CompileTaskWrapper() {
   CompilerThread* thread = CompilerThread::current();
   CompileTask* task = thread->task();
-  CompileLog*  log  = thread->log();
-  if (log != NULL)  task->log_task_done(log);
   thread->set_task(NULL);
   task->set_code_handle(NULL);
   thread->set_env(NULL);
@@ -256,7 +245,6 @@ static bool can_remove(CompilerThread *ct, bool do_it) {
  * Add a CompileTask to a CompileQueue.
  */
 void CompileQueue::add(CompileTask* task) {
-
   task->set_next(NULL);
   task->set_prev(NULL);
 
@@ -522,7 +510,6 @@ void CompileBroker::compilation_init_phase1(TRAPS) {
   }
 
   if (UsePerfData) {
-
     EXCEPTION_MARK;
 
     // create the jvmstat performance counters
@@ -582,7 +569,6 @@ JavaThread* CompileBroker::make_thread(jobject thread_handle, CompileQueue* queu
     // lock.
 
     if (thread != NULL && thread->osthread() != NULL) {
-
       java_lang_Thread::set_thread(JNIHandles::resolve_non_null(thread_handle), thread);
 
       // Note that this only sets the JavaThread _priority field, which by
@@ -641,12 +627,10 @@ void CompileBroker::init_compiler_sweeper_threads() {
     const char* name = UseJVMCICompiler ? "JVMCI compile queue" : "C2 compile queue";
     _c2_compile_queue  = new CompileQueue(name);
     _compiler2_objects = NEW_C_HEAP_ARRAY(jobject, _c2_count, mtCompiler);
-    _compiler2_logs = NEW_C_HEAP_ARRAY(CompileLog*, _c2_count, mtCompiler);
   }
   if (_c1_count > 0) {
     _c1_compile_queue  = new CompileQueue("C1 compile queue");
     _compiler1_objects = NEW_C_HEAP_ARRAY(jobject, _c1_count, mtCompiler);
-    _compiler1_logs = NEW_C_HEAP_ARRAY(CompileLog*, _c1_count, mtCompiler);
   }
 
   char name_buffer[256];
@@ -656,7 +640,6 @@ void CompileBroker::init_compiler_sweeper_threads() {
     sprintf(name_buffer, "%s CompilerThread%d", _compilers[1]->name(), i);
     jobject thread_handle = JNIHandles::make_global(create_thread_oop(name_buffer, THREAD));
     _compiler2_objects[i] = thread_handle;
-    _compiler2_logs[i] = NULL;
 
     if (!UseDynamicNumberOfCompilerThreads || i == 0) {
       JavaThread *ct = make_thread(thread_handle, _c2_compile_queue, _compilers[1], /* compiler_thread */ true, CHECK);
@@ -669,7 +652,6 @@ void CompileBroker::init_compiler_sweeper_threads() {
     sprintf(name_buffer, "C1 CompilerThread%d", i);
     jobject thread_handle = JNIHandles::make_global(create_thread_oop(name_buffer, THREAD));
     _compiler1_objects[i] = thread_handle;
-    _compiler1_logs[i] = NULL;
 
     if (!UseDynamicNumberOfCompilerThreads || i == 0) {
       JavaThread *ct = make_thread(thread_handle, _c1_compile_queue, _compilers[0], /* compiler_thread */ true, CHECK);
@@ -1143,9 +1125,7 @@ CompileTask* CompileBroker::create_compile_task(CompileQueue*       queue,
                                                 CompileTask::CompileReason compile_reason,
                                                 bool                blocking) {
   CompileTask* new_task = CompileTask::allocate();
-  new_task->initialize(compile_id, method, osr_bci, comp_level,
-                       hot_method, hot_count, compile_reason,
-                       blocking);
+  new_task->initialize(compile_id, method, osr_bci, comp_level, hot_method, hot_count, compile_reason, blocking);
   queue->add(new_task);
   return new_task;
 }
@@ -1205,7 +1185,6 @@ bool CompileBroker::wait_for_jvmci_completion(JVMCICompiler* jvmci, CompileTask*
  *  Wait for the compilation task to complete.
  */
 void CompileBroker::wait_for_completion(CompileTask* task) {
-
   JavaThread* thread = JavaThread::current();
   thread->set_blocked_on_compilation(true);
 
@@ -1214,8 +1193,7 @@ void CompileBroker::wait_for_completion(CompileTask* task) {
   AbstractCompiler* comp = compiler(task->comp_level());
   if (comp->is_jvmci()) {
     free_task = wait_for_jvmci_completion((JVMCICompiler*) comp, task, thread);
-  } else
-  {
+  } else {
     MutexLocker waiter(task->lock(), thread);
     free_task = true;
     while (!task->is_complete() && !is_compilation_disabled_forever()) {
@@ -1326,13 +1304,6 @@ void CompileBroker::shutdown_compiler_runtime(AbstractCompiler* comp, CompilerTh
   }
 }
 
-/**
- * Helper function to create new or reuse old CompileLog.
- */
-CompileLog* CompileBroker::get_log(CompilerThread* ct) {
-  return NULL;
-}
-
 // ------------------------------------------------------------------
 // CompileBroker::compiler_thread_loop
 //
@@ -1352,14 +1323,6 @@ void CompileBroker::compiler_thread_loop() {
     if (!ciObjectFactory::is_initialized()) {
       ciObjectFactory::initialize();
     }
-  }
-
-  // Open a log.
-  CompileLog* log = get_log(thread);
-  if (log != NULL) {
-    log->begin_elem("start_compile_thread name='%s' thread='" UINTX_FORMAT "' process='%d'", thread->name(), os::current_thread_id(), os::current_process_id());
-    log->stamp();
-    log->end_elem();
   }
 
   // If compiler thread/runtime initialization fails, exit the compiler thread
@@ -1393,7 +1356,6 @@ void CompileBroker::compiler_thread_loop() {
         }
       }
     } else {
-
       // Give compiler threads an extra quanta.  They tend to be bursty and
       // this helps the compiler to finish up the job.
       if (CompilerThreadHintNoPreempt) {
@@ -1429,43 +1391,6 @@ void CompileBroker::compiler_thread_loop() {
 
   // Shut down compiler runtime
   shutdown_compiler_runtime(thread->compiler(), thread);
-}
-
-// ------------------------------------------------------------------
-// CompileBroker::init_compiler_thread_log
-//
-// Set up state required by +false.
-void CompileBroker::init_compiler_thread_log() {
-    CompilerThread* thread = CompilerThread::current();
-    char  file_name[4*K];
-    FILE* fp = NULL;
-    intx thread_id = os::current_thread_id();
-    for (int try_temp_dir = 1; try_temp_dir >= 0; try_temp_dir--) {
-      const char* dir = (try_temp_dir ? os::get_temp_directory() : NULL);
-      if (dir == NULL) {
-        jio_snprintf(file_name, sizeof(file_name), "hs_c" UINTX_FORMAT "_pid%u.log", thread_id, os::current_process_id());
-      } else {
-        jio_snprintf(file_name, sizeof(file_name), "%s%shs_c" UINTX_FORMAT "_pid%u.log", dir, os::file_separator(), thread_id, os::current_process_id());
-      }
-
-      fp = fopen(file_name, "wt");
-      if (fp != NULL) {
-        CompileLog* log = new(ResourceObj::C_HEAP, mtCompiler) CompileLog(file_name, fp, thread_id);
-        if (log == NULL) {
-          fclose(fp);
-          return;
-        }
-        thread->init_log(log);
-
-        if (xtty != NULL) {
-          ttyLocker ttyl;
-          // Record any per thread log files
-          xtty->elem("thread_logfile thread='" INTX_FORMAT "' filename='%s'", thread_id, file_name);
-        }
-        return;
-      }
-    }
-    warning("Cannot open log file: %s", file_name);
 }
 
 void CompileBroker::log_metaspace_failure() {
@@ -1585,7 +1510,6 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
   uint compile_id = task->compile_id();
   int osr_bci = task->osr_bci();
   bool is_osr = (osr_bci != standard_entry_bci);
-  bool should_log = (thread->log() != NULL);
   bool should_break = false;
   const int task_level = task->comp_level();
   AbstractCompiler* comp = task->compiler();
@@ -1606,9 +1530,6 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
   }
 
   should_break = directive->BreakAtExecuteOption || task->check_break_at_flags();
-  if (should_log && !directive->LogOption) {
-    should_log = false;
-  }
 
   // Allocate a new set of JNI handles.
   push_jni_handle_block();
@@ -1649,18 +1570,13 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     if (event.should_commit()) {
       post_compilation_event(&event, task);
     }
-
-  } else
-  {
+  } else {
     NoHandleMark  nhm;
     ThreadToNativeFromVM ttn(thread);
 
     ciEnv ci_env(task, system_dictionary_modification_counter);
     if (should_break) {
       ci_env.set_break_at_compile(true);
-    }
-    if (should_log) {
-      ci_env.set_log(thread->log());
     }
     // The thread-env() field is cleared in ~CompileTaskWrapper.
 
@@ -1716,11 +1632,6 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
   }
   DirectivesStack::release(directive);
 
-  Log(compilation, codecache) log;
-  if (log.is_debug()) {
-    LogStream ls(log.debug());
-    codecache_print(&ls, /* detailed= */ false);
-  }
   // Disable compilation, if required.
   switch (compilable) {
   case ciEnv::MethodCompilable_never:
@@ -1803,7 +1714,6 @@ void CompileBroker::set_last_compile(CompilerThread* thread, const methodHandle&
 
     // check if we need to truncate the string
     if (s1len + s2len + 2 > maxLen) {
-
       // the strategy is to lop off the leading characters of the
       // class name and the trailing characters of the method name.
 

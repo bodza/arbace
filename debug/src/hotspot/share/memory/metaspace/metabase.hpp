@@ -4,7 +4,6 @@
 #include "utilities/globalDefinitions.hpp"
 
 namespace metaspace {
-
 // Super class of Metablock and Metachunk to allow them to
 // be put on the FreeList and in the BinaryTreeDictionary.
 template <class T>

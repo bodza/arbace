@@ -4,7 +4,6 @@
 #include "classfile/classLoaderData.inline.hpp"
 #include "classfile/javaClasses.inline.hpp"
 #include "classfile/moduleEntry.hpp"
-#include "logging/log.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oopHandle.inline.hpp"
 #include "oops/symbol.hpp"
@@ -88,7 +87,6 @@ void ModuleEntry::set_shared_protection_domain(ClassLoaderData *loader_data, Han
 
 // Returns true if this module can read module m
 bool ModuleEntry::can_read(ModuleEntry* m) const {
-
   // Unnamed modules read everyone and all modules
   // read java.base.  If either of these conditions
   // hold, readability has been established.
@@ -155,7 +153,6 @@ bool ModuleEntry::has_reads_list() const {
 
 // Purge dead module entries out of reads list.
 void ModuleEntry::purge_reads() {
-
   if (_must_walk_reads && has_reads_list()) {
     // This module's _must_walk_reads flag will be reset based
     // on the remaining live modules on the reads list.

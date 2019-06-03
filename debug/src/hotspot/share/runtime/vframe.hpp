@@ -192,15 +192,11 @@ class MonitorInfo : public ResourceObj {
     _owner_is_scalar_replaced = owner_is_scalar_replaced;
   }
   // Accessors
-  oop        owner() const {
-    return _owner;
-  }
-  oop   owner_klass() const {
-    return _owner_klass;
-  }
-  BasicLock* lock()  const { return _lock; }
-  bool eliminated()  const { return _eliminated; }
-  bool owner_is_scalar_replaced()  const { return _owner_is_scalar_replaced; }
+  oop owner() const { return _owner; }
+  oop owner_klass() const { return _owner_klass; }
+  BasicLock* lock() const { return _lock; }
+  bool eliminated() const { return _eliminated; }
+  bool owner_is_scalar_replaced() const { return _owner_is_scalar_replaced; }
 };
 
 class vframeStreamCommon : StackObj {

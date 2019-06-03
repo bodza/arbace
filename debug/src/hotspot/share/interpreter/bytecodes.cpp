@@ -15,7 +15,6 @@ Bytecodes::Code Bytecodes::_java_code     [Bytecodes::number_of_codes];
 unsigned short  Bytecodes::_flags         [(1<<BitsPerByte)*2];
 
 bool Bytecodes::check_must_rewrite(Bytecodes::Code code) {
-
   // Some codes are conditionally rewriting.  Look closely at them.
   switch (code) {
   case Bytecodes::_aload_0:

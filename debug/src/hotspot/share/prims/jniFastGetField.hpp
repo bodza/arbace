@@ -42,7 +42,6 @@ class JNI_FastGetField : AllStatic {
   static address generate_fast_get_float_field0(BasicType type);
 
  public:
-
   static address generate_fast_get_boolean_field();
   static address generate_fast_get_byte_field();
   static address generate_fast_get_char_field();

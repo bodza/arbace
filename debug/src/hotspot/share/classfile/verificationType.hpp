@@ -99,7 +99,6 @@ class VerificationType {
   }
 
  public:
-
   VerificationType() { *this = bogus_type(); }
 
   // Create verification types
@@ -286,7 +285,6 @@ class VerificationType {
   void print_on(outputStream* st) const;
 
  private:
-
   bool is_reference_assignable_from(const VerificationType&, ClassVerifier*, bool from_field_is_protected, TRAPS) const;
 
  public:

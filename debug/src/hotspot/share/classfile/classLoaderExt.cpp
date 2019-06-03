@@ -186,7 +186,6 @@ void ClassLoaderExt::setup_search_paths() {
 }
 
 void ClassLoaderExt::record_result(const s2 classpath_index, InstanceKlass* result, TRAPS) {
-
   // We need to remember where the class comes from during dumping.
   oop loader = result->class_loader();
   s2 classloader_type = ClassLoader::BOOT_LOADER;
@@ -211,7 +210,6 @@ void ClassLoaderExt::finalize_shared_paths_misc_info() {
 // the "source:" in the class list file (see classListParser.cpp), and can be a directory or
 // a JAR file.
 InstanceKlass* ClassLoaderExt::load_class(Symbol* name, const char* path, TRAPS) {
-
   ResourceMark rm(THREAD);
   const char* class_name = name->as_C_string();
 
@@ -263,7 +261,7 @@ ClassPathEntry* ClassLoaderExt::find_classpath_entry_from_cache(const char* path
     cached_path_entries = new (ResourceObj::C_HEAP, mtClass) GrowableArray<CachedClassPathEntry>(20, /*c heap*/ true);
   }
   CachedClassPathEntry ccpe;
-  for (int i=0; i<cached_path_entries->length(); i++) {
+  for (int i = 0; i<cached_path_entries->length(); i++) {
     ccpe = cached_path_entries->at(i);
     if (strcmp(ccpe._path, path) == 0) {
       if (i != 0) {

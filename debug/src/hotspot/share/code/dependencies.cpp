@@ -6,7 +6,6 @@
 #include "ci/ciMethod.hpp"
 #include "classfile/javaClasses.inline.hpp"
 #include "code/dependencies.hpp"
-#include "compiler/compileLog.hpp"
 #include "compiler/compileBroker.hpp"
 #include "compiler/compileTask.hpp"
 #include "memory/resourceArea.hpp"
@@ -23,7 +22,6 @@
 void Dependencies::initialize(ciEnv* env) {
   Arena* arena = env->arena();
   _oop_recorder = env->oop_recorder();
-  _log = env->log();
   _dep_seen = new(arena) GrowableArray<int>(arena, 500, 0, 0);
   _using_dep_values = false;
   for (int i = (int)FIRST_TYPE; i < (int)TYPE_LIMIT; i++) {
@@ -91,9 +89,8 @@ void Dependencies::assert_call_site_target_value(ciCallSite* call_site, ciMethod
   assert_common_2(call_site_target_value, call_site, method_handle);
 }
 
-Dependencies::Dependencies(Arena* arena, OopRecorder* oop_recorder, CompileLog* log) {
+Dependencies::Dependencies(Arena* arena, OopRecorder* oop_recorder) {
   _oop_recorder = oop_recorder;
-  _log = log;
   _dep_seen = new(arena) GrowableArray<int>(arena, 500, 0, 0);
   _using_dep_values = true;
   for (int i = (int)FIRST_TYPE; i < (int)TYPE_LIMIT; i++) {
@@ -160,7 +157,6 @@ bool Dependencies::maybe_merge_ctxk(GrowableArray<ciBaseObject*>* deps, int ctxk
 }
 
 void Dependencies::assert_common_1(DepType dept, ciBaseObject* x) {
-  log_dependency(dept, x);
   GrowableArray<ciBaseObject*>* deps = _deps[dept];
 
   // see if the same (or a similar) dep is already recorded
@@ -171,7 +167,6 @@ void Dependencies::assert_common_1(DepType dept, ciBaseObject* x) {
 }
 
 void Dependencies::assert_common_2(DepType dept, ciBaseObject* x0, ciBaseObject* x1) {
-  log_dependency(dept, x0, x1);
   GrowableArray<ciBaseObject*>* deps = _deps[dept];
 
   // see if the same (or a similar) dep is already recorded
@@ -209,7 +204,6 @@ void Dependencies::assert_common_2(DepType dept, ciBaseObject* x0, ciBaseObject*
 }
 
 void Dependencies::assert_common_3(DepType dept, ciKlass* ctxk, ciBaseObject* x, ciBaseObject* x2) {
-  log_dependency(dept, ctxk, x, x2);
   GrowableArray<ciBaseObject*>* deps = _deps[dept];
 
   // try to normalize an unordered pair:
@@ -261,7 +255,6 @@ bool Dependencies::maybe_merge_ctxk(GrowableArray<DepValue>* deps, int ctxk_i, D
 }
 
 void Dependencies::assert_common_1(DepType dept, DepValue x) {
-  //log_dependency(dept, x);
   GrowableArray<DepValue>* deps = _dep_values[dept];
 
   // see if the same (or a similar) dep is already recorded
@@ -272,7 +265,6 @@ void Dependencies::assert_common_1(DepType dept, DepValue x) {
 }
 
 void Dependencies::assert_common_2(DepType dept, DepValue x0, DepValue x1) {
-  //log_dependency(dept, x0, x1);
   GrowableArray<DepValue>* deps = _dep_values[dept];
 
   // see if the same (or a similar) dep is already recorded
@@ -576,7 +568,7 @@ Dependencies::DepType Dependencies::validate_dependencies(CompileTask* task, boo
           // resizing in the context of an inner resource mark.
           char* buffer = NEW_RESOURCE_ARRAY(char, O_BUFLEN);
           stringStream st(buffer, O_BUFLEN);
-          deps.print_dependency(witness, true, &st);
+          deps.print_dependency(witness, true, &st);
           *failure_detail = st.as_string();
         }
       }
@@ -585,7 +577,7 @@ Dependencies::DepType Dependencies::validate_dependencies(CompileTask* task, boo
         // Dependence failed but counter didn't change.  Log a message
         // describing what failed and allow the assert at the end to
         // trigger.
-        deps.print_dependency(witness);
+        deps.print_dependency(witness);
       } else if (xtty == NULL) {
         // If we're not logging then a single violation is sufficient,
         // otherwise we want to log all the dependences which were
@@ -596,224 +588,6 @@ Dependencies::DepType Dependencies::validate_dependencies(CompileTask* task, boo
   }
 
   return result;
-}
-
-// for the sake of the compiler log, print out current dependencies:
-void Dependencies::log_all_dependencies() {
-  if (log() == NULL)  return;
-  ResourceMark rm;
-  for (int deptv = (int)FIRST_TYPE; deptv < (int)TYPE_LIMIT; deptv++) {
-    DepType dept = (DepType)deptv;
-    GrowableArray<ciBaseObject*>* deps = _deps[dept];
-    int deplen = deps->length();
-    if (deplen == 0) {
-      continue;
-    }
-    int stride = dep_args(dept);
-    GrowableArray<ciBaseObject*>* ciargs = new GrowableArray<ciBaseObject*>(stride);
-    for (int i = 0; i < deps->length(); i += stride) {
-      for (int j = 0; j < stride; j++) {
-        // flush out the identities before printing
-        ciargs->push(deps->at(i+j));
-      }
-      write_dependency_to(log(), dept, ciargs);
-      ciargs->clear();
-    }
-    guarantee(deplen == deps->length(), "deps array cannot grow inside nested ResoureMark scope");
-  }
-}
-
-void Dependencies::write_dependency_to(CompileLog* log, DepType dept, GrowableArray<DepArgument>* args, Klass* witness) {
-  if (log == NULL) {
-    return;
-  }
-  ResourceMark rm;
-  ciEnv* env = ciEnv::current();
-  GrowableArray<ciBaseObject*>* ciargs = new GrowableArray<ciBaseObject*>(args->length());
-  for (GrowableArrayIterator<DepArgument> it = args->begin(); it != args->end(); ++it) {
-    DepArgument arg = *it;
-    if (arg.is_oop()) {
-      ciargs->push(env->get_object(arg.oop_value()));
-    } else {
-      ciargs->push(env->get_metadata(arg.metadata_value()));
-    }
-  }
-  int argslen = ciargs->length();
-  Dependencies::write_dependency_to(log, dept, ciargs, witness);
-  guarantee(argslen == ciargs->length(), "ciargs array cannot grow inside nested ResoureMark scope");
-}
-
-void Dependencies::write_dependency_to(CompileLog* log, DepType dept, GrowableArray<ciBaseObject*>* args, Klass* witness) {
-  if (log == NULL) {
-    return;
-  }
-  ResourceMark rm;
-  GrowableArray<int>* argids = new GrowableArray<int>(args->length());
-  for (GrowableArrayIterator<ciBaseObject*> it = args->begin(); it != args->end(); ++it) {
-    ciBaseObject* obj = *it;
-    if (obj->is_object()) {
-      argids->push(log->identify(obj->as_object()));
-    } else {
-      argids->push(log->identify(obj->as_metadata()));
-    }
-  }
-  if (witness != NULL) {
-    log->begin_elem("dependency_failed");
-  } else {
-    log->begin_elem("dependency");
-  }
-  log->print(" type='%s'", dep_name(dept));
-  const int ctxkj = dep_context_arg(dept);  // -1 if no context arg
-  if (ctxkj >= 0 && ctxkj < argids->length()) {
-    log->print(" ctxk='%d'", argids->at(ctxkj));
-  }
-  // write remaining arguments, if any.
-  for (int j = 0; j < argids->length(); j++) {
-    if (j == ctxkj)  continue;  // already logged
-    if (j == 1) {
-      log->print(  " x='%d'",    argids->at(j));
-    } else {
-      log->print(" x%d='%d'", j, argids->at(j));
-    }
-  }
-  if (witness != NULL) {
-    log->object("witness", witness);
-    log->stamp();
-  }
-  log->end_elem();
-}
-
-void Dependencies::write_dependency_to(xmlStream* xtty, DepType dept, GrowableArray<DepArgument>* args, Klass* witness) {
-  if (xtty == NULL) {
-    return;
-  }
-  Thread* thread = Thread::current();
-  HandleMark rm(thread);
-  ttyLocker ttyl;
-  int ctxkj = dep_context_arg(dept);  // -1 if no context arg
-  if (witness != NULL) {
-    xtty->begin_elem("dependency_failed");
-  } else {
-    xtty->begin_elem("dependency");
-  }
-  xtty->print(" type='%s'", dep_name(dept));
-  if (ctxkj >= 0) {
-    xtty->object("ctxk", args->at(ctxkj).metadata_value());
-  }
-  // write remaining arguments, if any.
-  for (int j = 0; j < args->length(); j++) {
-    if (j == ctxkj)  continue;  // already logged
-    DepArgument arg = args->at(j);
-    if (j == 1) {
-      if (arg.is_oop()) {
-        xtty->object("x", Handle(thread, arg.oop_value()));
-      } else {
-        xtty->object("x", arg.metadata_value());
-      }
-    } else {
-      char xn[12]; sprintf(xn, "x%d", j);
-      if (arg.is_oop()) {
-        xtty->object(xn, Handle(thread, arg.oop_value()));
-      } else {
-        xtty->object(xn, arg.metadata_value());
-      }
-    }
-  }
-  if (witness != NULL) {
-    xtty->object("witness", witness);
-    xtty->stamp();
-  }
-  xtty->end_elem();
-}
-
-void Dependencies::print_dependency(DepType dept, GrowableArray<DepArgument>* args, Klass* witness, outputStream* st) {
-  ResourceMark rm;
-  ttyLocker ttyl;   // keep the following output all in one block
-  st->print_cr("%s of type %s", (witness == NULL)? "Dependency": "Failed dependency", dep_name(dept));
-  // print arguments
-  int ctxkj = dep_context_arg(dept);  // -1 if no context arg
-  for (int j = 0; j < args->length(); j++) {
-    DepArgument arg = args->at(j);
-    bool put_star = false;
-    if (arg.is_null())  continue;
-    const char* what;
-    if (j == ctxkj) {
-      what = "context";
-      put_star = !Dependencies::is_concrete_klass((Klass*)arg.metadata_value());
-    } else if (arg.is_method()) {
-      what = "method ";
-      put_star = !Dependencies::is_concrete_method((Method*)arg.metadata_value(), NULL);
-    } else if (arg.is_klass()) {
-      what = "class  ";
-    } else {
-      what = "object ";
-    }
-    st->print("  %s = %s", what, (put_star? "*": ""));
-    if (arg.is_klass()) {
-      st->print("%s", ((Klass*)arg.metadata_value())->external_name());
-    } else if (arg.is_method()) {
-      ((Method*)arg.metadata_value())->print_value_on(st);
-    } else if (arg.is_oop()) {
-      arg.oop_value()->print_value_on(st);
-    } else {
-      ShouldNotReachHere(); // Provide impl for this type.
-    }
-
-    st->cr();
-  }
-  if (witness != NULL) {
-    bool put_star = !Dependencies::is_concrete_klass(witness);
-    st->print_cr("  witness = %s%s", (put_star? "*": ""), witness->external_name());
-  }
-}
-
-void Dependencies::DepStream::log_dependency(Klass* witness) {
-  if (_deps == NULL && xtty == NULL)  return;  // fast cutout for runtime
-  ResourceMark rm;
-  const int nargs = argument_count();
-  GrowableArray<DepArgument>* args = new GrowableArray<DepArgument>(nargs);
-  for (int j = 0; j < nargs; j++) {
-    if (is_oop_argument(j)) {
-      args->push(argument_oop(j));
-    } else {
-      args->push(argument(j));
-    }
-  }
-  int argslen = args->length();
-  if (_deps != NULL && _deps->log() != NULL) {
-    if (ciEnv::current() != NULL) {
-      Dependencies::write_dependency_to(_deps->log(), type(), args, witness);
-    } else {
-      // Treat the CompileLog as an xmlstream instead
-      Dependencies::write_dependency_to((xmlStream*)_deps->log(), type(), args, witness);
-    }
-  } else {
-    Dependencies::write_dependency_to(xtty, type(), args, witness);
-  }
-  guarantee(argslen == args->length(), "args array cannot grow inside nested ResoureMark scope");
-}
-
-void Dependencies::DepStream::print_dependency(Klass* witness, bool verbose, outputStream* st) {
-  ResourceMark rm;
-  int nargs = argument_count();
-  GrowableArray<DepArgument>* args = new GrowableArray<DepArgument>(nargs);
-  for (int j = 0; j < nargs; j++) {
-    if (is_oop_argument(j)) {
-      args->push(argument_oop(j));
-    } else {
-      args->push(argument(j));
-    }
-  }
-  int argslen = args->length();
-  Dependencies::print_dependency(type(), args, witness, st);
-  if (verbose) {
-    if (_code != NULL) {
-      st->print("  code: ");
-      _code->print_value_on(st);
-      st->cr();
-    }
-  }
-  guarantee(argslen == args->length(), "args array cannot grow inside nested ResoureMark scope");
 }
 
 /// Dependency stream support (decodes dependencies from an nmethod):
@@ -890,7 +664,6 @@ oop Dependencies::DepStream::argument_oop(int i) {
 }
 
 Klass* Dependencies::DepStream::context_type() {
-
   // Most dependencies have an explicit context type argument.
   {
     int ctxkj = dep_context_arg(type());  // -1 if no explicit context arg
@@ -1478,7 +1251,6 @@ Klass* Dependencies::check_has_no_finalizable_subclasses(Klass* ctxk, KlassDepCh
 }
 
 Klass* Dependencies::check_call_site_target_value(oop call_site, oop method_handle, CallSiteDepChange* changes) {
-
   if (changes == NULL) {
     // Validate all CallSites
     if (!oopDesc::equals(java_lang_invoke_CallSite::target(call_site), method_handle))
@@ -1492,12 +1264,7 @@ Klass* Dependencies::check_call_site_target_value(oop call_site, oop method_hand
   return NULL;  // assertion still valid
 }
 
-void Dependencies::DepStream::trace_and_log_witness(Klass* witness) {
-  if (witness != NULL) {
-    // The following is a no-op unless logging is enabled:
-    log_dependency(witness);
-  }
-}
+void Dependencies::DepStream::trace_and_log_witness(Klass* witness) { }
 
 Klass* Dependencies::DepStream::check_klass_dependency(KlassDepChange* changes) {
   Dependencies::check_valid_dependency_type(type());

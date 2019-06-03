@@ -117,7 +117,6 @@ void CodeInstaller::pd_relocate_JavaMethod(CodeBuffer &, Handle hotspot_method, 
       break;
     case INVOKEVIRTUAL:
     case INVOKEINTERFACE: {
-
       NativeCall* call = nativeCall_at(_instructions->start() + pc_offset);
       call->set_destination(SharedRuntime::get_resolve_virtual_call_stub());
       _instructions->relocate(call->instruction_address(),
@@ -126,7 +125,6 @@ void CodeInstaller::pd_relocate_JavaMethod(CodeBuffer &, Handle hotspot_method, 
       break;
     }
     case INVOKESTATIC: {
-
       NativeCall* call = nativeCall_at(_instructions->start() + pc_offset);
       call->set_destination(SharedRuntime::get_resolve_static_call_stub());
       _instructions->relocate(call->instruction_address(),

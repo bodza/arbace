@@ -24,7 +24,6 @@ class verification_type_info {
   verification_type_info(const verification_type_info&) { }
 
  public:
-
   static verification_type_info* at(address addr) {
     return (verification_type_info*)addr;
   }
@@ -146,7 +145,6 @@ class stack_map_frame {
   stack_map_frame(const stack_map_frame&) { }
 
  public:
-
   static stack_map_frame* at(address addr) {
     return (stack_map_frame*)addr;
   }
@@ -191,7 +189,6 @@ class same_frame : public stack_map_frame {
   static u1 offset_delta_to_frame_type(int offset_delta) { return (u1)(offset_delta - 1); }
 
  public:
-
   static bool is_frame_type(u1 tag) {
     return tag < 64;
   }
@@ -843,7 +840,6 @@ class stack_map_table {
   stack_map_table(const stack_map_table&) { }
 
  public:
-
   static stack_map_table* at(address addr) {
     return (stack_map_table*)addr;
   }
@@ -872,7 +868,6 @@ class stack_map_table_attribute {
   stack_map_table_attribute(const stack_map_table_attribute&) { }
 
  public:
-
   static stack_map_table_attribute* at(address addr) {
     return (stack_map_table_attribute*)addr;
   }

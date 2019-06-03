@@ -204,7 +204,7 @@ address MacroAssembler::target_addr_for_insn(address insn_addr, unsigned insn) {
         unsigned int byte_offset = Instruction_aarch64::extract(insn2, 21, 10);
         return address(target_page + byte_offset);
       } else {
-        if (Instruction_aarch64::extract(insn2, 31, 21) == 0b11110010110  && Instruction_aarch64::extract(insn, 4, 0) == Instruction_aarch64::extract(insn2, 4, 0)) {
+        if (Instruction_aarch64::extract(insn2, 31, 21) == 0b11110010110 && Instruction_aarch64::extract(insn, 4, 0) == Instruction_aarch64::extract(insn2, 4, 0)) {
           target_page = (target_page & 0xffffffff) | ((uint64_t)Instruction_aarch64::extract(insn2, 20, 5) << 32);
         }
         return (address)target_page;
@@ -284,7 +284,6 @@ void MacroAssembler::reset_last_Java_frame(bool clear_fp) {
 // in the (thread-local) JavaThread object. When leaving C land, the last Java fp
 // has to be reset to 0. This is required to allow proper stack traversal.
 void MacroAssembler::set_last_Java_frame(Register last_java_sp, Register last_java_fp, Register last_java_pc, Register scratch) {
-
   if (last_java_pc->is_valid()) {
       str(last_java_pc, Address(rthread, JavaThread::frame_anchor_offset() + JavaFrameAnchor::last_Java_pc_offset()));
     }
@@ -534,7 +533,6 @@ int MacroAssembler::biased_locking_enter(Register lock_reg, Register obj_reg, Re
 }
 
 void MacroAssembler::biased_locking_exit(Register obj_reg, Register temp_reg, Label& done) {
-
   // Check for biased locking unlock case, which is a no-op
   // Note: we do not have to check the thread ID for two reasons.
   // First, the interpreter checks for IllegalMonitorStateException at
@@ -620,7 +618,6 @@ void MacroAssembler::call_VM_helper(Register oop_result, address entry_point, in
 // trampolines won't be emitted.
 
 address MacroAssembler::trampoline_call(Address entry, CodeBuffer *cbuf) {
-
   // We need a trampoline if branches are far.
   if (far_branches()) {
     // We don't want to emit a trampoline if C2 is generating dummy
@@ -740,7 +737,6 @@ void MacroAssembler::call_VM(Register oop_result, Register last_java_sp, address
 }
 
 void MacroAssembler::call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1, Register arg_2, bool check_exceptions) {
-
   pass_arg2(this, arg_2);
   pass_arg1(this, arg_1);
   call_VM(oop_result, last_java_sp, entry_point, 2, check_exceptions);
@@ -893,8 +889,7 @@ void MacroAssembler::check_klass_subtype_fast_path(Register sub_klass, Register 
 
   // Hacked jmp, which may only be used just before L_fallthrough.
 #define final_jmp(label) \
-  if (&(label) == &L_fallthrough) { /*do nothing*/ } \
-  else                            b(label)                /*omit semi*/
+  if (&(label) == &L_fallthrough) { /*do nothing*/ } else b(label) /*omit semi*/
 
   // If the pointers are equal, we are done (e.g., String[] elements).
   // This self-check enables sharing of secondary supertype arrays among
@@ -1181,7 +1176,6 @@ void MacroAssembler::super_call_VM_leaf(address entry_point, Register arg_0) {
 }
 
 void MacroAssembler::super_call_VM_leaf(address entry_point, Register arg_0, Register arg_1) {
-
   pass_arg1(this, arg_1);
   pass_arg0(this, arg_0);
   MacroAssembler::call_VM_leaf_base(entry_point, 2);
@@ -1801,7 +1795,6 @@ void MacroAssembler::resolve_jobject(Register value, Register thread, Register t
   Label done, not_weak;
   cbz(value, done);           // Use NULL as-is.
 
-  STATIC_ASSERT(JNIHandles::weak_tag_mask == 1u);
   tbz(r0, 0, not_weak);    // Test for jweak tag.
 
   // Resolve jweak.
@@ -2332,7 +2325,6 @@ bool MacroAssembler::ldst_can_merge(Register rt, const Address &adr, size_t cur_
 
 // Merge current load/store with previous load/store into ldp/stp.
 void MacroAssembler::merge_ldst(Register rt, const Address &adr, size_t cur_size_in_bytes, bool is_store) {
-
   Register rt_low, rt_high;
   address prev = pc() - NativeInstruction::instruction_size;
   NativeLdSt* prev_ldst = NativeLdSt_at(prev);
@@ -2529,7 +2521,6 @@ void MacroAssembler::multiply_128_x_128_loop(Register y, Register z, Register ca
  *
  */
 void MacroAssembler::multiply_to_len(Register x, Register xlen, Register y, Register ylen, Register z, Register zlen, Register tmp1, Register tmp2, Register tmp3, Register tmp4, Register tmp5, Register tmp6, Register product_hi) {
-
   const Register idx = tmp1;
   const Register kdx = tmp2;
   const Register xstart = tmp3;
@@ -3531,7 +3522,7 @@ void MacroAssembler::bang_stack_size(Register size, Register tmp) {
   // Bang down shadow pages too.
   // At this point, (tmp-0) is the last address touched, so don't
   // touch it again.  (It was touched as (tmp-pagesize) but then tmp
-  // was post-decremented.)  Skip this address by starting at i=1, and
+  // was post-decremented.)  Skip this address by starting at i = 1, and
   // touch a few more pages below.  N.B.  It is important to touch all
   // the way down to and including i=StackShadowPages.
   for (int i = 0; i < (int)(JavaThread::stack_shadow_zone_size() / os::vm_page_size()) - 1; i++) {
@@ -3617,9 +3608,9 @@ void MacroAssembler::build_frame(int framesize) {
   } else {
     stp(rfp, lr, Address(pre(sp, -2 * wordSize)));
     if (PreserveFramePointer) mov(rfp, sp);
-    if (framesize < ((1 << 12) + 2 * wordSize))
+    if (framesize < ((1 << 12) + 2 * wordSize)) {
       sub(sp, sp, framesize - 2 * wordSize);
-    else {
+    } else {
       mov(rscratch1, framesize - 2 * wordSize);
       sub(sp, sp, rscratch1);
     }
@@ -3631,9 +3622,9 @@ void MacroAssembler::remove_frame(int framesize) {
     ldp(rfp, lr, Address(sp, framesize - 2 * wordSize));
     add(sp, sp, framesize);
   } else {
-    if (framesize < ((1 << 12) + 2 * wordSize))
+    if (framesize < ((1 << 12) + 2 * wordSize)) {
       add(sp, sp, framesize - 2 * wordSize);
-    else {
+    } else {
       mov(rscratch1, framesize - 2 * wordSize);
       add(sp, sp, rscratch1);
     }
@@ -4727,7 +4718,6 @@ void MacroAssembler::zero_dcache_blocks(Register base, Register cnt) {
 // value:  Value to be filled with.
 // base will point to the end of the buffer after filling.
 void MacroAssembler::fill_words(Register base, Register cnt, Register value) {
-
   Label fini, skip, entry, loop;
   const int unroll = 8; // Number of stp instructions we'll unroll
 

@@ -170,12 +170,12 @@ class ShortLoopOptimizer : public ValueNumberingVisitor {
   ValueMap* value_map_of(BlockBegin* block)      { return _gvn->value_map_of(block); }
 
   // implementation for abstract methods of ValueNumberingVisitor
-  void      kill_memory()                                 { _too_complicated_loop = true; }
-  void      kill_field(ciField* field, bool all_offsets)  {
+  void      kill_memory()                                { _too_complicated_loop = true; }
+  void      kill_field(ciField* field, bool all_offsets) {
     current_map()->kill_field(field, all_offsets);
     _has_field_store[field->type()->basic_type()] = true;
   }
-  void      kill_array(ValueType* type)                   {
+  void      kill_array(ValueType* type)                  {
     current_map()->kill_array(type);
     BasicType basic_type = as_BasicType(type);
     _has_indexed_store[basic_type] = true;
@@ -187,7 +187,7 @@ class ShortLoopOptimizer : public ValueNumberingVisitor {
     , _loop_blocks(ValueMapMaxLoopSize)
     , _too_complicated_loop(false)
   {
-    for (int i=0; i<= T_ARRAY; i++) {
+    for (int i = 0; i<= T_ARRAY; i++) {
       _has_field_store[i] = false;
       _has_indexed_store[i] = false;
     }
@@ -223,7 +223,6 @@ class LoopInvariantCodeMotion : public StackObj {
 
 LoopInvariantCodeMotion::LoopInvariantCodeMotion(ShortLoopOptimizer *slo, GlobalValueNumbering* gvn, BlockBegin* loop_header, BlockList* loop_blocks)
   : _gvn(gvn), _short_loop_optimizer(slo) {
-
   BlockBegin* insertion_block = loop_header->dominator();
   if (insertion_block->number_of_preds() == 0) {
     return;  // only the entry block does not have a predecessor
@@ -253,7 +252,6 @@ void LoopInvariantCodeMotion::process_block(BlockBegin* block) {
   Instruction* cur = block->next();
 
   while (cur != NULL) {
-
     // determine if cur instruction is loop invariant
     // only selected instruction types are processed here
     bool cur_invariant = false;
@@ -304,7 +302,6 @@ void LoopInvariantCodeMotion::process_block(BlockBegin* block) {
       }
 
       cur = prev->set_next(next);
-
     } else {
       prev = cur;
       cur = cur->next();
@@ -394,7 +391,6 @@ GlobalValueNumbering::GlobalValueNumbering(IR* ir)
 
     if (num_preds == 1 && !block->is_set(BlockBegin::exception_entry_flag)) {
       // nothing to do here
-
     } else if (block->is_set(BlockBegin::linear_scan_loop_header_flag)) {
       // block has incoming backward branches -> try to optimize short loops
       if (!short_loop_optimizer.process(block)) {
@@ -402,7 +398,6 @@ GlobalValueNumbering::GlobalValueNumbering(IR* ir)
         // stores to them in the loop
         current_map()->kill_memory();
       }
-
     } else {
       // only incoming forward branches that are already processed
       for (int j = 0; j < num_preds; j++) {
@@ -445,7 +440,6 @@ GlobalValueNumbering::GlobalValueNumbering(IR* ir)
 void GlobalValueNumbering::substitute(Instruction* instr) {
   Value subst = current_map()->find_insert(instr);
   if (subst != instr) {
-
     instr->set_subst(subst);
     _has_substitutions = true;
   }

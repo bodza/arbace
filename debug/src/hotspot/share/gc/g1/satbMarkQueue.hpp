@@ -62,9 +62,7 @@ class SATBMarkQueueSet: public PtrQueueSet {
 public:
   SATBMarkQueueSet();
 
-  void initialize(Monitor* cbl_mon, Mutex* fl_lock,
-                  int process_completed_threshold,
-                  Mutex* lock);
+  void initialize(Monitor* cbl_mon, Mutex* fl_lock, int process_completed_threshold, Mutex* lock);
 
   static void handle_zero_index_for_thread(JavaThread* t);
 

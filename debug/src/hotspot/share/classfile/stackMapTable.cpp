@@ -124,7 +124,7 @@ StackMapReader::StackMapReader(ClassVerifier* v, StackMapStream* stream, char* c
 int32_t StackMapReader::chop(VerificationType* locals, int32_t length, int32_t chops) {
   if (locals == NULL) return -1;
   int32_t pos = length - 1;
-  for (int32_t i=0; i<chops; i++) {
+  for (int32_t i = 0; i<chops; i++) {
     if (locals[pos].is_category2_2nd()) {
       pos -= 2;
     } else {
@@ -263,7 +263,7 @@ StackMapFrame* StackMapReader::next(StackMapFrame* pre_frame, bool first, u2 max
       check_verification_type_array_size(new_length, max_locals, CHECK_VERIFY_(_verifier, NULL));
       // Recompute flags since uninitializedThis could have been chopped.
       flags = 0;
-      for (int i=0; i<new_length; i++) {
+      for (int i = 0; i<new_length; i++) {
         if (locals[i].is_uninitialized_this()) {
           flags |= FLAG_THIS_UNINIT;
           break;
@@ -294,11 +294,11 @@ StackMapFrame* StackMapReader::next(StackMapFrame* pre_frame, bool first, u2 max
     locals = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, VerificationType, new_length);
     VerificationType* pre_locals = pre_frame->locals();
     int i;
-    for (i=0; i<pre_frame->locals_size(); i++) {
+    for (i = 0; i<pre_frame->locals_size(); i++) {
       locals[i] = pre_locals[i];
     }
     u1 flags = pre_frame->flags();
-    for (i=0; i<appends; i++) {
+    for (i = 0; i<appends; i++) {
       locals[real_length] = parse_verification_type(&flags, THREAD);
       if (locals[real_length].is_category2()) {
         locals[real_length + 1] = locals[real_length].to_category2_2nd();
@@ -324,7 +324,7 @@ StackMapFrame* StackMapReader::next(StackMapFrame* pre_frame, bool first, u2 max
       locals = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, VerificationType, locals_size*2);
     }
     int i;
-    for (i=0; i<locals_size; i++) {
+    for (i = 0; i<locals_size; i++) {
       locals[real_locals_size] = parse_verification_type(&flags, THREAD);
       if (locals[real_locals_size].is_category2()) {
         locals[real_locals_size + 1] = locals[real_locals_size].to_category2_2nd();
@@ -339,7 +339,7 @@ StackMapFrame* StackMapReader::next(StackMapFrame* pre_frame, bool first, u2 max
     if (stack_size > 0) {
       stack = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, VerificationType, stack_size*2);
     }
-    for (i=0; i<stack_size; i++) {
+    for (i = 0; i<stack_size; i++) {
       stack[real_stack_size] = parse_verification_type(NULL, THREAD);
       if (stack[real_stack_size].is_category2()) {
         stack[real_stack_size + 1] = stack[real_stack_size].to_category2_2nd();

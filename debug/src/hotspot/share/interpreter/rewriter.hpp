@@ -104,7 +104,7 @@ class Rewriter: public StackObj {
     return cache_index;
   }
 
-  int  cp_entry_to_resolved_references(int cp_index) const {
+  int cp_entry_to_resolved_references(int cp_index) const {
     return _reference_map.at(cp_index);
   }
   bool has_entry_in_resolved_references(int cp_index) const {

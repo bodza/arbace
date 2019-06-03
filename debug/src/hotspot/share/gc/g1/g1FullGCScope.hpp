@@ -6,7 +6,6 @@
 #include "gc/shared/collectorCounters.hpp"
 #include "gc/shared/gcId.hpp"
 #include "gc/shared/gcTrace.hpp"
-#include "gc/shared/gcTraceTime.hpp"
 #include "gc/shared/gcTimer.hpp"
 #include "gc/shared/isGCActiveMark.hpp"
 #include "gc/shared/vmGCOperations.hpp"
@@ -25,7 +24,6 @@ class G1FullGCScope : public StackObj {
   STWGCTimer              _timer;
   G1FullGCTracer          _tracer;
   IsGCActiveMark          _active;
-  GCTraceCPUTime          _cpu_time;
   ClearedAllSoftRefs      _soft_refs;
   TraceCollectorStats     _collector_stats;
   TraceMemoryManagerStats _memory_stats;

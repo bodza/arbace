@@ -218,13 +218,11 @@ enum CounterNS {
  *
  */
 class PerfData : public CHeapObj<mtInternal> {
-
   friend class StatSampler;      // for access to protected void sample()
   friend class PerfDataManager;  // for access to protected destructor
   friend class VMStructs;
 
   public:
-
     // the Variability enum must be kept in synchronization with the
     // the com.sun.hotspot.perfdata.Variability class
     enum Variability {
@@ -262,7 +260,6 @@ class PerfData : public CHeapObj<mtInternal> {
     PerfDataEntry* _pdep;
 
   protected:
-
     void *_valuep;
 
     PerfData(CounterNS ns, const char* name, Units u, Variability v);
@@ -278,7 +275,6 @@ class PerfData : public CHeapObj<mtInternal> {
     virtual void sample() = 0;
 
   public:
-
     // returns a boolean indicating the validity of this object.
     // the object is valid if and only if memory in PerfMemory
     // region was successfully allocated.
@@ -333,9 +329,7 @@ typedef PerfLongSampleHelper PerfSampleHelper;
  * types.
  */
 class PerfLong : public PerfData {
-
   protected:
-
     PerfLong(CounterNS ns, const char* namep, Units u, Variability v);
 
   public:
@@ -353,7 +347,6 @@ class PerfLong : public PerfData {
  * methods for changing the data value stored in PerfData memory region.
  */
 class PerfLongConstant : public PerfLong {
-
   friend class PerfDataManager; // for access to protected constructor
 
   private:
@@ -361,11 +354,9 @@ class PerfLongConstant : public PerfLong {
     void sample() { }
 
   protected:
-
     PerfLongConstant(CounterNS ns, const char* namep, Units u,
                      jlong initial_value=0)
                     : PerfLong(ns, namep, u, V_Constant) {
-
        if (is_valid()) *(jlong*)_valuep = initial_value;
     }
 };
@@ -379,7 +370,6 @@ typedef PerfLongConstant PerfConstant;
  * for common functionality among its derived types.
  */
 class PerfLongVariant : public PerfLong {
-
   protected:
     jlong* _sampled;
     PerfLongSampleHelper* _sample_helper;
@@ -416,11 +406,9 @@ class PerfLongVariant : public PerfLong {
  * either increasing or decreasing.
  */
 class PerfLongCounter : public PerfLongVariant {
-
   friend class PerfDataManager; // for access to protected constructor
 
   protected:
-
     PerfLongCounter(CounterNS ns, const char* namep, Units u,
                     jlong initial_value=0)
                    : PerfLongVariant(ns, namep, u, V_Monotonic,
@@ -443,11 +431,9 @@ typedef PerfLongCounter PerfCounter;
  * be modified in an unrestricted manner.
  */
 class PerfLongVariable : public PerfLongVariant {
-
   friend class PerfDataManager; // for access to protected constructor
 
   protected:
-
     PerfLongVariable(CounterNS ns, const char* namep, Units u,
                      jlong initial_value=0)
                     : PerfLongVariant(ns, namep, u, V_Variable,
@@ -474,7 +460,6 @@ typedef PerfLongVariable PerfVariable;
  * the PerfString class, and cannot be instantiated directly.
  */
 class PerfByteArray : public PerfData {
-
   protected:
     jint _length;
 
@@ -483,9 +468,7 @@ class PerfByteArray : public PerfData {
 };
 
 class PerfString : public PerfByteArray {
-
   protected:
-
     void set_string(const char* s2);
 
     PerfString(CounterNS ns, const char* namep, Variability v, jint length,
@@ -495,7 +478,6 @@ class PerfString : public PerfByteArray {
     }
 
   public:
-
     int format(char* buffer, int length);
 };
 
@@ -505,16 +487,13 @@ class PerfString : public PerfByteArray {
  * stored in the PerfData memory region.
  */
 class PerfStringConstant : public PerfString {
-
   friend class PerfDataManager; // for access to protected constructor
 
   private:
-
     // hide sample() - no need to sample constants
     void sample() { }
 
   protected:
-
     // Restrict string constant lengths to be <= PerfMaxStringConstLength.
     // This prevents long string constants, as can occur with very
     // long classpaths or java command lines, from consuming too much
@@ -532,11 +511,9 @@ class PerfStringConstant : public PerfString {
  * is always null terminated.
  */
 class PerfStringVariable : public PerfString {
-
   friend class PerfDataManager; // for access to protected constructor
 
   protected:
-
     // sampling of string variables are not yet supported
     void sample() { }
 
@@ -570,9 +547,7 @@ class PerfStringVariable : public PerfString {
  * a mechanism to iterate over the container by index.
  */
 class PerfDataList : public CHeapObj<mtInternal> {
-
   private:
-
     // GrowableArray implementation
     typedef GrowableArray<PerfData*> PerfDataArray;
 
@@ -587,7 +562,6 @@ class PerfDataList : public CHeapObj<mtInternal> {
     PerfDataArray* get_impl() { return _set; }
 
   public:
-
     // create a PerfDataList with the given initial length
     PerfDataList(int length);
 
@@ -636,7 +610,6 @@ class PerfDataList : public CHeapObj<mtInternal> {
  * of the various PerfData types.
  */
 class PerfDataManager : AllStatic {
-
   friend class StatSampler;   // for access to protected PerfDataList methods
 
   private:
@@ -665,7 +638,6 @@ class PerfDataManager : AllStatic {
     static inline int constants_count();
 
   public:
-
     // method to check for the existence of a PerfData item with
     // the given name.
     static inline bool exists(const char* name);
@@ -806,16 +778,13 @@ class PerfDataManager : AllStatic {
 
 // Useful macros to create the performance counters
 #define NEWPERFTICKCOUNTER(counter, counter_ns, counter_name) \
-  { counter = PerfDataManager::create_counter(counter_ns, counter_name, \
-                                             PerfData::U_Ticks,CHECK); }
+  { counter = PerfDataManager::create_counter(counter_ns, counter_name, PerfData::U_Ticks,CHECK); }
 
 #define NEWPERFEVENTCOUNTER(counter, counter_ns, counter_name) \
-  { counter = PerfDataManager::create_counter(counter_ns, counter_name, \
-                                             PerfData::U_Events,CHECK); }
+  { counter = PerfDataManager::create_counter(counter_ns, counter_name, PerfData::U_Events,CHECK); }
 
 #define NEWPERFBYTECOUNTER(counter, counter_ns, counter_name) \
-  { counter = PerfDataManager::create_counter(counter_ns, counter_name, \
-                                             PerfData::U_Bytes,CHECK); }
+  { counter = PerfDataManager::create_counter(counter_ns, counter_name, PerfData::U_Bytes,CHECK); }
 
 // Utility Classes
 
@@ -837,7 +806,6 @@ class PerfDataManager : AllStatic {
  * of this class.
  */
 class PerfTraceTime : public StackObj {
-
   protected:
     elapsedTimer _t;
     PerfLongCounter* _timerp;
@@ -881,7 +849,6 @@ class PerfTraceTime : public StackObj {
  *
  */
 class PerfTraceTimedEvent : public PerfTraceTime {
-
   protected:
     PerfLongCounter* _eventp;
 

@@ -12,10 +12,8 @@ class MachODecoder : public AbstractDecoder {
   MachODecoder() { }
   virtual ~MachODecoder() { }
   virtual bool demangle(const char* symbol, char* buf, int buflen);
-  virtual bool decode(address pc, char* buf, int buflen, int* offset,
-                      const void* base);
-  virtual bool decode(address pc, char* buf, int buflen, int* offset,
-                      const char* module_path, bool demangle) {
+  virtual bool decode(address pc, char* buf, int buflen, int* offset, const void* base);
+  virtual bool decode(address pc, char* buf, int buflen, int* offset, const char* module_path, bool demangle) {
     ShouldNotReachHere();
     return false;
   }

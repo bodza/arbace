@@ -29,13 +29,9 @@ class STWGCTimer;
 
 class G1Policy: public CHeapObj<mtGC> {
  private:
-
   static G1IHOPControl* create_ihop_control(const G1Predictions* predictor);
   // Update the IHOP control with necessary statistics.
-  void update_ihop_prediction(double mutator_time_s,
-                              size_t mutator_alloc_bytes,
-                              size_t young_gen_size,
-                              bool this_gc_was_young_only);
+  void update_ihop_prediction(double mutator_time_s, size_t mutator_alloc_bytes, size_t young_gen_size, bool this_gc_was_young_only);
   void report_ihop_statistics();
 
   G1Predictions _predictor;
@@ -256,7 +252,6 @@ private:
   // Indicate that we aborted marking before doing any mixed GCs.
   void abort_time_to_mixed_tracking();
 public:
-
   G1Policy(STWGCTimer* gc_timer);
 
   virtual ~G1Policy();

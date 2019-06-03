@@ -5,8 +5,6 @@
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "interpreter/linkResolver.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
@@ -126,7 +124,6 @@ int klassVtable::initialize_from_super(Klass* super) {
 //
 // Revised lookup semantics   introduced 1.3 (Kestrel beta)
 void klassVtable::initialize_vtable(bool checkconstraints, TRAPS) {
-
   // Note:  Arrays can have intermediate array supers.  Use java_super to skip them.
   Klass* super = _klass->java_super();
   int nofNewEntries = 0;
@@ -142,7 +139,6 @@ void klassVtable::initialize_vtable(bool checkconstraints, TRAPS) {
   int super_vtable_len = initialize_from_super(super);
   if (_klass->is_array_klass()) {
   } else {
-
     Array<Method*>* methods = ik()->methods();
     int len = methods->length();
     int initialized = super_vtable_len;
@@ -238,7 +234,7 @@ InstanceKlass* klassVtable::find_transitive_override(InstanceKlass* initialsuper
       if (supersuperklass->is_override(super_method, target_loader, target_classname, THREAD)) {
         break; // return found superk
       }
-    } else  {
+    } else {
       // super class has no vtable entry here, stop transitive search
       superk = (InstanceKlass*)NULL;
       break;
@@ -278,7 +274,7 @@ bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHand
   }
 
   // Static and <init> methods are never in
-  if (target_method()->is_static() || target_method()->name() ==  vmSymbols::object_initializer_name()) {
+  if (target_method()->is_static() || target_method()->name() == vmSymbols::object_initializer_name()) {
     return false;
   }
 
@@ -351,7 +347,6 @@ bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHand
     // This is safe because the method at this slot should never get invoked.
     // (TBD: put in a method to throw NoSuchMethodError if this slot is ever used.)
     if (super_method->name() == name && super_method->signature() == signature && (!_klass->is_interface() || !SystemDictionary::is_nonpublic_Object_method(super_method))) {
-
       // get super_klass for method_holder for the found method
       InstanceKlass* super_klass =  super_method->method_holder();
 
@@ -472,7 +467,7 @@ bool klassVtable::needs_new_vtable_entry(const methodHandle& target_method, cons
 
   // Concrete interface methods do not need new entries, they override
   // abstract method entries using default inheritance rules
-  if (target_method()->method_holder() != NULL && target_method()->method_holder()->is_interface()  && !target_method()->is_abstract()) {
+  if (target_method()->method_holder() != NULL && target_method()->method_holder()->is_interface() && !target_method()->is_abstract()) {
     return false;
   }
 
@@ -678,7 +673,6 @@ void klassVtable::add_new_mirandas_to_lists(
     GrowableArray<Method*>* new_mirandas, GrowableArray<Method*>* all_mirandas,
     Array<Method*>* current_interface_methods, Array<Method*>* class_methods,
     Array<Method*>* default_methods, const Klass* super, bool is_interface) {
-
   // iterate thru the current interface's method to see if it a miranda
   int num_methods = current_interface_methods->length();
   for (int i = 0; i < num_methods; i++) {
@@ -710,7 +704,6 @@ void klassVtable::add_new_mirandas_to_lists(
 }
 
 void klassVtable::get_mirandas(GrowableArray<Method*>* new_mirandas, GrowableArray<Method*>* all_mirandas, const Klass* super, Array<Method*>* class_methods, Array<Method*>* default_methods, Array<Klass*>* local_interfaces, bool is_interface) {
-
   // iterate thru the local interfaces looking for a miranda
   int num_local_ifs = local_interfaces->length();
   for (int i = 0; i < num_local_ifs; i++) {

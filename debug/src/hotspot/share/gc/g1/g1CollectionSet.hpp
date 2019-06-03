@@ -94,8 +94,7 @@ public:
 
   CollectionSetChooser* cset_chooser();
 
-  void init_region_lengths(uint eden_cset_region_length,
-                           uint survivor_cset_region_length);
+  void init_region_lengths(uint eden_cset_region_length, uint survivor_cset_region_length);
 
   void set_recorded_rs_lengths(size_t rs_lengths);
 

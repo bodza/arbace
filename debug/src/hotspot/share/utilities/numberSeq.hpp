@@ -93,8 +93,7 @@ protected:
 
 public:
   // accepts a value for L
-  TruncatedSeq(int length = DefaultSeqLength,
-               double alpha = DEFAULT_ALPHA_VALUE);
+  TruncatedSeq(int length = DefaultSeqLength, double alpha = DEFAULT_ALPHA_VALUE);
   ~TruncatedSeq();
   virtual void add(double val);
   virtual double maximum() const;

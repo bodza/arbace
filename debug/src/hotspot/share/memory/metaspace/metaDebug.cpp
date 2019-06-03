@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "logging/log.hpp"
 #include "memory/metaspace/metaDebug.hpp"
 #include "runtime/os.hpp"
 #include "runtime/thread.hpp"
@@ -8,7 +7,6 @@
 #include "utilities/globalDefinitions.hpp"
 
 namespace metaspace {
-
 int Metadebug::_allocation_fail_alot_count = 0;
 
 void Metadebug::init_allocation_fail_alot_count() {

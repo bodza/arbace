@@ -9,7 +9,6 @@
 class outputStream;
 
 namespace metaspace {
-
 class Metachunk;
 class ChunkManager;
 class OccupancyMap;
@@ -52,7 +51,6 @@ class VirtualSpaceNode : public CHeapObj<mtClass> {
   void allocate_padding_chunks_until_top_is_at(MetaWord* target_top);
 
  public:
-
   VirtualSpaceNode(bool is_class, size_t byte_size);
   VirtualSpaceNode(bool is_class, ReservedSpace rs) :
     _is_class(is_class), _top(NULL), _next(NULL), _rs(rs), _container_count(0), _occupancy_map(NULL) { }

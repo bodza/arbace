@@ -11,8 +11,6 @@
 #include "interpreter/bytecodeHistogram.hpp"
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciRuntime.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
@@ -47,54 +45,6 @@
 #include "utilities/vmError.hpp"
 #include "c1/c1_Compiler.hpp"
 #include "c1/c1_Runtime1.hpp"
-
-GrowableArray<Method*>* collected_profiled_methods;
-
-int compare_methods(Method** a, Method** b) {
-  // %%% there can be 32-bit overflow here
-  return ((*b)->invocation_count() + (*b)->compiled_invocation_count())
-       - ((*a)->invocation_count() + (*a)->compiled_invocation_count());
-}
-
-void collect_profiled_methods(Method* m) {
-  Thread* thread = Thread::current();
-  methodHandle mh(thread, m);
-  if ((m->method_data() != NULL) && CompilerOracle::should_print(mh)) {
-    collected_profiled_methods->push(m);
-  }
-}
-
-void print_method_profiling_data() {
-  if (ProfileInterpreter || C1UpdateMethodData && CompilerOracle::should_print_methods()) {
-    ResourceMark rm;
-    HandleMark hm;
-    collected_profiled_methods = new GrowableArray<Method*>(1024);
-    SystemDictionary::methods_do(collect_profiled_methods);
-    collected_profiled_methods->sort(&compare_methods);
-
-    int count = collected_profiled_methods->length();
-    int total_size = 0;
-    if (count > 0) {
-      for (int index = 0; index < count; index++) {
-        Method* m = collected_profiled_methods->at(index);
-        ttyLocker ttyl;
-        tty->print_cr("------------------------------------------------------------------------");
-        m->print_invocation_count();
-        tty->print_cr("  mdo size: %d bytes", m->method_data()->size_in_bytes());
-        tty->cr();
-        // Dump data on parameters if any
-        if (m->method_data() != NULL && m->method_data()->parameters_type_data() != NULL) {
-          tty->fill_to(2);
-          m->method_data()->parameters_type_data()->print_data_on(tty);
-        }
-        m->print_codes();
-        total_size += m->method_data()->size_in_bytes();
-      }
-      tty->print_cr("------------------------------------------------------------------------");
-      tty->print_cr("Total MDO size: %d bytes", total_size);
-    }
-  }
-}
 
 // Note: before_exit() can be executed only once, if more than one threads
 //       are trying to shutdown the VM at the same time, only one thread
@@ -157,18 +107,6 @@ void before_exit(JavaThread* thread) {
   // Stop concurrent GC threads
   Universe::heap()->stop();
 
-  // Print GC/heap related information.
-  Log(gc, heap, exit) log;
-  if (log.is_info()) {
-    ResourceMark rm;
-    LogStream ls_info(log.info());
-    Universe::print_on(&ls_info);
-    if (log.is_trace()) {
-      LogStream ls_trace(log.trace());
-      ClassLoaderDataGraph::print_on(&ls_trace);
-    }
-  }
-
   Threads::shutdown_vm_agents();
 
   // Terminate the signal thread
@@ -211,7 +149,6 @@ void notify_vm_shutdown() { }
 
 void vm_direct_exit(int code) {
   notify_vm_shutdown();
-  os::wait_for_keypress_at_exit();
   os::exit(code);
 }
 
@@ -233,13 +170,11 @@ void vm_perform_shutdown_actions() {
 
 void vm_shutdown() {
   vm_perform_shutdown_actions();
-  os::wait_for_keypress_at_exit();
   os::shutdown();
 }
 
 void vm_abort(bool dump_core) {
   vm_perform_shutdown_actions();
-  os::wait_for_keypress_at_exit();
 
   // Flush stdout and stderr before abort.
   fflush(stdout);

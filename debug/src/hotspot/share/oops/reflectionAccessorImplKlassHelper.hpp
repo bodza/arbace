@@ -9,7 +9,6 @@ class InstanceKlass;
 // offers convenience functions to extract the names of target class/method/signature
 // from the constant pool of these classes.
 class ReflectionAccessorImplKlassHelper: public AllStatic {
-
   // Returns true if k is of type jdk/internal/reflect/GeneratedMethodAccessorXXX.
   static bool is_generated_method_accessor(const InstanceKlass* k);
 
@@ -32,7 +31,6 @@ class ReflectionAccessorImplKlassHelper: public AllStatic {
   static const char* get_target_method_signature(const InstanceKlass* k);
 
 public:
-
   // Returns true if k is of type jdk/internal/reflect/Generated{SerializationConstructor|Constructor|Method}AccessorXXX
   // and it is safe to call print_invocation_target(k)
   static bool is_generated_accessor(const Klass* k);

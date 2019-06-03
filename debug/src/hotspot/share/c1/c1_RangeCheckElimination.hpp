@@ -148,7 +148,7 @@ public:
   typedef GrowableArray<AccessIndexed*> AccessIndexedList;
   typedef GrowableArray<Instruction*> InstructionList;
 
-  class AccessIndexedInfo : public CompilationResourceObj  {
+  class AccessIndexedInfo : public CompilationResourceObj {
   public:
     AccessIndexedList *_list;
     int _min;

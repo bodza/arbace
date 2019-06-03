@@ -69,7 +69,6 @@ G1Analytics::G1Analytics(const G1Predictions* predictor) :
     _recent_prev_end_times_for_all_gcs_sec(new TruncatedSeq(NumPrevPausesForHeuristics)),
     _recent_avg_pause_time_ratio(0.0),
     _last_pause_time_ratio(0.0) {
-
   // Seed sequences with initial values.
   _recent_prev_end_times_for_all_gcs_sec->add(os::elapsedTime());
   _prev_collection_pause_end_ms = os::elapsedTime() * 1000.0;

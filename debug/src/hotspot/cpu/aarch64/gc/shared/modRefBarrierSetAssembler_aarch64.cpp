@@ -6,7 +6,6 @@
 #define __ masm->
 
 void ModRefBarrierSetAssembler::arraycopy_prologue(MacroAssembler* masm, DecoratorSet decorators, bool is_oop, Register addr, Register count, RegSet saved_regs) {
-
   if (is_oop) {
     gen_write_ref_array_pre_barrier(masm, decorators, addr, count, saved_regs);
   }

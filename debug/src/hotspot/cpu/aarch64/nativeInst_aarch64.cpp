@@ -141,7 +141,6 @@ address NativeCall::destination() const {
 // Add parameter assert_lock to switch off assertion
 // during code generation, where no patching lock is needed.
 void NativeCall::set_destination_mt_safe(address dest, bool assert_lock) {
-
   ResourceMark rm;
   int code_size = NativeInstruction::instruction_size;
   address addr_call = addr_at(0);
@@ -400,7 +399,6 @@ void NativeIllegalInstruction::insert(address code_pos) {
 // nmethod::make_not_entrant_or_zombie)
 
 void NativeJump::patch_verified_entry(address entry, address verified_entry, address dest) {
-
   // Patch this nmethod atomically.
   if (Assembler::reachable_from_branch_at(verified_entry, dest)) {
     ptrdiff_t disp = dest - verified_entry;

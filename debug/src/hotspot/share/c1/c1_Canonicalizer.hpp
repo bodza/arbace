@@ -20,10 +20,7 @@ class Canonicalizer: InstructionVisitor {
   void do_Op2(Op2* x);
   void do_UnsafeRawOp(UnsafeRawOp* x);
 
-  void unsafe_raw_match(UnsafeRawOp* x,
-                        Instruction** base,
-                        Instruction** index,
-                        int* scale);
+  void unsafe_raw_match(UnsafeRawOp* x, Instruction** base, Instruction** index, int* scale);
 
  public:
   Canonicalizer(Compilation* c, Value x, int bci) : _compilation(c), _canonical(x), _bci(bci) {

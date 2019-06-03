@@ -42,7 +42,6 @@ public:
    */
   template<bool swap>
   static void conjoint_swap_if_needed(const void* src, void* dst, size_t byte_count, size_t elem_size) {
-
     address src_end = (address)src + byte_count;
 
     if (dst <= src || dst >= src_end) {

@@ -1,8 +1,6 @@
 #include "precompiled.hpp"
 
 #include "interpreter/bytecodeStream.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "oops/generateOopMap.hpp"
 #include "oops/oop.inline.hpp"
@@ -573,7 +571,7 @@ BasicBlock *GenerateOopMap::get_basic_block_at(int bci) const {
 
 // Requires "pc" to be the start of an instruction; returns the basic
 //   block containing that instruction. */
-BasicBlock  *GenerateOopMap::get_basic_block_containing(int bci) const {
+BasicBlock *GenerateOopMap::get_basic_block_containing(int bci) const {
   BasicBlock *bbs = _basic_blocks;
   int lo = 0, hi = _bb_count - 1;
 
@@ -658,7 +656,6 @@ CellTypeState CellTypeState::merge(CellTypeState cts, int slot) const {
 
   // If the top bit is set, we don't need to do any more work.
   if (!result.is_info_top()) {
-
     if (!equal(cts)) {
       // The two values being merged are different.  Raise to top.
       if (result.is_reference()) {
@@ -943,7 +940,6 @@ void GenerateOopMap::init_basic_blocks() {
 }
 
 void GenerateOopMap::setup_method_entry_state() {
-
     // Initialize all locals to 'uninit' and set stack-height to 0
     make_context_uninitialized();
 
@@ -959,7 +955,6 @@ void GenerateOopMap::setup_method_entry_state() {
 
 // The instruction at bci is changing size by "delta".  Update the basic blocks.
 void GenerateOopMap::update_basic_blocks(int bci, int delta, int new_method_size) {
-
   _bb_hdr_bits.reinitialize(new_method_size);
 
   for (int k = 0; k < _bb_count; k++) {
@@ -981,7 +976,6 @@ void GenerateOopMap::initialize_vars() {
 }
 
 void GenerateOopMap::add_to_ref_init_set(int localNo) {
-
   // Is it already in the set?
   if (_init_vars->contains(localNo))
     return;
@@ -1011,7 +1005,6 @@ void GenerateOopMap::interp_all() {
 }
 
 void GenerateOopMap::interp_bb(BasicBlock *bb) {
-
   // We do not want to do anything in case the basic-block has not been initialized. This
   // will happen in the case where there is dead-code hang around in a method.
   restore_state(bb);
@@ -1156,13 +1149,7 @@ void GenerateOopMap::do_exception_edge(BytecodeStream* itr) {
   _monitor_safe = false;
 }
 
-void GenerateOopMap::report_monitor_mismatch(const char *msg) {
-  ResourceMark rm;
-  LogStream ls(Log(monitormismatch)::info());
-  ls.print("Monitor mismatch in method ");
-  method()->print_short_name(&ls);
-  ls.print_cr(": %s", msg);
-}
+void GenerateOopMap::report_monitor_mismatch(const char *msg) { }
 
 void GenerateOopMap::print_states(outputStream *os, CellTypeState* vec, int num) {
   for (int i = 0; i < num; i++) {
@@ -1222,7 +1209,6 @@ void GenerateOopMap::print_current_state(outputStream *os, BytecodeStream *curre
 // Sets the current state to be the state after executing the
 // current instruction, starting in the current state.
 void GenerateOopMap::interp1(BytecodeStream *itr) {
-
   // Should we report the results? Result is reported *before* the instruction at the current bci is executed.
   // However, not for calls. For calls we do not want to include the arguments, so we postpone the reporting until
   // they have been popped (in method ppl).
@@ -1990,7 +1976,6 @@ void GenerateOopMap::verify_error(const char *format, ...) {
 // Report result opcodes
 //
 void GenerateOopMap::report_result() {
-
   // We now want to report the result of the parse
   _report_result = true;
 
@@ -2017,7 +2002,6 @@ void GenerateOopMap::report_result() {
 }
 
 void GenerateOopMap::result_for_basicblock(int bci) {
-
   // We now want to report the result of the parse
   _report_result = true;
 
@@ -2033,7 +2017,6 @@ void GenerateOopMap::result_for_basicblock(int bci) {
 //
 
 void GenerateOopMap::record_refval_conflict(int varNo) {
-
   if (!_new_var_map) {
     _new_var_map = NEW_RESOURCE_ARRAY(int, _max_locals);
     for (int k = 0; k < _max_locals; k++)  _new_var_map[k] = k;
@@ -2296,7 +2279,6 @@ void GenerateOopMap::compute_ret_adr_at_TOS() {
 
     // Make sure to only check basicblocks that are reachable
     if (bb->is_reachable()) {
-
       // For each Basic block we check all instructions
       BytecodeStream bcs(_method);
       bcs.set_interval(bb->_bci, next_bb_start_pc(bb));

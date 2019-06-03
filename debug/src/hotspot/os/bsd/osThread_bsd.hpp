@@ -5,7 +5,6 @@
   int _thread_type;
 
  public:
-
   int thread_type() const {
     return _thread_type;
   }
@@ -14,7 +13,6 @@
   }
 
  private:
-
 #ifdef __APPLE__
   typedef thread_t thread_id_t;
 #else
@@ -33,7 +31,6 @@
   sigset_t _caller_sigmask; // Caller's signal mask
 
  public:
-
   // Methods to save/restore caller's signal mask
   sigset_t  caller_sigmask() const       { return _caller_sigmask; }
   void    set_caller_sigmask(sigset_t sigmask)  { _caller_sigmask = sigmask; }
@@ -94,7 +91,6 @@ private:
   Monitor* _startThread_lock;     // sync parent and child in thread creation
 
 public:
-
   Monitor* startThread_lock() const {
     return _startThread_lock;
   }
@@ -104,7 +100,6 @@ public:
   // ***************************************************************
 
 private:
-
   void pd_initialize();
   void pd_destroy();
 

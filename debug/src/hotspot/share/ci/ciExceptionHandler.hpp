@@ -25,9 +25,7 @@ private:
   ciInstanceKlass* _catch_klass;
 
 public:
-  ciExceptionHandler(ciInstanceKlass* loading_klass,
-                     int start, int limit,
-                     int handler_bci, int klass_index) {
+  ciExceptionHandler(ciInstanceKlass* loading_klass, int start, int limit, int handler_bci, int klass_index) {
     _loading_klass = loading_klass;
     _start  = start;
     _limit  = limit;
@@ -44,14 +42,10 @@ public:
   // Get the exception klass that this handler catches.
   ciInstanceKlass* catch_klass();
 
-  bool      is_catch_all() { return catch_klass_index() == 0; }
-  bool      is_in_range(int bci) {
-    return start() <= bci && bci < limit();
-  }
-  bool      catches(ciInstanceKlass *exc) {
-    return is_catch_all() || exc->is_subtype_of(catch_klass());
-  }
-  bool      is_rethrow() { return handler_bci() == -1; }
+  bool      is_catch_all()                { return catch_klass_index() == 0; }
+  bool      is_in_range(int bci)          { return start() <= bci && bci < limit(); }
+  bool      catches(ciInstanceKlass *exc) { return is_catch_all() || exc->is_subtype_of(catch_klass()); }
+  bool      is_rethrow()                  { return handler_bci() == -1; }
 
   void      print();
 };

@@ -227,7 +227,7 @@ public:
       return;
     }
     int num_memory_pools = MemoryService::num_memory_pools();
-    for (int i=0; i<num_memory_pools; i++) {
+    for (int i = 0; i<num_memory_pools; i++) {
       MemoryPool* pool = MemoryService::get_memory_pool(i);
 
       // if low memory detection is enabled then check if the

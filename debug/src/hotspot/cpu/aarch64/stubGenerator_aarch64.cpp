@@ -39,7 +39,6 @@
 
 class StubGenerator: public StubCodeGenerator {
  private:
-
 #define inc_counter_np(counter) ((void)0)
 
   // Call stubs are used to call Java from C
@@ -143,7 +142,6 @@ class StubGenerator: public StubCodeGenerator {
   };
 
   address generate_call_stub(address& return_address) {
-
     StubCodeMark mark(this, "StubRoutines", "call_stub");
     address start = __ pc();
 
@@ -440,7 +438,6 @@ class StubGenerator: public StubCodeGenerator {
   //    [tos + 4]: saved r0
   //    [tos + 5]: saved rscratch1
   address generate_verify_oop() {
-
     StubCodeMark mark(this, "StubRoutines", "verify_oop");
     address start = __ pc();
 
@@ -1518,7 +1515,6 @@ class StubGenerator: public StubCodeGenerator {
   //    r0 == -1^K - failure, where K is partial transfer count
   //
   address generate_checkcast_copy(const char *name, address *entry, bool dest_uninitialized = false) {
-
     Label L_load_element, L_store_element, L_do_card_marks, L_done, L_done_pop;
 
     // Input registers (after setup_arg_regs)
@@ -1725,7 +1721,6 @@ class StubGenerator: public StubCodeGenerator {
                                 address byte_copy_entry, address short_copy_entry,
                                 address int_copy_entry, address oop_copy_entry,
                                 address long_copy_entry, address checkcast_copy_entry) {
-
     Label L_failed, L_failed_0, L_objArray;
     Label L_copy_bytes, L_copy_shorts, L_copy_ints, L_copy_longs;
 
@@ -1822,8 +1817,7 @@ class StubGenerator: public StubCodeGenerator {
     const Register rscratch1_offset = rscratch1;    // array offset
     const Register r18_elsize = lh; // element size
 
-    __ ubfx(rscratch1_offset, lh, Klass::_lh_header_size_shift,
-           exact_log2(Klass::_lh_header_size_mask+1));   // array_offset
+    __ ubfx(rscratch1_offset, lh, Klass::_lh_header_size_shift, exact_log2(Klass::_lh_header_size_mask+1));   // array_offset
     __ add(src, src, rscratch1_offset);           // src array offset
     __ add(dst, dst, rscratch1_offset);           // dst array offset
     BLOCK_COMMENT("choose copy loop based on element size");
@@ -2828,7 +2822,6 @@ class StubGenerator: public StubCodeGenerator {
    *       rax   - int crc result
    */
   address generate_updateBytesCRC32() {
-
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "updateBytesCRC32");
 
@@ -2846,8 +2839,7 @@ class StubGenerator: public StubCodeGenerator {
     BLOCK_COMMENT("Entry:");
     __ enter(); // required for proper stackwalking of RuntimeStub frame
 
-    __ kernel_crc32(crc, buf, len,
-              table0, table1, table2, table3, rscratch1, rscratch2, tmp3);
+    __ kernel_crc32(crc, buf, len, table0, table1, table2, table3, rscratch1, rscratch2, tmp3);
 
     __ leave(); // required for proper stackwalking of RuntimeStub frame
     __ ret(lr);
@@ -2868,7 +2860,6 @@ class StubGenerator: public StubCodeGenerator {
    *       r0   - int crc result
    */
   address generate_updateBytesCRC32C() {
-
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "updateBytesCRC32C");
 
@@ -2886,8 +2877,7 @@ class StubGenerator: public StubCodeGenerator {
     BLOCK_COMMENT("Entry:");
     __ enter(); // required for proper stackwalking of RuntimeStub frame
 
-    __ kernel_crc32c(crc, buf, len,
-              table0, table1, table2, table3, rscratch1, rscratch2, tmp3);
+    __ kernel_crc32c(crc, buf, len, table0, table1, table2, table3, rscratch1, rscratch2, tmp3);
 
     __ leave(); // required for proper stackwalking of RuntimeStub frame
     __ ret(lr);
@@ -3671,11 +3661,9 @@ class StubGenerator: public StubCodeGenerator {
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "dlog");
     address entry = __ pc();
-    FloatRegister vtmp0 = v0, vtmp1 = v1, vtmp2 = v2, vtmp3 = v3, vtmp4 = v4,
-        vtmp5 = v5, tmpC1 = v16, tmpC2 = v17, tmpC3 = v18, tmpC4 = v19;
+    FloatRegister vtmp0 = v0, vtmp1 = v1, vtmp2 = v2, vtmp3 = v3, vtmp4 = v4, vtmp5 = v5, tmpC1 = v16, tmpC2 = v17, tmpC3 = v18, tmpC4 = v19;
     Register tmp1 = r0, tmp2 = r1, tmp3 = r2, tmp4 = r3, tmp5 = r4;
-    __ fast_log(vtmp0, vtmp1, vtmp2, vtmp3, vtmp4, vtmp5, tmpC1, tmpC2, tmpC3,
-        tmpC4, tmp1, tmp2, tmp3, tmp4, tmp5);
+    __ fast_log(vtmp0, vtmp1, vtmp2, vtmp3, vtmp4, vtmp5, tmpC1, tmpC2, tmpC3, tmpC4, tmp1, tmp2, tmp3, tmp4, tmp5);
     return entry;
   }
 
@@ -4521,7 +4509,6 @@ class StubGenerator: public StubCodeGenerator {
   }
 
   class MontgomeryMultiplyGenerator : public MacroAssembler {
-
     Register Pa_base, Pb_base, Pn_base, Pm_base, inv, Rlen, Ra, Rb, Rm, Rn,
       Pa, Pb, Pn, Pm, Rhi_ab, Rlo_ab, Rhi_mn, Rlo_mn, t0, t1, t2, Ri, Rj;
 
@@ -4531,7 +4518,6 @@ class StubGenerator: public StubCodeGenerator {
   public:
     MontgomeryMultiplyGenerator (Assembler *as, bool squaring)
       : MacroAssembler(as->code()), _squaring(squaring) {
-
       // Register allocation
 
       Register reg = c_rarg0;
@@ -4786,7 +4772,6 @@ class StubGenerator: public StubCodeGenerator {
     //    Preserves len
     //    Leaves s pointing to the address which was in d at start
     void reverse(Register d, Register s, Register len, Register tmp1, Register tmp2) {
-
       lea(s, Address(s, len, Address::uxtw(LogBytesPerWord)));
       mov(tmp1, len);
       unroll_2(tmp1, &MontgomeryMultiplyGenerator::reverse1, d, s, tmp2);
@@ -5263,7 +5248,7 @@ class StubGenerator: public StubCodeGenerator {
       generate_initial();
     }
   }
-}; // end class declaration
+};
 
 void StubGenerator_generate(CodeBuffer* code, bool all) {
   StubGenerator g(code, all);

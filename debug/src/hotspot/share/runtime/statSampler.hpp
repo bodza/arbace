@@ -15,11 +15,9 @@ class StatSamplerTask;
  * PerfData instances that otherwise have no better home.
  */
 class StatSampler : AllStatic {
-
   friend class StatSamplerTask;
 
   private:
-
     static StatSamplerTask* _task;
     static PerfDataList* _sampled;
 

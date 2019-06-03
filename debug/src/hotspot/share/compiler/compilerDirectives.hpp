@@ -13,7 +13,6 @@
     cflags(Exclude,                 bool, false, X) \
     cflags(BreakAtExecute,          bool, false, X) \
     cflags(BreakAtCompile,          bool, false, X) \
-    cflags(Log,                     bool, false, X) \
     cflags(PrintAssembly,           bool, PrintAssembly, PrintAssembly) \
     cflags(BackgroundCompilation,   bool, BackgroundCompilation, BackgroundCompilation) \
     cflags(ReplayInline,            bool, false, ReplayInline) \
@@ -116,7 +115,6 @@ private:
   int _ref_count;
 
 public:
-
   CompilerDirectives();
   ~CompilerDirectives();
 

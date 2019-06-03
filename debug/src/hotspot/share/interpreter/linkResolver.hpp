@@ -35,24 +35,11 @@ class CallInfo : public StackObj {
   Handle       _resolved_method_name;   // Object holding the ResolvedMethodName
 
   void set_static(Klass* resolved_klass, const methodHandle& resolved_method, TRAPS);
-  void set_interface(Klass* resolved_klass, Klass* selected_klass,
-                     const methodHandle& resolved_method,
-                     const methodHandle& selected_method,
-                     int itable_index, TRAPS);
-  void set_virtual(Klass* resolved_klass, Klass* selected_klass,
-                   const methodHandle& resolved_method,
-                   const methodHandle& selected_method,
-                   int vtable_index, TRAPS);
-  void set_handle(const methodHandle& resolved_method,
-                  Handle resolved_appendix, Handle resolved_method_type, TRAPS);
-  void set_handle(Klass* resolved_klass,
-                  const methodHandle& resolved_method,
-                  Handle resolved_appendix, Handle resolved_method_type, TRAPS);
-  void set_common(Klass* resolved_klass, Klass* selected_klass,
-                  const methodHandle& resolved_method,
-                  const methodHandle& selected_method,
-                  CallKind kind,
-                  int index, TRAPS);
+  void set_interface(Klass* resolved_klass, Klass* selected_klass, const methodHandle& resolved_method, const methodHandle& selected_method, int itable_index, TRAPS);
+  void set_virtual(Klass* resolved_klass, Klass* selected_klass, const methodHandle& resolved_method, const methodHandle& selected_method, int vtable_index, TRAPS);
+  void set_handle(const methodHandle& resolved_method, Handle resolved_appendix, Handle resolved_method_type, TRAPS);
+  void set_handle(Klass* resolved_klass, const methodHandle& resolved_method, Handle resolved_appendix, Handle resolved_method_type, TRAPS);
+  void set_common(Klass* resolved_klass, Klass* selected_klass, const methodHandle& resolved_method, const methodHandle& selected_method, CallKind kind, int index, TRAPS);
 
   friend class LinkResolver;
 
@@ -161,7 +148,6 @@ class LinkResolver: AllStatic {
   friend class klassItable;
 
  private:
-
   static Method* lookup_method_in_klasses(const LinkInfo& link_info, bool checkpolymorphism, bool in_imethod_resolve);
   static Method* lookup_method_in_interfaces(const LinkInfo& link_info);
 
@@ -170,7 +156,6 @@ class LinkResolver: AllStatic {
   // Not Linktime so doesn't take LinkInfo
   static methodHandle lookup_instance_method_in_klasses (Klass* klass, Symbol* name, Symbol* signature, Klass::PrivateLookupMode private_mode, TRAPS);
  private:
-
   // Similar loader constraint checking functions that throw
   // LinkageError with descriptive message.
   static void check_method_loader_constraints(const LinkInfo& link_info, const methodHandle& resolved_method, const char* method_type, TRAPS);

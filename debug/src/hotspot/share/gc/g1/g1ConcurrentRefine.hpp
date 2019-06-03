@@ -68,15 +68,10 @@ class G1ConcurrentRefine : public CHeapObj<mtGC> {
   size_t _red_zone;
   size_t _min_yellow_zone_size;
 
-  G1ConcurrentRefine(size_t green_zone,
-                     size_t yellow_zone,
-                     size_t red_zone,
-                     size_t min_yellow_zone_size);
+  G1ConcurrentRefine(size_t green_zone, size_t yellow_zone, size_t red_zone, size_t min_yellow_zone_size);
 
   // Update green/yellow/red zone values based on how well goals are being met.
-  void update_zones(double update_rs_time,
-                    size_t update_rs_processed_buffers,
-                    double goal_ms);
+  void update_zones(double update_rs_time, size_t update_rs_processed_buffers, double goal_ms);
 
   static uint worker_id_offset();
   void maybe_activate_more_threads(uint worker_id, size_t num_cur_buffers);

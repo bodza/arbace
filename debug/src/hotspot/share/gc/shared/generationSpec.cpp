@@ -9,7 +9,6 @@
 
 Generation* GenerationSpec::init(ReservedSpace rs, CardTableRS* remset) {
   switch (name()) {
-
     default:
       guarantee(false, "unrecognized GenerationName");
       return NULL;

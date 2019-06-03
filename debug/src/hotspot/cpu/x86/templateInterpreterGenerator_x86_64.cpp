@@ -229,7 +229,6 @@ address TemplateInterpreterGenerator::generate_CRC32C_updateBytes_entry(Abstract
 //
 
 address TemplateInterpreterGenerator::generate_math_entry(AbstractInterpreter::MethodKind kind) {
-
   // rbx,: Method*
   // rcx: scratrch
   // r13: sender sp

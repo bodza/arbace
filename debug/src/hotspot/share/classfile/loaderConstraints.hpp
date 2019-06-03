@@ -9,13 +9,11 @@ class LoaderConstraintEntry;
 class Symbol;
 
 class LoaderConstraintTable : public Hashtable<InstanceKlass*, mtClass> {
-
 private:
   LoaderConstraintEntry** find_loader_constraint(Symbol* name,
                                                  Handle loader);
 
 public:
-
   LoaderConstraintTable(int table_size);
 
   LoaderConstraintEntry* new_entry(unsigned int hash, Symbol* name,
@@ -45,10 +43,8 @@ public:
   // Class loader constraints
 
   void ensure_loader_constraint_capacity(LoaderConstraintEntry *p, int nfree);
-  void extend_loader_constraint(LoaderConstraintEntry* p, Handle loader,
-                                InstanceKlass* klass);
-  void merge_loader_constraints(LoaderConstraintEntry** pp1,
-                                LoaderConstraintEntry** pp2, InstanceKlass* klass);
+  void extend_loader_constraint(LoaderConstraintEntry* p, Handle loader, InstanceKlass* klass);
+  void merge_loader_constraints(LoaderConstraintEntry** pp1, LoaderConstraintEntry** pp2, InstanceKlass* klass);
 
   bool check_or_update(InstanceKlass* k, Handle loader, Symbol* name);
 
@@ -69,7 +65,6 @@ private:
   ClassLoaderData**              _loaders;                // initiating loaders
 
 public:
-
   InstanceKlass* klass() { return literal(); }
   InstanceKlass** klass_addr() { return literal_addr(); }
   void set_klass(InstanceKlass* k) { set_literal(k); }

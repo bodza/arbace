@@ -6,7 +6,6 @@
 #include "gc/g1/heapRegionSet.inline.hpp"
 
 inline HeapRegion* HeapRegionManager::addr_to_region(HeapWord* addr) const {
-
   HeapRegion* hr = _regions.get_by_address(addr);
   return hr;
 }

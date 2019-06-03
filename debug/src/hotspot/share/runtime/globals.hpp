@@ -348,9 +348,6 @@
   notproduct(bool, ZombieALot, false, \
           "Create zombies (non-entrant) at exit from the runtime system") \
  \
-  product(bool, UnlinkSymbolsALot, false, \
-          "Unlink unreferenced symbols from the symbol table at safepoints") \
- \
   notproduct(bool, WalkStackALot, false, \
           "Trace stack (no print) at every exit from the runtime system") \
  \
@@ -812,7 +809,7 @@
           "Print VM flags and their ranges and exit VM") \
  \
   diagnostic(bool, SerializeVMOutput, true, \
-          "Use a mutex to serialize output to tty and NULL") \
+          "Use a mutex to serialize output to tty") \
  \
   diagnostic(bool, DisplayVMOutput, true, \
           "Display all VM output on the tty, independently of false") \
@@ -1801,12 +1798,8 @@
  \
   /* Shared spaces */ \
  \
-  product(bool, UseSharedSpaces, true, \
+  product(bool, false, true, \
           "Use shared spaces for metadata") \
- \
-  product(bool, VerifySharedSpaces, false, \
-          "Verify shared spaces (false for default archive, true for " \
-          "archive specified by -XX:SharedArchiveFile)") \
  \
   product(size_t, SharedBaseAddress, 32*G, \
           "Address to allocate shared memory region for class data") \
@@ -1890,9 +1883,6 @@
  \
   product(ccstr, SharedClassListFile, NULL, \
           "Override the default CDS class list") \
- \
-  product(ccstr, SharedArchiveFile, NULL, \
-          "Override the default location of the CDS archive file") \
  \
   product(ccstr, ExtraSharedClassListFile, NULL, \
           "Extra classlist for building the CDS archive file") \

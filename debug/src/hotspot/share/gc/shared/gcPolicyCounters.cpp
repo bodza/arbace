@@ -4,7 +4,6 @@
 #include "memory/resourceArea.hpp"
 
 GCPolicyCounters::GCPolicyCounters(const char* name, int collectors, int generations) {
-
   if (UsePerfData) {
     EXCEPTION_MARK;
     ResourceMark rm;

@@ -162,7 +162,6 @@ void BCEscapeAnalyzer::set_dirty(ArgumentMap vars) {
 }
 
 void BCEscapeAnalyzer::set_modified(ArgumentMap vars, int offs, int size) {
-
   for (int i = 0; i < _arg_size; i++) {
     if (vars.contains(i)) {
       set_arg_modified(i, offs, size);
@@ -330,7 +329,6 @@ bool BCEscapeAnalyzer::contains(uint arg_set1, uint arg_set2) {
 }
 
 void BCEscapeAnalyzer::iterate_one_block(ciBlock *blk, StateInfo &state, GrowableArray<ciBlock *> &successors) {
-
   blk->set_processed();
   ciBytecodeStream s(method());
   int limit_bci = blk->limit_bci();
@@ -1221,7 +1219,7 @@ void BCEscapeAnalyzer::compute_escape_info() {
   vmIntrinsics::ID iid = known_intrinsic();
 
   // check if method can be analyzed
-  if (iid ==  vmIntrinsics::_none && (method()->is_abstract() || method()->is_native() || !method()->holder()->is_initialized() || _level > MaxBCEAEstimateLevel || method()->code_size() > MaxBCEAEstimateSize)) {
+  if (iid == vmIntrinsics::_none && (method()->is_abstract() || method()->is_native() || !method()->holder()->is_initialized() || _level > MaxBCEAEstimateLevel || method()->code_size() > MaxBCEAEstimateSize)) {
     if (BCEATraceLevel >= 1) {
       tty->print("Skipping method because: ");
       if (method()->is_abstract())
@@ -1305,7 +1303,6 @@ void BCEscapeAnalyzer::compute_escape_info() {
 }
 
 void BCEscapeAnalyzer::read_escape_info() {
-
   // read escape information from method descriptor
   for (int i = 0; i < _arg_size; i++) {
     if (methodData()->is_arg_local(i))

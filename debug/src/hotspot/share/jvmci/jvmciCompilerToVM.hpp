@@ -180,7 +180,7 @@ class JavaArgumentUnboxer : public SignatureIterator {
   Handle next_arg(BasicType expectedType);
 
  public:
-  JavaArgumentUnboxer(Symbol* signature, JavaCallArguments*  jca, arrayOop args, bool is_static) : SignatureIterator(signature) {
+  JavaArgumentUnboxer(Symbol* signature, JavaCallArguments* jca, arrayOop args, bool is_static) : SignatureIterator(signature) {
     this->_return_type = T_ILLEGAL;
     _jca = jca;
     _index = 0;

@@ -151,16 +151,16 @@ class FilteredFieldsMap : AllStatic {
  public:
   static void initialize();
   static bool is_filtered_field(Klass* klass, int field_offset) {
-    for (int i=0; i < _filtered_fields->length(); i++) {
+    for (int i = 0; i < _filtered_fields->length(); i++) {
       if (klass == _filtered_fields->at(i)->klass() && field_offset == _filtered_fields->at(i)->field_offset()) {
         return true;
       }
     }
     return false;
   }
-  static int  filtered_fields_count(Klass* klass, bool local_only) {
+  static int filtered_fields_count(Klass* klass, bool local_only) {
     int nflds = 0;
-    for (int i=0; i < _filtered_fields->length(); i++) {
+    for (int i = 0; i < _filtered_fields->length(); i++) {
       if (local_only && klass == _filtered_fields->at(i)->klass()) {
         nflds++;
       } else if (klass->is_subtype_of(_filtered_fields->at(i)->klass())) {

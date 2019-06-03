@@ -53,7 +53,6 @@ void G1Allocator::reuse_retained_old_region(EvacuationInfo& evacuation_info, Old
     bool during_im = _g1h->collector_state()->in_initial_mark_gc();
     retained_region->note_start_of_copying(during_im);
     old->set(retained_region);
-    _g1h->hr_printer()->reuse(retained_region);
     evacuation_info.set_alloc_regions_used_before(retained_region->used());
   }
 }
@@ -140,7 +139,6 @@ HeapWord* G1Allocator::par_allocate_during_gc(InCSetState dest, size_t min_word_
 }
 
 HeapWord* G1Allocator::survivor_attempt_allocation(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size) {
-
   HeapWord* result = survivor_gc_alloc_region()->attempt_allocation(min_word_size,
                                                                     desired_word_size,
                                                                     actual_word_size);
@@ -160,7 +158,6 @@ HeapWord* G1Allocator::survivor_attempt_allocation(size_t min_word_size, size_t 
 }
 
 HeapWord* G1Allocator::old_attempt_allocation(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size) {
-
   HeapWord* result = old_gc_alloc_region()->attempt_allocation(min_word_size,
                                                                desired_word_size,
                                                                actual_word_size);
@@ -211,7 +208,6 @@ HeapWord* G1PLABAllocator::allocate_direct_or_new_plab(InCSetState dest, size_t 
   // Only get a new PLAB if the allocation fits and it would not waste more than
   // ParallelGCBufferWastePct in the existing buffer.
   if ((required_in_plab <= plab_word_size) && may_throw_away_buffer(required_in_plab, plab_word_size)) {
-
     PLAB* alloc_buf = alloc_buffer(dest);
     alloc_buf->retire();
 
@@ -290,7 +286,6 @@ bool G1ArchiveAllocator::alloc_new_region() {
   }
   _g1h->g1_policy()->remset_tracker()->update_at_allocate(hr);
   _g1h->old_set_add(hr);
-  _g1h->hr_printer()->alloc(hr);
   _allocated_regions.append(hr);
   _allocation_region = hr;
 
@@ -349,7 +344,6 @@ HeapWord* G1ArchiveAllocator::archive_mem_allocate(size_t word_size) {
 }
 
 void G1ArchiveAllocator::complete_archive(GrowableArray<MemRegion>* ranges, size_t end_alignment_in_bytes) {
-
   // If we've allocated nothing, simply return.
   if (_allocation_region == NULL) {
     return;

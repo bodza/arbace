@@ -429,10 +429,6 @@
           "Time slice for MMU specification") \
           constraint(GCPauseIntervalMillisConstraintFunc,AfterErgo) \
  \
-  product(uintx, MaxGCMinorPauseMillis, max_uintx, \
-          "Adaptive size policy maximum GC minor pause time goal in millisecond") \
-          range(0, max_uintx) \
- \
   product(uintx, GCTimeRatio, 99, \
           "Adaptive size policy application time to GC time ratio") \
           range(0, max_juint) \
@@ -537,14 +533,6 @@
  \
   product(bool, UseGCTaskAffinity, false, \
           "Use worker affinity when asking for GCTasks") \
- \
-  product(bool, PrintGC, false, \
-          "Print message at garbage collection. " \
-          "Deprecated, use -Xlog:gc instead.") \
- \
-  product(bool, PrintGCDetails, false, \
-          "Print more details at garbage collection. " \
-          "Deprecated, use -Xlog:gc* instead.") \
  \
   develop(intx, ConcGCYieldTimeout, 0, \
           "If non-zero, assert that GC threads yield within this number of milliseconds") \

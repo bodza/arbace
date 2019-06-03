@@ -43,7 +43,6 @@ bool ElfSymbolTable::compare(const Elf_Sym* sym, address addr, int* stringtableI
 }
 
 bool ElfSymbolTable::lookup(address addr, int* stringtableIndex, int* posIndex, int* offset, ElfFuncDescTable* funcDescTable) {
-
   if (NullDecoder::is_error(get_status())) {
     return false;
   }

@@ -181,7 +181,6 @@ public:
 
 class GlobalTLABStats: public CHeapObj<mtThread> {
 private:
-
   // Accumulate perfdata in private variables because
   // PerfData should be write-only for security reasons
   // (see perfData.hpp)

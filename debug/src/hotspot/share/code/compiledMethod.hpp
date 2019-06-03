@@ -37,7 +37,6 @@ class ExceptionCache : public CHeapObj<mtCode> {
   void increment_count();
 
  public:
-
   ExceptionCache(Handle exception, address pc, address handler);
 
   Klass*    exception_type()                { return _exception_type; }
@@ -176,8 +175,6 @@ public:
   virtual int   compile_id() const = 0;
 
   virtual address verified_entry_point() const = 0;
-  virtual void log_identity(xmlStream* log) const = 0;
-  virtual void log_state_change() const = 0;
   virtual bool make_not_used() = 0;
   virtual bool make_not_entrant() = 0;
   virtual bool make_entrant() = 0;
@@ -185,10 +182,10 @@ public:
   virtual bool make_zombie() = 0;
   virtual bool is_osr_method() const = 0;
   virtual int osr_entry_bci() const = 0;
-  Method* method() const                          { return _method; }
-  virtual void print_pcs() = 0;
+  Method* method() const { return _method; }
+
   bool is_native_method() const { return _method != NULL && _method->is_native(); }
-  bool is_java_method() const { return _method != NULL && !_method->is_native(); }
+  bool is_java_method() const   { return _method != NULL && !_method->is_native(); }
 
   // ScopeDesc retrieval operation
   PcDesc* pc_desc_at(address pc)   { return find_pc_desc(pc, false); }
@@ -202,8 +199,8 @@ public:
   bool is_at_poll_return(address pc);
   bool is_at_poll_or_poll_return(address pc);
 
-  bool  is_marked_for_deoptimization() const      { return _mark_for_deoptimization_status != not_marked; }
-  void  mark_for_deoptimization(bool inc_recompile_counts = true) {
+  bool is_marked_for_deoptimization() const { return _mark_for_deoptimization_status != not_marked; }
+  void mark_for_deoptimization(bool inc_recompile_counts = true) {
     _mark_for_deoptimization_status = (inc_recompile_counts ? deoptimize : deoptimize_noupdate);
   }
   bool update_recompile_counts() const {

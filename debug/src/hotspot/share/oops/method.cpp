@@ -6,7 +6,6 @@
 #include "code/debugInfoRec.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "interpreter/bytecodeStream.hpp"
-#include "interpreter/bytecodeTracer.hpp"
 #include "interpreter/bytecodes.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/oopMapCache.hpp"
@@ -875,7 +874,6 @@ address Method::make_adapters(const methodHandle& mh, TRAPS) {
 }
 
 void Method::restore_unshareable_info(TRAPS) {
-
   // Since restore_unshareable_info can be called more than once for a method, don't
   // redo any work.
   if (adapter() == NULL) {
@@ -1344,20 +1342,6 @@ void Method::sort_methods(Array<Method*>* methods, bool idempotent, bool set_idn
   }
 }
 
-void Method::print_codes_on(outputStream* st) const {
-  print_codes_on(0, code_size(), st);
-}
-
-void Method::print_codes_on(int from, int to, outputStream* st) const {
-  Thread *thread = Thread::current();
-  ResourceMark rm(thread);
-  methodHandle mh (thread, (Method*)this);
-  BytecodeStream s(mh);
-  s.set_interval(from, to);
-  BytecodeTracer::set_closure(BytecodeTracer::std_closure());
-  while (s.next() >= 0) BytecodeTracer::trace(mh, s.bcp(), st);
-}
-
 // Simple compression of line number tables. We use a regular compressed stream, except that we compress deltas
 // between (bci,line) pairs since they are smaller. If (bci delta, line delta) fits in (5-bit unsigned, 3-bit unsigned)
 // we save it as one byte, otherwise we write a 0xFF escape character and use regular compression. 0x0 is used
@@ -1473,7 +1457,6 @@ class JNIMethodBlockNode : public CHeapObj<mtClass> {
   JNIMethodBlockNode* _next;
 
  public:
-
   JNIMethodBlockNode(int num_methods = min_block_size);
 
   ~JNIMethodBlockNode() { FREE_C_HEAP_ARRAY(Method*, _methods); }
@@ -1730,7 +1713,6 @@ static const int TOUCHED_METHOD_TABLE_SIZE = 20011;
 static TouchedMethodRecord** _touched_method_table = NULL;
 
 void Method::log_touched(TRAPS) {
-
   const int table_size = TOUCHED_METHOD_TABLE_SIZE;
   Symbol* my_class = klass_name();
   Symbol* my_name  = name();
@@ -1748,7 +1730,7 @@ void Method::log_touched(TRAPS) {
 
   TouchedMethodRecord* ptr = _touched_method_table[index];
   while (ptr) {
-    if (ptr->_class_name       == my_class && ptr->_method_name      == my_name && ptr->_method_signature == my_sig) {
+    if (ptr->_class_name == my_class && ptr->_method_name == my_name && ptr->_method_signature == my_sig) {
       return;
     }
     if (ptr->_next == NULL) break;

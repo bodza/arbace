@@ -51,7 +51,6 @@
 //    stubGenerator_<arch>.cpp file and call the function in generate_all() of that file
 
 class StubRoutines: AllStatic {
-
  public:
   enum platform_independent_constants {
     max_size_of_parameters = 256                           // max. parameter size supported by megamorphic lookups
@@ -349,21 +348,11 @@ class StubRoutines: AllStatic {
 
   static address zero_aligned_words()  { return _zero_aligned_words; }
 
-  static double  intrinsic_log10(double d) {
-    return _intrinsic_log10(d);
-  }
-  static double  intrinsic_pow(double d, double d2) {
-    return _intrinsic_pow(d, d2);
-  }
-  static double  intrinsic_sin(double d) {
-    return _intrinsic_sin(d);
-  }
-  static double  intrinsic_cos(double d) {
-    return _intrinsic_cos(d);
-  }
-  static double  intrinsic_tan(double d) {
-    return _intrinsic_tan(d);
-  }
+  static double  intrinsic_log10(double d) { return _intrinsic_log10(d); }
+  static double  intrinsic_pow(double d, double d2) { return _intrinsic_pow(d, d2); }
+  static double  intrinsic_sin(double d) { return _intrinsic_sin(d); }
+  static double  intrinsic_cos(double d) { return _intrinsic_cos(d); }
+  static double  intrinsic_tan(double d) { return _intrinsic_tan(d); }
 
   //
   // Safefetch stub support
@@ -380,7 +369,6 @@ class StubRoutines: AllStatic {
   }
 
   static address continuation_for_safefetch_fault(address pc) {
-
     if (pc == _safefetch32_fault_pc) return _safefetch32_continuation_pc;
     if (pc == _safefetchN_fault_pc)  return _safefetchN_continuation_pc;
 

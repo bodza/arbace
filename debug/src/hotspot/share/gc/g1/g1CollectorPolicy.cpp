@@ -10,7 +10,6 @@
 #include "utilities/debug.hpp"
 
 G1CollectorPolicy::G1CollectorPolicy() {
-
   // Set up the region size and associated fields. Given that the
   // policy is created before the heap, we have to set this up here,
   // so it's done as soon as possible.

@@ -16,7 +16,6 @@ class MacroAssembler: public Assembler {
   using Assembler::movi;
 
  protected:
-
   // Support for VM calls
   //
   // This is the base routine called by the different versions of call_VM_leaf. The interpreter
@@ -398,7 +397,6 @@ class MacroAssembler: public Assembler {
 
   // first two private routines for loading 32 bit or 64 bit constants
 private:
-
   void mov_immediate64(Register dst, u_int64_t imm64);
   void mov_immediate32(Register dst, u_int32_t imm32);
 
@@ -462,11 +460,9 @@ public:
   }
 
 public:
-
   // Generalized Test Bit And Branch, including a "far" variety which
   // spans more than 32KiB.
   void tbr(Condition cond, Register Rt, int bitpos, Label &dest, bool far = false) {
-
     if (far)
       cond = ~cond;
 
@@ -679,20 +675,9 @@ public:
   void super_call_VM_leaf(address entry_point, Register arg_1, Register arg_2, Register arg_3, Register arg_4);
 
   // last Java Frame (fills frame anchor)
-  void set_last_Java_frame(Register last_java_sp,
-                           Register last_java_fp,
-                           address last_java_pc,
-                           Register scratch);
-
-  void set_last_Java_frame(Register last_java_sp,
-                           Register last_java_fp,
-                           Label &last_java_pc,
-                           Register scratch);
-
-  void set_last_Java_frame(Register last_java_sp,
-                           Register last_java_fp,
-                           Register last_java_pc,
-                           Register scratch);
+  void set_last_Java_frame(Register last_java_sp, Register last_java_fp, address last_java_pc, Register scratch);
+  void set_last_Java_frame(Register last_java_sp, Register last_java_fp, Label &last_java_pc, Register scratch);
+  void set_last_Java_frame(Register last_java_sp, Register last_java_fp, Register last_java_pc, Register scratch);
 
   void reset_last_Java_frame(Register thread);
 
@@ -716,19 +701,13 @@ public:
   void resolve_oop_handle(Register result, Register tmp = r5);
   void load_mirror(Register dst, Register method, Register tmp = r5);
 
-  void access_load_at(BasicType type, DecoratorSet decorators, Register dst, Address src,
-                      Register tmp1, Register tmp_thread);
+  void access_load_at(BasicType type, DecoratorSet decorators, Register dst, Address src, Register tmp1, Register tmp_thread);
+  void access_store_at(BasicType type, DecoratorSet decorators, Address dst, Register src, Register tmp1, Register tmp_thread);
 
-  void access_store_at(BasicType type, DecoratorSet decorators, Address dst, Register src,
-                       Register tmp1, Register tmp_thread);
+  void load_heap_oop(Register dst, Address src, Register tmp1 = noreg, Register thread_tmp = noreg, DecoratorSet decorators = 0);
 
-  void load_heap_oop(Register dst, Address src, Register tmp1 = noreg,
-                     Register thread_tmp = noreg, DecoratorSet decorators = 0);
-
-  void load_heap_oop_not_null(Register dst, Address src, Register tmp1 = noreg,
-                              Register thread_tmp = noreg, DecoratorSet decorators = 0);
-  void store_heap_oop(Address dst, Register src, Register tmp1 = noreg,
-                      Register tmp_thread = noreg, DecoratorSet decorators = 0);
+  void load_heap_oop_not_null(Register dst, Address src, Register tmp1 = noreg, Register thread_tmp = noreg, DecoratorSet decorators = 0);
+  void store_heap_oop(Address dst, Register src, Register tmp1 = noreg, Register tmp_thread = noreg, DecoratorSet decorators = 0);
 
   // currently unimplemented
   // Used for storing NULL. All other oop constants should be
@@ -792,19 +771,11 @@ public:
   void verify_tlab();
 
   // interface method calling
-  void lookup_interface_method(Register recv_klass,
-                               Register intf_klass,
-                               RegisterOrConstant itable_index,
-                               Register method_result,
-                               Register scan_temp,
-                               Label& no_such_interface,
-                   bool return_method = true);
+  void lookup_interface_method(Register recv_klass, Register intf_klass, RegisterOrConstant itable_index, Register method_result, Register scan_temp, Label& no_such_interface, bool return_method = true);
 
   // virtual method calling
   // n.b. x86 allows RegisterOrConstant for vtable_index
-  void lookup_virtual_method(Register recv_klass,
-                             RegisterOrConstant vtable_index,
-                             Register method_result);
+  void lookup_virtual_method(Register recv_klass, RegisterOrConstant vtable_index, Register method_result);
 
   // Test sub_klass against super_klass, with fast and slow paths.
 
@@ -812,33 +783,18 @@ public:
   // One of the three labels can be NULL, meaning take the fall-through.
   // If super_check_offset is -1, the value is loaded up from super_klass.
   // No registers are killed, except temp_reg.
-  void check_klass_subtype_fast_path(Register sub_klass,
-                                     Register super_klass,
-                                     Register temp_reg,
-                                     Label* L_success,
-                                     Label* L_failure,
-                                     Label* L_slow_path,
-                RegisterOrConstant super_check_offset = RegisterOrConstant(-1));
+  void check_klass_subtype_fast_path(Register sub_klass, Register super_klass, Register temp_reg, Label* L_success, Label* L_failure, Label* L_slow_path, RegisterOrConstant super_check_offset = RegisterOrConstant(-1));
 
   // The rest of the type check; must be wired to a corresponding fast path.
   // It does not repeat the fast path logic, so don't use it standalone.
   // The temp_reg and temp2_reg can be noreg, if no temps are available.
   // Updates the sub's secondary super cache as necessary.
   // If set_cond_codes, condition codes will be Z on success, NZ on failure.
-  void check_klass_subtype_slow_path(Register sub_klass,
-                                     Register super_klass,
-                                     Register temp_reg,
-                                     Register temp2_reg,
-                                     Label* L_success,
-                                     Label* L_failure,
-                                     bool set_cond_codes = false);
+  void check_klass_subtype_slow_path(Register sub_klass, Register super_klass, Register temp_reg, Register temp2_reg, Label* L_success, Label* L_failure, bool set_cond_codes = false);
 
   // Simplified, combined version, good for typical uses.
   // Falls through on failure.
-  void check_klass_subtype(Register sub_klass,
-                           Register super_klass,
-                           Register temp_reg,
-                           Label& L_success);
+  void check_klass_subtype(Register sub_klass, Register super_klass, Register temp_reg, Label& L_success);
 
   Address argument_address(RegisterOrConstant arg_slot, int extra_slot_offset = 0);
 
@@ -901,13 +857,9 @@ public:
 
   // Various forms of CAS
 
-  void cmpxchg_obj_header(Register oldv, Register newv, Register obj, Register tmp,
-                          Label &suceed, Label *fail);
-  void cmpxchgptr(Register oldv, Register newv, Register addr, Register tmp,
-                  Label &suceed, Label *fail);
-
-  void cmpxchgw(Register oldv, Register newv, Register addr, Register tmp,
-                  Label &suceed, Label *fail);
+  void cmpxchg_obj_header(Register oldv, Register newv, Register obj, Register tmp, Label &suceed, Label *fail);
+  void cmpxchgptr(Register oldv, Register newv, Register addr, Register tmp, Label &suceed, Label *fail);
+  void cmpxchgw(Register oldv, Register newv, Register addr, Register tmp, Label &suceed, Label *fail);
 
   void atomic_add(Register prev, RegisterOrConstant incr, Register addr);
   void atomic_addw(Register prev, RegisterOrConstant incr, Register addr);
@@ -930,10 +882,7 @@ public:
 
   // A generic CAS; success or failure is in the EQ flag.
   // Clobbers rscratch1
-  void cmpxchg(Register addr, Register expected, Register new_val,
-               enum operand_size size,
-               bool acquire, bool release, bool weak,
-               Register result);
+  void cmpxchg(Register addr, Register expected, Register new_val, enum operand_size size, bool acquire, bool release, bool weak, Register result);
 private:
   void compare_eq(Register rn, Register rm, enum operand_size size);
 
@@ -963,7 +912,6 @@ public:
   address ic_call(address entry, jint method_index = 0);
 
 public:
-
   // Data
 
   void mov_metadata(Register dst, Metadata* obj);
@@ -973,13 +921,9 @@ public:
   void movoop(Register dst, jobject obj, bool immediate = false);
 
   // CRC32 code for java.util.zip.CRC32::updateBytes() instrinsic.
-  void kernel_crc32(Register crc, Register buf, Register len,
-        Register table0, Register table1, Register table2, Register table3,
-        Register tmp, Register tmp2, Register tmp3);
+  void kernel_crc32(Register crc, Register buf, Register len, Register table0, Register table1, Register table2, Register table3, Register tmp, Register tmp2, Register tmp3);
   // CRC32 code for java.util.zip.CRC32C::updateBytes() instrinsic.
-  void kernel_crc32c(Register crc, Register buf, Register len,
-        Register table0, Register table1, Register table2, Register table3,
-        Register tmp, Register tmp2, Register tmp3);
+  void kernel_crc32c(Register crc, Register buf, Register len, Register table0, Register table1, Register table2, Register table3, Register tmp, Register tmp2, Register tmp3);
 
   // Stack push and pop individual 64 bit registers
   void push(Register src);
@@ -989,31 +933,24 @@ public:
   void pusha();
   void popa();
 
-  void repne_scan(Register addr, Register value, Register count,
-                  Register scratch);
-  void repne_scanw(Register addr, Register value, Register count,
-                   Register scratch);
+  void repne_scan(Register addr, Register value, Register count, Register scratch);
+  void repne_scanw(Register addr, Register value, Register count, Register scratch);
 
   typedef void (MacroAssembler::* add_sub_imm_insn)(Register Rd, Register Rn, unsigned imm);
   typedef void (MacroAssembler::* add_sub_reg_insn)(Register Rd, Register Rn, Register Rm, enum shift_kind kind, unsigned shift);
 
   // If a constant does not fit in an immediate field, generate some
   // number of MOV instructions and then perform the operation
-  void wrap_add_sub_imm_insn(Register Rd, Register Rn, unsigned imm,
-                             add_sub_imm_insn insn1,
-                             add_sub_reg_insn insn2);
+  void wrap_add_sub_imm_insn(Register Rd, Register Rn, unsigned imm, add_sub_imm_insn insn1, add_sub_reg_insn insn2);
   // Seperate vsn which sets the flags
-  void wrap_adds_subs_imm_insn(Register Rd, Register Rn, unsigned imm,
-                             add_sub_imm_insn insn1,
-                             add_sub_reg_insn insn2);
+  void wrap_adds_subs_imm_insn(Register Rd, Register Rn, unsigned imm, add_sub_imm_insn insn1, add_sub_reg_insn insn2);
 
 #define WRAP(INSN) \
   void INSN(Register Rd, Register Rn, unsigned imm) { \
     wrap_add_sub_imm_insn(Rd, Rn, imm, &Assembler::INSN, &Assembler::INSN); \
   } \
  \
-  void INSN(Register Rd, Register Rn, Register Rm, \
-             enum shift_kind kind, unsigned shift = 0) { \
+  void INSN(Register Rd, Register Rn, Register Rm, enum shift_kind kind, unsigned shift = 0) { \
     Assembler::INSN(Rd, Rn, Rm, kind, shift); \
   } \
  \
@@ -1021,8 +958,7 @@ public:
     Assembler::INSN(Rd, Rn, Rm); \
   } \
  \
-  void INSN(Register Rd, Register Rn, Register Rm, \
-           ext::operation option, int amount = 0) { \
+  void INSN(Register Rd, Register Rn, Register Rm, ext::operation option, int amount = 0) { \
     Assembler::INSN(Rd, Rn, Rm, option, amount); \
   }
 
@@ -1034,8 +970,7 @@ public:
     wrap_adds_subs_imm_insn(Rd, Rn, imm, &Assembler::INSN, &Assembler::INSN); \
   } \
  \
-  void INSN(Register Rd, Register Rn, Register Rm, \
-             enum shift_kind kind, unsigned shift = 0) { \
+  void INSN(Register Rd, Register Rn, Register Rm, enum shift_kind kind, unsigned shift = 0) { \
     Assembler::INSN(Rd, Rn, Rm, kind, shift); \
   } \
  \
@@ -1043,8 +978,7 @@ public:
     Assembler::INSN(Rd, Rn, Rm); \
   } \
  \
-  void INSN(Register Rd, Register Rn, Register Rm, \
-           ext::operation option, int amount = 0) { \
+  void INSN(Register Rd, Register Rn, Register Rm, ext::operation option, int amount = 0) { \
     Assembler::INSN(Rd, Rn, Rm, option, amount); \
   }
 
@@ -1130,9 +1064,7 @@ public:
 
   // CRC32 code for java.util.zip.CRC32::updateBytes() instrinsic.
   void update_byte_crc32(Register crc, Register val, Register table);
-  void update_word_crc32(Register crc, Register v, Register tmp,
-        Register table0, Register table1, Register table2, Register table3,
-        bool upper = false);
+  void update_word_crc32(Register crc, Register v, Register tmp, Register table0, Register table1, Register table2, Register table3, bool upper = false);
 
   void string_compare(Register str1, Register str2,
                       Register cnt1, Register cnt2, Register result,
@@ -1141,11 +1073,8 @@ public:
 
   void has_negatives(Register ary1, Register len, Register result);
 
-  void arrays_equals(Register a1, Register a2, Register result, Register cnt1,
-                     Register tmp1, Register tmp2, Register tmp3, int elem_size);
-
-  void string_equals(Register a1, Register a2, Register result, Register cnt1,
-                     int elem_size);
+  void arrays_equals(Register a1, Register a2, Register result, Register cnt1, Register tmp1, Register tmp2, Register tmp3, int elem_size);
+  void string_equals(Register a1, Register a2, Register result, Register cnt1, int elem_size);
 
   void fill_words(Register base, Register cnt, Register value);
   void zero_words(Register base, u_int64_t cnt);
@@ -1181,8 +1110,7 @@ public:
                 FloatRegister tmpC1, FloatRegister tmpC2, FloatRegister tmpC3,
                 FloatRegister tmpC4, Register tmp1, Register tmp2,
                 Register tmp3, Register tmp4, Register tmp5);
-  void generate_dsin_dcos(bool isCos, address npio2_hw, address two_over_pi,
-      address pio2, address dsin_coef, address dcos_coef);
+  void generate_dsin_dcos(bool isCos, address npio2_hw, address two_over_pi, address pio2, address dsin_coef, address dcos_coef);
  private:
   // begin trigonometric functions support block
   void generate__ieee754_rem_pio2(address npio2_hw, address two_over_pi, address pio2);
@@ -1190,8 +1118,7 @@ public:
   void generate_kernel_sin(FloatRegister x, bool iyIsOne, address dsin_coef);
   void generate_kernel_cos(FloatRegister x, address dcos_coef);
   // end trigonometric functions support block
-  void add2_with_carry(Register final_dest_hi, Register dest_hi, Register dest_lo,
-                       Register src1, Register src2);
+  void add2_with_carry(Register final_dest_hi, Register dest_hi, Register dest_lo, Register src1, Register src2);
   void add2_with_carry(Register dest_hi, Register dest_lo, Register src1, Register src2) {
     add2_with_carry(dest_hi, dest_hi, dest_lo, src1, src2);
   }
@@ -1205,12 +1132,8 @@ public:
                                Register yz_idx1, Register yz_idx2,
                                Register tmp, Register tmp3, Register tmp4,
                                Register tmp7, Register product_hi);
-  void kernel_crc32_using_crc32(Register crc, Register buf,
-        Register len, Register tmp0, Register tmp1, Register tmp2,
-        Register tmp3);
-  void kernel_crc32c_using_crc32c(Register crc, Register buf,
-        Register len, Register tmp0, Register tmp1, Register tmp2,
-        Register tmp3);
+  void kernel_crc32_using_crc32(Register crc, Register buf, Register len, Register tmp0, Register tmp1, Register tmp2, Register tmp3);
+  void kernel_crc32c_using_crc32c(Register crc, Register buf, Register len, Register tmp0, Register tmp1, Register tmp2, Register tmp3);
 public:
   void multiply_to_len(Register x, Register xlen, Register y, Register ylen, Register z,
                        Register zlen, Register tmp1, Register tmp2, Register tmp3,

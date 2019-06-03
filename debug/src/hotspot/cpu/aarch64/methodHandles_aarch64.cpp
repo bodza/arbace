@@ -54,9 +54,7 @@ void MethodHandles::jump_to_lambda_form(MacroAssembler* _masm, Register recv, Re
   if (VerifyMethodHandles && !for_compiler_entry) {
     // make sure recv is already on stack
     __ ldr(temp2, Address(method_temp, Method::const_offset()));
-    __ load_sized_value(temp2,
-                        Address(temp2, ConstMethod::size_of_parameters_offset()),
-                        sizeof(u2), /*is_signed*/ false);
+    __ load_sized_value(temp2, Address(temp2, ConstMethod::size_of_parameters_offset()), sizeof(u2), /*is_signed*/ false);
     Label L;
     __ ldr(rscratch1, __ argument_address(temp2, -1));
     __ cmpoop(recv, rscratch1);
@@ -95,7 +93,6 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   address entry_point = __ pc();
 
   if (VerifyMethodHandles) {
-
     Label L;
     BLOCK_COMMENT("verify_intrinsic_id {");
     __ ldrh(rscratch1, Address(rmethod, Method::intrinsic_id_offset_in_bytes()));
@@ -115,9 +112,7 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   int ref_kind = signature_polymorphic_intrinsic_ref_kind(iid);
   if (ref_kind == 0 || MethodHandles::ref_kind_has_receiver(ref_kind)) {
     __ ldr(argp, Address(rmethod, Method::const_offset()));
-    __ load_sized_value(argp,
-                        Address(argp, ConstMethod::size_of_parameters_offset()),
-                        sizeof(u2), /*is_signed*/ false);
+    __ load_sized_value(argp, Address(argp, ConstMethod::size_of_parameters_offset()), sizeof(u2), /*is_signed*/ false);
     r3_first_arg_addr = __ argument_address(argp, -1);
   }
 
@@ -130,7 +125,6 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   trace_method_handle_interpreter_entry(_masm, iid);
   if (iid == vmIntrinsics::_invokeBasic) {
     generate_method_handle_dispatch(_masm, iid, mh, noreg, not_for_compiler_entry);
-
   } else {
     // Adjust argument list by popping the trailing MemberName argument.
     Register recv = noreg;
@@ -155,7 +149,6 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm, vmInt
   if (iid == vmIntrinsics::_invokeBasic) {
     // indirect through MH.form.vmentry.vmtarget
     jump_to_lambda_form(_masm, receiver_reg, rmethod, temp1, for_compiler_entry);
-
   } else {
     // The method is a member invoker used by direct method handles.
     if (VerifyMethodHandles) {

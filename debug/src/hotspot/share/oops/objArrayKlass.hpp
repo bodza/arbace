@@ -66,9 +66,7 @@ class ObjArrayKlass : public ArrayKlass {
  private:
   // Either oop or narrowOop depending on UseCompressedOops.
   // must be called from within ObjArrayKlass.cpp
-  void do_copy(arrayOop s, size_t src_offset,
-               arrayOop d, size_t dst_offset,
-               int length, TRAPS);
+  void do_copy(arrayOop s, size_t src_offset, arrayOop d, size_t dst_offset, int length, TRAPS);
  protected:
   // Returns the ObjArrayKlass for n'th dimension.
   virtual Klass* array_klass_impl(bool or_null, int n, TRAPS);
@@ -77,7 +75,6 @@ class ObjArrayKlass : public ArrayKlass {
   virtual Klass* array_klass_impl(bool or_null, TRAPS);
 
  public:
-
   static ObjArrayKlass* cast(Klass* k) {
     return const_cast<ObjArrayKlass*>(cast(const_cast<const Klass*>(k)));
   }

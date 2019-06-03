@@ -70,9 +70,7 @@ private:
   unsigned int _full_collections_completed;
 
   // Collects the given generation.
-  void collect_generation(Generation* gen, bool full, size_t size, bool is_tlab,
-                          bool run_verification, bool clear_soft_refs,
-                          bool restore_marks_for_biased_locking);
+  void collect_generation(Generation* gen, bool full, size_t size, bool is_tlab, bool run_verification, bool clear_soft_refs, bool restore_marks_for_biased_locking);
 
   // Reserve aligned space for the heap as needed by the contained generations.
   char* allocate(size_t alignment, ReservedSpace* heap_rs);
@@ -81,7 +79,6 @@ private:
   void ref_processing_init();
 
 protected:
-
   // The set of potentially parallel tasks in root scanning.
   enum GCH_strong_roots_tasks {
     GCH_PS_Universe_oops_do,
@@ -106,17 +103,11 @@ protected:
   GCMemoryManager* _old_manager;
 
   // Helper functions for allocation
-  HeapWord* attempt_allocation(size_t size,
-                               bool   is_tlab,
-                               bool   first_only);
+  HeapWord* attempt_allocation(size_t size, bool   is_tlab, bool   first_only);
 
   // Helper function for two callbacks below.
   // Considers collection of the first max_level+1 generations.
-  void do_collection(bool           full,
-                     bool           clear_all_soft_refs,
-                     size_t         size,
-                     bool           is_tlab,
-                     GenerationType max_generation);
+  void do_collection(bool           full, bool           clear_all_soft_refs, size_t         size, bool           is_tlab, GenerationType max_generation);
 
   // Callback from VM_GenCollectForAllocation operation.
   // This function does everything necessary/possible to satisfy an
@@ -133,20 +124,14 @@ protected:
   // we absolutely __must__ clear soft refs?
   bool must_clear_all_soft_refs();
 
-  GenCollectedHeap(GenCollectorPolicy *policy,
-                   Generation::Name young,
-                   Generation::Name old,
-                   const char* policy_counters_name);
+  GenCollectedHeap(GenCollectorPolicy *policy, Generation::Name young, Generation::Name old, const char* policy_counters_name);
 
 public:
-
   // Returns JNI_OK on success
   virtual jint initialize();
   virtual CardTableRS* create_rem_set(const MemRegion& reserved_region);
 
-  void initialize_size_policy(size_t init_eden_size,
-                              size_t init_promo_size,
-                              size_t init_survivor_size);
+  void initialize_size_policy(size_t init_eden_size, size_t init_promo_size, size_t init_survivor_size);
 
   // Does operations required after initialization has been done.
   void post_initialize();
@@ -361,16 +346,9 @@ public:
   };
 
  protected:
-  void process_roots(StrongRootsScope* scope,
-                     ScanningOption so,
-                     OopClosure* strong_roots,
-                     CLDClosure* strong_cld_closure,
-                     CLDClosure* weak_cld_closure,
-                     CodeBlobToOopClosure* code_roots);
+  void process_roots(StrongRootsScope* scope, ScanningOption so, OopClosure* strong_roots, CLDClosure* strong_cld_closure, CLDClosure* weak_cld_closure, CodeBlobToOopClosure* code_roots);
 
-  void process_string_table_roots(StrongRootsScope* scope,
-                                  OopClosure* root_closure,
-                                  OopStorage::ParState<false, false>* par_state_string);
+  void process_string_table_roots(StrongRootsScope* scope, OopClosure* root_closure, OopStorage::ParState<false, false>* par_state_string);
 
   virtual void gc_prologue(bool full);
   virtual void gc_epilogue(bool full);
@@ -430,9 +408,7 @@ public:
   // gens in ascending order; return the new location of obj if successful.
   // Otherwise, try expand-and-allocate for obj in both the young and old
   // generation; return the new location of obj if successful.  Otherwise, return NULL.
-  oop handle_failed_promotion(Generation* old_gen,
-                              oop obj,
-                              size_t obj_size);
+  oop handle_failed_promotion(Generation* old_gen, oop obj, size_t obj_size);
 
 private:
   // Return true if an allocation should be attempted in the older generation
@@ -442,13 +418,10 @@ private:
   // Try to allocate space by expanding the heap.
   HeapWord* expand_heap_and_allocate(size_t size, bool is_tlab);
 
-  HeapWord* mem_allocate_work(size_t size,
-                              bool is_tlab,
-                              bool* gc_overhead_limit_was_exceeded);
+  HeapWord* mem_allocate_work(size_t size, bool is_tlab, bool* gc_overhead_limit_was_exceeded);
 
   // Override
-  void check_for_non_bad_heap_word_value(HeapWord* addr,
-    size_t size) { };
+  void check_for_non_bad_heap_word_value(HeapWord* addr, size_t size) { };
 
   // Perform a full collection of the generations up to and including max_generation.
   // This is the low level interface used by the public versions of

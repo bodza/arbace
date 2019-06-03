@@ -7,25 +7,17 @@
 
 class BarrierSetAssembler: public CHeapObj<mtGC> {
 private:
-  void incr_allocated_bytes(MacroAssembler* masm,
-                            Register var_size_in_bytes, int con_size_in_bytes,
-                            Register t1 = noreg);
+  void incr_allocated_bytes(MacroAssembler* masm, Register var_size_in_bytes, int con_size_in_bytes, Register t1 = noreg);
 
 public:
-  virtual void arraycopy_prologue(MacroAssembler* masm, DecoratorSet decorators, bool is_oop,
-                                  Register addr, Register count, RegSet saved_regs) { }
-  virtual void arraycopy_epilogue(MacroAssembler* masm, DecoratorSet decorators, bool is_oop,
-                                  Register start, Register end, Register tmp, RegSet saved_regs) { }
-  virtual void load_at(MacroAssembler* masm, DecoratorSet decorators, BasicType type,
-                       Register dst, Address src, Register tmp1, Register tmp_thread);
-  virtual void store_at(MacroAssembler* masm, DecoratorSet decorators, BasicType type,
-                        Address dst, Register val, Register tmp1, Register tmp2);
+  virtual void arraycopy_prologue(MacroAssembler* masm, DecoratorSet decorators, bool is_oop, Register addr, Register count, RegSet saved_regs) { }
+  virtual void arraycopy_epilogue(MacroAssembler* masm, DecoratorSet decorators, bool is_oop, Register start, Register end, Register tmp, RegSet saved_regs) { }
+  virtual void load_at(MacroAssembler* masm, DecoratorSet decorators, BasicType type, Register dst, Address src, Register tmp1, Register tmp_thread);
+  virtual void store_at(MacroAssembler* masm, DecoratorSet decorators, BasicType type, Address dst, Register val, Register tmp1, Register tmp2);
 
-  virtual void obj_equals(MacroAssembler* masm,
-                          Register obj1, Register obj2);
+  virtual void obj_equals(MacroAssembler* masm, Register obj1, Register obj2);
 
-  virtual void try_resolve_jobject_in_native(MacroAssembler* masm, Register jni_env,
-                                             Register obj, Register tmp, Label& slowpath);
+  virtual void try_resolve_jobject_in_native(MacroAssembler* masm, Register jni_env, Register obj, Register tmp, Label& slowpath);
 
   virtual void tlab_allocate(MacroAssembler* masm,
     Register obj,                      // result: pointer to object after successful allocation

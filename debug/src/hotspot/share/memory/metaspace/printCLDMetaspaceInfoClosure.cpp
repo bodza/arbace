@@ -10,7 +10,6 @@
 #include "utilities/ostream.hpp"
 
 namespace metaspace {
-
 PrintCLDMetaspaceInfoClosure::PrintCLDMetaspaceInfoClosure(outputStream* out, size_t scale, bool do_print, bool do_print_classes, bool break_down_by_chunktype)
 : _out(out), _scale(scale), _do_print(do_print), _do_print_classes(do_print_classes)
 , _break_down_by_chunktype(break_down_by_chunktype)
@@ -24,7 +23,6 @@ static const char* classes_plural(uintx num) {
 }
 
 void PrintCLDMetaspaceInfoClosure::do_cld(ClassLoaderData* cld) {
-
   if (cld->is_unloading()) {
     _num_loaders_unloading ++;
     return;
@@ -48,7 +46,6 @@ void PrintCLDMetaspaceInfoClosure::do_cld(ClassLoaderData* cld) {
 
   // Optionally, print.
   if (_do_print) {
-
     _out->print(UINTX_FORMAT_W(4) ": ", _num_loaders);
 
     // Print "CLD for [<loader name>,] instance of <loader class name>"

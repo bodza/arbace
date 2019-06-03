@@ -5,7 +5,6 @@
 friend class ArrayCopyStub;
 
  private:
-
   int array_element_size(BasicType type) const;
 
   void arith_fpu_implementation(LIR_Code code, int left_index, int right_index, int dest_index, bool pop_fpu_stack);
@@ -25,9 +24,7 @@ friend class ArrayCopyStub;
   Address as_Address(LIR_Address* addr, Register tmp);
 
   // Record the type of the receiver in ReceiverTypeData
-  void type_profile_helper(Register mdo,
-                           ciMethodData *md, ciProfileData *data,
-                           Register recv, Label* update_done);
+  void type_profile_helper(Register mdo, ciMethodData *md, ciProfileData *data, Register recv, Label* update_done);
   void add_debug_info_for_branch(address adr, CodeEmitInfo* info);
 
   void casw(Register addr, Register newval, Register cmpval);
@@ -53,7 +50,6 @@ friend class ArrayCopyStub;
   void arithmetic_idiv(LIR_Op3* op, bool is_irem);
 
 public:
-
   void store_parameter(Register r, int offset_from_esp_in_words);
   void store_parameter(jint c,     int offset_from_esp_in_words);
   void store_parameter(jobject c,  int offset_from_esp_in_words);

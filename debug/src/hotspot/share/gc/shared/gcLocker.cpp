@@ -3,7 +3,6 @@
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/gcLocker.hpp"
 #include "memory/resourceArea.hpp"
-#include "logging/log.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/safepoint.hpp"
 #include "runtime/thread.inline.hpp"
@@ -13,13 +12,7 @@ volatile jint GCLocker::_jni_lock_count = 0;
 volatile bool GCLocker::_needs_gc       = false;
 volatile bool GCLocker::_doing_gc       = false;
 
-void GCLocker::log_debug_jni(const char* msg) {
-  Log(gc, jni) log;
-  if (log.is_debug()) {
-    ResourceMark rm; // JavaThread::name() allocates to convert to UTF8
-    log.debug("%s Thread \"%s\" %d locked.", msg, Thread::current()->name(), _jni_lock_count);
-  }
-}
+void GCLocker::log_debug_jni(const char* msg) { }
 
 bool GCLocker::is_at_safepoint() {
   return SafepointSynchronize::is_at_safepoint();

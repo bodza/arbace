@@ -28,7 +28,6 @@ class FieldType: public AllStatic {
  private:
   static bool is_valid_array_signature(Symbol* signature);
  public:
-
   // Return basic type
   static BasicType basic_type(Symbol* signature);
 

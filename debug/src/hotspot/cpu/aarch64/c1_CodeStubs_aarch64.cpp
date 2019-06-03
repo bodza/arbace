@@ -220,7 +220,6 @@ void ImplicitNullCheckStub::emit_code(LIR_Assembler* ce) {
 }
 
 void SimpleExceptionStub::emit_code(LIR_Assembler* ce) {
-
   __ bind(_entry);
   // pass the object in a scratch register because all other registers
   // must be preserved

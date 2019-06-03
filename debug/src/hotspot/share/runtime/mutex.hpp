@@ -55,7 +55,6 @@ class ParkEvent;
 static const int MONITOR_NAME_LEN = 64;
 
 class Monitor : public CHeapObj<mtInternal> {
-
  public:
   // A special lock: Is a lock where you are guaranteed not to block while you are
   // holding it, i.e., no vm operation can happen, taking other (blocking) locks, etc.

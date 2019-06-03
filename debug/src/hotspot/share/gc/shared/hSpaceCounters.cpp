@@ -6,7 +6,6 @@
 #include "runtime/perfData.hpp"
 
 HSpaceCounters::HSpaceCounters(const char* name_space, const char* name, int ordinal, size_t max_size, size_t initial_capacity) {
-
   if (UsePerfData) {
     EXCEPTION_MARK;
     ResourceMark rm;

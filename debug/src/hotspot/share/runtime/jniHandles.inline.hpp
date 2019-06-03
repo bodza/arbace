@@ -8,8 +8,6 @@
 #include "utilities/globalDefinitions.hpp"
 
 inline bool JNIHandles::is_jweak(jobject handle) {
-  STATIC_ASSERT(weak_tag_size == 1);
-  STATIC_ASSERT(weak_tag_value == 1);
   return (reinterpret_cast<uintptr_t>(handle) & weak_tag_mask) != 0;
 }
 

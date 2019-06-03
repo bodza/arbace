@@ -90,25 +90,16 @@ protected:
 
 public:
   // Has this klass been initialized?
-  bool                   is_initialized() {
-    update_if_shared(InstanceKlass::fully_initialized);
-    return _init_state == InstanceKlass::fully_initialized;
-  }
+  bool is_initialized()       { update_if_shared(InstanceKlass::fully_initialized); return _init_state == InstanceKlass::fully_initialized; }
   // Is this klass being initialized?
-  bool                   is_being_initialized() {
-    update_if_shared(InstanceKlass::being_initialized);
-    return _init_state == InstanceKlass::being_initialized;
-  }
+  bool is_being_initialized() { update_if_shared(InstanceKlass::being_initialized); return _init_state == InstanceKlass::being_initialized; }
   // Has this klass been linked?
-  bool                   is_linked() {
-    update_if_shared(InstanceKlass::linked);
-    return _init_state >= InstanceKlass::linked;
-  }
+  bool is_linked()            { update_if_shared(InstanceKlass::linked); return _init_state >= InstanceKlass::linked; }
 
   // General klass information.
-  ciFlags                flags()          { return _flags; }
-  bool                   has_finalizer()  { return _has_finalizer; }
-  bool                   has_subklass()   {
+  ciFlags flags()      { return _flags; }
+  bool has_finalizer() { return _has_finalizer; }
+  bool has_subklass()  {
     if (_is_shared && !_has_subklass) {
       if (flags().is_final()) {
         return false;
@@ -118,12 +109,12 @@ public:
     }
     return _has_subklass;
   }
-  jint                   size_helper()  { return (Klass::layout_helper_size_in_bytes(layout_helper()) >> LogHeapWordSize); }
-  jint                   nonstatic_field_size()  { return _nonstatic_field_size; }
-  jint                   has_nonstatic_fields()  { return _has_nonstatic_fields; }
-  jint                   nonstatic_oop_map_size()  { return _nonstatic_oop_map_size; }
-  ciInstanceKlass*       super();
-  jint                   nof_implementors() {
+  jint             size_helper()            { return (Klass::layout_helper_size_in_bytes(layout_helper()) >> LogHeapWordSize); }
+  jint             nonstatic_field_size()   { return _nonstatic_field_size; }
+  jint             has_nonstatic_fields()   { return _has_nonstatic_fields; }
+  jint             nonstatic_oop_map_size() { return _nonstatic_oop_map_size; }
+  ciInstanceKlass* super();
+  jint             nof_implementors() {
     ciInstanceKlass* impl;
     impl = implementor();
     if (impl == NULL) {

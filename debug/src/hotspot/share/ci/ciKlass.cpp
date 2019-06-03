@@ -40,7 +40,6 @@ ciKlass::ciKlass(ciSymbol* name, BasicType bt) : ciType(bt) {
 // ------------------------------------------------------------------
 // ciKlass::is_subtype_of
 bool ciKlass::is_subtype_of(ciKlass* that) {
-
   // Check to see if the klasses are identical.
   if (this == that) {
     return true;
@@ -57,14 +56,12 @@ bool ciKlass::is_subtype_of(ciKlass* that) {
 // ------------------------------------------------------------------
 // ciKlass::is_subclass_of
 bool ciKlass::is_subclass_of(ciKlass* that) {
-
   GUARDED_VM_ENTRY(return get_Klass()->is_subclass_of(that->get_Klass());)
 }
 
 // ------------------------------------------------------------------
 // ciKlass::super_depth
 juint ciKlass::super_depth() {
-
   VM_ENTRY_MARK;
   Klass* this_klass = get_Klass();
   return this_klass->super_depth();
@@ -73,7 +70,6 @@ juint ciKlass::super_depth() {
 // ------------------------------------------------------------------
 // ciKlass::super_check_offset
 juint ciKlass::super_check_offset() {
-
   VM_ENTRY_MARK;
   Klass* this_klass = get_Klass();
   return this_klass->super_check_offset();
@@ -82,7 +78,6 @@ juint ciKlass::super_check_offset() {
 // ------------------------------------------------------------------
 // ciKlass::super_of_depth
 ciKlass* ciKlass::super_of_depth(juint i) {
-
   VM_ENTRY_MARK;
   Klass* this_klass = get_Klass();
   Klass* super = this_klass->primary_super_of_depth(i);
@@ -92,7 +87,6 @@ ciKlass* ciKlass::super_of_depth(juint i) {
 // ------------------------------------------------------------------
 // ciKlass::can_be_primary_super
 bool ciKlass::can_be_primary_super() {
-
   VM_ENTRY_MARK;
   Klass* this_klass = get_Klass();
   return this_klass->can_be_primary_super();

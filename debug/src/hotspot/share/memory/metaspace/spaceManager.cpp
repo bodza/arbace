@@ -1,7 +1,5 @@
 #include "precompiled.hpp"
 
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/metaspace/chunkManager.hpp"
 #include "memory/metaspace/metachunk.hpp"
 #include "memory/metaspace/metaDebug.hpp"
@@ -15,7 +13,6 @@
 #include "utilities/globalDefinitions.hpp"
 
 namespace metaspace {
-
 #define assert_counter(expected_value, real_value, msg)
 
 // SpaceManager methods
@@ -68,7 +65,6 @@ size_t SpaceManager::get_initial_chunk_size(Metaspace::MetaspaceType type) const
 }
 
 void SpaceManager::locked_print_chunks_in_use_on(outputStream* st) const {
-
   for (ChunkIndex i = ZeroIndex; i < NumberOfInUseLists; i = next_chunk_index(i)) {
     st->print("SpaceManager: " UINTX_FORMAT " %s chunks.",
         num_chunks_by_type(i), chunk_size_name(i));
@@ -78,7 +74,6 @@ void SpaceManager::locked_print_chunks_in_use_on(outputStream* st) const {
 }
 
 size_t SpaceManager::calc_chunk_size(size_t word_size) {
-
   // Decide between a small chunk and a medium chunk.  Up to
   // _small_chunk_limit small chunks can be allocated.
   // After that a medium chunk is preferred.
@@ -106,20 +101,10 @@ size_t SpaceManager::calc_chunk_size(size_t word_size) {
     chunk_word_size = medium_chunk_size();
   }
 
-  // Might still need a humongous chunk.  Enforce
-  // humongous allocations sizes to be aligned up to
-  // the smallest chunk size.
+  // Might still need a humongous chunk.  Enforce humongous allocations
+  // sizes to be aligned up to the smallest chunk size.
   size_t if_humongous_sized_chunk = align_up(word_size + Metachunk::overhead(), smallest_chunk_size());
-  chunk_word_size = MAX2((size_t) chunk_word_size, if_humongous_sized_chunk);
-
-  Log(gc, metaspace, alloc) log;
-  if (log.is_trace() && SpaceManager::is_humongous(word_size)) {
-    log.trace("Metadata humongous allocation:");
-    log.trace("  word_size " PTR_FORMAT, word_size);
-    log.trace("  chunk_word_size " PTR_FORMAT, chunk_word_size);
-    log.trace("    chunk overhead " PTR_FORMAT, Metachunk::overhead());
-  }
-  return chunk_word_size;
+  return MAX2((size_t) chunk_word_size, if_humongous_sized_chunk);
 }
 
 void SpaceManager::track_metaspace_memory_usage() {
@@ -208,23 +193,11 @@ void SpaceManager::account_for_spacemanager_death() {
 }
 
 SpaceManager::~SpaceManager() {
-
   MutexLockerEx fcl(MetaspaceExpand_lock, Mutex::_no_safepoint_check_flag);
 
   chunk_manager()->slow_locked_verify();
 
   account_for_spacemanager_death();
-
-  Log(gc, metaspace, freelist) log;
-  if (log.is_trace()) {
-    log.trace("~SpaceManager(): " PTR_FORMAT, p2i(this));
-    ResourceMark rm;
-    LogStream ls(log.trace());
-    locked_print_chunks_in_use_on(&ls);
-    if (block_freelists() != NULL) {
-      block_freelists()->print_on(&ls);
-    }
-  }
 
   // Add all the chunks in use by this space manager
   // to the global list of free chunks.
@@ -271,15 +244,6 @@ void SpaceManager::add_chunk(Metachunk* new_chunk, bool make_current) {
 
   // Adjust counters.
   account_for_new_chunk(new_chunk);
-
-  Log(gc, metaspace, freelist) log;
-  if (log.is_trace()) {
-    log.trace("SpaceManager::added chunk: ");
-    ResourceMark rm;
-    LogStream ls(log.trace());
-    new_chunk->print_on(&ls);
-    chunk_manager()->locked_print_free_chunks(&ls);
-  }
 }
 
 void SpaceManager::retire_current_chunk() {
@@ -298,13 +262,7 @@ Metachunk* SpaceManager::get_new_chunk(size_t chunk_word_size) {
   Metachunk* next = chunk_manager()->chunk_freelist_allocate(chunk_word_size);
 
   if (next == NULL) {
-    next = vs_list()->get_new_chunk(chunk_word_size,
-                                    medium_chunk_bunch());
-  }
-
-  Log(gc, metaspace, alloc) log;
-  if (log.is_trace() && next != NULL && SpaceManager::is_humongous(next->word_size())) {
-    log.trace("  new humongous chunk word size " PTR_FORMAT, next->word_size());
+    next = vs_list()->get_new_chunk(chunk_word_size, medium_chunk_bunch());
   }
 
   return next;

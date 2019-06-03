@@ -135,7 +135,6 @@ class frame {
   // A low-level interface for vframes:
 
  public:
-
   intptr_t* addr_at(int index) const             { return &fp()[index]; }
   intptr_t  at(int index) const                  { return *addr_at(index); }
 
@@ -354,7 +353,7 @@ class frame {
 //
 // Use:
 //
-//   for(StackFrameStream fst(thread); !fst.is_done(); fst.next()) {
+//   for (StackFrameStream fst(thread); !fst.is_done(); fst.next()) {
 //     ...
 //   }
 //

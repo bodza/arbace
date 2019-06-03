@@ -119,7 +119,6 @@ void FpuStackAllocator::allocate_block(BlockBegin* block) {
         processed_merge = true;
         bool required_merge = merge_fpu_stack_with_successors(block);
       }
-
     } else if (op1 != NULL) {
       handle_op1(op1);
     } else if (op2 != NULL) {
@@ -220,7 +219,6 @@ int FpuStackAllocator::tos_offset(LIR_Opr opr) {
 }
 
 LIR_Opr FpuStackAllocator::to_fpu_stack(LIR_Opr opr) {
-
   int stack_offset = tos_offset(opr);
   if (opr->is_single_fpu()) {
     return LIR_OprFact::single_fpu(stack_offset)->make_fpu_stack_offset();
@@ -230,7 +228,6 @@ LIR_Opr FpuStackAllocator::to_fpu_stack(LIR_Opr opr) {
 }
 
 LIR_Opr FpuStackAllocator::to_fpu_stack_top(LIR_Opr opr, bool dont_check_offset) {
-
   int stack_offset = 0;
   if (opr->is_single_fpu()) {
     return LIR_OprFact::single_fpu(stack_offset)->make_fpu_stack_offset();
@@ -296,7 +293,6 @@ void FpuStackAllocator::do_push(LIR_Opr opr) {
 }
 
 void FpuStackAllocator::pop_if_last_use(LIR_Op* op, LIR_Opr opr) {
-
   if (opr->is_last_use()) {
     op->set_fpu_pop_count(1);
     sim()->pop();
@@ -304,7 +300,6 @@ void FpuStackAllocator::pop_if_last_use(LIR_Op* op, LIR_Opr opr) {
 }
 
 void FpuStackAllocator::pop_always(LIR_Op* op, LIR_Opr opr) {
-
   op->set_fpu_pop_count(1);
   sim()->pop();
 }
@@ -312,7 +307,6 @@ void FpuStackAllocator::pop_always(LIR_Op* op, LIR_Opr opr) {
 void FpuStackAllocator::clear_fpu_stack(LIR_Opr preserve) {
   int result_stack_size = (preserve->is_fpu_register() && !preserve->is_xmm_register() ? 1 : 0);
   while (sim()->stack_size() > result_stack_size) {
-
     if (result_stack_size == 0 || sim()->get_slot(0) != fpu_num(preserve)) {
       insert_free(0);
     } else {
@@ -332,7 +326,6 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
   // Note: this switch is processed for all LIR_Op1, regardless if they have FPU-arguments,
   //       so checks for is_float_kind() are necessary inside the cases
   switch (op1->code()) {
-
     case lir_return: {
       // FPU-Stack must only contain the (optional) fpu return value.
       // All remaining dead values are popped from the stack
@@ -354,7 +347,6 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
           insert_exchange(in);
           new_in = to_fpu_stack_top(in);
           pop_always(op1, in);
-
         } else if (res->is_fpu_register() && !res->is_xmm_register()) {
           // move from fpu-register to fpu-register:
           // * input and result register equal:
@@ -379,7 +371,6 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
           }
           new_in = to_fpu_stack(res);
           new_res = new_in;
-
         } else {
           // move from fpu-register to memory
           // input operand must be on top of stack
@@ -392,7 +383,6 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
           new_in = to_fpu_stack_top(in);
           pop_if_last_use(op1, in);
         }
-
       } else if (res->is_fpu_register() && !res->is_xmm_register()) {
         // move from memory/constant to fpu register
         // result is pushed on the stack
@@ -410,7 +400,6 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
 
     case lir_neg: {
       if (in->is_fpu_register() && !in->is_xmm_register()) {
-
         insert_free_if_dead(res, in);
         insert_exchange(in);
         new_in = to_fpu_stack_top(in);
@@ -492,7 +481,6 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
     }
 
     case lir_roundfp: {
-
       insert_exchange(in);
       new_in = to_fpu_stack_top(in);
       pop_if_last_use(op1, in);
@@ -524,7 +512,6 @@ void FpuStackAllocator::handle_op2(LIR_Op2* op2) {
     case lir_cmp_fd2i:
     case lir_ucmp_fd2i:
     case lir_assert: {
-
       // the left-hand side must be on top of stack.
       // the right-hand side is never popped, even if is_last_use is set
       insert_exchange(left);
@@ -543,7 +530,6 @@ void FpuStackAllocator::handle_op2(LIR_Op2* op2) {
     case lir_sub:
     case lir_mul:
     case lir_div: {
-
       // either the left-hand or the right-hand side must be on top of stack
       // (if right is not a register, left must be on top)
       if (!right->is_fpu_register()) {
@@ -579,7 +565,6 @@ void FpuStackAllocator::handle_op2(LIR_Op2* op2) {
     }
 
     case lir_rem: {
-
       // Must bring both operands to top of stack with following operand ordering:
       // * fpu stack before rem: ... right left
       // * fpu stack after rem:  ... left
@@ -649,7 +634,6 @@ void FpuStackAllocator::merge_insert_add(LIR_List* instrs, FpuStackSim* cur_sim,
 }
 
 void FpuStackAllocator::merge_insert_xchg(LIR_List* instrs, FpuStackSim* cur_sim, int slot) {
-
   LIR_Op1* fxch = new LIR_Op1(lir_fxch, LIR_OprFact::intConst(slot));
   instrs->instructions_list()->push(fxch);
   cur_sim->swap(slot);
@@ -689,7 +673,6 @@ void FpuStackAllocator::merge_fpu_stack(LIR_List* instrs, FpuStackSim* cur_sim, 
 
     int sux_slot = sux_sim->stack_size() - 1;
     while (size_diff < 0) {
-
       int reg = sux_sim->get_slot(sux_slot);
       if (!cur_sim->contains(reg)) {
         merge_insert_add(instrs, cur_sim, reg);
@@ -718,9 +701,7 @@ void FpuStackAllocator::merge_fpu_stack(LIR_List* instrs, FpuStackSim* cur_sim, 
       if (sux_sim->contains(reg)) {
         int sux_slot = sux_sim->offset_from_tos(reg);
         merge_insert_xchg(instrs, cur_sim, sux_slot + size_diff);
-
       } else if (!merge_rename(cur_sim, sux_sim, finished_slot, 0)) {
-
         merge_insert_pop(instrs, cur_sim);
         size_diff--;
       }
@@ -776,7 +757,6 @@ bool FpuStackAllocator::merge_fpu_stack_with_successors(BlockBegin* block) {
       sux_sim->read_state(state);
 
       merge_fpu_stack(instrs, cur_sim, sux_sim);
-
     } else {
       // propagate current FPU stack state to successor without state
       // clean up stack first so that there are no dead values on the stack
@@ -800,7 +780,6 @@ bool FpuStackAllocator::merge_fpu_stack_with_successors(BlockBegin* block) {
       set_pos(instrs->instructions_list()->length() + pos());
       changed = true;
     }
-
   } else {
     // Propagate unmodified Stack to successors where a stack merge is not necessary
     intArray* state = sim()->write_state();

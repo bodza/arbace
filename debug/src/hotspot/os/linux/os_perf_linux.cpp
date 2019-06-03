@@ -867,7 +867,7 @@ int SystemProcessInterface::SystemProcesses::ProcessIterator::next_process() {
       _valid = false;
       return OS_ERR;
     }
-  } while(!is_valid_entry(_entry));
+  } while (!is_valid_entry(_entry));
 
   _valid = true;
   return OS_OK;
@@ -916,7 +916,6 @@ SystemProcessInterface::SystemProcesses::~SystemProcesses() {
 }
 
 int SystemProcessInterface::SystemProcesses::system_processes(SystemProcess** system_processes, int* no_of_sys_processes) const {
-
   // initialize pointers
   *no_of_sys_processes = 0;
   *system_processes = NULL;

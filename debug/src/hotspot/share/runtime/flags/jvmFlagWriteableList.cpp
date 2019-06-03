@@ -82,7 +82,6 @@ void emit_writeable_double(const char* name, JVMFlagWriteable::WriteableType typ
 GrowableArray<JVMFlagWriteable*>* JVMFlagWriteableList::_controls = NULL;
 
 void JVMFlagWriteableList::init(void) {
-
   _controls = new (ResourceObj::C_HEAP, mtArguments) GrowableArray<JVMFlagWriteable*>(INITIAL_WRITEABLES_SIZE, true);
 
   emit_writeable_no(NULL VM_FLAGS(EMIT_WRITEABLE_DEVELOPER_FLAG,
@@ -137,7 +136,7 @@ void JVMFlagWriteableList::init(void) {
 
 JVMFlagWriteable* JVMFlagWriteableList::find(const char* name) {
   JVMFlagWriteable* found = NULL;
-  for (int i=0; i<length(); i++) {
+  for (int i = 0; i<length(); i++) {
     JVMFlagWriteable* writeable = at(i);
     if (strcmp(writeable->name(), name) == 0) {
       found = writeable;
@@ -148,7 +147,7 @@ JVMFlagWriteable* JVMFlagWriteableList::find(const char* name) {
 }
 
 void JVMFlagWriteableList::mark_startup(void) {
-  for (int i=0; i<length(); i++) {
+  for (int i = 0; i<length(); i++) {
     JVMFlagWriteable* writeable = at(i);
     writeable->mark_startup();
   }

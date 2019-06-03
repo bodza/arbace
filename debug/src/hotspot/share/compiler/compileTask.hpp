@@ -3,7 +3,6 @@
 
 #include "ci/ciMethod.hpp"
 #include "code/nmethod.hpp"
-#include "compiler/compileLog.hpp"
 #include "memory/allocation.hpp"
 #include "utilities/xmlstream.hpp"
 
@@ -161,8 +160,6 @@ public:
 
   void         log_task(xmlStream* log);
   void         log_task_queued();
-  void         log_task_start(CompileLog* log);
-  void         log_task_done(CompileLog* log);
 
   void         set_failure_reason(const char* reason) {
     _failure_reason = reason;

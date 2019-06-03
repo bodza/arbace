@@ -286,7 +286,6 @@ address TemplateInterpreterGenerator::generate_Double_doubleToRawLongBits_entry(
 }
 
 address TemplateInterpreterGenerator::generate_math_entry(AbstractInterpreter::MethodKind kind) {
-
   // rbx,: Method*
   // rcx: scratrch
   // rsi: sender sp

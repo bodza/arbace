@@ -808,52 +808,37 @@ JNI_ENTRY_CHECKED(jmethodID,
 JNI_END
 
 #define WRAPPER_CallMethod(ResultType, Result) \
-JNI_ENTRY_CHECKED(ResultType, \
-  checked_jni_Call##Result##Method(JNIEnv *env, \
-                                   jobject obj, \
-                                   jmethodID methodID, \
-                                   ...)) \
+JNI_ENTRY_CHECKED(ResultType, checked_jni_Call##Result##Method(JNIEnv *env, jobject obj, jmethodID methodID, ...)) \
     functionEnter(thr); \
     va_list args; \
     IN_VM( \
       jniCheck::validate_call_object(thr, obj, methodID); \
     ) \
     va_start(args,methodID); \
-    ResultType result =UNCHECKED()->Call##Result##MethodV(env, obj, methodID, \
-                                                          args); \
+    ResultType result =UNCHECKED()->Call##Result##MethodV(env, obj, methodID, args); \
     va_end(args); \
     thr->set_pending_jni_exception_check("Call"#Result"Method"); \
     functionExit(thr); \
     return result; \
 JNI_END \
 \
-JNI_ENTRY_CHECKED(ResultType, \
-  checked_jni_Call##Result##MethodV(JNIEnv *env, \
-                                    jobject obj, \
-                                    jmethodID methodID, \
-                                    va_list args)) \
+JNI_ENTRY_CHECKED(ResultType, checked_jni_Call##Result##MethodV(JNIEnv *env, jobject obj, jmethodID methodID, va_list args)) \
     functionEnter(thr); \
     IN_VM( \
       jniCheck::validate_call_object(thr, obj, methodID); \
     ) \
-    ResultType result = UNCHECKED()->Call##Result##MethodV(env, obj, methodID, \
-                                                           args); \
+    ResultType result = UNCHECKED()->Call##Result##MethodV(env, obj, methodID, args); \
     thr->set_pending_jni_exception_check("Call"#Result"MethodV"); \
     functionExit(thr); \
     return result; \
 JNI_END \
 \
-JNI_ENTRY_CHECKED(ResultType, \
-  checked_jni_Call##Result##MethodA(JNIEnv *env, \
-                                    jobject obj, \
-                                    jmethodID methodID, \
-                                    const jvalue * args)) \
+JNI_ENTRY_CHECKED(ResultType, checked_jni_Call##Result##MethodA(JNIEnv *env, jobject obj, jmethodID methodID, const jvalue * args)) \
     functionEnter(thr); \
     IN_VM( \
       jniCheck::validate_call_object(thr, obj, methodID); \
     ) \
-    ResultType result = UNCHECKED()->Call##Result##MethodA(env, obj, methodID, \
-                                                           args); \
+    ResultType result = UNCHECKED()->Call##Result##MethodA(env, obj, methodID, args); \
     thr->set_pending_jni_exception_check("Call"#Result"MethodA"); \
     functionExit(thr); \
     return result; \
@@ -906,8 +891,7 @@ JNI_ENTRY_CHECKED(void,
 JNI_END
 
 #define WRAPPER_CallNonvirtualMethod(ResultType, Result) \
-JNI_ENTRY_CHECKED(ResultType, \
-  checked_jni_CallNonvirtual##Result##Method(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, ...)) \
+JNI_ENTRY_CHECKED(ResultType, checked_jni_CallNonvirtual##Result##Method(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, ...)) \
     functionEnter(thr); \
     va_list args; \
     IN_VM( \
@@ -922,8 +906,7 @@ JNI_ENTRY_CHECKED(ResultType, \
     return result; \
 JNI_END \
 \
-JNI_ENTRY_CHECKED(ResultType, \
-  checked_jni_CallNonvirtual##Result##MethodV(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, va_list args)) \
+JNI_ENTRY_CHECKED(ResultType, checked_jni_CallNonvirtual##Result##MethodV(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, va_list args)) \
     functionEnter(thr); \
     IN_VM( \
       jniCheck::validate_call_object(thr, obj, methodID); \
@@ -935,8 +918,7 @@ JNI_ENTRY_CHECKED(ResultType, \
     return result; \
 JNI_END \
 \
-JNI_ENTRY_CHECKED(ResultType, \
-  checked_jni_CallNonvirtual##Result##MethodA(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, const jvalue * args)) \
+JNI_ENTRY_CHECKED(ResultType, checked_jni_CallNonvirtual##Result##MethodA(JNIEnv *env, jobject obj, jclass clazz, jmethodID methodID, const jvalue * args)) \
     functionEnter(thr); \
     IN_VM( \
       jniCheck::validate_call_object(thr, obj, methodID); \
@@ -1088,8 +1070,7 @@ JNI_ENTRY_CHECKED(ReturnType, checked_jni_CallStatic##Result##MethodV(JNIEnv *en
     return result; \
 JNI_END \
 \
-JNI_ENTRY_CHECKED(ReturnType, \
-  checked_jni_CallStatic##Result##MethodA(JNIEnv *env, jclass clazz, jmethodID methodID, const jvalue *args)) \
+JNI_ENTRY_CHECKED(ReturnType, checked_jni_CallStatic##Result##MethodA(JNIEnv *env, jclass clazz, jmethodID methodID, const jvalue *args)) \
     functionEnter(thr); \
     IN_VM( \
       jniCheck::validate_jmethod_id(thr, methodID); \
@@ -1241,7 +1222,7 @@ JNI_ENTRY_CHECKED(const jchar *,
       if (new_result == NULL) {
         vm_exit_out_of_memory(len, OOM_MALLOC_ERROR, "checked_jni_GetStringChars");
       }
-      // Avoiding call to UNCHECKED()->ReleaseStringChars() since that will fire unexpected dtrace probes
+      // Avoiding call to UNCHECKED()->ReleaseStringChars() since that will fire unexpected dtrace probes.
       // Note that the dtrace arguments for the allocated memory will not match up with this solution.
       FreeHeap((char*)result);
     }
@@ -1310,7 +1291,7 @@ JNI_ENTRY_CHECKED(const char *,
       if (new_result == NULL) {
         vm_exit_out_of_memory(len, OOM_MALLOC_ERROR, "checked_jni_GetStringUTFChars");
       }
-      // Avoiding call to UNCHECKED()->ReleaseStringUTFChars() since that will fire unexpected dtrace probes
+      // Avoiding call to UNCHECKED()->ReleaseStringUTFChars() since that will fire unexpected dtrace probes.
       // Note that the dtrace arguments for the allocated memory will not match up with this solution.
       FreeHeap((char*)result);
     }
@@ -1384,9 +1365,7 @@ JNI_ENTRY_CHECKED(void,
 JNI_END
 
 #define WRAPPER_NewScalarArray(Return, Result) \
-JNI_ENTRY_CHECKED(Return, \
-  checked_jni_New##Result##Array(JNIEnv *env, \
-                                 jsize len)) \
+JNI_ENTRY_CHECKED(Return, checked_jni_New##Result##Array(JNIEnv *env, jsize len)) \
     functionEnter(thr); \
     Return result = UNCHECKED()->New##Result##Array(env,len); \
     functionExit(thr); \
@@ -1974,7 +1953,6 @@ struct JNINativeInterface_ checked_jni_NativeInterface = {
 
 // Returns the function structure
 struct JNINativeInterface_* jni_functions_check() {
-
   unchecked_jni_NativeInterface = jni_functions_nocheck();
 
   return &checked_jni_NativeInterface;

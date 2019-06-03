@@ -22,7 +22,6 @@ class CardTableBarrierSet: public ModRefBarrierSet {
   // Some classes get to look at some private stuff.
   friend class VMStructs;
  protected:
-
   bool       _defer_initial_card_mark;
   CardTable* _card_table;
 

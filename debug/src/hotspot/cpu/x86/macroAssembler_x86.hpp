@@ -441,9 +441,7 @@ class MacroAssembler: public Assembler {
                                bool return_method = true);
 
   // virtual method calling
-  void lookup_virtual_method(Register recv_klass,
-                             RegisterOrConstant vtable_index,
-                             Register method_result);
+  void lookup_virtual_method(Register recv_klass, RegisterOrConstant vtable_index, Register method_result);
 
   // Test sub_klass against super_klass, with fast and slow paths.
 
@@ -474,10 +472,7 @@ class MacroAssembler: public Assembler {
 
   // Simplified, combined version, good for typical uses.
   // Falls through on failure.
-  void check_klass_subtype(Register sub_klass,
-                           Register super_klass,
-                           Register temp_reg,
-                           Label& L_success);
+  void check_klass_subtype(Register sub_klass, Register super_klass, Register temp_reg, Label& L_success);
 
   // method handles (JSR 292)
   Address argument_address(RegisterOrConstant arg_slot, int extra_slot_offset = 0);
@@ -856,7 +851,6 @@ class MacroAssembler: public Assembler {
   void restore_precision();
 
 private:
-
   // these are private because users should be doing movflt/movdbl
 
   void movss(Address dst, XMMRegister src)     { Assembler::movss(dst, src); }
@@ -868,7 +862,6 @@ private:
   void movlpd(XMMRegister dst, AddressLiteral src);
 
 public:
-
   void addsd(XMMRegister dst, XMMRegister src)    { Assembler::addsd(dst, src); }
   void addsd(XMMRegister dst, Address src)        { Assembler::addsd(dst, src); }
   void addsd(XMMRegister dst, AddressLiteral src);
@@ -1390,9 +1383,7 @@ public:
   void xmm_clear_mem(Register base, Register cnt, XMMRegister xtmp);
 
   // Fill primitive arrays
-  void generate_fill(BasicType t, bool aligned,
-                     Register to, Register value, Register count,
-                     Register rtmp, XMMRegister xtmp);
+  void generate_fill(BasicType t, bool aligned, Register to, Register value, Register count, Register rtmp, XMMRegister xtmp);
 
   void encode_iso_array(Register src, Register dst, Register len,
                         XMMRegister tmp1, XMMRegister tmp2, XMMRegister tmp3,
@@ -1415,17 +1406,12 @@ public:
                                Register yz_idx, Register idx, Register jdx,
                                Register carry, Register product,
                                Register carry2);
-  void multiply_to_len(Register x, Register xlen, Register y, Register ylen, Register z, Register zlen,
-                       Register tmp1, Register tmp2, Register tmp3, Register tmp4, Register tmp5);
-  void square_rshift(Register x, Register len, Register z, Register tmp1, Register tmp3,
-                     Register tmp4, Register tmp5, Register rdxReg, Register raxReg);
-  void multiply_add_64_bmi2(Register sum, Register op1, Register op2, Register carry,
-                            Register tmp2);
-  void multiply_add_64(Register sum, Register op1, Register op2, Register carry,
-                       Register rdxReg, Register raxReg);
+  void multiply_to_len(Register x, Register xlen, Register y, Register ylen, Register z, Register zlen, Register tmp1, Register tmp2, Register tmp3, Register tmp4, Register tmp5);
+  void square_rshift(Register x, Register len, Register z, Register tmp1, Register tmp3, Register tmp4, Register tmp5, Register rdxReg, Register raxReg);
+  void multiply_add_64_bmi2(Register sum, Register op1, Register op2, Register carry, Register tmp2);
+  void multiply_add_64(Register sum, Register op1, Register op2, Register carry, Register rdxReg, Register raxReg);
   void add_one_64(Register z, Register zlen, Register carry, Register tmp1);
-  void lshift_by_1(Register x, Register len, Register z, Register zlen, Register tmp1, Register tmp2,
-                       Register tmp3, Register tmp4);
+  void lshift_by_1(Register x, Register len, Register z, Register zlen, Register tmp1, Register tmp2, Register tmp3, Register tmp4);
   void square_to_len(Register x, Register len, Register z, Register zlen, Register tmp1, Register tmp2,
                      Register tmp3, Register tmp4, Register tmp5, Register rdxReg, Register raxReg);
 
@@ -1446,8 +1432,7 @@ public:
   // Note on a naming convention:
   // Prefix w = register only used on a Westmere+ architecture
   // Prefix n = register only used on a Nehalem architecture
-  void crc32c_ipl_alg4(Register in_out, uint32_t n,
-                       Register tmp1, Register tmp2, Register tmp3);
+  void crc32c_ipl_alg4(Register in_out, uint32_t n, Register tmp1, Register tmp2, Register tmp3);
   void crc32c_pclmulqdq(XMMRegister w_xtmp1,
                         Register in_out,
                         uint32_t const_or_pre_comp_const_index, bool is_pclmulqdq_supported,
@@ -1478,13 +1463,10 @@ public:
   void fold_128bit_crc32_avx512(XMMRegister xcrc, XMMRegister xK, XMMRegister xtmp, Register buf, int offset);
 
   // Compress char[] array to byte[].
-  void char_array_compress(Register src, Register dst, Register len,
-                           XMMRegister tmp1, XMMRegister tmp2, XMMRegister tmp3,
-                           XMMRegister tmp4, Register tmp5, Register result);
+  void char_array_compress(Register src, Register dst, Register len, XMMRegister tmp1, XMMRegister tmp2, XMMRegister tmp3, XMMRegister tmp4, Register tmp5, Register result);
 
   // Inflate byte[] array to char[].
-  void byte_array_inflate(Register src, Register dst, Register len,
-                          XMMRegister tmp1, Register tmp2);
+  void byte_array_inflate(Register src, Register dst, Register len, XMMRegister tmp1, Register tmp2);
 };
 
 #endif

@@ -15,7 +15,6 @@
 #include "gc/g1/heapRegion.inline.hpp"
 #include "gc/g1/heapRegionManager.inline.hpp"
 #include "gc/g1/heapRegionRemSet.hpp"
-#include "gc/shared/gcTraceTime.inline.hpp"
 #include "gc/shared/suspendibleThreadSet.hpp"
 #include "memory/iterator.hpp"
 #include "memory/resourceArea.hpp"
@@ -479,7 +478,6 @@ void G1RemSet::cleanup_after_oops_into_collection_set_do() {
 inline void check_card_ptr(jbyte* card_ptr, G1CardTable* ct) { }
 
 void G1RemSet::refine_card_concurrently(jbyte* card_ptr, uint worker_i) {
-
   check_card_ptr(card_ptr, _ct);
 
   // If the card is no longer dirty, nothing to do.
@@ -525,7 +523,6 @@ void G1RemSet::refine_card_concurrently(jbyte* card_ptr, uint worker_i) {
   //
 
   if (_hot_card_cache->use_cache()) {
-
     const jbyte* orig_card_ptr = card_ptr;
     card_ptr = _hot_card_cache->insert(card_ptr);
     if (card_ptr == NULL) {
@@ -606,7 +603,6 @@ void G1RemSet::refine_card_concurrently(jbyte* card_ptr, uint worker_i) {
 }
 
 bool G1RemSet::refine_card_during_gc(jbyte* card_ptr, G1ScanObjsDuringUpdateRSClosure* update_rs_cl) {
-
   check_card_ptr(card_ptr, _ct);
 
   // If the card is no longer dirty, nothing to do. This covers cards that were already
@@ -702,7 +698,6 @@ class G1RebuildRemSetTask: public AbstractGangTask {
           _tams(tams),
           _mr(mr),
           _current(first_oop_into_mr) {
-
         // Step to the next live object within the MemRegion if needed.
         if (is_live(_current)) {
           // Non-objArrays were scanned by the previous part of that region.
@@ -856,8 +851,6 @@ public:
 void G1RemSet::rebuild_rem_set(G1ConcurrentMark* cm, WorkGang* workers, uint worker_id_offset) {
   uint num_workers = workers->active_workers();
 
-  G1RebuildRemSetTask cl(cm,
-                         num_workers,
-                         worker_id_offset);
+  G1RebuildRemSetTask cl(cm, num_workers, worker_id_offset);
   workers->run_task(&cl, num_workers);
 }

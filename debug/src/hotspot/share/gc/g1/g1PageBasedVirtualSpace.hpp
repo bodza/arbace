@@ -87,7 +87,6 @@ class G1PageBasedVirtualSpace {
 
   void initialize_with_page_size(ReservedSpace rs, size_t used_size, size_t page_size);
  public:
-
   // Commit the given area of pages starting at start being size_in_pages large.
   // Returns true if the given area is zero filled upon completion.
   bool commit(size_t start_page, size_t size_in_pages);

@@ -54,7 +54,6 @@ TypeArrayKlass* TypeArrayKlass::create_klass(BasicType type, const char* name_st
 }
 
 TypeArrayKlass* TypeArrayKlass::allocate(ClassLoaderData* loader_data, BasicType type, Symbol* name, TRAPS) {
-
   int size = ArrayKlass::static_size(TypeArrayKlass::header_size());
 
   return new (loader_data, size, THREAD) TypeArrayKlass(type, name);
@@ -90,7 +89,6 @@ oop TypeArrayKlass::multi_allocate(int rank, jint* last_size, TRAPS) {
 }
 
 void TypeArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos, int length, TRAPS) {
-
   // Check destination type.
   if (!d->is_typeArray()) {
     ResourceMark rm(THREAD);

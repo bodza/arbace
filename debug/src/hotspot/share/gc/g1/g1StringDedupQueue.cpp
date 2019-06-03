@@ -4,7 +4,6 @@
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1StringDedup.hpp"
 #include "gc/g1/g1StringDedupQueue.hpp"
-#include "logging/log.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/mutexLocker.hpp"
@@ -44,7 +43,6 @@ void G1StringDedupQueue::cancel_wait_impl() {
 }
 
 void G1StringDedupQueue::push_impl(uint worker_id, oop java_string) {
-
   // Push and notify waiter
   G1StringDedupWorkerQueue& worker_queue = _queues[worker_id];
   if (!worker_queue.is_full()) {

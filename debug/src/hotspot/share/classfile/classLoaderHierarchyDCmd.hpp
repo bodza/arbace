@@ -8,7 +8,6 @@ class ClassLoaderHierarchyDCmd: public DCmdWithParser {
   DCmdArgument<bool> _verbose;
   DCmdArgument<bool> _fold;
 public:
-
   ClassLoaderHierarchyDCmd(outputStream* output, bool heap);
 
   static const char* name() {

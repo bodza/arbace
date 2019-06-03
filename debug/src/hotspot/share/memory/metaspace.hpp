@@ -67,7 +67,6 @@ namespace metaspace {
 // Namespace for important central static functions
 // (auxiliary stuff goes into MetaspaceUtils)
 class Metaspace : public AllStatic {
-
   friend class MetaspaceShared;
 
  public:
@@ -86,7 +85,6 @@ class Metaspace : public AllStatic {
   };
 
  private:
-
   // Align up the word size to the allocation word size
   static size_t align_word_size_up(size_t);
 
@@ -140,7 +138,6 @@ class Metaspace : public AllStatic {
   static void allocate_metaspace_compressed_klass_ptrs(char* requested_addr, address cds_base);
 
  private:
-
   static void set_narrow_klass_base_and_shift(address metaspace_base, address cds_base);
 
   // Returns true if can use CDS with metaspace allocated as specified address.
@@ -149,7 +146,6 @@ class Metaspace : public AllStatic {
   static void initialize_class_space(ReservedSpace rs);
 
  public:
-
   static void ergo_initialize();
   static void global_initialize();
   static void post_initialize();
@@ -199,7 +195,6 @@ class ClassLoaderMetaspace : public CHeapObj<mtClass> {
   friend class VM_CollectForMetadataAllocation; // For expand_and_allocate()
 
  private:
-
   void initialize(Mutex* lock, Metaspace::MetaspaceType type);
 
   // Initialize the first chunk for a Metaspace.  Used for
@@ -231,7 +226,6 @@ class ClassLoaderMetaspace : public CHeapObj<mtClass> {
   Metaspace::MetaspaceType space_type() const { return _space_type; }
 
  public:
-
   ClassLoaderMetaspace(Mutex* lock, Metaspace::MetaspaceType type);
   ~ClassLoaderMetaspace();
 
@@ -251,11 +245,9 @@ class ClassLoaderMetaspace : public CHeapObj<mtClass> {
 
   // Adds to the given statistic object. Will lock with CLD metaspace lock.
   void add_to_statistics(metaspace::ClassLoaderMetaspaceStatistics* out) const;
-
-}; // ClassLoaderMetaspace
+};
 
 class MetaspaceUtils : AllStatic {
-
   // Spacemanager updates running counters.
   friend class metaspace::SpaceManager;
 
@@ -296,7 +288,6 @@ class MetaspaceUtils : AllStatic {
   static bool is_range_in_committed(const void* from, const void* to);
 
 public:
-
   // Collect used metaspace statistics. This involves walking the CLDG. The resulting
   // output will be the accumulated values for all live metaspaces.
   // Note: method does not do any locking.
@@ -393,7 +384,6 @@ public:
 // Metaspaces.
 
 class MetaspaceGC : AllStatic {
-
   // The current high-water-mark for inducing a GC.
   // When committed memory of all metaspaces reaches this value,
   // a GC is induced and the value is increased. Size is in bytes.
@@ -409,7 +399,6 @@ class MetaspaceGC : AllStatic {
   void set_shrink_factor(uint v) { _shrink_factor = v; }
 
  public:
-
   static void initialize();
   static void post_initialize();
 

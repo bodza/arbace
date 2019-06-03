@@ -9,46 +9,12 @@ class TypeFunc;
 
 class G1BarrierSetC2: public CardTableBarrierSetC2 {
 protected:
-  virtual void pre_barrier(GraphKit* kit,
-                           bool do_load,
-                           Node* ctl,
-                           Node* obj,
-                           Node* adr,
-                           uint adr_idx,
-                           Node* val,
-                           const TypeOopPtr* val_type,
-                           Node* pre_val,
-                           BasicType bt) const;
+  virtual void pre_barrier(GraphKit* kit, bool do_load, Node* ctl, Node* obj, Node* adr, uint adr_idx, Node* val, const TypeOopPtr* val_type, Node* pre_val, BasicType bt) const;
+  virtual void post_barrier(GraphKit* kit, Node* ctl, Node* store, Node* obj, Node* adr, uint adr_idx, Node* val, BasicType bt, bool use_precise) const;
 
-  virtual void post_barrier(GraphKit* kit,
-                            Node* ctl,
-                            Node* store,
-                            Node* obj,
-                            Node* adr,
-                            uint adr_idx,
-                            Node* val,
-                            BasicType bt,
-                            bool use_precise) const;
-
-  bool g1_can_remove_pre_barrier(GraphKit* kit,
-                                 PhaseTransform* phase,
-                                 Node* adr,
-                                 BasicType bt,
-                                 uint adr_idx) const;
-
-  bool g1_can_remove_post_barrier(GraphKit* kit,
-                                  PhaseTransform* phase, Node* store,
-                                  Node* adr) const;
-
-  void g1_mark_card(GraphKit* kit,
-                    IdealKit& ideal,
-                    Node* card_adr,
-                    Node* oop_store,
-                    uint oop_alias_idx,
-                    Node* index,
-                    Node* index_adr,
-                    Node* buffer,
-                    const TypeFunc* tf) const;
+  bool g1_can_remove_pre_barrier(GraphKit* kit, PhaseTransform* phase, Node* adr, BasicType bt, uint adr_idx) const;
+  bool g1_can_remove_post_barrier(GraphKit* kit, PhaseTransform* phase, Node* store, Node* adr) const;
+  void g1_mark_card(GraphKit* kit, IdealKit& ideal, Node* card_adr, Node* oop_store, uint oop_alias_idx, Node* index, Node* index_adr, Node* buffer, const TypeFunc* tf) const;
 
   // Helper for unsafe accesses, that may or may not be on the referent field.
   // Generates the guards that check whether the result of

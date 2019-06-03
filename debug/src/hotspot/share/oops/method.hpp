@@ -82,7 +82,6 @@ class Method : public Metadata {
   // Constructor
   Method(ConstMethod* xconst, AccessFlags access_flags);
  public:
-
   static Method* allocate(ClassLoaderData* loader_data, int byte_code_size, AccessFlags access_flags, InlineTableSizes* sizes, ConstMethod::MethodType method_type, TRAPS);
 
   // CDS and vtbl checking can create an empty Method to get vtbl pointer.
@@ -122,18 +121,10 @@ class Method : public Metadata {
   void set_generic_signature_index(int index)    { constMethod()->set_generic_signature_index(index); }
 
   // annotations support
-  AnnotationArray* annotations() const           {
-    return constMethod()->method_annotations();
-  }
-  AnnotationArray* parameter_annotations() const {
-    return constMethod()->parameter_annotations();
-  }
-  AnnotationArray* annotation_default() const    {
-    return constMethod()->default_annotations();
-  }
-  AnnotationArray* type_annotations() const      {
-    return constMethod()->type_annotations();
-  }
+  AnnotationArray* annotations() const           { return constMethod()->method_annotations(); }
+  AnnotationArray* parameter_annotations() const { return constMethod()->parameter_annotations(); }
+  AnnotationArray* annotation_default() const    { return constMethod()->default_annotations(); }
+  AnnotationArray* type_annotations() const      { return constMethod()->type_annotations(); }
 
   // Helper routine: get klass name + "." + method name + signature as
   // C string, for the purpose of providing more useful NoSuchMethodErrors
@@ -146,12 +137,8 @@ class Method : public Metadata {
   static char* name_and_sig_as_C_string(Klass* klass, Symbol* method_name, Symbol* signature);
   static char* name_and_sig_as_C_string(Klass* klass, Symbol* method_name, Symbol* signature, char* buf, int size);
 
-  Bytecodes::Code java_code_at(int bci) const {
-    return Bytecodes::java_code_at(this, bcp_from(bci));
-  }
-  Bytecodes::Code code_at(int bci) const {
-    return Bytecodes::code_at(this, bcp_from(bci));
-  }
+  Bytecodes::Code java_code_at(int bci) const { return Bytecodes::java_code_at(this, bcp_from(bci)); }
+  Bytecodes::Code code_at(int bci) const { return Bytecodes::code_at(this, bcp_from(bci)); }
 
   // index into InstanceKlass methods() array
   // note: also used by jfr
@@ -168,18 +155,18 @@ class Method : public Metadata {
   int method_size() const                { return sizeof(Method)/wordSize + ( is_native() ? 2 : 0 ); }
 
   // constant pool for Klass* holding this method
-  ConstantPool* constants() const              { return constMethod()->constants(); }
-  void set_constants(ConstantPool* c)          { constMethod()->set_constants(c); }
+  ConstantPool* constants() const        { return constMethod()->constants(); }
+  void set_constants(ConstantPool* c)    { constMethod()->set_constants(c); }
 
   // max stack
   // return original max stack size for method verification
-  int  verifier_max_stack() const                { return constMethod()->max_stack(); }
-  int           max_stack() const                { return constMethod()->max_stack() + extra_stack_entries(); }
-  void      set_max_stack(int size)              {        constMethod()->set_max_stack(size); }
+  int  verifier_max_stack() const        { return constMethod()->max_stack(); }
+  int           max_stack() const        { return constMethod()->max_stack() + extra_stack_entries(); }
+  void      set_max_stack(int size)      {        constMethod()->set_max_stack(size); }
 
   // max locals
-  int  max_locals() const                        { return constMethod()->max_locals(); }
-  void set_max_locals(int size)                  { constMethod()->set_max_locals(size); }
+  int  max_locals() const                { return constMethod()->max_locals(); }
+  void set_max_locals(int size)          { constMethod()->set_max_locals(size); }
 
   int highest_comp_level() const;
   void set_highest_comp_level(int level);
@@ -194,7 +181,7 @@ class Method : public Metadata {
     }
   }
 
-  int  interpreter_throwout_count() const        {
+  int  interpreter_throwout_count() const {
     MethodCounters* mcs = method_counters();
     if (mcs == NULL) {
       return 0;
@@ -204,8 +191,8 @@ class Method : public Metadata {
   }
 
   // size of parameters
-  int  size_of_parameters() const                { return constMethod()->size_of_parameters(); }
-  void set_size_of_parameters(int size)          { constMethod()->set_size_of_parameters(size); }
+  int  size_of_parameters() const       { return constMethod()->size_of_parameters(); }
+  void set_size_of_parameters(int size) { constMethod()->set_size_of_parameters(size); }
 
   bool has_stackmap_table() const {
     return constMethod()->has_stackmap_table();
@@ -220,12 +207,9 @@ class Method : public Metadata {
   }
 
   // exception handler table
-  bool has_exception_handler() const
-                             { return constMethod()->has_exception_handler(); }
-  int exception_table_length() const
-                             { return constMethod()->exception_table_length(); }
-  ExceptionTableElement* exception_table_start() const
-                             { return constMethod()->exception_table_start(); }
+  bool has_exception_handler() const                   { return constMethod()->has_exception_handler(); }
+  int exception_table_length() const                   { return constMethod()->exception_table_length(); }
+  ExceptionTableElement* exception_table_start() const { return constMethod()->exception_table_start(); }
 
   // Finds the first entry point bci of an exception handler for an
   // exception of klass ex_klass thrown at throw_bci. A value of NULL
@@ -242,19 +226,13 @@ class Method : public Metadata {
   static int fast_exception_handler_bci_for(const methodHandle& mh, Klass* ex_klass, int throw_bci, TRAPS);
 
   // method data access
-  MethodData* method_data() const              {
-    return _method_data;
-  }
+  MethodData* method_data() const { return _method_data; }
 
   void set_method_data(MethodData* data);
 
-  MethodCounters* method_counters() const {
-    return _method_counters;
-  }
+  MethodCounters* method_counters() const { return _method_counters; }
 
-  void clear_method_counters() {
-    _method_counters = NULL;
-  }
+  void clear_method_counters() { _method_counters = NULL; }
 
   bool init_method_counters(MethodCounters* counters);
 
@@ -270,7 +248,7 @@ class Method : public Metadata {
   int backedge_count();
 
   bool was_executed_more_than(int n);
-  bool was_never_executed()                      { return !was_executed_more_than(0); }
+  bool was_never_executed() { return !was_executed_more_than(0); }
 
   static void build_interpreter_method_data(const methodHandle& method, TRAPS);
 
@@ -285,13 +263,11 @@ class Method : public Metadata {
     }
   }
   int increment_interpreter_invocation_count(TRAPS) {
-    if (TieredCompilation) ShouldNotReachHere();
+    if (TieredCompilation)
+        ShouldNotReachHere();
     MethodCounters* mcs = get_method_counters(CHECK_0);
     return (mcs == NULL) ? 0 : mcs->increment_interpreter_invocation_count();
   }
-
-  // for false in a product build
-  int  compiled_invocation_count() const         { return 0; }
 
   // Clear (non-shared space) pointers which could not be relevant
   // if this (shared) method were mapped into another JVM.
@@ -382,40 +358,25 @@ class Method : public Metadata {
   address code_base() const           { return constMethod()->code_base(); }
   bool    contains(address bcp) const { return constMethod()->contains(bcp); }
 
-  // prints byte codes
-  void print_codes() const            { print_codes_on(tty); }
-  void print_codes_on(outputStream* st) const;
-  void print_codes_on(int from, int to, outputStream* st) const;
-
   // method parameters
-  bool has_method_parameters() const
-                         { return constMethod()->has_method_parameters(); }
-  int method_parameters_length() const
-                         { return constMethod()->method_parameters_length(); }
-  MethodParametersElement* method_parameters_start() const
-                          { return constMethod()->method_parameters_start(); }
+  bool has_method_parameters() const             { return constMethod()->has_method_parameters(); }
+  int method_parameters_length() const           { return constMethod()->method_parameters_length(); }
+  MethodParametersElement* method_parameters_start() const { return constMethod()->method_parameters_start(); }
 
   // checked exceptions
-  int checked_exceptions_length() const
-                         { return constMethod()->checked_exceptions_length(); }
-  CheckedExceptionElement* checked_exceptions_start() const
-                          { return constMethod()->checked_exceptions_start(); }
+  int checked_exceptions_length() const          { return constMethod()->checked_exceptions_length(); }
+  CheckedExceptionElement* checked_exceptions_start() const { return constMethod()->checked_exceptions_start(); }
 
   // localvariable table
-  bool has_localvariable_table() const
-                          { return constMethod()->has_localvariable_table(); }
-  int localvariable_table_length() const
-                        { return constMethod()->localvariable_table_length(); }
-  LocalVariableTableElement* localvariable_table_start() const
-                         { return constMethod()->localvariable_table_start(); }
+  bool has_localvariable_table() const           { return constMethod()->has_localvariable_table(); }
+  int localvariable_table_length() const         { return constMethod()->localvariable_table_length(); }
+  LocalVariableTableElement* localvariable_table_start() const { return constMethod()->localvariable_table_start(); }
 
-  bool has_linenumber_table() const
-                              { return constMethod()->has_linenumber_table(); }
-  u_char* compressed_linenumber_table() const
-                       { return constMethod()->compressed_linenumber_table(); }
+  bool has_linenumber_table() const              { return constMethod()->has_linenumber_table(); }
+  u_char* compressed_linenumber_table() const    { return constMethod()->compressed_linenumber_table(); }
 
   // method holder (the Klass* holding this method)
-  InstanceKlass* method_holder() const         { return constants()->pool_holder(); }
+  InstanceKlass* method_holder() const           { return constants()->pool_holder(); }
 
   void compute_size_of_parameters(Thread *thread); // word size of parameters (receiver if any + arguments)
   Symbol* klass_name() const;                    // returns the name of the method holder
@@ -521,16 +482,12 @@ class Method : public Metadata {
   static void print_touched_methods(outputStream* out);
 
   // interpreter support
-  static ByteSize const_offset()                 { return byte_offset_of(Method, _constMethod       ); }
-  static ByteSize access_flags_offset()          { return byte_offset_of(Method, _access_flags      ); }
+  static ByteSize const_offset()                 { return byte_offset_of(Method, _constMethod ); }
+  static ByteSize access_flags_offset()          { return byte_offset_of(Method, _access_flags ); }
   static ByteSize from_compiled_offset()         { return byte_offset_of(Method, _from_compiled_entry); }
   static ByteSize code_offset()                  { return byte_offset_of(Method, _code); }
-  static ByteSize method_data_offset()           {
-    return byte_offset_of(Method, _method_data);
-  }
-  static ByteSize method_counters_offset()       {
-    return byte_offset_of(Method, _method_counters);
-  }
+  static ByteSize method_data_offset()           { return byte_offset_of(Method, _method_data); }
+  static ByteSize method_counters_offset()       { return byte_offset_of(Method, _method_counters); }
   static ByteSize native_function_offset()       { return in_ByteSize(sizeof(Method)); }
   static ByteSize from_interpreted_offset()      { return byte_offset_of(Method, _from_interpreted_entry ); }
   static ByteSize interpreter_entry_offset()     { return byte_offset_of(Method, _i2i_entry ); }
@@ -817,7 +774,6 @@ class Method : public Metadata {
   void verify_on(outputStream* st);
 
  private:
-
   // Inlined elements
   address* native_function_addr() const          { return (address*) (this+1); }
   address* signature_handler_addr() const        { return native_function_addr() + 1; }

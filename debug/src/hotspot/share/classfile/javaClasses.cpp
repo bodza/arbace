@@ -11,8 +11,6 @@
 #include "code/pcDesc.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/linkResolver.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
@@ -175,7 +173,6 @@ void java_lang_String::set_compact_strings(bool value) {
 }
 
 Handle java_lang_String::basic_create(int length, bool is_latin1, TRAPS) {
-
   // Create the String object first, so there's a chance that the String
   // and the char array it points to end up in the same cache line.
   oop obj;
@@ -276,7 +273,6 @@ Handle java_lang_String::create_from_symbol(Symbol* symbol, TRAPS) {
 
 // Converts a C string to a Java String based on current encoding
 Handle java_lang_String::create_from_platform_dependent_str(const char* str, TRAPS) {
-
   typedef jstring (*to_java_string_fn_t)(JNIEnv*, const char *);
   static to_java_string_fn_t _to_java_string_fn = NULL;
 
@@ -655,7 +651,6 @@ static void initialize_static_field(fieldDescriptor* fd, Handle mirror, TRAPS) {
 }
 
 void java_lang_Class::fixup_mirror(Klass* k, TRAPS) {
-
   // If the offset was read from the shared archive, it was fixed up already
   if (!k->is_shared()) {
     if (k->is_instance_klass()) {
@@ -737,7 +732,6 @@ void java_lang_Class::allocate_fixup_lists() {
 }
 
 void java_lang_Class::create_mirror(Klass* k, Handle class_loader, Handle module, Handle protection_domain, TRAPS) {
-
   // Use this moment of initialization to cache modifier_flags also,
   // to support Class.getModifiers().  Instance classes recalculate
   // the cached flags after the class file is parsed, but before the
@@ -775,7 +769,6 @@ void java_lang_Class::create_mirror(Klass* k, Handle class_loader, Handle module
       // See below for ordering dependencies between field array_klass in component mirror
       // and java_mirror in this klass.
     } else {
-
       initialize_mirror_fields(k, mirror, protection_domain, THREAD);
       if (HAS_PENDING_EXCEPTION) {
         // If any of the fields throws an exception like OOM remove the klass field
@@ -1100,7 +1093,6 @@ int java_lang_Thread::_park_event_offset = 0;
   macro(_park_event_offset,    k, "nativeParkEventPointer", long_signature, false)
 
 void java_lang_Thread::compute_offsets() {
-
   InstanceKlass* k = SystemDictionary::Thread_klass();
   THREAD_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
@@ -1210,7 +1202,6 @@ jlong java_lang_Thread::thread_id(oop java_thread) {
 }
 
 oop java_lang_Thread::park_blocker(oop java_thread) {
-
   if (_park_blocker_offset > 0) {
     return java_thread->obj_field(_park_blocker_offset);
   }
@@ -1315,7 +1306,6 @@ bool java_lang_ThreadGroup::is_daemon(oop java_thread_group) {
   macro(_ngroups_offset,     k, vmSymbols::ngroups_name(),     int_signature,               false)
 
 void java_lang_ThreadGroup::compute_offsets() {
-
   InstanceKlass* k = SystemDictionary::ThreadGroup_klass();
   THREADGROUP_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
@@ -1441,7 +1431,6 @@ class BacktraceBuilder: public StackObj {
   }
 
  public:
-
   // constructor for new backtrace
   BacktraceBuilder(TRAPS): _methods(NULL), _bcis(NULL), _head(NULL), _mirrors(NULL), _names(NULL) {
     expand(CHECK);
@@ -1815,7 +1804,6 @@ void java_lang_Throwable::fill_in_stack_trace(Handle throwable, const methodHand
       }
     }
     if (!skip_throwableInit_check) {
-
       // skip <init> methods of the exception class and superclasses
       // This is simlar to classic VM.
       if (method->name() == vmSymbols::object_initializer_name() && throwable->is_a(method->method_holder())) {
@@ -1899,7 +1887,6 @@ void java_lang_Throwable::fill_in_stack_trace_of_preallocated_backtrace(Handle t
 }
 
 void java_lang_Throwable::get_stack_trace_elements(Handle throwable, objArrayHandle stack_trace_array_h, TRAPS) {
-
   if (throwable.is_null() || stack_trace_array_h.is_null()) {
     THROW(vmSymbols::java_lang_NullPointerException());
   }
@@ -1924,11 +1911,7 @@ void java_lang_Throwable::get_stack_trace_elements(Handle throwable, objArrayHan
     InstanceKlass* holder = InstanceKlass::cast(java_lang_Class::as_Klass(bte._mirror()));
     methodHandle method (THREAD, holder->method_with_orig_idnum(bte._method_id, bte._version));
 
-    java_lang_StackTraceElement::fill_in(stack_trace_element, holder,
-                                         method,
-                                         bte._version,
-                                         bte._bci,
-                                         bte._name, CHECK);
+    java_lang_StackTraceElement::fill_in(stack_trace_element, holder, method, bte._version, bte._bci, bte._name, CHECK);
   }
 }
 
@@ -1947,7 +1930,6 @@ oop java_lang_StackTraceElement::create(const methodHandle& method, int bci, TRA
 }
 
 void java_lang_StackTraceElement::fill_in(Handle element, InstanceKlass* holder, const methodHandle& method, int version, int bci, Symbol* name, TRAPS) {
-
   ResourceMark rm(THREAD);
   HandleMark hm(THREAD);
 
@@ -2554,7 +2536,6 @@ void java_lang_Module::set_name(oop module, oop value) {
 }
 
 ModuleEntry* java_lang_Module::module_entry(oop module) {
-
   ModuleEntry* module_entry = (ModuleEntry*)module->address_field(_module_entry_offset);
   if (module_entry == NULL) {
     // If the inject field containing the ModuleEntry* is null then return the
@@ -2585,7 +2566,6 @@ void reflect_ConstantPool::set_cp(oop reflect, ConstantPool* value) {
 }
 
 ConstantPool* reflect_ConstantPool::get_cp(oop reflect) {
-
   oop mirror = reflect->obj_field(_oop_offset);
   Klass* k = java_lang_Class::as_Klass(mirror);
 
@@ -3058,7 +3038,6 @@ void java_lang_invoke_CallSite::compute_offsets() {
 }
 
 oop java_lang_invoke_CallSite::context(oop call_site) {
-
   oop dep_oop = call_site->obj_field(_context_offset);
   return dep_oop;
 }
@@ -3527,24 +3506,19 @@ static int member_offset(int hardcoded_offset) {
 // Invoked before SystemDictionary::initialize, so pre-loaded classes
 // are not available to determine the offset_of_static_fields.
 void JavaClasses::compute_hard_coded_offsets() {
-
   // java_lang_boxing_object
   java_lang_boxing_object::value_offset      = member_offset(java_lang_boxing_object::hc_value_offset);
   java_lang_boxing_object::long_value_offset = align_up(member_offset(java_lang_boxing_object::hc_value_offset), BytesPerLong);
 
   // java_lang_ref_Reference
-  java_lang_ref_Reference::referent_offset    = member_offset(java_lang_ref_Reference::hc_referent_offset);
-  java_lang_ref_Reference::queue_offset       = member_offset(java_lang_ref_Reference::hc_queue_offset);
-  java_lang_ref_Reference::next_offset        = member_offset(java_lang_ref_Reference::hc_next_offset);
-  java_lang_ref_Reference::discovered_offset  = member_offset(java_lang_ref_Reference::hc_discovered_offset);
+  java_lang_ref_Reference::referent_offset   = member_offset(java_lang_ref_Reference::hc_referent_offset);
+  java_lang_ref_Reference::queue_offset      = member_offset(java_lang_ref_Reference::hc_queue_offset);
+  java_lang_ref_Reference::next_offset       = member_offset(java_lang_ref_Reference::hc_next_offset);
+  java_lang_ref_Reference::discovered_offset = member_offset(java_lang_ref_Reference::hc_discovered_offset);
 }
 
 // Compute non-hard-coded field offsets of all the classes in this file
 void JavaClasses::compute_offsets() {
-  if (UseSharedSpaces) {
-    return; // field offsets are loaded from archive
-  }
-
   // java_lang_Class::compute_offsets was called earlier in bootstrap
   java_lang_System::compute_offsets();
   java_lang_ClassLoader::compute_offsets();
@@ -3562,6 +3536,7 @@ void JavaClasses::compute_offsets() {
   java_lang_invoke_CallSite::compute_offsets();
   java_lang_invoke_MethodHandleNatives_CallSiteContext::compute_offsets();
   java_security_AccessControlContext::compute_offsets();
+
   // Initialize reflection classes. The layouts of these classes
   // changed with the new reflection implementation in JDK 1.4, and
   // since the Universe doesn't know what JDK version it is until this

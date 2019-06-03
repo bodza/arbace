@@ -14,11 +14,9 @@
 // that cannot/should not be dealt with in assembly and needs C support.
 
 class InterpreterRuntime: AllStatic {
-  friend class BytecodeClosure; // for method and bcp
   friend class PrintingClosure; // for method and bcp
 
  private:
-
   static void      set_bcp_and_mdp(address bcp, JavaThread*thread);
   static void      note_trap_inner(JavaThread* thread, int reason, const methodHandle& trap_method, int trap_bci, TRAPS);
   static void      note_trap(JavaThread *thread, int reason, TRAPS);
@@ -95,9 +93,6 @@ class InterpreterRuntime: AllStatic {
   // Popframe support (only needed on x86, AMD64 and ARM)
   static void popframe_move_outgoing_args(JavaThread* thread, void* src_address, void* dest_address);
 #endif
-
-  // bytecode tracing is only used by the false
-  static intptr_t trace_bytecode(JavaThread* thread, intptr_t preserve_this_value, intptr_t tos, intptr_t tos2) { return 0; };
 
   // Platform dependent stuff
 #include CPU_HEADER(interpreterRT)

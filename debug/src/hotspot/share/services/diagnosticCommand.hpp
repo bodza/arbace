@@ -359,7 +359,6 @@ public:
 // Enhanced JMX Agent support
 
 class JMXStartRemoteDCmd : public DCmdWithParser {
-
   // Explicitly list all properties that could be
   // passed to Agent.startRemoteManagementAgent()
   // com.sun.management is omitted
@@ -407,7 +406,6 @@ public:
 };
 
 class JMXStartLocalDCmd : public DCmd {
-
   // Explicitly request start of local agent,
   // it will not be started by start dcmd
 

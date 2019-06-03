@@ -7,7 +7,6 @@
 #include "utilities/elfFile.hpp"
 
 class ElfDecoder : public AbstractDecoder {
-
 public:
   ElfDecoder() {
     _opened_elf_files = NULL;

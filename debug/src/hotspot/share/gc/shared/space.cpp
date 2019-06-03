@@ -78,7 +78,6 @@ void DirtyCardToOopClosure::walk_mem_region(MemRegion mr, HeapWord* bottom, Heap
 // we (or another worker thread) may already have scanned
 // or planning to scan.
 void DirtyCardToOopClosure::do_MemRegion(MemRegion mr) {
-
   // Some collectors need to do special things whenever their dirty
   // cards are processed. For instance, CMS must remember mutator updates
   // (i.e. dirty cards) so as to re-scan mutated objects.
@@ -167,10 +166,7 @@ void FilteringDCTOC::walk_mem_region(MemRegion mr, HeapWord* bottom, HeapWord* t
 // We must replicate this so that the static type of "FilteringClosure"
 // (see above) is apparent at the oop_iterate calls.
 #define ContiguousSpaceDCTOC__walk_mem_region_with_cl_DEFN(ClosureType) \
-void ContiguousSpaceDCTOC::walk_mem_region_with_cl(MemRegion mr, \
-                                                   HeapWord* bottom, \
-                                                   HeapWord* top, \
-                                                   ClosureType* cl) { \
+void ContiguousSpaceDCTOC::walk_mem_region_with_cl(MemRegion mr, HeapWord* bottom, HeapWord* top, ClosureType* cl) { \
   bottom += oop(bottom)->oop_iterate_size(cl, mr); \
   if (bottom < top) { \
     HeapWord* next_obj = bottom + oop(bottom)->size(); \

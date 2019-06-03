@@ -253,7 +253,6 @@ class ClassLoaderData : public CHeapObj<mtClass> {
   void clear_accumulated_modified_oops() { _accumulated_modified_oops = false; }
   bool has_accumulated_modified_oops()   { return _accumulated_modified_oops; }
  private:
-
   void unload();
   bool keep_alive() const       { return _keep_alive > 0; }
 
@@ -322,7 +321,7 @@ class ClassLoaderData : public CHeapObj<mtClass> {
   inline oop class_loader() const;
 
   // Returns true if this class loader data is for a loader going away.
-  bool is_unloading() const     {
+  bool is_unloading() const {
     return _unloading;
   }
 

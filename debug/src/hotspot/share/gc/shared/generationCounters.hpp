@@ -11,9 +11,7 @@ class GenerationCounters: public CHeapObj<mtGC> {
   friend class VMStructs;
 
 private:
-  void initialize(const char* name, int ordinal, int spaces,
-                  size_t min_capacity, size_t max_capacity,
-                  size_t curr_capacity);
+  void initialize(const char* name, int ordinal, int spaces, size_t min_capacity, size_t max_capacity, size_t curr_capacity);
 
  protected:
   PerfVariable*      _current_size;

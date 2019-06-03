@@ -10,7 +10,7 @@
 //                     ALGORITHM DESCRIPTION  - POW()
 //                     ---------------------
 //
-//    Let x=2^k * mx, mx in [1,2)
+//    Let x = 2^k * mx, mx in [1,2)
 //
 //    log2(x) calculation:
 //

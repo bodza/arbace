@@ -62,7 +62,6 @@ class GuardedMemory : StackObj { // Wrapper on stack
   // Private inner classes for memory layout...
 
 protected:
-
   /**
    * Guard class for header and trailer known pattern to test for overwrites.
    */
@@ -76,7 +75,6 @@ protected:
     u_char _guard[GUARD_SIZE];
 
    public:
-
     void build() {
       u_char* c = _guard; // Possibly unaligned if tail guard
       u_char* end = c + GUARD_SIZE;
@@ -97,8 +95,7 @@ protected:
       }
       return true;
     }
-
-  }; // GuardedMemory::Guard
+  };
 
   /**
    * Header guard and size
@@ -119,8 +116,7 @@ protected:
 
     void set_tag(const void* tag) { _tag = (void*) tag; }
     void* get_tag() const { return _tag; }
-
-  }; // GuardedMemory::GuardHeader
+  };
 
   // Guarded Memory...
 
@@ -128,7 +124,6 @@ protected:
   u_char* _base_addr;
 
  public:
-
   /**
    * Create new guarded memory.
    *
@@ -287,7 +282,6 @@ protected:
    * @return true if guards were verified as intact. false indicates a buffer overrun.
    */
   static bool free_copy(void* p);
-
-}; // GuardedMemory
+};
 
 #endif

@@ -76,7 +76,7 @@ char* ProfileData::print_data_on_helper(const MethodData* md) const {
         char buf[100];
         ss.print("trap/");
         data->method()->print_short_name(&ss);
-        ss.print("(%s) ", Deoptimization::format_trap_state(buf, sizeof(buf), trap));
+        ss.print("(%s) ", Deoptimization::format_trap_state(buf, sizeof(buf), trap));
       }
       break;
     case DataLayout::bit_data_tag:
@@ -104,7 +104,7 @@ void ProfileData::print_shared(outputStream* st, const char* name, const char* e
   int trap = trap_state();
   if (trap != 0) {
     char buf[100];
-    st->print("trap(%s) ", Deoptimization::format_trap_state(buf, sizeof(buf), trap));
+    st->print("trap(%s) ", Deoptimization::format_trap_state(buf, sizeof(buf), trap));
   }
   if (extra != NULL) {
     st->print("%s", extra);
@@ -564,7 +564,6 @@ void MultiBranchData::post_initialize(BytecodeStream* stream, MethodData* mdo) {
     target_di = mdo->bci_to_di(target);
     offset = target_di - my_di;
     set_default_displacement(offset);
-
   } else {
     Bytecode_lookupswitch sw(stream->method()(), stream->bcp());
     int npairs = sw.number_of_pairs();

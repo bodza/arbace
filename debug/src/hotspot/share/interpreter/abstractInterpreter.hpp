@@ -226,7 +226,7 @@ class AbstractInterpreter: AllStatic {
 #endif
 
   // Local values relative to locals[n]
-  static int  local_offset_in_bytes(int n) {
+  static int local_offset_in_bytes(int n) {
     return ((frame::interpreter_frame_expression_stack_direction() * n) * stackElementSize);
   }
 

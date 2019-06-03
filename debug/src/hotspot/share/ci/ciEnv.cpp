@@ -15,7 +15,6 @@
 #include "code/codeCache.hpp"
 #include "code/scopeDesc.hpp"
 #include "compiler/compileBroker.hpp"
-#include "compiler/compileLog.hpp"
 #include "compiler/disassembler.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "interpreter/linkResolver.hpp"
@@ -79,7 +78,6 @@ ciEnv::ciEnv(CompileTask* task, int system_dictionary_modification_counter)
   _system_dictionary_modification_counter = system_dictionary_modification_counter;
   _num_inlined_bytecodes = 0;
   _task = task;
-  _log = NULL;
 
   // Temporary buffer for creating symbols and such.
   _name_buffer = NULL;
@@ -125,7 +123,6 @@ ciEnv::ciEnv(Arena* arena) : _ciEnv_arena(mtCompiler) {
   _system_dictionary_modification_counter = 0;
   _num_inlined_bytecodes = 0;
   _task = NULL;
-  _log = NULL;
 
   // Temporary buffer for creating symbols and such.
   _name_buffer = NULL;
@@ -596,12 +593,7 @@ ciField* ciEnv::get_field_by_index(ciInstanceKlass* accessor,
 //
 // Perform an appropriate method lookup based on accessor, holder,
 // name, signature, and bytecode.
-Method* ciEnv::lookup_method(ciInstanceKlass* accessor,
-                             ciKlass*         holder,
-                             Symbol*          name,
-                             Symbol*          sig,
-                             Bytecodes::Code  bc,
-                             constantTag      tag) {
+Method* ciEnv::lookup_method(ciInstanceKlass* accessor, ciKlass* holder, Symbol* name, Symbol* sig, Bytecodes::Code bc, constantTag tag) {
   InstanceKlass* accessor_klass = accessor->get_instanceKlass();
   Klass* holder_klass = holder->get_Klass();
   methodHandle dest_method;
@@ -800,11 +792,6 @@ void ciEnv::register_method(ciMethod* target, int entry_bci, CodeOffsets* offset
     NoSafepointVerifier nsv;
 
     if (!failing()) {
-      if (log() != NULL) {
-        // Log the dependencies which this compilation declares.
-        dependencies()->log_all_dependencies();
-      }
-
       // Encode the dependencies now, so we can check them right away.
       dependencies()->encode_content_bytes();
 
@@ -945,13 +932,6 @@ void ciEnv::record_method_not_compilable(const char* reason, bool all_tiers) {
 
   // Only note transitions to a worse state
   if (new_compilable > _compilable) {
-    if (log() != NULL) {
-      if (all_tiers) {
-        log()->elem("method_not_compilable");
-      } else {
-        log()->elem("method_not_compilable_at_tier level='%d'", current()->task()->comp_level());
-      }
-    }
     _compilable = new_compilable;
 
     // Reset failure reason; this one is more important.

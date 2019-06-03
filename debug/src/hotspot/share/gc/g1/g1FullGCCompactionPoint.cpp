@@ -70,7 +70,6 @@ void G1FullGCCompactionPoint::switch_region() {
 }
 
 void G1FullGCCompactionPoint::forward(oop object, size_t size) {
-
   // Ensure the object fit in the current region.
   while (!object_will_fit(size)) {
     switch_region();

@@ -8,7 +8,6 @@
 // nested subphases.
 class ConcurrentGCPhaseManager : public StackObj {
 public:
-
   // Special phase ids used by all GC's that use this facility.
   static const int UNCONSTRAINED_PHASE = 0; // Unconstrained or no request.
   static const int IDLE_PHASE = 1;          // Concurrent processing is idle.

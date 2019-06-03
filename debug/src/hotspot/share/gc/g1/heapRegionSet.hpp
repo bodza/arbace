@@ -7,7 +7,7 @@
 #define guarantee_heap_region_set(p, message) \
   do { \
     guarantee((p), "[%s] %s ln: %u", name(), message, length()); \
-  } while (0)
+  } while (false)
 
 class HRSMtSafeChecker : public CHeapObj<mtGC> {
 public:
@@ -172,7 +172,6 @@ public:
   }
 
   HeapRegion* get_next() {
-
     // If we are going to introduce a count in the iterator we should
     // do the "cycle" check.
 

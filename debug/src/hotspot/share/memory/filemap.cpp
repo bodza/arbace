@@ -8,9 +8,6 @@
 #include "classfile/symbolTable.hpp"
 #include "classfile/systemDictionaryShared.hpp"
 #include "classfile/altHashing.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
-#include "logging/logMessage.hpp"
 #include "memory/filemap.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceClosure.hpp"
@@ -67,10 +64,6 @@ void FileMapInfo::fail_continue(const char *msg, ...) {
   va_start(ap, msg);
   MetaspaceShared::set_archive_loading_failed();
   {
-    if (false) {
-      fail(msg, ap);
-    }
-    UseSharedSpaces = false;
     current_info()->close();
   }
   va_end(ap);
@@ -86,13 +79,11 @@ void FileMapInfo::fail_continue(const char *msg, ...) {
 // the code that reads the CDS file will both use the same size buffer.  Hence, will
 // use identical truncation.  This is necessary for matching of truncated versions.
 template <int N> static void get_header_version(char (&header_version) [N]) {
-
   const char *vm_version = VM_Version::internal_vm_info_string();
   const int version_len = (int)strlen(vm_version);
 
   if (version_len < (JVM_IDENT_MAX-1)) {
     strcpy(header_version, vm_version);
-
   } else {
     // Get the hash value.  Use a static seed because the hash needs to return the same
     // value over multiple jvm invocations.
@@ -152,8 +143,6 @@ void FileMapInfo::FileMapHeader::populate(FileMapInfo* mapinfo, size_t alignment
   _app_class_paths_start_index = ClassLoaderExt::app_class_paths_start_index();
   _app_module_paths_start_index = ClassLoaderExt::app_module_paths_start_index();
 
-  _verify_local = false;
-  _verify_remote = false;
   _has_platform_or_app_classes = ClassLoaderExt::has_platform_or_app_classes();
 }
 
@@ -190,7 +179,6 @@ void SharedClassPathEntry::init(const char* name, bool is_modules_image, TRAPS) 
 }
 
 bool SharedClassPathEntry::validate(bool is_class_path) {
-
   struct stat st;
   const char* name;
 
@@ -230,7 +218,6 @@ void SharedClassPathEntry::metaspace_pointers_do(MetaspaceClosure* it) {
 }
 
 void FileMapInfo::allocate_shared_path_table() {
-
   Thread* THREAD = Thread::current();
   ClassLoaderData* loader_data = ClassLoaderData::the_null_class_loader_data();
   ClassPathEntry* jrt = ClassLoader::get_jrt_entry();
@@ -286,7 +273,6 @@ void FileMapInfo::allocate_shared_path_table() {
 }
 
 void FileMapInfo::check_nonempty_dir_in_shared_path_table() {
-
   bool has_nonempty_dir = false;
 
   int end = _shared_path_table_size;
@@ -385,7 +371,6 @@ void FileMapInfo::update_shared_classpath(ClassPathEntry *cpe, SharedClassPathEn
 }
 
 bool FileMapInfo::validate_shared_path_table() {
-
   _validating_shared_path_table = true;
   _shared_path_table = _header->_shared_path_table;
   _shared_path_entry_size = _header->_shared_path_entry_size;
@@ -398,7 +383,7 @@ bool FileMapInfo::validate_shared_path_table() {
   // entry index < _app_class_paths_start_index).
   int count = _header->has_platform_or_app_classes() ? _shared_path_table_size : _header->_app_class_paths_start_index;
 
-  for (int i=0; i<count; i++) {
+  for (int i = 0; i<count; i++) {
     if (i < module_paths_start_index) {
       if (shared_path(i)->validate()) {
       }
@@ -461,7 +446,7 @@ bool FileMapInfo::init_from_file(int fd) {
 
 // Read the FileMapInfo information from the file.
 bool FileMapInfo::open_for_read() {
-  _full_path = Arguments::GetSharedArchivePath();
+  _full_path = Arguments::NULL;
   int fd = open(_full_path, O_RDONLY | O_BINARY, 0);
   if (fd < 0) {
     if (errno == ENOENT) {
@@ -481,20 +466,14 @@ bool FileMapInfo::open_for_read() {
 // Write the FileMapInfo information to the file.
 
 void FileMapInfo::open_for_write() {
-  _full_path = Arguments::GetSharedArchivePath();
-  LogMessage(cds) msg;
-  if (msg.is_info()) {
-    msg.info("Dumping shared data to file: ");
-    msg.info("   %s", _full_path);
-  }
+  _full_path = Arguments::NULL;
 
   // Use remove() to delete the existing file because, on Unix, this will
   // allow processes that have it open continued access to the file.
   remove(_full_path);
   int fd = open(_full_path, O_RDWR | O_CREAT | O_TRUNC | O_BINARY, 0444);
   if (fd < 0) {
-    fail_stop("Unable to create shared archive file %s: (%s).", _full_path,
-              os::strerror(errno));
+    fail_stop("Unable to create shared archive file %s: (%s).", _full_path, os::strerror(errno));
   }
   _fd = fd;
   _file_offset = 0;
@@ -577,7 +556,6 @@ void FileMapInfo::write_region(int region, char* base, size_t size, bool read_on
 //             +-- gap
 size_t FileMapInfo::write_archive_heap_regions(GrowableArray<MemRegion> *heap_mem,
                                                int first_region_id, int max_num_regions) {
-
   int arr_len = heap_mem == NULL ? 0 : heap_mem->length();
   if (arr_len > max_num_regions) {
     fail_stop("Unable to write archive heap memory regions: number of memory regions exceeds maximum due to fragmentation");
@@ -715,9 +693,7 @@ char* FileMapInfo::map_region(int i, char** top_ret) {
   char *requested_addr = _header->region_addr(i);
 
   // map the contents of the CDS archive in this memory
-  char *base = os::map_memory(_fd, _full_path, si->_file_offset,
-                              requested_addr, size, si->_read_only,
-                              si->_allow_exec);
+  char *base = os::map_memory(_fd, _full_path, si->_file_offset, requested_addr, size, si->_read_only, si->_allow_exec);
   if (base == NULL || base != requested_addr) {
     fail_continue("Unable to map %s shared space at required address.", shared_region_name[i]);
     return NULL;
@@ -737,24 +713,6 @@ static int num_string_ranges = 0;
 static int num_open_archive_heap_ranges = 0;
 
 bool FileMapInfo::verify_region_checksum(int i) {
-  if (!VerifySharedSpaces) {
-    return true;
-  }
-
-  size_t sz = _header->_space[i]._used;
-
-  if (sz == 0) {
-    return true; // no data
-  }
-  if ((MetaspaceShared::is_string_region(i) && !StringTable::shared_string_mapped()) || (MetaspaceShared::is_open_archive_heap_region(i) && !MetaspaceShared::open_archive_heap_region_mapped())) {
-    return true; // archived heap data is not mapped
-  }
-  const char* buf = _header->region_addr(i);
-  int crc = ClassLoader::crc32(0, buf, (jint)sz);
-  if (crc != _header->_space[i]._crc) {
-    fail_continue("Checksum verification failed.");
-    return false;
-  }
   return true;
 }
 
@@ -783,7 +741,7 @@ void FileMapInfo::assert_mark(bool check) {
 
 void FileMapInfo::metaspace_pointers_do(MetaspaceClosure* it) {
   it->push(&_shared_path_table);
-  for (int i=0; i<_shared_path_table_size; i++) {
+  for (int i = 0; i<_shared_path_table_size; i++) {
     shared_path(i)->metaspace_pointers_do(it);
   }
 }
@@ -805,7 +763,6 @@ bool FileMapInfo::_validating_shared_path_table = false;
 // [2] validate_shared_path_table - this is done later, because the table is in the RW
 //     region of the archive, which is not mapped yet.
 bool FileMapInfo::initialize() {
-
   if (!open_for_read()) {
     return false;
   }
@@ -819,8 +776,7 @@ bool FileMapInfo::initialize() {
 
 char* FileMapInfo::FileMapHeader::region_addr(int idx) {
   if (MetaspaceShared::is_heap_region(idx)) {
-    return _space[idx]._used > 0 ?
-             (char*)((void*)CompressedOops::decode_not_null((narrowOop)_space[idx]._addr._offset)) : NULL;
+    return _space[idx]._used > 0 ? (char*)((void*)CompressedOops::decode_not_null((narrowOop)_space[idx]._addr._offset)) : NULL;
   } else {
     return _space[idx]._addr._base;
   }
@@ -835,13 +791,8 @@ int FileMapInfo::FileMapHeader::compute_crc() {
   return crc;
 }
 
-// This function should only be called during run time with UseSharedSpaces enabled.
+// This function should only be called during run time with false enabled.
 bool FileMapInfo::FileMapHeader::validate() {
-  if (VerifySharedSpaces && compute_crc() != _crc) {
-    fail_continue("Header checksum verification failed.");
-    return false;
-  }
-
   if (!Arguments::has_jimage()) {
     FileMapInfo::fail_continue("The shared archive file cannot be used with an exploded module build.");
     return false;
@@ -902,26 +853,6 @@ bool FileMapInfo::validate_header() {
   return status;
 }
 
-// Check if a given address is within one of the shared regions
-bool FileMapInfo::is_in_shared_region(const void* p, int idx) {
-  char* base = _header->region_addr(idx);
-  if (p >= base && p < base + _header->_space[idx]._used) {
-    return true;
-  }
-  return false;
-}
-
-void FileMapInfo::print_shared_spaces() {
-  tty->print_cr("Shared Spaces:");
-  for (int i = 0; i < MetaspaceShared::n_regions; i++) {
-    struct FileMapInfo::FileMapHeader::space_info* si = &_header->_space[i];
-    char *base = _header->region_addr(i);
-    tty->print("  %s " INTPTR_FORMAT "-" INTPTR_FORMAT,
-                        shared_region_name[i],
-                        p2i(base), p2i(base + si->_used));
-  }
-}
-
 // Unmap mapped regions of shared space.
 void FileMapInfo::stop_sharing_and_unmap(const char* msg) {
   FileMapInfo *map_info = FileMapInfo::current_info();
@@ -936,13 +867,7 @@ void FileMapInfo::stop_sharing_and_unmap(const char* msg) {
     }
     // Dealloc the archive heap regions only without unmapping. The regions are part
     // of the java heap. Unmapping of the heap regions are managed by GC.
-    map_info->dealloc_archive_heap_regions(open_archive_heap_ranges,
-                                           num_open_archive_heap_ranges,
-                                           true);
-    map_info->dealloc_archive_heap_regions(string_ranges,
-                                           num_string_ranges,
-                                           false);
-  } else if (false) {
-    fail_stop("%s", msg);
+    map_info->dealloc_archive_heap_regions(open_archive_heap_ranges, num_open_archive_heap_ranges, true);
+    map_info->dealloc_archive_heap_regions(string_ranges, num_string_ranges, false);
   }
 }

@@ -20,7 +20,6 @@
 #include "gc/shared/collectedHeap.hpp"
 #include "interpreter/bytecode.hpp"
 #include "interpreter/interpreter.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
@@ -198,8 +197,6 @@ const char* Runtime1::name_for_address(address entry) {
   FUNCTION_CASE(entry, SharedRuntime::lmul);
   FUNCTION_CASE(entry, SharedRuntime::lrem);
   FUNCTION_CASE(entry, SharedRuntime::lrem);
-  FUNCTION_CASE(entry, SharedRuntime::dtrace_method_entry);
-  FUNCTION_CASE(entry, SharedRuntime::dtrace_method_exit);
   FUNCTION_CASE(entry, is_instance_of);
   FUNCTION_CASE(entry, trace_block_entry);
   FUNCTION_CASE(entry, StubRoutines::updateBytesCRC32());
@@ -384,7 +381,6 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
   // skip the exception cache update (i.e., just leave continuation==NULL).
   address continuation = NULL;
   if (guard_pages_enabled) {
-
     // New exception handling mechanism can support inlined methods
     // with exception handlers since the mappings are from PC to PC
 
@@ -656,7 +652,6 @@ JRT_ENTRY(void, Runtime1::patch_code(JavaThread* thread, Runtime1::StubID stub_i
   bool load_klass_or_mirror_patch_id = (stub_id == Runtime1::load_klass_patching_id || stub_id == Runtime1::load_mirror_patching_id);
 
   if (stub_id == Runtime1::access_field_patching_id) {
-
     Bytecode_field field_access(caller_method, bci);
     fieldDescriptor result; // initialize class if needed
     Bytecodes::Code code = field_access.code();
@@ -689,7 +684,6 @@ JRT_ENTRY(void, Runtime1::patch_code(JavaThread* thread, Runtime1::StubID stub_i
 
     patch_field_type = result.field_type();
     deoptimize_for_atomic = (AlwaysAtomicAccesses && (patch_field_type == T_DOUBLE || patch_field_type == T_LONG));
-
   } else if (load_klass_or_mirror_patch_id) {
     Klass* k = NULL;
     switch (code) {
@@ -923,10 +917,8 @@ JRT_ENTRY(void, Runtime1::patch_code(JavaThread* thread, Runtime1::StubID stub_i
             // the reloc info so that it will get updated during
             // future GCs.
             RelocIterator iter(nm, (address)instr_pc, (address)(instr_pc + 1));
-            relocInfo::change_reloc_info_for_address(&iter, (address) instr_pc,
-                                                     relocInfo::none, rtype);
+            relocInfo::change_reloc_info_for_address(&iter, (address) instr_pc, relocInfo::none, rtype);
           }
-
         } else {
           ICache::invalidate_range(copy_buff, *byte_count);
           NativeGeneralJump::insert_unconditional(instr_pc, being_initialized_entry);

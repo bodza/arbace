@@ -9,7 +9,6 @@ NativeCallStack NativeCallStack::EMPTY_STACK(0, false);
 
 NativeCallStack::NativeCallStack(int toSkip, bool fillStack) :
   _hash_value(0) {
-
   if (fillStack) {
     // We need to skip the NativeCallStack::NativeCallStack frame if a tail call is NOT used
     // to call os::get_native_stack. A tail call is used if _NMT_NOINLINE_ is not defined

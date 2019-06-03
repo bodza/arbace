@@ -28,7 +28,6 @@
 // MT-safe to use.
 
 void* CompiledIC::cached_value() const {
-
   if (!is_in_transition_state()) {
     void* data = get_data();
     // If we let the metadata value here be initialized to zero...
@@ -39,7 +38,6 @@ void* CompiledIC::cached_value() const {
 }
 
 void CompiledIC::internal_set_ic_destination(address entry_point, bool is_icstub, void* cache, bool is_icholder) {
-
   // Don't use ic_destination for this test since that forwards
   // through ICBuffer instead of returning the actual current state of
   // the CompiledIC.
@@ -107,7 +105,6 @@ void CompiledIC::clear_ic_stub() {
 // High-level access to an inline cache. Guaranteed to be MT-safe.
 
 void CompiledIC::initialize_from_iter(RelocIterator* iter) {
-
   if (iter->type() == relocInfo::virtual_call_type) {
     virtual_call_Relocation* r = iter->virtual_call_reloc();
     _is_optimized = false;
@@ -143,7 +140,6 @@ CompiledIC::CompiledIC(RelocIterator* iter)
 }
 
 bool CompiledIC::set_to_megamorphic(CallInfo* call_info, Bytecodes::Code bytecode, TRAPS) {
-
   address entry;
   if (call_info->call_kind() == CallInfo::itable_call) {
     int itable_index = call_info->itable_index();
@@ -170,13 +166,11 @@ bool CompiledIC::set_to_megamorphic(CallInfo* call_info, Bytecodes::Code bytecod
 
 // true if destination is megamorphic stub
 bool CompiledIC::is_megamorphic() const {
-
   // Cannot rely on cached_value. It is either an interface or a method.
   return VtableStubs::entry_point(ic_destination()) != NULL;
 }
 
 bool CompiledIC::is_call_to_compiled() const {
-
   // Use unsafe, since an inline cache might point to a zombie method. However, the zombie
   // method is guaranteed to still exist, since we only remove methods after all inline caches
   // has been cleaned up
@@ -209,7 +203,6 @@ bool CompiledIC::is_call_to_interpreted() const {
 }
 
 void CompiledIC::set_to_clean(bool in_use) {
-
   address entry = _call->get_resolve_call_stub(is_optimized());
 
   // A zombie transition will always be safe, since the metadata has already been set to NULL, so

@@ -92,7 +92,6 @@ protected:
   ~PtrQueue();
 
 public:
-
   // Associate a lock with a ptr queue.
   void set_lock(Mutex* lock) { _lock = lock; }
 
@@ -269,14 +268,9 @@ protected:
 
   // Because of init-order concerns, we can't pass these as constructor
   // arguments.
-  void initialize(Monitor* cbl_mon,
-                  Mutex* fl_lock,
-                  int process_completed_threshold,
-                  int max_completed_queue,
-                  PtrQueueSet *fl_owner = NULL);
+  void initialize(Monitor* cbl_mon, Mutex* fl_lock, int process_completed_threshold, int max_completed_queue, PtrQueueSet *fl_owner = NULL);
 
 public:
-
   // Return the buffer for a BufferNode of size buffer_size().
   void** allocate_buffer();
 

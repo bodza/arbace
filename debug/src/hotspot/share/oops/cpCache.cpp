@@ -6,7 +6,6 @@
 #include "interpreter/interpreter.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "interpreter/rewriter.hpp"
-#include "logging/log.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceClosure.hpp"
 #include "memory/metaspaceShared.hpp"
@@ -186,7 +185,7 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
     if (do_resolve) {
       set_bytecode_1(invoke_code);
     }
-  } else if (byte_no == 2)  {
+  } else if (byte_no == 2) {
     if (change_to_virtual) {
       // NOTE: THIS IS A HACK - BE VERY CAREFUL!!!
       //
@@ -334,7 +333,6 @@ void ConstantPoolCacheEntry::set_method_handle_common(const constantPoolHandle& 
 }
 
 bool ConstantPoolCacheEntry::save_and_throw_indy_exc(const constantPoolHandle& cpool, int cpool_index, int index, constantTag tag, TRAPS) {
-
   // Use the resolved_references() lock for this cpCache entry.
   // resolved_references are created for all classes with Invokedynamic, MethodHandle
   // or MethodType constant pool cache entries.
@@ -437,7 +435,6 @@ void ConstantPoolCacheEntry::verify(outputStream* st) const {
 // Implementation of ConstantPoolCache
 
 ConstantPoolCache* ConstantPoolCache::allocate(ClassLoaderData* loader_data, const intStack& index_map, const intStack& invokedynamic_index_map, const intStack& invokedynamic_map, TRAPS) {
-
   const int length = index_map.length() + invokedynamic_index_map.length();
   int size = ConstantPoolCache::size(length);
 
@@ -517,7 +514,7 @@ void ConstantPoolCache::walk_entries_for_initialization(bool check_only) {
 
   if (check_only) {
   } else {
-    for (int i=0; i<length(); i++) {
+    for (int i = 0; i<length(); i++) {
       entry_at(i)->reinitialize(f2_used[i]);
     }
   }

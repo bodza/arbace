@@ -39,7 +39,7 @@ void UnhandledOops::register_unhandled_oop(oop* op, address pc) {
 
   _level ++;
   if (unhandled_oop_print) {
-    for (int i=0; i<_level; i++) tty->print(" ");
+    for (int i = 0; i<_level; i++) tty->print(" ");
     tty->print_cr("r " INTPTR_FORMAT, p2i(op));
   }
   UnhandledOopEntry entry(op, pc);
@@ -55,7 +55,6 @@ bool match_oop_entry(void *op, UnhandledOopEntry e) {
 // May not be called for the current thread, as in the case of
 // VM_GetOrSetLocal in jvmti.
 void UnhandledOops::allow_unhandled_oop(oop* op) {
-
   int i = _oop_list->find_from_end(op, match_oop_entry);
 
   UnhandledOopEntry entry = _oop_list->at(i);
@@ -71,7 +70,7 @@ void UnhandledOops::unregister_unhandled_oop(oop* op) {
 
   _level --;
   if (unhandled_oop_print) {
-    for (int i=0; i<_level; i++) tty->print(" ");
+    for (int i = 0; i<_level; i++) tty->print(" ");
     tty->print_cr("u " INTPTR_FORMAT, p2i(op));
   }
 
@@ -80,7 +79,6 @@ void UnhandledOops::unregister_unhandled_oop(oop* op) {
 }
 
 void UnhandledOops::clear_unhandled_oops() {
-
   for (int k = 0; k < _oop_list->length(); k++) {
     UnhandledOopEntry entry = _oop_list->at(k);
     // If an entry is on the unhandled oop list but isn't on the stack

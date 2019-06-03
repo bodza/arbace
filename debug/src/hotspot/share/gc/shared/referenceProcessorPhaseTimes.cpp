@@ -4,8 +4,6 @@
 #include "gc/shared/referenceProcessorPhaseTimes.hpp"
 #include "gc/shared/referenceProcessor.inline.hpp"
 #include "gc/shared/workerDataArray.inline.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 
 static const char* SubPhasesParWorkTitle[ReferenceProcessor::RefSubPhaseMax] = {
@@ -43,8 +41,6 @@ static const char* ReferenceTypeNames[REF_PHANTOM + 1] = {
        "None", "Other", "SoftReference", "WeakReference", "FinalReference", "PhantomReference"
        };
 
-STATIC_ASSERT((REF_PHANTOM + 1) == ARRAY_SIZE(ReferenceTypeNames));
-
 static const char* phase_enum_2_phase_string(ReferenceProcessor::RefProcPhases phase) {
   return PhaseNames[phase];
 }
@@ -70,7 +66,6 @@ RefProcSubPhasesWorkerTimeTracker::~RefProcSubPhasesWorkerTimeTracker() { }
 
 RefProcPhaseTimeBaseTracker::RefProcPhaseTimeBaseTracker(const char* title, ReferenceProcessor::RefProcPhases phase_number, ReferenceProcessorPhaseTimes* phase_times) :
   _phase_times(phase_times), _start_ticks(), _end_ticks(), _phase_number(phase_number) {
-
   _start_ticks.stamp();
   if (_phase_times->gc_timer() != NULL) {
     _phase_times->gc_timer()->register_gc_phase_start(title, _start_ticks);
@@ -127,7 +122,6 @@ RefProcTotalPhaseTimesTracker::~RefProcTotalPhaseTimesTracker() {
 
 ReferenceProcessorPhaseTimes::ReferenceProcessorPhaseTimes(GCTimer* gc_timer, uint max_gc_threads) :
   _gc_timer(gc_timer), _processing_is_mt(false) {
-
   for (uint i = 0; i < ReferenceProcessor::RefSubPhaseMax; i++) {
     _sub_phases_worker_time_sec[i] = new WorkerDataArray<double>(max_gc_threads, SubPhasesParWorkTitle[i]);
   }
@@ -206,19 +200,7 @@ void ReferenceProcessorPhaseTimes::set_balance_queues_time_ms(ReferenceProcessor
   _balance_queues_time_ms[phase] = time_ms;
 }
 
-#define TIME_FORMAT "%.1lfms"
-
 void ReferenceProcessorPhaseTimes::print_all_references(uint base_indent, bool print_total) const {
-  if (print_total) {
-    LogTarget(Debug, gc, phases, ref) lt;
-
-    if (lt.is_enabled()) {
-      LogStream ls(lt);
-      ls.print_cr("%s%s: " TIME_FORMAT,
-                  Indents[base_indent], "Reference Processing", total_time_ms());
-    }
-  }
-
   uint next_indent = base_indent + 1;
   print_phase(ReferenceProcessor::RefPhase1, next_indent);
   print_phase(ReferenceProcessor::RefPhase2, next_indent);
@@ -231,22 +213,7 @@ void ReferenceProcessorPhaseTimes::print_all_references(uint base_indent, bool p
   print_reference(REF_PHANTOM, next_indent);
 }
 
-void ReferenceProcessorPhaseTimes::print_reference(ReferenceType ref_type, uint base_indent) const {
-  LogTarget(Debug, gc, phases, ref) lt;
-
-  if (lt.is_enabled()) {
-    LogStream ls(lt);
-    ResourceMark rm;
-
-    ls.print_cr("%s%s:", Indents[base_indent], ref_type_2_string(ref_type));
-
-    uint const next_indent = base_indent + 1;
-    int const ref_type_index = ref_type_2_index(ref_type);
-
-    ls.print_cr("%sDiscovered: " SIZE_FORMAT, Indents[next_indent], _ref_discovered[ref_type_index]);
-    ls.print_cr("%sCleared: " SIZE_FORMAT, Indents[next_indent], _ref_cleared[ref_type_index]);
-  }
-}
+void ReferenceProcessorPhaseTimes::print_reference(ReferenceType ref_type, uint base_indent) const { }
 
 void ReferenceProcessorPhaseTimes::print_phase(ReferenceProcessor::RefProcPhases phase, uint indent) const {
   double phase_time = phase_time_ms(phase);
@@ -254,78 +221,4 @@ void ReferenceProcessorPhaseTimes::print_phase(ReferenceProcessor::RefProcPhases
   if (phase_time == uninitialized()) {
     return;
   }
-
-  LogTarget(Debug, gc, phases, ref) lt;
-  LogStream ls(lt);
-
-  ls.print_cr("%s%s%s " TIME_FORMAT,
-              Indents[indent],
-              phase_enum_2_phase_string(phase),
-              indent == 0 ? "" : ":", /* 0 indent logs don't need colon. */
-              phase_time);
-
-  LogTarget(Debug, gc, phases, ref) lt2;
-  if (lt2.is_enabled()) {
-    LogStream ls(lt2);
-
-    if (_processing_is_mt) {
-      print_balance_time(&ls, phase, indent + 1);
-    }
-
-    switch (phase) {
-      case ReferenceProcessor::RefPhase1:
-        print_sub_phase(&ls, ReferenceProcessor::SoftRefSubPhase1, indent + 1);
-        break;
-      case ReferenceProcessor::RefPhase2:
-        print_sub_phase(&ls, ReferenceProcessor::SoftRefSubPhase2, indent + 1);
-        print_sub_phase(&ls, ReferenceProcessor::WeakRefSubPhase2, indent + 1);
-        print_sub_phase(&ls, ReferenceProcessor::FinalRefSubPhase2, indent + 1);
-        break;
-      case ReferenceProcessor::RefPhase3:
-        print_sub_phase(&ls, ReferenceProcessor::FinalRefSubPhase3, indent + 1);
-        break;
-      case ReferenceProcessor::RefPhase4:
-        print_sub_phase(&ls, ReferenceProcessor::PhantomRefSubPhase4, indent + 1);
-        break;
-      default:
-        ShouldNotReachHere();
-    }
-    if (phase == ReferenceProcessor::RefPhase2) {
-      print_worker_time(&ls, _phase2_worker_time_sec, Phase2SerWorkTitle, indent + 1);
-    }
-  }
 }
-
-void ReferenceProcessorPhaseTimes::print_balance_time(LogStream* ls, ReferenceProcessor::RefProcPhases phase, uint indent) const {
-  double balance_time = balance_queues_time_ms(phase);
-  if (balance_time != uninitialized()) {
-    ls->print_cr("%s%s " TIME_FORMAT, Indents[indent], "Balance queues:", balance_time);
-  }
-}
-
-void ReferenceProcessorPhaseTimes::print_sub_phase(LogStream* ls, ReferenceProcessor::RefProcSubPhases sub_phase, uint indent) const {
-  print_worker_time(ls, _sub_phases_worker_time_sec[sub_phase], SubPhasesSerWorkTitle[sub_phase], indent);
-}
-
-void ReferenceProcessorPhaseTimes::print_worker_time(LogStream* ls, WorkerDataArray<double>* worker_time, const char* ser_title, uint indent) const {
-  ls->print("%s", Indents[indent]);
-  if (_processing_is_mt) {
-    worker_time->print_summary_on(ls, true);
-    LogTarget(Trace, gc, phases, task) lt;
-    if (lt.is_enabled()) {
-      LogStream ls2(lt);
-      ls2.print("%s", Indents[indent]);
-      worker_time->print_details_on(&ls2);
-    }
-  } else {
-    if (worker_time->get(0) != uninitialized()) {
-      ls->print_cr("%s " TIME_FORMAT,
-                   ser_title,
-                   worker_time->get(0) * MILLIUNITS);
-    } else {
-      ls->print_cr("%s skipped", ser_title);
-    }
-  }
-}
-
-#undef TIME_FORMAT

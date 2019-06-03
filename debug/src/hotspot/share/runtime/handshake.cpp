@@ -1,7 +1,5 @@
 #include "precompiled.hpp"
 
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/handshake.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
@@ -71,14 +69,6 @@ bool VM_Handshake::handshake_has_timed_out(jlong start_time) {
 }
 
 void VM_Handshake::handle_timeout() {
-  LogStreamHandle(Warning, handshake) log_stream;
-  for (JavaThreadIteratorWithHandle jtiwh; JavaThread *thr = jtiwh.next(); ) {
-    if (thr->has_handshake()) {
-      log_stream.print("Thread " PTR_FORMAT " has not cleared its handshake op", p2i(thr));
-      thr->print_thread_state_on(&log_stream);
-    }
-  }
-  log_stream.flush();
   fatal("Handshake operation timed out");
 }
 
@@ -184,7 +174,6 @@ class VM_HandshakeAllThreads: public VM_Handshake {
         // Includes canceled operations by exiting threads.
         number_of_threads_completed++;
       }
-
     } while (number_of_threads_issued > number_of_threads_completed);
   }
 
@@ -263,7 +252,6 @@ void HandshakeState::clear_handshake(JavaThread* target) {
 }
 
 void HandshakeState::process_self_inner(JavaThread* thread) {
-
   if (thread->is_terminated()) {
     // If thread is not on threads list but armed, cancel.
     thread->cancel_handshake();
@@ -308,7 +296,6 @@ bool HandshakeState::claim_handshake_for_vmthread() {
 }
 
 void HandshakeState::process_by_vmthread(JavaThread* target) {
-
   if (!has_operation()) {
     // JT has already cleared its handshake
     return;

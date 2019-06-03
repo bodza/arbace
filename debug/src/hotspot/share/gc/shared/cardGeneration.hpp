@@ -36,7 +36,6 @@ class CardGeneration: public Generation {
   virtual CompactibleSpace* space() const = 0;
 
  public:
-
   // Attempt to expand the generation by "bytes".  Expand by at a
   // minimum "expand_bytes".  Return true if some amount (not
   // necessarily the full "bytes") was done.

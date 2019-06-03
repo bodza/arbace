@@ -5,7 +5,6 @@
 #include "memory/allocation.hpp"
 
 class ErrorReporter : public StackObj {
-
 public:
   ErrorReporter();
   ~ErrorReporter() { };

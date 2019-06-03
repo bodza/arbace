@@ -116,8 +116,6 @@ class DebugInformationRecorder: public ResourceObj {
 
   int last_pc_offset() { return last_pc()->pc_offset(); }
 
-  bool recording_non_safepoints() { return _recording_non_safepoints; }
-
   PcDesc* pcs() const { return _pcs; }
   int pcs_length() const { return _pcs_length; }
 
@@ -127,9 +125,6 @@ class DebugInformationRecorder: public ResourceObj {
   friend class ScopeDesc;
   friend class vframeStreamCommon;
   friend class DIR_Chunk;
-
-  // True if we are recording non-safepoint scopes.
-  const bool _recording_non_safepoints;
 
   DebugInfoWriteStream* _stream;
 

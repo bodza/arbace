@@ -2,8 +2,6 @@
 
 #include "classfile/classLoader.hpp"
 #include "classfile/sharedPathsMiscInfo.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/filemap.hpp"
 #include "memory/metaspaceShared.hpp"
@@ -96,13 +94,6 @@ bool SharedPathsMiscInfo::check() {
     _cur_ptr += strlen(path) + 1;
     if (!read_jint(&type)) {
       return fail("Corrupted archive file header");
-    }
-    LogTarget(Info, class, path) lt;
-    if (lt.is_enabled()) {
-      lt.print("type=%s ", type_name(type));
-      LogStream ls(lt);
-      print_path(&ls, type, path);
-      ls.cr();
     }
     if (!check(type, path)) {
       return false;

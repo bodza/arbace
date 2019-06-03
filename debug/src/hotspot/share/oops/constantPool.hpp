@@ -29,7 +29,6 @@ class CPSlot {
   intptr_t _ptr;
   enum TagBits  { _pseudo_bit = 1 };
  public:
-
   CPSlot(intptr_t ptr): _ptr(ptr) { }
   CPSlot(Symbol* ptr, int tag_bits = 0): _ptr((intptr_t)ptr | tag_bits) { }
 
@@ -184,10 +183,7 @@ class ConstantPool : public Metadata {
   virtual MetaspaceObj::Type type() const { return ConstantPoolType; }
 
   // Create object cache in the constant pool
-  void initialize_resolved_references(ClassLoaderData* loader_data,
-                                      const intStack& reference_map,
-                                      int constant_pool_map_length,
-                                      TRAPS);
+  void initialize_resolved_references(ClassLoaderData* loader_data, const intStack& reference_map, int constant_pool_map_length, TRAPS);
 
   // resolved strings, methodHandles and callsite objects from the constant pool
   objArrayOop resolved_references()  const;
@@ -619,7 +615,6 @@ class ConstantPool : public Metadata {
  private:
   enum { _no_index_sentinel = -1, _possible_index_sentinel = -2 };
  public:
-
   // Get the tag for a constant, which may involve a constant dynamic
   constantTag constant_tag_at(int which);
   // Get the basic type for a constant, which may involve a constant dynamic
@@ -651,21 +646,17 @@ class ConstantPool : public Metadata {
     return resolve_bootstrap_specifier_at_impl(h_this, index, THREAD);
   }
 
-  void copy_bootstrap_arguments_at(int index,
-                                   int start_arg, int end_arg,
-                                   objArrayHandle info, int pos,
-                                   bool must_resolve, Handle if_not_available, TRAPS) {
+  void copy_bootstrap_arguments_at(int index, int start_arg, int end_arg, objArrayHandle info, int pos, bool must_resolve, Handle if_not_available, TRAPS) {
     constantPoolHandle h_this(THREAD, this);
-    copy_bootstrap_arguments_at_impl(h_this, index, start_arg, end_arg,
-                                     info, pos, must_resolve, if_not_available, THREAD);
+    copy_bootstrap_arguments_at_impl(h_this, index, start_arg, end_arg, info, pos, must_resolve, if_not_available, THREAD);
   }
 
   // Klass name matches name at offset
   bool klass_name_at_matches(const InstanceKlass* k, int which);
 
   // Sizing
-  int length() const                   { return _length; }
-  void set_length(int length)          { _length = length; }
+  int length() const          { return _length; }
+  void set_length(int length) { _length = length; }
 
   // Tells whether index is within bounds.
   bool is_within_bounds(int index) const {
@@ -673,11 +664,11 @@ class ConstantPool : public Metadata {
   }
 
   // Sizing (in words)
-  static int header_size()             {
+  static int header_size()    {
     return align_up((int)sizeof(ConstantPool), wordSize) / wordSize;
   }
-  static int size(int length)          { return align_metadata_size(header_size() + length); }
-  int size() const                     { return size(length()); }
+  static int size(int length) { return align_metadata_size(header_size() + length); }
+  int size() const            { return size(length()); }
 
   // ConstantPools should be stored in the read-only region of CDS archive.
   static bool is_read_only_by_default() { return true; }
@@ -723,7 +714,6 @@ class ConstantPool : public Metadata {
   }
 
  private:
-
   void set_resolved_references(OopHandle s) { _cache->set_resolved_references(s); }
   Array<u2>* reference_map() const        {  return (_cache == NULL) ? NULL :  _cache->reference_map(); }
   void set_reference_map(Array<u2>* o)    { _cache->set_reference_map(o); }
@@ -842,11 +832,9 @@ class SymbolHashMapEntry : public CHeapObj<mtSymbol> {
 
   SymbolHashMapEntry(unsigned int hash, Symbol* symbol, u2 value)
     : _hash(hash), _symbol(symbol), _value(value), _next(NULL) { }
-
-}; // End SymbolHashMapEntry class
+};
 
 class SymbolHashMapBucket : public CHeapObj<mtSymbol> {
-
 private:
   SymbolHashMapEntry*    _entry;
 
@@ -854,11 +842,9 @@ public:
   SymbolHashMapEntry* entry() const         {  return _entry; }
   void set_entry(SymbolHashMapEntry* entry) { _entry = entry; }
   void clear()                              { _entry = NULL; }
-
-}; // End SymbolHashMapBucket class
+};
 
 class SymbolHashMap: public CHeapObj<mtSymbol> {
-
  private:
   // Default number of entries in the table
   enum SymbolHashMap_Constants {
@@ -871,7 +857,6 @@ class SymbolHashMap: public CHeapObj<mtSymbol> {
   void initialize_table(int table_size);
 
  public:
-
   int table_size() const        { return _table_size; }
 
   SymbolHashMap()               { initialize_table(_Def_HashMap_Size); }
@@ -900,6 +885,6 @@ class SymbolHashMap: public CHeapObj<mtSymbol> {
   }
 
   ~SymbolHashMap();
-}; // End SymbolHashMap class
+};
 
 #endif

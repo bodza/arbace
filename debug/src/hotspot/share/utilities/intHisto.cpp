@@ -22,7 +22,7 @@ void IntHistogram::print_on(outputStream* st) const {
   double tot_d = (double)_tot;
   st->print_cr("Outcome     # of occurrences   %% of occurrences");
   st->print_cr("-----------------------------------------------");
-  for (int i=0; i < _elements->length()-2; i++) {
+  for (int i = 0; i < _elements->length()-2; i++) {
     int cnt = _elements->at(i);
     if (cnt != 0) {
       st->print_cr("%7d        %10d         %8.4f", i, cnt, (double)cnt/tot_d);

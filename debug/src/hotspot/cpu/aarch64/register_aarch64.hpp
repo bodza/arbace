@@ -180,7 +180,6 @@ class RegSet {
   RegSet(uint32_t bitset) : _bitset(bitset) { }
 
 public:
-
   RegSet() : _bitset(0) { }
 
   RegSet(Register r1) : _bitset(r1->bit()) { }

@@ -98,7 +98,7 @@ class VirtualMemoryAllocationWalker : public VirtualMemoryWalker {
  public:
   VirtualMemoryAllocationWalker() : _count(0) { }
 
-  bool do_allocation_site(const ReservedMemoryRegion* rgn)  {
+  bool do_allocation_site(const ReservedMemoryRegion* rgn) {
     if (rgn->size() >= MemBaseline::SIZE_THRESHOLD) {
       if (_virtual_memory_regions.add(*rgn) != NULL) {
         _count ++;

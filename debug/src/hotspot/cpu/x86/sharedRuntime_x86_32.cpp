@@ -8,7 +8,6 @@
 #include "code/vtableStubs.hpp"
 #include "gc/shared/gcLocker.hpp"
 #include "interpreter/interpreter.hpp"
-#include "logging/log.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/compiledICHolder.hpp"
 #include "runtime/safepointMechanism.hpp"
@@ -64,7 +63,6 @@ class RegisterSaver {
   enum { FPU_regs_live = flags_off - fpu_state_end };
 
   public:
-
   static OopMap* save_live_registers(MacroAssembler* masm, int additional_frame_words, int* total_frame_words, bool verify_fpu = true, bool save_vectors = false);
   static void restore_live_registers(MacroAssembler* masm, bool restore_vectors = false);
 
@@ -262,7 +260,6 @@ void RegisterSaver::restore_live_registers(MacroAssembler* masm, bool restore_ve
 }
 
 void RegisterSaver::restore_result_registers(MacroAssembler* masm) {
-
   // Just restore result register. Only used by deoptimization. By
   // now any callee save register that needs to be restore to a c2
   // caller of the deoptee has been extracted into the vframeArray
@@ -543,7 +540,6 @@ static void gen_c2i_adapter(MacroAssembler *masm,
         __ movl(rdi, Address(rsp, ld_off));
         __ movptr(Address(rsp, st_off), rdi);
       } else {
-
         // ld_off == LSW, ld_off+VMRegImpl::stack_slot_size == MSW
         // st_off == MSW, st_off-wordSize == LSW
 
@@ -896,7 +892,6 @@ static void object_move(MacroAssembler* masm,
                         VMRegPair dst,
                         bool is_receiver,
                         int* receiver_offset) {
-
   // Because of the calling conventions we know that src can be a
   // register or a stack location. dst can only be a stack location.
 
@@ -943,7 +938,6 @@ static void object_move(MacroAssembler* masm,
 
 // A float arg may have to do float reg int reg conversion
 static void float_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
-
   // Because of the calling convention we know that src is either a stack location
   // or an xmm register. dst can only be a stack location.
 
@@ -958,7 +952,6 @@ static void float_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
 
 // A long move
 static void long_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
-
   // The only legal possibility for a long_move VMRegPair is:
   // 1: two stack slots (possibly unaligned)
   // as neither the java  or C calling convention will use registers
@@ -974,7 +967,6 @@ static void long_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
 
 // A double move
 static void double_move(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
-
   // The only legal possibilities for a double_move VMRegPair are:
   // The painful thing here is that like long_move a VMRegPair might be
 
@@ -1681,7 +1673,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   // Pre-load a static method's oop into rsi.  Used both by locking code and
   // the normal JNI call code.
   if (method->is_static() && !is_critical_native) {
-
     //  load opp into a register
     __ movoop(oop_handle_reg, JNIHandles::make_local(method->method_holder()->java_mirror()));
 
@@ -1718,7 +1709,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
   // Lock a synchronized method
   if (method->is_synchronized()) {
-
     const int mark_word_offset = BasicLock::displaced_header_offset_in_bytes();
 
     // Get the handle (the 2nd argument)
@@ -1867,11 +1857,9 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     save_native_result(masm, ret_type, stack_slots);
     __ push(thread);
     if (!is_critical_native) {
-      __ call(RuntimeAddress(CAST_FROM_FN_PTR(address,
-                                              JavaThread::check_special_condition_for_native_trans)));
+      __ call(RuntimeAddress(CAST_FROM_FN_PTR(address, JavaThread::check_special_condition_for_native_trans)));
     } else {
-      __ call(RuntimeAddress(CAST_FROM_FN_PTR(address,
-                                              JavaThread::check_special_condition_for_native_trans_and_transition)));
+      __ call(RuntimeAddress(CAST_FROM_FN_PTR(address, JavaThread::check_special_condition_for_native_trans_and_transition)));
     }
     __ increment(rsp, wordSize);
     // Restore any method result value
@@ -1906,7 +1894,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   Label slow_path_unlock;
   Label unlock_done;
   if (method->is_synchronized()) {
-
     Label done;
 
     // Get locked oop from the handle we passed to jni
@@ -1999,7 +1986,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
   // Slow path locking & unlocking
   if (method->is_synchronized()) {
-
     // BEGIN Slow path lock
 
     __ bind(slow_path_lock);
@@ -2429,7 +2415,6 @@ void SharedRuntime::generate_deopt_blob() {
 // a safepoint.
 //
 SafepointBlob* SharedRuntime::generate_handler_blob(address call_ptr, int poll_type) {
-
   // Account for thread arg in our frame
   const int additional_words = 1;
   int frame_size_in_words;
@@ -2570,7 +2555,6 @@ SafepointBlob* SharedRuntime::generate_handler_blob(address call_ptr, int poll_t
 // must do any gc of the args.
 //
 RuntimeStub* SharedRuntime::generate_resolve_blob(address destination, const char* name) {
-
   // allocate space for the code
   ResourceMark rm;
 

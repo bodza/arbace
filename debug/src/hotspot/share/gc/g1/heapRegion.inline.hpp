@@ -116,7 +116,6 @@ HeapRegion::block_is_obj(const HeapWord* p) const {
 }
 
 inline size_t HeapRegion::block_size_using_bitmap(const HeapWord* addr, const G1CMBitMap* const prev_bitmap) const {
-
   // Old regions' dead objects may have dead classes
   // We need to find the next live object using the bitmap
   HeapWord* next = prev_bitmap->get_next_marked_addr(addr, prev_top_at_mark_start());

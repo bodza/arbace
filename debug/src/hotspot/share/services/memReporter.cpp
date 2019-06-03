@@ -93,7 +93,6 @@ void MemSummaryReporter::report() {
 }
 
 void MemSummaryReporter::report_summary_of_type(MEMFLAGS flag, MallocMemory* malloc_memory, VirtualMemory* virtual_memory) {
-
   size_t reserved_amount  = reserved_total (malloc_memory, virtual_memory);
   size_t committed_amount = committed_total(malloc_memory, virtual_memory);
 
@@ -243,7 +242,6 @@ void MemDetailReporter::report_virtual_memory_map() {
 }
 
 void MemDetailReporter::report_virtual_memory_region(const ReservedMemoryRegion* reserved_rgn) {
-
   // Don't report if size is too small
   if (amount_in_current_scale(reserved_rgn->size()) == 0) return;
 
@@ -371,7 +369,6 @@ void MemSummaryDiffReporter::print_virtual_memory_diff(size_t current_reserved, 
 }
 
 void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag, const MallocMemory* early_malloc, const VirtualMemory* early_vm, const MetaspaceSnapshot* early_ms, const MallocMemory* current_malloc, const VirtualMemory* current_vm, const MetaspaceSnapshot* current_ms) const {
-
   outputStream* out = output();
   const char* scale = current_scale();
 
@@ -402,7 +399,6 @@ void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag, const MallocMem
   }
 
   if (amount_in_current_scale(current_reserved_amount) > 0 || diff_in_current_scale(current_reserved_amount, early_reserved_amount) != 0) {
-
     // print summary line
     out->print("-%26s (", NMTUtil::flag_to_name(flag));
     print_virtual_memory_diff(current_reserved_amount, current_committed_amount,
@@ -428,7 +424,6 @@ void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag, const MallocMem
         out->print(" %+d", (int)(_current_baseline.array_class_count() - _early_baseline.array_class_count()));
       }
       out->print_cr(")");
-
     } else if (flag == mtThread) {
       // report thread count
       out->print("%27s (thread #" SIZE_FORMAT "", " ", _current_baseline.thread_count());

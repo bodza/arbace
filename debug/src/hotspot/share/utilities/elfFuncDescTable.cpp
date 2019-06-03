@@ -7,7 +7,6 @@
 
 ElfFuncDescTable::ElfFuncDescTable(FILE* file, Elf_Shdr shdr, int index) :
   _file(file), _index(index), _section(file, shdr) {
-
   _status = _section.status();
 }
 

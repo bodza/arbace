@@ -18,12 +18,9 @@ class ReservedSpace {
   bool   _executable;
 
   // ReservedSpace
-  ReservedSpace(char* base, size_t size, size_t alignment, bool special,
-                bool executable);
+  ReservedSpace(char* base, size_t size, size_t alignment, bool special, bool executable);
  protected:
-  void initialize(size_t size, size_t alignment, bool large,
-                  char* requested_address,
-                  bool executable);
+  void initialize(size_t size, size_t alignment, bool large, char* requested_address, bool executable);
 
  public:
   // Constructor
@@ -82,11 +79,8 @@ ReservedSpace ReservedSpace::last_part(size_t partition_size)
 // Class encapsulating behavior specific of memory space reserved for Java heap.
 class ReservedHeapSpace : public ReservedSpace {
  private:
-  void try_reserve_heap(size_t size, size_t alignment, bool large,
-                        char *requested_address);
-  void try_reserve_range(char *highest_start, char *lowest_start,
-                         size_t attach_point_alignment, char *aligned_HBMA,
-                         char *upper_bound, size_t size, size_t alignment, bool large);
+  void try_reserve_heap(size_t size, size_t alignment, bool large, char *requested_address);
+  void try_reserve_range(char *highest_start, char *lowest_start, size_t attach_point_alignment, char *aligned_HBMA, char *upper_bound, size_t size, size_t alignment, bool large);
   void initialize_compressed_heap(const size_t size, size_t alignment, bool large);
   // Create protection page at the beginning of the space.
   void establish_noaccess_prefix();

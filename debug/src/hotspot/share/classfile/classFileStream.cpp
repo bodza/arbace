@@ -7,13 +7,12 @@
 #include "memory/resourceArea.hpp"
 
 const bool ClassFileStream::verify = true;
-const bool ClassFileStream::no_verification = false;
 
 void ClassFileStream::truncated_file_error(TRAPS) const {
   THROW_MSG(vmSymbols::java_lang_ClassFormatError(), "Truncated class file");
 }
 
-ClassFileStream::ClassFileStream(const u1* buffer, int length, const char* source, bool verify_stream) :
+ClassFileStream::ClassFileStream(const u1* buffer, int length, const char* source) :
   _buffer_start(buffer),
   _buffer_end(buffer + length),
   _current(buffer),
@@ -41,7 +40,7 @@ const char* const ClassFileStream::clone_source() const {
 // clone stream with a rewound position
 const ClassFileStream* ClassFileStream::clone() const {
   const u1* const new_buffer_start = clone_buffer();
-  return new ClassFileStream(new_buffer_start, length(), clone_source(), false);
+  return new ClassFileStream(new_buffer_start, length(), clone_source());
 }
 
 u1 ClassFileStream::get_u1(TRAPS) const {

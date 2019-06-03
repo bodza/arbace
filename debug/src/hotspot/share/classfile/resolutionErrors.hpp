@@ -16,7 +16,6 @@ class ResolutionErrorEntry;
 const int CPCACHE_INDEX_MANGLE_VALUE = 1000000;
 
 class ResolutionErrorTable : public Hashtable<ConstantPool*, mtClass> {
-
 public:
   ResolutionErrorTable(int table_size);
 
@@ -37,12 +36,10 @@ public:
       (HashtableEntry<ConstantPool*, mtClass>*)new_entry);
   }
 
-  void add_entry(int index, unsigned int hash,
-                 const constantPoolHandle& pool, int which, Symbol* error, Symbol* message);
+  void add_entry(int index, unsigned int hash, const constantPoolHandle& pool, int which, Symbol* error, Symbol* message);
 
   // find error given the constant pool and constant pool index
-  ResolutionErrorEntry* find_entry(int index, unsigned int hash,
-                                   const constantPoolHandle& pool, int cp_index);
+  ResolutionErrorEntry* find_entry(int index, unsigned int hash, const constantPoolHandle& pool, int cp_index);
 
   unsigned int compute_hash(const constantPoolHandle& pool, int cp_index) {
     return (unsigned int) pool->identity_hash() + cp_index;

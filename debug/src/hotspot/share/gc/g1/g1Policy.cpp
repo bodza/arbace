@@ -15,7 +15,6 @@
 #include "gc/g1/heapRegion.inline.hpp"
 #include "gc/g1/heapRegionRemSet.hpp"
 #include "gc/shared/gcPolicyCounters.hpp"
-#include "logging/logStream.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/java.hpp"
 #include "runtime/mutexLocker.hpp"
@@ -242,7 +241,6 @@ G1Policy::YoungTargetLengths G1Policy::young_list_target_lengths(size_t rs_lengt
 
 uint
 G1Policy::calculate_young_list_target_length(size_t rs_lengths, uint base_min_length, uint desired_min_length, uint desired_max_length) const {
-
   // In case some edge-condition makes the desired max length too small...
   if (desired_max_length <= desired_min_length) {
     return desired_min_length;
@@ -1029,7 +1027,6 @@ void G1Policy::finalize_collection_set(double target_pause_time_ms, G1SurvivorRe
 }
 
 void G1Policy::transfer_survivors_to_cset(const G1SurvivorRegions* survivors) {
-
   // Add survivor regions to SurvRateGroup.
   note_start_adding_survivor_regions();
   finished_recalculating_age_indexes(true /* is_survivors */);

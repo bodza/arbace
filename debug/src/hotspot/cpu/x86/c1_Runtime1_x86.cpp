@@ -220,7 +220,6 @@ enum reg_save_layout {
 // to simply save their current value.
 
 static OopMap* generate_oop_map(StubAssembler* sasm, int num_rt_args, bool save_fpu_registers = true) {
-
   // In 64bit all the args are in regs so there are no additional stack slots
   num_rt_args = 0;
   int frame_size_in_slots = reg_save_frame_size + num_rt_args; // args + thread
@@ -293,7 +292,6 @@ static OopMap* generate_oop_map(StubAssembler* sasm, int num_rt_args, bool save_
         }
         xmm_off += 2;
       }
-
     } else if (UseSSE == 1) {
       int xmm_off = xmm_regs_as_doubles_off;
       for (int n = 0; n < FrameMap::nof_fpu_regs; n++) {
@@ -401,7 +399,6 @@ static void restore_fpu(C1_MacroAssembler* sasm, bool restore_fpu_registers) {
       // check that FPU stack is really empty
       __ verify_FPU(0, "restore_live_registers");
     }
-
   } else {
     // check that FPU stack is really empty
     __ verify_FPU(0, "restore_live_registers");
@@ -730,7 +727,6 @@ OopMapSet* Runtime1::generate_patching(StubAssembler* sasm, address target) {
 }
 
 OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
-
   // for better readability
   const bool must_gc_arguments = true;
   const bool dont_gc_arguments = false;
@@ -1158,20 +1154,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
       { StubFrame f(sasm, "load_appendix_patching", dont_gc_arguments);
         // we should set up register map
         oop_maps = generate_patching(sasm, CAST_FROM_FN_PTR(address, move_appendix_patching));
-      }
-      break;
-
-    case dtrace_object_alloc_id:
-      { // rax,: object
-        StubFrame f(sasm, "dtrace_object_alloc", dont_gc_arguments);
-        // we can't gc here so skip the oopmap but make sure that all
-        // the live registers get saved.
-        save_live_registers(sasm, 1);
-
-        __ mov(c_rarg0, rax);
-        __ call(RuntimeAddress(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_object_alloc)));
-
-        restore_live_registers(sasm);
       }
       break;
 

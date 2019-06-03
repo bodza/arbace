@@ -30,8 +30,7 @@ public:
   virtual Method* method()=0;
   virtual int     bci()=0;
 
-  virtual void    fill_frame(int index, objArrayHandle  frames_array,
-                             const methodHandle& method, TRAPS)=0;
+  virtual void    fill_frame(int index, objArrayHandle  frames_array, const methodHandle& method, TRAPS)=0;
 
   void setup_magic_on_entry(objArrayHandle frames_array);
   bool check_magic(objArrayHandle frames_array);
@@ -61,8 +60,7 @@ public:
   Method* method() { return _vfst.method(); }
   int bci()        { return _vfst.bci(); }
 
-  void fill_frame(int index, objArrayHandle  frames_array,
-                  const methodHandle& method, TRAPS);
+  void fill_frame(int index, objArrayHandle  frames_array, const methodHandle& method, TRAPS);
 };
 
 class LiveFrameStream : public BaseFrameStream {
@@ -89,8 +87,7 @@ public:
   Method* method() { return _jvf->method(); }
   int bci()        { return _jvf->bci(); }
 
-  void fill_frame(int index, objArrayHandle  frames_array,
-                  const methodHandle& method, TRAPS);
+  void fill_frame(int index, objArrayHandle  frames_array, const methodHandle& method, TRAPS);
 };
 
 class StackWalk : public AllStatic {

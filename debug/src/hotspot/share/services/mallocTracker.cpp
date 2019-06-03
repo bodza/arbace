@@ -79,7 +79,6 @@ bool MallocTracker::initialize(NMT_TrackingLevel level) {
 }
 
 bool MallocTracker::transition(NMT_TrackingLevel from, NMT_TrackingLevel to) {
-
   if (from == NMT_detail) {
     MallocSiteTable::shutdown();
   }

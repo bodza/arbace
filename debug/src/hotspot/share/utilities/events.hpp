@@ -84,12 +84,6 @@ template <class T> class EventLogBase : public EventLog {
     return index;
   }
 
-  bool should_log() {
-    // Don't bother adding new entries when we're crashing.  This also
-    // avoids mutating the ring buffer when printing the log.
-    return !VMError::fatal_error_in_progress();
-  }
-
   // Print the contents of the log
   void print_log_on(outputStream* out);
 
@@ -123,16 +117,7 @@ class StringEventLog : public EventLogBase<StringLogMessage> {
  public:
   StringEventLog(const char* name, int count = 10) : EventLogBase<StringLogMessage>(name, count) { }
 
-  void logv(Thread* thread, const char* format, va_list ap) ATTRIBUTE_PRINTF(3, 0) {
-    if (!should_log()) return;
-
-    double timestamp = fetch_timestamp();
-    MutexLockerEx ml(&_mutex, Mutex::_no_safepoint_check_flag);
-    int index = compute_log_index();
-    _records[index].thread = thread;
-    _records[index].timestamp = timestamp;
-    _records[index].data.printv(format, ap);
-  }
+  void logv(Thread* thread, const char* format, va_list ap) ATTRIBUTE_PRINTF(3, 0) { }
 
   void log(Thread* thread, const char* format, ...) ATTRIBUTE_PRINTF(3, 4) {
     va_list ap;

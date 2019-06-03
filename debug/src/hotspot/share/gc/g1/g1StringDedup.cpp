@@ -102,7 +102,6 @@ public:
 };
 
 void G1StringDedup::unlink_or_oops_do(BoolObjectClosure* is_alive, OopClosure* keep_alive, bool allow_resize_and_rehash, G1GCPhaseTimes* phase_times) {
-
   G1StringDedupUnlinkOrOopsDoTask task(is_alive, keep_alive, allow_resize_and_rehash, phase_times);
   G1CollectedHeap* g1h = G1CollectedHeap::heap();
   g1h->workers()->run_task(&task);

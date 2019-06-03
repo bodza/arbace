@@ -24,9 +24,7 @@ instruct compareAndExchange$1$5(iReg$2NoSp res, indirect mem, iReg$2 oldval, iRe
     "cmpxchg $res = $mem, $oldval, $newval\t# ($3, weak) if $mem == $oldval then $mem <-- $newval"
   %}
   ins_encode %{
-    __ cmpxchg($mem$$Register, $oldval$$Register, $newval$$Register,
-               Assembler::$4, /*acquire*/ ifelse($5,Acq,true,false), /*release*/ true,
-               /*weak*/ false, $res$$Register);
+    __ cmpxchg($mem$$Register, $oldval$$Register, $newval$$Register, Assembler::$4, /*acquire*/ ifelse($5,Acq,true,false), /*release*/ true, /*weak*/ false, $res$$Register);
   %}
   ins_pipe(pipe_slow);
 %}')dnl
@@ -42,9 +40,7 @@ instruct compareAndExchange$1$7(iReg$2NoSp res, indirect mem, iReg$2 oldval, iRe
   %}
   ins_encode %{
     __ $5(rscratch2, $oldval$$Register);
-    __ cmpxchg($mem$$Register, rscratch2, $newval$$Register,
-               Assembler::$4, /*acquire*/ ifelse($5,Acq,true,false), /*release*/ true,
-               /*weak*/ false, $res$$Register);
+    __ cmpxchg($mem$$Register, rscratch2, $newval$$Register, Assembler::$4, /*acquire*/ ifelse($5,Acq,true,false), /*release*/ true, /*weak*/ false, $res$$Register);
     __ $6($res$$Register, $res$$Register);
   %}
   ins_pipe(pipe_slow);
@@ -76,9 +72,7 @@ instruct weakCompareAndSwap$1$6(iRegINoSp res, indirect mem, iReg$2 oldval, iReg
   %}
   ins_encode %{
     __ uxt$5(rscratch2, $oldval$$Register);
-    __ cmpxchg($mem$$Register, rscratch2, $newval$$Register,
-               Assembler::$4, /*acquire*/ ifelse($6,Acq,true,false), /*release*/ true,
-               /*weak*/ true, noreg);
+    __ cmpxchg($mem$$Register, rscratch2, $newval$$Register, Assembler::$4, /*acquire*/ ifelse($6,Acq,true,false), /*release*/ true, /*weak*/ true, noreg);
     __ csetw($res$$Register, Assembler::EQ);
   %}
   ins_pipe(pipe_slow);
@@ -95,9 +89,7 @@ instruct weakCompareAndSwap$1$5(iRegINoSp res, indirect mem, iReg$2 oldval, iReg
     "csetw $res, EQ\t# $res <-- (EQ ? 1 : 0)"
   %}
   ins_encode %{
-    __ cmpxchg($mem$$Register, $oldval$$Register, $newval$$Register,
-               Assembler::$4, /*acquire*/ ifelse($5,Acq,true,false), /*release*/ true,
-               /*weak*/ true, noreg);
+    __ cmpxchg($mem$$Register, $oldval$$Register, $newval$$Register, Assembler::$4, /*acquire*/ ifelse($5,Acq,true,false), /*release*/ true, /*weak*/ true, noreg);
     __ csetw($res$$Register, Assembler::EQ);
   %}
   ins_pipe(pipe_slow);

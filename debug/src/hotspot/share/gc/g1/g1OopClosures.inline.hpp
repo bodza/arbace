@@ -160,13 +160,11 @@ void G1ParCopyHelper::do_cld_barrier(oop new_obj) {
 }
 
 void G1ParCopyHelper::mark_object(oop obj) {
-
   // We know that the object is not moving so it's safe to read its size.
   _cm->mark_in_next_bitmap(_worker_id, obj);
 }
 
 void G1ParCopyHelper::mark_forwarded_object(oop from_obj, oop to_obj) {
-
   // The object might be in the process of being copied by another
   // worker so we cannot trust that its to-space image is
   // well-formed. So we have to read its size from its from-space

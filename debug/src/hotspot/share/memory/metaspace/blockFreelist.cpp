@@ -1,13 +1,11 @@
 #include "precompiled.hpp"
 
-#include "logging/log.hpp"
 #include "memory/binaryTreeDictionary.inline.hpp"
 #include "memory/metaspace/blockFreelist.hpp"
 #include "utilities/ostream.hpp"
 #include "utilities/globalDefinitions.hpp"
 
 namespace metaspace {
-
 BlockFreelist::BlockFreelist() : _dictionary(new BlockTreeDictionary()), _small_blocks(NULL) { }
 
 BlockFreelist::~BlockFreelist() {
@@ -18,7 +16,6 @@ BlockFreelist::~BlockFreelist() {
 }
 
 void BlockFreelist::return_block(MetaWord* p, size_t word_size) {
-
   Metablock* free_chunk = ::new (p) Metablock(word_size);
   if (word_size < SmallBlocks::small_block_max_size()) {
     small_blocks()->return_block(free_chunk, word_size);
@@ -28,7 +25,6 @@ void BlockFreelist::return_block(MetaWord* p, size_t word_size) {
 }
 
 MetaWord* BlockFreelist::get_block(size_t word_size) {
-
   // Try small_blocks first.
   if (word_size < SmallBlocks::small_block_max_size()) {
     // Don't create small_blocks() until needed.  small_blocks() allocates the small block list for

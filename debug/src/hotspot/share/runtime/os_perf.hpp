@@ -72,7 +72,7 @@ class CPUInformation : public CHeapObj<mtInternal> {
     _no_of_hw_threads = no_of_hw_threads;
   }
 
-  const char* cpu_name(void)  const {
+  const char* cpu_name(void) const {
     return _name;
   }
 

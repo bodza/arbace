@@ -7,7 +7,6 @@
 #include <limits.h>
 #include <new>
 
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "utilities/decoder.hpp"
@@ -77,7 +76,7 @@ MarkedFileReader::~MarkedFileReader() {
 ElfFile::ElfFile(const char* filepath) :
   _string_tables(NULL), _symbol_tables(NULL), _funcDesc_table(NULL),
   _next(NULL), _status(NullDecoder::no_error),
-  _shdr_string_table(NULL),  _file(NULL), _filepath(NULL) {
+  _shdr_string_table(NULL), _file(NULL), _filepath(NULL) {
   memset(&_elfHdr, 0, sizeof(_elfHdr));
 
   int len = strlen(filepath) + 1;
@@ -135,7 +134,6 @@ void ElfFile::cleanup_tables() {
 }
 
 NullDecoder::decoder_status ElfFile::parse_elf(const char* filepath) {
-
   _file = fopen(filepath, "r");
   if (_file != NULL) {
     return load_tables();
@@ -150,7 +148,6 @@ bool ElfFile::is_elf_file(Elf_Ehdr& hdr) {
 }
 
 NullDecoder::decoder_status ElfFile::load_tables() {
-
   FileReader freader(fd());
   // read elf file header
   if (!freader.read(&_elfHdr, sizeof(_elfHdr))) {

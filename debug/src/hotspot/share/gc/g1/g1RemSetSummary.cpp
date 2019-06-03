@@ -60,7 +60,6 @@ G1RemSetSummary::G1RemSetSummary() :
   _num_vtimes(G1ConcurrentRefine::max_num_threads()),
   _rs_threads_vtimes(NEW_C_HEAP_ARRAY(double, _num_vtimes, mtGC)),
   _sampling_thread_vtime(0.0f) {
-
   memset(_rs_threads_vtimes, 0, sizeof(double) * _num_vtimes);
 }
 
@@ -83,7 +82,6 @@ G1RemSetSummary::~G1RemSetSummary() {
 }
 
 void G1RemSetSummary::set(G1RemSetSummary* other) {
-
   _num_conc_refined_cards = other->num_conc_refined_cards();
 
   _num_processed_buf_mutator = other->num_processed_buf_mutator();
@@ -97,7 +95,6 @@ void G1RemSetSummary::set(G1RemSetSummary* other) {
 }
 
 void G1RemSetSummary::subtract_from(G1RemSetSummary* other) {
-
   _num_conc_refined_cards = other->num_conc_refined_cards() - _num_conc_refined_cards;
 
   _num_processed_buf_mutator = other->num_processed_buf_mutator() - _num_processed_buf_mutator;
@@ -142,12 +139,10 @@ private:
   size_t amount() const { return _amount; }
 
 public:
-
   RegionTypeCounter(const char* name) : _name(name), _rs_mem_size(0), _cards_occupied(0),
     _amount(0), _code_root_mem_size(0), _code_root_elems(0) { }
 
-  void add(size_t rs_mem_size, size_t cards_occupied, size_t code_root_mem_size,
-    size_t code_root_elems) {
+  void add(size_t rs_mem_size, size_t cards_occupied, size_t code_root_mem_size, size_t code_root_elems) {
     _rs_mem_size += rs_mem_size;
     _cards_occupied += cards_occupied;
     _code_root_mem_size += code_root_mem_size;

@@ -8,7 +8,6 @@
 #include "interpreter/interp_masm.hpp"
 #include "interpreter/templateInterpreterGenerator.hpp"
 #include "interpreter/templateTable.hpp"
-#include "interpreter/bytecodeTracer.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/arrayOop.hpp"
 #include "oops/methodData.hpp"
@@ -395,8 +394,7 @@ address TemplateInterpreterGenerator::generate_return_entry_for(TosState state, 
   __ ldr(rscratch1, Address(rmethod, Method::const_offset()));
   __ ldrh(rscratch1, Address(rscratch1, ConstMethod::max_stack_offset()));
   __ add(rscratch1, rscratch1, frame::interpreter_frame_monitor_size() + 2);
-  __ ldr(rscratch2,
-         Address(rfp, frame::interpreter_frame_initial_sp_offset * wordSize));
+  __ ldr(rscratch2, Address(rfp, frame::interpreter_frame_initial_sp_offset * wordSize));
   __ sub(rscratch1, rscratch2, rscratch1, ext::uxtw, 3);
   __ andr(sp, rscratch1, -16);
 
@@ -418,8 +416,7 @@ address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state, i
   __ ldr(rscratch1, Address(rmethod, Method::const_offset()));
   __ ldrh(rscratch1, Address(rscratch1, ConstMethod::max_stack_offset()));
   __ add(rscratch1, rscratch1, frame::interpreter_frame_monitor_size() + 2);
-  __ ldr(rscratch2,
-         Address(rfp, frame::interpreter_frame_initial_sp_offset * wordSize));
+  __ ldr(rscratch2, Address(rfp, frame::interpreter_frame_initial_sp_offset * wordSize));
   __ sub(rscratch1, rscratch2, rscratch1, ext::uxtx, 3);
   __ andr(sp, rscratch1, -16);
 
@@ -571,7 +568,6 @@ void TemplateInterpreterGenerator::generate_counter_incr(Label* overflow, Label*
 }
 
 void TemplateInterpreterGenerator::generate_counter_overflow(Label& do_continue) {
-
   // Asm interpreter on entry
   // On return (i.e. jump to entry_point) [ back to invocation of interpreter ]
   // Everything as it was on entry
@@ -608,7 +604,6 @@ void TemplateInterpreterGenerator::generate_counter_overflow(Label& do_continue)
 // Kills:
 //      r0
 void TemplateInterpreterGenerator::generate_stack_overflow_check(void) {
-
   // monitor entry size: see picture of stack set
   // (generate_method_entry) and frame_amd64.hpp
   const int entry_size = frame::interpreter_frame_monitor_size() * wordSize;
@@ -1073,9 +1068,6 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
 
   // start execution
 
-  // jvmti support
-  __ notify_method_entry();
-
   // work registers
   const Register t = r17;
   const Register result_handler = r19;
@@ -1306,13 +1298,6 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
     __ bind(L);
   }
 
-  // jvmti support
-  // Note: This must happen _after_ handling/throwing any exceptions since
-  //       the exception handler code notifies the runtime of method exits
-  //       too. If this happens before, method entry/exit notifications are
-  //       not properly paired (was bug - gri 11/22/99).
-  __ notify_method_exit(vtos, InterpreterMacroAssembler::NotifyJVMTI);
-
   // restore potential result in r0:d0, call result handler to
   // restore potential result in ST0 & handle result
 
@@ -1322,9 +1307,7 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
   __ blr(result_handler);
 
   // remove activation
-  __ ldr(esp, Address(rfp,
-                    frame::interpreter_frame_sender_sp_offset *
-                    wordSize)); // get sender sp
+  __ ldr(esp, Address(rfp, frame::interpreter_frame_sender_sp_offset * wordSize)); // get sender sp
   // remove frame anchor
   __ leave();
 
@@ -1451,9 +1434,6 @@ address TemplateInterpreterGenerator::generate_normal_entry(bool synchronized) {
 
   // start execution
 
-  // jvmti support
-  __ notify_method_entry();
-
   __ dispatch_next(vtos);
 
   // invocation counter overflow
@@ -1514,8 +1494,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
   __ ldr(rscratch1, Address(rmethod, Method::const_offset()));
   __ ldrh(rscratch1, Address(rscratch1, ConstMethod::max_stack_offset()));
   __ add(rscratch1, rscratch1, frame::interpreter_frame_monitor_size() + 4);
-  __ ldr(rscratch2,
-         Address(rfp, frame::interpreter_frame_initial_sp_offset * wordSize));
+  __ ldr(rscratch2, Address(rfp, frame::interpreter_frame_initial_sp_offset * wordSize));
   __ sub(rscratch1, rscratch2, rscratch1, ext::uxtx, 3);
   __ andr(sp, rscratch1, -16);
 
@@ -1609,8 +1588,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
   __ ldr(rscratch1, Address(rmethod, Method::const_offset()));
   __ ldrh(rscratch1, Address(rscratch1, ConstMethod::max_stack_offset()));
   __ add(rscratch1, rscratch1, frame::interpreter_frame_monitor_size() + 4);
-  __ ldr(rscratch2,
-         Address(rfp, frame::interpreter_frame_initial_sp_offset * wordSize));
+  __ ldr(rscratch2, Address(rfp, frame::interpreter_frame_initial_sp_offset * wordSize));
   __ sub(rscratch1, rscratch2, rscratch1, ext::uxtw, 3);
   __ andr(sp, rscratch1, -16);
 

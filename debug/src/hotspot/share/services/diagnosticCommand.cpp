@@ -167,16 +167,12 @@ int HelpDCmd::num_arguments() {
 }
 
 void VersionDCmd::execute(DCmdSource source, TRAPS) {
-  output()->print_cr("%s version %s", Abstract_VM_Version::vm_name(),
-          Abstract_VM_Version::vm_release());
+  output()->print_cr("%s version %s", Abstract_VM_Version::vm_name(), Abstract_VM_Version::vm_release());
   JDK_Version jdk_version = JDK_Version::current();
   if (jdk_version.patch_version() > 0) {
-    output()->print_cr("JDK %d.%d.%d.%d", jdk_version.major_version(),
-            jdk_version.minor_version(), jdk_version.security_version(),
-            jdk_version.patch_version());
+    output()->print_cr("JDK %d.%d.%d.%d", jdk_version.major_version(), jdk_version.minor_version(), jdk_version.security_version(), jdk_version.patch_version());
   } else {
-    output()->print_cr("JDK %d.%d.%d", jdk_version.major_version(),
-            jdk_version.minor_version(), jdk_version.security_version());
+    output()->print_cr("JDK %d.%d.%d", jdk_version.major_version(), jdk_version.minor_version(), jdk_version.security_version());
   }
 }
 
@@ -545,7 +541,7 @@ void JMXStartRemoteDCmd::execute(DCmdSource source, TRAPS) {
             } \
             comma[0] = ','; \
         } \
-    } while(0);
+    } while (false);
 
     PUT_OPTION(_config_file);
     PUT_OPTION(_jmxremote_host);

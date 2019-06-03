@@ -8,7 +8,6 @@
 #include "compiler/compileBroker.hpp"
 #include "compiler/disassembler.hpp"
 #include "interpreter/interpreter.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/filemap.hpp"
 #include "oops/oop.inline.hpp"
@@ -533,7 +532,6 @@ sigset_t* os::Bsd::vm_signals() {
 }
 
 void os::Bsd::hotspot_sigmask(Thread* thread) {
-
   //Save caller's signal mask before setting VM signal mask
   sigset_t caller_sigmask;
   pthread_sigmask(SIG_BLOCK, NULL, &caller_sigmask);
@@ -582,7 +580,6 @@ static uint64_t locate_unique_thread_id(mach_port_t mach_thread_port) {
 
 // Thread start routine for all newly created threads
 static void *thread_native_entry(Thread *thread) {
-
   thread->record_stack_base_and_size();
 
   // Try to randomize the cache line index of hot stack frames.
@@ -644,7 +641,6 @@ static void *thread_native_entry(Thread *thread) {
 }
 
 bool os::create_thread(Thread* thread, ThreadType thr_type, size_t req_stack_size) {
-
   // Allocate the OSThread object
   OSThread* osthread = new OSThread(NULL, NULL);
   if (osthread == NULL) {
@@ -716,7 +712,6 @@ bool os::create_main_thread(JavaThread* thread) {
 }
 
 bool os::create_attached_thread(JavaThread* thread) {
-
   // Allocate the OSThread object
   OSThread* osthread = new OSThread(NULL, NULL);
 
@@ -758,7 +753,6 @@ void os::pd_start_thread(Thread* thread) {
 
 // Free Bsd resources related to the OSThread
 void os::free_thread(OSThread* osthread) {
-
   // Restore caller's signal mask
   sigset_t sigmask = osthread->caller_sigmask();
   pthread_sigmask(SIG_SETMASK, &sigmask, NULL);
@@ -772,7 +766,6 @@ void os::free_thread(OSThread* osthread) {
 // Time since start-up in seconds to a fine granularity.
 // Used by VMSelfDestructTimer and the MemProfiler.
 double os::elapsedTime() {
-
   return ((double)os::elapsed_counter()) / os::elapsed_frequency();
 }
 
@@ -820,7 +813,7 @@ void os::Bsd::clock_init() {
 void os::Bsd::clock_init() {
   struct timespec res;
   struct timespec tp;
-  if (::clock_getres(CLOCK_MONOTONIC, &res) == 0 && ::clock_gettime(CLOCK_MONOTONIC, &tp)  == 0) {
+  if (::clock_getres(CLOCK_MONOTONIC, &res) == 0 && ::clock_gettime(CLOCK_MONOTONIC, &tp) == 0) {
     // yes, monotonic clock is supported
     _clock_gettime = ::clock_gettime;
   }
@@ -908,7 +901,6 @@ struct tm* os::localtime_pd(const time_t* clock, struct tm* res) {
 // called from signal handler. Before adding something to os::shutdown(), make
 // sure it is async-safe and can handle partially initialized VM.
 void os::shutdown() {
-
   // allow PerfMemory to attempt cleanup of any persistent resources
   perfMemory_exit();
 
@@ -998,7 +990,6 @@ intx os::current_thread_id() {
 }
 
 int os::current_process_id() {
-
   // Under the old bsd thread library, bsd gives each thread
   // its own process id. Because of this each thread will return
   // a different pid if this method were to return the result
@@ -1268,7 +1259,7 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
   arch_t lib_arch = { elf_head.e_machine,0,elf_head.e_ident[EI_CLASS], elf_head.e_ident[EI_DATA], NULL };
   int running_arch_index=-1;
 
-  for (unsigned int i=0; i < ARRAY_SIZE(arch_array); i++) {
+  for (unsigned int i = 0; i < ARRAY_SIZE(arch_array); i++) {
     if (running_arch_code == arch_array[i].code) {
       running_arch_index    = i;
     }
@@ -1454,7 +1445,6 @@ void os::get_summary_cpu_info(char* buf, size_t buflen) {
 }
 
 void os::print_memory_info(outputStream* st) {
-
   st->print("Memory:");
   st->print(" %dk page", os::vm_page_size()>>10);
 
@@ -2361,7 +2351,6 @@ static void SR_handler(int sig, siginfo_t* siginfo, ucontext_t* context) {
           ShouldNotReachHere();
         }
       }
-
     } else if (state == os::SuspendResume::SR_RUNNING) {
       // request was cancelled, continue
     } else {
@@ -2433,7 +2422,6 @@ static const int RANDOMLY_LARGE_INTEGER2 = 100;
 // returns true on success and false on error - really an error is fatal
 // but this seems the normal response to library errors
 static bool do_suspend(OSThread* osthread) {
-
   // mark as suspended and send signal
   if (osthread->sr.request_suspend() != os::SuspendResume::SR_SUSPEND_REQUEST) {
     // failed to switch, state wasn't running?
@@ -2470,7 +2458,6 @@ static bool do_suspend(OSThread* osthread) {
 }
 
 static void do_resume(OSThread* osthread) {
-
   if (osthread->sr.request_wakeup() != os::SuspendResume::SR_WAKEUP_REQUEST) {
     // failed to switch to WAKEUP_REQUEST
     ShouldNotReachHere();
@@ -2831,13 +2818,12 @@ static void print_signal_handler(outputStream* st, int sig, char* buf, size_t bu
     if (!sigismember(&check_signal_done, sig)) { \
       os::Bsd::check_signal_handler(sig); \
     } \
-  } while (0)
+  } while (false)
 
 // This method is a periodic task to check for misbehaving JNI applications
 // under CheckJNI, we can add any periodic checks here
 
 void os::run_periodic_checks() {
-
   if (check_signals == false) return;
 
   // SEGV and BUS if overridden could potentially prevent
@@ -2922,7 +2908,7 @@ void os::Bsd::check_signal_handler(int sig) {
     if (sig == SHUTDOWN2_SIGNAL && !isatty(fileno(stdin))) {
       tty->print_cr("Running in non-interactive shell, %s handler is replaced by shell", exception_name(sig, buf, O_BUFLEN));
     }
-  } else if(os::Bsd::get_our_sigflags(sig) != 0 && (int)act.sa_flags != os::Bsd::get_our_sigflags(sig)) {
+  } else if (os::Bsd::get_our_sigflags(sig) != 0 && (int)act.sa_flags != os::Bsd::get_our_sigflags(sig)) {
     tty->print("Warning: %s handler flags ", exception_name(sig, buf, O_BUFLEN));
     tty->print("expected:");
     os::Posix::print_sa_flags(tty, os::Bsd::get_our_sigflags(sig));
@@ -2997,7 +2983,6 @@ extern "C" {
 
 // this is called _after_ the global arguments have been parsed
 jint os::init_2(void) {
-
   os::Posix::init_2();
 
   // initialize suspend/resume support - must do this before signal_sets_init()
@@ -3493,7 +3478,6 @@ int os::fork_and_exec(char* cmd, bool use_vfork_if_available) {
   if (pid < 0) {
     // fork failed
     return -1;
-
   } else if (pid == 0) {
     // child process
 
@@ -3508,8 +3492,7 @@ int os::fork_and_exec(char* cmd, bool use_vfork_if_available) {
 
     // execve failed
     _exit(-1);
-
-  } else  {
+  } else {
     // copied from J2SE ..._waitForProcessExit() in UNIXProcess_md.c; we don't
     // care about the actual exit code, for now.
 

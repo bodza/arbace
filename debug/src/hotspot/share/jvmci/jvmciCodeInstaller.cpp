@@ -458,7 +458,7 @@ void CodeInstaller::initialize_dependencies(oop compiled_code, OopRecorder* reco
   JavaThread* thread = JavaThread::current();
   CompilerThread* compilerThread = thread->is_Compiler_thread() ? thread->as_CompilerThread() : NULL;
   _oop_recorder = recorder;
-  _dependencies = new Dependencies(&_arena, _oop_recorder, compilerThread != NULL ? compilerThread->log() : NULL);
+  _dependencies = new Dependencies(&_arena, _oop_recorder);
   objArrayHandle assumptions(THREAD, HotSpotCompiledCode::assumptions(compiled_code));
   if (!assumptions.is_null()) {
     int length = assumptions->length();

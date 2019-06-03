@@ -17,7 +17,6 @@
 #include "gc/shared/gcLocker.inline.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
-#include "logging/log.hpp"
 #include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
@@ -299,7 +298,6 @@ JRT_END
 // previous frame depending on the return address.
 
 address SharedRuntime::raw_exception_handler_for_return_address(JavaThread* thread, address return_address) {
-
   // Reset method handle flag.
   thread->set_is_method_handle_return(false);
 
@@ -538,8 +536,7 @@ void SharedRuntime::throw_StackOverflowError_common(JavaThread* thread, bool del
   Klass* k = SystemDictionary::StackOverflowError_klass();
   oop exception_oop = InstanceKlass::cast(k)->allocate_instance(CHECK);
   if (delayed) {
-    java_lang_Throwable::set_message(exception_oop,
-                                     Universe::delayed_stack_overflow_error_message());
+    java_lang_Throwable::set_message(exception_oop, Universe::delayed_stack_overflow_error_message());
   }
   Handle exception (thread, exception_oop);
   if (StackTraceInThrowable) {
@@ -728,27 +725,6 @@ jlong SharedRuntime::get_java_tid(Thread* thread) {
   return 0;
 }
 
-/**
- * This function ought to be a void function, but cannot be because
- * it gets turned into a tail-call on sparc, which runs into dtrace bug
- * 6254741.  Once that is fixed we can remove the dummy return value.
- */
-int SharedRuntime::dtrace_object_alloc(oopDesc* o, int size) {
-  return dtrace_object_alloc_base(Thread::current(), o, size);
-}
-
-int SharedRuntime::dtrace_object_alloc_base(Thread* thread, oopDesc* o, int size) {
-  return 0;
-}
-
-JRT_LEAF(int, SharedRuntime::dtrace_method_entry(JavaThread* thread, Method* method))
-  return 0;
-JRT_END
-
-JRT_LEAF(int, SharedRuntime::dtrace_method_exit(JavaThread* thread, Method* method))
-  return 0;
-JRT_END
-
 // Finds receiver, CallInfo (i.e. receiver method), and calling bytecode)
 // for a call current in progress, i.e., arguments has been pushed on stack
 // put callee has not been invoked yet.  Used by: resolve virtual/static,
@@ -901,7 +877,6 @@ methodHandle SharedRuntime::resolve_helper(JavaThread *thread,
 methodHandle SharedRuntime::resolve_sub_helper(JavaThread *thread,
                                            bool is_virtual,
                                            bool is_optimized, TRAPS) {
-
   ResourceMark rm(thread);
   RegisterMap cbl_map(thread, false);
   frame caller_frame = thread->last_frame().sender(&cbl_map);
@@ -1142,7 +1117,6 @@ methodHandle SharedRuntime::handle_ic_miss_helper(JavaThread *thread, TRAPS) {
       } else if (inline_cache->is_icholder_call()) {
         CompiledICHolder* ic_oop = inline_cache->cached_icholder();
         if (ic_oop != NULL) {
-
           if (receiver()->klass() == ic_oop->holder_klass()) {
             // This isn't a real miss. We must have seen that compiled code
             // is now available and we want the call site converted to a
@@ -1155,7 +1129,6 @@ methodHandle SharedRuntime::handle_ic_miss_helper(JavaThread *thread, TRAPS) {
       }
 
       if (should_be_mono) {
-
         // We have a path that was monomorphic but was going interpreted
         // and now we have (or had) a compiled entry. We correct the IC
         // by using a new icBuffer.
@@ -1201,7 +1174,6 @@ methodHandle SharedRuntime::reresolve_call_site(JavaThread *thread, TRAPS) {
   // so no update to the caller is needed.
 
   if (caller.is_compiled_frame() && !caller.is_deoptimized_frame()) {
-
     address pc = caller.pc();
 
     // Check for static or virtual call
@@ -1344,7 +1316,6 @@ IRT_LEAF(void, SharedRuntime::fixup_callers_callsite(Method* method, address cal
   if (moop->code() == NULL) return;
 
   if (nm->is_in_use()) {
-
     // Expect to find a native call there (unless it was no-inline cache vtable dispatch)
     MutexLockerEx ml_patch(Patching_lock, Mutex::_no_safepoint_check_flag);
     if (NativeCall::is_call_before(return_pc)) {
@@ -1375,7 +1346,7 @@ IRT_LEAF(void, SharedRuntime::fixup_callers_callsite(Method* method, address cal
 IRT_END
 
 // same as JVM_Arraycopy, but called directly from compiled code
-JRT_ENTRY(void, SharedRuntime::slow_arraycopy_C(oopDesc* src,  jint src_pos, oopDesc* dest, jint dest_pos, jint length, JavaThread* thread)) {
+JRT_ENTRY(void, SharedRuntime::slow_arraycopy_C(oopDesc* src, jint src_pos, oopDesc* dest, jint dest_pos, jint length, JavaThread* thread)) {
   // Check if we have null pointers
   if (src == NULL || dest == NULL) {
     THROW(vmSymbols::java_lang_NullPointerException());
@@ -1393,7 +1364,6 @@ JRT_END
 // The caller of generate_class_cast_message() (or one of its callers)
 // must use a ResourceMark in order to correctly free the result.
 char* SharedRuntime::generate_class_cast_message(JavaThread* thread, Klass* caster_klass) {
-
   // Get target class name from the checkcast instruction
   vframeStream vfst(thread, true);
   Bytecode_checkcast cc(vfst.method(), vfst.method()->bcp_from(vfst.bci()));
@@ -1650,7 +1620,6 @@ class AdapterHandlerTable : public BasicHashtable<mtCode> {
   friend class AdapterHandlerTableIterator;
 
  private:
-
   AdapterHandlerEntry* bucket(int i) {
     return (AdapterHandlerEntry*)BasicHashtable<mtCode>::bucket(i);
   }
@@ -1879,12 +1848,7 @@ AdapterHandlerEntry* AdapterHandlerLibrary::get_adapter0(const methodHandle& met
   // Outside of the lock
   if (new_adapter != NULL) {
     char blob_id[256];
-    jio_snprintf(blob_id,
-                 sizeof(blob_id),
-                 "%s(%s)@" PTR_FORMAT,
-                 new_adapter->name(),
-                 fingerprint->as_string(),
-                 new_adapter->content_begin());
+    jio_snprintf(blob_id, sizeof(blob_id), "%s(%s)@" PTR_FORMAT, new_adapter->name(), fingerprint->as_string(), new_adapter->content_begin());
     Forte::register_stub(blob_id, new_adapter->content_begin(), new_adapter->content_end());
   }
   return entry;
@@ -1944,7 +1908,7 @@ void AdapterHandlerLibrary::create_native_wrapper(const methodHandle& method) {
 
       BasicType* sig_bt = NEW_RESOURCE_ARRAY(BasicType, total_args_passed);
       VMRegPair*   regs = NEW_RESOURCE_ARRAY(VMRegPair, total_args_passed);
-      int i=0;
+      int i = 0;
       if (!method->is_static())  // Pass in receiver first
         sig_bt[i++] = T_OBJECT;
       SignatureStream ss(method->signature());

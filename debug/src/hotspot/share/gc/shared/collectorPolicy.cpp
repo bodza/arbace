@@ -8,7 +8,6 @@
 #include "gc/shared/generationSpec.hpp"
 #include "gc/shared/space.hpp"
 #include "gc/shared/vmGCOperations.hpp"
-#include "logging/log.hpp"
 #include "memory/universe.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/globals_extension.hpp"
@@ -30,7 +29,6 @@ CollectorPolicy::CollectorPolicy() :
 { }
 
 void CollectorPolicy::initialize_flags() {
-
   if (FLAG_IS_CMDLINE(MaxHeapSize)) {
     if (FLAG_IS_CMDLINE(InitialHeapSize) && InitialHeapSize > MaxHeapSize) {
       vm_exit_during_initialization("Initial heap size set to a larger value than the maximum heap size");
@@ -135,7 +133,6 @@ size_t GenCollectorPolicy::old_gen_size_lower_bound() {
 
 void GenCollectorPolicy::initialize_flags() {
   CollectorPolicy::initialize_flags();
-
 
   // All generational heaps have a young gen; handle those flags here
 

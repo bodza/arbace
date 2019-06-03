@@ -57,7 +57,6 @@ class SpaceMangler: public CHeapObj<mtGC> {
   HeapWord* top_for_allocations() { return _top_for_allocations; }
 
  public:
-
   // Setting _top_for_allocations to NULL at initialization
   // makes it always below top so that mangling done as part
   // of the initialize() call of a space does nothing (as it

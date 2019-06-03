@@ -190,7 +190,6 @@ void ConstantPool::klass_at_put(int class_index, Klass* k) {
 
 // CDS support. Create a new resolved_references array.
 void ConstantPool::restore_unshareable_info(TRAPS) {
-
   // Only create the new resolved references array if it hasn't been attempted before
   if (resolved_references() != NULL) return;
 
@@ -263,7 +262,6 @@ void ConstantPool::string_at_put(int which, int obj_index, oop str) {
 }
 
 Klass* ConstantPool::klass_at_impl(const constantPoolHandle& this_cp, int which, bool save_resolution_error, TRAPS) {
-
   // A resolved constantPool entry will contain a Klass*, otherwise a Symbol*.
   // It is not safe to rely on the tag bit's here, since we don't have a lock, and
   // the entry and tag is not updated atomicly.
@@ -575,8 +573,7 @@ void ConstantPool::save_and_throw_exception(const constantPoolHandle& this_cp, i
     // This doesn't deterministically get an error.   So why do we save this?
     // We save this because jvmti can add classes to the bootclass path after
     // this error, so it needs to get the same error if the error is first.
-    jbyte old_tag = Atomic::cmpxchg((jbyte)error_tag,
-                            (jbyte*)this_cp->tag_addr_at(which), (jbyte)tag.value());
+    jbyte old_tag = Atomic::cmpxchg((jbyte)error_tag, (jbyte*)this_cp->tag_addr_at(which), (jbyte)tag.value());
     if (old_tag != error_tag && old_tag != tag.value()) {
       // MethodHandles and MethodType doesn't change to resolved version.
       // Forget the exception and use the resolved class.
@@ -670,7 +667,6 @@ oop ConstantPool::resolve_constant_at_impl(const constantPoolHandle& this_cp, in
   }
 
   switch (tag.value()) {
-
   case JVM_CONSTANT_UnresolvedClass:
   case JVM_CONSTANT_UnresolvedClassInError:
   case JVM_CONSTANT_Class:
@@ -769,8 +765,7 @@ oop ConstantPool::resolve_constant_at_impl(const constantPoolHandle& this_cp, in
       if ((callee->is_interface() && m_tag.is_method()) || ((!callee->is_interface() && m_tag.is_interface_method()))) {
         ResourceMark rm(THREAD);
         char buf[400];
-        jio_snprintf(buf, sizeof(buf),
-          "Inconsistent constant pool data in classfile for class %s. Method %s%s at index %d is %s and should be %s",
+        jio_snprintf(buf, sizeof(buf), "Inconsistent constant pool data in classfile for class %s. Method %s%s at index %d is %s and should be %s",
           callee->name()->as_C_string(), name->as_C_string(), signature->as_C_string(), index,
           callee->is_interface() ? "CONSTANT_MethodRef" : "CONSTANT_InterfaceMethodRef",
           callee->is_interface() ? "CONSTANT_InterfaceMethodRef" : "CONSTANT_MethodRef");
@@ -1029,7 +1024,6 @@ void ConstantPool::unreference_symbols() {
 // Compare this constant pool's entry at index1 to the constant pool
 // cp2's entry at index2.
 bool ConstantPool::compare_entry_to(int index1, const constantPoolHandle& cp2, int index2, TRAPS) {
-
   // The error tags are equivalent to non-error tags when comparing
   jbyte t1 = tag_at(index1).non_error_value();
   jbyte t2 = cp2->tag_at(index2).non_error_value();
@@ -1297,7 +1291,6 @@ void ConstantPool::shrink_operands(int new_len, TRAPS) {
 }
 
 void ConstantPool::copy_operands(const constantPoolHandle& from_cp, const constantPoolHandle& to_cp, TRAPS) {
-
   int from_oplen = operand_array_length(from_cp->operands());
   int old_oplen  = operand_array_length(to_cp->operands());
   if (from_oplen != 0) {
@@ -1355,7 +1348,6 @@ void ConstantPool::copy_operands(const constantPoolHandle& from_cp, const consta
 // to the constant pool to_cp's entries starting at to_i. A total of
 // (end_i - start_i) + 1 entries are copied.
 void ConstantPool::copy_cp_to_impl(const constantPoolHandle& from_cp, int start_i, int end_i, const constantPoolHandle& to_cp, int to_i, TRAPS) {
-
   int dest_i = to_i;  // leave original alone for debug purposes
 
   for (int src_i = start_i; src_i <= end_i; /* see loop bottom */ ) {
@@ -1382,7 +1374,6 @@ void ConstantPool::copy_cp_to_impl(const constantPoolHandle& from_cp, int start_
 // Copy this constant pool's entry at from_i to the constant pool
 // to_cp's entry at to_i.
 void ConstantPool::copy_entry_to(const constantPoolHandle& from_cp, int from_i, const constantPoolHandle& to_cp, int to_i, TRAPS) {
-
   int tag = from_cp->tag_at(from_i).value();
   switch (tag) {
   case JVM_CONSTANT_ClassIndex:
@@ -1524,7 +1515,6 @@ void ConstantPool::copy_entry_to(const constantPoolHandle& from_cp, int from_i, 
 // constant pool's entry at pattern_i. Returns the index of a
 // matching entry or zero (0) if there is no matching entry.
 int ConstantPool::find_matching_entry(int pattern_i, const constantPoolHandle& search_cp, TRAPS) {
-
   // index zero (0) is not used
   for (int i = 1; i < search_cp->length(); i++) {
     bool found = compare_entry_to(pattern_i, search_cp, i, CHECK_0);
@@ -1993,7 +1983,7 @@ void ConstantPool::print_value_on(outputStream* st) const {
 
 void ConstantPool::verify_on(outputStream* st) {
   guarantee(is_constantPool(), "object must be constant pool");
-  for (int i = 0; i< length();  i++) {
+  for (int i = 0; i< length(); i++) {
     constantTag tag = tag_at(i);
     if (tag.is_klass() || tag.is_unresolved_klass()) {
       guarantee(klass_name_at(i)->refcount() != 0, "should have nonzero reference count");

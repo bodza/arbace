@@ -8,7 +8,6 @@
 #include "ci/ciStreams.hpp"
 #include "ci/ciTypeArrayKlass.hpp"
 #include "ci/ciTypeFlow.hpp"
-#include "compiler/compileLog.hpp"
 #include "interpreter/bytecode.hpp"
 #include "interpreter/bytecodes.hpp"
 #include "memory/allocation.inline.hpp"
@@ -265,7 +264,7 @@ ciTypeFlow::StateVector::StateVector(ciTypeFlow* analyzer) {
   // Allocate the _types array
   int max_cells = analyzer->max_cells();
   _types = (ciType**)analyzer->arena()->Amalloc(sizeof(ciType*) * max_cells);
-  for (int i=0; i<max_cells; i++) {
+  for (int i = 0; i<max_cells; i++) {
     _types[i] = top_type();
   }
   _trap_bci = -1;
@@ -422,7 +421,7 @@ bool ciTypeFlow::StateVector::meet_exception(ciInstanceKlass* exc, const ciTypeF
 // ciTypeFlow::StateVector::push_translate
 void ciTypeFlow::StateVector::push_translate(ciType* type) {
   BasicType basic_type = type->basic_type();
-  if (basic_type == T_BOOLEAN || basic_type == T_CHAR || basic_type == T_BYTE    || basic_type == T_SHORT) {
+  if (basic_type == T_BOOLEAN || basic_type == T_CHAR || basic_type == T_BYTE || basic_type == T_SHORT) {
     push_int();
   } else {
     push(type);
@@ -695,20 +694,6 @@ void ciTypeFlow::StateVector::do_ret(ciBytecodeStream* str) {
 void ciTypeFlow::StateVector::trap(ciBytecodeStream* str, ciKlass* klass, int index) {
   _trap_bci = str->cur_bci();
   _trap_index = index;
-
-  // Log information about this trap:
-  CompileLog* log = outer()->env()->log();
-  if (log != NULL) {
-    int mid = log->identify(outer()->method());
-    int kid = (klass == NULL)? -1: log->identify(klass);
-    log->begin_elem("uncommon_trap method='%d' bci='%d'", mid, str->cur_bci());
-    char buf[100];
-    log->print(" %s", Deoptimization::format_trap_request(buf, sizeof(buf),
-                                                          index));
-    if (kid >= 0)
-      log->print(" klass='%d'", kid);
-    log->end_elem();
-  }
 }
 
 // ------------------------------------------------------------------
@@ -1420,7 +1405,6 @@ void ciTypeFlow::Block::df_init() {
 // Get the successors for this Block.
 GrowableArray<ciTypeFlow::Block*>* ciTypeFlow::Block::successors(ciBytecodeStream* str, ciTypeFlow::StateVector* state, ciTypeFlow::JsrSet* jsrs) {
   if (_successors == NULL) {
-
     ciTypeFlow* analyzer = outer();
     Arena* arena = analyzer->arena();
     Block* block = NULL;
@@ -1475,7 +1459,7 @@ GrowableArray<ciTypeFlow::Block*>* ciTypeFlow::Block::successors(ciBytecodeStrea
         _successors->append(analyzer->block_at(str->get_far_dest(), jsrs));
         break;
 
-      case Bytecodes::_tableswitch:  {
+      case Bytecodes::_tableswitch: {
         Bytecode_tableswitch tableswitch(str);
 
         int len = tableswitch.length();
@@ -1547,7 +1531,6 @@ GrowableArray<ciTypeFlow::Block*>* ciTypeFlow::Block::successors(ciBytecodeStrea
 //
 // Compute the exceptional successors and types for this Block.
 void ciTypeFlow::Block::compute_exceptions() {
-
   ciTypeFlow* analyzer = outer();
   Arena* arena = analyzer->arena();
 
@@ -1669,7 +1652,6 @@ ciTypeFlow::Block* ciTypeFlow::work_list_next() {
 // Add a basic block to our work list.
 // List is sorted by decreasing postorder sort (same as increasing RPO)
 void ciTypeFlow::add_to_work_list(ciTypeFlow::Block* block) {
-
   block->set_on_work_list(true);
 
   // decreasing post order sort
@@ -1926,7 +1908,6 @@ ciTypeFlow::Block* ciTypeFlow::clone_loop_head(Loop* lp, StateVector* temp_vecto
 // vector of a basic block.  Push the changed state to succeeding
 // basic blocks.
 void ciTypeFlow::flow_block(ciTypeFlow::Block* block, ciTypeFlow::StateVector* state, ciTypeFlow::JsrSet* jsrs) {
-
   int start = block->start();
   int limit = block->limit();
   int control = block->control();
@@ -1964,7 +1945,6 @@ void ciTypeFlow::flow_block(ciTypeFlow::Block* block, ciTypeFlow::StateVector* s
     }
 
     if (res) {
-
       // We have encountered a trap.  Record it in this block.
       block->set_trap(state->trap_bci(), state->trap_index());
 
@@ -2105,7 +2085,6 @@ void ciTypeFlow::build_loop_tree(Block* blk) {
       if (succ->loop() == NULL)
         succ->set_loop(lp);
       // succ->loop will be updated to innermost loop on a later call, when blk==succ
-
     } else {  // Nested loop
       lp = succ->loop();
 
@@ -2425,7 +2404,6 @@ void ciTypeFlow::do_flow() {
 //
 // Determine if the instruction at bci is dominated by the instruction at dom_bci.
 bool ciTypeFlow::is_dominated_by(int bci, int dom_bci) {
-
   ResourceMark rm;
   JsrSet* jsrs = new ciTypeFlow::JsrSet(NULL);
   int        index = _methodBlocks->block_containing(bci)->index();
@@ -2492,9 +2470,6 @@ bool ciTypeFlow::is_dominated_by(int bci, int dom_bci) {
 // requests are not optional; if they fail the requestor is responsible for
 // copying the failure reason up to the ciEnv.  (See Parse::Parse.)
 void ciTypeFlow::record_failure(const char* reason) {
-  if (env()->log() != NULL) {
-    env()->log()->elem("failure reason='%s' phase='typeflow'", reason);
-  }
   if (_failure_reason == NULL) {
     // Record the first failure reason.
     _failure_reason = reason;

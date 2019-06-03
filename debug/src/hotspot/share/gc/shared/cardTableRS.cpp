@@ -77,7 +77,6 @@ void CardTableRS::prepare_for_younger_refs_iterate(bool parallel) {
     // Find a parallel value to be used next.
     jbyte next_val = find_unused_youngergenP_card_value();
     set_cur_youngergen_card_val(next_val);
-
   } else {
     // In an sequential traversal we will always write youngergen, so that
     // the inline barrier is  correct.
@@ -165,7 +164,7 @@ void ClearNoncleanCardWrapper::do_MemRegion(MemRegion mr) {
       // fast forward through potential continuous whole-word range of clean cards beginning at a word-boundary
       if (is_word_aligned(cur_entry)) {
         jbyte* cur_row = cur_entry - BytesPerWord;
-        while (cur_row >= limit && *((intptr_t*)cur_row) ==  CardTableRS::clean_card_row_val()) {
+        while (cur_row >= limit && *((intptr_t*)cur_row) == CardTableRS::clean_card_row_val()) {
           cur_row -= BytesPerWord;
         }
         cur_entry = cur_row + BytesPerWord;

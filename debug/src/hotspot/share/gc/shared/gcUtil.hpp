@@ -33,7 +33,7 @@ class AdaptiveWeightedAverage : public CHeapObj<mtGC> {
  protected:
   float            _last_sample;    // The last value sampled.
 
-  void  increment_count() {
+  void increment_count() {
     _sample_count++;
     if (!_is_old && _sample_count > OLD_THRESHOLD) {
       _is_old = true;
@@ -61,7 +61,7 @@ class AdaptiveWeightedAverage : public CHeapObj<mtGC> {
   }
 
   // Useful for modifying static structures after startup.
-  void  modify(size_t avg, unsigned wt, bool force = false) {
+  void modify(size_t avg, unsigned wt, bool force = false) {
     _average = (float)avg;
     _weight  = wt;
   }

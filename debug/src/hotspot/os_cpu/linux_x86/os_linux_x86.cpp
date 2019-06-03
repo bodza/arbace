@@ -8,7 +8,6 @@
 #include "code/icBuffer.hpp"
 #include "code/vtableStubs.hpp"
 #include "interpreter/interpreter.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "os_share_linux.hpp"
 #include "prims/jniFastGetField.hpp"
@@ -115,12 +114,10 @@ intptr_t* os::Linux::ucontext_get_fp(const ucontext_t * uc) {
 // os::fetch_frame_from_context().
 // This method is also used for stack overflow signal handling.
 ExtendedPC os::Linux::fetch_frame_from_ucontext(Thread* thread, const ucontext_t* uc, intptr_t** ret_sp, intptr_t** ret_fp) {
-
   return os::fetch_frame_from_context(uc, ret_sp, ret_fp);
 }
 
 ExtendedPC os::fetch_frame_from_context(const void* ucVoid, intptr_t** ret_sp, intptr_t** ret_fp) {
-
   ExtendedPC  epc;
   const ucontext_t* uc = (const ucontext_t*)ucVoid;
 
@@ -276,7 +273,7 @@ JVM_handle_linux_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unr
     if (t != NULL ) {
       if (t->is_Java_thread()) {
         thread = (JavaThread*)t;
-      } else if(t->is_VM_thread()) {
+      } else if (t->is_VM_thread()) {
         vmthread = (VMThread *)t;
       }
     }
@@ -389,7 +386,7 @@ JVM_handle_linux_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unr
       } else
 
 #ifdef AMD64
-      if (sig == SIGFPE  && (info->si_code == FPE_INTDIV || info->si_code == FPE_FLTDIV)) {
+      if (sig == SIGFPE && (info->si_code == FPE_INTDIV || info->si_code == FPE_FLTDIV)) {
         stub = SharedRuntime::continuation_for_implicit_exception(thread, pc, SharedRuntime::IMPLICIT_DIVIDE_BY_ZERO);
 #else
       if (sig == SIGFPE /* && info->si_code == FPE_INTDIV */) {
@@ -469,7 +466,6 @@ JVM_handle_linux_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unr
 
       // In conservative mode, don't unguard unless the address is in the VM
       if (addr != last_addr && (UnguardOnExecutionViolation > 1 || os::address_is_in_vm(addr))) {
-
         // Set memory to RWX and retry
         address page_start = align_down(addr, page_size);
         bool res = os::protect_memory((char*) page_start, page_size, os::MEM_PROT_RWX);

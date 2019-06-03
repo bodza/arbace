@@ -7,7 +7,6 @@
 #include "runtime/os.hpp"
 
 namespace metaspace {
-
 OccupancyMap::OccupancyMap(const MetaWord* reference_address, size_t word_size, size_t smallest_chunk_word_size) :
             _reference_address(reference_address), _word_size(word_size),
             _smallest_chunk_word_size(smallest_chunk_word_size)

@@ -610,7 +610,6 @@ csize_t CodeBuffer::copy_relocations_to(CodeBlob* dest) const {
 }
 
 void CodeBuffer::copy_code_to(CodeBlob* dest_blob) {
-
   CodeBuffer dest(dest_blob);
   this->compute_final_layout(&dest);
 
@@ -731,7 +730,6 @@ csize_t CodeBuffer::figure_expanded_capacities(CodeSection* which_cs,
 }
 
 void CodeBuffer::expand(CodeSection* which_cs, csize_t amount) {
-
   // Resizing must be allowed
   {
     if (blob() == NULL)  return;  // caller must check for blob == NULL
@@ -813,7 +811,6 @@ void CodeBuffer::verify_section_allocation() {
   if (tstart == badAddress)  return;  // smashed by set_blob(NULL)
   address tend   = tstart + _total_size;
   if (_blob != NULL) {
-
     guarantee(tstart >= _blob->content_begin(), "sanity");
     guarantee(tend   <= _blob->content_end(),   "sanity");
   }

@@ -134,8 +134,7 @@ LIR_Opr FrameMap::_caller_save_fpu_regs[] = { 0, };
 //--------------------------------------------------------
 
 void FrameMap::initialize() {
-
-  int i=0;
+  int i = 0;
   map_register(i, r0); r0_opr = LIR_OprFact::single_cpu(i); i++;
   map_register(i, r1); r1_opr = LIR_OprFact::single_cpu(i); i++;
   map_register(i, r2); r2_opr = LIR_OprFact::single_cpu(i); i++;

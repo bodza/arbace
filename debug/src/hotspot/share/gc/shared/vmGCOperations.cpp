@@ -7,7 +7,6 @@
 #include "gc/shared/genCollectedHeap.hpp"
 #include "gc/shared/vmGCOperations.hpp"
 #include "interpreter/oopMapCache.hpp"
-#include "logging/log.hpp"
 #include "memory/oopFactory.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/init.hpp"
@@ -45,7 +44,6 @@ bool VM_GC_Operation::skip_operation() const {
 }
 
 bool VM_GC_Operation::doit_prologue() {
-
   // To be able to handle a GC the VM initialization needs to be completed.
   if (!is_init_completed()) {
     vm_exit_during_initialization(
@@ -145,7 +143,6 @@ VM_CollectForMetadataAllocation::VM_CollectForMetadataAllocation(ClassLoaderData
 
 // Returns true iff concurrent GCs unloads metadata.
 bool VM_CollectForMetadataAllocation::initiate_concurrent_GC() {
-
   if (UseG1GC && ClassUnloadingWithConcurrentMark) {
     G1CollectedHeap* g1h = G1CollectedHeap::heap();
     g1h->g1_policy()->collector_state()->set_initiate_conc_mark_if_possible(true);

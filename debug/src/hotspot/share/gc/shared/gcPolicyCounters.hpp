@@ -10,7 +10,6 @@ class GCPolicyCounters: public CHeapObj<mtGC> {
   friend class VMStructs;
 
   private:
-
     // Constant PerfData types don't need to retain a reference.
     // However, it's a good idea to document them here.
     // PerfStringConstant*     _name;
@@ -23,7 +22,6 @@ class GCPolicyCounters: public CHeapObj<mtGC> {
     const char* _name_space;
 
  public:
-
   enum Name {
     NONE,
     GCPolicyCountersKind,
@@ -34,11 +32,11 @@ class GCPolicyCounters: public CHeapObj<mtGC> {
 
   GCPolicyCounters(const char* name, int collectors, int generations);
 
-    inline PerfVariable* tenuring_threshold() const  {
+    inline PerfVariable* tenuring_threshold() const {
       return _tenuring_threshold;
     }
 
-    inline PerfVariable* desired_survivor_size() const  {
+    inline PerfVariable* desired_survivor_size() const {
       return _desired_survivor_size;
     }
 

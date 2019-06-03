@@ -11,7 +11,6 @@
   };
 
  public:
-
   // This platform has no oops in the code that are not also
   // listed in the oop section.
   static bool mustIterateImmediateOopsInCode() { return false; }

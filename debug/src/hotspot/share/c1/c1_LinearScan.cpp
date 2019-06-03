@@ -58,7 +58,6 @@ LinearScan::LinearScan(IR* ir, LIRGenerator* gen, FrameMap* frame_map)
 //       is done in calc_operand_for_interval()
 
 int LinearScan::reg_num(LIR_Opr opr) {
-
   if (opr->is_virtual_register()) {
     return opr->vreg_number();
   } else if (opr->is_single_cpu()) {
@@ -82,7 +81,6 @@ int LinearScan::reg_num(LIR_Opr opr) {
 }
 
 int LinearScan::reg_numHi(LIR_Opr opr) {
-
   if (opr->is_virtual_register()) {
     return -1;
   } else if (opr->is_single_cpu()) {
@@ -163,12 +161,10 @@ int LinearScan::allocate_spill_slot(bool double_word) {
     }
     spill_slot = _max_spills;
     _max_spills += 2;
-
   } else if (_unused_spill_slot != -1) {
     // re-use hole that was the result of a previous double-word alignment
     spill_slot = _unused_spill_slot;
     _unused_spill_slot = -1;
-
   } else {
     spill_slot = _max_spills;
     _max_spills++;
@@ -209,7 +205,6 @@ void LinearScan::propagate_spill_slots() {
 // create a new interval with a predefined reg_num
 // (only used for parent intervals that are created during the building phase)
 Interval* LinearScan::create_interval(int reg_num) {
-
   Interval* interval = new Interval(reg_num);
   _intervals.at_put(reg_num, interval);
 
@@ -246,7 +241,6 @@ void LinearScan::copy_register_flags(Interval* from, Interval* to) {
 
 // called during building of intervals
 void LinearScan::change_spill_definition_pos(Interval* interval, int def_pos) {
-
   switch (interval->spill_state()) {
     case noDefinitionFound:
       interval->set_spill_definition_pos(def_pos);
@@ -350,7 +344,6 @@ void LinearScan::eliminate_spill_moves() {
           TRACE_LINEAR_SCAN(4, tty->print_cr("eliminating move from interval %d to %d", op1->in_opr()->vreg_number(), op1->result_opr()->vreg_number()));
           instructions->at_put(j, NULL); // NULL-instructions are deleted by assign_reg_num
         }
-
       } else {
         // insert move from register to stack just after the beginning of the interval
 
@@ -660,7 +653,6 @@ void LinearScan::add_def(LIR_Opr opr, int def_pos, IntervalUseKind use_kind) {
 
   if (opr->is_virtual_register()) {
     add_def(opr->vreg_number(), def_pos, use_kind, opr->type_register());
-
   } else {
     int reg = reg_num(opr);
     if (is_processed_reg_num(reg)) {
@@ -678,7 +670,6 @@ void LinearScan::add_use(LIR_Opr opr, int from, int to, IntervalUseKind use_kind
 
   if (opr->is_virtual_register()) {
     add_use(opr->vreg_number(), from, to, use_kind, opr->type_register());
-
   } else {
     int reg = reg_num(opr);
     if (is_processed_reg_num(reg)) {
@@ -696,7 +687,6 @@ void LinearScan::add_temp(LIR_Opr opr, int temp_pos, IntervalUseKind use_kind) {
 
   if (opr->is_virtual_register()) {
     add_temp(opr->vreg_number(), temp_pos, use_kind, opr->type_register());
-
   } else {
     int reg = reg_num(opr);
     if (is_processed_reg_num(reg)) {
@@ -712,7 +702,6 @@ void LinearScan::add_temp(LIR_Opr opr, int temp_pos, IntervalUseKind use_kind) {
 void LinearScan::add_def(int reg_num, int def_pos, IntervalUseKind use_kind, BasicType type) {
   Interval* interval = interval_at(reg_num);
   if (interval != NULL) {
-
     if (type != T_ILLEGAL) {
       interval->set_type(type);
     }
@@ -723,7 +712,6 @@ void LinearScan::add_def(int reg_num, int def_pos, IntervalUseKind use_kind, Bas
       // start is the beginning of the current block until a def is encountered.)
       r->set_from(def_pos);
       interval->add_use_pos(def_pos, use_kind);
-
     } else {
       // Dead value - make vacuous interval
       // also add use_kind for dead intervals
@@ -731,7 +719,6 @@ void LinearScan::add_def(int reg_num, int def_pos, IntervalUseKind use_kind, Bas
       interval->add_use_pos(def_pos, use_kind);
       TRACE_LINEAR_SCAN(2, tty->print_cr("Warning: def of reg %d at %d occurs without use", reg_num, def_pos));
     }
-
   } else {
     // Dead value - make vacuous interval
     // also add use_kind for dead intervals
@@ -794,11 +781,9 @@ IntervalUseKind LinearScan::use_kind_of_output_operand(LIR_Op* op, LIR_Opr opr) 
       // Begin of an interval with must_start_in_memory set.
       // This interval will always get a stack slot first, so return noUse.
       return noUse;
-
     } else if (move->in_opr()->is_stack()) {
       // method argument (condition must be equal to handle_method_arguments)
       return noUse;
-
     } else if (move->in_opr()->is_register() && move->result_opr()->is_register()) {
       // Move from register to register
       if (block_of_op_with_id(op->id())->is_set(BlockBegin::osr_entry_flag)) {
@@ -828,7 +813,6 @@ IntervalUseKind LinearScan::use_kind_of_input_operand(LIR_Op* op, LIR_Opr opr) {
       // Move to an interval with must_start_in_memory set.
       // To avoid moves from stack to stack (not allowed) force the input operand to a register
       return mustHaveRegister;
-
     } else if (move->in_opr()->is_register() && move->result_opr()->is_register()) {
       // Move from register to register
       if (block_of_op_with_id(op->id())->is_set(BlockBegin::osr_entry_flag)) {
@@ -924,7 +908,6 @@ void LinearScan::handle_method_arguments(LIR_Op* op) {
     LIR_Op1* move = (LIR_Op1*)op;
 
     if (move->in_opr()->is_stack()) {
-
       Interval* interval = interval_at(reg_num(move->result_opr()));
 
       int stack_slot = LinearScan::nof_regs + (move->in_opr()->is_single_stack() ? move->in_opr()->single_stack_ix() : move->in_opr()->double_stack_ix());
@@ -1164,7 +1147,6 @@ void LinearScan::add_to_list(Interval** first, Interval** prev, Interval* interv
 }
 
 void LinearScan::create_unhandled_lists(Interval** list1, Interval** list2, bool (is_list1)(const Interval* i), bool (is_list2)(const Interval* i)) {
-
   *list1 = *list2 = Interval::end();
 
   Interval* list1_prev = NULL;
@@ -1327,17 +1309,14 @@ Interval* LinearScan::split_child_at_op_id(Interval* interval, int op_id, LIR_Op
 }
 
 Interval* LinearScan::interval_at_block_begin(BlockBegin* block, int reg_num) {
-
   return split_child_at_op_id(interval_at(reg_num), block->first_lir_instruction_id(), LIR_OpVisitState::outputMode);
 }
 
 Interval* LinearScan::interval_at_block_end(BlockBegin* block, int reg_num) {
-
   return split_child_at_op_id(interval_at(reg_num), block->last_lir_instruction_id() + 1, LIR_OpVisitState::outputMode);
 }
 
 Interval* LinearScan::interval_at_op_id(int reg_num, int op_id) {
-
   return split_child_at_op_id(interval_at(reg_num), op_id, LIR_OpVisitState::inputMode);
 }
 
@@ -1348,7 +1327,6 @@ void LinearScan::resolve_collect_mappings(BlockBegin* from_block, BlockBegin* to
 
   // visit all registers where the live_at_edge bit is set
   for (int r = (int)live_at_edge.get_next_one_offset(0, size); r < size; r = (int)live_at_edge.get_next_one_offset(r + 1, size)) {
-
     Interval* from_interval = interval_at_block_end(from_block, r);
     Interval* to_interval = interval_at_block_begin(to_block, r);
 
@@ -1371,7 +1349,6 @@ void LinearScan::resolve_find_insert_pos(BlockBegin* from_block, BlockBegin* to_
     } else {
       move_resolver.set_insert_position(from_block->lir(), instructions->length() - 1);
     }
-
   } else {
     TRACE_LINEAR_SCAN(4, tty->print_cr("inserting moves at beginning of to_block B%d", to_block->block_id()));
 
@@ -1487,7 +1464,6 @@ void LinearScan::resolve_exception_entry(BlockBegin* block, int reg_num, MoveRes
 }
 
 void LinearScan::resolve_exception_entry(BlockBegin* block, MoveResolver &move_resolver) {
-
   // visit all registers where the live_in bit is set
   int size = live_set_size();
   for (int r = (int)block->live_in().get_next_one_offset(0, size); r < size; r = (int)block->live_in().get_next_one_offset(r + 1, size)) {
@@ -1537,7 +1513,6 @@ void LinearScan::resolve_exception_edge(XHandler* handler, int throwing_op_id, i
       Interval* from_interval = interval_at_op_id(from_value->operand()->vreg_number(), throwing_op_id);
       move_resolver.add_mapping(from_interval, to_interval);
     }
-
   } else {
     // no phi function, so use reg_num also for from_interval
     // search split child at the throwing op_id
@@ -1647,7 +1622,6 @@ LIR_Opr LinearScan::calc_operand_for_interval(const Interval* interval) {
   if (assigned_reg >= nof_regs) {
     // stack slot
     return LIR_OprFact::stack(assigned_reg - nof_regs, type);
-
   } else {
     // register
     switch (type) {
@@ -1730,11 +1704,9 @@ LIR_Opr LinearScan::canonical_spill_opr(Interval* interval) {
 }
 
 LIR_Opr LinearScan::color_lir_opr(LIR_Opr opr, int op_id, LIR_OpVisitState::OprMode mode) {
-
   Interval* interval = interval_at(opr->vreg_number());
 
   if (op_id != -1) {
-
     // operands are not changed when an interval is split during allocation,
     // so search the right interval here
     interval = split_child_at_op_id(interval, op_id, mode);
@@ -1797,14 +1769,12 @@ OopMap* LinearScan::compute_oop_map(IntervalWalker* iw, LIR_Op* op, CodeEmitInfo
     // in the oop map since we may safepoint while doing the patch
     // before we've consumed the inputs.
     if (op->is_patching() || op->id() < interval->current_to()) {
-
       VMReg name = vm_reg_for_interval(interval);
       set_oop(map, name);
 
       // Spill optimization: when the stack value is guaranteed to be always correct,
       // then it must be added to the oop map even if the interval is currently in a register
       if (interval->always_in_memory() && op->id() > interval->spill_definition_pos() && interval->assigned_reg() != interval->canonical_spill_slot()) {
-
         set_oop(map, frame_map()->slot_regname(interval->canonical_spill_slot() - LinearScan::nof_regs));
       }
     }
@@ -1820,7 +1790,6 @@ OopMap* LinearScan::compute_oop_map(IntervalWalker* iw, LIR_Op* op, CodeEmitInfo
 }
 
 void LinearScan::compute_oop_map(IntervalWalker* iw, const LIR_OpVisitState &visitor, LIR_Op* op) {
-
   // compute oop_map only for first CodeEmitInfo
   // because it is (in most cases) equal for all other infos of the same operation
   CodeEmitInfo* first_info = visitor.info_at(0);
@@ -1891,7 +1860,6 @@ LocationValue* LinearScan::location_for_name(int name, Location::Type loc_type) 
 }
 
 int LinearScan::append_scope_value_for_constant(LIR_Opr opr, GrowableArray<ScopeValue*>* scope_values) {
-
   LIR_Const* c = opr->as_constant_ptr();
   BasicType t = c->type();
   switch (t) {
@@ -1951,7 +1919,6 @@ int LinearScan::append_scope_value_for_operand(LIR_Opr opr, GrowableArray<ScopeV
 
     scope_values->append(sv);
     return 1;
-
   } else if (opr->is_single_cpu()) {
     bool is_oop = opr->is_oop_register();
     int cache_idx = opr->cpu_regnr() * 2 + (is_oop ? 1 : 0);
@@ -1976,7 +1943,6 @@ int LinearScan::append_scope_value_for_operand(LIR_Opr opr, GrowableArray<ScopeV
     scope_values->append(sv);
     return 1;
 #endif
-
   } else if (opr->is_single_fpu()) {
 #ifdef X86
     // the exact location of fpu stack values is only known
@@ -2008,7 +1974,6 @@ int LinearScan::append_scope_value_for_operand(LIR_Opr opr, GrowableArray<ScopeV
 
     scope_values->append(sv);
     return 1;
-
   } else {
     // double-size operands
 
@@ -2024,7 +1989,6 @@ int LinearScan::append_scope_value_for_operand(LIR_Opr opr, GrowableArray<ScopeV
       // Does this reverse on x86 vs. sparc?
       first =  new LocationValue(loc1);
       second = _int_0_scope_value;
-
     } else if (opr->is_double_cpu()) {
       VMReg rname_first = opr->as_register_lo()->as_VMReg();
       first = new LocationValue(Location::new_reg_loc(Location::lng, rname_first));
@@ -2036,7 +2000,6 @@ int LinearScan::append_scope_value_for_operand(LIR_Opr opr, GrowableArray<ScopeV
       first = new LocationValue(Location::new_reg_loc(Location::dbl, rname_first));
       second = _int_0_scope_value;
 #endif
-
     } else if (opr->is_double_fpu()) {
       // On SPARC, fpu_regnrLo/fpu_regnrHi represents the two halves of
       // the double as float registers in the native ordering. On X86,
@@ -2061,7 +2024,6 @@ int LinearScan::append_scope_value_for_operand(LIR_Opr opr, GrowableArray<ScopeV
 
       first = new LocationValue(Location::new_reg_loc(Location::dbl, rname_first));
       second = _int_0_scope_value;
-
     } else {
       ShouldNotReachHere();
       first = NULL;
@@ -2117,9 +2079,7 @@ int LinearScan::append_scope_value(int op_id, Value value, GrowableArray<ScopeVa
 
       // Append to ScopeValue array
       return append_scope_value_for_operand(opr, scope_values);
-
     } else {
-
       return append_scope_value_for_constant(opr, scope_values);
     }
   } else {
@@ -2152,7 +2112,6 @@ IRScopeDebugInfo* LinearScan::compute_debug_info_for_scope(int op_id, IRScope* c
 
     int pos = 0;
     while (pos < nof_locals) {
-
       Value local = cur_state->local_at(pos);
       pos += append_scope_value(op_id, local, locals);
     }
@@ -2422,7 +2381,6 @@ void MoveResolver::append_insertion_buffer() {
 }
 
 void MoveResolver::insert_move(Interval* from_interval, Interval* to_interval) {
-
   LIR_Opr from_opr = LIR_OprFact::virtual_register(from_interval->reg_num(), from_interval->type());
   LIR_Opr to_opr = LIR_OprFact::virtual_register(to_interval->reg_num(), to_interval->type());
 
@@ -2438,7 +2396,6 @@ void MoveResolver::insert_move(Interval* from_interval, Interval* to_interval) {
 }
 
 void MoveResolver::insert_move(LIR_Opr from_opr, Interval* to_interval) {
-
   LIR_Opr to_opr = LIR_OprFact::virtual_register(to_interval->reg_num(), to_interval->type());
   _insertion_buffer.move(_insert_idx, from_opr, to_opr);
 
@@ -2652,7 +2609,6 @@ Interval::Interval(int reg_num) :
 }
 
 int Interval::calc_to() {
-
   Range* r = _first;
   while (r->next() != Range::end()) {
     r = r->next();
@@ -2666,10 +2622,8 @@ Interval* Interval::register_hint(bool search_split_child) const {
   }
 
   if (_register_hint != NULL) {
-
     if (_register_hint->assigned_reg() >= 0 && _register_hint->assigned_reg() < LinearScan::nof_regs) {
       return _register_hint;
-
     } else if (_register_hint->_split_children.length() > 0) {
       // search the first split child that has a register assigned
       int len = _register_hint->_split_children.length();
@@ -2688,7 +2642,6 @@ Interval* Interval::register_hint(bool search_split_child) const {
 }
 
 Interval* Interval::split_child_at_op_id(int op_id, LIR_OpVisitState::OprMode mode) {
-
   Interval* result;
   if (_split_children.length() == 0) {
     result = this;
@@ -2721,7 +2674,6 @@ Interval* Interval::split_child_at_op_id(int op_id, LIR_OpVisitState::OprMode mo
 
 // returns the last split child that ends before the given op_id
 Interval* Interval::split_child_before_op_id(int op_id) {
-
   Interval* parent = split_parent();
   Interval* result = NULL;
 
@@ -2739,11 +2691,9 @@ Interval* Interval::split_child_before_op_id(int op_id) {
 
 // checks if op_id is covered by any split child
 bool Interval::split_child_covers(int op_id, LIR_OpVisitState::OprMode mode) {
-
   if (_split_children.length() == 0) {
     // simple case if interval was not split
     return covers(op_id, mode);
-
   } else {
     // extended case: check all split children
     int len = _split_children.length();
@@ -2759,7 +2709,6 @@ bool Interval::split_child_covers(int op_id, LIR_OpVisitState::OprMode mode) {
 
 // Note: use positions are sorted descending -> first use has highest index
 int Interval::first_usage(IntervalUseKind min_use_kind) const {
-
   for (int i = _use_pos_and_kinds.length() - 2; i >= 0; i -= 2) {
     if (_use_pos_and_kinds.at(i + 1) >= min_use_kind) {
       return _use_pos_and_kinds.at(i);
@@ -2769,7 +2718,6 @@ int Interval::first_usage(IntervalUseKind min_use_kind) const {
 }
 
 int Interval::next_usage(IntervalUseKind min_use_kind, int from) const {
-
   for (int i = _use_pos_and_kinds.length() - 2; i >= 0; i -= 2) {
     if (_use_pos_and_kinds.at(i) >= from && _use_pos_and_kinds.at(i + 1) >= min_use_kind) {
       return _use_pos_and_kinds.at(i);
@@ -2779,7 +2727,6 @@ int Interval::next_usage(IntervalUseKind min_use_kind, int from) const {
 }
 
 int Interval::next_usage_exact(IntervalUseKind exact_use_kind, int from) const {
-
   for (int i = _use_pos_and_kinds.length() - 2; i >= 0; i -= 2) {
     if (_use_pos_and_kinds.at(i) >= from && _use_pos_and_kinds.at(i + 1) == exact_use_kind) {
       return _use_pos_and_kinds.at(i);
@@ -2789,7 +2736,6 @@ int Interval::next_usage_exact(IntervalUseKind exact_use_kind, int from) const {
 }
 
 int Interval::previous_usage(IntervalUseKind min_use_kind, int from) const {
-
   int prev = 0;
   for (int i = _use_pos_and_kinds.length() - 2; i >= 0; i -= 2) {
     if (_use_pos_and_kinds.at(i) > from) {
@@ -2803,11 +2749,9 @@ int Interval::previous_usage(IntervalUseKind min_use_kind, int from) const {
 }
 
 void Interval::add_use_pos(int pos, IntervalUseKind use_kind) {
-
   // do not add use positions for precolored intervals because
   // they are never used
   if (use_kind != noUse && reg_num() >= LIR_OprDesc::vreg_base) {
-
     // Note: add_use is called in descending order, so list gets sorted
     //       automatically by just appending new use positions
     int len = _use_pos_and_kinds.length();
@@ -2821,7 +2765,6 @@ void Interval::add_use_pos(int pos, IntervalUseKind use_kind) {
 }
 
 void Interval::add_range(int from, int to) {
-
   if (first()->from() <= to) {
     // join intersecting ranges
     first()->set_from(MIN2(from, first()->from()));
@@ -2843,7 +2786,6 @@ Interval* Interval::new_split_child() {
 
   // insert new interval in children-list of parent
   if (parent->_split_children.length() == 0) {
-
     parent->_split_children = IntervalList(4);
     parent->_split_children.append(this);
   }
@@ -2863,7 +2805,6 @@ Interval* Interval::new_split_child() {
 //
 // Note: The new interval has no valid reg_num
 Interval* Interval::split(int split_pos) {
-
   // allocate new interval
   Interval* result = new_split_child();
 
@@ -2879,7 +2820,6 @@ Interval* Interval::split(int split_pos) {
     result->_first = new Range(split_pos, cur->to(), cur->next());
     cur->set_to(split_pos);
     cur->set_next(Range::end());
-
   } else {
     result->_first = cur;
     prev->set_next(Range::end());
@@ -2913,7 +2853,6 @@ Interval* Interval::split(int split_pos) {
 // Currently, only the first range can be split, and the new interval
 // must not have split positions
 Interval* Interval::split_from_start(int split_pos) {
-
   // allocate new interval
   Interval* result = new_split_child();
 
@@ -2938,7 +2877,6 @@ bool Interval::covers(int op_id, LIR_OpVisitState::OprMode mode) const {
     cur = cur->next();
   }
   if (cur != Range::end()) {
-
     if (mode == LIR_OpVisitState::outputMode) {
       return cur->from() <= op_id && op_id < cur->to();
     } else {
@@ -2951,10 +2889,8 @@ bool Interval::covers(int op_id, LIR_OpVisitState::OprMode mode) const {
 // returns true if the interval has any hole between hole_from and hole_to
 // (even if the hole has only the length 1)
 bool Interval::has_hole_between(int hole_from, int hole_to) {
-
   Range* cur  = _first;
   while (cur != Range::end()) {
-
     // hole-range starts before this range -> hole
     if (hole_from < cur->from()) {
       return true;
@@ -3012,7 +2948,6 @@ void IntervalWalker::append_sorted(Interval** list, Interval* interval) {
 }
 
 void IntervalWalker::append_to_unhandled(Interval** list, Interval* interval) {
-
   Interval* prev = NULL;
   Interval* cur  = *list;
   while (cur->from() < interval->from() || (cur->from() == interval->from() && cur->first_usage(noUse) < interval->first_usage(noUse))) {
@@ -3105,7 +3040,6 @@ void IntervalWalker::next_interval() {
   if (any != Interval::end()) {
     // intervals may start at same position -> prefer fixed interval
     kind = fixed != Interval::end() && fixed->from() <= any->from() ? fixedKind : anyKind;
-
   } else if (fixed != Interval::end()) {
     kind = fixedKind;
   } else {
@@ -3176,13 +3110,11 @@ inline void LinearScanWalker::exclude_from_use(int reg) {
   }
 }
 inline void LinearScanWalker::exclude_from_use(Interval* i) {
-
   exclude_from_use(i->assigned_reg());
   exclude_from_use(i->assigned_regHi());
 }
 
 inline void LinearScanWalker::set_use_pos(int reg, Interval* i, int use_pos, bool only_process_use_pos) {
-
   if (reg >= _first_reg && reg <= _last_reg) {
     if (_use_pos[reg] > use_pos) {
       _use_pos[reg] = use_pos;
@@ -3363,9 +3295,7 @@ int LinearScanWalker::find_optimal_split_pos(Interval* it, int min_split_pos, in
     // trivial case, no optimization of split position possible
     TRACE_LINEAR_SCAN(4, tty->print_cr("      min-pos and max-pos are equal, no optimization possible"));
     optimal_split_pos = min_split_pos;
-
   } else {
-
     // reason for using min_split_pos - 1: when the minimal split pos is exactly at the
     // beginning of a block, then min_split_pos is also a possible split position.
     // Use the block before as min_block, because then min_block->last_lir_instruction_id() + 2 == min_split_pos
@@ -3381,7 +3311,6 @@ int LinearScanWalker::find_optimal_split_pos(Interval* it, int min_split_pos, in
       // split position cannot be moved to block boundary, so split as late as possible
       TRACE_LINEAR_SCAN(4, tty->print_cr("      cannot move split pos to block boundary because min_pos and max_pos are in same block"));
       optimal_split_pos = max_split_pos;
-
     } else if (it->has_hole_between(max_split_pos - 1, max_split_pos) && !allocator()->is_block_begin(max_split_pos)) {
       // Do not move split position if the interval has a hole before max_split_pos.
       // Intervals resulting from Phi-Functions have more than one definition (marked
@@ -3389,7 +3318,6 @@ int LinearScanWalker::find_optimal_split_pos(Interval* it, int min_split_pos, in
       // for the second definition, an earlier reloading is unnecessary.
       TRACE_LINEAR_SCAN(4, tty->print_cr("      interval has hole just before max_split_pos, so splitting at max_split_pos"));
       optimal_split_pos = max_split_pos;
-
     } else {
       // seach optimal block boundary between min_split_pos and max_split_pos
       TRACE_LINEAR_SCAN(4, tty->print_cr("      moving split pos to optimal block boundary between block B%d and B%d", min_block->block_id(), max_block->block_id()));
@@ -3441,7 +3369,6 @@ void LinearScanWalker::split_before_usage(Interval* it, int min_split_pos, int m
   TRACE_LINEAR_SCAN(2, tty->print   ("----- splitting interval: "); it->print());
   TRACE_LINEAR_SCAN(2, tty->print_cr("      between %d and %d", min_split_pos, max_split_pos));
 
-
   int optimal_split_pos = find_optimal_split_pos(it, min_split_pos, max_split_pos, true);
 
   if (optimal_split_pos == it->to() && it->next_usage(mustHaveRegister, min_split_pos) == max_jint) {
@@ -3487,7 +3414,6 @@ void LinearScanWalker::split_for_spilling(Interval* it) {
   TRACE_LINEAR_SCAN(2, tty->print   ("----- splitting and spilling interval: "); it->print());
   TRACE_LINEAR_SCAN(2, tty->print_cr("      between %d and %d", min_split_pos, max_split_pos));
 
-
   if (min_split_pos == it->from()) {
     // the whole interval is never used, so spill it entirely to memory
     TRACE_LINEAR_SCAN(2, tty->print_cr("      spilling entire interval because split pos is at beginning of interval"));
@@ -3513,7 +3439,6 @@ void LinearScanWalker::split_for_spilling(Interval* it) {
         }
       }
     }
-
   } else {
     // search optimal split pos, split interval and spill only the right hand part
     int optimal_split_pos = find_optimal_split_pos(it, min_split_pos, max_split_pos, false);
@@ -3559,14 +3484,12 @@ void LinearScanWalker::split_when_partial_register_available(Interval* it, int r
 }
 
 void LinearScanWalker::split_and_spill_interval(Interval* it) {
-
   int current_pos = current_position();
   if (it->state() == inactiveState) {
     // the interval is currently inactive, so no spill slot is needed for now.
     // when the split part is activated, the interval has a new chance to get a register,
     // so in the best case no stack slot is necessary
     split_before_usage(it, current_pos + 1, current_pos + 1);
-
   } else {
     // search the position where the interval must have a register and split
     // at the optimal position before.
@@ -3588,7 +3511,6 @@ int LinearScanWalker::find_free_reg(int reg_needed_until, int interval_to, int h
   for (int i = _first_reg; i <= _last_reg; i++) {
     if (i == ignore_reg) {
       // this register must be ignored
-
     } else if (_use_pos[i] >= interval_to) {
       // this register is free for the full interval
       if (min_full_reg == any_reg || i == hint_reg || (_use_pos[i] < _use_pos[min_full_reg] && min_full_reg != hint_reg)) {
@@ -3613,7 +3535,6 @@ int LinearScanWalker::find_free_reg(int reg_needed_until, int interval_to, int h
 }
 
 int LinearScanWalker::find_free_double_reg(int reg_needed_until, int interval_to, int hint_reg, bool* need_split) {
-
   int min_full_reg = any_reg;
   int max_partial_reg = any_reg;
 
@@ -3667,7 +3588,6 @@ bool LinearScanWalker::alloc_free_reg(Interval* cur) {
       hint_regHi = hint_reg + 1;  // connect e.g. eax-edx
     }
     TRACE_LINEAR_SCAN(4, tty->print("      hint registers %d, %d from interval ", hint_reg, hint_regHi); register_hint->print());
-
   } else {
     hint_reg = any_reg;
     hint_regHi = any_reg;
@@ -3689,7 +3609,6 @@ bool LinearScanWalker::alloc_free_reg(Interval* cur) {
       return false;
     }
     split_pos = MIN2(_use_pos[reg], _use_pos[regHi]);
-
   } else {
     reg = find_free_reg(reg_needed_until, interval_to, hint_reg, any_reg, &need_split);
     if (reg == any_reg) {
@@ -3705,7 +3624,6 @@ bool LinearScanWalker::alloc_free_reg(Interval* cur) {
         // (when one register is found for the whole interval, split&spill is only
         // performed for the hi register)
         return false;
-
       } else if (regHi != any_reg) {
         split_pos = MIN2(split_pos, _use_pos[regHi]);
 
@@ -3737,7 +3655,6 @@ int LinearScanWalker::find_locked_reg(int reg_needed_until, int interval_to, int
   for (int i = _first_reg; i <= _last_reg; i++) {
     if (i == ignore_reg) {
       // this register must be ignored
-
     } else if (_use_pos[i] > reg_needed_until) {
       if (max_reg == any_reg || i == hint_reg || (_use_pos[i] > _use_pos[max_reg] && max_reg != hint_reg)) {
         max_reg = i;
@@ -3753,7 +3670,6 @@ int LinearScanWalker::find_locked_reg(int reg_needed_until, int interval_to, int
 }
 
 int LinearScanWalker::find_locked_double_reg(int reg_needed_until, int interval_to, int hint_reg, bool* need_split) {
-
   int max_reg = any_reg;
 
   for (int i = _first_reg; i < _last_reg; i+=2) {
@@ -3772,7 +3688,6 @@ int LinearScanWalker::find_locked_double_reg(int reg_needed_until, int interval_
 }
 
 void LinearScanWalker::split_and_spill_intersecting_intervals(int reg, int regHi) {
-
   for (int i = 0; i < _spill_intervals[reg]->length(); i++) {
     Interval* it = _spill_intervals[reg]->at(i);
     remove_from_list(it);
@@ -3961,7 +3876,6 @@ void LinearScanWalker::combine_spilled_intervals(Interval* cur) {
     return;
   }
 
-
   if (begin_hint->assigned_reg() < LinearScan::nof_regs) {
     // register_hint is not spilled at begin_pos, so it would not be benefitial to immediately spill cur
     return;
@@ -3989,7 +3903,6 @@ bool LinearScanWalker::activate_current() {
 
     split_stack_interval(cur);
     result = false;
-
   } else if (allocator()->gen()->is_vreg_flag_set(cur->reg_num(), LIRGenerator::must_start_in_memory)) {
     // activating an interval that must start in a stack slot, but may get a register later
     // used for lir_roundfp: rounding is done by store to stack and reload later
@@ -3998,7 +3911,6 @@ bool LinearScanWalker::activate_current() {
     allocator()->assign_spill_slot(cur);
     split_stack_interval(cur);
     result = false;
-
   } else if (cur->assigned_reg() == any_reg) {
     // interval has not assigned register -> normal allocation
     // (this is the normal case for most intervals)
@@ -4103,7 +4015,6 @@ bool EdgeMoveOptimizer::operations_different(LIR_Op* op1, LIR_Op* op2) {
       // these moves are exactly equal and can be optimized
       return false;
     }
-
   } else if (op1->code() == lir_fxch && op2->code() == lir_fxch) {
     LIR_Op1* fxch1 = (LIR_Op1*)op1;
     LIR_Op1* fxch2 = (LIR_Op1*)op2;
@@ -4111,7 +4022,6 @@ bool EdgeMoveOptimizer::operations_different(LIR_Op* op1, LIR_Op* op2) {
       // equal FPU stack operations can be optimized
       return false;
     }
-
   } else if (op1->code() == lir_fpop_raw && op2->code() == lir_fpop_raw) {
     // equal FPU stack operations can be optimized
     return false;
@@ -4143,7 +4053,6 @@ void EdgeMoveOptimizer::optimize_moves_at_block_end(BlockBegin* block) {
       // the same blocks.
       return;
     }
-
 
     if (pred_instructions->last()->info() != NULL) {
       // can not optimize instructions when debug info is needed
@@ -4184,7 +4093,6 @@ void EdgeMoveOptimizer::optimize_moves_at_block_begin(BlockBegin* block) {
   int num_sux = block->number_of_sux();
 
   LIR_OpList* cur_instructions = block->lir()->instructions_list();
-
 
   if (cur_instructions->last()->info() != NULL) {
     // can no optimize instructions when debug info is needed
@@ -4314,7 +4222,6 @@ bool ControlFlowOptimizer::can_delete_block(BlockBegin* block) {
 
   LIR_OpList* instructions = block->lir()->instructions_list();
 
-
   // block must have exactly one successor
 
   if (instructions->length() == 2 && instructions->last()->info() == NULL) {
@@ -4403,19 +4310,16 @@ void ControlFlowOptimizer::delete_unnecessary_jumps(BlockList* code) {
 
       if (last_branch->info() == NULL) {
         if (last_branch->block() == code->at(i + 1)) {
-
           TRACE_LINEAR_SCAN(3, tty->print_cr("Deleting unconditional branch at end of block B%d", block->block_id()));
 
           // delete last branch instruction
           instructions->trunc_to(instructions->length() - 1);
-
         } else {
           LIR_Op* prev_op = instructions->at(instructions->length() - 2);
           if (prev_op->code() == lir_branch || prev_op->code() == lir_cond_float_branch) {
             LIR_OpBranch* prev_branch = (LIR_OpBranch*)prev_op;
 
             if (prev_branch->stub() == NULL) {
-
               LIR_Op2* prev_cmp = NULL;
               // There might be a cmove inserted for profiling which depends on the same
               // compare. If we change the condition of the respective compare, we have
@@ -4435,7 +4339,6 @@ void ControlFlowOptimizer::delete_unnecessary_jumps(BlockList* code) {
               // Guarantee because it is dereferenced below.
               guarantee(prev_cmp != NULL, "should have found comp instruction for branch");
               if (prev_branch->block() == code->at(i + 1) && prev_branch->info() == NULL) {
-
                 TRACE_LINEAR_SCAN(3, tty->print_cr("Negating conditional branch and deleting unconditional branch at end of block B%d", block->block_id()));
 
                 // eliminate a conditional branch to the immediate successor
@@ -4460,7 +4363,6 @@ void ControlFlowOptimizer::delete_unnecessary_jumps(BlockList* code) {
 }
 
 void ControlFlowOptimizer::delete_jumps_to_return(BlockList* code) {
-
   for (int i = code->length() - 1; i >= 0; i--) {
     BlockBegin* block = code->at(i);
     LIR_OpList* cur_instructions = block->lir()->instructions_list();

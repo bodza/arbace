@@ -17,14 +17,12 @@ class nmethodLocker;
 // Per Compiler Performance Counters.
 //
 class CompilerCounters : public CHeapObj<mtCompiler> {
-
   public:
     enum {
       cmname_buffer_length = 160
     };
 
   private:
-
     char _current_method[cmname_buffer_length];
     int  _compile_type;
 
@@ -135,9 +133,6 @@ class CompileBroker: AllStatic {
   // An array of compiler thread Java objects
   static jobject *_compiler1_objects, *_compiler2_objects;
 
-  // An array of compiler logs
-  static CompileLog **_compiler1_logs, **_compiler2_logs;
-
   // These counters are used for assigning id's to each compilation
   static volatile jint _compilation_id;
   static volatile jint _osr_compilation_id;
@@ -239,7 +234,6 @@ class CompileBroker: AllStatic {
   static void shutdown_compiler_runtime(AbstractCompiler* comp, CompilerThread* thread);
 
 public:
-
   static DirectivesStack* dirstack();
   static void set_dirstack(DirectivesStack* stack);
 
@@ -263,7 +257,6 @@ public:
   }
   static void compilation_init_phase1(TRAPS);
   static void compilation_init_phase2();
-  static void init_compiler_thread_log();
   static nmethod* compile_method(const methodHandle& method,
                                  int osr_bci,
                                  int comp_level,
@@ -360,8 +353,6 @@ public:
   static jobject compiler2_object(int idx) {
     return _compiler2_objects[idx];
   }
-
-  static CompileLog* get_log(CompilerThread* ct);
 
   static int get_total_compile_count() {            return _total_compile_count; }
   static int get_total_bailout_count() {            return _total_bailout_count; }

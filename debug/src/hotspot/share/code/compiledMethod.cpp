@@ -5,8 +5,6 @@
 #include "code/scopeDesc.hpp"
 #include "code/codeCache.hpp"
 #include "interpreter/bytecode.inline.hpp"
-#include "logging/log.hpp"
-#include "logging/logTag.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/methodData.hpp"
 #include "oops/method.inline.hpp"
@@ -67,7 +65,6 @@ const char* CompiledMethod::state() const {
 //-----------------------------------------------------------------------------
 
 void CompiledMethod::add_exception_cache_entry(ExceptionCache* new_entry) {
-
   ExceptionCache *ec = exception_cache();
   if (ec != NULL) {
     new_entry->set_next(ec);
@@ -425,7 +422,6 @@ bool CompiledMethod::do_unloading_parallel(BoolObjectClosure* is_alive, bool unl
 // inline caches found that point to nmethods that are not yet visited during
 // the do_unloading walk.
 bool CompiledMethod::unload_nmethod_caches(bool parallel, bool unloading_occurred) {
-
   // Exception cache only needs to be called if unloading occurred
   if (unloading_occurred) {
     clean_exception_cache();
@@ -449,9 +445,7 @@ bool CompiledMethod::cleanup_inline_caches_impl(bool parallel, bool unloading_oc
   // zombie and unloaded nmethods.
   RelocIterator iter(this, oops_reloc_begin());
   while (iter.next()) {
-
     switch (iter.type()) {
-
     case relocInfo::virtual_call_type:
       if (unloading_occurred) {
         // If class unloading occurred we first clear ICs where the cached metadata
@@ -490,9 +484,7 @@ void CompiledMethod::do_unloading_parallel_postponed() {
 
   RelocIterator iter(this, oops_reloc_begin());
   while (iter.next()) {
-
     switch (iter.type()) {
-
     case relocInfo::virtual_call_type:
       clean_if_nmethod_is_unloaded(CompiledIC_at(&iter), this, true);
       break;

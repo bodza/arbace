@@ -183,13 +183,13 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
   // Given an immediate value, return an operand usable in logical ops.
   LIR_Opr load_immediate(int x, BasicType type);
 
-  void  set_result(Value x, LIR_Opr opr)           {
+  void  set_result(Value x, LIR_Opr opr) {
     x->set_operand(opr);
     if (opr->is_virtual()) {
       _instruction_for_operand.at_put_grow(opr->vreg_number(), x, NULL);
     }
   }
-  void  set_no_result(Value x)                     { x->clear_operand(); }
+  void  set_no_result(Value x) { x->clear_operand(); }
 
   friend class LIRItem;
 
@@ -249,14 +249,9 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
                       LIRItem& base, LIR_Opr offset, LIR_Opr result,
                       CodeEmitInfo* patch_info = NULL, CodeEmitInfo* load_emit_info = NULL);
 
-  LIR_Opr access_atomic_cmpxchg_at(DecoratorSet decorators, BasicType type,
-                                   LIRItem& base, LIRItem& offset, LIRItem& cmp_value, LIRItem& new_value);
-
-  LIR_Opr access_atomic_xchg_at(DecoratorSet decorators, BasicType type,
-                                LIRItem& base, LIRItem& offset, LIRItem& value);
-
-  LIR_Opr access_atomic_add_at(DecoratorSet decorators, BasicType type,
-                               LIRItem& base, LIRItem& offset, LIRItem& value);
+  LIR_Opr access_atomic_cmpxchg_at(DecoratorSet decorators, BasicType type, LIRItem& base, LIRItem& offset, LIRItem& cmp_value, LIRItem& new_value);
+  LIR_Opr access_atomic_xchg_at(DecoratorSet decorators, BasicType type, LIRItem& base, LIRItem& offset, LIRItem& value);
+  LIR_Opr access_atomic_add_at(DecoratorSet decorators, BasicType type, LIRItem& base, LIRItem& offset, LIRItem& value);
 
   // These need to guarantee JMM volatile semantics are preserved on each platform
   // and requires one implementation per architecture.
@@ -351,9 +346,7 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
   LIR_Opr safepoint_poll_register();
 
   void profile_branch(If* if_instr, If::Condition cond);
-  void increment_event_counter_impl(CodeEmitInfo* info,
-                                    ciMethod *method, LIR_Opr step, int frequency,
-                                    int bci, bool backedge, bool notify);
+  void increment_event_counter_impl(CodeEmitInfo* info, ciMethod *method, LIR_Opr step, int frequency, int bci, bool backedge, bool notify);
   void increment_event_counter(CodeEmitInfo* info, LIR_Opr step, int bci, bool backedge);
   void increment_invocation_counter(CodeEmitInfo *info) {
     if (compilation()->count_invocations()) {
@@ -576,17 +569,15 @@ class LIRItem: public CompilationResourceObj {
     _new_result = LIR_OprFact::illegalOpr;
   }
 
-  Value value() const          { return _value; }
-  ValueType* type() const      { return value()->type(); }
-  LIR_Opr result()             {
+  Value value() const     { return _value; }
+  ValueType* type() const { return value()->type(); }
+  LIR_Opr result()        {
     if (_destroys_register && _result->is_register()) {
       if (_new_result->is_illegal()) {
         _new_result = _gen->new_register(type());
         gen()->lir()->move(_result, _new_result);
       }
       return _new_result;
-    } else {
-      return _result;
     }
     return _result;
   }

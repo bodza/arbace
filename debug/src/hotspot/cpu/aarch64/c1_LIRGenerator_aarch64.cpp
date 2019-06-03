@@ -244,7 +244,6 @@ void LIRGenerator::cmp_reg_mem(LIR_Condition condition, LIR_Opr reg, LIR_Opr bas
 }
 
 bool LIRGenerator::strength_reduce_multiply(LIR_Opr left, int c, LIR_Opr result, LIR_Opr tmp) {
-
   if (is_power_of_2(c - 1)) {
     __ shift_left(left, exact_log2(c - 1), tmp);
     __ add(tmp, left, result);
@@ -300,7 +299,6 @@ void LIRGenerator::do_MonitorEnter(MonitorEnter* x) {
 }
 
 void LIRGenerator::do_MonitorExit(MonitorExit* x) {
-
   LIRItem obj(x->obj(), this);
   obj.dont_load_item();
 
@@ -311,7 +309,6 @@ void LIRGenerator::do_MonitorExit(MonitorExit* x) {
 }
 
 void LIRGenerator::do_NegateOp(NegateOp* x) {
-
   LIRItem from(x->x(), this);
   from.load_item();
   LIR_Opr result = rlock_result(x);
@@ -321,7 +318,6 @@ void LIRGenerator::do_NegateOp(NegateOp* x) {
 // for  _fadd, _fmul, _fsub, _fdiv, _frem
 //      _dadd, _dmul, _dsub, _ddiv, _drem
 void LIRGenerator::do_ArithmeticOp_FPU(ArithmeticOp* x) {
-
   if (x->op() == Bytecodes::_frem || x->op() == Bytecodes::_drem) {
     // float remainder is implemented as a direct call into the runtime
     LIRItem right(x->x(), this);
@@ -381,13 +377,11 @@ void LIRGenerator::do_ArithmeticOp_FPU(ArithmeticOp* x) {
 
 // for  _ladd, _lmul, _lsub, _ldiv, _lrem
 void LIRGenerator::do_ArithmeticOp_Long(ArithmeticOp* x) {
-
   // missing test if instr is commutative and if we should swap
   LIRItem left(x->x(), this);
   LIRItem right(x->y(), this);
 
   if (x->op() == Bytecodes::_ldiv || x->op() == Bytecodes::_lrem) {
-
     // the check for division by zero destroys the right operand
     right.set_destroys_register();
 
@@ -412,7 +406,6 @@ void LIRGenerator::do_ArithmeticOp_Long(ArithmeticOp* x) {
       ShouldNotReachHere();
       break;
     }
-
   } else {
     // add, sub, mul
     left.load_item();
@@ -431,7 +424,6 @@ void LIRGenerator::do_ArithmeticOp_Long(ArithmeticOp* x) {
 
 // for: _iadd, _imul, _isub, _idiv, _irem
 void LIRGenerator::do_ArithmeticOp_Int(ArithmeticOp* x) {
-
   // Test if instr is commutative and if we should swap
   LIRItem left(x->x(),  this);
   LIRItem right(x->y(), this);
@@ -447,7 +439,6 @@ void LIRGenerator::do_ArithmeticOp_Int(ArithmeticOp* x) {
 
   // do not need to load right, as we can handle stack and constants
   if (x->op() == Bytecodes::_idiv || x->op() == Bytecodes::_irem) {
-
     right_arg->load_item();
     rlock_result(x);
 
@@ -462,7 +453,6 @@ void LIRGenerator::do_ArithmeticOp_Int(ArithmeticOp* x) {
     } else if (x->op() == Bytecodes::_idiv) {
       __ idiv(left_arg->result(), right_arg->result(), x->operand(), tmp, NULL);
     }
-
   } else if (x->op() == Bytecodes::_iadd || x->op() == Bytecodes::_isub) {
     if (right.is_constant() && Assembler::operand_valid_for_add_sub_immediate(right.get_jint_constant())) {
       right.load_nonconstant();
@@ -507,7 +497,6 @@ void LIRGenerator::do_ArithmeticOp(ArithmeticOp* x) {
 
 // _ishl, _lshl, _ishr, _lshr, _iushr, _lushr
 void LIRGenerator::do_ShiftOp(ShiftOp* x) {
-
   LIRItem left(x->x(),  this);
   LIRItem right(x->y(), this);
 
@@ -593,7 +582,6 @@ void LIRGenerator::do_ShiftOp(ShiftOp* x) {
 
 // _iand, _land, _ior, _lor, _ixor, _lxor
 void LIRGenerator::do_LogicOp(LogicOp* x) {
-
   LIRItem left(x->x(),  this);
   LIRItem right(x->y(), this);
 
@@ -790,7 +778,6 @@ void LIRGenerator::do_LibmIntrinsic(Intrinsic* x) {
 }
 
 void LIRGenerator::do_ArrayCopy(Intrinsic* x) {
-
   // Make all state_for calls early since they can emit code
   CodeEmitInfo* info = state_for(x, x->state());
 
@@ -1137,9 +1124,7 @@ void LIRGenerator::do_NewMultiArray(NewMultiArray* x) {
   args->append(rank);
   args->append(varargs);
   LIR_Opr reg = result_register_for(x->type());
-  __ call_runtime(Runtime1::entry_for(Runtime1::new_multi_array_id),
-                  LIR_OprFact::illegalOpr,
-                  reg, args, info);
+  __ call_runtime(Runtime1::entry_for(Runtime1::new_multi_array_id), LIR_OprFact::illegalOpr, reg, args, info);
 
   LIR_Opr result = rlock_result(x);
   __ move(reg, result);
@@ -1167,9 +1152,7 @@ void LIRGenerator::do_CheckCast(CheckCast* x) {
   if (x->is_incompatible_class_change_check()) {
     stub = new SimpleExceptionStub(Runtime1::throw_incompatible_class_change_error_id, LIR_OprFact::illegalOpr, info_for_exception);
   } else if (x->is_invokespecial_receiver_check()) {
-    stub = new DeoptimizeStub(info_for_exception,
-                              Deoptimization::Reason_class_check,
-                              Deoptimization::Action_none);
+    stub = new DeoptimizeStub(info_for_exception, Deoptimization::Reason_class_check, Deoptimization::Action_none);
   } else {
     stub = new SimpleExceptionStub(Runtime1::throw_class_cast_exception_id, obj.result(), info_for_exception);
   }
@@ -1178,10 +1161,7 @@ void LIRGenerator::do_CheckCast(CheckCast* x) {
   if (!x->klass()->is_loaded() || UseCompressedClassPointers) {
     tmp3 = new_register(objectType);
   }
-  __ checkcast(reg, obj.result(), x->klass(),
-               new_register(objectType), new_register(objectType), tmp3,
-               x->direct_compare(), info_for_exception, patching_info, stub,
-               x->profiled_method(), x->profiled_bci());
+  __ checkcast(reg, obj.result(), x->klass(), new_register(objectType), new_register(objectType), tmp3, x->direct_compare(), info_for_exception, patching_info, stub, x->profiled_method(), x->profiled_bci());
 }
 
 void LIRGenerator::do_InstanceOf(InstanceOf* x) {
@@ -1199,9 +1179,7 @@ void LIRGenerator::do_InstanceOf(InstanceOf* x) {
   if (!x->klass()->is_loaded() || UseCompressedClassPointers) {
     tmp3 = new_register(objectType);
   }
-  __ instanceof(reg, obj.result(), x->klass(),
-                new_register(objectType), new_register(objectType), tmp3,
-                x->direct_compare(), patching_info, x->profiled_method(), x->profiled_bci());
+  __ instanceof(reg, obj.result(), x->klass(), new_register(objectType), new_register(objectType), tmp3, x->direct_compare(), patching_info, x->profiled_method(), x->profiled_bci());
 }
 
 void LIRGenerator::do_If(If* x) {

@@ -10,7 +10,6 @@ inline bool is_FloatRegister() {
 }
 
 inline Register as_Register() {
-
   // Yuk
   return ::as_Register(value() >> 1);
 }

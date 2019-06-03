@@ -73,7 +73,6 @@ static bool is_hidden_thread(JavaThread *thread) {
 }
 
 void ThreadService::add_thread(JavaThread* thread, bool daemon) {
-
   // Do not count hidden threads
   if (is_hidden_thread(thread)) {
     return;
@@ -103,7 +102,6 @@ void ThreadService::decrement_thread_counts(JavaThread* jt, bool daemon) {
 }
 
 void ThreadService::remove_thread(JavaThread* thread, bool daemon) {
-
   // Do not count hidden threads
   if (is_hidden_thread(thread)) {
     return;
@@ -119,7 +117,6 @@ void ThreadService::remove_thread(JavaThread* thread, bool daemon) {
 
   _live_threads_count->dec(1);
   if (daemon) {
-
     _daemon_threads_count->dec(1);
   }
 }
@@ -135,7 +132,6 @@ void ThreadService::current_thread_exiting(JavaThread* jt, bool daemon) {
 
 // FIXME: JVMTI should call this function
 Handle ThreadService::get_current_contended_monitor(JavaThread* thread) {
-
   ObjectMonitor *wait_obj = thread->current_waiting_monitor();
 
   oop obj = NULL;
@@ -227,7 +223,6 @@ void ThreadService::remove_thread_dump(ThreadDumpResult* dump) {
 // Returns StackTraceElement[][] each element is the stack trace of a thread in
 // the corresponding entry in the given threads array
 Handle ThreadService::dump_stack_traces(GrowableArray<instanceHandle>* threads, int num_threads, TRAPS) {
-
   ThreadDumpResult dump_result;
   VM_ThreadDump op(&dump_result,
                    threads,
@@ -278,7 +273,6 @@ void ThreadService::reset_contention_time_stat(JavaThread* thread) {
 
 // Find deadlocks involving object monitors and concurrent locks if concurrent_locks is true
 DeadlockCycle* ThreadService::find_deadlocks_at_safepoint(ThreadsList * t_list, bool concurrent_locks) {
-
   // This code was modified from the original Threads::find_deadlocks code.
   int globalDfn = 0, thisDfn;
   ObjectMonitor* waitingToLockMonitor = NULL;
@@ -397,7 +391,6 @@ DeadlockCycle* ThreadService::find_deadlocks_at_safepoint(ThreadsList * t_list, 
 }
 
 ThreadDumpResult::ThreadDumpResult() : _num_threads(0), _num_snapshots(0), _snapshots(NULL), _next(NULL), _last(NULL), _setter() {
-
   // Create a new ThreadDumpResult object and append to the list.
   // If GC happens before this function returns, Method*
   // in the stack trace will be visited.
@@ -536,7 +529,6 @@ ThreadStackTrace::~ThreadStackTrace() {
 }
 
 void ThreadStackTrace::dump_stack_at_safepoint(int maxDepth) {
-
   if (_thread->has_last_Java_frame()) {
     RegisterMap reg_map(_thread);
     vframe* start_vf = _thread->last_java_vframe(&reg_map);
@@ -565,7 +557,6 @@ void ThreadStackTrace::dump_stack_at_safepoint(int maxDepth) {
 }
 
 bool ThreadStackTrace::is_owned_monitor_on_stack(oop object) {
-
   bool found = false;
   int num_frames = get_stack_depth();
   for (int depth = 0; depth < num_frames; depth++) {
@@ -628,7 +619,7 @@ ConcurrentLocksDump::~ConcurrentLocksDump() {
     return;
   }
 
-  for (ThreadConcurrentLocks* t = _map; t != NULL;)  {
+  for (ThreadConcurrentLocks* t = _map; t != NULL;) {
     ThreadConcurrentLocks* tcl = t;
     t = t->next();
     delete tcl;
@@ -761,7 +752,6 @@ ThreadSnapshot::ThreadSnapshot(ThreadsList * t_list, JavaThread* thread) {
   if (_thread_status == java_lang_Thread::BLOCKED_ON_MONITOR_ENTER ||
       _thread_status == java_lang_Thread::IN_OBJECT_WAIT ||
       _thread_status == java_lang_Thread::IN_OBJECT_WAIT_TIMED) {
-
     Handle obj = ThreadService::get_current_contended_monitor(thread);
     if (obj() == NULL) {
       // monitor no longer exists; thread is not blocked
@@ -786,7 +776,6 @@ ThreadSnapshot::ThreadSnapshot(ThreadsList * t_list, JavaThread* thread) {
 
   // Support for JSR-166 locks
   if (JDK_Version::current().supports_thread_park_blocker() && (_thread_status == java_lang_Thread::PARKED || _thread_status == java_lang_Thread::PARKED_TIMED)) {
-
     _blocker_object = thread->current_park_blocker();
     if (_blocker_object != NULL && _blocker_object->is_a(SystemDictionary::java_util_concurrent_locks_AbstractOwnableSynchronizer_klass())) {
       _blocker_object_owner = java_util_concurrent_locks_AbstractOwnableSynchronizer::get_owner_threadObj(_blocker_object);
@@ -892,7 +881,6 @@ void DeadlockCycle::print_on_with(ThreadsList * t_list, outputStream* st) const 
 }
 
 ThreadsListEnumerator::ThreadsListEnumerator(Thread* cur_thread, bool include_jvmti_agent_threads, bool include_jni_attaching_threads) {
-
   int init_size = ThreadService::get_live_thread_count();
   _threads_array = new GrowableArray<instanceHandle>(init_size);
 
@@ -901,7 +889,7 @@ ThreadsListEnumerator::ThreadsListEnumerator(Thread* cur_thread, bool include_jv
     // and also skips VM internal JavaThreads
     // Threads in _thread_new or _thread_new_trans state are included.
     // i.e. threads have been started but not yet running.
-    if (jt->threadObj() == NULL   || jt->is_exiting() || !java_lang_Thread::is_alive(jt->threadObj())   || jt->is_hidden_from_external_view()) {
+    if (jt->threadObj() == NULL || jt->is_exiting() || !java_lang_Thread::is_alive(jt->threadObj()) || jt->is_hidden_from_external_view()) {
       continue;
     }
 

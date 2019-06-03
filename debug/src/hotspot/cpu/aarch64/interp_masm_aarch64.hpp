@@ -11,8 +11,6 @@ typedef ByteSize (*OffsetFunction)(uint);
 
 class InterpreterMacroAssembler: public MacroAssembler {
  protected:
-
- protected:
   using MacroAssembler::call_VM_leaf_base;
 
   // Interpreter specific version of call_VM_base
@@ -157,10 +155,7 @@ class InterpreterMacroAssembler: public MacroAssembler {
   // installing an exception, and notifying jvmdi.
   // In earlyReturn case we only want to skip throwing an exception
   // and installing an exception.
-  void remove_activation(TosState state,
-                         bool throw_monitor_exception = true,
-                         bool install_monitor_exception = true,
-                         bool notify_jvmdi = true);
+  void remove_activation(TosState state, bool throw_monitor_exception = true, bool install_monitor_exception = true, bool notify_jvmdi = true);
 
   // FIXME: Give us a valid frame at a null check.
   virtual void null_check(Register reg, int offset = -1) {
@@ -178,29 +173,15 @@ class InterpreterMacroAssembler: public MacroAssembler {
 
   void set_mdp_data_at(Register mdp_in, int constant, Register value);
   void increment_mdp_data_at(Address data, bool decrement = false);
-  void increment_mdp_data_at(Register mdp_in, int constant,
-                             bool decrement = false);
-  void increment_mdp_data_at(Register mdp_in, Register reg, int constant,
-                             bool decrement = false);
-  void increment_mask_and_jump(Address counter_addr,
-                               int increment, Address mask,
-                               Register scratch, Register scratch2,
-                               bool preloaded, Condition cond,
-                               Label* where);
+  void increment_mdp_data_at(Register mdp_in, int constant, bool decrement = false);
+  void increment_mdp_data_at(Register mdp_in, Register reg, int constant, bool decrement = false);
+  void increment_mask_and_jump(Address counter_addr, int increment, Address mask, Register scratch, Register scratch2, bool preloaded, Condition cond, Label* where);
   void set_mdp_flag_at(Register mdp_in, int flag_constant);
-  void test_mdp_data_at(Register mdp_in, int offset, Register value,
-                        Register test_value_out,
-                        Label& not_equal_continue);
+  void test_mdp_data_at(Register mdp_in, int offset, Register value, Register test_value_out, Label& not_equal_continue);
 
-  void record_klass_in_profile(Register receiver, Register mdp,
-                               Register reg2, bool is_virtual_call);
-  void record_klass_in_profile_helper(Register receiver, Register mdp,
-                                      Register reg2, int start_row,
-                                      Label& done, bool is_virtual_call);
-  void record_item_in_profile_helper(Register item, Register mdp,
-                                     Register reg2, int start_row, Label& done, int total_rows,
-                                     OffsetFunction item_offset_fn, OffsetFunction item_count_offset_fn,
-                                     int non_profiled_offset);
+  void record_klass_in_profile(Register receiver, Register mdp, Register reg2, bool is_virtual_call);
+  void record_klass_in_profile_helper(Register receiver, Register mdp, Register reg2, int start_row, Label& done, bool is_virtual_call);
+  void record_item_in_profile_helper(Register item, Register mdp, Register reg2, int start_row, Label& done, int total_rows, OffsetFunction item_offset_fn, OffsetFunction item_count_offset_fn, int non_profiled_offset);
 
   void update_mdp_by_offset(Register mdp_in, int offset_of_offset);
   void update_mdp_by_offset(Register mdp_in, Register reg, int offset_of_disp);
@@ -233,12 +214,6 @@ class InterpreterMacroAssembler: public MacroAssembler {
   void verify_oop(Register reg, TosState state = atos);
   // only if +VerifyFPU  && (state == ftos || state == dtos)
   void verify_FPU(int stack_depth, TosState state = ftos);
-
-  typedef enum { NotifyJVMTI, SkipNotifyJVMTI } NotifyMethodExitMode;
-
-  // support for jvmti/dtrace
-  void notify_method_entry();
-  void notify_method_exit(TosState state, NotifyMethodExitMode mode);
 
   virtual void _call_Unimplemented(address call_site) {
     save_bcp();

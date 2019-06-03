@@ -48,7 +48,6 @@ MethodHandlesAdapterBlob* MethodHandles::_adapter_code = NULL;
  * failed and true otherwise.
  */
 void MethodHandles::generate_adapters() {
-
   ResourceMark rm;
   _adapter_code = MethodHandlesAdapterBlob::create(adapter_code_size);
   CodeBuffer code(_adapter_code);
@@ -769,7 +768,6 @@ Handle MethodHandles::resolve_MemberName(Handle mname, Klass* caller, bool specu
 // Resolving it plants a vmtarget/vmindex in it,
 // which refers directly to JVM internals.
 void MethodHandles::expand_MemberName(Handle mname, int suppress, TRAPS) {
-
   bool have_defc = (java_lang_invoke_MemberName::clazz(mname()) != NULL);
   bool have_name = (java_lang_invoke_MemberName::name(mname()) != NULL);
   bool have_type = (java_lang_invoke_MemberName::type(mname()) != NULL);
@@ -1364,7 +1362,6 @@ static JNINativeMethod MH_methods[] = {
  * This one function is exported, used by NativeLookup.
  */
 JVM_ENTRY(void, JVM_RegisterMethodHandleMethods(JNIEnv *env, jclass MHN_class)) {
-
   oop mirror = SystemDictionary::MethodHandle_klass()->java_mirror();
   jclass MH_class = (jclass) JNIHandles::make_local(env, mirror);
 

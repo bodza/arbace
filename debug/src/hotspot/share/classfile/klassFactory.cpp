@@ -14,12 +14,10 @@
 
 // called during initial loading of a shared class
 InstanceKlass* KlassFactory::check_shared_class_file_load_hook(InstanceKlass* ik, Symbol* class_name, Handle class_loader, Handle protection_domain, TRAPS) {
-
   return NULL;
 }
 
 InstanceKlass* KlassFactory::create_from_stream(ClassFileStream* stream, Symbol* name, ClassLoaderData* loader_data, Handle protection_domain, const InstanceKlass* host_klass, GrowableArray<Handle>* cp_patches, TRAPS) {
-
   ResourceMark rm;
   HandleMark hm;
 

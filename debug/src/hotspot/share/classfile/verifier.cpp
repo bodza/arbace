@@ -11,8 +11,6 @@
 #include "classfile/vmSymbols.hpp"
 #include "interpreter/bytecodes.hpp"
 #include "interpreter/bytecodeStream.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/constantPool.inline.hpp"
@@ -75,7 +73,7 @@ void Verifier::log_end_verification(outputStream* st, const char* klassName, Sym
   st->print_cr("End class verification for: %s", klassName);
 }
 
-bool Verifier::verify(InstanceKlass* klass, Verifier::Mode mode, bool should_verify_class, TRAPS) {
+bool Verifier::verify(InstanceKlass* klass, Verifier::Mode mode, bool false, TRAPS) {
   HandleMark hm(THREAD);
   ResourceMark rm(THREAD);
 
@@ -92,109 +90,7 @@ bool Verifier::verify(InstanceKlass* klass, Verifier::Mode mode, bool should_ver
     klass->java_mirror()->identity_hash();
   }
 
-  if (!is_eligible_for_verification(klass, should_verify_class)) {
-    return true;
-  }
-
-  // Timer includes any side effects of class verification (resolution,
-  // etc), but not recursive calls to Verifier::verify().
-  JavaThread* jt = (JavaThread*)THREAD;
-  PerfClassTraceTime timer(ClassLoader::perf_class_verify_time(),
-                           ClassLoader::perf_class_verify_selftime(),
-                           ClassLoader::perf_classes_verified(),
-                           jt->get_thread_stat()->perf_recursion_counts_addr(),
-                           jt->get_thread_stat()->perf_timers_addr(),
-                           PerfClassTraceTime::CLASS_VERIFY);
-
-  // If the class should be verified, first see if we can use the split
-  // verifier.  If not, or if verification fails and FailOverToOldVerifier
-  // is set, then call the inference verifier.
-
-  Symbol* exception_name = NULL;
-  const size_t message_buffer_len = klass->name()->utf8_length() + 1024;
-  char* message_buffer = NEW_RESOURCE_ARRAY(char, message_buffer_len);
-  char* exception_message = message_buffer;
-
-  const char* klassName = klass->external_name();
-  bool can_failover = FailOverToOldVerifier && klass->major_version() < NOFAILOVER_MAJOR_VERSION;
-
-  if (klass->major_version() >= STACKMAP_ATTRIBUTE_MAJOR_VERSION) {
-    ClassVerifier split_verifier(klass, THREAD);
-    split_verifier.verify_class(THREAD);
-    exception_name = split_verifier.result();
-    if (can_failover && !HAS_PENDING_EXCEPTION && (exception_name == vmSymbols::java_lang_VerifyError() || exception_name == vmSymbols::java_lang_ClassFormatError())) {
-      exception_name = inference_verify(klass, message_buffer, message_buffer_len, THREAD);
-    }
-    if (exception_name != NULL) {
-      exception_message = split_verifier.exception_message();
-    }
-  } else {
-    exception_name = inference_verify(klass, message_buffer, message_buffer_len, THREAD);
-  }
-
-  LogTarget(Info, class, init) lt1;
-  if (lt1.is_enabled()) {
-    LogStream ls(lt1);
-    log_end_verification(&ls, klassName, exception_name, THREAD);
-  }
-  LogTarget(Info, verification) lt2;
-  if (lt2.is_enabled()) {
-    LogStream ls(lt2);
-    log_end_verification(&ls, klassName, exception_name, THREAD);
-  }
-
-  if (HAS_PENDING_EXCEPTION) {
-    return false; // use the existing exception
-  } else if (exception_name == NULL) {
-    return true; // verifcation succeeded
-  } else { // VerifyError or ClassFormatError to be created and thrown
-    ResourceMark rm(THREAD);
-    Klass* kls = SystemDictionary::resolve_or_fail(exception_name, true, CHECK_false);
-
-    while (kls != NULL) {
-      if (kls == klass) {
-        // If the class being verified is the exception we're creating
-        // or one of it's superclasses, we're in trouble and are going
-        // to infinitely recurse when we try to initialize the exception.
-        // So bail out here by throwing the preallocated VM error.
-        THROW_OOP_(Universe::virtual_machine_error_instance(), false);
-      }
-      kls = kls->super();
-    }
-    message_buffer[message_buffer_len - 1] = '\0'; // just to be sure
-    THROW_MSG_(exception_name, exception_message, false);
-  }
-}
-
-bool Verifier::is_eligible_for_verification(InstanceKlass* klass, bool should_verify_class) {
-  Symbol* name = klass->name();
-  Klass* refl_magic_klass = SystemDictionary::reflect_MagicAccessorImpl_klass();
-
-  bool is_reflect = refl_magic_klass != NULL && klass->is_subtype_of(refl_magic_klass);
-
-  return (false &&
-    // return if the class is a bootstrapping class
-    // or defineClass specified not to verify by default (flags override passed arg)
-    // We need to skip the following four for bootstraping
-    name != vmSymbols::java_lang_Object() &&
-    name != vmSymbols::java_lang_Class() &&
-    name != vmSymbols::java_lang_String() &&
-    name != vmSymbols::java_lang_Throwable() &&
-
-    // Can not verify the bytecodes for shared classes because they have
-    // already been rewritten to contain constant pool cache indices,
-    // which the verifier can't understand.
-    // Shared classes shouldn't have stackmaps either.
-    !klass->is_shared() &&
-
-    // As of the fix for 4486457 we disable verification for all of the
-    // dynamically-generated bytecodes associated with the 1.4
-    // reflection implementation, not just those associated with
-    // jdk/internal/reflect/SerializationConstructorAccessor.
-    // NOTE: this is called too early in the bootstrapping process to be
-    // guarded by Universe::is_gte_jdk14x_version().
-    // Also for lambda generated code, gte jdk8
-    (!is_reflect));
+  return true;
 }
 
 Symbol* Verifier::inference_verify(InstanceKlass* klass, char* message, size_t message_len, TRAPS) {
@@ -565,15 +461,7 @@ void ClassVerifier::verify_method(const methodHandle& m, TRAPS) {
   Array<u1>* stackmap_data = m->stackmap_data();
   StackMapStream stream(stackmap_data);
   StackMapReader reader(this, &stream, code_data, code_length, THREAD);
-  StackMapTable stackmap_table(&reader, &current_frame, max_locals, max_stack,
-                               code_data, code_length, CHECK_VERIFY(this));
-
-  LogTarget(Info, verification) lt;
-  if (lt.is_enabled()) {
-    ResourceMark rm(THREAD);
-    LogStream ls(lt);
-    stackmap_table.print_on(&ls);
-  }
+  StackMapTable stackmap_table(&reader, &current_frame, max_locals, max_stack, code_data, code_length, CHECK_VERIFY(this));
 
   RawBytecodeStream bcs(m);
 
@@ -608,15 +496,6 @@ void ClassVerifier::verify_method(const methodHandle& m, TRAPS) {
       int target;
       VerificationType type, type2;
       VerificationType atype;
-
-      LogTarget(Info, verification) lt;
-      if (lt.is_enabled()) {
-        ResourceMark rm(THREAD);
-        LogStream ls(lt);
-        current_frame.print_on(&ls);
-        lt.print("offset = %d,  opcode = %s", bci,
-                 opcode == Bytecodes::_illegal ? "illegal" : Bytecodes::name(opcode));
-      }
 
       // Make sure wide instruction is in correct format
       if (bcs.is_wide()) {
@@ -1588,7 +1467,6 @@ void ClassVerifier::verify_cp_index(u2 bci, const constantPoolHandle& cp, int in
 }
 
 void ClassVerifier::verify_cp_type(u2 bci, int index, const constantPoolHandle& cp, unsigned int types, TRAPS) {
-
   // In some situations, bytecode rewriting may occur while we're verifying.
   // In this case, a constant pool cache exists and some indices refer to that
   // instead.  Be sure we don't pick up such indices by accident.

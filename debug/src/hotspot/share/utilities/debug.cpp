@@ -125,7 +125,6 @@ void report_java_out_of_memory(const char* message) {
   // commands multiple times we just do it once when the first threads reports
   // the error.
   if (Atomic::cmpxchg(1, &out_of_memory_reported, 0) == 0) {
-
     if (OnOutOfMemoryError && OnOutOfMemoryError[0]) {
       VMError::report_java_out_of_memory(message);
     }
@@ -205,9 +204,6 @@ extern "C" void pss() { // print all stacks
   Command c("pss");
   Threads::print(true, false);
 }
-
-//////////////////////////////////////////////////////////////////////////////
-// Test multiple STATIC_ASSERT forms in various scopes.
 
 // Support for showing register content on asserts/guarantees.
 #ifdef CAN_SHOW_REGISTERS_ON_ASSERT

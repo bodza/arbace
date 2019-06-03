@@ -64,7 +64,6 @@ class CodeBlob {
   friend class CodeCacheDumper;
 
 protected:
-
   const CompilerType _type;                      // CompilerType
   int        _size;                              // total size of CodeBlob in bytes
   int        _header_size;                       // size of header (depends on subclass)
@@ -306,7 +305,6 @@ public:
 class RuntimeBlob : public CodeBlob {
   friend class VMStructs;
  public:
-
   // Creation
   // a) simple CodeBlob
   // frame_complete is the offset from the beginning of the instructions

@@ -2,7 +2,6 @@
 #define SHARE_VM_SERVICES_MEMORYSERVICE_HPP
 
 #include "gc/shared/gcCause.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.hpp"
 #include "runtime/handles.hpp"
 #include "services/memoryUsage.hpp"

@@ -14,7 +14,6 @@
 #include "classfile/vmSymbols.hpp"
 #include "gc/shared/gcLocker.inline.hpp"
 #include "interpreter/linkResolver.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/oopFactory.hpp"
@@ -63,38 +62,6 @@
 #include "jvmci/jvmciRuntime.hpp"
 
 static jint CurrentVersion = JNI_VERSION_10;
-
-#define DT_RETURN_MARK_DECL(name, type, probe)
-#define DT_VOID_RETURN_MARK_DECL(name, probe)
-
-// Place these macros in the function to mark the return.  Non-void
-// functions need the type and address of the return value.
-#define DT_RETURN_MARK(name, type, ref)
-#define DT_VOID_RETURN_MARK(name)
-
-// Use these to select distinct code for floating-point vs. non-floating point
-// situations.  Used from within common macros where we need slightly
-// different behavior for Float/Double
-#define FP_SELECT_Boolean(intcode, fpcode) intcode
-#define FP_SELECT_Byte(intcode, fpcode)    intcode
-#define FP_SELECT_Char(intcode, fpcode)    intcode
-#define FP_SELECT_Short(intcode, fpcode)   intcode
-#define FP_SELECT_Object(intcode, fpcode)  intcode
-#define FP_SELECT_Int(intcode, fpcode)     intcode
-#define FP_SELECT_Long(intcode, fpcode)    intcode
-#define FP_SELECT_Float(intcode, fpcode)   fpcode
-#define FP_SELECT_Double(intcode, fpcode)  fpcode
-
-#define FP_SELECT(TypeName, intcode, fpcode) FP_SELECT_##TypeName(intcode, fpcode)
-
-// Choose DT_RETURN_MARK macros  based on the type: float/double -> void
-// (dtrace doesn't do FP yet)
-#define DT_RETURN_MARK_DECL_FOR(TypeName, name, type, probe) \
-  FP_SELECT(TypeName, \
-    DT_RETURN_MARK_DECL(name, type, probe), DT_VOID_RETURN_MARK_DECL(name, probe))
-#define DT_RETURN_MARK_FOR(TypeName, name, type, ref) \
-  FP_SELECT(TypeName, \
-    DT_RETURN_MARK(name, type, ref), DT_VOID_RETURN_MARK(name))
 
 // out-of-line helpers for class jfieldIDWorkaround:
 
@@ -157,11 +124,8 @@ void jfieldIDWorkaround::verify_instance_jfieldID(Klass* k, jfieldID id) {
 
 // Implementation of JNI entries
 
-DT_RETURN_MARK_DECL(DefineClass, jclass, );
-
 JNI_ENTRY(jclass, jni_DefineClass(JNIEnv *env, const char *name, jobject loaderRef, const jbyte *buf, jsize bufLen))
   jclass cls = NULL;
-  DT_RETURN_MARK(DefineClass, jclass, (const jclass&)cls);
 
   TempNewSymbol class_name = NULL;
   // Since exceptions can be thrown, class initialization can take place
@@ -195,11 +159,8 @@ JNI_END
 
 static bool first_time_FindClass = true;
 
-DT_RETURN_MARK_DECL(FindClass, jclass, );
-
 JNI_ENTRY(jclass, jni_FindClass(JNIEnv *env, const char *name))
   jclass result = NULL;
-  DT_RETURN_MARK(FindClass, jclass, (const jclass&)result);
 
   // Remember if we are the first invocation of jni_FindClass
   bool first_time = first_time_FindClass;
@@ -253,12 +214,7 @@ JNI_ENTRY(jclass, jni_FindClass(JNIEnv *env, const char *name))
   return result;
 JNI_END
 
-DT_RETURN_MARK_DECL(FromReflectedMethod, jmethodID, );
-
 JNI_ENTRY(jmethodID, jni_FromReflectedMethod(JNIEnv *env, jobject method))
-  jmethodID ret = NULL;
-  DT_RETURN_MARK(FromReflectedMethod, jmethodID, (const jmethodID&)ret);
-
   // method is a handle to a java.lang.reflect.Method object
   oop reflected  = JNIHandles::resolve_non_null(method);
   oop mirror     = NULL;
@@ -276,16 +232,10 @@ JNI_ENTRY(jmethodID, jni_FromReflectedMethod(JNIEnv *env, jobject method))
   // Make sure class is initialized before handing id's out to methods
   k1->initialize(CHECK_NULL);
   Method* m = InstanceKlass::cast(k1)->method_with_idnum(slot);
-  ret = m==NULL? NULL : m->jmethod_id();  // return NULL if reflected method deleted
-  return ret;
+  return (m == NULL) ? NULL : m->jmethod_id();  // return NULL if reflected method deleted
 JNI_END
 
-DT_RETURN_MARK_DECL(FromReflectedField, jfieldID, );
-
 JNI_ENTRY(jfieldID, jni_FromReflectedField(JNIEnv *env, jobject field))
-  jfieldID ret = NULL;
-  DT_RETURN_MARK(FromReflectedField, jfieldID, (const jfieldID&)ret);
-
   // field is a handle to a java.lang.reflect.Field object
   oop reflected   = JNIHandles::resolve_non_null(field);
   oop mirror      = java_lang_reflect_Field::clazz(reflected);
@@ -301,24 +251,17 @@ JNI_ENTRY(jfieldID, jni_FromReflectedField(JNIEnv *env, jobject field))
     intptr_t offset = InstanceKlass::cast(k1)->field_offset( slot );
     JNIid* id = InstanceKlass::cast(k1)->jni_id_for(offset);
     // A jfieldID for a static field is a JNIid specifying the field holder and the offset within the Klass*
-    ret = jfieldIDWorkaround::to_static_jfieldID(id);
-    return ret;
+    return jfieldIDWorkaround::to_static_jfieldID(id);
   }
 
   // The slot is the index of the field description in the field-array
   // The jfieldID is the offset of the field within the object
   // It may also have hash bits for k, if VerifyJNIFields is turned on.
   intptr_t offset = InstanceKlass::cast(k1)->field_offset( slot );
-  ret = jfieldIDWorkaround::to_instance_jfieldID(k1, offset);
-  return ret;
+  return jfieldIDWorkaround::to_instance_jfieldID(k1, offset);
 JNI_END
 
-DT_RETURN_MARK_DECL(ToReflectedMethod, jobject, );
-
 JNI_ENTRY(jobject, jni_ToReflectedMethod(JNIEnv *env, jclass cls, jmethodID method_id, jboolean isStatic))
-  jobject ret = NULL;
-  DT_RETURN_MARK(ToReflectedMethod, jobject, (const jobject&)ret);
-
   methodHandle m (THREAD, Method::resolve_jmethod_id(method_id));
   oop reflection_method;
   if (m->is_initializer()) {
@@ -326,15 +269,11 @@ JNI_ENTRY(jobject, jni_ToReflectedMethod(JNIEnv *env, jclass cls, jmethodID meth
   } else {
     reflection_method = Reflection::new_method(m, false, CHECK_NULL);
   }
-  ret = JNIHandles::make_local(env, reflection_method);
-  return ret;
+  return JNIHandles::make_local(env, reflection_method);
 JNI_END
-
-DT_RETURN_MARK_DECL(GetSuperclass, jclass, );
 
 JNI_ENTRY(jclass, jni_GetSuperclass(JNIEnv *env, jclass sub))
   jclass obj = NULL;
-  DT_RETURN_MARK(GetSuperclass, jclass, (const jclass&)obj);
 
   oop mirror = JNIHandles::resolve_non_null(sub);
   // primitive classes return NULL
@@ -357,34 +296,20 @@ JNI_QUICK_ENTRY(jboolean, jni_IsAssignableFrom(JNIEnv *env, jclass sub, jclass s
   oop sub_mirror   = JNIHandles::resolve_non_null(sub);
   oop super_mirror = JNIHandles::resolve_non_null(super);
   if (java_lang_Class::is_primitive(sub_mirror) || java_lang_Class::is_primitive(super_mirror)) {
-    jboolean ret = oopDesc::equals(sub_mirror, super_mirror);
-
-    return ret;
+    return oopDesc::equals(sub_mirror, super_mirror);
   }
   Klass* sub_klass   = java_lang_Class::as_Klass(sub_mirror);
   Klass* super_klass = java_lang_Class::as_Klass(super_mirror);
-  jboolean ret = sub_klass->is_subtype_of(super_klass) ? JNI_TRUE : JNI_FALSE;
-
-  return ret;
+  return sub_klass->is_subtype_of(super_klass) ? JNI_TRUE : JNI_FALSE;
 JNI_END
 
-DT_RETURN_MARK_DECL(Throw, jint, );
-
 JNI_ENTRY(jint, jni_Throw(JNIEnv *env, jthrowable obj))
-  jint ret = JNI_OK;
-  DT_RETURN_MARK(Throw, jint, (const jint&)ret);
-
   THROW_OOP_(JNIHandles::resolve(obj), JNI_OK);
   ShouldNotReachHere();
   return 0;  // Mute compiler.
 JNI_END
 
-DT_RETURN_MARK_DECL(ThrowNew, jint, );
-
 JNI_ENTRY(jint, jni_ThrowNew(JNIEnv *env, jclass clazz, const char *message))
-  jint ret = JNI_OK;
-  DT_RETURN_MARK(ThrowNew, jint, (const jint&)ret);
-
   InstanceKlass* k = InstanceKlass::cast(java_lang_Class::as_Klass(JNIHandles::resolve_non_null(clazz)));
   Symbol*  name = k->name();
   Handle class_loader (THREAD,  k->class_loader());
@@ -410,9 +335,7 @@ static void jni_check_async_exceptions(JavaThread *thread) {
 JNI_ENTRY_NO_PRESERVE(jthrowable, jni_ExceptionOccurred(JNIEnv *env))
   jni_check_async_exceptions(thread);
   oop exception = thread->pending_exception();
-  jthrowable ret = (jthrowable) JNIHandles::make_local(env, exception);
-
-  return ret;
+  return (jthrowable) JNIHandles::make_local(env, exception);
 JNI_END
 
 JNI_ENTRY_NO_PRESERVE(void, jni_ExceptionDescribe(JNIEnv *env))
@@ -429,12 +352,7 @@ JNI_ENTRY_NO_PRESERVE(void, jni_ExceptionDescribe(JNIEnv *env))
       }
       if (ex->is_a(SystemDictionary::Throwable_klass())) {
         JavaValue result(T_VOID);
-        JavaCalls::call_virtual(&result,
-                                ex,
-                                SystemDictionary::Throwable_klass(),
-                                vmSymbols::printStackTrace_name(),
-                                vmSymbols::void_method_signature(),
-                                THREAD);
+        JavaCalls::call_virtual(&result, ex, SystemDictionary::Throwable_klass(), vmSymbols::printStackTrace_name(), vmSymbols::void_method_signature(), THREAD);
         // If an exception is thrown in the call it gets thrown away. Not much
         // we can do with it. The native code that calls this, does not check
         // for the exception - hence, it might still be in the thread when DestroyVM gets
@@ -468,8 +386,7 @@ JNI_ENTRY(jint, jni_PushLocalFrame(JNIEnv *env, jint capacity))
   JNIHandleBlock* new_handles = JNIHandleBlock::allocate_block(thread);
   new_handles->set_pop_frame_link(old_handles);
   thread->set_active_handles(new_handles);
-  jint ret = JNI_OK;
-  return ret;
+  return JNI_OK;
 JNI_END
 
 JNI_ENTRY(jobject, jni_PopLocalFrame(JNIEnv *env, jobject result))
@@ -492,8 +409,7 @@ JNI_END
 
 JNI_ENTRY(jobject, jni_NewGlobalRef(JNIEnv *env, jobject ref))
   Handle ref_handle(thread, JNIHandles::resolve(ref));
-  jobject ret = JNIHandles::make_global(ref_handle);
-  return ret;
+  return JNIHandles::make_global(ref_handle);
 JNI_END
 
 // Must be JNI_ENTRY (with HandleMark)
@@ -508,15 +424,11 @@ JNI_END
 JNI_QUICK_ENTRY(jboolean, jni_IsSameObject(JNIEnv *env, jobject r1, jobject r2))
   oop a = JNIHandles::resolve(r1);
   oop b = JNIHandles::resolve(r2);
-  jboolean ret = oopDesc::equals(a, b) ? JNI_TRUE : JNI_FALSE;
-
-  return ret;
+  return oopDesc::equals(a, b) ? JNI_TRUE : JNI_FALSE;
 JNI_END
 
 JNI_ENTRY(jobject, jni_NewLocalRef(JNIEnv *env, jobject ref))
-  jobject ret = JNIHandles::make_local(env, JNIHandles::resolve(ref));
-
-  return ret;
+  return JNIHandles::make_local(env, JNIHandles::resolve(ref));
 JNI_END
 
 JNI_LEAF(jint, jni_EnsureLocalCapacity(JNIEnv *env, jint capacity))
@@ -623,39 +535,20 @@ class JNI_ArgumentPusherVaArg : public JNI_ArgumentPusher {
     if (fingerprint == (uint64_t)CONST64(-1)) {
       SignatureIterator::iterate(); // Must be too many arguments
     } else {
-      _return_type = (BasicType)((fingerprint >> static_feature_size) &
-                                  result_feature_mask);
+      _return_type = (BasicType)((fingerprint >> static_feature_size) & result_feature_mask);
 
       fingerprint = fingerprint >> (static_feature_size + result_feature_size);
       while ( 1 ) {
         switch ( fingerprint & parameter_feature_mask ) {
-          case bool_parm:
-            get_bool();
-            break;
-          case char_parm:
-            get_char();
-            break;
-          case short_parm:
-            get_short();
-            break;
-          case byte_parm:
-            get_byte();
-            break;
-          case int_parm:
-            get_int();
-            break;
-          case obj_parm:
-            get_object();
-            break;
-          case long_parm:
-            get_long();
-            break;
-          case float_parm:
-            get_float();
-            break;
-          case double_parm:
-            get_double();
-            break;
+          case bool_parm:   get_bool();   break;
+          case char_parm:   get_char();   break;
+          case short_parm:  get_short();  break;
+          case byte_parm:   get_byte();   break;
+          case int_parm:    get_int();    break;
+          case obj_parm:    get_object(); break;
+          case long_parm:   get_long();   break;
+          case float_parm:  get_float();  break;
+          case double_parm: get_double(); break;
           case done_parm:
             return;
             break;
@@ -708,38 +601,19 @@ class JNI_ArgumentPusherArray : public JNI_ArgumentPusher {
     if (fingerprint == (uint64_t)CONST64(-1)) {
       SignatureIterator::iterate(); // Must be too many arguments
     } else {
-      _return_type = (BasicType)((fingerprint >> static_feature_size) &
-                                  result_feature_mask);
+      _return_type = (BasicType)((fingerprint >> static_feature_size) & result_feature_mask);
       fingerprint = fingerprint >> (static_feature_size + result_feature_size);
       while ( 1 ) {
         switch ( fingerprint & parameter_feature_mask ) {
-          case bool_parm:
-            get_bool();
-            break;
-          case char_parm:
-            get_char();
-            break;
-          case short_parm:
-            get_short();
-            break;
-          case byte_parm:
-            get_byte();
-            break;
-          case int_parm:
-            get_int();
-            break;
-          case obj_parm:
-            get_object();
-            break;
-          case long_parm:
-            get_long();
-            break;
-          case float_parm:
-            get_float();
-            break;
-          case double_parm:
-            get_double();
-            break;
+          case bool_parm:   get_bool();   break;
+          case char_parm:   get_char();   break;
+          case short_parm:  get_short();  break;
+          case byte_parm:   get_byte();   break;
+          case int_parm:    get_int();    break;
+          case obj_parm:    get_object(); break;
+          case long_parm:   get_long();   break;
+          case float_parm:  get_float();  break;
+          case double_parm: get_double(); break;
           case done_parm:
             return;
             break;
@@ -853,22 +727,13 @@ static instanceOop alloc_object(jclass clazz, TRAPS) {
   return ih;
 }
 
-DT_RETURN_MARK_DECL(AllocObject, jobject, );
-
 JNI_ENTRY(jobject, jni_AllocObject(JNIEnv *env, jclass clazz))
-  jobject ret = NULL;
-  DT_RETURN_MARK(AllocObject, jobject, (const jobject&)ret);
-
   instanceOop i = alloc_object(clazz, CHECK_NULL);
-  ret = JNIHandles::make_local(env, i);
-  return ret;
+  return JNIHandles::make_local(env, i);
 JNI_END
-
-DT_RETURN_MARK_DECL(NewObjectA, jobject, );
 
 JNI_ENTRY(jobject, jni_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID, const jvalue *args))
   jobject obj = NULL;
-  DT_RETURN_MARK(NewObjectA, jobject, (const jobject)obj);
 
   instanceOop i = alloc_object(clazz, CHECK_NULL);
   obj = JNIHandles::make_local(env, i);
@@ -878,11 +743,8 @@ JNI_ENTRY(jobject, jni_NewObjectA(JNIEnv *env, jclass clazz, jmethodID methodID,
   return obj;
 JNI_END
 
-DT_RETURN_MARK_DECL(NewObjectV, jobject, );
-
 JNI_ENTRY(jobject, jni_NewObjectV(JNIEnv *env, jclass clazz, jmethodID methodID, va_list args))
   jobject obj = NULL;
-  DT_RETURN_MARK(NewObjectV, jobject, (const jobject&)obj);
 
   instanceOop i = alloc_object(clazz, CHECK_NULL);
   obj = JNIHandles::make_local(env, i);
@@ -892,11 +754,8 @@ JNI_ENTRY(jobject, jni_NewObjectV(JNIEnv *env, jclass clazz, jmethodID methodID,
   return obj;
 JNI_END
 
-DT_RETURN_MARK_DECL(NewObject, jobject, );
-
 JNI_ENTRY(jobject, jni_NewObject(JNIEnv *env, jclass clazz, jmethodID methodID, ...))
   jobject obj = NULL;
-  DT_RETURN_MARK(NewObject, jobject, (const jobject&)obj);
 
   instanceOop i = alloc_object(clazz, CHECK_NULL);
   obj = JNIHandles::make_local(env, i);
@@ -911,9 +770,7 @@ JNI_END
 
 JNI_ENTRY(jclass, jni_GetObjectClass(JNIEnv *env, jobject obj))
   Klass* k = JNIHandles::resolve_non_null(obj)->klass();
-  jclass ret = (jclass) JNIHandles::make_local(env, k->java_mirror());
-
-  return ret;
+  return (jclass) JNIHandles::make_local(env, k->java_mirror());
 JNI_END
 
 JNI_QUICK_ENTRY(jboolean, jni_IsInstanceOf(JNIEnv *env, jobject obj, jclass clazz))
@@ -935,9 +792,7 @@ static jmethodID get_method_id(JNIEnv *env, jclass clazz, const char *name_str, 
   // The class should have been loaded (we have an instance of the class
   // passed in) so the method and signature should already be in the symbol
   // table.  If they're not there, the method doesn't exist.
-  const char *name_to_probe = (name_str == NULL)
-                        ? vmSymbols::object_initializer_name()->as_C_string()
-                        : name_str;
+  const char *name_to_probe = (name_str == NULL) ? vmSymbols::object_initializer_name()->as_C_string() : name_str;
   TempNewSymbol name = SymbolTable::probe(name_to_probe, (int)strlen(name_to_probe));
   TempNewSymbol signature = SymbolTable::probe(sig, (int)strlen(sig));
 
@@ -967,7 +822,7 @@ static jmethodID get_method_id(JNIEnv *env, jclass clazz, const char *name_str, 
     }
   } else {
     m = klass->lookup_method(name, signature);
-    if (m == NULL &&  klass->is_instance_klass()) {
+    if (m == NULL && klass->is_instance_klass()) {
       m = InstanceKlass::cast(klass)->lookup_method_in_ordered_interfaces(name, signature);
     }
   }
@@ -978,115 +833,78 @@ static jmethodID get_method_id(JNIEnv *env, jclass clazz, const char *name_str, 
 }
 
 JNI_ENTRY(jmethodID, jni_GetMethodID(JNIEnv *env, jclass clazz, const char *name, const char *sig))
-  jmethodID ret = get_method_id(env, clazz, name, sig, false, thread);
-  return ret;
+  return get_method_id(env, clazz, name, sig, false, thread);
 JNI_END
 
 JNI_ENTRY(jmethodID, jni_GetStaticMethodID(JNIEnv *env, jclass clazz, const char *name, const char *sig))
-  jmethodID ret = get_method_id(env, clazz, name, sig, true, thread);
-  return ret;
+  return get_method_id(env, clazz, name, sig, true, thread);
 JNI_END
 
 //
 // Calling Methods
 //
 
-#define DEFINE_CALLMETHOD(ResultType, Result, Tag, EntryProbe, ReturnProbe) \
-\
-  DT_RETURN_MARK_DECL_FOR(Result, Call##Result##Method, ResultType, ReturnProbe); \
+#define DEFINE_CALLMETHOD(ResultType, Result, Tag) \
 \
 JNI_ENTRY(ResultType, jni_Call##Result##Method(JNIEnv *env, jobject obj, jmethodID methodID, ...)) \
-\
-  EntryProbe; \
-  ResultType ret = 0; \
-  DT_RETURN_MARK_FOR(Result, Call##Result##Method, ResultType, (const ResultType&)ret); \
-\
   va_list args; \
   va_start(args, methodID); \
   JavaValue jvalue(Tag); \
   JNI_ArgumentPusherVaArg ap(methodID, args); \
   jni_invoke_nonstatic(env, &jvalue, obj, JNI_VIRTUAL, methodID, &ap, CHECK_0); \
   va_end(args); \
-  ret = jvalue.get_##ResultType(); \
-  return ret; \
+  return jvalue.get_##ResultType(); \
 JNI_END
 
-// the runtime type of subword integral basic types is integer
-DEFINE_CALLMETHOD(jboolean, Boolean, T_BOOLEAN, , )
-DEFINE_CALLMETHOD(jbyte,    Byte,    T_BYTE, , )
-DEFINE_CALLMETHOD(jchar,    Char,    T_CHAR, , )
-DEFINE_CALLMETHOD(jshort,   Short,   T_SHORT, , )
-DEFINE_CALLMETHOD(jobject,  Object,  T_OBJECT, , )
-DEFINE_CALLMETHOD(jint,     Int,     T_INT, , )
-DEFINE_CALLMETHOD(jlong,    Long,    T_LONG, , )
-// Float and double probes don't return value because dtrace doesn't currently support it
-DEFINE_CALLMETHOD(jfloat,   Float,   T_FLOAT, , )
-DEFINE_CALLMETHOD(jdouble,  Double,  T_DOUBLE, , )
+DEFINE_CALLMETHOD(jboolean, Boolean, T_BOOLEAN)
+DEFINE_CALLMETHOD(jbyte,    Byte,    T_BYTE)
+DEFINE_CALLMETHOD(jchar,    Char,    T_CHAR)
+DEFINE_CALLMETHOD(jshort,   Short,   T_SHORT)
+DEFINE_CALLMETHOD(jobject,  Object,  T_OBJECT)
+DEFINE_CALLMETHOD(jint,     Int,     T_INT)
+DEFINE_CALLMETHOD(jlong,    Long,    T_LONG)
+DEFINE_CALLMETHOD(jfloat,   Float,   T_FLOAT)
+DEFINE_CALLMETHOD(jdouble,  Double,  T_DOUBLE)
 
-#define DEFINE_CALLMETHODV(ResultType, Result, Tag, EntryProbe, ReturnProbe) \
-\
-  DT_RETURN_MARK_DECL_FOR(Result, Call##Result##MethodV, ResultType, ReturnProbe); \
+#define DEFINE_CALLMETHODV(ResultType, Result, Tag) \
 \
 JNI_ENTRY(ResultType, jni_Call##Result##MethodV(JNIEnv *env, jobject obj, jmethodID methodID, va_list args)) \
-\
-  EntryProbe; \
-  ResultType ret = 0; \
-  DT_RETURN_MARK_FOR(Result, Call##Result##MethodV, ResultType, (const ResultType&)ret); \
-\
   JavaValue jvalue(Tag); \
   JNI_ArgumentPusherVaArg ap(methodID, args); \
   jni_invoke_nonstatic(env, &jvalue, obj, JNI_VIRTUAL, methodID, &ap, CHECK_0); \
-  ret = jvalue.get_##ResultType(); \
-  return ret; \
+  return jvalue.get_##ResultType(); \
 JNI_END
 
-// the runtime type of subword integral basic types is integer
-DEFINE_CALLMETHODV(jboolean, Boolean, T_BOOLEAN, , )
-DEFINE_CALLMETHODV(jbyte,    Byte,    T_BYTE, , )
-DEFINE_CALLMETHODV(jchar,    Char,    T_CHAR, , )
-DEFINE_CALLMETHODV(jshort,   Short,   T_SHORT, , )
-DEFINE_CALLMETHODV(jobject,  Object,  T_OBJECT, , )
-DEFINE_CALLMETHODV(jint,     Int,     T_INT, , )
-DEFINE_CALLMETHODV(jlong,    Long,    T_LONG, , )
-// Float and double probes don't return value because dtrace doesn't currently support it
-DEFINE_CALLMETHODV(jfloat,   Float,   T_FLOAT, , )
-DEFINE_CALLMETHODV(jdouble,  Double,  T_DOUBLE, , )
+DEFINE_CALLMETHODV(jboolean, Boolean, T_BOOLEAN)
+DEFINE_CALLMETHODV(jbyte,    Byte,    T_BYTE)
+DEFINE_CALLMETHODV(jchar,    Char,    T_CHAR)
+DEFINE_CALLMETHODV(jshort,   Short,   T_SHORT)
+DEFINE_CALLMETHODV(jobject,  Object,  T_OBJECT)
+DEFINE_CALLMETHODV(jint,     Int,     T_INT)
+DEFINE_CALLMETHODV(jlong,    Long,    T_LONG)
+DEFINE_CALLMETHODV(jfloat,   Float,   T_FLOAT)
+DEFINE_CALLMETHODV(jdouble,  Double,  T_DOUBLE)
 
-#define DEFINE_CALLMETHODA(ResultType, Result, Tag, EntryProbe, ReturnProbe) \
-\
-  DT_RETURN_MARK_DECL_FOR(Result, Call##Result##MethodA, ResultType, ReturnProbe); \
+#define DEFINE_CALLMETHODA(ResultType, Result, Tag) \
 \
 JNI_ENTRY(ResultType, jni_Call##Result##MethodA(JNIEnv *env, jobject obj, jmethodID methodID, const jvalue *args)) \
-  EntryProbe; \
-  ResultType ret = 0; \
-  DT_RETURN_MARK_FOR(Result, Call##Result##MethodA, ResultType, (const ResultType&)ret); \
-\
   JavaValue jvalue(Tag); \
   JNI_ArgumentPusherArray ap(methodID, args); \
   jni_invoke_nonstatic(env, &jvalue, obj, JNI_VIRTUAL, methodID, &ap, CHECK_0); \
-  ret = jvalue.get_##ResultType(); \
-  return ret; \
+  return jvalue.get_##ResultType(); \
 JNI_END
 
-// the runtime type of subword integral basic types is integer
-DEFINE_CALLMETHODA(jboolean, Boolean, T_BOOLEAN, , )
-DEFINE_CALLMETHODA(jbyte,    Byte,    T_BYTE, , )
-DEFINE_CALLMETHODA(jchar,    Char,    T_CHAR, , )
-DEFINE_CALLMETHODA(jshort,   Short,   T_SHORT, , )
-DEFINE_CALLMETHODA(jobject,  Object,  T_OBJECT, , )
-DEFINE_CALLMETHODA(jint,     Int,     T_INT, , )
-DEFINE_CALLMETHODA(jlong,    Long,    T_LONG, , )
-// Float and double probes don't return value because dtrace doesn't currently support it
-DEFINE_CALLMETHODA(jfloat,   Float,   T_FLOAT, , )
-DEFINE_CALLMETHODA(jdouble,  Double,  T_DOUBLE, , )
-
-DT_VOID_RETURN_MARK_DECL(CallVoidMethod, );
-DT_VOID_RETURN_MARK_DECL(CallVoidMethodV, );
-DT_VOID_RETURN_MARK_DECL(CallVoidMethodA, );
+DEFINE_CALLMETHODA(jboolean, Boolean, T_BOOLEAN)
+DEFINE_CALLMETHODA(jbyte,    Byte,    T_BYTE)
+DEFINE_CALLMETHODA(jchar,    Char,    T_CHAR)
+DEFINE_CALLMETHODA(jshort,   Short,   T_SHORT)
+DEFINE_CALLMETHODA(jobject,  Object,  T_OBJECT)
+DEFINE_CALLMETHODA(jint,     Int,     T_INT)
+DEFINE_CALLMETHODA(jlong,    Long,    T_LONG)
+DEFINE_CALLMETHODA(jfloat,   Float,   T_FLOAT)
+DEFINE_CALLMETHODA(jdouble,  Double,  T_DOUBLE)
 
 JNI_ENTRY(void, jni_CallVoidMethod(JNIEnv *env, jobject obj, jmethodID methodID, ...))
-  DT_VOID_RETURN_MARK(CallVoidMethod);
-
   va_list args;
   va_start(args, methodID);
   JavaValue jvalue(T_VOID);
@@ -1096,118 +914,78 @@ JNI_ENTRY(void, jni_CallVoidMethod(JNIEnv *env, jobject obj, jmethodID methodID,
 JNI_END
 
 JNI_ENTRY(void, jni_CallVoidMethodV(JNIEnv *env, jobject obj, jmethodID methodID, va_list args))
-  DT_VOID_RETURN_MARK(CallVoidMethodV);
-
   JavaValue jvalue(T_VOID);
   JNI_ArgumentPusherVaArg ap(methodID, args);
   jni_invoke_nonstatic(env, &jvalue, obj, JNI_VIRTUAL, methodID, &ap, CHECK);
 JNI_END
 
 JNI_ENTRY(void, jni_CallVoidMethodA(JNIEnv *env, jobject obj, jmethodID methodID, const jvalue *args))
-  DT_VOID_RETURN_MARK(CallVoidMethodA);
-
   JavaValue jvalue(T_VOID);
   JNI_ArgumentPusherArray ap(methodID, args);
   jni_invoke_nonstatic(env, &jvalue, obj, JNI_VIRTUAL, methodID, &ap, CHECK);
 JNI_END
 
-#define DEFINE_CALLNONVIRTUALMETHOD(ResultType, Result, Tag, EntryProbe, ReturnProbe) \
-\
-  DT_RETURN_MARK_DECL_FOR(Result, CallNonvirtual##Result##Method, ResultType, ReturnProbe); \
+#define DEFINE_CALLNONVIRTUALMETHOD(ResultType, Result, Tag) \
 \
 JNI_ENTRY(ResultType, jni_CallNonvirtual##Result##Method(JNIEnv *env, jobject obj, jclass cls, jmethodID methodID, ...)) \
-\
-  EntryProbe; \
-  ResultType ret; \
-  DT_RETURN_MARK_FOR(Result, CallNonvirtual##Result##Method, ResultType, (const ResultType&)ret); \
-\
   va_list args; \
   va_start(args, methodID); \
   JavaValue jvalue(Tag); \
   JNI_ArgumentPusherVaArg ap(methodID, args); \
   jni_invoke_nonstatic(env, &jvalue, obj, JNI_NONVIRTUAL, methodID, &ap, CHECK_0); \
   va_end(args); \
-  ret = jvalue.get_##ResultType(); \
-  return ret; \
+  return jvalue.get_##ResultType(); \
 JNI_END
 
-// the runtime type of subword integral basic types is integer
-DEFINE_CALLNONVIRTUALMETHOD(jboolean, Boolean, T_BOOLEAN, , )
-DEFINE_CALLNONVIRTUALMETHOD(jbyte,    Byte,    T_BYTE, , )
-DEFINE_CALLNONVIRTUALMETHOD(jchar,    Char,    T_CHAR, , )
-DEFINE_CALLNONVIRTUALMETHOD(jshort,   Short,   T_SHORT, , )
-DEFINE_CALLNONVIRTUALMETHOD(jobject,  Object,  T_OBJECT, , )
-DEFINE_CALLNONVIRTUALMETHOD(jint,     Int,     T_INT, , )
-DEFINE_CALLNONVIRTUALMETHOD(jlong,    Long,    T_LONG, , )
-// Float and double probes don't return value because dtrace doesn't currently support it
-DEFINE_CALLNONVIRTUALMETHOD(jfloat,   Float,   T_FLOAT, , )
-DEFINE_CALLNONVIRTUALMETHOD(jdouble,  Double,  T_DOUBLE, , )
+DEFINE_CALLNONVIRTUALMETHOD(jboolean, Boolean, T_BOOLEAN)
+DEFINE_CALLNONVIRTUALMETHOD(jbyte,    Byte,    T_BYTE)
+DEFINE_CALLNONVIRTUALMETHOD(jchar,    Char,    T_CHAR)
+DEFINE_CALLNONVIRTUALMETHOD(jshort,   Short,   T_SHORT)
+DEFINE_CALLNONVIRTUALMETHOD(jobject,  Object,  T_OBJECT)
+DEFINE_CALLNONVIRTUALMETHOD(jint,     Int,     T_INT)
+DEFINE_CALLNONVIRTUALMETHOD(jlong,    Long,    T_LONG)
+DEFINE_CALLNONVIRTUALMETHOD(jfloat,   Float,   T_FLOAT)
+DEFINE_CALLNONVIRTUALMETHOD(jdouble,  Double,  T_DOUBLE)
 
-#define DEFINE_CALLNONVIRTUALMETHODV(ResultType, Result, Tag, EntryProbe, ReturnProbe) \
-\
-  DT_RETURN_MARK_DECL_FOR(Result, CallNonvirtual##Result##MethodV, ResultType, ReturnProbe); \
+#define DEFINE_CALLNONVIRTUALMETHODV(ResultType, Result, Tag) \
 \
 JNI_ENTRY(ResultType, jni_CallNonvirtual##Result##MethodV(JNIEnv *env, jobject obj, jclass cls, jmethodID methodID, va_list args)) \
-\
-  EntryProbe; \
-  ResultType ret; \
-  DT_RETURN_MARK_FOR(Result, CallNonvirtual##Result##MethodV, ResultType, (const ResultType&)ret); \
-\
   JavaValue jvalue(Tag); \
   JNI_ArgumentPusherVaArg ap(methodID, args); \
   jni_invoke_nonstatic(env, &jvalue, obj, JNI_NONVIRTUAL, methodID, &ap, CHECK_0); \
-  ret = jvalue.get_##ResultType(); \
-  return ret; \
+  return jvalue.get_##ResultType(); \
 JNI_END
 
-// the runtime type of subword integral basic types is integer
-DEFINE_CALLNONVIRTUALMETHODV(jboolean, Boolean, T_BOOLEAN, , )
-DEFINE_CALLNONVIRTUALMETHODV(jbyte,    Byte,    T_BYTE, , )
-DEFINE_CALLNONVIRTUALMETHODV(jchar,    Char,    T_CHAR, , )
-DEFINE_CALLNONVIRTUALMETHODV(jshort,   Short,   T_SHORT, , )
-DEFINE_CALLNONVIRTUALMETHODV(jobject,  Object,  T_OBJECT, , )
-DEFINE_CALLNONVIRTUALMETHODV(jint,     Int,     T_INT, , )
-DEFINE_CALLNONVIRTUALMETHODV(jlong,    Long,    T_LONG, , )
-// Float and double probes don't return value because dtrace doesn't currently support it
-DEFINE_CALLNONVIRTUALMETHODV(jfloat,   Float,   T_FLOAT, , )
-DEFINE_CALLNONVIRTUALMETHODV(jdouble,  Double,  T_DOUBLE, , )
+DEFINE_CALLNONVIRTUALMETHODV(jboolean, Boolean, T_BOOLEAN)
+DEFINE_CALLNONVIRTUALMETHODV(jbyte,    Byte,    T_BYTE)
+DEFINE_CALLNONVIRTUALMETHODV(jchar,    Char,    T_CHAR)
+DEFINE_CALLNONVIRTUALMETHODV(jshort,   Short,   T_SHORT)
+DEFINE_CALLNONVIRTUALMETHODV(jobject,  Object,  T_OBJECT)
+DEFINE_CALLNONVIRTUALMETHODV(jint,     Int,     T_INT)
+DEFINE_CALLNONVIRTUALMETHODV(jlong,    Long,    T_LONG)
+DEFINE_CALLNONVIRTUALMETHODV(jfloat,   Float,   T_FLOAT)
+DEFINE_CALLNONVIRTUALMETHODV(jdouble,  Double,  T_DOUBLE)
 
-#define DEFINE_CALLNONVIRTUALMETHODA(ResultType, Result, Tag, EntryProbe, ReturnProbe) \
-\
-  DT_RETURN_MARK_DECL_FOR(Result, CallNonvirtual##Result##MethodA, ResultType, ReturnProbe); \
+#define DEFINE_CALLNONVIRTUALMETHODA(ResultType, Result, Tag) \
 \
 JNI_ENTRY(ResultType, jni_CallNonvirtual##Result##MethodA(JNIEnv *env, jobject obj, jclass cls, jmethodID methodID, const jvalue *args)) \
-\
-  EntryProbe; \
-  ResultType ret; \
-  DT_RETURN_MARK_FOR(Result, CallNonvirtual##Result##MethodA, ResultType, (const ResultType&)ret); \
-\
   JavaValue jvalue(Tag); \
   JNI_ArgumentPusherArray ap(methodID, args); \
   jni_invoke_nonstatic(env, &jvalue, obj, JNI_NONVIRTUAL, methodID, &ap, CHECK_0); \
-  ret = jvalue.get_##ResultType(); \
-  return ret; \
+  return jvalue.get_##ResultType(); \
 JNI_END
 
-// the runtime type of subword integral basic types is integer
-DEFINE_CALLNONVIRTUALMETHODA(jboolean, Boolean, T_BOOLEAN, , )
-DEFINE_CALLNONVIRTUALMETHODA(jbyte,    Byte,    T_BYTE, , )
-DEFINE_CALLNONVIRTUALMETHODA(jchar,    Char,    T_CHAR, , )
-DEFINE_CALLNONVIRTUALMETHODA(jshort,   Short,   T_SHORT, , )
-DEFINE_CALLNONVIRTUALMETHODA(jobject,  Object,  T_OBJECT, , )
-DEFINE_CALLNONVIRTUALMETHODA(jint,     Int,     T_INT, , )
-DEFINE_CALLNONVIRTUALMETHODA(jlong,    Long,    T_LONG, , )
-// Float and double probes don't return value because dtrace doesn't currently support it
-DEFINE_CALLNONVIRTUALMETHODA(jfloat,   Float,   T_FLOAT, , )
-DEFINE_CALLNONVIRTUALMETHODA(jdouble,  Double,  T_DOUBLE, , )
-
-DT_VOID_RETURN_MARK_DECL(CallNonvirtualVoidMethod, );
-DT_VOID_RETURN_MARK_DECL(CallNonvirtualVoidMethodV, );
-DT_VOID_RETURN_MARK_DECL(CallNonvirtualVoidMethodA, );
+DEFINE_CALLNONVIRTUALMETHODA(jboolean, Boolean, T_BOOLEAN)
+DEFINE_CALLNONVIRTUALMETHODA(jbyte,    Byte,    T_BYTE)
+DEFINE_CALLNONVIRTUALMETHODA(jchar,    Char,    T_CHAR)
+DEFINE_CALLNONVIRTUALMETHODA(jshort,   Short,   T_SHORT)
+DEFINE_CALLNONVIRTUALMETHODA(jobject,  Object,  T_OBJECT)
+DEFINE_CALLNONVIRTUALMETHODA(jint,     Int,     T_INT)
+DEFINE_CALLNONVIRTUALMETHODA(jlong,    Long,    T_LONG)
+DEFINE_CALLNONVIRTUALMETHODA(jfloat,   Float,   T_FLOAT)
+DEFINE_CALLNONVIRTUALMETHODA(jdouble,  Double,  T_DOUBLE)
 
 JNI_ENTRY(void, jni_CallNonvirtualVoidMethod(JNIEnv *env, jobject obj, jclass cls, jmethodID methodID, ...))
-  DT_VOID_RETURN_MARK(CallNonvirtualVoidMethod);
-
   va_list args;
   va_start(args, methodID);
   JavaValue jvalue(T_VOID);
@@ -1217,62 +995,42 @@ JNI_ENTRY(void, jni_CallNonvirtualVoidMethod(JNIEnv *env, jobject obj, jclass cl
 JNI_END
 
 JNI_ENTRY(void, jni_CallNonvirtualVoidMethodV(JNIEnv *env, jobject obj, jclass cls, jmethodID methodID, va_list args))
-  DT_VOID_RETURN_MARK(CallNonvirtualVoidMethodV);
-
   JavaValue jvalue(T_VOID);
   JNI_ArgumentPusherVaArg ap(methodID, args);
   jni_invoke_nonstatic(env, &jvalue, obj, JNI_NONVIRTUAL, methodID, &ap, CHECK);
 JNI_END
 
 JNI_ENTRY(void, jni_CallNonvirtualVoidMethodA(JNIEnv *env, jobject obj, jclass cls, jmethodID methodID, const jvalue *args))
-  DT_VOID_RETURN_MARK(CallNonvirtualVoidMethodA);
   JavaValue jvalue(T_VOID);
   JNI_ArgumentPusherArray ap(methodID, args);
   jni_invoke_nonstatic(env, &jvalue, obj, JNI_NONVIRTUAL, methodID, &ap, CHECK);
 JNI_END
 
-#define DEFINE_CALLSTATICMETHOD(ResultType, Result, Tag, EntryProbe, ResultProbe) \
-\
-  DT_RETURN_MARK_DECL_FOR(Result, CallStatic##Result##Method, ResultType, ResultProbe); \
+#define DEFINE_CALLSTATICMETHOD(ResultType, Result, Tag) \
 \
 JNI_ENTRY(ResultType, jni_CallStatic##Result##Method(JNIEnv *env, jclass cls, jmethodID methodID, ...)) \
-\
-  EntryProbe; \
-  ResultType ret = 0; \
-  DT_RETURN_MARK_FOR(Result, CallStatic##Result##Method, ResultType, (const ResultType&)ret); \
-\
   va_list args; \
   va_start(args, methodID); \
   JavaValue jvalue(Tag); \
   JNI_ArgumentPusherVaArg ap(methodID, args); \
   jni_invoke_static(env, &jvalue, NULL, JNI_STATIC, methodID, &ap, CHECK_0); \
   va_end(args); \
-  ret = jvalue.get_##ResultType(); \
-  return ret; \
+  return jvalue.get_##ResultType(); \
 JNI_END
 
-// the runtime type of subword integral basic types is integer
-DEFINE_CALLSTATICMETHOD(jboolean, Boolean, T_BOOLEAN, , );
-DEFINE_CALLSTATICMETHOD(jbyte,    Byte,    T_BYTE, , );
-DEFINE_CALLSTATICMETHOD(jchar,    Char,    T_CHAR, , );
-DEFINE_CALLSTATICMETHOD(jshort,   Short,   T_SHORT, , );
-DEFINE_CALLSTATICMETHOD(jobject,  Object,  T_OBJECT, , );
-DEFINE_CALLSTATICMETHOD(jint,     Int,     T_INT, , );
-DEFINE_CALLSTATICMETHOD(jlong,    Long,    T_LONG, , );
-// Float and double probes don't return value because dtrace doesn't currently support it
-DEFINE_CALLSTATICMETHOD(jfloat,   Float,   T_FLOAT, , );
-DEFINE_CALLSTATICMETHOD(jdouble,  Double,  T_DOUBLE, , );
+DEFINE_CALLSTATICMETHOD(jboolean, Boolean, T_BOOLEAN);
+DEFINE_CALLSTATICMETHOD(jbyte,    Byte,    T_BYTE);
+DEFINE_CALLSTATICMETHOD(jchar,    Char,    T_CHAR);
+DEFINE_CALLSTATICMETHOD(jshort,   Short,   T_SHORT);
+DEFINE_CALLSTATICMETHOD(jobject,  Object,  T_OBJECT);
+DEFINE_CALLSTATICMETHOD(jint,     Int,     T_INT);
+DEFINE_CALLSTATICMETHOD(jlong,    Long,    T_LONG);
+DEFINE_CALLSTATICMETHOD(jfloat,   Float,   T_FLOAT);
+DEFINE_CALLSTATICMETHOD(jdouble,  Double,  T_DOUBLE);
 
-#define DEFINE_CALLSTATICMETHODV(ResultType, Result, Tag, EntryProbe, ResultProbe) \
-\
-  DT_RETURN_MARK_DECL_FOR(Result, CallStatic##Result##MethodV, ResultType, ResultProbe); \
+#define DEFINE_CALLSTATICMETHODV(ResultType, Result, Tag) \
 \
 JNI_ENTRY(ResultType, jni_CallStatic##Result##MethodV(JNIEnv *env, jclass cls, jmethodID methodID, va_list args)) \
-\
-  EntryProbe; \
-  ResultType ret = 0; \
-  DT_RETURN_MARK_FOR(Result, CallStatic##Result##MethodV, ResultType, (const ResultType&)ret); \
-\
   JavaValue jvalue(Tag); \
   JNI_ArgumentPusherVaArg ap(methodID, args); \
   /* Make sure class is initialized before trying to invoke its method */ \
@@ -1280,58 +1038,39 @@ JNI_ENTRY(ResultType, jni_CallStatic##Result##MethodV(JNIEnv *env, jclass cls, j
   k->initialize(CHECK_0); \
   jni_invoke_static(env, &jvalue, NULL, JNI_STATIC, methodID, &ap, CHECK_0); \
   va_end(args); \
-  ret = jvalue.get_##ResultType(); \
-  return ret; \
+  return jvalue.get_##ResultType(); \
 JNI_END
 
-// the runtime type of subword integral basic types is integer
-DEFINE_CALLSTATICMETHODV(jboolean, Boolean, T_BOOLEAN, , );
-DEFINE_CALLSTATICMETHODV(jbyte,    Byte,    T_BYTE, , );
-DEFINE_CALLSTATICMETHODV(jchar,    Char,    T_CHAR, , );
-DEFINE_CALLSTATICMETHODV(jshort,   Short,   T_SHORT, , );
-DEFINE_CALLSTATICMETHODV(jobject,  Object,  T_OBJECT, , );
-DEFINE_CALLSTATICMETHODV(jint,     Int,     T_INT, , );
-DEFINE_CALLSTATICMETHODV(jlong,    Long,    T_LONG, , );
-// Float and double probes don't return value because dtrace doesn't currently support it
-DEFINE_CALLSTATICMETHODV(jfloat,   Float,   T_FLOAT, , );
-DEFINE_CALLSTATICMETHODV(jdouble,  Double,  T_DOUBLE, , );
+DEFINE_CALLSTATICMETHODV(jboolean, Boolean, T_BOOLEAN);
+DEFINE_CALLSTATICMETHODV(jbyte,    Byte,    T_BYTE);
+DEFINE_CALLSTATICMETHODV(jchar,    Char,    T_CHAR);
+DEFINE_CALLSTATICMETHODV(jshort,   Short,   T_SHORT);
+DEFINE_CALLSTATICMETHODV(jobject,  Object,  T_OBJECT);
+DEFINE_CALLSTATICMETHODV(jint,     Int,     T_INT);
+DEFINE_CALLSTATICMETHODV(jlong,    Long,    T_LONG);
+DEFINE_CALLSTATICMETHODV(jfloat,   Float,   T_FLOAT);
+DEFINE_CALLSTATICMETHODV(jdouble,  Double,  T_DOUBLE);
 
-#define DEFINE_CALLSTATICMETHODA(ResultType, Result, Tag, EntryProbe, ResultProbe) \
-\
-  DT_RETURN_MARK_DECL_FOR(Result, CallStatic##Result##MethodA, ResultType, ResultProbe); \
+#define DEFINE_CALLSTATICMETHODA(ResultType, Result, Tag) \
 \
 JNI_ENTRY(ResultType, jni_CallStatic##Result##MethodA(JNIEnv *env, jclass cls, jmethodID methodID, const jvalue *args)) \
-\
-  EntryProbe; \
-  ResultType ret = 0; \
-  DT_RETURN_MARK_FOR(Result, CallStatic##Result##MethodA, ResultType, (const ResultType&)ret); \
-\
   JavaValue jvalue(Tag); \
   JNI_ArgumentPusherArray ap(methodID, args); \
   jni_invoke_static(env, &jvalue, NULL, JNI_STATIC, methodID, &ap, CHECK_0); \
-  ret = jvalue.get_##ResultType(); \
-  return ret; \
+  return jvalue.get_##ResultType(); \
 JNI_END
 
-// the runtime type of subword integral basic types is integer
-DEFINE_CALLSTATICMETHODA(jboolean, Boolean, T_BOOLEAN, , );
-DEFINE_CALLSTATICMETHODA(jbyte,    Byte,    T_BYTE, , );
-DEFINE_CALLSTATICMETHODA(jchar,    Char,    T_CHAR, , );
-DEFINE_CALLSTATICMETHODA(jshort,   Short,   T_SHORT, , );
-DEFINE_CALLSTATICMETHODA(jobject,  Object,  T_OBJECT, , );
-DEFINE_CALLSTATICMETHODA(jint,     Int,     T_INT, , );
-DEFINE_CALLSTATICMETHODA(jlong,    Long,    T_LONG, , );
-// Float and double probes don't return value because dtrace doesn't currently support it
-DEFINE_CALLSTATICMETHODA(jfloat,   Float,   T_FLOAT, , );
-DEFINE_CALLSTATICMETHODA(jdouble,  Double,  T_DOUBLE, , );
-
-DT_VOID_RETURN_MARK_DECL(CallStaticVoidMethod, );
-DT_VOID_RETURN_MARK_DECL(CallStaticVoidMethodV, );
-DT_VOID_RETURN_MARK_DECL(CallStaticVoidMethodA, );
+DEFINE_CALLSTATICMETHODA(jboolean, Boolean, T_BOOLEAN);
+DEFINE_CALLSTATICMETHODA(jbyte,    Byte,    T_BYTE);
+DEFINE_CALLSTATICMETHODA(jchar,    Char,    T_CHAR);
+DEFINE_CALLSTATICMETHODA(jshort,   Short,   T_SHORT);
+DEFINE_CALLSTATICMETHODA(jobject,  Object,  T_OBJECT);
+DEFINE_CALLSTATICMETHODA(jint,     Int,     T_INT);
+DEFINE_CALLSTATICMETHODA(jlong,    Long,    T_LONG);
+DEFINE_CALLSTATICMETHODA(jfloat,   Float,   T_FLOAT);
+DEFINE_CALLSTATICMETHODA(jdouble,  Double,  T_DOUBLE);
 
 JNI_ENTRY(void, jni_CallStaticVoidMethod(JNIEnv *env, jclass cls, jmethodID methodID, ...))
-  DT_VOID_RETURN_MARK(CallStaticVoidMethod);
-
   va_list args;
   va_start(args, methodID);
   JavaValue jvalue(T_VOID);
@@ -1341,16 +1080,12 @@ JNI_ENTRY(void, jni_CallStaticVoidMethod(JNIEnv *env, jclass cls, jmethodID meth
 JNI_END
 
 JNI_ENTRY(void, jni_CallStaticVoidMethodV(JNIEnv *env, jclass cls, jmethodID methodID, va_list args))
-  DT_VOID_RETURN_MARK(CallStaticVoidMethodV);
-
   JavaValue jvalue(T_VOID);
   JNI_ArgumentPusherVaArg ap(methodID, args);
   jni_invoke_static(env, &jvalue, NULL, JNI_STATIC, methodID, &ap, CHECK);
 JNI_END
 
 JNI_ENTRY(void, jni_CallStaticVoidMethodA(JNIEnv *env, jclass cls, jmethodID methodID, const jvalue *args))
-  DT_VOID_RETURN_MARK(CallStaticVoidMethodA);
-
   JavaValue jvalue(T_VOID);
   JNI_ArgumentPusherArray ap(methodID, args);
   jni_invoke_static(env, &jvalue, NULL, JNI_STATIC, methodID, &ap, CHECK);
@@ -1360,12 +1095,7 @@ JNI_END
 // Accessing Fields
 //
 
-DT_RETURN_MARK_DECL(GetFieldID, jfieldID, );
-
 JNI_ENTRY(jfieldID, jni_GetFieldID(JNIEnv *env, jclass clazz, const char *name, const char *sig))
-  jfieldID ret = 0;
-  DT_RETURN_MARK(GetFieldID, jfieldID, (const jfieldID&)ret);
-
   // The class should have been loaded (we have an instance of the class
   // passed in) so the field and signature should already be in the symbol
   // table.  If they're not there, the field doesn't exist.
@@ -1385,8 +1115,7 @@ JNI_ENTRY(jfieldID, jni_GetFieldID(JNIEnv *env, jclass clazz, const char *name, 
 
   // A jfieldID for a non-static field is simply the offset of the field within the instanceOop
   // It may also have hash bits for k, if VerifyJNIFields is turned on.
-  ret = jfieldIDWorkaround::to_instance_jfieldID(k, fd.offset());
-  return ret;
+  return jfieldIDWorkaround::to_instance_jfieldID(k, fd.offset());
 JNI_END
 
 JNI_ENTRY(jobject, jni_GetObjectField(JNIEnv *env, jobject obj, jfieldID fieldID))
@@ -1394,61 +1123,35 @@ JNI_ENTRY(jobject, jni_GetObjectField(JNIEnv *env, jobject obj, jfieldID fieldID
   Klass* k = o->klass();
   int offset = jfieldIDWorkaround::from_instance_jfieldID(k, fieldID);
   oop loaded_obj = HeapAccess<ON_UNKNOWN_OOP_REF>::oop_load_at(o, offset);
-  jobject ret = JNIHandles::make_local(env, loaded_obj);
-  return ret;
+  return JNIHandles::make_local(env, loaded_obj);
 JNI_END
 
-#define DEFINE_GETFIELD(Return, Fieldname, Result, EntryProbe, ReturnProbe) \
-\
-  DT_RETURN_MARK_DECL_FOR(Result, Get##Result##Field, Return, ReturnProbe); \
+#define DEFINE_GETFIELD(Return, Fieldname, Result) \
 \
 JNI_QUICK_ENTRY(Return, jni_Get##Result##Field(JNIEnv *env, jobject obj, jfieldID fieldID)) \
-\
-  EntryProbe; \
-  Return ret = 0; \
-  DT_RETURN_MARK_FOR(Result, Get##Result##Field, Return, (const Return&)ret); \
-\
   oop o = JNIHandles::resolve_non_null(obj); \
   Klass* k = o->klass(); \
   int offset = jfieldIDWorkaround::from_instance_jfieldID(k, fieldID); \
-  ret = o->Fieldname##_field(offset); \
-  return ret; \
+  return o->Fieldname##_field(offset); \
 JNI_END
 
-DEFINE_GETFIELD(jboolean, bool,   Boolean, , )
-DEFINE_GETFIELD(jbyte,    byte,   Byte, , )
-DEFINE_GETFIELD(jchar,    char,   Char, , )
-DEFINE_GETFIELD(jshort,   short,  Short, , )
-DEFINE_GETFIELD(jint,     int,    Int, , )
-DEFINE_GETFIELD(jlong,    long,   Long, , )
-// Float and double probes don't return value because dtrace doesn't currently support it
-DEFINE_GETFIELD(jfloat,   float,  Float, , )
-DEFINE_GETFIELD(jdouble,  double, Double, , )
+DEFINE_GETFIELD(jboolean, bool,   Boolean)
+DEFINE_GETFIELD(jbyte,    byte,   Byte)
+DEFINE_GETFIELD(jchar,    char,   Char)
+DEFINE_GETFIELD(jshort,   short,  Short)
+DEFINE_GETFIELD(jint,     int,    Int)
+DEFINE_GETFIELD(jlong,    long,   Long)
+DEFINE_GETFIELD(jfloat,   float,  Float)
+DEFINE_GETFIELD(jdouble,  double, Double)
 
-address jni_GetBooleanField_addr() {
-  return (address)jni_GetBooleanField;
-}
-address jni_GetByteField_addr() {
-  return (address)jni_GetByteField;
-}
-address jni_GetCharField_addr() {
-  return (address)jni_GetCharField;
-}
-address jni_GetShortField_addr() {
-  return (address)jni_GetShortField;
-}
-address jni_GetIntField_addr() {
-  return (address)jni_GetIntField;
-}
-address jni_GetLongField_addr() {
-  return (address)jni_GetLongField;
-}
-address jni_GetFloatField_addr() {
-  return (address)jni_GetFloatField;
-}
-address jni_GetDoubleField_addr() {
-  return (address)jni_GetDoubleField;
-}
+address jni_GetBooleanField_addr() { return (address)jni_GetBooleanField; }
+address jni_GetByteField_addr()    { return (address)jni_GetByteField; }
+address jni_GetCharField_addr()    { return (address)jni_GetCharField; }
+address jni_GetShortField_addr()   { return (address)jni_GetShortField; }
+address jni_GetIntField_addr()     { return (address)jni_GetIntField; }
+address jni_GetLongField_addr()    { return (address)jni_GetLongField; }
+address jni_GetFloatField_addr()   { return (address)jni_GetFloatField; }
+address jni_GetDoubleField_addr()  { return (address)jni_GetDoubleField; }
 
 JNI_QUICK_ENTRY(void, jni_SetObjectField(JNIEnv *env, jobject obj, jfieldID fieldID, jobject value))
   oop o = JNIHandles::resolve_non_null(obj);
@@ -1457,36 +1160,26 @@ JNI_QUICK_ENTRY(void, jni_SetObjectField(JNIEnv *env, jobject obj, jfieldID fiel
   HeapAccess<ON_UNKNOWN_OOP_REF>::oop_store_at(o, offset, JNIHandles::resolve(value));
 JNI_END
 
-#define DEFINE_SETFIELD(Argument, Fieldname, Result, SigType, unionType, EntryProbe, ReturnProbe) \
+#define DEFINE_SETFIELD(Argument, Fieldname, Result, SigType, unionType) \
 \
 JNI_QUICK_ENTRY(void, jni_Set##Result##Field(JNIEnv *env, jobject obj, jfieldID fieldID, Argument value)) \
-\
-  EntryProbe; \
-\
   oop o = JNIHandles::resolve_non_null(obj); \
   Klass* k = o->klass(); \
   int offset = jfieldIDWorkaround::from_instance_jfieldID(k, fieldID); \
   if (SigType == 'Z') { value = ((jboolean)value) & 1; } \
   o->Fieldname##_field_put(offset, value); \
-  ReturnProbe; \
 JNI_END
 
-DEFINE_SETFIELD(jboolean, bool,   Boolean, 'Z', z, , )
-DEFINE_SETFIELD(jbyte,    byte,   Byte,    'B', b, , )
-DEFINE_SETFIELD(jchar,    char,   Char,    'C', c, , )
-DEFINE_SETFIELD(jshort,   short,  Short,   'S', s, , )
-DEFINE_SETFIELD(jint,     int,    Int,     'I', i, , )
-DEFINE_SETFIELD(jlong,    long,   Long,    'J', j, , )
-// Float and double probes don't return value because dtrace doesn't currently support it
-DEFINE_SETFIELD(jfloat,   float,  Float,   'F', f, , )
-DEFINE_SETFIELD(jdouble,  double, Double,  'D', d, , )
-
-DT_RETURN_MARK_DECL(ToReflectedField, jobject, );
+DEFINE_SETFIELD(jboolean, bool,   Boolean, 'Z', z)
+DEFINE_SETFIELD(jbyte,    byte,   Byte,    'B', b)
+DEFINE_SETFIELD(jchar,    char,   Char,    'C', c)
+DEFINE_SETFIELD(jshort,   short,  Short,   'S', s)
+DEFINE_SETFIELD(jint,     int,    Int,     'I', i)
+DEFINE_SETFIELD(jlong,    long,   Long,    'J', j)
+DEFINE_SETFIELD(jfloat,   float,  Float,   'F', f)
+DEFINE_SETFIELD(jdouble,  double, Double,  'D', d)
 
 JNI_ENTRY(jobject, jni_ToReflectedField(JNIEnv *env, jclass cls, jfieldID fieldID, jboolean isStatic))
-  jobject ret = NULL;
-  DT_RETURN_MARK(ToReflectedField, jobject, (const jobject&)ret);
-
   fieldDescriptor fd;
   bool found = false;
   Klass* k = java_lang_Class::as_Klass(JNIHandles::resolve_non_null(cls));
@@ -1501,19 +1194,14 @@ JNI_ENTRY(jobject, jni_ToReflectedField(JNIEnv *env, jclass cls, jfieldID fieldI
     found = InstanceKlass::cast(k)->find_field_from_offset(offset, false, &fd);
   }
   oop reflected = Reflection::new_field(&fd, CHECK_NULL);
-  ret = JNIHandles::make_local(env, reflected);
-  return ret;
+  return JNIHandles::make_local(env, reflected);
 JNI_END
 
 //
 // Accessing Static Fields
 //
-DT_RETURN_MARK_DECL(GetStaticFieldID, jfieldID, );
 
 JNI_ENTRY(jfieldID, jni_GetStaticFieldID(JNIEnv *env, jclass clazz, const char *name, const char *sig))
-  jfieldID ret = NULL;
-  DT_RETURN_MARK(GetStaticFieldID, jfieldID, (const jfieldID&)ret);
-
   // The class should have been loaded (we have an instance of the class
   // passed in) so the field and signature should already be in the symbol
   // table.  If they're not there, the field doesn't exist.
@@ -1534,64 +1222,51 @@ JNI_ENTRY(jfieldID, jni_GetStaticFieldID(JNIEnv *env, jclass clazz, const char *
   // A jfieldID for a static field is a JNIid specifying the field holder and the offset within the Klass*
   JNIid* id = fd.field_holder()->jni_id_for(fd.offset());
 
-  ret = jfieldIDWorkaround::to_static_jfieldID(id);
-  return ret;
+  return jfieldIDWorkaround::to_static_jfieldID(id);
 JNI_END
 
 JNI_ENTRY(jobject, jni_GetStaticObjectField(JNIEnv *env, jclass clazz, jfieldID fieldID))
   JNIid* id = jfieldIDWorkaround::from_static_jfieldID(fieldID);
-  jobject ret = JNIHandles::make_local(id->holder()->java_mirror()->obj_field(id->offset()));
-  return ret;
+  return JNIHandles::make_local(id->holder()->java_mirror()->obj_field(id->offset()));
 JNI_END
 
-#define DEFINE_GETSTATICFIELD(Return, Fieldname, Result, EntryProbe, ReturnProbe) \
-\
-  DT_RETURN_MARK_DECL_FOR(Result, GetStatic##Result##Field, Return, ReturnProbe); \
+#define DEFINE_GETSTATICFIELD(Return, Fieldname, Result) \
 \
 JNI_ENTRY(Return, jni_GetStatic##Result##Field(JNIEnv *env, jclass clazz, jfieldID fieldID)) \
-  EntryProbe; \
-  Return ret = 0; \
-  DT_RETURN_MARK_FOR(Result, GetStatic##Result##Field, Return, (const Return&)ret); \
   JNIid* id = jfieldIDWorkaround::from_static_jfieldID(fieldID); \
-  ret = id->holder()->java_mirror()-> Fieldname##_field (id->offset()); \
-  return ret; \
+  return id->holder()->java_mirror()-> Fieldname##_field (id->offset()); \
 JNI_END
 
-DEFINE_GETSTATICFIELD(jboolean, bool,   Boolean, , )
-DEFINE_GETSTATICFIELD(jbyte,    byte,   Byte,    ,    )
-DEFINE_GETSTATICFIELD(jchar,    char,   Char,    ,    )
-DEFINE_GETSTATICFIELD(jshort,   short,  Short,   ,   )
-DEFINE_GETSTATICFIELD(jint,     int,    Int,     ,     )
-DEFINE_GETSTATICFIELD(jlong,    long,   Long,    ,    )
-// Float and double probes don't return value because dtrace doesn't currently support it
-DEFINE_GETSTATICFIELD(jfloat,   float,  Float,   ,           )
-DEFINE_GETSTATICFIELD(jdouble,  double, Double,  ,          )
+DEFINE_GETSTATICFIELD(jboolean, bool,   Boolean)
+DEFINE_GETSTATICFIELD(jbyte,    byte,   Byte)
+DEFINE_GETSTATICFIELD(jchar,    char,   Char)
+DEFINE_GETSTATICFIELD(jshort,   short,  Short)
+DEFINE_GETSTATICFIELD(jint,     int,    Int)
+DEFINE_GETSTATICFIELD(jlong,    long,   Long)
+DEFINE_GETSTATICFIELD(jfloat,   float,  Float)
+DEFINE_GETSTATICFIELD(jdouble,  double, Double)
 
 JNI_ENTRY(void, jni_SetStaticObjectField(JNIEnv *env, jclass clazz, jfieldID fieldID, jobject value))
   JNIid* id = jfieldIDWorkaround::from_static_jfieldID(fieldID);
   id->holder()->java_mirror()->obj_field_put(id->offset(), JNIHandles::resolve(value));
 JNI_END
 
-#define DEFINE_SETSTATICFIELD(Argument, Fieldname, Result, SigType, unionType, EntryProbe, ReturnProbe) \
+#define DEFINE_SETSTATICFIELD(Argument, Fieldname, Result, SigType, unionType) \
 \
 JNI_ENTRY(void, jni_SetStatic##Result##Field(JNIEnv *env, jclass clazz, jfieldID fieldID, Argument value)) \
-  EntryProbe; \
-\
   JNIid* id = jfieldIDWorkaround::from_static_jfieldID(fieldID); \
   if (SigType == 'Z') { value = ((jboolean)value) & 1; } \
   id->holder()->java_mirror()-> Fieldname##_field_put (id->offset(), value); \
-  ReturnProbe; \
 JNI_END
 
-DEFINE_SETSTATICFIELD(jboolean, bool,   Boolean, 'Z', z, , )
-DEFINE_SETSTATICFIELD(jbyte,    byte,   Byte,    'B', b, , )
-DEFINE_SETSTATICFIELD(jchar,    char,   Char,    'C', c, , )
-DEFINE_SETSTATICFIELD(jshort,   short,  Short,   'S', s, , )
-DEFINE_SETSTATICFIELD(jint,     int,    Int,     'I', i, , )
-DEFINE_SETSTATICFIELD(jlong,    long,   Long,    'J', j, , )
-// Float and double probes don't return value because dtrace doesn't currently support it
-DEFINE_SETSTATICFIELD(jfloat,   float,  Float,   'F', f, , )
-DEFINE_SETSTATICFIELD(jdouble,  double, Double,  'D', d, , )
+DEFINE_SETSTATICFIELD(jboolean, bool,   Boolean, 'Z', z)
+DEFINE_SETSTATICFIELD(jbyte,    byte,   Byte,    'B', b)
+DEFINE_SETSTATICFIELD(jchar,    char,   Char,    'C', c)
+DEFINE_SETSTATICFIELD(jshort,   short,  Short,   'S', s)
+DEFINE_SETSTATICFIELD(jint,     int,    Int,     'I', i)
+DEFINE_SETSTATICFIELD(jlong,    long,   Long,    'J', j)
+DEFINE_SETSTATICFIELD(jfloat,   float,  Float,   'F', f)
+DEFINE_SETSTATICFIELD(jdouble,  double, Double,  'D', d)
 
 //
 // String Operations
@@ -1599,14 +1274,9 @@ DEFINE_SETSTATICFIELD(jdouble,  double, Double,  'D', d, , )
 
 // Unicode Interface
 
-DT_RETURN_MARK_DECL(NewString, jstring, );
-
 JNI_ENTRY(jstring, jni_NewString(JNIEnv *env, const jchar *unicodeChars, jsize len))
-  jstring ret = NULL;
-  DT_RETURN_MARK(NewString, jstring, (const jstring&)ret);
   oop string=java_lang_String::create_oop_from_unicode((jchar*) unicodeChars, len, CHECK_NULL);
-  ret = (jstring) JNIHandles::make_local(env, string);
-  return ret;
+  return (jstring) JNIHandles::make_local(env, string);
 JNI_END
 
 JNI_QUICK_ENTRY(jsize, jni_GetStringLength(JNIEnv *env, jstring string))
@@ -1630,8 +1300,7 @@ JNI_QUICK_ENTRY(const jchar*, jni_GetStringChars(JNIEnv *env, jstring string, jb
     if (buf != NULL) {
       if (s_len > 0) {
         if (!is_latin1) {
-          ArrayAccess<>::arraycopy_to_native(s_value, (size_t) typeArrayOopDesc::element_offset<jchar>(0),
-                                             buf, s_len);
+          ArrayAccess<>::arraycopy_to_native(s_value, (size_t) typeArrayOopDesc::element_offset<jchar>(0), buf, s_len);
         } else {
           for (int i = 0; i < s_len; i++) {
             buf[i] = ((jchar) s_value->byte_at(i)) & 0xff;
@@ -1659,15 +1328,9 @@ JNI_END
 
 // UTF Interface
 
-DT_RETURN_MARK_DECL(NewStringUTF, jstring, );
-
 JNI_ENTRY(jstring, jni_NewStringUTF(JNIEnv *env, const char *bytes))
-  jstring ret;
-  DT_RETURN_MARK(NewStringUTF, jstring, (const jstring&)ret);
-
   oop result = java_lang_String::create_oop_from_str((char*) bytes, CHECK_NULL);
-  ret = (jstring) JNIHandles::make_local(env, result);
-  return ret;
+  return (jstring) JNIHandles::make_local(env, result);
 JNI_END
 
 JNI_ENTRY(jsize, jni_GetStringUTFLength(JNIEnv *env, jstring string))
@@ -1704,19 +1367,14 @@ JNI_END
 
 JNI_QUICK_ENTRY(jsize, jni_GetArrayLength(JNIEnv *env, jarray array))
   arrayOop a = arrayOop(JNIHandles::resolve_non_null(array));
-  jsize ret = a->length();
-  return ret;
+  return a->length();
 JNI_END
 
 //
 // Object Array Operations
 //
 
-DT_RETURN_MARK_DECL(NewObjectArray, jobjectArray, );
-
 JNI_ENTRY(jobjectArray, jni_NewObjectArray(JNIEnv *env, jsize length, jclass elementClass, jobject initialElement))
-  jobjectArray ret = NULL;
-  DT_RETURN_MARK(NewObjectArray, jobjectArray, (const jobjectArray&)ret);
   Klass* ek = java_lang_Class::as_Klass(JNIHandles::resolve_non_null(elementClass));
   Klass* ak = ek->array_klass(CHECK_NULL);
   ObjArrayKlass::cast(ak)->initialize(CHECK_NULL);
@@ -1727,19 +1385,13 @@ JNI_ENTRY(jobjectArray, jni_NewObjectArray(JNIEnv *env, jsize length, jclass ele
       result->obj_at_put(index, initial_value);
     }
   }
-  ret = (jobjectArray) JNIHandles::make_local(env, result);
-  return ret;
+  return (jobjectArray) JNIHandles::make_local(env, result);
 JNI_END
 
-DT_RETURN_MARK_DECL(GetObjectArrayElement, jobject, );
-
 JNI_ENTRY(jobject, jni_GetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize index))
-  jobject ret = NULL;
-  DT_RETURN_MARK(GetObjectArrayElement, jobject, (const jobject&)ret);
   objArrayOop a = objArrayOop(JNIHandles::resolve_non_null(array));
   if (a->is_within_bounds(index)) {
-    ret = JNIHandles::make_local(env, a->obj_at(index));
-    return ret;
+    return JNIHandles::make_local(env, a->obj_at(index));
   } else {
     ResourceMark rm(THREAD);
     stringStream ss;
@@ -1748,11 +1400,7 @@ JNI_ENTRY(jobject, jni_GetObjectArrayElement(JNIEnv *env, jobjectArray array, js
   }
 JNI_END
 
-DT_VOID_RETURN_MARK_DECL(SetObjectArrayElement, );
-
 JNI_ENTRY(void, jni_SetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize index, jobject value))
-  DT_VOID_RETURN_MARK(SetObjectArrayElement);
-
   objArrayOop a = objArrayOop(JNIHandles::resolve_non_null(array));
   oop v = JNIHandles::resolve(value);
   if (a->is_within_bounds(index)) {
@@ -1779,28 +1427,21 @@ JNI_ENTRY(void, jni_SetObjectArrayElement(JNIEnv *env, jobjectArray array, jsize
   }
 JNI_END
 
-#define DEFINE_NEWSCALARARRAY(Return, Allocator, Result, EntryProbe, ReturnProbe) \
-\
-  DT_RETURN_MARK_DECL(New##Result##Array, Return, ReturnProbe); \
+#define DEFINE_NEWSCALARARRAY(Return, Allocator, Result) \
 \
 JNI_ENTRY(Return, jni_New##Result##Array(JNIEnv *env, jsize len)) \
-  EntryProbe; \
-  Return ret = NULL; \
-  DT_RETURN_MARK(New##Result##Array, Return, (const Return&)ret); \
-\
   oop obj= oopFactory::Allocator(len, CHECK_0); \
-  ret = (Return) JNIHandles::make_local(env, obj); \
-  return ret; \
+  return (Return) JNIHandles::make_local(env, obj); \
 JNI_END
 
-DEFINE_NEWSCALARARRAY(jbooleanArray, new_boolArray,   Boolean, , )
-DEFINE_NEWSCALARARRAY(jbyteArray,    new_byteArray,   Byte, , )
-DEFINE_NEWSCALARARRAY(jshortArray,   new_shortArray,  Short, , )
-DEFINE_NEWSCALARARRAY(jcharArray,    new_charArray,   Char, , )
-DEFINE_NEWSCALARARRAY(jintArray,     new_intArray,    Int, , )
-DEFINE_NEWSCALARARRAY(jlongArray,    new_longArray,   Long, , )
-DEFINE_NEWSCALARARRAY(jfloatArray,   new_singleArray, Float, , )
-DEFINE_NEWSCALARARRAY(jdoubleArray,  new_doubleArray, Double, , )
+DEFINE_NEWSCALARARRAY(jbooleanArray, new_boolArray,   Boolean)
+DEFINE_NEWSCALARARRAY(jbyteArray,    new_byteArray,   Byte)
+DEFINE_NEWSCALARARRAY(jshortArray,   new_shortArray,  Short)
+DEFINE_NEWSCALARARRAY(jcharArray,    new_charArray,   Char)
+DEFINE_NEWSCALARARRAY(jintArray,     new_intArray,    Int)
+DEFINE_NEWSCALARARRAY(jlongArray,    new_longArray,   Long)
+DEFINE_NEWSCALARARRAY(jfloatArray,   new_singleArray, Float)
+DEFINE_NEWSCALARARRAY(jdoubleArray,  new_doubleArray, Double)
 
 // Return an address which will fault if the caller writes to it.
 
@@ -1810,18 +1451,16 @@ static char* get_bad_address() {
     size_t size = os::vm_allocation_granularity();
     bad_address = os::reserve_memory(size);
     if (bad_address != NULL) {
-      os::protect_memory(bad_address, size, os::MEM_PROT_READ,
-                         /*is_committed*/false);
+      os::protect_memory(bad_address, size, os::MEM_PROT_READ, /*is_committed*/false);
       MemTracker::record_virtual_memory_type((void*)bad_address, mtInternal);
     }
   }
   return bad_address;
 }
 
-#define DEFINE_GETSCALARARRAYELEMENTS(ElementTag, ElementType, Result, Tag, EntryProbe, ReturnProbe) \
+#define DEFINE_GETSCALARARRAYELEMENTS(ElementTag, ElementType, Result, Tag) \
 \
 JNI_QUICK_ENTRY(ElementType*, jni_Get##Result##ArrayElements(JNIEnv *env, ElementType##Array array, jboolean *isCopy)) \
-  EntryProbe; \
   /* allocate an chunk of memory in c land */ \
   typeArrayOop a = typeArrayOop(JNIHandles::resolve_non_null(array)); \
   ElementType* result; \
@@ -1842,24 +1481,21 @@ JNI_QUICK_ENTRY(ElementType*, jni_Get##Result##ArrayElements(JNIEnv *env, Elemen
       } \
     } \
   } \
-  ReturnProbe; \
   return result; \
 JNI_END
 
-DEFINE_GETSCALARARRAYELEMENTS(T_BOOLEAN, jboolean, Boolean, bool, , )
-DEFINE_GETSCALARARRAYELEMENTS(T_BYTE,    jbyte,    Byte,    byte, , )
-DEFINE_GETSCALARARRAYELEMENTS(T_SHORT,   jshort,   Short,   short, , )
-DEFINE_GETSCALARARRAYELEMENTS(T_CHAR,    jchar,    Char,    char, , )
-DEFINE_GETSCALARARRAYELEMENTS(T_INT,     jint,     Int,     int, , )
-DEFINE_GETSCALARARRAYELEMENTS(T_LONG,    jlong,    Long,    long, , )
-// Float and double probes don't return value because dtrace doesn't currently support it
-DEFINE_GETSCALARARRAYELEMENTS(T_FLOAT,   jfloat,   Float,   float, , )
-DEFINE_GETSCALARARRAYELEMENTS(T_DOUBLE,  jdouble,  Double,  double, , )
+DEFINE_GETSCALARARRAYELEMENTS(T_BOOLEAN, jboolean, Boolean, bool)
+DEFINE_GETSCALARARRAYELEMENTS(T_BYTE,    jbyte,    Byte,    byte)
+DEFINE_GETSCALARARRAYELEMENTS(T_SHORT,   jshort,   Short,   short)
+DEFINE_GETSCALARARRAYELEMENTS(T_CHAR,    jchar,    Char,    char)
+DEFINE_GETSCALARARRAYELEMENTS(T_INT,     jint,     Int,     int)
+DEFINE_GETSCALARARRAYELEMENTS(T_LONG,    jlong,    Long,    long)
+DEFINE_GETSCALARARRAYELEMENTS(T_FLOAT,   jfloat,   Float,   float)
+DEFINE_GETSCALARARRAYELEMENTS(T_DOUBLE,  jdouble,  Double,  double)
 
-#define DEFINE_RELEASESCALARARRAYELEMENTS(ElementTag, ElementType, Result, Tag, EntryProbe, ReturnProbe); \
+#define DEFINE_RELEASESCALARARRAYELEMENTS(ElementTag, ElementType, Result, Tag); \
 \
 JNI_QUICK_ENTRY(void, jni_Release##Result##ArrayElements(JNIEnv *env, ElementType##Array array, ElementType *buf, jint mode)) \
-  EntryProbe; \
   typeArrayOop a = typeArrayOop(JNIHandles::resolve_non_null(array)); \
   int len = a->length(); \
   if (len != 0) {   /* Empty array:  nothing to free or copy. */ \
@@ -1870,17 +1506,16 @@ JNI_QUICK_ENTRY(void, jni_Release##Result##ArrayElements(JNIEnv *env, ElementTyp
       FreeHeap(buf); \
     } \
   } \
-  ReturnProbe; \
 JNI_END
 
-DEFINE_RELEASESCALARARRAYELEMENTS(T_BOOLEAN, jboolean, Boolean, bool, , )
-DEFINE_RELEASESCALARARRAYELEMENTS(T_BYTE,    jbyte,    Byte,    byte, , )
-DEFINE_RELEASESCALARARRAYELEMENTS(T_SHORT,   jshort,   Short,   short, , )
-DEFINE_RELEASESCALARARRAYELEMENTS(T_CHAR,    jchar,    Char,    char, , )
-DEFINE_RELEASESCALARARRAYELEMENTS(T_INT,     jint,     Int,     int, , )
-DEFINE_RELEASESCALARARRAYELEMENTS(T_LONG,    jlong,    Long,    long, , )
-DEFINE_RELEASESCALARARRAYELEMENTS(T_FLOAT,   jfloat,   Float,   float, , )
-DEFINE_RELEASESCALARARRAYELEMENTS(T_DOUBLE,  jdouble,  Double,  double, , )
+DEFINE_RELEASESCALARARRAYELEMENTS(T_BOOLEAN, jboolean, Boolean, bool)
+DEFINE_RELEASESCALARARRAYELEMENTS(T_BYTE,    jbyte,    Byte,    byte)
+DEFINE_RELEASESCALARARRAYELEMENTS(T_SHORT,   jshort,   Short,   short)
+DEFINE_RELEASESCALARARRAYELEMENTS(T_CHAR,    jchar,    Char,    char)
+DEFINE_RELEASESCALARARRAYELEMENTS(T_INT,     jint,     Int,     int)
+DEFINE_RELEASESCALARARRAYELEMENTS(T_LONG,    jlong,    Long,    long)
+DEFINE_RELEASESCALARARRAYELEMENTS(T_FLOAT,   jfloat,   Float,   float)
+DEFINE_RELEASESCALARARRAYELEMENTS(T_DOUBLE,  jdouble,  Double,  double)
 
 static void check_bounds(jsize start, jsize copy_len, jsize array_len, TRAPS) {
   ResourceMark rm(THREAD);
@@ -1895,12 +1530,9 @@ static void check_bounds(jsize start, jsize copy_len, jsize array_len, TRAPS) {
   }
 }
 
-#define DEFINE_GETSCALARARRAYREGION(ElementTag, ElementType, Result, Tag, EntryProbe, ReturnProbe); \
-  DT_VOID_RETURN_MARK_DECL(Get##Result##ArrayRegion, ReturnProbe); \
+#define DEFINE_GETSCALARARRAYREGION(ElementTag, ElementType, Result, Tag); \
 \
 JNI_ENTRY(void, jni_Get##Result##ArrayRegion(JNIEnv *env, ElementType##Array array, jsize start, jsize len, ElementType *buf)) \
-  EntryProbe; \
-  DT_VOID_RETURN_MARK(Get##Result##ArrayRegion); \
   typeArrayOop src = typeArrayOop(JNIHandles::resolve_non_null(array)); \
   check_bounds(start, len, src->length(), CHECK); \
   if (len > 0) { \
@@ -1908,21 +1540,18 @@ JNI_ENTRY(void, jni_Get##Result##ArrayRegion(JNIEnv *env, ElementType##Array arr
   } \
 JNI_END
 
-DEFINE_GETSCALARARRAYREGION(T_BOOLEAN, jboolean,Boolean, bool, , );
-DEFINE_GETSCALARARRAYREGION(T_BYTE,    jbyte,   Byte,    byte, , );
-DEFINE_GETSCALARARRAYREGION(T_SHORT,   jshort,  Short,   short, , );
-DEFINE_GETSCALARARRAYREGION(T_CHAR,    jchar,   Char,    char, , );
-DEFINE_GETSCALARARRAYREGION(T_INT,     jint,    Int,     int, , );
-DEFINE_GETSCALARARRAYREGION(T_LONG,    jlong,   Long,    long, , );
-DEFINE_GETSCALARARRAYREGION(T_FLOAT,   jfloat,  Float,   float, , );
-DEFINE_GETSCALARARRAYREGION(T_DOUBLE,  jdouble, Double,  double, , );
+DEFINE_GETSCALARARRAYREGION(T_BOOLEAN, jboolean,Boolean, bool);
+DEFINE_GETSCALARARRAYREGION(T_BYTE,    jbyte,   Byte,    byte);
+DEFINE_GETSCALARARRAYREGION(T_SHORT,   jshort,  Short,   short);
+DEFINE_GETSCALARARRAYREGION(T_CHAR,    jchar,   Char,    char);
+DEFINE_GETSCALARARRAYREGION(T_INT,     jint,    Int,     int);
+DEFINE_GETSCALARARRAYREGION(T_LONG,    jlong,   Long,    long);
+DEFINE_GETSCALARARRAYREGION(T_FLOAT,   jfloat,  Float,   float);
+DEFINE_GETSCALARARRAYREGION(T_DOUBLE,  jdouble, Double,  double);
 
-#define DEFINE_SETSCALARARRAYREGION(ElementTag, ElementType, Result, Tag, EntryProbe, ReturnProbe); \
-  DT_VOID_RETURN_MARK_DECL(Set##Result##ArrayRegion, ReturnProbe); \
+#define DEFINE_SETSCALARARRAYREGION(ElementTag, ElementType, Result, Tag); \
 \
 JNI_ENTRY(void, jni_Set##Result##ArrayRegion(JNIEnv *env, ElementType##Array array, jsize start, jsize len, const ElementType *buf)) \
-  EntryProbe; \
-  DT_VOID_RETURN_MARK(Set##Result##ArrayRegion); \
   typeArrayOop dst = typeArrayOop(JNIHandles::resolve_non_null(array)); \
   check_bounds(start, len, dst->length(), CHECK); \
   if (len > 0) { \
@@ -1930,14 +1559,14 @@ JNI_ENTRY(void, jni_Set##Result##ArrayRegion(JNIEnv *env, ElementType##Array arr
   } \
 JNI_END
 
-DEFINE_SETSCALARARRAYREGION(T_BOOLEAN, jboolean, Boolean, bool, , )
-DEFINE_SETSCALARARRAYREGION(T_BYTE,    jbyte,    Byte,    byte, , )
-DEFINE_SETSCALARARRAYREGION(T_SHORT,   jshort,   Short,   short, , )
-DEFINE_SETSCALARARRAYREGION(T_CHAR,    jchar,    Char,    char, , )
-DEFINE_SETSCALARARRAYREGION(T_INT,     jint,     Int,     int, , )
-DEFINE_SETSCALARARRAYREGION(T_LONG,    jlong,    Long,    long, , )
-DEFINE_SETSCALARARRAYREGION(T_FLOAT,   jfloat,   Float,   float, , )
-DEFINE_SETSCALARARRAYREGION(T_DOUBLE,  jdouble,  Double,  double, , )
+DEFINE_SETSCALARARRAYREGION(T_BOOLEAN, jboolean, Boolean, bool)
+DEFINE_SETSCALARARRAYREGION(T_BYTE,    jbyte,    Byte,    byte)
+DEFINE_SETSCALARARRAYREGION(T_SHORT,   jshort,   Short,   short)
+DEFINE_SETSCALARARRAYREGION(T_CHAR,    jchar,    Char,    char)
+DEFINE_SETSCALARARRAYREGION(T_INT,     jint,     Int,     int)
+DEFINE_SETSCALARARRAYREGION(T_LONG,    jlong,    Long,    long)
+DEFINE_SETSCALARARRAYREGION(T_FLOAT,   jfloat,   Float,   float)
+DEFINE_SETSCALARARRAYREGION(T_DOUBLE,  jdouble,  Double,  double)
 
 //
 // Interception of natives
@@ -1980,11 +1609,8 @@ static bool register_native(Klass* k, Symbol* name, Symbol* signature, address e
   return true;
 }
 
-DT_RETURN_MARK_DECL(RegisterNatives, jint, );
-
 JNI_ENTRY(jint, jni_RegisterNatives(JNIEnv *env, jclass clazz, const JNINativeMethod *methods, jint nMethods))
   jint ret = 0;
-  DT_RETURN_MARK(RegisterNatives, jint, (const jint&)ret);
 
   Klass* k = java_lang_Class::as_Klass(JNIHandles::resolve_non_null(clazz));
 
@@ -2007,8 +1633,7 @@ JNI_ENTRY(jint, jni_RegisterNatives(JNIEnv *env, jclass clazz, const JNINativeMe
       THROW_MSG_(vmSymbols::java_lang_NoSuchMethodError(), st.as_string(), -1);
     }
 
-    bool res = register_native(k, name, signature,
-                               (address) methods[index].fnPtr, THREAD);
+    bool res = register_native(k, name, signature, (address) methods[index].fnPtr, THREAD);
     if (!res) {
       ret = -1;
       break;
@@ -2036,12 +1661,7 @@ JNI_END
 // Monitor functions
 //
 
-DT_RETURN_MARK_DECL(MonitorEnter, jint, );
-
 JNI_ENTRY(jint, jni_MonitorEnter(JNIEnv *env, jobject jobj))
-  jint ret = JNI_ERR;
-  DT_RETURN_MARK(MonitorEnter, jint, (const jint&)ret);
-
   // If the object is null, we can't do anything with it
   if (jobj == NULL) {
     THROW_(vmSymbols::java_lang_NullPointerException(), JNI_ERR);
@@ -2049,16 +1669,10 @@ JNI_ENTRY(jint, jni_MonitorEnter(JNIEnv *env, jobject jobj))
 
   Handle obj(thread, JNIHandles::resolve_non_null(jobj));
   ObjectSynchronizer::jni_enter(obj, CHECK_(JNI_ERR));
-  ret = JNI_OK;
-  return ret;
+  return JNI_OK;
 JNI_END
 
-DT_RETURN_MARK_DECL(MonitorExit, jint, );
-
 JNI_ENTRY(jint, jni_MonitorExit(JNIEnv *env, jobject jobj))
-  jint ret = JNI_ERR;
-  DT_RETURN_MARK(MonitorExit, jint, (const jint&)ret);
-
   // Don't do anything with a null object
   if (jobj == NULL) {
     THROW_(vmSymbols::java_lang_NullPointerException(), JNI_ERR);
@@ -2067,18 +1681,14 @@ JNI_ENTRY(jint, jni_MonitorExit(JNIEnv *env, jobject jobj))
   Handle obj(THREAD, JNIHandles::resolve_non_null(jobj));
   ObjectSynchronizer::jni_exit(obj(), CHECK_(JNI_ERR));
 
-  ret = JNI_OK;
-  return ret;
+  return JNI_OK;
 JNI_END
 
 //
 // Extensions
 //
 
-DT_VOID_RETURN_MARK_DECL(GetStringRegion, );
-
 JNI_ENTRY(void, jni_GetStringRegion(JNIEnv *env, jstring string, jsize start, jsize len, jchar *buf))
-  DT_VOID_RETURN_MARK(GetStringRegion);
   oop s = JNIHandles::resolve_non_null(string);
   int s_len = java_lang_String::length(s);
   if (start < 0 || len < 0 || start > s_len - len) {
@@ -2088,8 +1698,7 @@ JNI_ENTRY(void, jni_GetStringRegion(JNIEnv *env, jstring string, jsize start, js
       typeArrayOop s_value = java_lang_String::value(s);
       bool is_latin1 = java_lang_String::is_latin1(s);
       if (!is_latin1) {
-        ArrayAccess<>::arraycopy_to_native(s_value, typeArrayOopDesc::element_offset<jchar>(start),
-                                           buf, len);
+        ArrayAccess<>::arraycopy_to_native(s_value, typeArrayOopDesc::element_offset<jchar>(start), buf, len);
       } else {
         for (int i = 0; i < len; i++) {
           buf[i] = ((jchar) s_value->byte_at(i + start)) & 0xff;
@@ -2099,10 +1708,7 @@ JNI_ENTRY(void, jni_GetStringRegion(JNIEnv *env, jstring string, jsize start, js
   }
 JNI_END
 
-DT_VOID_RETURN_MARK_DECL(GetStringUTFRegion, );
-
 JNI_ENTRY(void, jni_GetStringUTFRegion(JNIEnv *env, jstring string, jsize start, jsize len, char *buf))
-  DT_VOID_RETURN_MARK(GetStringUTFRegion);
   oop s = JNIHandles::resolve_non_null(string);
   int s_len = java_lang_String::length(s);
   if (start < 0 || len < 0 || start > s_len - len) {
@@ -2152,8 +1758,7 @@ JNI_ENTRY(void*, jni_GetPrimitiveArrayCritical(JNIEnv *env, jarray array, jboole
   } else {
     type = TypeArrayKlass::cast(a->klass())->element_type();
   }
-  void* ret = arrayOop(a)->base(type);
-  return ret;
+  return arrayOop(a)->base(type);
 JNI_END
 
 JNI_ENTRY(void, jni_ReleasePrimitiveArrayCritical(JNIEnv *env, jarray array, void *carray, jint mode))
@@ -2199,8 +1804,7 @@ JNI_END
 
 JNI_ENTRY(jweak, jni_NewWeakGlobalRef(JNIEnv *env, jobject ref))
   Handle ref_handle(thread, JNIHandles::resolve(ref));
-  jweak ret = JNIHandles::make_weak_global(ref_handle);
-  return ret;
+  return JNIHandles::make_weak_global(ref_handle);
 JNI_END
 
 // Must be JNI_ENTRY (with HandleMark)
@@ -2210,8 +1814,7 @@ JNI_END
 
 JNI_QUICK_ENTRY(jboolean, jni_ExceptionCheck(JNIEnv *env))
   jni_check_async_exceptions(thread);
-  jboolean ret = (thread->has_pending_exception()) ? JNI_TRUE : JNI_FALSE;
-  return ret;
+  return (thread->has_pending_exception()) ? JNI_TRUE : JNI_FALSE;
 JNI_END
 
 // Initialization state for three routines below relating to
@@ -2270,20 +1873,20 @@ static bool initializeDirectBufferSupport(JNIEnv* env, JavaThread* thread) {
       directBufferSupportInitializeFailed = 1;
       return false;
     }
-    directBufferAddressField    = env->GetFieldID(bufferClass, "address", "J");
+    directBufferAddressField = env->GetFieldID(bufferClass, "address", "J");
     if (env->ExceptionCheck()) {
       env->ExceptionClear();
       directBufferSupportInitializeFailed = 1;
       return false;
     }
-    bufferCapacityField         = env->GetFieldID(bufferClass, "capacity", "I");
+    bufferCapacityField = env->GetFieldID(bufferClass, "capacity", "I");
     if (env->ExceptionCheck()) {
       env->ExceptionClear();
       directBufferSupportInitializeFailed = 1;
       return false;
     }
 
-    if ((directByteBufferConstructor == NULL) || (directBufferAddressField    == NULL) || (bufferCapacityField         == NULL)) {
+    if ((directByteBufferConstructor == NULL) || (directBufferAddressField == NULL) || (bufferCapacityField == NULL)) {
       directBufferSupportInitializeFailed = 1;
       return false;
     }
@@ -2313,20 +1916,13 @@ extern "C" jobject JNICALL jni_NewDirectByteBuffer(JNIEnv *env, void* address, j
   jlong addr = (jlong) ((uintptr_t) address);
   // NOTE that package-private DirectByteBuffer constructor currently
   // takes int capacity
-  jint  cap  = (jint)  capacity;
-  jobject ret = env->NewObject(directByteBufferClass, directByteBufferConstructor, addr, cap);
-  return ret;
+  jint cap = (jint) capacity;
+  return env->NewObject(directByteBufferClass, directByteBufferConstructor, addr, cap);
 }
 
-DT_RETURN_MARK_DECL(GetDirectBufferAddress, void*, );
-
-extern "C" void* JNICALL jni_GetDirectBufferAddress(JNIEnv *env, jobject buf)
-{
+extern "C" void* JNICALL jni_GetDirectBufferAddress(JNIEnv *env, jobject buf) {
   // thread_from_jni_environment() will block if VM is gone.
   JavaThread* thread = JavaThread::thread_from_jni_environment(env);
-
-  void* ret = NULL;
-  DT_RETURN_MARK(GetDirectBufferAddress, void*, (const void*&)ret);
 
   if (!directBufferSupportInitializeEnded) {
     if (!initializeDirectBufferSupport(env, thread)) {
@@ -2338,24 +1934,16 @@ extern "C" void* JNICALL jni_GetDirectBufferAddress(JNIEnv *env, jobject buf)
     return 0;
   }
 
-  ret = (void*)(intptr_t)env->GetLongField(buf, directBufferAddressField);
-  return ret;
+  return (void*)(intptr_t)env->GetLongField(buf, directBufferAddressField);
 }
 
-DT_RETURN_MARK_DECL(GetDirectBufferCapacity, jlong, );
-
-extern "C" jlong JNICALL jni_GetDirectBufferCapacity(JNIEnv *env, jobject buf)
-{
+extern "C" jlong JNICALL jni_GetDirectBufferCapacity(JNIEnv *env, jobject buf) {
   // thread_from_jni_environment() will block if VM is gone.
   JavaThread* thread = JavaThread::thread_from_jni_environment(env);
 
-  jlong ret = -1;
-  DT_RETURN_MARK(GetDirectBufferCapacity, jlong, (const jlong&)ret);
-
   if (!directBufferSupportInitializeEnded) {
     if (!initializeDirectBufferSupport(env, thread)) {
-      ret = 0;
-      return ret;
+      return 0;
     }
   }
 
@@ -2368,8 +1956,7 @@ extern "C" jlong JNICALL jni_GetDirectBufferCapacity(JNIEnv *env, jobject buf)
   }
 
   // NOTE that capacity is currently an int in the implementation
-  ret = env->GetIntField(buf, bufferCapacityField);
-  return ret;
+  return env->GetIntField(buf, bufferCapacityField);
 }
 
 JNI_LEAF(jint, jni_GetVersion(JNIEnv *env))
@@ -2682,7 +2269,7 @@ struct JNINativeInterface_ jni_NativeInterface = {
 void copy_jni_function_table(const struct JNINativeInterface_ *new_jni_NativeInterface) {
   intptr_t *a = (intptr_t *) jni_functions();
   intptr_t *b = (intptr_t *) new_jni_NativeInterface;
-  for (uint i=0; i <  sizeof(struct JNINativeInterface_)/sizeof(void *); i++) {
+  for (uint i = 0; i < sizeof(struct JNINativeInterface_) / sizeof(void *); i++) {
     Atomic::store(*b++, a++);
   }
 }
@@ -2758,12 +2345,9 @@ struct JavaVM_ main_vm = { &jni_InvokeInterface };
 #define JAVASTACKSIZE (400 * 1024)    /* Default size of a thread java stack */
 enum { VERIFY_NONE, VERIFY_REMOTE, VERIFY_ALL };
 
-DT_RETURN_MARK_DECL(GetDefaultJavaVMInitArgs, jint, );
-
 _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_GetDefaultJavaVMInitArgs(void *args_) {
   JDK1_1InitArgs *args = (JDK1_1InitArgs *)args_;
   jint ret = JNI_ERR;
-  DT_RETURN_MARK(GetDefaultJavaVMInitArgs, jint, (const jint&)ret);
 
   if (Threads::is_supported_jni_version(args->version)) {
     ret = JNI_OK;
@@ -2780,12 +2364,8 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_GetDefaultJavaVMInitArgs(void *args_) {
   return ret;
 }
 
-DT_RETURN_MARK_DECL(CreateJavaVM, jint, );
-
 static jint JNI_CreateJavaVM_inner(JavaVM **vm, void **penv, void *args) {
-
   jint result = JNI_ERR;
-  DT_RETURN_MARK(CreateJavaVM, jint, (const jint&)result);
 
   // At the moment it's only possible to have one Java VM,
   // since some of the runtime state is in global variables.
@@ -2898,12 +2478,8 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_GetCreatedJavaVMs(JavaVM **vm_buf, jsize
 }
 
 extern "C" {
-
-DT_RETURN_MARK_DECL(DestroyJavaVM, jint, );
-
 static jint JNICALL jni_DestroyJavaVM_inner(JavaVM *vm) {
   jint res = JNI_ERR;
-  DT_RETURN_MARK(DestroyJavaVM, jint, (const jint&)res);
 
   if (vm_created == 0) {
     res = JNI_ERR;
@@ -3025,8 +2601,7 @@ static jint attach_current_thread(JavaVM *vm, void **penv, void *_args, bool dae
   thread->set_done_attaching_via_jni();
 
   // Set java thread status.
-  java_lang_Thread::set_thread_status(thread->threadObj(),
-              java_lang_Thread::RUNNABLE);
+  java_lang_Thread::set_thread_status(thread->threadObj(), java_lang_Thread::RUNNABLE);
 
   post_thread_start_event(thread);
 
@@ -3049,9 +2624,7 @@ jint JNICALL jni_AttachCurrentThread(JavaVM *vm, void **penv, void *_args) {
   if (vm_created == 0) {
     return JNI_ERR;
   }
-
-  jint ret = attach_current_thread(vm, penv, _args, false);
-  return ret;
+  return attach_current_thread(vm, penv, _args, false);
 }
 
 jint JNICALL jni_DetachCurrentThread(JavaVM *vm) {
@@ -3087,16 +2660,10 @@ jint JNICALL jni_DetachCurrentThread(JavaVM *vm) {
   return JNI_OK;
 }
 
-DT_RETURN_MARK_DECL(GetEnv, jint, );
-
 jint JNICALL jni_GetEnv(JavaVM *vm, void **penv, jint version) {
-  jint ret = JNI_ERR;
-  DT_RETURN_MARK(GetEnv, jint, (const jint&)ret);
-
   if (vm_created == 0) {
     *penv = NULL;
-    ret = JNI_EDETACHED;
-    return ret;
+    return JNI_EDETACHED;
   }
 
 #ifndef JVMPI_VERSION_1
@@ -3110,23 +2677,18 @@ jint JNICALL jni_GetEnv(JavaVM *vm, void **penv, jint version) {
   if (thread != NULL && thread->is_Java_thread()) {
     if (Threads::is_supported_jni_version_including_1_1(version)) {
       *(JNIEnv**)penv = ((JavaThread*) thread)->jni_environment();
-      ret = JNI_OK;
-      return ret;
-
+      return JNI_OK;
     } else if (version == JVMPI_VERSION_1 || version == JVMPI_VERSION_1_1 || version == JVMPI_VERSION_1_2) {
       tty->print_cr("ERROR: JVMPI, an experimental interface, is no longer supported.");
       tty->print_cr("Please use the supported interface: the JVM Tool Interface (JVM TI).");
-      ret = JNI_EVERSION;
-      return ret;
+      return JNI_EVERSION;
     } else {
       *penv = NULL;
-      ret = JNI_EVERSION;
-      return ret;
+      return JNI_EVERSION;
     }
   } else {
     *penv = NULL;
-    ret = JNI_EDETACHED;
-    return ret;
+    return JNI_EDETACHED;
   }
 }
 
@@ -3134,9 +2696,7 @@ jint JNICALL jni_AttachCurrentThreadAsDaemon(JavaVM *vm, void **penv, void *_arg
   if (vm_created == 0) {
     return JNI_ERR;
   }
-
-  jint ret = attach_current_thread(vm, penv, _args, true);
-  return ret;
+  return attach_current_thread(vm, penv, _args, true);
 }
 }
 

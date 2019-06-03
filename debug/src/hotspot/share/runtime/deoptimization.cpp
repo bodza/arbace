@@ -118,7 +118,6 @@ JRT_END
 
 // This is factored, since it is both called from a JRT_LEAF (deoptimization) and a JRT_ENTRY (uncommon_trap)
 Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread* thread, int exec_mode) {
-
   // Note: there is a safepoint safety issue here. No matter whether we enter
   // via vanilla deopt or uncommon trap we MUST NOT stop at a safepoint once
   // the vframeArray is created.
@@ -383,7 +382,6 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
 // Called to cleanup deoptimization data structures in normal case
 // after unpacking to stack and when stack overflow error occurs
 void Deoptimization::cleanup_deopt_info(JavaThread *thread, vframeArray *array) {
-
   // Get array if coming from exception
   if (array == NULL) {
     array = thread->vframe_array_head();
@@ -419,7 +417,6 @@ void Deoptimization::cleanup_deopt_info(JavaThread *thread, vframeArray *array) 
 // Moved from cpu directories because none of the cpus has callee save values.
 // If a cpu implements callee save values, move this to deoptimization_<cpu>.cpp.
 void Deoptimization::unwind_callee_save_values(frame* f, vframeArray* vframe_array) {
-
   // This code is sort of the equivalent of C2IAdapter::setup_stack_frame back in
   // the days we had adapter frames. When we deoptimize a situation where a
   // compiled caller calls a compiled caller will have registers it expects
@@ -871,7 +868,6 @@ void Deoptimization::revoke_biases_of_monitors(CodeBlob* cb) {
 }
 
 void Deoptimization::deoptimize_single_frame(JavaThread* thread, frame fr, Deoptimization::DeoptReason reason) {
-
   gather_statistics(reason, Action_none, Bytecodes::_illegal);
 
   // Patch the compiled method so that when execution returns to it we will
@@ -1435,7 +1431,6 @@ Deoptimization::UnrollBlock* Deoptimization::uncommon_trap(JavaThread* thread, j
 const int DS_REASON_MASK   = ((uint)DataLayout::trap_mask) >> 1;
 const int DS_RECOMPILE_BIT = DataLayout::trap_mask - DS_REASON_MASK;
 
-//---------------------------trap_state_reason---------------------------------
 Deoptimization::DeoptReason
 Deoptimization::trap_state_reason(int trap_state) {
   int recompile_bit = (trap_state & DS_RECOMPILE_BIT);
@@ -1446,7 +1441,7 @@ Deoptimization::trap_state_reason(int trap_state) {
     return (DeoptReason)trap_state;
   }
 }
-//-------------------------trap_state_has_reason-------------------------------
+
 int Deoptimization::trap_state_has_reason(int trap_state, int reason) {
   int recompile_bit = (trap_state & DS_RECOMPILE_BIT);
   trap_state -= recompile_bit;
@@ -1460,7 +1455,7 @@ int Deoptimization::trap_state_has_reason(int trap_state, int reason) {
     return 0;   // false, definitely
   }
 }
-//-------------------------trap_state_add_reason-------------------------------
+
 int Deoptimization::trap_state_add_reason(int trap_state, int reason) {
   int recompile_bit = (trap_state & DS_RECOMPILE_BIT);
   trap_state -= recompile_bit;
@@ -1474,40 +1469,16 @@ int Deoptimization::trap_state_add_reason(int trap_state, int reason) {
     return DS_REASON_MASK + recompile_bit;  // fall to state lattice bottom
   }
 }
-//-----------------------trap_state_is_recompiled------------------------------
+
 bool Deoptimization::trap_state_is_recompiled(int trap_state) {
   return (trap_state & DS_RECOMPILE_BIT) != 0;
 }
-//-----------------------trap_state_set_recompiled-----------------------------
+
 int Deoptimization::trap_state_set_recompiled(int trap_state, bool z) {
   if (z)  return trap_state |  DS_RECOMPILE_BIT;
   else    return trap_state & ~DS_RECOMPILE_BIT;
 }
-//---------------------------format_trap_state---------------------------------
-// This is used for debugging and diagnostics, including NULL output.
-const char* Deoptimization::format_trap_state(char* buf, size_t buflen, int trap_state) {
-  DeoptReason reason      = trap_state_reason(trap_state);
-  bool        recomp_flag = trap_state_is_recompiled(trap_state);
-  // Re-encode the state from its decoded components.
-  int decoded_state = 0;
-  if (reason_is_recorded_per_bytecode(reason) || reason == Reason_many)
-    decoded_state = trap_state_add_reason(decoded_state, reason);
-  if (recomp_flag)
-    decoded_state = trap_state_set_recompiled(decoded_state, recomp_flag);
-  // If the state re-encodes properly, format it symbolically.
-  // Because this routine is used for debugging and diagnostics,
-  // be robust even if the state is a strange value.
-  size_t len;
-  if (decoded_state != trap_state) {
-    // Random buggy state that doesn't decode??
-    len = jio_snprintf(buf, buflen, "#%d", trap_state);
-  } else {
-    len = jio_snprintf(buf, buflen, "%s%s", trap_reason_name(reason), recomp_flag ? " recompiled" : "");
-  }
-  return buf;
-}
 
-//--------------------------------statics--------------------------------------
 const char* Deoptimization::_trap_reason_name[] = {
   // Note:  Keep this in sync. with enum DeoptReason.
   "none",
@@ -1552,10 +1523,8 @@ const char* Deoptimization::_trap_action_name[] = {
 };
 
 const char* Deoptimization::trap_reason_name(int reason) {
-  // Check that every reason has a name
-  STATIC_ASSERT(sizeof(_trap_reason_name)/sizeof(const char*) == Reason_LIMIT);
-
-  if (reason == Reason_many)  return "many";
+  if (reason == Reason_many)
+    return "many";
   if ((uint)reason < Reason_LIMIT)
     return _trap_reason_name[reason];
   static char buf[20];
@@ -1564,28 +1533,10 @@ const char* Deoptimization::trap_reason_name(int reason) {
 }
 
 const char* Deoptimization::trap_action_name(int action) {
-  // Check that every action has a name
-  STATIC_ASSERT(sizeof(_trap_action_name)/sizeof(const char*) == Action_LIMIT);
-
   if ((uint)action < Action_LIMIT)
     return _trap_action_name[action];
   static char buf[20];
   sprintf(buf, "action%d", action);
-  return buf;
-}
-
-// This is used for debugging and diagnostics, including NULL output.
-const char* Deoptimization::format_trap_request(char* buf, size_t buflen, int trap_request) {
-  jint unloaded_class_index = trap_request_index(trap_request);
-  const char* reason = trap_reason_name(trap_request_reason(trap_request));
-  const char* action = trap_action_name(trap_request_action(trap_request));
-  int debug_id = trap_request_debug_id(trap_request);
-  size_t len;
-  if (unloaded_class_index < 0) {
-    len = jio_snprintf(buf, buflen, "reason='%s' action='%s' debug_id='%d'", reason, action, debug_id);
-  } else {
-    len = jio_snprintf(buf, buflen, "reason='%s' action='%s' index='%d' debug_id='%d'", reason, action, unloaded_class_index, debug_id);
-  }
   return buf;
 }
 

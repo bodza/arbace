@@ -414,7 +414,6 @@ class Instruction: public CompilationResourceObj {
   void unpin(PinReason reason)                   { _pin_state &= ~reason; }
 
   Instruction* set_next(Instruction* next) {
-
     BlockBegin *block = this->block();
     next->_block = block;
 
@@ -581,21 +580,21 @@ LEAF(Phi, Instruction)
   };
 
   // accessors
-  bool  is_local() const          { return _index >= 0; }
-  bool  is_on_stack() const       { return !is_local(); }
-  int   local_index() const       { return _index; }
-  int   stack_index() const       { return -(_index+1); }
+  bool is_local() const     { return _index >= 0; }
+  bool is_on_stack() const  { return !is_local(); }
+  int  local_index() const  { return _index; }
+  int  stack_index() const  { return -(_index+1); }
 
   Value operand_at(int i) const;
-  int   operand_count() const;
+  int  operand_count() const;
 
-  void   set(Flag f)              { _pf_flags |=  f; }
-  void   clear(Flag f)            { _pf_flags &= ~f; }
-  bool   is_set(Flag f) const     { return (_pf_flags & f) != 0; }
+  void set(Flag f)          { _pf_flags |=  f; }
+  void clear(Flag f)        { _pf_flags &= ~f; }
+  bool is_set(Flag f) const { return (_pf_flags & f) != 0; }
 
   // Invalidates phis corresponding to merges of locals of two different types
   // (these should never be referenced, otherwise the bytecodes are illegal)
-  void   make_illegal() {
+  void make_illegal() {
     set(cannot_simplify);
     set_type(illegalType);
   }
@@ -1523,7 +1522,7 @@ LEAF(BlockBegin, StateSplit)
   }
 
   // initialization/counting
-  static int  number_of_blocks() {
+  static int number_of_blocks() {
     return Compilation::current()->number_of_blocks();
   }
 

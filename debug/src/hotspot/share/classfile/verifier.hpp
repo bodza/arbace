@@ -27,10 +27,9 @@ class Verifier : AllStatic {
    * error.
    */
   static void log_end_verification(outputStream* st, const char* klassName, Symbol* exception_name, TRAPS);
-  static bool verify(InstanceKlass* klass, Mode mode, bool should_verify_class, TRAPS);
+  static bool verify(InstanceKlass* klass, Mode mode, bool false, TRAPS);
 
  private:
-  static bool is_eligible_for_verification(InstanceKlass* klass, bool should_verify_class);
   static Symbol* inference_verify(InstanceKlass* klass, char* msg, size_t msg_len, TRAPS);
 };
 

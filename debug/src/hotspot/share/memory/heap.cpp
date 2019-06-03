@@ -63,23 +63,19 @@ void CodeHeap::on_code_mapping(char* base, size_t size) {
 }
 
 bool CodeHeap::reserve(ReservedSpace rs, size_t committed_size, size_t segment_size) {
-
-  _segment_size      = segment_size;
+  _segment_size = segment_size;
   _log2_segment_size = exact_log2(segment_size);
 
   // Reserve and initialize space for _memory.
   size_t page_size = os::vm_page_size();
   if (os::can_execute_large_page_memory()) {
     const size_t min_pages = 8;
-    page_size = MIN2(os::page_size_for_region_aligned(committed_size, min_pages),
-                     os::page_size_for_region_aligned(rs.size(), min_pages));
+    page_size = MIN2(os::page_size_for_region_aligned(committed_size, min_pages), os::page_size_for_region_aligned(rs.size(), min_pages));
   }
 
   const size_t granularity = os::vm_allocation_granularity();
   const size_t c_size = align_up(committed_size, page_size);
 
-  os::trace_page_sizes(_name, committed_size, rs.size(), page_size,
-                       rs.base(), rs.size());
   if (!_memory.initialize(rs, c_size)) {
     return false;
   }
@@ -321,7 +317,6 @@ FreeBlock* CodeHeap::following_block(FreeBlock *b) {
 
 // Inserts block b after a
 void CodeHeap::insert_after(FreeBlock* a, FreeBlock* b) {
-
   // Link b into the list after a
   b->set_link(a->link());
   a->set_link(b);

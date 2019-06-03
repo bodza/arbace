@@ -166,8 +166,7 @@ class decode_env {
   void print_address(address value);
 
  public:
-  decode_env(CodeBlob* code, outputStream* output,
-             CodeStrings c = CodeStrings(), ptrdiff_t offset = 0);
+  decode_env(CodeBlob* code, outputStream* output, CodeStrings c = CodeStrings(), ptrdiff_t offset = 0);
 
   address decode_instructions(address start, address end);
 
@@ -197,8 +196,7 @@ class decode_env {
   const char* options() { return _option_buf; }
 };
 
-decode_env::decode_env(CodeBlob* code, outputStream* output, CodeStrings c,
-                       ptrdiff_t offset) {
+decode_env::decode_env(CodeBlob* code, outputStream* output, CodeStrings c, ptrdiff_t offset) {
   memset(this, 0, sizeof(*this)); // Beware, this zeroes bits of fields.
   _output = output ? output : tty;
   _code = code;

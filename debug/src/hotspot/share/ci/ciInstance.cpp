@@ -72,7 +72,6 @@ ciConstant ciInstance::field_value_impl(BasicType field_btype, int offset) {
 //
 // Constant value of a field.
 ciConstant ciInstance::field_value(ciField* field) {
-
   GUARDED_VM_ENTRY(return field_value_impl(field->type()->basic_type(), field->offset());)
 }
 

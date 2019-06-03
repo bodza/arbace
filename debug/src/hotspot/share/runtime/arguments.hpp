@@ -1,8 +1,6 @@
 #ifndef SHARE_VM_RUNTIME_ARGUMENTS_HPP
 #define SHARE_VM_RUNTIME_ARGUMENTS_HPP
 
-#include "logging/logLevel.hpp"
-#include "logging/logTag.hpp"
 #include "memory/allocation.hpp"
 #include "runtime/flags/jvmFlag.hpp"
 #include "runtime/java.hpp"
@@ -195,19 +193,6 @@ class AgentLibraryList {
 // Helper class for controlling the lifetime of JavaVMInitArgs objects.
 class ScopedVMInitArgs;
 
-// Most logging functions require 5 tags. Some of them may be _NO_TAG.
-typedef struct {
-  const char* alias_name;
-  LogLevelType level;
-  bool exactMatch;
-  LogTagType tag0;
-  LogTagType tag1;
-  LogTagType tag2;
-  LogTagType tag3;
-  LogTagType tag4;
-  LogTagType tag5;
-} AliasedLoggingFlag;
-
 class Arguments : AllStatic {
   friend class VMStructs;
   friend class CodeCacheExtensions;
@@ -243,7 +228,6 @@ class Arguments : AllStatic {
   };
 
  private:
-
   // a pointer to the flags file name if it is specified
   static char*  _jvm_flags_file;
   // an array containing all flags specified in the .hotspotrc file
@@ -301,8 +285,6 @@ class Arguments : AllStatic {
   // was this VM created via the -XXaltjvm=<path> option
   static bool   _sun_java_launcher_is_altjvm;
 
-  // Option flags
-  static const char*  _gc_log_filename;
   // Value of the conservative maximum heap alignment needed
   static size_t  _conservative_max_heap_alignment;
 
@@ -328,11 +310,6 @@ class Arguments : AllStatic {
   static void set_java_compiler(bool arg) { _java_compiler = arg; }
   static bool java_compiler()   { return _java_compiler; }
 
-  // -Xdebug flag
-  static bool _xdebug_mode;
-  static void set_xdebug_mode(bool arg) { _xdebug_mode = arg; }
-  static bool xdebug_mode()             { return _xdebug_mode; }
-
   // preview features
   static bool _enable_preview;
 
@@ -350,7 +327,6 @@ class Arguments : AllStatic {
   static void set_use_compressed_oops();
   static void set_use_compressed_klass_ptrs();
   static jint set_ergonomics_flags();
-  static void set_shared_spaces_flags();
   // limits the given memory size by the maximum amount of memory this process is
   // currently allowed to allocate or reserve.
   static julong limit_by_allocatable_memory(julong size);
@@ -372,9 +348,6 @@ class Arguments : AllStatic {
   static bool create_numbered_property(const char* prop_base_name, const char* prop_value, unsigned int count);
 
   static int process_patch_mod_option(const char* patch_mod_tail, bool* patch_mod_javabase);
-
-  // Aggressive optimization flags.
-  static jint set_aggressive_opts_flags();
 
   static jint set_aggressive_heap_flags();
 
@@ -398,8 +371,6 @@ class Arguments : AllStatic {
   static bool args_contains_vm_options_file_arg(const JavaVMInitArgs* args);
   static jint expand_vm_options_as_needed(const JavaVMInitArgs* args_in, ScopedVMInitArgs* mod_args, JavaVMInitArgs** args_out);
   static jint match_special_option_and_act(const JavaVMInitArgs* args, ScopedVMInitArgs* args_out);
-
-  static bool handle_deprecated_print_gc_flags();
 
   static void handle_extra_cms_flags(const char* msg);
 
@@ -445,10 +416,6 @@ class Arguments : AllStatic {
   // Return the "real" name for option arg if arg is an alias, and print a warning if arg is deprecated.
   // Return NULL if the arg has expired.
   static const char* handle_aliases_and_deprecation(const char* arg, bool warn);
-  static bool lookup_logging_aliases(const char* arg, char* buffer);
-  static AliasedLoggingFlag catch_logging_aliases(const char* name, bool on);
-
-  static char*  SharedArchivePath;
 
  public:
   // Parses the arguments, first phase
@@ -518,9 +485,10 @@ class Arguments : AllStatic {
   // -Xrun
   static AgentLibrary* libraries()          { return _libraryList.first(); }
   static bool init_libraries_at_startup()   { return !_libraryList.is_empty(); }
-  static void convert_library_to_agent(AgentLibrary* lib)
-                                            { _libraryList.remove(lib);
-                                              _agentList.add(lib); }
+  static void convert_library_to_agent(AgentLibrary* lib) {
+    _libraryList.remove(lib);
+    _agentList.add(lib);
+  }
 
   // -agentlib -agentpath
   static AgentLibrary* agents()             { return _agentList.first(); }
@@ -530,8 +498,6 @@ class Arguments : AllStatic {
   static abort_hook_t    abort_hook()       { return _abort_hook; }
   static exit_hook_t     exit_hook()        { return _exit_hook; }
   static vfprintf_hook_t vfprintf_hook()    { return _vfprintf_hook; }
-
-  static const char* GetSharedArchivePath() { return SharedArchivePath; }
 
   // Java launcher properties
   static void process_sun_java_launcher_properties(JavaVMInitArgs* args);
@@ -621,6 +587,6 @@ do { \
     } \
     FLAG_SET_DEFAULT(opt, false); \
   } \
-} while(0)
+} while (false)
 
 #endif

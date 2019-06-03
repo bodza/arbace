@@ -27,11 +27,11 @@ class oopFactory: AllStatic {
   static typeArrayOop    new_longArray  (int length, TRAPS) { return TypeArrayKlass::cast(Universe::longArrayKlassObj  ())->allocate(length, THREAD); }
 
   // create java.lang.Object[]
-  static objArrayOop     new_objectArray(int length, TRAPS)  {
+  static objArrayOop     new_objectArray(int length, TRAPS) {
     return ObjArrayKlass::cast(Universe::objectArrayKlassObj())->allocate(length, THREAD);
   }
 
-  static typeArrayOop    new_charArray           (const char* utf8_str,  TRAPS);
+  static typeArrayOop    new_charArray(const char* utf8_str,  TRAPS);
   static typeArrayOop    new_tenured_charArray(int length, TRAPS);
 
   static typeArrayOop    new_typeArray(BasicType type, int length, TRAPS);

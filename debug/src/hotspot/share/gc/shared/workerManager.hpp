@@ -45,9 +45,5 @@ class WorkerManager : public AllStatic {
 
     return created_workers;
   }
-
-  // Log (at trace level) a change in the number of created workers.
-  template <class WorkerType>
-  static void log_worker_creation(WorkerType* holder, uint previous_created_workers, uint active_workers, uint created_workers, bool initializing) { }
 };
 #endif

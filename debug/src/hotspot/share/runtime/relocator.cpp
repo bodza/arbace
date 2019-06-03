@@ -138,7 +138,6 @@ methodHandle Relocator::insert_space_at(int bci, int size, u_char inst_buffer[],
 }
 
 bool Relocator::handle_code_changes() {
-
   while (!_changes->is_empty()) {
     // Inv: everything is aligned.
     ChangeItem* ci = _changes->first();
@@ -241,7 +240,7 @@ void Relocator::change_jump(int bci, int offset, bool is_short, int break_bci, i
   int bci_delta = (is_short) ? short_at(offset) : int_at(offset);
   int targ = bci + bci_delta;
 
-  if ((bci <= break_bci && targ >  break_bci) || (bci >  break_bci && targ <= break_bci)) {
+  if ((bci <= break_bci && targ > break_bci) || (bci > break_bci && targ <= break_bci)) {
     int new_delta;
     if (bci_delta > 0)
       new_delta = bci_delta + delta;
@@ -536,7 +535,7 @@ bool Relocator::expand_code_array(int delta) {
 // change items as necessary.
 bool Relocator::relocate_code(int bci, int ilen, int delta) {
   int next_bci = bci + ilen;
-  if (delta > 0 && code_length() + delta > code_array_length())  {
+  if (delta > 0 && code_length() + delta > code_array_length()) {
     // Expand allocated code space, if necessary.
     if (!expand_code_array(delta)) {
           return false;

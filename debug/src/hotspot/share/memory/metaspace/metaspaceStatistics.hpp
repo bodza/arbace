@@ -8,7 +8,6 @@
 class outputStream;
 
 namespace metaspace {
-
 // Contains statistics for a number of free chunks.
 class FreeChunksStatistics {
   uintx _num;         // Number of chunks
@@ -25,16 +24,13 @@ public:
   void add(uintx n, size_t s);
   void add(const FreeChunksStatistics& other);
   void print_on(outputStream* st, size_t scale) const;
-
-}; // end: FreeChunksStatistics
+};
 
 // Contains statistics for a ChunkManager.
 class ChunkManagerStatistics {
-
   FreeChunksStatistics _chunk_stats[NumberOfInUseLists];
 
 public:
-
   // Free chunk statistics, by chunk index.
   const FreeChunksStatistics& chunk_stats(ChunkIndex index) const   { return _chunk_stats[index]; }
   FreeChunksStatistics& chunk_stats(ChunkIndex index)               { return _chunk_stats[index]; }
@@ -43,8 +39,7 @@ public:
   size_t total_capacity() const;
 
   void print_on(outputStream* st, size_t scale) const;
-
-}; // ChunkManagerStatistics
+};
 
 // Contains statistics for a number of chunks in use.
 // Each chunk has a used and free portion; however, there are current chunks (serving
@@ -59,7 +54,6 @@ class UsedChunksStatistics {
   size_t _overhead; // Total sum of chunk overheads, in words.
 
 public:
-
   UsedChunksStatistics();
 
   void reset();
@@ -91,18 +85,15 @@ public:
   void add(const UsedChunksStatistics& other);
 
   void print_on(outputStream* st, size_t scale) const;
-
-}; // UsedChunksStatistics
+};
 
 // Class containing statistics for one or more space managers.
 class SpaceManagerStatistics {
-
   UsedChunksStatistics _chunk_stats[NumberOfInUseLists];
   uintx _free_blocks_num;
   size_t _free_blocks_cap_words;
 
 public:
-
   SpaceManagerStatistics();
 
   // Chunk statistics by chunk index
@@ -122,15 +113,12 @@ public:
   void add(const SpaceManagerStatistics& other);
 
   void print_on(outputStream* st, size_t scale,  bool detailed) const;
-
-}; // SpaceManagerStatistics
+};
 
 class ClassLoaderMetaspaceStatistics {
-
   SpaceManagerStatistics _sm_stats[Metaspace::MetadataTypeCount];
 
 public:
-
   ClassLoaderMetaspaceStatistics();
 
   const SpaceManagerStatistics& sm_stats(Metaspace::MetadataType mdType) const { return _sm_stats[mdType]; }
@@ -149,8 +137,7 @@ public:
   SpaceManagerStatistics totals() const;
 
   void print_on(outputStream* st, size_t scale, bool detailed) const;
-
-}; // ClassLoaderMetaspaceStatistics
+};
 }
 
 #endif

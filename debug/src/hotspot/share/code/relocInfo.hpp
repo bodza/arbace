@@ -1147,7 +1147,6 @@ class trampoline_stub_Relocation : public Relocation {
   trampoline_stub_Relocation() { }
 
  public:
-
   // Return the address of the NativeCall that owns the trampoline.
   address owner() { return _owner; }
 

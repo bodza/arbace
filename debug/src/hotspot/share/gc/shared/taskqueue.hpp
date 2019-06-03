@@ -333,7 +333,6 @@ protected:
   void sleep(uint millis);
 
 public:
-
   // "n_threads" is the number of threads to be terminated.  "queue_set" is a
   // queue sets of work queues of other threads.
   ParallelTaskTerminator(uint n_threads, TaskQueueSetSuper* queue_set);

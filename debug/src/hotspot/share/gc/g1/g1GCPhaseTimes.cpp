@@ -7,8 +7,6 @@
 #include "gc/g1/g1StringDedup.hpp"
 #include "gc/shared/workerDataArray.inline.hpp"
 #include "memory/resourceArea.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "runtime/timer.hpp"
 #include "runtime/os.hpp"
 #include "utilities/macros.hpp"
@@ -216,14 +214,7 @@ size_t G1GCPhaseTimes::sum_thread_work_items(GCParPhases phase, uint index) {
 }
 
 template <class T>
-void G1GCPhaseTimes::details(T* phase, const char* indent) const {
-  LogTarget(Trace, gc, phases, task) lt;
-  if (lt.is_enabled()) {
-    LogStream ls(lt);
-    ls.print("%s", indent);
-    phase->print_details_on(&ls);
-  }
-}
+void G1GCPhaseTimes::details(T* phase, const char* indent) const { }
 
 void G1GCPhaseTimes::log_phase(WorkerDataArray<double>* phase, uint indent, outputStream* out, bool print_sum) const {
   out->print("%s", Indents[indent]);
@@ -240,44 +231,12 @@ void G1GCPhaseTimes::log_phase(WorkerDataArray<double>* phase, uint indent, outp
   }
 }
 
-void G1GCPhaseTimes::debug_phase(WorkerDataArray<double>* phase) const {
-  LogTarget(Debug, gc, phases) lt;
-  if (lt.is_enabled()) {
-    ResourceMark rm;
-    LogStream ls(lt);
-    log_phase(phase, 2, &ls, true);
-  }
-}
-
-void G1GCPhaseTimes::trace_phase(WorkerDataArray<double>* phase, bool print_sum) const {
-  LogTarget(Trace, gc, phases) lt;
-  if (lt.is_enabled()) {
-    LogStream ls(lt);
-    log_phase(phase, 3, &ls, print_sum);
-  }
-}
-
-#define TIME_FORMAT "%.1lfms"
-
+void G1GCPhaseTimes::debug_phase(WorkerDataArray<double>* phase) const { }
+void G1GCPhaseTimes::trace_phase(WorkerDataArray<double>* phase, bool print_sum) const { }
 void G1GCPhaseTimes::info_time(const char* name, double value) const { }
-
 void G1GCPhaseTimes::debug_time(const char* name, double value) const { }
-
-void G1GCPhaseTimes::debug_time_for_reference(const char* name, double value) const {
-  LogTarget(Debug, gc, phases) lt;
-  LogTarget(Debug, gc, phases, ref) lt2;
-
-  if (lt.is_enabled()) {
-    LogStream ls(lt);
-    ls.print_cr("%s%s: " TIME_FORMAT, Indents[2], name, value);
-  } else if (lt2.is_enabled()) {
-    LogStream ls(lt2);
-    ls.print_cr("%s%s: " TIME_FORMAT, Indents[2], name, value);
-  }
-}
-
+void G1GCPhaseTimes::debug_time_for_reference(const char* name, double value) const { }
 void G1GCPhaseTimes::trace_time(const char* name, double value) const { }
-
 void G1GCPhaseTimes::trace_count(const char* name, size_t value) const { }
 
 double G1GCPhaseTimes::print_pre_evacuate_collection_set() const {

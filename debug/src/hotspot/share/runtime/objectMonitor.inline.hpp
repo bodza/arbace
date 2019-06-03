@@ -33,7 +33,6 @@ inline void* ObjectMonitor::owner() const {
 }
 
 inline void ObjectMonitor::clear() {
-
   _header = NULL;
   _object = NULL;
 }

@@ -222,7 +222,6 @@ class CodeEmitInfo: public CompilationResourceObj {
   Compilation*  compilation() const              { return scope()->compilation(); }
 
  public:
-
   // use scope from ValueStack
   CodeEmitInfo(ValueStack* stack, XHandlers* exception_handlers, bool deoptimize_on_exception = false);
 

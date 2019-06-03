@@ -24,7 +24,6 @@ class RFrame : public ResourceObj {
   void print(const char* name);
 
  public:
-
   static RFrame* new_RFrame(frame fr, JavaThread* thread, RFrame*const callee);
 
   virtual bool is_interpreted() const     { return false; }

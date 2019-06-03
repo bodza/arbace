@@ -232,7 +232,6 @@ public: // Temporary, can't be private: C++03 11.4/2. Fixed by C++11.
   template<typename Derived> struct FetchAndAdd;
   template<typename Derived> struct AddAndFetch;
 private:
-
   // Support for platforms that implement some variants of add using a
   // (typically out of line) non-template helper function.  The
   // generic arguments passed to PlatformAdd need to be translated to
@@ -289,7 +288,6 @@ private:
 public: // Temporary, can't be private: C++03 11.4/2. Fixed by C++11.
   struct CmpxchgByteUsingInt;
 private:
-
   // Dispatch handler for xchg.  Provides type-based validity
   // checking and limited conversions around calls to the
   // platform-specific implementation layer provided by
@@ -371,7 +369,6 @@ struct Atomic::LoadImpl<
   T operator()(T const volatile* dest) const {
     typedef PrimitiveConversions::Translate<T> Translator;
     typedef typename Translator::Decayed Decayed;
-    STATIC_ASSERT(sizeof(T) == sizeof(Decayed));
     Decayed result = PlatformOp()(reinterpret_cast<Decayed const volatile*>(dest));
     return Translator::recover(result);
   }
@@ -387,7 +384,6 @@ template<size_t byte_size>
 struct Atomic::PlatformLoad {
   template<typename T>
   T operator()(T const volatile* dest) const {
-    STATIC_ASSERT(sizeof(T) <= sizeof(void*)); // wide atomics need specialization
     return *dest;
   }
 };
@@ -440,9 +436,7 @@ struct Atomic::StoreImpl<
   void operator()(T new_value, T volatile* dest) const {
     typedef PrimitiveConversions::Translate<T> Translator;
     typedef typename Translator::Decayed Decayed;
-    STATIC_ASSERT(sizeof(T) == sizeof(Decayed));
-    PlatformOp()(Translator::decay(new_value),
-                 reinterpret_cast<Decayed volatile*>(dest));
+    PlatformOp()(Translator::decay(new_value), reinterpret_cast<Decayed volatile*>(dest));
   }
 };
 
@@ -455,9 +449,7 @@ struct Atomic::StoreImpl<
 template<size_t byte_size>
 struct Atomic::PlatformStore {
   template<typename T>
-  void operator()(T new_value,
-                  T volatile* dest) const {
-    STATIC_ASSERT(sizeof(T) <= sizeof(void*)); // wide atomics need specialization
+  void operator()(T new_value, T volatile* dest) const {
     (void)const_cast<T&>(*dest = new_value);
   }
 };
@@ -480,14 +472,12 @@ struct Atomic::AddAndFetch {
 
 template<typename D>
 inline void Atomic::inc(D volatile* dest, atomic_memory_order order) {
-  STATIC_ASSERT(IsPointer<D>::value || IsIntegral<D>::value);
   typedef typename Conditional<IsPointer<D>::value, ptrdiff_t, D>::type I;
   Atomic::add(I(1), dest, order);
 }
 
 template<typename D>
 inline void Atomic::dec(D volatile* dest, atomic_memory_order order) {
-  STATIC_ASSERT(IsPointer<D>::value || IsIntegral<D>::value);
   typedef typename Conditional<IsPointer<D>::value, ptrdiff_t, D>::type I;
   // Assumes two's complement integer representation.
   #pragma warning(suppress: 4146)
@@ -496,15 +486,11 @@ inline void Atomic::dec(D volatile* dest, atomic_memory_order order) {
 
 template<typename I, typename D>
 inline D Atomic::sub(I sub_value, D volatile* dest, atomic_memory_order order) {
-  STATIC_ASSERT(IsPointer<D>::value || IsIntegral<D>::value);
-  STATIC_ASSERT(IsIntegral<I>::value);
   // If D is a pointer type, use [u]intptr_t as the addend type,
   // matching signedness of I.  Otherwise, use D as the addend type.
   typedef typename Conditional<IsSigned<I>::value, intptr_t, uintptr_t>::type PI;
   typedef typename Conditional<IsPointer<D>::value, PI, D>::type AddendType;
   // Only allow conversions that can't change the value.
-  STATIC_ASSERT(IsSigned<I>::value == IsSigned<AddendType>::value);
-  STATIC_ASSERT(sizeof(I) <= sizeof(AddendType));
   AddendType addend = sub_value;
   // Assumes two's complement integer representation.
   #pragma warning(suppress: 4146) // In case AddendType is not signed.
@@ -590,11 +576,7 @@ struct Atomic::AddImpl<
   typename EnableIf<IsIntegral<I>::value && (sizeof(I) <= sizeof(P*))>::type>
 {
   P* operator()(I add_value, P* volatile* dest, atomic_memory_order order) const {
-    STATIC_ASSERT(sizeof(intptr_t) == sizeof(P*));
-    STATIC_ASSERT(sizeof(uintptr_t) == sizeof(P*));
-    typedef typename Conditional<IsSigned<I>::value,
-                                 intptr_t,
-                                 uintptr_t>::type CI;
+    typedef typename Conditional<IsSigned<I>::value, intptr_t, uintptr_t>::type CI;
     CI addend = add_value;
     return PlatformAdd<sizeof(P*)>()(addend, dest, order);
   }
@@ -719,20 +701,17 @@ struct Atomic::CmpxchgImpl<
   T operator()(T exchange_value, T volatile* dest, T compare_value, atomic_memory_order order) const {
     typedef PrimitiveConversions::Translate<T> Translator;
     typedef typename Translator::Decayed Decayed;
-    STATIC_ASSERT(sizeof(T) == sizeof(Decayed));
     return Translator::recover(cmpxchg(Translator::decay(exchange_value), reinterpret_cast<Decayed volatile*>(dest), Translator::decay(compare_value), order));
   }
 };
 
 template<typename Type, typename Fn, typename T>
 inline T Atomic::cmpxchg_using_helper(Fn fn, T exchange_value, T volatile* dest, T compare_value) {
-  STATIC_ASSERT(sizeof(Type) == sizeof(T));
   return PrimitiveConversions::cast<T>(fn(PrimitiveConversions::cast<Type>(exchange_value), reinterpret_cast<Type volatile*>(dest), PrimitiveConversions::cast<Type>(compare_value)));
 }
 
 template<typename T>
 inline T Atomic::CmpxchgByteUsingInt::operator()(T exchange_value, T volatile* dest, T compare_value, atomic_memory_order order) const {
-  STATIC_ASSERT(sizeof(T) == sizeof(uint8_t));
   uint8_t canon_exchange_value = exchange_value;
   uint8_t canon_compare_value = compare_value;
   volatile uint32_t* aligned_dest = reinterpret_cast<volatile uint32_t*>(align_down(dest, sizeof(uint32_t)));
@@ -810,14 +789,12 @@ struct Atomic::XchgImpl<
   T operator()(T exchange_value, T volatile* dest, atomic_memory_order order) const {
     typedef PrimitiveConversions::Translate<T> Translator;
     typedef typename Translator::Decayed Decayed;
-    STATIC_ASSERT(sizeof(T) == sizeof(Decayed));
     return Translator::recover(xchg(Translator::decay(exchange_value), reinterpret_cast<Decayed volatile*>(dest), order));
   }
 };
 
 template<typename Type, typename Fn, typename T>
 inline T Atomic::xchg_using_helper(Fn fn, T exchange_value, T volatile* dest) {
-  STATIC_ASSERT(sizeof(Type) == sizeof(T));
   return PrimitiveConversions::cast<T>(fn(PrimitiveConversions::cast<Type>(exchange_value), reinterpret_cast<Type volatile*>(dest)));
 }
 

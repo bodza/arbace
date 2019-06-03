@@ -7,7 +7,6 @@
 #include "utilities/ostream.hpp"
 
 class CodeHeapState : public CHeapObj<mtCode> {
-
  public:
   enum compType {
     noComp = 0,     // must be! due to initialization by memset to zero

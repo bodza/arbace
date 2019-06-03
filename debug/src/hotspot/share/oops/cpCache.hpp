@@ -379,9 +379,7 @@ class ConstantPoolCache: public MetaspaceObj {
                     const intStack& invokedynamic_references_map);
 
   // Initialization
-  void initialize(const intArray& inverse_index_map,
-                  const intArray& invokedynamic_inverse_index_map,
-                  const intArray& invokedynamic_references_map);
+  void initialize(const intArray& inverse_index_map, const intArray& invokedynamic_inverse_index_map, const intArray& invokedynamic_references_map);
  public:
   static ConstantPoolCache* allocate(ClassLoaderData* loader_data, const intStack& cp_cache_map, const intStack& invokedynamic_cp_cache_map, const intStack& invokedynamic_references_map, TRAPS);
   bool is_constantPoolCache() const { return true; }
@@ -413,7 +411,6 @@ class ConstantPoolCache: public MetaspaceObj {
  public:
   int size() const                               { return size(length()); }
  private:
-
   // Helpers
   ConstantPool**        constant_pool_addr()     { return &_constant_pool; }
   ConstantPoolCacheEntry* base() const           { return (ConstantPoolCacheEntry*)((address)this + in_bytes(base_offset())); }

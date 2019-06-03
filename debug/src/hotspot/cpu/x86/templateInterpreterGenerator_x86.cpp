@@ -294,7 +294,6 @@ void TemplateInterpreterGenerator::generate_counter_incr(Label* overflow, Label*
 }
 
 void TemplateInterpreterGenerator::generate_counter_overflow(Label& do_continue) {
-
   // Asm interpreter on entry
   // r14/rdi - locals
   // r13/rsi - bcp
@@ -342,7 +341,6 @@ void TemplateInterpreterGenerator::generate_counter_overflow(Label& do_continue)
 // Kills:
 //      rax
 void TemplateInterpreterGenerator::generate_stack_overflow_check(void) {
-
   // monitor entry size: see picture of stack in frame_x86.hpp
   const int entry_size = frame::interpreter_frame_monitor_size() * wordSize;
 
@@ -648,9 +646,6 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
 
   // start execution
 
-  // jvmti support
-  __ notify_method_entry();
-
   // work registers
   const Register method = rbx;
   const Register thread = r15_thread;
@@ -688,9 +683,7 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
 
   // result handler is in rax
   // set result handler
-  __ movptr(Address(rbp,
-                    (frame::interpreter_frame_result_handler_offset) * wordSize),
-            rax);
+  __ movptr(Address(rbp, (frame::interpreter_frame_result_handler_offset) * wordSize), rax);
 
   // pass mirror handle if static call
   {
@@ -701,11 +694,9 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
     // get mirror
     __ load_mirror(t, method, rax);
     // copy mirror into activation frame
-    __ movptr(Address(rbp, frame::interpreter_frame_oop_temp_offset * wordSize),
-            t);
+    __ movptr(Address(rbp, frame::interpreter_frame_oop_temp_offset * wordSize), t);
     // pass handle to mirror
-    __ lea(c_rarg1,
-           Address(rbp, frame::interpreter_frame_oop_temp_offset * wordSize));
+    __ lea(c_rarg1, Address(rbp, frame::interpreter_frame_oop_temp_offset * wordSize));
     __ bind(L);
   }
 
@@ -733,8 +724,7 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
 
   // Change state to native
 
-  __ movl(Address(thread, JavaThread::thread_state_offset()),
-          _thread_in_native);
+  __ movl(Address(thread, JavaThread::thread_state_offset()), _thread_in_native);
 
   // Call the native method.
   __ call(rax);
@@ -818,9 +808,7 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
     // retrieve result
     __ pop(ltos);
     // Unbox oop result, e.g. JNIHandles::resolve value.
-    __ resolve_jobject(rax /* value */,
-                       thread /* thread */,
-                       t /* tmp */);
+    __ resolve_jobject(rax /* value */, thread /* thread */, t /* tmp */);
     __ movptr(Address(rbp, frame::interpreter_frame_oop_temp_offset*wordSize), rax);
     // keep stack depth as expected by pushing oop which will eventually be discarded
     __ push(ltos);
@@ -829,8 +817,7 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
 
   {
     Label no_reguard;
-    __ cmpl(Address(thread, JavaThread::stack_guard_state_offset()),
-            JavaThread::stack_guard_yellow_reserved_disabled);
+    __ cmpl(Address(thread, JavaThread::stack_guard_state_offset()), JavaThread::stack_guard_yellow_reserved_disabled);
     __ jcc(Assembler::notEqual, no_reguard);
 
     __ pusha(); // XXX only save smashed registers
@@ -902,27 +889,17 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
     __ bind(L);
   }
 
-  // jvmti support
-  // Note: This must happen _after_ handling/throwing any exceptions since
-  //       the exception handler code notifies the runtime of method exits
-  //       too. If this happens before, method entry/exit notifications are
-  //       not properly paired (was bug - gri 11/22/99).
-  __ notify_method_exit(vtos, InterpreterMacroAssembler::NotifyJVMTI);
-
   // restore potential result in edx:eax, call result handler to
   // restore potential result in ST0 & handle result
 
   __ pop(ltos);
    __ pop(dtos);
 
-  __ movptr(t, Address(rbp,
-                       (frame::interpreter_frame_result_handler_offset) * wordSize));
+  __ movptr(t, Address(rbp, (frame::interpreter_frame_result_handler_offset) * wordSize));
   __ call(t);
 
   // remove activation
-  __ movptr(t, Address(rbp,
-                       frame::interpreter_frame_sender_sp_offset *
-                       wordSize)); // get sender sp
+  __ movptr(t, Address(rbp, frame::interpreter_frame_sender_sp_offset * wordSize)); // get sender sp
   __ leave();                                // remove frame anchor
   __ pop(rdi);                               // get return address
   __ mov(rsp, t);                            // set sp to sender sp
@@ -940,7 +917,6 @@ address TemplateInterpreterGenerator::generate_native_entry(bool synchronized) {
 // Abstract method entry
 // Attempt to execute abstract method. Throw exception
 address TemplateInterpreterGenerator::generate_abstract_entry(void) {
-
   address entry_point = __ pc();
 
   // abstract method entry
@@ -1064,9 +1040,6 @@ address TemplateInterpreterGenerator::generate_normal_entry(bool synchronized) {
 
   // start execution
 
-  // jvmti support
-  __ notify_method_entry();
-
   __ dispatch_next(vtos);
 
   // invocation counter overflow
@@ -1175,10 +1148,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
     // Save these arguments
     __ super_call_VM_leaf(CAST_FROM_FN_PTR(address, Deoptimization::popframe_preserve_args), thread, rax, rlocals);
 
-    __ remove_activation(vtos, rdx,
-                         /* throw_monitor_exception */ false,
-                         /* install_monitor_exception */ false,
-                         /* notify_jvmdi */ false);
+    __ remove_activation(vtos, rdx, /* throw_monitor_exception */ false, /* install_monitor_exception */ false, /* notify_jvmdi */ false);
 
     // Inform deoptimization that it is responsible for restoring
     // these arguments

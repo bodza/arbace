@@ -49,7 +49,7 @@ class CompiledICInfo : public StackObj {
  public:
   address entry() const        { return _entry; }
   Metadata*    cached_metadata() const         { return (Metadata*)_cached_value; }
-  CompiledICHolder*    claim_cached_icholder() {
+  CompiledICHolder* claim_cached_icholder() {
     _release_icholder = false;
     CompiledICHolder* icholder = (CompiledICHolder*)_cached_value;
     icholder->claim();

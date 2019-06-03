@@ -102,7 +102,6 @@ class CellTypeState {
          addr_conflict        = addr_bit | info_conflict };
 
  public:
-
   // Since some C++ constructors generate poor code for declarations of the
   // form...
   //
@@ -251,7 +250,6 @@ class BasicBlock: ResourceObj {
 //
 class GenerateOopMap {
  protected:
-
   // _monitor_top is set to this constant to indicate that a monitor matching
   // problem was encountered prior to this point in control flow.
   enum { bad_monitors = -1 };
@@ -296,16 +294,13 @@ class GenerateOopMap {
   void            push                       (CellTypeState cts);
   CellTypeState   monitor_pop                ();
   void            monitor_push               (CellTypeState cts);
-  CellTypeState * vars                       ()                                             { return _state; }
-  CellTypeState * stack                      ()                                             { return _state+_max_locals; }
-  CellTypeState * monitors                   ()                                             { return _state+_max_locals+_max_stack; }
+  CellTypeState * vars                       () { return _state; }
+  CellTypeState * stack                      () { return _state+_max_locals; }
+  CellTypeState * monitors                   () { return _state+_max_locals+_max_stack; }
 
-  void            replace_all_CTS_matches    (CellTypeState match,
-                                              CellTypeState replace);
+  void            replace_all_CTS_matches    (CellTypeState match, CellTypeState replace);
   void            print_states               (outputStream *os, CellTypeState *vector, int num);
-  void            print_current_state        (outputStream   *os,
-                                              BytecodeStream *itr,
-                                              bool            detailed);
+  void            print_current_state        (outputStream *os, BytecodeStream *itr, bool detailed);
   void            report_monitor_mismatch    (const char *msg);
 
   // Basicblock info
@@ -317,11 +312,9 @@ class GenerateOopMap {
   // Basicblocks methods
   void          initialize_bb               ();
   void          mark_bbheaders_and_count_gc_points();
-  bool          is_bb_header                (int bci) const   {
-    return _bb_hdr_bits.at(bci);
-  }
-  int           gc_points                   () const                          { return _gc_points; }
-  int           bb_count                    () const                          { return _bb_count; }
+  bool          is_bb_header                (int bci) const { return _bb_hdr_bits.at(bci); }
+  int           gc_points                   () const        { return _gc_points; }
+  int           bb_count                    () const        { return _bb_count; }
   void          set_bbmark_bit              (int bci);
   BasicBlock *  get_basic_block_at          (int bci) const;
   BasicBlock *  get_basic_block_containing  (int bci) const;
@@ -471,20 +464,17 @@ class GenerateOopMap {
 //
 class ResolveOopMapConflicts: public GenerateOopMap {
  private:
-
   bool _must_clear_locals;
 
-  virtual bool report_results() const     { return false; }
-  virtual bool report_init_vars() const   { return true; }
-  virtual bool allow_rewrites() const     { return true; }
-  virtual bool possible_gc_point          (BytecodeStream *bcs)           { return false; }
-  virtual void fill_stackmap_prolog       (int nof_gc_points)             { }
-  virtual void fill_stackmap_epilog       ()                              { }
-  virtual void fill_stackmap_for_opcodes  (BytecodeStream *bcs,
-                                           CellTypeState* vars,
-                                           CellTypeState* stack,
-                                           int stack_top)                 { }
-  virtual void fill_init_vars             (GrowableArray<intptr_t> *init_vars) { _must_clear_locals = init_vars->length() > 0; }
+  virtual bool report_results() const                 { return false; }
+  virtual bool report_init_vars() const               { return true; }
+  virtual bool allow_rewrites() const                 { return true; }
+  virtual bool possible_gc_point(BytecodeStream *bcs) { return false; }
+
+  virtual void fill_stackmap_prolog(int nof_gc_points) { }
+  virtual void fill_stackmap_epilog()                  { }
+  virtual void fill_stackmap_for_opcodes(BytecodeStream *bcs, CellTypeState* vars, CellTypeState* stack, int stack_top) { }
+  virtual void fill_init_vars(GrowableArray<intptr_t> *init_vars) { _must_clear_locals = init_vars->length() > 0; }
 
  public:
   ResolveOopMapConflicts(const methodHandle& method) : GenerateOopMap(method) { _must_clear_locals = false; };
@@ -498,20 +488,17 @@ class ResolveOopMapConflicts: public GenerateOopMap {
 //
 class GeneratePairingInfo: public GenerateOopMap {
  private:
+  virtual bool report_results() const                 { return false; }
+  virtual bool report_init_vars() const               { return false; }
+  virtual bool allow_rewrites() const                 { return false; }
+  virtual bool possible_gc_point(BytecodeStream *bcs) { return false; }
 
-  virtual bool report_results() const     { return false; }
-  virtual bool report_init_vars() const   { return false; }
-  virtual bool allow_rewrites() const     { return false; }
-  virtual bool possible_gc_point          (BytecodeStream *bcs)           { return false; }
-  virtual void fill_stackmap_prolog       (int nof_gc_points)             { }
-  virtual void fill_stackmap_epilog       ()                              { }
-  virtual void fill_stackmap_for_opcodes  (BytecodeStream *bcs,
-                                           CellTypeState* vars,
-                                           CellTypeState* stack,
-                                           int stack_top)                 { }
-  virtual void fill_init_vars             (GrowableArray<intptr_t> *init_vars) { }
+  virtual void fill_stackmap_prolog(int nof_gc_points) { }
+  virtual void fill_stackmap_epilog()                  { }
+  virtual void fill_stackmap_for_opcodes(BytecodeStream *bcs, CellTypeState* vars, CellTypeState* stack, int stack_top) { }
+  virtual void fill_init_vars(GrowableArray<intptr_t> *init_vars) { }
  public:
-  GeneratePairingInfo(const methodHandle& method) : GenerateOopMap(method)       { };
+  GeneratePairingInfo(const methodHandle& method) : GenerateOopMap(method) { };
 
   // Call compute_map(CHECK) to generate info.
 };

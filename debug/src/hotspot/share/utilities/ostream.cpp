@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "jvm.h"
-#include "compiler/compileLog.hpp"
 #include "memory/allocation.inline.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/arguments.hpp"
@@ -57,11 +56,7 @@ void outputStream::update_position(const char* s, size_t len) {
 
 // Execute a vsprintf, using the given buffer if necessary.
 // Return a pointer to the formatted string.
-const char* outputStream::do_vsnprintf(char* buffer, size_t buflen,
-                                       const char* format, va_list ap,
-                                       bool add_cr,
-                                       size_t& result_len) {
-
+const char* outputStream::do_vsnprintf(char* buffer, size_t buflen, const char* format, va_list ap, bool add_cr, size_t& result_len) {
   const char* result;
   if (add_cr)  buflen--;
   if (!strchr(format, '%')) {
@@ -481,7 +476,7 @@ fileStream::fileStream(const char* file_name, const char* opentype) {
 }
 
 void fileStream::write(const char* s, size_t len) {
-  if (_file != NULL)  {
+  if (_file != NULL) {
     // Make an unused local variable to avoid warning from gcc 4.x compiler.
     size_t count = fwrite(s, 1, len, _file);
   }
@@ -598,83 +593,6 @@ fileStream* defaultStream::open_file(const char* log_name) {
   return NULL;
 }
 
-void defaultStream::init_log() {
-  // %%% Need a MutexLocker?
-  const char* log_name = "hotspot_%p.log";
-  fileStream* file = open_file(log_name);
-
-  if (file != NULL) {
-    _log_file = file;
-    _outer_xmlStream = new(ResourceObj::C_HEAP, mtInternal) xmlStream(file);
-    start_log();
-  } else {
-    // and leave xtty as NULL
-    DisplayVMOutput = true;
-  }
-}
-
-void defaultStream::start_log() {
-  xmlStream*xs = _outer_xmlStream;
-    if (this == tty)  xtty = xs;
-    // Write XML header.
-    xs->print_cr("<?xml version='1.0' encoding='UTF-8'?>");
-    // (For now, don't bother to issue a DTD for this private format.)
-    jlong time_ms = os::javaTimeMillis() - tty->time_stamp().milliseconds();
-    // %%% Should be: jlong time_ms = os::start_time_milliseconds(), if
-    // we ever get round to introduce that method on the os class
-    xs->head("hotspot_log version='%d %d' process='%d' time_ms='" INT64_FORMAT "'", LOG_MAJOR_VERSION, LOG_MINOR_VERSION, os::current_process_id(), (int64_t)time_ms);
-    // Write VM version header immediately.
-    xs->head("vm_version");
-    xs->head("name"); xs->text("%s", VM_Version::vm_name()); xs->cr();
-    xs->tail("name");
-    xs->head("release"); xs->text("%s", VM_Version::vm_release()); xs->cr();
-    xs->tail("release");
-    xs->head("info"); xs->text("%s", VM_Version::internal_vm_info_string()); xs->cr();
-    xs->tail("info");
-    xs->tail("vm_version");
-    // Record information about the command-line invocation.
-    xs->head("vm_arguments");  // Cf. Arguments::print_on()
-    if (Arguments::num_jvm_flags() > 0) {
-      xs->head("flags");
-      Arguments::print_jvm_flags_on(xs->text());
-      xs->tail("flags");
-    }
-    if (Arguments::num_jvm_args() > 0) {
-      xs->head("args");
-      Arguments::print_jvm_args_on(xs->text());
-      xs->tail("args");
-    }
-    if (Arguments::java_command() != NULL) {
-      xs->head("command"); xs->text()->print_cr("%s", Arguments::java_command());
-      xs->tail("command");
-    }
-    if (Arguments::sun_java_launcher() != NULL) {
-      xs->head("launcher"); xs->text()->print_cr("%s", Arguments::sun_java_launcher());
-      xs->tail("launcher");
-    }
-    if (Arguments::system_properties() !=  NULL) {
-      xs->head("properties");
-      // Print it as a java-style property list.
-      // System properties don't generally contain newlines, so don't bother with unparsing.
-      outputStream *text = xs->text();
-      for (SystemProperty* p = Arguments::system_properties(); p != NULL; p = p->next()) {
-        if (p->is_readable()) {
-          // Print in two stages to avoid problems with long
-          // keys/values.
-          text->print_raw(p->key());
-          text->put('=');
-          text->print_raw_cr(p->value());
-        }
-      }
-      xs->tail("properties");
-    }
-    xs->tail("vm_arguments");
-    // tty output per se is grouped under the <tty>...</tty> element.
-    xs->head("tty");
-    // All further non-markup text gets copied to the tty:
-    xs->_text = this;  // requires friend declaration!
-}
-
 // finish_log() is called during normal VM shutdown. finish_log_on_error() is
 // called by ostream_abort() after a fatal error.
 //
@@ -683,7 +601,7 @@ void defaultStream::finish_log() {
   xs->done("tty");
 
   // Other log forks are appended here, at the End of Time:
-  CompileLog::finish_log(xs->out());  // write compile logging, if any, now
+  CompileLog::finish_log(xs->out());  // write compile logging, if any, now
 
   xs->done("hotspot_log");
   xs->flush();
@@ -702,11 +620,10 @@ void defaultStream::finish_log_on_error(char *buf, int buflen) {
   xmlStream* xs = _outer_xmlStream;
 
   if (xs && xs->out()) {
-
     xs->done_raw("tty");
 
     // Other log forks are appended here, at the End of Time:
-    CompileLog::finish_log_on_error(xs->out(), buf, buflen);  // write compile logging, if any, now
+    CompileLog::finish_log_on_error(xs->out(), buf, buflen);  // write compile logging, if any, now
 
     xs->done_raw("hotspot_log");
     xs->flush();
@@ -900,7 +817,6 @@ bufferedStream::bufferedStream(char* fixed_buffer, size_t fixed_buffer_size, siz
 }
 
 void bufferedStream::write(const char* s, size_t len) {
-
   if (buffer_pos + len > buffer_max) {
     flush();
   }

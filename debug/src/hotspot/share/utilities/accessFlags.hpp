@@ -146,13 +146,11 @@ class AccessFlags {
 
   // Initialization
   void add_promoted_flags(jint flags)   { _flags |= (flags & JVM_ACC_PROMOTED_FLAGS); }
-  void set_field_flags(jint flags)      {
-    _flags = (flags & JVM_ACC_FIELD_FLAGS);
-  }
+  void set_field_flags(jint flags)      { _flags = (flags & JVM_ACC_FIELD_FLAGS); }
   void set_flags(jint flags)            { _flags = (flags & JVM_ACC_WRITTEN_FLAGS); }
 
-  void set_queued_for_compilation()    { atomic_set_bits(JVM_ACC_QUEUED); }
-  void clear_queued_for_compilation()  { atomic_clear_bits(JVM_ACC_QUEUED); }
+  void set_queued_for_compilation()     { atomic_set_bits(JVM_ACC_QUEUED); }
+  void clear_queued_for_compilation()   { atomic_clear_bits(JVM_ACC_QUEUED); }
 
   // Atomic update of flags
   void atomic_set_bits(jint bits);

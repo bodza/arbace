@@ -11,9 +11,6 @@
 // The memory can't be deleted since the raw memory chunk is not returned.
 template <class T, MEMFLAGS flags, size_t alignment>
 PaddedEnd<T>* PaddedArray<T, flags, alignment>::create_unfreeable(uint length) {
-  // Check that the PaddedEnd class works as intended.
-  STATIC_ASSERT(is_aligned_(sizeof(PaddedEnd<T>), alignment));
-
   // Allocate a chunk of memory large enough to allow for some alignment.
   void* chunk = AllocateHeap(length * sizeof(PaddedEnd<T, alignment>) + alignment, flags);
 

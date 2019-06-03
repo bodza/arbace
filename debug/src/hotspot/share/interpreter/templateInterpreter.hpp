@@ -63,7 +63,6 @@ class TemplateInterpreter: public AbstractInterpreter {
   friend class CodeCacheExtensions;
   // friend class Interpreter;
  public:
-
   enum MoreConstants {
     max_invoke_length = 5,    // invokedynamic is the longest
     max_bytecode_length = 6,  // worse case is wide iinc, "reexecute" bytecodes are excluded because "skip" will be 0
@@ -73,7 +72,6 @@ class TemplateInterpreter: public AbstractInterpreter {
   };
 
  protected:
-
   static address    _throw_ArrayIndexOutOfBoundsException_entry;
   static address    _throw_ArrayStoreException_entry;
   static address    _throw_ArithmeticException_entry;
@@ -108,7 +106,6 @@ class TemplateInterpreter: public AbstractInterpreter {
   static InterpreterCodelet* codelet_containing(address pc);
 
  public:
-
   static address    remove_activation_entry()                   { return _remove_activation_entry; }
   static address    throw_exception_entry()                     { return _throw_exception_entry; }
   static address    throw_ArithmeticException_entry()           { return _throw_ArithmeticException_entry; }

@@ -74,11 +74,6 @@ void CompilerDirectives::finalize(outputStream* st) {
 }
 
 void DirectiveSet::finalize(outputStream* st) {
-  // Check LogOption and warn
-  if (LogOption) {
-    st->print_cr("Warning:  +false must be set to enable compilation logging from directives");
-  }
-
   // if any flag has been modified - set directive as enabled
   // unless it already has been explicitly set.
   if (!_modified[EnableIndex]) {
@@ -139,7 +134,7 @@ int CompilerDirectives::refcount() {
 DirectiveSet* CompilerDirectives::get_for(AbstractCompiler *comp) {
   if (comp == NULL) { // Xint
     return _c1_store;
-  } else  if (comp->is_c2()) {
+  } else if (comp->is_c2()) {
     return _c2_store;
   } else {
     // use c1_store as default
@@ -220,13 +215,6 @@ DirectiveSet* DirectiveSet::compilecommand_compatibility_init(const methodHandle
       }
       if (!_modified[BreakAtExecuteIndex]) {
         set->BreakAtExecuteOption = true;
-        changed = true;
-      }
-    }
-    if (!_modified[LogIndex]) {
-      bool log = CompilerOracle::should_log(method);
-      if (log != set->LogOption) {
-        set->LogOption = log;
         changed = true;
       }
     }
@@ -436,7 +424,6 @@ void DirectivesStack::pop(int count) {
 }
 
 void DirectivesStack::pop_inner() {
-
   if (_top->next() == NULL) {
     return; // Do nothing - don't allow an empty stack
   }
@@ -491,7 +478,6 @@ void DirectivesStack::release(CompilerDirectives* dir) {
 }
 
 DirectiveSet* DirectivesStack::getMatchingDirective(const methodHandle& method, AbstractCompiler *comp) {
-
   DirectiveSet* match = NULL;
   {
     MutexLockerEx locker(DirectivesStack_lock, Mutex::_no_safepoint_check_flag);

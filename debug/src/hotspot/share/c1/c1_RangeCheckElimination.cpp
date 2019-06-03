@@ -96,7 +96,7 @@ void RangeCheckEliminator::Visitor::do_Phi(Phi *phi) {
   Bound *bound = NULL;
 
   // TODO: support more difficult phis
-  for (int i=0; i<op_count; i++) {
+  for (int i = 0; i<op_count; i++) {
     Value v = phi->operand_at(i);
 
     if (v == phi) continue;
@@ -189,7 +189,6 @@ void RangeCheckEliminator::Visitor::do_ArithmeticOp(ArithmeticOp *ao) {
     }
   } else if (!x->as_Constant() || !y->as_Constant()) {
     if (((x->as_Constant() || y->as_Constant()) && (ao->op() == Bytecodes::_iadd)) || (y->as_Constant() && ao->op() == Bytecodes::_isub)) {
-
       if (y->as_Constant()) {
         Value tmp = x;
         x = y;
@@ -353,13 +352,13 @@ void RangeCheckEliminator::in_block_motion(BlockBegin *block, AccessIndexedList 
   InstructionList indices;
 
   // Now iterate over all arrays
-  for (int i=0; i<arrays.length(); i++) {
+  for (int i = 0; i<arrays.length(); i++) {
     int max_constant = -1;
     AccessIndexedList list_constant;
     Value array = arrays.at(i);
 
     // For all AccessIndexed-instructions in this block concerning the current array.
-    for (int j=0; j<accessIndexed.length(); j++) {
+    for (int j = 0; j<accessIndexed.length(); j++) {
       AccessIndexed *ai = accessIndexed.at(j);
       if (ai->array() != array || !ai->check_flag(Instruction::NeedsRangeCheckFlag)) continue;
 
@@ -526,7 +525,7 @@ bool RangeCheckEliminator::set_process_block_flags(BlockBegin *block) {
   }
 
   BlockList *dominates = block->dominates();
-  for (int i=0; i<dominates->length(); i++) {
+  for (int i = 0; i<dominates->length(); i++) {
     BlockBegin *next = dominates->at(i);
     process |= set_process_block_flags(next);
   }
@@ -663,7 +662,7 @@ void RangeCheckEliminator::add_if_condition(IntegerStack &pushed, Value x, Value
   if (c != NULL) {
     const_value = c->type()->as_IntConstant()->value();
     instr_value = NULL;
-  } else if (ao != NULL &&  (!ao->x()->as_Constant() || !ao->y()->as_Constant()) && ((ao->op() == Bytecodes::_isub && ao->y()->as_Constant()) || ao->op() == Bytecodes::_iadd)) {
+  } else if (ao != NULL && (!ao->x()->as_Constant() || !ao->y()->as_Constant()) && ((ao->op() == Bytecodes::_isub && ao->y()->as_Constant()) || ao->op() == Bytecodes::_iadd)) {
     c = ao->x()->as_Constant();
     if (c != NULL) {
       const_value = c->type()->as_IntConstant()->value();
@@ -739,7 +738,6 @@ void RangeCheckEliminator::process_access_indexed(BlockBegin *loop_header, Block
 
         remove_range_check(ai);
     } else if (_optimistic && loop_header) {
-
       // Array instruction
       Instruction *array_instr = ai->array();
       if (!loop_invariant(loop_header, array_instr)) {
@@ -907,7 +905,7 @@ void RangeCheckEliminator::calc_bounds(BlockBegin *block, BlockBegin *loop_heade
   in_block_motion(block, accessIndexed, arrays);
 
   // Call all dominated blocks
-  for (int i=0; i<block->dominates()->length(); i++) {
+  for (int i = 0; i<block->dominates()->length(); i++) {
     BlockBegin *next = block->dominates()->at(i);
     if (!next->is_set(BlockBegin::donot_eliminate_range_checks)) {
       // if current block is a loop header and:
@@ -924,7 +922,7 @@ void RangeCheckEliminator::calc_bounds(BlockBegin *block, BlockBegin *loop_heade
   }
 
   // Reset stack
-  for (int i=0; i<pushed.length(); i++) {
+  for (int i = 0; i<pushed.length(); i++) {
     _bounds.at(pushed.at(i))->pop();
   }
 }
@@ -940,10 +938,10 @@ void RangeCheckEliminator::Verification::block_do(BlockBegin *block) {
   If *cond = block->end()->as_If();
   // Watch out: tsux and fsux can be the same!
   if (block->number_of_sux() > 1) {
-    for (int i=0; i<block->number_of_sux(); i++) {
+    for (int i = 0; i<block->number_of_sux(); i++) {
       BlockBegin *sux = block->sux_at(i);
       BlockBegin *pred = NULL;
-      for (int j=0; j<sux->number_of_preds(); j++) {
+      for (int j = 0; j<sux->number_of_preds(); j++) {
         BlockBegin *cur = sux->pred_at(j);
         if (!pred) {
           pred = cur;
@@ -988,7 +986,7 @@ bool RangeCheckEliminator::Verification::can_reach(BlockBegin *start, BlockBegin
   if (start == end) return start != dont_use;
   // Simple BSF from start to end
   //  BlockBeginList _current;
-  for (int i=0; i < _used.length(); i++) {
+  for (int i = 0; i < _used.length(); i++) {
     _used.at_put(i, false);
   }
   _current.trunc_to(0);
@@ -1002,26 +1000,26 @@ bool RangeCheckEliminator::Verification::can_reach(BlockBegin *start, BlockBegin
   while (_current.length() > 0) {
     BlockBegin *cur = _current.pop();
     // Add exception handlers to list
-    for (int i=0; i<cur->number_of_exception_handlers(); i++) {
+    for (int i = 0; i<cur->number_of_exception_handlers(); i++) {
       BlockBegin *xhandler = cur->exception_handler_at(i);
       _successors.push(xhandler);
       // Add exception handlers of _successors to list
-      for (int j=0; j<xhandler->number_of_exception_handlers(); j++) {
+      for (int j = 0; j<xhandler->number_of_exception_handlers(); j++) {
         BlockBegin *sux_xhandler = xhandler->exception_handler_at(j);
         _successors.push(sux_xhandler);
       }
     }
     // Add normal _successors to list
-    for (int i=0; i<cur->number_of_sux(); i++) {
+    for (int i = 0; i<cur->number_of_sux(); i++) {
       BlockBegin *sux = cur->sux_at(i);
       _successors.push(sux);
       // Add exception handlers of _successors to list
-      for (int j=0; j<sux->number_of_exception_handlers(); j++) {
+      for (int j = 0; j<sux->number_of_exception_handlers(); j++) {
         BlockBegin *xhandler = sux->exception_handler_at(j);
         _successors.push(xhandler);
       }
     }
-    for (int i=0; i<_successors.length(); i++) {
+    for (int i = 0; i<_successors.length(); i++) {
       BlockBegin *sux = _successors.at(i);
       if (sux == end) {
         return true;
@@ -1060,7 +1058,6 @@ RangeCheckEliminator::Bound::Bound(int lower, Value lower_instr, int upper, Valu
 
 // Bound constructor
 RangeCheckEliminator::Bound::Bound(Instruction::Condition cond, Value v, int constant) {
-
   init();
   if (cond == Instruction::eql) {
     _lower = constant;

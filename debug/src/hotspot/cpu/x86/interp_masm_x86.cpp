@@ -3,7 +3,6 @@
 #include "interp_masm_x86.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
-#include "logging/log.hpp"
 #include "oops/arrayOop.hpp"
 #include "oops/markOop.hpp"
 #include "oops/methodData.hpp"
@@ -146,7 +145,6 @@ void InterpreterMacroAssembler::profile_return_type(Register mdp, Register ret, 
     test_method_data_pointer(mdp, profile_continue);
 
     if (MethodData::profile_return_jsr292_only()) {
-
       // If we don't profile all invoke bytecodes we must make sure
       // it's a bytecode we indeed profile. We can't go back to the
       // begining of the ProfileData we intend to update to check its
@@ -325,7 +323,6 @@ void InterpreterMacroAssembler::load_resolved_klass_at_index(Register cpool, Reg
 // Kills:
 //      rcx, rdi
 void InterpreterMacroAssembler::gen_subtype_check(Register Rsub_klass, Label& ok_is_subtype) {
-
   // Profile the not-null value's klass.
   profile_typecheck(rcx, Rsub_klass, rdi); // blows rcx, reloads rdi
 
@@ -514,7 +511,6 @@ void InterpreterMacroAssembler::dispatch_via(TosState state, address* table) {
 }
 
 void InterpreterMacroAssembler::narrow(Register result) {
-
   // Get method->_constMethod->_result_type
   movptr(rcx, Address(rbp, frame::interpreter_frame_method_offset * wordSize));
   movptr(rcx, Address(rcx, Method::const_offset()));
@@ -687,13 +683,6 @@ void InterpreterMacroAssembler::remove_activation(TosState state, Register ret_a
 
   bind(no_unlock);
 
-  // jvmti support
-  if (notify_jvmdi) {
-    notify_method_exit(state, NotifyJVMTI);    // preserve TOSCA
-  } else {
-    notify_method_exit(state, SkipNotifyJVMTI); // preserve TOSCA
-  }
-
   // remove activation
   // get sender sp
   movptr(rbx,
@@ -740,7 +729,6 @@ void InterpreterMacroAssembler::get_method_counters(Register method, Register mc
 // Kills:
 //      rax, rbx
 void InterpreterMacroAssembler::lock_object(Register lock_reg) {
-
   if (UseHeavyMonitors) {
     call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorenter), lock_reg);
   } else {
@@ -826,7 +814,6 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
 //      rscratch1 (scratch reg)
 // rax, rbx, rcx, rdx
 void InterpreterMacroAssembler::unlock_object(Register lock_reg) {
-
   if (UseHeavyMonitors) {
     call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::monitorexit), lock_reg);
   } else {
@@ -1373,20 +1360,4 @@ void InterpreterMacroAssembler::increment_mask_and_jump(Address counter_addr, in
   if (where != NULL) {
     jcc(cond, *where);
   }
-}
-
-void InterpreterMacroAssembler::notify_method_entry() {
-  // Whenever JVMTI is interp_only_mode, method entry/exit events are sent to
-  // track stack depth.  If it is possible to enter interp_only_mode we add
-  // the code to check if the event should be sent.
-  Register rthread = r15_thread;
-  Register rarg = c_rarg1;
-}
-
-void InterpreterMacroAssembler::notify_method_exit(TosState state, NotifyMethodExitMode mode) {
-  // Whenever JVMTI is interp_only_mode, method entry/exit events are sent to
-  // track stack depth.  If it is possible to enter interp_only_mode we add
-  // the code to check if the event should be sent.
-  Register rthread = r15_thread;
-  Register rarg = c_rarg1;
 }

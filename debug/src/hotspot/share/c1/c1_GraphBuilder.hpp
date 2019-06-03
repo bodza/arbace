@@ -7,7 +7,6 @@
 #include "c1/c1_ValueStack.hpp"
 #include "ci/ciMethodData.hpp"
 #include "ci/ciStreams.hpp"
-#include "compiler/compileLog.hpp"
 
 class MemoryBuffer;
 
@@ -136,9 +135,7 @@ class GraphBuilder {
     int num_returns();
     void incr_num_returns();
 
-    void set_inline_cleanup_info(BlockBegin* block,
-                                 Instruction* return_prev,
-                                 ValueStack* return_state);
+    void set_inline_cleanup_info(BlockBegin* block, Instruction* return_prev, ValueStack* return_state);
     BlockBegin*  inline_cleanup_block() const      { return _cleanup_block; }
     Instruction* inline_cleanup_return_prev() const{ return _cleanup_return_prev; }
     ValueStack*  inline_cleanup_state() const      { return _cleanup_state; }
@@ -296,11 +293,7 @@ class GraphBuilder {
   BlockBegin* continuation() const                       { return scope_data()->continuation(); }
   BlockBegin* jsr_continuation() const                   { return scope_data()->jsr_continuation(); }
   void set_continuation(BlockBegin* continuation)        { scope_data()->set_continuation(continuation); }
-  void set_inline_cleanup_info(BlockBegin* block,
-                               Instruction* return_prev,
-                               ValueStack* return_state) { scope_data()->set_inline_cleanup_info(block,
-                                                                                                  return_prev,
-                                                                                                  return_state); }
+  void set_inline_cleanup_info(BlockBegin* block, Instruction* return_prev, ValueStack* return_state) { scope_data()->set_inline_cleanup_info(block, return_prev, return_state); }
   void set_inline_cleanup_info() {
     set_inline_cleanup_info(_block, _last, _state);
   }

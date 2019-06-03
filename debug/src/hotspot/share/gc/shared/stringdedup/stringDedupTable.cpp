@@ -5,7 +5,6 @@
 #include "gc/shared/stringdedup/stringDedup.hpp"
 #include "gc/shared/stringdedup/stringDedupTable.hpp"
 #include "gc/shared/suspendibleThreadSet.hpp"
-#include "logging/log.hpp"
 #include "memory/padded.inline.hpp"
 #include "oops/access.inline.hpp"
 #include "oops/arrayOop.inline.hpp"
@@ -126,7 +125,6 @@ StringDedupEntry* StringDedupEntryCache::alloc() {
 }
 
 void StringDedupEntryCache::free(StringDedupEntry* entry, uint worker_id) {
-
   entry->set_obj(NULL);
   entry->set_hash(0);
 
@@ -406,7 +404,6 @@ StringDedupTable* StringDedupTable::prepare_resize() {
 }
 
 void StringDedupTable::finish_resize(StringDedupTable* resized_table) {
-
   resized_table->_entries = _table->_entries;
 
   // Free old table
@@ -500,7 +497,6 @@ uintx StringDedupTable::unlink_or_oops_do(StringDedupUnlinkOrOopsDoClosure* cl,
 }
 
 void StringDedupTable::gc_prologue(bool resize_and_rehash_table) {
-
   _claimed_index = 0;
   if (resize_and_rehash_table) {
     // If both resize and rehash is needed, only do resize. Rehash of
@@ -513,7 +509,6 @@ void StringDedupTable::gc_prologue(bool resize_and_rehash_table) {
 }
 
 void StringDedupTable::gc_epilogue() {
-
   if (is_resizing()) {
     StringDedupTable::finish_resize(_resized_table);
     _resized_table = NULL;
@@ -540,7 +535,6 @@ StringDedupTable* StringDedupTable::prepare_rehash() {
 }
 
 void StringDedupTable::finish_rehash(StringDedupTable* rehashed_table) {
-
   // Move all newly rehashed entries into the correct buckets in the new table
   for (size_t bucket = 0; bucket < _table->_size; bucket++) {
     StringDedupEntry** entry = _table->bucket(bucket);

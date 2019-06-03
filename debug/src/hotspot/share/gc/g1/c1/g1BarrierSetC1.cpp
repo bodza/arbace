@@ -49,7 +49,6 @@ void G1BarrierSetC1::pre_barrier(LIRAccess& access, LIR_Opr addr_opr, LIR_Opr pr
   CodeStub* slow;
 
   if (do_load) {
-
     if (patch)
       pre_val_patch_code = lir_patch_normal;
 
@@ -60,7 +59,6 @@ void G1BarrierSetC1::pre_barrier(LIRAccess& access, LIR_Opr addr_opr, LIR_Opr pr
     }
     slow = new G1PreBarrierStub(addr_opr, pre_val, pre_val_patch_code, info);
   } else {
-
     slow = new G1PreBarrierStub(pre_val);
   }
 
@@ -106,16 +104,10 @@ void G1BarrierSetC1::post_barrier(LIRAccess& access, LIR_OprDesc* addr, LIR_OprD
     __ move(addr, xor_res);
     __ logical_xor(xor_res, new_val, xor_res);
     __ move(xor_res, xor_shift_res);
-    __ unsigned_shift_right(xor_shift_res,
-                            LIR_OprFact::intConst(HeapRegion::LogOfHRGrainBytes),
-                            xor_shift_res,
-                            LIR_OprDesc::illegalOpr());
+    __ unsigned_shift_right(xor_shift_res, LIR_OprFact::intConst(HeapRegion::LogOfHRGrainBytes), xor_shift_res, LIR_OprDesc::illegalOpr());
   } else {
     __ logical_xor(addr, new_val, xor_res);
-    __ unsigned_shift_right(xor_res,
-                            LIR_OprFact::intConst(HeapRegion::LogOfHRGrainBytes),
-                            xor_shift_res,
-                            LIR_OprDesc::illegalOpr());
+    __ unsigned_shift_right(xor_res, LIR_OprFact::intConst(HeapRegion::LogOfHRGrainBytes), xor_shift_res, LIR_OprDesc::illegalOpr());
   }
 
   if (!new_val->is_register()) {

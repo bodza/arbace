@@ -73,7 +73,6 @@ class TemplateTable: AllStatic {
   static InterpreterMacroAssembler* _masm;       // the assembler used when generating templates
 
  private:
-
   // special registers
   static inline Address at_bcp(int offset);
 

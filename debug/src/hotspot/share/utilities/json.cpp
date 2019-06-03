@@ -47,7 +47,6 @@ bool JSON::parse_json_value() {
 
   // Must start with object or array
   if (level == 0) {
-
     switch (c) {
     case '{':
       if (parse_json_object() == false) {
@@ -322,7 +321,6 @@ bool JSON::parse_json_number() {
   // sscanf as a double and check if part is 0.
   tokens = sscanf(pos, "%lf%n", &double_value, &read);
   if (tokens == 1) {
-
     if (floor(double_value) == double_value) {
       // No exponent - treat as an int
       v.int_value = (int)double_value;
@@ -352,7 +350,6 @@ bool JSON::parse_json_symbol(const char* name, JSON_TYPE symbol) {
 }
 
 void JSON::mark_pos() {
-
   u_char c;
 
   while (mark < pos) {
@@ -369,7 +366,6 @@ void JSON::mark_pos() {
 }
 
 u_char JSON::next() {
-
   u_char c = *pos;
   if (c != 0) {
     pos++;

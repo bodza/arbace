@@ -29,7 +29,6 @@ inline bool is_KRegister() {
 }
 
 inline Register as_Register() {
-
   // Yuk
 #ifdef AMD64
   return ::as_Register(value() >> 1);

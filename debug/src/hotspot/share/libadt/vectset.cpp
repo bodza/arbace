@@ -107,7 +107,7 @@ VectorSet &VectorSet::operator &= (const VectorSet &s)
   if (s.size < size ) size = s.size; // Get smaller size
   register uint32_t *u1 = data;   // Pointer to the destination data
   register uint32_t *u2 = s.data; // Pointer to the source data
-  for ( uint i=0; i<size; i++)   // For data in set
+  for ( uint i = 0; i<size; i++)   // For data in set
     *u1++ &= *u2++;             // Copy and AND longwords
   return *this;                 // Return set
 }
@@ -127,7 +127,7 @@ VectorSet &VectorSet::operator |= (const VectorSet &s)
   register uint cnt = ((size<s.size)?size:s.size);
   register uint32_t *u1 = data;   // Pointer to the destination data
   register uint32_t *u2 = s.data; // Pointer to the source data
-  for ( uint i=0; i<cnt; i++)    // Copy and OR the two sets
+  for ( uint i = 0; i<cnt; i++)    // Copy and OR the two sets
     *u1++ |= *u2++;
   if (size < s.size ) {         // Is set 2 larger than set 1?
     // Extend result by larger set
@@ -152,7 +152,7 @@ VectorSet &VectorSet::operator -= (const VectorSet &s)
   register uint cnt = ((size<s.size)?size:s.size);
   register uint32_t *u1 = data;   // Pointer to the destination data
   register uint32_t *u2 = s.data; // Pointer to the source data
-  for ( uint i=0; i<cnt; i++ )   // For data in set
+  for ( uint i = 0; i<cnt; i++ )   // For data in set
     *u1++ &= ~(*u2++);          // A <-- A & ~B  with longwords
   return *this;                 // Return new set
 }
@@ -180,7 +180,7 @@ int VectorSet::compare (const VectorSet &s) const
 
   // Get bits for both sets
   uint i;                       // Exit value of loop
-  for ( i=0; i<cnt; i++ ) {      // For data in BOTH sets
+  for ( i = 0; i<cnt; i++ ) {      // For data in BOTH sets
     register uint32_t A = *u1++;  // Data from one guy
     register uint32_t B = *u2++;  // Data from other guy
     AnotB |= (A & ~B);          // Compute bits in A not B
@@ -225,7 +225,7 @@ int VectorSet::disjoint(const Set &set) const
   register uint small_size = ((size<s.size)?size:s.size);
   register uint32_t *u1 = data;        // Pointer to the destination data
   register uint32_t *u2 = s.data;      // Pointer to the source data
-  for ( uint i=0; i<small_size; i++)  // For data in set
+  for ( uint i = 0; i<small_size; i++)  // For data in set
     if (*u1++ & *u2++ )              // If any elements in common
       return 0;                      // Then not disjoint
   return 1;                          // Else disjoint
@@ -275,7 +275,7 @@ int VectorSet::operator[](uint elem) const
 uint VectorSet::getelem(void) const
 {
   uint i;                       // Exit value of loop
-  for ( i=0; i<size; i++ )
+  for ( i = 0; i<size; i++ )
     if (data[i] )
       break;
   uint32_t word = data[i];
@@ -357,6 +357,6 @@ uint VectorSetI::next(void)
     j = 0;                      // No more bits in word; setup for next word
     mask = 1;
     for ( i++; (i<s->size) && (!s->data[i]); i++ ); // Skip to non-zero word
-  } while( i<s->size );
+  } while ( i<s->size );
   return max_juint;             // No element, iterated them all
 }

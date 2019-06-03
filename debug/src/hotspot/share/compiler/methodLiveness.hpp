@@ -134,8 +134,7 @@ class MethodLiveness : public ResourceObj {
     // -- Debugging.
 
     void print_on(outputStream *os) const { };
-
-  }; // End of MethodLiveness::BasicBlock
+  };
 
  private:
   // The method we are analyzing.

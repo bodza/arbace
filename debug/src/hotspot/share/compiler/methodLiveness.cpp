@@ -66,7 +66,6 @@ MethodLiveness::MethodLiveness(Arena* arena, ciMethod* method) : _bci_block_star
 }
 
 void MethodLiveness::compute_liveness() {
-
   {
     TraceTime buildGraph(NULL, &_time_build_graph, TimeLivenessAnalysis);
     init_basic_blocks();

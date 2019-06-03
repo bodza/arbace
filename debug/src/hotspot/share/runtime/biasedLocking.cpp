@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "logging/log.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/klass.inline.hpp"
 #include "oops/markOop.hpp"
@@ -464,7 +463,6 @@ static void post_class_revocation_event(EventBiasedLockClassRevocation* event, K
 }
 
 BiasedLocking::Condition BiasedLocking::revoke_and_rebias(Handle obj, bool attempt_rebias, TRAPS) {
-
   // We can revoke the biases of anonymously-biased objects
   // efficiently enough that we should not cause these revocations to
   // update the heuristics because doing so may cause unwanted bulk

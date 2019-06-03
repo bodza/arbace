@@ -594,22 +594,22 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
       //---<  some sanity checks  >---
       // Do not assert here, just check, print error message and return.
       // This is a diagnostic function. It is not supposed to tear down the VM.
-      if ((char*)h <  low_bound) {
+      if ((char*)h < low_bound) {
         insane = true; ast->print_cr("Sanity check: HeapBlock @%p below low bound (%p)", (char*)h, low_bound);
       }
-      if ((char*)h >  (low_bound + res_size)) {
+      if ((char*)h > (low_bound + res_size)) {
         insane = true; ast->print_cr("Sanity check: HeapBlock @%p outside reserved range (%p)", (char*)h, low_bound + res_size);
       }
-      if ((char*)h >  (low_bound + size)) {
+      if ((char*)h > (low_bound + size)) {
         insane = true; ast->print_cr("Sanity check: HeapBlock @%p outside used range (%p)", (char*)h, low_bound + size);
       }
-      if (ix_end   >= granules) {
+      if (ix_end >= granules) {
         insane = true; ast->print_cr("Sanity check: end index (%d) out of bounds (" SIZE_FORMAT ")", ix_end, granules);
       }
-      if (size     != heap->capacity()) {
+      if (size != heap->capacity()) {
         insane = true; ast->print_cr("Sanity check: code heap capacity has changed (" SIZE_FORMAT "K to " SIZE_FORMAT "K)", size/(size_t)K, heap->capacity()/(size_t)K);
       }
-      if (ix_beg   >  ix_end) {
+      if (ix_beg > ix_end) {
         insane = true; ast->print_cr("Sanity check: end index (%d) lower than begin index (%d)", ix_end, ix_beg);
       }
       if (insane) {
@@ -725,7 +725,7 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
                   if (limit_i++ >= alloc_topSizeBlocks) {
                     insane = true; break; // emergency exit
                   }
-                  if (i >= used_topSizeBlocks)  {
+                  if (i >= used_topSizeBlocks) {
                     insane = true; break; // emergency exit
                   }
                   total_iterations++;
@@ -755,7 +755,7 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
                         if (limit_j++ >= alloc_topSizeBlocks) {
                           insane = true; break; // emergency exit
                         }
-                        if (j >= used_topSizeBlocks)  {
+                        if (j >= used_topSizeBlocks) {
                           insane = true; break; // emergency exit
                         }
                         total_iterations++;
@@ -1007,13 +1007,13 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
       out->print("Verifying collected data...");
       size_t granule_segs = granule_size>>log2_seg_size;
       for (unsigned int ix = 0; ix < granules; ix++) {
-        if (StatArray[ix].t1_count   > granule_segs) {
+        if (StatArray[ix].t1_count > granule_segs) {
           out->print_cr("t1_count[%d]   = %d", ix, StatArray[ix].t1_count);
         }
-        if (StatArray[ix].t2_count   > granule_segs) {
+        if (StatArray[ix].t2_count > granule_segs) {
           out->print_cr("t2_count[%d]   = %d", ix, StatArray[ix].t2_count);
         }
-        if (StatArray[ix].tx_count   > granule_segs) {
+        if (StatArray[ix].tx_count > granule_segs) {
           out->print_cr("tx_count[%d]   = %d", ix, StatArray[ix].tx_count);
         }
         if (StatArray[ix].stub_count > granule_segs) {
@@ -1022,13 +1022,13 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
         if (StatArray[ix].dead_count > granule_segs) {
           out->print_cr("dead_count[%d] = %d", ix, StatArray[ix].dead_count);
         }
-        if (StatArray[ix].t1_space   > granule_segs) {
+        if (StatArray[ix].t1_space > granule_segs) {
           out->print_cr("t1_space[%d]   = %d", ix, StatArray[ix].t1_space);
         }
-        if (StatArray[ix].t2_space   > granule_segs) {
+        if (StatArray[ix].t2_space > granule_segs) {
           out->print_cr("t2_space[%d]   = %d", ix, StatArray[ix].t2_space);
         }
-        if (StatArray[ix].tx_space   > granule_segs) {
+        if (StatArray[ix].tx_space > granule_segs) {
           out->print_cr("tx_space[%d]   = %d", ix, StatArray[ix].tx_space);
         }
         if (StatArray[ix].stub_space > granule_segs) {
@@ -1074,7 +1074,6 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
 
   done        = false;
   while (!done && (nBlocks_free > 0)) {
-
     printBox(ast, '=', "C O D E   H E A P   A N A L Y S I S   (free blocks) for segment ", heapName);
     ast->print_cr("   The aggregate step collects information about all free blocks in CodeHeap.\n"
                   "   Subsequent print functions create their output based on this snapshot.\n");
@@ -2239,7 +2238,7 @@ void CodeHeapState::print_space_legend(outputStream* out) {
   out->cr();
   printBox(out, '-', "Space ranges, based on granule occupancy", NULL);
   out->print_cr("    -   0%% == occupancy");
-  for (int i=0; i<=9; i++) {
+  for (int i = 0; i<=9; i++) {
     out->print_cr("  %d - %3d%% < occupancy < %3d%%", i, 10*i, 10*(i+1));
   }
   out->print_cr("  * - 100%% == occupancy");

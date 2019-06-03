@@ -56,7 +56,6 @@ size_t MetaspaceCounters::max_capacity() {
 
 void MetaspaceCounters::initialize_performance_counters() {
   if (UsePerfData) {
-
     size_t min_capacity = 0;
     _perf_counters = new MetaspacePerfCounters("metaspace", min_capacity,
                                                capacity(), max_capacity(), used());
@@ -65,7 +64,6 @@ void MetaspaceCounters::initialize_performance_counters() {
 
 void MetaspaceCounters::update_performance_counters() {
   if (UsePerfData) {
-
     _perf_counters->update(capacity(), max_capacity(), used());
   }
 }
@@ -86,7 +84,6 @@ size_t CompressedClassSpaceCounters::max_capacity() {
 
 void CompressedClassSpaceCounters::update_performance_counters() {
   if (UsePerfData && UseCompressedClassPointers) {
-
     _perf_counters->update(capacity(), max_capacity(), used());
   }
 }

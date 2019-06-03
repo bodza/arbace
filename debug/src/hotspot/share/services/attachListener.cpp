@@ -171,7 +171,6 @@ static jint heap_inspection(AttachOperation* op, outputStream* out) {
 
 // Implementation of "setflag" command
 static jint set_flag(AttachOperation* op, outputStream* out) {
-
   const char* name = NULL;
   if ((name = op->arg(0)) == NULL) {
     out->print_cr("flag name is missing");
@@ -259,7 +258,7 @@ static void attach_listener_thread_entry(JavaThread* thread, TRAPS) {
     } else {
       // find the function to dispatch too
       AttachOperationFunctionInfo* info = NULL;
-      for (int i=0; funcs[i].name != NULL; i++) {
+      for (int i = 0; funcs[i].name != NULL; i++) {
         const char* name = funcs[i].name;
         if (strcmp(op->name(), name) == 0) {
           info = &(funcs[i]);

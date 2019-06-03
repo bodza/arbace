@@ -8,7 +8,6 @@
 class ServiceThread : public JavaThread {
   friend class VMStructs;
  private:
-
   static ServiceThread* _instance;
 
   static void service_thread_entry(JavaThread* thread, TRAPS);

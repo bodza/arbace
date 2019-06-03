@@ -369,8 +369,7 @@ class BlockOffsetArrayNonContigSpace: public BlockOffsetArray {
   // [blk_start + left_blk_size, blk_start + full_blk_size).
   // It is assumed (and verified in the non-product VM) that the
   // BOT was correct for the original block.
-  void split_block(HeapWord* blk_start, size_t full_blk_size,
-                           size_t left_blk_size);
+  void split_block(HeapWord* blk_start, size_t full_blk_size, size_t left_blk_size);
 
   // Adjust BOT to show that it has a block in the range
   // [blk_start, blk_start + size). Only the first card

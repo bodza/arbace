@@ -10,8 +10,6 @@
 #include "code/nmethod.hpp"
 #include "code/pcDesc.hpp"
 #include "compiler/compileBroker.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/iterator.hpp"
 #include "memory/resourceArea.hpp"
@@ -335,7 +333,6 @@ int CodeCache::code_heap_compare(CodeHeap* const &lhs, CodeHeap* const &rhs) {
 }
 
 void CodeCache::add_heap(CodeHeap* heap) {
-
   _heaps->insert_sorted<code_heap_compare>(heap);
 
   int type = heap->code_blob_type();
@@ -627,14 +624,7 @@ void CodeCache::scavenge_root_nmethods_do(CodeBlobToOopClosure* f) {
   nmethod* prev = NULL;
   nmethod* cur = scavenge_root_nmethods();
   while (cur != NULL) {
-
     bool is_live = (!cur->is_zombie() && !cur->is_unloaded());
-    LogTarget(Trace, gc, nmethod) lt;
-    if (lt.is_enabled()) {
-      LogStream ls(lt);
-      CompileTask::print(&ls, cur,
-        is_live ? "scavenge root " : "dead scavenge root", /*short_form:*/ true);
-    }
     if (is_live) {
       // Perform cur->oops_do(f), maybe just once per nmethod.
       f->do_code_blob(cur);
@@ -1085,13 +1075,6 @@ void CodeCache::report_codemem_full(int code_blob_type, bool print) {
     {
       ttyLocker ttyl;
       tty->print("%s", s.as_string());
-    }
-
-    if (heap->full_count() == 0) {
-      LogTarget(Debug, codecache) lt;
-      if (lt.is_enabled()) {
-        CompileBroker::print_heapinfo(tty, "all", "4096"); // details, may be a lot!
-      }
     }
   }
 

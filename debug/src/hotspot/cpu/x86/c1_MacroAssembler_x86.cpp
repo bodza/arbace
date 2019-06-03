@@ -127,8 +127,7 @@ void C1_MacroAssembler::initialize_header(Register obj, Register klass, Register
     movptr(t1, klass);
     encode_klass_not_null(t1);
     movl(Address(obj, oopDesc::klass_offset_in_bytes()), t1);
-  } else
-  {
+  } else {
     movptr(Address(obj, oopDesc::klass_offset_in_bytes()), klass);
   }
 
@@ -267,7 +266,8 @@ void C1_MacroAssembler::verified_entry() {
     // For all these cases generate long instruction first.
     fat_nop();
   }
-  if (C1Breakpoint)int3();
+  if (C1Breakpoint)
+    int3();
   // build frame
   verify_FPU(0, "method_entry");
 }

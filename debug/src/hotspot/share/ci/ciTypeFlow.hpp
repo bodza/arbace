@@ -92,9 +92,7 @@ public:
     bool is_compatible_with(JsrSet* other);
 
     // Apply the effect of a single bytecode to the JsrSet.
-    void apply_control(ciTypeFlow* analyzer,
-                       ciBytecodeStream* str,
-                       StateVector* state);
+    void apply_control(ciTypeFlow* analyzer, ciBytecodeStream* str, StateVector* state);
 
     // What is the cardinality of this set?
     int size() const { return _set->length(); }
@@ -165,80 +163,59 @@ public:
     }
 
     // Accessors
-    ciTypeFlow* outer() const          { return _outer; }
+    ciTypeFlow* outer() const      { return _outer; }
 
-    int         stack_size() const     { return _stack_size; }
-    void    set_stack_size(int ss)     { _stack_size = ss; }
+    int      stack_size() const    { return _stack_size; }
+    void set_stack_size(int ss)    { _stack_size = ss; }
 
-    int         monitor_count() const  { return _monitor_count; }
-    void    set_monitor_count(int mc)  { _monitor_count = mc; }
+    int      monitor_count() const { return _monitor_count; }
+    void set_monitor_count(int mc) { _monitor_count = mc; }
 
     LocalSet* def_locals() { return &_def_locals; }
     const LocalSet* def_locals() const { return &_def_locals; }
 
-    static Cell start_cell()           { return (Cell)0; }
-    static Cell next_cell(Cell c)      { return (Cell)(((int)c) + 1); }
+    static Cell start_cell()       { return (Cell)0; }
+    static Cell next_cell(Cell c)  { return (Cell)(((int)c) + 1); }
     Cell        limit_cell() const {
       return (Cell)(outer()->max_locals() + stack_size());
     }
 
     // Cell creation
-    Cell      local(int lnum) const {
-      return (Cell)(lnum);
-    }
-
-    Cell      stack(int snum) const {
-      return (Cell)(outer()->max_locals() + snum);
-    }
-
-    Cell      tos() const { return stack(stack_size()-1); }
+    Cell local(int lnum) const { return (Cell)(lnum); }
+    Cell stack(int snum) const { return (Cell)(outer()->max_locals() + snum); }
+    Cell tos() const           { return stack(stack_size()-1); }
 
     // For external use only:
     ciType* local_type_at(int i) const { return type_at(local(i)); }
     ciType* stack_type_at(int i) const { return type_at(stack(i)); }
 
     // Accessors for the type of some Cell c
-    ciType*   type_at(Cell c) const {
-      return _types[c];
-    }
-
-    void      set_type_at(Cell c, ciType* type) {
-      _types[c] = type;
-    }
+    ciType* type_at(Cell c) const             { return _types[c]; }
+    void    set_type_at(Cell c, ciType* type) { _types[c] = type; }
 
     // Top-of-stack operations.
-    void      set_type_at_tos(ciType* type) { set_type_at(tos(), type); }
-    ciType*   type_at_tos() const           { return type_at(tos()); }
+    void    set_type_at_tos(ciType* type) { set_type_at(tos(), type); }
+    ciType* type_at_tos() const           { return type_at(tos()); }
 
-    void      push(ciType* type) {
+    void    push(ciType* type) {
       _stack_size++;
       set_type_at_tos(type);
     }
-    void      pop() {
+    void    pop() {
       _stack_size--;
     }
-    ciType*   pop_value() {
+    ciType* pop_value() {
       ciType* t = type_at_tos();
       pop();
       return t;
     }
 
     // Convenience operations.
-    bool      is_reference(ciType* type) const {
-      return type == null_type() || !type->is_primitive_type();
-    }
-    bool      is_int(ciType* type) const {
-      return type->basic_type() == T_INT;
-    }
-    bool      is_long(ciType* type) const {
-      return type->basic_type() == T_LONG;
-    }
-    bool      is_float(ciType* type) const {
-      return type->basic_type() == T_FLOAT;
-    }
-    bool      is_double(ciType* type) const {
-      return type->basic_type() == T_DOUBLE;
-    }
+    bool is_reference(ciType* type) const { return type == null_type() || !type->is_primitive_type(); }
+    bool is_int(ciType* type) const       { return type->basic_type() == T_INT; }
+    bool is_long(ciType* type) const      { return type->basic_type() == T_LONG; }
+    bool is_float(ciType* type) const     { return type->basic_type() == T_FLOAT; }
+    bool is_double(ciType* type) const    { return type->basic_type() == T_DOUBLE; }
 
     void store_to_local(int lnum) {
       _def_locals.add((uint) lnum);
@@ -829,31 +806,23 @@ private:
 
   // Merge the current state into all exceptional successors at the
   // current point in the code.
-  void flow_exceptions(GrowableArray<Block*>* exceptions,
-                       GrowableArray<ciInstanceKlass*>* exc_klasses,
-                       StateVector* state);
+  void flow_exceptions(GrowableArray<Block*>* exceptions, GrowableArray<ciInstanceKlass*>* exc_klasses, StateVector* state);
 
   // Merge the current state into all successors at the current point
   // in the code.
-  void flow_successors(GrowableArray<Block*>* successors,
-                       StateVector* state);
+  void flow_successors(GrowableArray<Block*>* successors, StateVector* state);
 
   // Interpret the effects of the bytecodes on the incoming state
   // vector of a basic block.  Push the changed state to succeeding
   // basic blocks.
-  void flow_block(Block* block,
-                  StateVector* scratch_state,
-                  JsrSet* scratch_jsrs);
+  void flow_block(Block* block, StateVector* scratch_state, JsrSet* scratch_jsrs);
 
   // Perform the type flow analysis, creating and cloning Blocks as
   // necessary.
   void flow_types();
 
   // Perform the depth first type flow analysis. Helper for flow_types.
-  void df_flow_types(Block* start,
-                     bool do_flow,
-                     StateVector* temp_vector,
-                     JsrSet* temp_set);
+  void df_flow_types(Block* start, bool do_flow, StateVector* temp_vector, JsrSet* temp_set);
 
   // Incrementally build loop tree.
   void build_loop_tree(Block* blk);

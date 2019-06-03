@@ -37,7 +37,6 @@ private:
   bool             _break_at_compile;
   int              _num_inlined_bytecodes;
   CompileTask*     _task;           // faster access to CompilerThread::task
-  CompileLog*      _log;            // faster access to CompilerThread::log
   void*            _compiler_data;  // compiler-specific stuff, if any
 
   char* _name_buffer;
@@ -210,10 +209,7 @@ private:
   }
 
   // Get a ciInstance representing an unresolved method handle constant.
-  ciInstance* get_unloaded_method_handle_constant(ciKlass*  holder,
-                                                  ciSymbol* name,
-                                                  ciSymbol* signature,
-                                                  int       ref_kind) {
+  ciInstance* get_unloaded_method_handle_constant(ciKlass* holder, ciSymbol* name, ciSymbol* signature, int ref_kind) {
     return _factory->get_unloaded_method_handle_constant(holder, name, signature, ref_kind);
   }
 
@@ -224,7 +220,7 @@ private:
 
   // See if we already have an unloaded klass for the given name
   // or return NULL if not.
-  ciKlass *check_get_unloaded_klass(ciKlass*  accessing_klass, ciSymbol* name) {
+  ciKlass *check_get_unloaded_klass(ciKlass* accessing_klass, ciSymbol* name) {
     return _factory->get_unloaded_klass(accessing_klass, name, false);
   }
 
@@ -389,10 +385,6 @@ public:
 
   // Total number of bytecodes in inlined methods in this compile
   int num_inlined_bytecodes() const;
-
-  // Output stream for logging compilation info.
-  CompileLog* log() { return _log; }
-  void set_log(CompileLog* log) { _log = log; }
 
   // Check for changes to the system dictionary during compilation
   bool system_dictionary_modification_counter_changed();

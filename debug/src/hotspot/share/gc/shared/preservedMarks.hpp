@@ -57,8 +57,7 @@ public:
 
 class RestorePreservedMarksTaskExecutor {
 public:
-  void virtual restore(PreservedMarksSet* preserved_marks_set,
-                       volatile size_t* total_size_addr) = 0;
+  void virtual restore(PreservedMarksSet* preserved_marks_set, volatile size_t* total_size_addr) = 0;
 };
 
 class SharedRestorePreservedMarksTaskExecutor : public RestorePreservedMarksTaskExecutor {
@@ -68,8 +67,7 @@ private:
 public:
     SharedRestorePreservedMarksTaskExecutor(WorkGang* workers) : _workers(workers) { }
 
-    void restore(PreservedMarksSet* preserved_marks_set,
-                 volatile size_t* total_size_addr);
+    void restore(PreservedMarksSet* preserved_marks_set, volatile size_t* total_size_addr);
 };
 
 class PreservedMarksSet : public CHeapObj<mtGC> {

@@ -44,18 +44,11 @@ class GCMessage : public FormatBuffer<1024> {
 class CollectedHeap;
 
 class GCHeapLog : public EventLogBase<GCMessage> {
- private:
-  void log_heap(CollectedHeap* heap, bool before);
-
  public:
   GCHeapLog() : EventLogBase<GCMessage>("GC Heap History") { }
 
-  void log_heap_before(CollectedHeap* heap) {
-    log_heap(heap, true);
-  }
-  void log_heap_after(CollectedHeap* heap) {
-    log_heap(heap, false);
-  }
+  void log_heap_before(CollectedHeap* heap) { }
+  void log_heap_after(CollectedHeap* heap) { }
 };
 
 //
@@ -74,9 +67,7 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   friend class MemAllocator;
 
  private:
-
   GCHeapLog* _gc_heap_log;
-
   MemRegion _reserved;
 
  protected:

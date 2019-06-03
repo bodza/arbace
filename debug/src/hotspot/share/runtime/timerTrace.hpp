@@ -1,7 +1,6 @@
 #ifndef SHARE_VM_RUNTIME_TIMERTRACE_HPP
 #define SHARE_VM_RUNTIME_TIMERTRACE_HPP
 
-#include "logging/log.hpp"
 #include "utilities/globalDefinitions.hpp"
 
 // TraceTime is used for tracing the execution time of a block

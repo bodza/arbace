@@ -156,10 +156,6 @@ void LIR_Assembler::emit_lir_list(LIR_List* list) {
     CHECK_BAILOUT();
 
     op->emit_code(this);
-
-    if (compilation()->debug_info_recorder()->recording_non_safepoints()) {
-      process_debug_info(op);
-    }
   }
 }
 
@@ -186,34 +182,6 @@ static ValueStack* debug_info(Instruction* ins) {
   StateSplit* ss = ins->as_StateSplit();
   if (ss != NULL) return ss->state();
   return ins->state_before();
-}
-
-void LIR_Assembler::process_debug_info(LIR_Op* op) {
-  Instruction* src = op->source();
-  if (src == NULL)  return;
-  int pc_offset = code_offset();
-  if (_pending_non_safepoint == src) {
-    _pending_non_safepoint_offset = pc_offset;
-    return;
-  }
-  ValueStack* vstack = debug_info(src);
-  if (vstack == NULL)  return;
-  if (_pending_non_safepoint != NULL) {
-    // Got some old debug info.  Get rid of it.
-    if (debug_info(_pending_non_safepoint) == vstack) {
-      _pending_non_safepoint_offset = pc_offset;
-      return;
-    }
-    if (_pending_non_safepoint_offset < pc_offset) {
-      record_non_safepoint_debug_info();
-    }
-    _pending_non_safepoint = NULL;
-  }
-  // Remember the debug info.
-  if (pc_offset > compilation()->debug_info_recorder()->last_pc_offset()) {
-    _pending_non_safepoint = src;
-    _pending_non_safepoint_offset = pc_offset;
-  }
 }
 
 // Index caller states in s, where 0 is the oldest, 1 its callee, etc.
@@ -576,7 +544,6 @@ void LIR_Assembler::build_frame() {
 }
 
 void LIR_Assembler::roundfp_op(LIR_Opr src, LIR_Opr tmp, LIR_Opr dest, bool pop_fpu_stack) {
-
   reg2stack (src, dest, src->type(), pop_fpu_stack);
 }
 
@@ -591,7 +558,6 @@ void LIR_Assembler::move_op(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
     } else {
       ShouldNotReachHere();
     }
-
   } else if (src->is_stack()) {
     if (dest->is_register()) {
       stack2reg(src, dest, type);
@@ -600,7 +566,6 @@ void LIR_Assembler::move_op(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
     } else {
       ShouldNotReachHere();
     }
-
   } else if (src->is_constant()) {
     if (dest->is_register()) {
       const2reg(src, dest, patch_code, info); // patching is possible
@@ -611,10 +576,8 @@ void LIR_Assembler::move_op(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
     } else {
       ShouldNotReachHere();
     }
-
   } else if (src->is_address()) {
     mem2reg(src, dest, type, patch_code, info, wide, unaligned);
-
   } else {
     ShouldNotReachHere();
   }

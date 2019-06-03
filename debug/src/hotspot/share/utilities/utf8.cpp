@@ -228,7 +228,7 @@ const char* UTF8::from_quoted_ascii(const char* quoted_ascii_str) {
           case 'u': {
             ptr += 2;
             jchar value=0;
-            for (int i=0; i<4; i++) {
+            for (int i = 0; i<4; i++) {
               char c = *ptr++;
               switch (c) {
                 case '0': case '1': case '2': case '3': case '4':
@@ -306,7 +306,7 @@ jint UTF8::get_supplementary_character(const unsigned char* str) {
 bool UTF8::is_legal_utf8(const unsigned char* buffer, int length, bool version_leq_47) {
   int i = 0;
   int count = length >> 2;
-  for (int k=0; k<count; k++) {
+  for (int k = 0; k<count; k++) {
     unsigned char b0 = buffer[i];
     unsigned char b1 = buffer[i+1];
     unsigned char b2 = buffer[i+2];
@@ -383,7 +383,7 @@ int UNICODE::utf8_size(jchar c) {
   if ((0x0001 <= c) && (c <= 0x007F)) {
     // ASCII character
     return 1;
-  } else  if (c <= 0x07FF) {
+  } else if (c <= 0x07FF) {
     return 2;
   } else {
     return 3;

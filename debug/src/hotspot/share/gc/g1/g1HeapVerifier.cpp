@@ -12,8 +12,6 @@
 #include "gc/g1/heapRegion.inline.hpp"
 #include "gc/g1/heapRegionRemSet.hpp"
 #include "gc/g1/g1StringDedup.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/iterator.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/access.inline.hpp"
@@ -44,11 +42,6 @@ public:
     if (!CompressedOops::is_null(heap_oop)) {
       oop obj = CompressedOops::decode_not_null(heap_oop);
       if (_g1h->is_obj_dead_cond(obj, _vo)) {
-        Log(gc, verify) log;
-        log.error("Root location " PTR_FORMAT " points to dead obj " PTR_FORMAT, p2i(p), p2i(obj));
-        ResourceMark rm;
-        LogStream ls(log.error());
-        obj->print_on(&ls);
         _failures = true;
       }
     }
@@ -397,13 +390,11 @@ void G1HeapVerifier::verify(VerifyOption vo) {
   }
 
   if (GCParallelVerificationEnabled && ParallelGCThreads > 1) {
-
     G1ParVerifyTask task(_g1h, vo);
     _g1h->workers()->run_task(&task);
     if (task.failures()) {
       failures = true;
     }
-
   } else {
     VerifyRegionClosure blk(false, vo);
     _g1h->heap_region_iterate(&blk);
@@ -416,15 +407,6 @@ void G1HeapVerifier::verify(VerifyOption vo) {
     G1StringDedup::verify();
   }
 
-  if (failures) {
-    // It helps to have the per-region information in the output to
-    // help us track down what went wrong. This is why we call
-    // print_extended_on() instead of print_on().
-    Log(gc, verify) log;
-    ResourceMark rm;
-    LogStream ls(log.error());
-    _g1h->print_extended_on(&ls);
-  }
   guarantee(!failures, "there should not have been any failures");
 }
 
@@ -441,11 +423,8 @@ public:
   uint _humongous_count;
   uint _free_count;
 
-  VerifyRegionListsClosure(HeapRegionSet* old_set,
-                           HeapRegionSet* humongous_set,
-                           HeapRegionManager* hrm) :
-    _old_set(old_set), _humongous_set(humongous_set), _hrm(hrm),
-    _old_count(), _humongous_count(), _free_count() { }
+  VerifyRegionListsClosure(HeapRegionSet* old_set, HeapRegionSet* humongous_set, HeapRegionManager* hrm) :
+    _old_set(old_set), _humongous_set(humongous_set), _hrm(hrm), _old_count(), _humongous_count(), _free_count() { }
 
   bool do_heap_region(HeapRegion* hr) {
     if (hr->is_young()) {

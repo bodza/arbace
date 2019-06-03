@@ -144,7 +144,6 @@ private:
   jshort _shared_class_path_index;
 
 protected:
-
   // Constructor
   Klass(KlassID id);
   Klass() : _id(KlassID(-1)) { }
@@ -171,8 +170,7 @@ protected:
   void initialize_supers_impl2(Klass* k);
 
   // klass-specific helper for initializing _secondary_supers
-  virtual GrowableArray<Klass*>* compute_secondary_supers(int num_extra_slots,
-                                                          Array<Klass*>* transitive_interfaces);
+  virtual GrowableArray<Klass*>* compute_secondary_supers(int num_extra_slots, Array<Klass*>* transitive_interfaces);
 
   // java_super is the Java-level super type as specified by Class.getSuperClass.
   virtual Klass* java_super() const  { return NULL; }
@@ -222,7 +220,7 @@ protected:
   // Both mirrors are on the ClassLoaderData::_handles list already so no
   // barriers are needed.
   void set_java_mirror_handle(OopHandle mirror) { _java_mirror = mirror; }
-  OopHandle java_mirror_handle() const          {
+  OopHandle java_mirror_handle() const {
     return _java_mirror;
   }
 
@@ -273,7 +271,6 @@ protected:
   void     set_next_sibling(Klass* s);
 
  public:
-
   // Compiler support
   static ByteSize super_offset()                 { return in_ByteSize(offset_of(Klass, _super)); }
   static ByteSize super_check_offset_offset()    { return in_ByteSize(offset_of(Klass, _super_check_offset)); }
@@ -406,9 +403,7 @@ protected:
   // lookup operation for MethodLookupCache
   friend class MethodLookupCache;
   virtual Klass* find_field(Symbol* name, Symbol* signature, fieldDescriptor* fd) const;
-  virtual Method* uncached_lookup_method(const Symbol* name, const Symbol* signature,
-                                         OverpassLookupMode overpass_mode,
-                                         PrivateLookupMode = find_private) const;
+  virtual Method* uncached_lookup_method(const Symbol* name, const Symbol* signature, OverpassLookupMode overpass_mode, PrivateLookupMode = find_private) const;
  public:
   Method* lookup_method(const Symbol* name, const Symbol* signature) const {
     return uncached_lookup_method(name, signature, find_overpass);
@@ -487,7 +482,6 @@ protected:
 
   // type testing operations
  public:
-
   // Fast non-virtual versions
   #define assert_same_query(xval, xcheck) xval
   inline  bool is_instance_klass()            const { return assert_same_query(layout_helper_is_instance(layout_helper()), is_instance_klass_slow()); }

@@ -220,8 +220,7 @@ static OopMap* save_live_registers(StubAssembler* sasm, bool save_fpu_registers 
   if (save_fpu_registers) {
     for (int i = 31; i>= 0; i -= 4) {
       __ sub(sp, sp, 4 * wordSize); // no pre-increment for st1. Emulate it without modifying other registers
-      __ st1(as_FloatRegister(i-3), as_FloatRegister(i-2), as_FloatRegister(i-1),
-          as_FloatRegister(i), __ T1D, Address(sp));
+      __ st1(as_FloatRegister(i-3), as_FloatRegister(i-2), as_FloatRegister(i-1), as_FloatRegister(i), __ T1D, Address(sp));
     }
   } else {
     __ add(sp, sp, -32 * wordSize);
@@ -233,8 +232,7 @@ static OopMap* save_live_registers(StubAssembler* sasm, bool save_fpu_registers 
 static void restore_live_registers(StubAssembler* sasm, bool restore_fpu_registers = true) {
   if (restore_fpu_registers) {
     for (int i = 0; i < 32; i += 4)
-      __ ld1(as_FloatRegister(i), as_FloatRegister(i+1), as_FloatRegister(i+2),
-          as_FloatRegister(i+3), __ T1D, Address(__ post(sp, 4 * wordSize)));
+      __ ld1(as_FloatRegister(i), as_FloatRegister(i+1), as_FloatRegister(i+2), as_FloatRegister(i+3), __ T1D, Address(__ post(sp, 4 * wordSize)));
   } else {
     __ add(sp, sp, 32 * wordSize);
   }
@@ -243,11 +241,9 @@ static void restore_live_registers(StubAssembler* sasm, bool restore_fpu_registe
 }
 
 static void restore_live_registers_except_r0(StubAssembler* sasm, bool restore_fpu_registers = true) {
-
   if (restore_fpu_registers) {
     for (int i = 0; i < 32; i += 4)
-      __ ld1(as_FloatRegister(i), as_FloatRegister(i+1), as_FloatRegister(i+2),
-          as_FloatRegister(i+3), __ T1D, Address(__ post(sp, 4 * wordSize)));
+      __ ld1(as_FloatRegister(i), as_FloatRegister(i+1), as_FloatRegister(i+2), as_FloatRegister(i+3), __ T1D, Address(__ post(sp, 4 * wordSize)));
   } else {
     __ add(sp, sp, 32 * wordSize);
   }
@@ -521,7 +517,6 @@ OopMapSet* Runtime1::generate_patching(StubAssembler* sasm, address target) {
 }
 
 OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
-
   const Register exception_oop = r0;
   const Register exception_pc  = r3;
 
@@ -670,8 +665,7 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
           // since size is positive movw does right thing on 64bit
           __ movw(arr_size, length);
           __ lslvw(arr_size, length, t1);
-          __ ubfx(t1, t1, Klass::_lh_header_size_shift,
-                  exact_log2(Klass::_lh_header_size_mask + 1));
+          __ ubfx(t1, t1, Klass::_lh_header_size_shift, exact_log2(Klass::_lh_header_size_mask + 1));
           __ add(arr_size, arr_size, t1);
           __ add(arr_size, arr_size, MinObjAlignmentInBytesMask); // align up
           __ andr(arr_size, arr_size, ~MinObjAlignmentInBytesMask);

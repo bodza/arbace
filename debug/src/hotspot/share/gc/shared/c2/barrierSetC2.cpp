@@ -298,8 +298,7 @@ Node* BarrierSetC2::atomic_cmpxchg_val_at_resolved(C2AtomicAccess& access, Node*
       Node *newval_enc = kit->gvn().transform(new EncodePNode(new_val, new_val->bottom_type()->make_narrowoop()));
       Node *oldval_enc = kit->gvn().transform(new EncodePNode(expected_val, expected_val->bottom_type()->make_narrowoop()));
       load_store = kit->gvn().transform(new CompareAndExchangeNNode(kit->control(), mem, adr, newval_enc, oldval_enc, adr_type, value_type->make_narrowoop(), mo));
-    } else
-    {
+    } else {
       load_store = kit->gvn().transform(new CompareAndExchangePNode(kit->control(), mem, adr, new_val, expected_val, adr_type, value_type->is_oopptr(), mo));
     }
   } else {
@@ -353,8 +352,7 @@ Node* BarrierSetC2::atomic_cmpxchg_bool_at_resolved(C2AtomicAccess& access, Node
       } else {
         load_store = kit->gvn().transform(new CompareAndSwapNNode(kit->control(), mem, adr, newval_enc, oldval_enc, mo));
       }
-    } else
-    {
+    } else {
       if (is_weak_cas) {
         load_store = kit->gvn().transform(new WeakCompareAndSwapPNode(kit->control(), mem, adr, new_val, expected_val, mo));
       } else {
@@ -417,11 +415,10 @@ Node* BarrierSetC2::atomic_xchg_at_resolved(C2AtomicAccess& access, Node* new_va
     if (adr->bottom_type()->is_ptr_to_narrowoop()) {
       Node *newval_enc = kit->gvn().transform(new EncodePNode(new_val, new_val->bottom_type()->make_narrowoop()));
       load_store = kit->gvn().transform(new GetAndSetNNode(kit->control(), mem, adr, newval_enc, adr_type, value_type->make_narrowoop()));
-    } else
-    {
+    } else {
       load_store = kit->gvn().transform(new GetAndSetPNode(kit->control(), mem, adr, new_val, adr_type, value_type->is_oopptr()));
     }
-  } else  {
+  } else {
     switch (access.type()) {
       case T_BYTE:
         load_store = kit->gvn().transform(new GetAndSetBNode(kit->control(), mem, adr, new_val, adr_type));

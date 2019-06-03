@@ -7,7 +7,6 @@
 #include "gc/g1/heapRegion.inline.hpp"
 #include "gc/g1/heapRegionRemSet.hpp"
 #include "gc/g1/heapRegionSet.hpp"
-#include "logging/logStream.hpp"
 #include "utilities/debug.hpp"
 #include "utilities/quickSort.hpp"
 
@@ -86,7 +85,6 @@ void G1CollectionSet::add_old_region(HeapRegion* hr) {
 
 // Initialize the per-collection-set information
 void G1CollectionSet::start_incremental_building() {
-
   _inc_bytes_used_before = 0;
 
   _inc_recorded_rs_lengths = 0;
@@ -97,7 +95,6 @@ void G1CollectionSet::start_incremental_building() {
 }
 
 void G1CollectionSet::finalize_incremental_building() {
-
   // The two "main" fields, _inc_recorded_rs_lengths and
   // _inc_predicted_elapsed_time_ms, are updated by the thread
   // that adds a new region to the CSet. Further updates by the
@@ -183,7 +180,6 @@ void G1CollectionSet::update_young_region_prediction(HeapRegion* hr, size_t new_
 }
 
 void G1CollectionSet::add_young_region_common(HeapRegion* hr) {
-
   size_t collection_set_length = _collection_set_cur_length;
   hr->set_young_index_in_cset((int)collection_set_length);
 

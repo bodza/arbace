@@ -31,8 +31,7 @@ public:
   // Note: the 'base' variant does not demangle names. The
   // demangling that was done systematically in the 'modulepath' variant
   // is now optional.
-  virtual bool decode(address pc, char* buf, int buflen, int* offset,
-                      const char* modulepath = NULL, bool demangle = true) = 0;
+  virtual bool decode(address pc, char* buf, int buflen, int* offset, const char* modulepath = NULL, bool demangle = true) = 0;
   virtual bool decode(address pc, char* buf, int buflen, int* offset, const void* base) = 0;
 
   // demangle a C++ symbol
@@ -60,18 +59,9 @@ public:
 
   virtual ~NullDecoder() { };
 
-  virtual bool decode(address pc, char* buf, int buflen, int* offset,
-                      const char* modulepath, bool demangle) {
-    return false;
-  }
-
-  virtual bool decode(address pc, char* buf, int buflen, int* offset, const void* base) {
-    return false;
-  }
-
-  virtual bool demangle(const char* symbol, char* buf, int buflen) {
-    return false;
-  }
+  virtual bool decode(address pc, char* buf, int buflen, int* offset, const char* modulepath, bool demangle) { return false; }
+  virtual bool decode(address pc, char* buf, int buflen, int* offset, const void* base) { return false; }
+  virtual bool demangle(const char* symbol, char* buf, int buflen) { return false; }
 };
 
 class Decoder : AllStatic {

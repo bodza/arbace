@@ -303,34 +303,10 @@ public:
 template <DecoratorSet decorators>
 template <DecoratorSet expected_decorators>
 void Access<decorators>::verify_decorators() {
-  STATIC_ASSERT((~expected_decorators & decorators) == 0); // unexpected decorator used
   const DecoratorSet barrier_strength_decorators = decorators & AS_DECORATOR_MASK;
-  STATIC_ASSERT(barrier_strength_decorators == 0 || ( // make sure barrier strength decorators are disjoint if set
-    (barrier_strength_decorators ^ AS_NO_KEEPALIVE) == 0 ||
-    (barrier_strength_decorators ^ AS_RAW) == 0 ||
-    (barrier_strength_decorators ^ AS_NORMAL) == 0
-  ));
   const DecoratorSet ref_strength_decorators = decorators & ON_DECORATOR_MASK;
-  STATIC_ASSERT(ref_strength_decorators == 0 || ( // make sure ref strength decorators are disjoint if set
-    (ref_strength_decorators ^ ON_STRONG_OOP_REF) == 0 ||
-    (ref_strength_decorators ^ ON_WEAK_OOP_REF) == 0 ||
-    (ref_strength_decorators ^ ON_PHANTOM_OOP_REF) == 0 ||
-    (ref_strength_decorators ^ ON_UNKNOWN_OOP_REF) == 0
-  ));
   const DecoratorSet memory_ordering_decorators = decorators & MO_DECORATOR_MASK;
-  STATIC_ASSERT(memory_ordering_decorators == 0 || ( // make sure memory ordering decorators are disjoint if set
-    (memory_ordering_decorators ^ MO_UNORDERED) == 0 ||
-    (memory_ordering_decorators ^ MO_VOLATILE) == 0 ||
-    (memory_ordering_decorators ^ MO_RELAXED) == 0 ||
-    (memory_ordering_decorators ^ MO_ACQUIRE) == 0 ||
-    (memory_ordering_decorators ^ MO_RELEASE) == 0 ||
-    (memory_ordering_decorators ^ MO_SEQ_CST) == 0
-  ));
   const DecoratorSet location_decorators = decorators & IN_DECORATOR_MASK;
-  STATIC_ASSERT(location_decorators == 0 || ( // make sure location decorators are disjoint if set
-    (location_decorators ^ IN_NATIVE) == 0 ||
-    (location_decorators ^ IN_HEAP) == 0
-  ));
 }
 
 #endif

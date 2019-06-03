@@ -35,7 +35,6 @@ class G1RegionsLargerThanCommitSizeMapper : public G1RegionToSpaceMapper {
                                       MemoryType type) :
     G1RegionToSpaceMapper(rs, actual_size, page_size, alloc_granularity, commit_factor, type),
     _pages_per_region(alloc_granularity / (page_size * commit_factor)) {
-
     guarantee(alloc_granularity >= page_size, "allocation granularity smaller than commit granularity");
   }
 
@@ -82,7 +81,6 @@ class G1RegionsSmallerThanCommitSizeMapper : public G1RegionToSpaceMapper {
                                        MemoryType type) :
     G1RegionToSpaceMapper(rs, actual_size, page_size, alloc_granularity, commit_factor, type),
     _regions_per_page((page_size * commit_factor) / alloc_granularity), _refcounts() {
-
     guarantee((page_size * commit_factor) >= alloc_granularity, "allocation granularity smaller than commit granularity");
     _refcounts.initialize((HeapWord*)rs.base(), (HeapWord*)(rs.base() + align_up(rs.size(), page_size)), page_size);
   }
@@ -140,7 +138,6 @@ void G1RegionToSpaceMapper::fire_on_commit(uint start_idx, size_t num_regions, b
 }
 
 G1RegionToSpaceMapper* G1RegionToSpaceMapper::create_mapper(ReservedSpace rs, size_t actual_size, size_t page_size, size_t region_granularity, size_t commit_factor, MemoryType type) {
-
   if (region_granularity >= (page_size * commit_factor)) {
     return new G1RegionsLargerThanCommitSizeMapper(rs, actual_size, page_size, region_granularity, commit_factor, type);
   } else {

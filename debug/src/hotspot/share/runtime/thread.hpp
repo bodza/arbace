@@ -37,7 +37,7 @@ class Parker;
 
 class ciEnv;
 class CompileThread;
-class CompileLog;
+class CompileLog;
 class CompileTask;
 class CompileQueue;
 class CompilerCounters;
@@ -71,7 +71,6 @@ class Thread: public ThreadShadow {
   friend class VMStructs;
   friend class JVMCIVMStructs;
  private:
-
 #ifndef USE_LIBRARY_BASED_TLS_ONLY
   // Current thread is maintained as a thread-local variable
   static THREAD_LOCAL_DECL Thread* _thr_current;
@@ -89,7 +88,6 @@ class Thread: public ThreadShadow {
   }
 
   template <typename T> T* gc_data() {
-    STATIC_ASSERT(sizeof(T) <= sizeof(_gc_data));
     return reinterpret_cast<T*>(&_gc_data);
   }
 
@@ -143,7 +141,6 @@ class Thread: public ThreadShadow {
  protected:
   static void* allocate(size_t size, bool throw_excpt, MEMFLAGS flags = mtThread);
  private:
-
   // ***************************************************************
   // Suspend and resume support
   // ***************************************************************
@@ -261,7 +258,6 @@ class Thread: public ThreadShadow {
   void set_last_handle_mark(HandleMark* mark)   { _last_handle_mark = mark; }
   HandleMark* last_handle_mark() const          { return _last_handle_mark; }
  private:
-
   friend class NoAllocVerifier;
   friend class NoSafepointVerifier;
   friend class PauseNoSafepointVerifier;
@@ -399,7 +395,6 @@ class Thread: public ThreadShadow {
 #endif
 
  public:
-
   // Installs a pending exception to be inserted later
   static void send_async_exception(oop thread_oop, oop java_throwable);
 
@@ -848,7 +843,6 @@ class JavaThread: public Thread {
   };
 
  private:
-
   // The _pending_* fields below are used to communicate extra information
   // from an uncommon trap in JVMCI compiled code to the uncommon trap handler.
 
@@ -886,7 +880,6 @@ class JavaThread: public Thread {
   static jlong* _jvmci_old_thread_counters;
   static void collect_counters(typeArrayOop array);
  private:
-
   StackGuardState  _stack_guard_state;
 
   // Precompute the limit of the stack as used in stack overflow checks.
@@ -1076,7 +1069,6 @@ class JavaThread: public Thread {
   int  java_suspend_self();
 
   void check_and_wait_while_suspended() {
-
     bool do_self_suspend;
     do {
       // were we externally suspended while we were waiting?
@@ -1162,15 +1154,15 @@ class JavaThread: public Thread {
   }
 
   // utility methods to see if we are doing some kind of suspension
-  bool is_being_ext_suspended() const            {
+  bool is_being_ext_suspended() const {
     MutexLockerEx ml(SR_lock(), Mutex::_no_safepoint_check_flag);
     return is_ext_suspended() || is_external_suspend();
   }
 
-  bool is_suspend_equivalent() const             { return _suspend_equivalent; }
+  bool is_suspend_equivalent() const  { return _suspend_equivalent; }
 
-  void set_suspend_equivalent()                  { _suspend_equivalent = true; }
-  void clear_suspend_equivalent()                { _suspend_equivalent = false; }
+  void set_suspend_equivalent()       { _suspend_equivalent = true; }
+  void clear_suspend_equivalent()     { _suspend_equivalent = false; }
 
   // Thread.stop support
   void send_thread_stop(oop throwable);
@@ -1532,7 +1524,6 @@ class JavaThread: public Thread {
   void set_entry_point(ThreadFunction entry_point) { _entry_point = entry_point; }
 
  public:
-
   // Frame iteration; calls the function f for all frames on the stack
   void frames_do(void f(frame*, const RegisterMap*));
 
@@ -1620,7 +1611,6 @@ class JavaThread: public Thread {
   PrivilegedElement*  _privileged_stack_top;
   GrowableArray<oop>* _array_for_gc;
  public:
-
   // Returns the privileged_stack information.
   PrivilegedElement* privileged_stack_top() const       { return _privileged_stack_top; }
   void set_privileged_stack_top(PrivilegedElement *e)   { _privileged_stack_top = e; }
@@ -1783,7 +1773,6 @@ class CompilerThread : public JavaThread {
   CompilerCounters* _counters;
 
   ciEnv*                _env;
-  CompileLog*           _log;
   CompileTask* volatile _task;  // print_threads_compiling can read this concurrently.
   CompileQueue*         _queue;
   BufferBlob*           _buffer_blob;
@@ -1792,7 +1781,6 @@ class CompilerThread : public JavaThread {
   TimeStamp             _idle_time;
 
  public:
-
   static CompilerThread* current();
 
   CompilerThread(CompileQueue* queue, CompilerCounters* counters);
@@ -1817,10 +1805,6 @@ class CompilerThread : public JavaThread {
 
   BufferBlob*   get_buffer_blob() const          { return _buffer_blob; }
   void          set_buffer_blob(BufferBlob* b)   { _buffer_blob = b; }
-
-  // Get/set the thread's logging information
-  CompileLog*   log()                            { return _log; }
-  void          init_log(CompileLog* log)        { _log = log; }
 
   void start_idle_timer()                        { _idle_time.update(); }
   jlong idle_time_millis() {

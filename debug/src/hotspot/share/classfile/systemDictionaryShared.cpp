@@ -13,7 +13,6 @@
 #include "classfile/systemDictionaryShared.hpp"
 #include "classfile/verificationType.hpp"
 #include "classfile/vmSymbols.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.hpp"
 #include "memory/filemap.hpp"
 #include "memory/metadataFactory.hpp"
@@ -285,186 +284,6 @@ bool SystemDictionaryShared::is_sharing_possible(ClassLoaderData* loader_data) {
   return (class_loader == NULL || SystemDictionary::is_system_class_loader(class_loader) || SystemDictionary::is_platform_class_loader(class_loader));
 }
 
-// Currently AppCDS only archives classes from the run-time image, the
-// -Xbootclasspath/a path, the class path, and the module path.
-//
-// Check if a shared class can be loaded by the specific classloader. Following
-// are the "visible" archived classes for different classloaders.
-//
-// NULL classloader:
-//   - see SystemDictionary::is_shared_class_visible()
-// Platform classloader:
-//   - Module class from runtime image. ModuleEntry must be defined in the
-//     classloader.
-// App classloader:
-//   - Module Class from runtime image and module path. ModuleEntry must be defined in the
-//     classloader.
-//   - Class from -cp. The class must have no PackageEntry defined in any of the
-//     boot/platform/app classloader, or must be in the unnamed module defined in the
-//     AppClassLoader.
-bool SystemDictionaryShared::is_shared_class_visible_for_classloader(InstanceKlass* ik, Handle class_loader, const char* pkg_string, Symbol* pkg_name, PackageEntry* pkg_entry, ModuleEntry* mod_entry, TRAPS) {
-  ResourceMark rm(THREAD);
-
-  int path_index = ik->shared_classpath_index();
-  SharedClassPathEntry* ent = (SharedClassPathEntry*)FileMapInfo::shared_path(path_index);
-
-  if (SystemDictionary::is_platform_class_loader(class_loader())) {
-    // The PlatformClassLoader can only load archived class originated from the
-    // run-time image. The class' PackageEntry/ModuleEntry must be
-    // defined by the PlatformClassLoader.
-    if (mod_entry != NULL) {
-      // PackageEntry/ModuleEntry is found in the classloader. Check if the
-      // ModuleEntry's location agrees with the archived class' origination.
-      if (ent->is_modules_image() && mod_entry->location()->starts_with("jrt:")) {
-        return true; // Module class from the runtime image
-      }
-    }
-  } else if (SystemDictionary::is_system_class_loader(class_loader())) {
-    if (pkg_string == NULL) {
-      // The archived class is in the unnamed package. Currently, the boot image
-      // does not contain any class in the unnamed package.
-      if (path_index >= ClassLoaderExt::app_class_paths_start_index()) {
-        return true;
-      }
-    } else {
-      // Check if this is from a PackageEntry/ModuleEntry defined in the AppClassloader.
-      if (pkg_entry == NULL) {
-        // It's not guaranteed that the class is from the classpath if the
-        // PackageEntry cannot be found from the AppClassloader. Need to check
-        // the boot and platform classloader as well.
-        if (get_package_entry(pkg_name, ClassLoaderData::class_loader_data_or_null(SystemDictionary::java_platform_loader())) == NULL &&
-            get_package_entry(pkg_name, ClassLoaderData::the_null_class_loader_data()) == NULL) {
-          // The PackageEntry is not defined in any of the boot/platform/app classloaders.
-          // The archived class must from -cp path and not from the runtime image.
-          if (!ent->is_modules_image() && path_index >= ClassLoaderExt::app_class_paths_start_index() &&
-                                          path_index < ClassLoaderExt::app_module_paths_start_index()) {
-            return true;
-          }
-        }
-      } else if (mod_entry != NULL) {
-        // The package/module is defined in the AppClassLoader. We support
-        // archiving application module class from the runtime image or from
-        // a named module from a module path.
-        // Packages from the -cp path are in the unnamed_module.
-        if (ent->is_modules_image() && mod_entry->location()->starts_with("jrt:")) {
-          // shared module class from runtime image
-          return true;
-        } else if (pkg_entry->in_unnamed_module() && path_index >= ClassLoaderExt::app_class_paths_start_index() &&
-            path_index < ClassLoaderExt::app_module_paths_start_index()) {
-          // shared class from -cp
-          return true;
-        } else {
-          if (!pkg_entry->in_unnamed_module() &&
-              (path_index >= ClassLoaderExt::app_module_paths_start_index()) &&
-              (path_index < FileMapInfo::get_number_of_shared_paths()) &&
-              (strcmp(ent->name(), ClassLoader::skip_uri_protocol(mod_entry->location()->as_C_string())) == 0)) {
-            // shared module class from module path
-            return true;
-          }
-        }
-      }
-    }
-  } else {
-    // TEMP: if a shared class can be found by a custom loader, consider it visible now.
-    // FIXME: is this actually correct?
-    return true;
-  }
-  return false;
-}
-
-// The following stack shows how this code is reached:
-//
-//   [0] SystemDictionaryShared::find_or_load_shared_class()
-//   [1] JVM_FindLoadedClass
-//   [2] java.lang.ClassLoader.findLoadedClass0()
-//   [3] java.lang.ClassLoader.findLoadedClass()
-//   [4] jdk.internal.loader.BuiltinClassLoader.loadClassOrNull()
-//   [5] jdk.internal.loader.BuiltinClassLoader.loadClass()
-//   [6] jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(), or
-//       jdk.internal.loader.ClassLoaders$PlatformClassLoader.loadClass()
-//
-// AppCDS supports fast class loading for these 2 built-in class loaders:
-//    jdk.internal.loader.ClassLoaders$PlatformClassLoader
-//    jdk.internal.loader.ClassLoaders$AppClassLoader
-// with the following assumptions (based on the JDK core library source code):
-//
-// [a] these two loaders use the BuiltinClassLoader.loadClassOrNull() to
-//     load the named class.
-// [b] BuiltinClassLoader.loadClassOrNull() first calls findLoadedClass(name).
-// [c] At this point, if we can find the named class inside the
-//     shared_dictionary, we can perform further checks (see
-//     is_shared_class_visible_for_classloader() to ensure that this class
-//     was loaded by the same class loader during dump time.
-//
-// Given these assumptions, we intercept the findLoadedClass() call to invoke
-// SystemDictionaryShared::find_or_load_shared_class() to load the shared class from
-// the archive for the 2 built-in class loaders. This way,
-// we can improve start-up because we avoid decoding the classfile,
-// and avoid delegating to the parent loader.
-//
-// NOTE: there's a lot of assumption about the Java code. If any of that change, this
-// needs to be redesigned.
-
-InstanceKlass* SystemDictionaryShared::find_or_load_shared_class(Symbol* name, Handle class_loader, TRAPS) {
-  InstanceKlass* k = NULL;
-  if (UseSharedSpaces) {
-    if (!FileMapInfo::current_info()->header()->has_platform_or_app_classes()) {
-      return NULL;
-    }
-
-    if (shared_dictionary() != NULL && (SystemDictionary::is_system_class_loader(class_loader()) || SystemDictionary::is_platform_class_loader(class_loader()))) {
-      // Fix for 4474172; see evaluation for more details
-      class_loader = Handle(THREAD, java_lang_ClassLoader::non_reflection_class_loader(class_loader()));
-      ClassLoaderData *loader_data = register_loader(class_loader);
-      Dictionary* dictionary = loader_data->dictionary();
-
-      unsigned int d_hash = dictionary->compute_hash(name);
-
-      bool DoObjectLock = true;
-      if (is_parallelCapable(class_loader)) {
-        DoObjectLock = false;
-      }
-
-      // Make sure we are synchronized on the class loader before we proceed
-      //
-      // Note: currently, find_or_load_shared_class is called only from
-      // JVM_FindLoadedClass and used for PlatformClassLoader and AppClassLoader,
-      // which are parallel-capable loaders, so this lock is NOT taken.
-      Handle lockObject = compute_loader_lock_object(class_loader, THREAD);
-      check_loader_lock_contention(lockObject, THREAD);
-      ObjectLocker ol(lockObject, THREAD, DoObjectLock);
-
-      {
-        MutexLocker mu(SystemDictionary_lock, THREAD);
-        Klass* check = find_class(d_hash, name, dictionary);
-        if (check != NULL) {
-          return InstanceKlass::cast(check);
-        }
-      }
-
-      k = load_shared_class_for_builtin_loader(name, class_loader, THREAD);
-      if (k != NULL) {
-        define_instance_class(k, CHECK_NULL);
-      }
-    }
-  }
-  return k;
-}
-
-InstanceKlass* SystemDictionaryShared::load_shared_class_for_builtin_loader(Symbol* class_name, Handle class_loader, TRAPS) {
-  Klass* k = shared_dictionary()->find_class_for_builtin_loader(class_name);
-
-  if (k != NULL) {
-    InstanceKlass* ik = InstanceKlass::cast(k);
-    if ((ik->is_shared_app_class() && SystemDictionary::is_system_class_loader(class_loader()))  || (ik->is_shared_platform_class() && SystemDictionary::is_platform_class_loader(class_loader()))) {
-      Handle protection_domain = SystemDictionaryShared::init_security_info(class_loader, ik, CHECK_NULL);
-      return load_shared_class(ik, class_loader, protection_domain, THREAD);
-    }
-  }
-
-  return NULL;
-}
-
 void SystemDictionaryShared::oops_do(OopClosure* f) {
   f->do_oop((oop*)&_shared_protection_domains);
   f->do_oop((oop*)&_shared_jar_urls);
@@ -562,7 +381,6 @@ InstanceKlass* SystemDictionaryShared::acquire_class_for_current_thread(Instance
 }
 
 bool SystemDictionaryShared::add_non_builtin_klass(Symbol* name, ClassLoaderData* loader_data, InstanceKlass* k, TRAPS) {
-
   if (boot_loader_dictionary()->add_non_builtin_klass(name, loader_data, k)) {
     MutexLocker mu_r(Compile_lock, THREAD); // not really necessary, but add_to_hierarchy asserts this.
     add_to_hierarchy(k, CHECK_0);
@@ -579,7 +397,6 @@ bool SystemDictionaryShared::add_non_builtin_klass(Symbol* name, ClassLoaderData
 // Interface   id: 2 super: 0 source: cust.jar
 // ChildClass  id: 4 super: 0 interfaces: 2 source: cust.jar
 Klass* SystemDictionaryShared::dump_time_resolve_super_or_fail(Symbol* child_name, Symbol* class_name, Handle class_loader, Handle protection_domain, bool is_superclass, TRAPS) {
-
   ClassListParser* parser = ClassListParser::instance();
   if (parser == NULL) {
     // We're still loading the well-known classes, before the ClassListParser is created.
@@ -635,7 +452,7 @@ void SystemDictionaryShared::init_shared_dictionary_entry(Klass* k, DictionaryEn
   entry->_verifier_constraint_flags = NULL;
 
   if (misc_info_array != NULL) {
-    for (int i=0; i<misc_info_array->length(); i++) {
+    for (int i = 0; i<misc_info_array->length(); i++) {
       SharedMiscInfo misc_info = misc_info_array->at(i);
       if (misc_info._klass == k) {
         entry->_clsfile_size = misc_info._clsfile_size;
@@ -648,7 +465,6 @@ void SystemDictionaryShared::init_shared_dictionary_entry(Klass* k, DictionaryEn
 }
 
 bool SystemDictionaryShared::add_verification_constraint(Klass* k, Symbol* name, Symbol* from_name, bool from_field_is_protected, bool from_is_array, bool from_is_object) {
-
   // Skip anonymous classes, which are not archived as they are not in
   // dictionary (see assert_no_anonymoys_classes_in_dictionaries() in
   // VM_PopulateDumpSharedSpace::doit()).
@@ -663,8 +479,7 @@ bool SystemDictionaryShared::add_verification_constraint(Klass* k, Symbol* name,
     guarantee(strstr(k->name()->as_C_string(), "Lambda$") != NULL, "class should be in dictionary before being verified");
     return true;
   }
-  entry->add_verification_constraint(name, from_name, from_field_is_protected,
-                                     from_is_array, from_is_object);
+  entry->add_verification_constraint(name, from_name, from_field_is_protected, from_is_array, from_is_object);
   if (entry->is_builtin()) {
     // For builtin class loaders, we can try to complete the verification check at dump time,
     // because we can resolve all the constraint classes.
@@ -720,8 +535,8 @@ void SharedDictionaryEntry::add_verification_constraint(Symbol* name, Symbol* fr
     _verifier_constraint_flags = new(ResourceObj::C_HEAP, mtClass) GrowableArray<char>(4, true, mtClass);
   }
   GrowableArray<Symbol*>* vc_array = (GrowableArray<Symbol*>*)_verifier_constraints;
-  for (int i=0; i<vc_array->length(); i+= 2) {
-    if (name      == vc_array->at(i) && from_name == vc_array->at(i+1)) {
+  for (int i = 0; i < vc_array->length(); i += 2) {
+    if (name == vc_array->at(i) && from_name == vc_array->at(i + 1)) {
       return;
     }
   }
@@ -749,7 +564,7 @@ int SharedDictionaryEntry::finalize_verification_constraints() {
       // FIXME: change this to be done after relocation, so we can use symbol offset??
       int length = vc_array->length();
       Array<Symbol*>* out = MetadataFactory::new_array<Symbol*>(loader_data, length, 0, THREAD);
-      for (int i=0; i<length; i++) {
+      for (int i = 0; i<length; i++) {
         out->at_put(i, vc_array->at(i));
       }
       _verifier_constraints = out;
@@ -759,7 +574,7 @@ int SharedDictionaryEntry::finalize_verification_constraints() {
     {
       int length = vcflags_array->length();
       Array<char>* out = MetadataFactory::new_array<char>(loader_data, length, 0, THREAD);
-      for (int i=0; i<length; i++) {
+      for (int i = 0; i<length; i++) {
         out->at_put(i, vcflags_array->at(i));
       }
       _verifier_constraint_flags = out;
@@ -778,7 +593,7 @@ void SharedDictionaryEntry::check_verification_constraints(InstanceKlass* klass,
 
   if (vc_array != NULL) {
     int length = vc_array->length();
-    for (int i=0; i<length; i+=2) {
+    for (int i = 0; i<length; i+=2) {
       Symbol* name      = vc_array->at(i);
       Symbol* from_name = vc_array->at(i+1);
       char c = vcflags_array->at(i/2);
@@ -809,8 +624,6 @@ void SharedDictionaryEntry::metaspace_pointers_do(MetaspaceClosure* it) {
 }
 
 bool SharedDictionary::add_non_builtin_klass(const Symbol* class_name, ClassLoaderData* loader_data, InstanceKlass* klass) {
-
-
   // Add an entry for a non-builtin class.
   // For a shared class for custom class loaders, SystemDictionary::resolve_or_null will
   // not find this class, because is_builtin() is false.
@@ -843,7 +656,6 @@ Klass* SharedDictionary::find_class_for_builtin_loader(const Symbol* name) const
 }
 
 Klass* SharedDictionary::find_class_for_unregistered_loader(const Symbol* name, int clsfile_size, int clsfile_crc32) const {
-
   const SharedDictionaryEntry* entry = get_entry_for_unregistered_loader(name, clsfile_size, clsfile_crc32);
   return entry != NULL ? entry->instance_klass() : (Klass*)NULL;
 }

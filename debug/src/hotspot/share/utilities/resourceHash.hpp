@@ -31,7 +31,6 @@ template<
     >
 class ResourceHashtable : public ResourceObj {
  private:
-
   class Node : public ResourceObj {
    public:
     unsigned _hash;

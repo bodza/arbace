@@ -37,7 +37,6 @@ const int FPU_CNTRL_WRD_MASK = 0xFFFF;
 
 class StubGenerator: public StubCodeGenerator {
  private:
-
 #define inc_counter_np(counter) ((void)0)
 
   void inc_copy_counter_np(BasicType t) { }
@@ -139,8 +138,7 @@ class StubGenerator: public StubCodeGenerator {
 
     // get parameter
     __ movptr(rax, Address(rdx, rcx, Interpreter::stackElementScale(), -wordSize));
-    __ movptr(Address(rsp, rbx, Interpreter::stackElementScale(),
-                    Interpreter::expr_offset_in_bytes(0)), rax);          // store parameter
+    __ movptr(Address(rsp, rbx, Interpreter::stackElementScale(), Interpreter::expr_offset_in_bytes(0)), rax);          // store parameter
     __ increment(rbx);
     __ decrement(rcx);
     __ jcc(Assembler::notZero, loop);
@@ -242,8 +240,7 @@ class StubGenerator: public StubCodeGenerator {
     // set pending exception
     __ verify_oop(rax);
     __ movptr(Address(rcx, Thread::pending_exception_offset()), rax          );
-    __ lea(Address(rcx, Thread::exception_file_offset   ()),
-           ExternalAddress((address)__FILE__));
+    __ lea(Address(rcx, Thread::exception_file_offset   ()), ExternalAddress((address)__FILE__));
     __ movl(Address(rcx, Thread::exception_line_offset   ()), __LINE__ );
     // complete return to VM
     __ jump(RuntimeAddress(StubRoutines::_call_stub_return_address));
@@ -1073,11 +1070,7 @@ class StubGenerator: public StubCodeGenerator {
   // Helper for generating a dynamic type check.
   // The sub_klass must be one of {rbx, rdx, rsi}.
   // The temp is killed.
-  void generate_type_check(Register sub_klass,
-                           Address& super_check_offset_addr,
-                           Address& super_klass_addr,
-                           Register temp,
-                           Label* L_success, Label* L_failure) {
+  void generate_type_check(Register sub_klass, Address& super_check_offset_addr, Address& super_klass_addr, Register temp, Label* L_success, Label* L_failure) {
     BLOCK_COMMENT("type_check:");
 
     Label L_fallthrough;
@@ -1110,8 +1103,7 @@ class StubGenerator: public StubCodeGenerator {
     // We happen to know this works best when super_klass is in rax.
     Register super_klass = temp;
     __ movptr(super_klass, super_klass_addr);
-    __ check_klass_subtype_slow_path(sub_klass, super_klass, noreg, noreg,
-                                     L_success, L_failure);
+    __ check_klass_subtype_slow_path(sub_klass, super_klass, noreg, noreg, L_success, L_failure);
 
     __ bind(L_fallthrough);
 
@@ -1295,7 +1287,6 @@ class StubGenerator: public StubCodeGenerator {
                                address short_copy_entry,
                                address int_copy_entry,
                                address long_copy_entry) {
-
     Label L_long_aligned, L_int_aligned, L_short_aligned;
 
     __ align(CodeEntryAlignment);
@@ -1357,12 +1348,7 @@ class StubGenerator: public StubCodeGenerator {
 
   // Perform range checks on the proposed arraycopy.
   // Smashes src_pos and dst_pos.  (Uses them up for temps.)
-  void arraycopy_range_checks(Register src,
-                              Register src_pos,
-                              Register dst,
-                              Register dst_pos,
-                              Address& length,
-                              Label& L_failed) {
+  void arraycopy_range_checks(Register src, Register src_pos, Register dst, Register dst_pos, Address& length, Label& L_failed) {
     BLOCK_COMMENT("arraycopy_range_checks:");
     const Register src_end = src_pos;   // source array end position
     const Register dst_end = dst_pos;   // destination array end position
@@ -1586,11 +1572,9 @@ class StubGenerator: public StubCodeGenerator {
   __ BIND(L_plain_copy);
     __ movl2ptr(count, LENGTH); // elements count
     __ movl2ptr(src_pos, SRC_POS);  // reload src_pos
-    __ lea(from, Address(src, src_pos, Address::times_ptr,
-                 arrayOopDesc::base_offset_in_bytes(T_OBJECT))); // src_addr
+    __ lea(from, Address(src, src_pos, Address::times_ptr, arrayOopDesc::base_offset_in_bytes(T_OBJECT))); // src_addr
     __ movl2ptr(dst_pos, DST_POS);  // reload dst_pos
-    __ lea(to,   Address(dst, dst_pos, Address::times_ptr,
-                 arrayOopDesc::base_offset_in_bytes(T_OBJECT))); // dst_addr
+    __ lea(to,   Address(dst, dst_pos, Address::times_ptr, arrayOopDesc::base_offset_in_bytes(T_OBJECT))); // dst_addr
     __ movptr(FROM,  from);   // src_addr
     __ movptr(TO,    to);     // dst_addr
     __ movl(COUNT, count);  // count
@@ -1663,12 +1647,10 @@ class StubGenerator: public StubCodeGenerator {
 
       __ movl(length_arg, length);      // outgoing length argument
 
-      __ lea(from, Address(src, src_pos, Address::times_ptr,
-                            arrayOopDesc::base_offset_in_bytes(T_OBJECT)));
+      __ lea(from, Address(src, src_pos, Address::times_ptr, arrayOopDesc::base_offset_in_bytes(T_OBJECT)));
       __ movptr(from_arg, from);
 
-      __ lea(to, Address(dst, dst_pos, Address::times_ptr,
-                          arrayOopDesc::base_offset_in_bytes(T_OBJECT)));
+      __ lea(to, Address(dst, dst_pos, Address::times_ptr, arrayOopDesc::base_offset_in_bytes(T_OBJECT)));
       __ movptr(to_arg, to);
       __ jump(RuntimeAddress(entry_checkcast_arraycopy));
     }
@@ -2075,7 +2057,7 @@ class StubGenerator: public StubCodeGenerator {
     const XMMRegister xmm_key_shuf_mask = xmm_temp;  // used temporarily to swap key bytes up front
     __ movdqu(xmm_key_shuf_mask, ExternalAddress(StubRoutines::x86::key_shuffle_mask_addr()));
     // load up xmm regs 2 thru 7 with keys 0-5
-    for (int rnum = XMM_REG_NUM_KEY_FIRST, offset = 0x00; rnum  <= XMM_REG_NUM_KEY_LAST; rnum++) {
+    for (int rnum = XMM_REG_NUM_KEY_FIRST, offset = 0x00; rnum <= XMM_REG_NUM_KEY_LAST; rnum++) {
       load_key(as_XMMRegister(rnum), key, offset, xmm_key_shuf_mask);
       offset += 0x10;
     }
@@ -2095,7 +2077,7 @@ class StubGenerator: public StubCodeGenerator {
     __ pxor  (xmm_result, xmm_temp);                                // xor with the current r vector
 
     __ pxor  (xmm_result, xmm_key0);                                // do the aes rounds
-    for (int rnum = XMM_REG_NUM_KEY_FIRST + 1; rnum  <= XMM_REG_NUM_KEY_LAST; rnum++) {
+    for (int rnum = XMM_REG_NUM_KEY_FIRST + 1; rnum <= XMM_REG_NUM_KEY_LAST; rnum++) {
       __ aesenc(xmm_result, as_XMMRegister(rnum));
     }
     for (int key_offset = 0x60; key_offset <= 0x90; key_offset += 0x10) {
@@ -2131,7 +2113,7 @@ class StubGenerator: public StubCodeGenerator {
     __ pxor  (xmm_result, xmm_temp);                                // xor with the current r vector
 
     __ pxor  (xmm_result, xmm_key0);                                // do the aes rounds
-    for (int rnum = XMM_REG_NUM_KEY_FIRST + 1; rnum  <= XMM_REG_NUM_KEY_LAST; rnum++) {
+    for (int rnum = XMM_REG_NUM_KEY_FIRST + 1; rnum <= XMM_REG_NUM_KEY_LAST; rnum++) {
       __ aesenc(xmm_result, as_XMMRegister(rnum));
     }
     for (int key_offset = 0x60; key_offset <= 0xb0; key_offset += 0x10) {
@@ -2156,7 +2138,7 @@ class StubGenerator: public StubCodeGenerator {
     __ pxor  (xmm_result, xmm_temp);                                // xor with the current r vector
 
     __ pxor  (xmm_result, xmm_key0);                                // do the aes rounds
-    for (int rnum = XMM_REG_NUM_KEY_FIRST + 1; rnum  <= XMM_REG_NUM_KEY_LAST; rnum++) {
+    for (int rnum = XMM_REG_NUM_KEY_FIRST + 1; rnum <= XMM_REG_NUM_KEY_LAST; rnum++) {
       __ aesenc(xmm_result, as_XMMRegister(rnum));
     }
     for (int key_offset = 0x60; key_offset <= 0xd0; key_offset += 0x10) {
@@ -2705,8 +2687,7 @@ class StubGenerator: public StubCodeGenerator {
       __ movptr(limit, limit_param);
     }
 
-    __ fast_sha1(abcd, e0, e1, msg0, msg1, msg2, msg3, shuf_mask,
-      buf, state, ofs, limit, rsp, multi_block);
+    __ fast_sha1(abcd, e0, e1, msg0, msg1, msg2, msg3, shuf_mask, buf, state, ofs, limit, rsp, multi_block);
 
     if (multi_block) {
       __ pop(limit);
@@ -2765,8 +2746,7 @@ class StubGenerator: public StubCodeGenerator {
      __ movptr(limit, limit_param);
     }
 
-    __ fast_sha256(msg, state0, state1, msgtmp0, msgtmp1, msgtmp2, msgtmp3, msgtmp4,
-      buf, state, ofs, limit, rsp, multi_block);
+    __ fast_sha256(msg, state0, state1, msgtmp0, msgtmp1, msgtmp2, msgtmp3, msgtmp4, buf, state, ofs, limit, rsp, multi_block);
 
     handleSOERegisters(false);
     __ addptr(rsp, 8 * wordSize);
@@ -2949,7 +2929,6 @@ class StubGenerator: public StubCodeGenerator {
    *       rax   - int crc result
    */
   address generate_updateBytesCRC32() {
-
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "updateBytesCRC32");
 
@@ -3030,11 +3009,7 @@ class StubGenerator: public StubCodeGenerator {
       __ push(d);
       __ push(g);
       __ push(h);
-      __ crc32c_ipl_alg2_alt2(crc, buf, len,
-                              d, g, h,
-                              empty, empty, empty,
-                              xmm0, xmm1, xmm2,
-                              is_pclmulqdq_supported);
+      __ crc32c_ipl_alg2_alt2(crc, buf, len, d, g, h, empty, empty, empty, xmm0, xmm1, xmm2, is_pclmulqdq_supported);
       __ pop(h);
       __ pop(g);
       __ pop(d);
@@ -3312,7 +3287,6 @@ class StubGenerator: public StubCodeGenerator {
   };
 
  private:
-
 #undef  __
 #define __ masm->
 
@@ -3340,7 +3314,6 @@ class StubGenerator: public StubCodeGenerator {
   // either at call sites or otherwise assume that stack unwinding will be initiated,
   // so caller saved registers were assumed volatile in the compiler.
   address generate_throw_exception(const char* name, address runtime_entry, Register arg1 = noreg, Register arg2 = noreg) {
-
     int insts_size = 256;
     int locs_size  = 32;
 
@@ -3583,7 +3556,7 @@ class StubGenerator: public StubCodeGenerator {
       generate_initial();
     }
   }
-}; // end class declaration
+};
 
 void StubGenerator_generate(CodeBuffer* code, bool all) {
   StubGenerator g(code, all);

@@ -41,7 +41,6 @@ protected:
     _size_in_bytes = _area->size_in_bytes();
   }
  public:
-
   ResourceMark(Thread *thread) {
     initialize(thread);
   }
@@ -122,7 +121,6 @@ protected:
   }
 
  public:
-
   DeoptResourceMark(Thread *thread) {
     initialize(thread);
   }

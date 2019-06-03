@@ -21,7 +21,6 @@ class CompiledPltStaticCall: public CompiledStaticCall {
   CompiledPltStaticCall(NativePltCall* call) : _call(call) { }
 
  public:
-
   inline static CompiledPltStaticCall* before(address return_addr) {
     CompiledPltStaticCall* st = new CompiledPltStaticCall(nativePltCall_before(return_addr));
     st->verify();

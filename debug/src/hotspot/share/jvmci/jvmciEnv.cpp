@@ -7,7 +7,6 @@
 #include "code/codeCache.hpp"
 #include "code/scopeDesc.hpp"
 #include "compiler/compileBroker.hpp"
-#include "compiler/compileLog.hpp"
 #include "compiler/compilerOracle.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "memory/allocation.inline.hpp"
@@ -219,7 +218,7 @@ void JVMCIEnv::get_field_by_index(InstanceKlass* accessor, fieldDescriptor& fd, 
 // ------------------------------------------------------------------
 // Perform an appropriate method lookup based on accessor, holder,
 // name, signature, and bytecode.
-methodHandle JVMCIEnv::lookup_method(InstanceKlass* accessor, Klass*         holder, Symbol*        name, Symbol*        sig, Bytecodes::Code bc, constantTag   tag) {
+methodHandle JVMCIEnv::lookup_method(InstanceKlass* accessor, Klass* holder, Symbol* name, Symbol* sig, Bytecodes::Code bc, constantTag tag) {
   methodHandle dest_method;
   LinkInfo link_info(holder, name, sig, accessor, LinkInfo::needs_access_check, tag);
   switch (bc) {

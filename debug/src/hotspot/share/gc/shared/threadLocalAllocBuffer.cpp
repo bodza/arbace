@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "gc/shared/threadLocalAllocBuffer.inline.hpp"
-#include "logging/log.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
 #include "oops/oop.inline.hpp"
@@ -175,7 +174,6 @@ void ThreadLocalAllocBuffer::initialize() {
 }
 
 void ThreadLocalAllocBuffer::startup_initialization() {
-
   // Assuming each thread's active tlab is, on average,
   // 1/2 full at a GC
   _target_refills = 100 / (2 * TLABWasteTargetPercent);
@@ -245,13 +243,11 @@ HeapWord* ThreadLocalAllocBuffer::hard_end() {
 
 GlobalTLABStats::GlobalTLABStats() :
   _allocating_threads_avg(TLABAllocationWeight) {
-
   initialize();
 
   _allocating_threads_avg.sample(1); // One allocating thread at startup
 
   if (UsePerfData) {
-
     EXCEPTION_MARK;
     ResourceMark rm;
 
@@ -327,23 +323,4 @@ void GlobalTLABStats::publish() {
   }
 }
 
-void GlobalTLABStats::print() {
-  Log(gc, tlab) log;
-  if (!log.is_debug()) {
-    return;
-  }
-
-  size_t waste = _total_gc_waste + _total_slow_refill_waste + _total_fast_refill_waste;
-  double waste_percent = percent_of(waste, _total_allocation);
-  log.debug("TLAB totals: thrds: %d  refills: %d max: %d slow allocs: %d max %d waste: %4.1f%% gc: " SIZE_FORMAT "B max: " SIZE_FORMAT "B slow: " SIZE_FORMAT "B max: " SIZE_FORMAT "B fast: " SIZE_FORMAT "B max: " SIZE_FORMAT "B",
-            _allocating_threads,
-            _total_refills, _max_refills,
-            _total_slow_allocations, _max_slow_allocations,
-            waste_percent,
-            _total_gc_waste * HeapWordSize,
-            _max_gc_waste * HeapWordSize,
-            _total_slow_refill_waste * HeapWordSize,
-            _max_slow_refill_waste * HeapWordSize,
-            _total_fast_refill_waste * HeapWordSize,
-            _max_fast_refill_waste * HeapWordSize);
-}
+void GlobalTLABStats::print() { }

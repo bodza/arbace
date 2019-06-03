@@ -13,16 +13,9 @@
 #include "gc/epsilon/vmStructs_epsilon.hpp"
 #include "gc/g1/vmStructs_g1.hpp"
 
-#define VM_STRUCTS_GC(nonstatic_field, \
-                      volatile_nonstatic_field, \
-                      static_field, \
-                      unchecked_nonstatic_field) \
-  VM_STRUCTS_EPSILONGC(nonstatic_field, \
-                                      volatile_nonstatic_field, \
-                                      static_field) \
-  VM_STRUCTS_G1GC(nonstatic_field, \
-                            volatile_nonstatic_field, \
-                            static_field) \
+#define VM_STRUCTS_GC(nonstatic_field, volatile_nonstatic_field, static_field, unchecked_nonstatic_field) \
+  VM_STRUCTS_EPSILONGC(nonstatic_field, volatile_nonstatic_field, static_field) \
+  VM_STRUCTS_G1GC(nonstatic_field, volatile_nonstatic_field, static_field) \
  \
   /**********************************************************************************/ \
   /* Generation and Space hierarchies                                               */ \
@@ -107,15 +100,9 @@
   nonstatic_field(Space,                       _bottom,                                       HeapWord*) \
   nonstatic_field(Space,                       _end,                                          HeapWord*)
 
-#define VM_TYPES_GC(declare_type, \
-                    declare_toplevel_type, \
-                    declare_integer_type) \
-  VM_TYPES_EPSILONGC(declare_type, \
-                                    declare_toplevel_type, \
-                                    declare_integer_type) \
-  VM_TYPES_G1GC(declare_type, \
-                          declare_toplevel_type, \
-                          declare_integer_type) \
+#define VM_TYPES_GC(declare_type, declare_toplevel_type, declare_integer_type) \
+  VM_TYPES_EPSILONGC(declare_type, declare_toplevel_type, declare_integer_type) \
+  VM_TYPES_G1GC(declare_type, declare_toplevel_type, declare_integer_type) \
  \
   /******************************************/ \
   /* Generation and space hierarchies       */ \
@@ -176,12 +163,9 @@
  \
   declare_toplevel_type(BarrierSet::FakeRtti)
 
-#define VM_INT_CONSTANTS_GC(declare_constant, \
-                            declare_constant_with_value) \
-  VM_INT_CONSTANTS_EPSILONGC(declare_constant, \
-                                            declare_constant_with_value) \
-  VM_INT_CONSTANTS_G1GC(declare_constant, \
-                                  declare_constant_with_value) \
+#define VM_INT_CONSTANTS_GC(declare_constant, declare_constant_with_value) \
+  VM_INT_CONSTANTS_EPSILONGC(declare_constant, declare_constant_with_value) \
+  VM_INT_CONSTANTS_G1GC(declare_constant, declare_constant_with_value) \
  \
   /********************************************/ \
   /* Generation and Space Hierarchy Constants */ \

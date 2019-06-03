@@ -23,7 +23,7 @@ class GlobalCounter::CriticalSection {
   inline CriticalSection(Thread* thread) : _thread(thread) {
     GlobalCounter::critical_section_begin(_thread);
   }
-  inline  ~CriticalSection() {
+  inline ~CriticalSection() {
     GlobalCounter::critical_section_end(_thread);
   }
 };

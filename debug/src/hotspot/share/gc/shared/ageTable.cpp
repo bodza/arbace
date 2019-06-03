@@ -5,16 +5,13 @@
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/collectorPolicy.hpp"
 #include "memory/resourceArea.hpp"
-#include "logging/log.hpp"
 #include "oops/oop.inline.hpp"
 #include "utilities/copy.hpp"
 
 AgeTable::AgeTable(bool global) {
-
   clear();
 
   if (UsePerfData && global) {
-
     ResourceMark rm;
     EXCEPTION_MARK;
 

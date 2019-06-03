@@ -145,7 +145,6 @@ LIR_OpBranch::LIR_OpBranch(LIR_Condition cond, BasicType type, BlockBegin* block
 }
 
 void LIR_OpBranch::change_block(BlockBegin* b) {
-
   _block = b;
   _label = b->label();
 }
@@ -263,7 +262,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
   set_op(op);
 
   switch (op->code()) {
-
 // LIR_Op0
     case lir_word_align:               // result and info always invalid
     case lir_backwardbranch_target:    // result and info always invalid
@@ -447,7 +445,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
     case lir_div_strictfp:
     {
       LIR_Op2* op2 = (LIR_Op2*)op;
-
 
       do_input(op2->_opr1); do_temp(op2->_opr1);
       do_input(op2->_opr2); do_temp(op2->_opr2);
@@ -1004,7 +1001,6 @@ void print_LIR(BlockList* blocks) { }
 // Implementation of LIR_InsertionBuffer
 
 void LIR_InsertionBuffer::append(int index, LIR_Op* op) {
-
   int i = number_of_insertion_points() - 1;
   if (i < 0 || index_at(i) < index) {
     append_new(index, 1);

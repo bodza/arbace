@@ -109,7 +109,6 @@ class BytecodeConstantPool : ResourceObj {
   u2 find_or_add(BytecodeCPEntry const& bcpe);
 
  public:
-
   BytecodeConstantPool(ConstantPool* orig) : _orig(orig) { }
 
   BytecodeCPEntry const& at(u2 index) const { return _entries.at(index); }

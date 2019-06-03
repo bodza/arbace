@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "gc/shared/oopStorage.inline.hpp"
-#include "logging/log.hpp"
 #include "memory/iterator.hpp"
 #include "oops/access.inline.hpp"
 #include "oops/oop.inline.hpp"
@@ -224,7 +223,6 @@ size_t JNIHandles::weak_global_handle_memory_usage() {
 
 // We assume this is called at a safepoint: no lock is needed.
 void JNIHandles::print_on(outputStream* st) {
-
   st->print_cr("JNI global refs: " SIZE_FORMAT ", weak refs: " SIZE_FORMAT,
                global_handles()->allocation_count(),
                weak_global_handles()->allocation_count());
@@ -265,7 +263,7 @@ void jni_handles_init() {
 int             JNIHandleBlock::_blocks_allocated     = 0;
 JNIHandleBlock* JNIHandleBlock::_block_free_list      = NULL;
 
-JNIHandleBlock* JNIHandleBlock::allocate_block(Thread* thread)  {
+JNIHandleBlock* JNIHandleBlock::allocate_block(Thread* thread) {
   JNIHandleBlock* block;
   // Check the thread-local free list for a block so we don't
   // have to acquire a mutex.

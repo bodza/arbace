@@ -17,9 +17,6 @@
 #include "interpreter/interpreter.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "interpreter/oopMapCache.hpp"
-#include "logging/log.hpp"
-#include "logging/logConfiguration.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/metaspaceShared.hpp"
 #include "memory/oopFactory.hpp"
@@ -86,7 +83,6 @@
 #include "utilities/vmError.hpp"
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciRuntime.hpp"
-#include "logging/logHandle.hpp"
 #include "c1/c1_Compiler.hpp"
 #if INCLUDE_RTM_OPT
 #include "runtime/rtmLocking.hpp"
@@ -350,7 +346,6 @@ void Thread::send_async_exception(oop java_thread, oop java_throwable) {
 }
 
 bool JavaThread::is_ext_suspend_completed(bool called_by_wait, int delay, uint32_t *bits) {
-
   bool did_trans_retry = false;  // only do thread_in_native_trans retry once
   bool do_trans_retry;           // flag to force the retry
 
@@ -469,7 +464,6 @@ bool JavaThread::is_ext_suspend_completed(bool called_by_wait, int delay, uint32
 // Returns true if the thread is externally suspended and false otherwise.
 //
 bool JavaThread::wait_for_ext_suspend_completion(int retries, int delay, uint32_t *bits) {
-
   // local flag copies to minimize SR_lock hold time
   bool is_suspended;
   bool pending;
@@ -643,14 +637,12 @@ void Thread::print_on(outputStream* st, bool print_extended_info) const {
     st->print("tid=" INTPTR_FORMAT " ", p2i(this));
     osthread()->print_on(st);
   }
-  ThreadsSMRSupport::print_info_on(this, st);
   st->print(" ");
 }
 
 // Thread::print_on_error() is called by fatal error handler. Don't use
 // any lock or allocate memory.
 void Thread::print_on_error(outputStream* st, char* buf, int buflen) const {
-
   if (is_VM_thread())                 { st->print("VMThread"); }
   else if (is_GC_task_thread())       { st->print("GCTaskThread"); }
   else if (is_Watcher_thread())       { st->print("WatcherThread"); }
@@ -667,8 +659,6 @@ void Thread::print_on_error(outputStream* st, char* buf, int buflen) const {
   if (osthread()) {
     st->print(" [id=%d]", osthread()->thread_id());
   }
-
-  ThreadsSMRSupport::print_info_on(this, st);
 }
 
 void Thread::print_value_on(outputStream* st) const {
@@ -792,7 +782,6 @@ static void call_postVMInitHook(TRAPS) {
 }
 
 void JavaThread::allocate_threadObj(Handle thread_group, const char* thread_name, bool daemon, TRAPS) {
-
   InstanceKlass* ik = SystemDictionary::Thread_klass();
   instanceHandle thread_oop = ik->allocate_instance_handle(CHECK);
 
@@ -969,11 +958,9 @@ int WatcherThread::sleep() const {
 }
 
 void WatcherThread::run() {
-
   this->set_native_thread_name(this->name());
   this->set_active_handles(JNIHandleBlock::allocate_block());
   while (true) {
-
     // Calculate how long it'll be until the next PeriodicTask work
     // should be done, and sleep that amount of time.
     int time_waited = sleep();
@@ -1027,7 +1014,6 @@ void WatcherThread::run() {
 }
 
 void WatcherThread::start() {
-
   if (watcher_thread() == NULL && _startable) {
     _should_terminate = false;
     // Create the single instance of WatcherThread
@@ -1253,7 +1239,6 @@ JavaThread::JavaThread(ThreadFunction entry_point, size_t stack_sz) :
 }
 
 JavaThread::~JavaThread() {
-
   // JSR166 -- return the parker to the free list
   Parker::Release(_parker);
   _parker = NULL;
@@ -1316,7 +1301,6 @@ void JavaThread::run() {
 }
 
 void JavaThread::thread_main_inner() {
-
   // Execute thread entry point unless this thread has a pending exception
   // or has been stopped before starting.
   // Note: Due to JVM_StopThread we can have pending exceptions already!
@@ -1356,7 +1340,6 @@ static bool is_daemon(oop threadObj) {
 // For any new cleanup additions, please check to see if they need to be applied to
 // cleanup_failed_attach_current_thread as well.
 void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
-
   elapsedTimer _timer_exit_phase1;
   elapsedTimer _timer_exit_phase2;
   elapsedTimer _timer_exit_phase3;
@@ -1387,9 +1370,7 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
                               THREAD);
       if (HAS_PENDING_EXCEPTION) {
         ResourceMark rm(this);
-        jio_fprintf(defaultStream::error_stream(), "\nException: %s thrown from the UncaughtExceptionHandler in thread \"%s\"\n",
-                    pending_exception()->klass()->external_name(),
-                    get_thread_name());
+        jio_fprintf(defaultStream::error_stream(), "\nException: %s thrown from the UncaughtExceptionHandler in thread \"%s\"\n", pending_exception()->klass()->external_name(), get_thread_name());
         CLEAR_PENDING_EXCEPTION;
       }
     }
@@ -1571,7 +1552,6 @@ void JavaThread::remove_monitor_chunk(MonitorChunk* chunk) {
 // _thread_in_native_trans state (such as from
 // check_special_condition_for_native_trans()).
 void JavaThread::check_and_handle_async_exceptions(bool check_unsafe_error) {
-
   if (has_last_Java_frame() && has_async_condition()) {
     // If we are at a polling page safepoint (not a poll return)
     // then we must defer async exception because live registers
@@ -1610,21 +1590,8 @@ void JavaThread::check_and_handle_async_exceptions(bool check_unsafe_error) {
   if (_pending_async_exception != NULL) {
     // Only overwrite an already pending exception, if it is not a threadDeath.
     if (!has_pending_exception() || !pending_exception()->is_a(SystemDictionary::ThreadDeath_klass())) {
-
       // We cannot call Exceptions::_throw(...) here because we cannot block
       set_pending_exception(_pending_async_exception, __FILE__, __LINE__);
-
-      LogTarget(Info, exceptions) lt;
-      if (lt.is_enabled()) {
-        ResourceMark rm;
-        LogStream ls(lt);
-        ls.print("Async. exception installed at runtime exit (" INTPTR_FORMAT ")", p2i(this));
-          if (has_last_Java_frame()) {
-            frame f = last_frame();
-           ls.print(" (pc: " INTPTR_FORMAT " sp: " INTPTR_FORMAT " )", p2i(f.pc()), p2i(f.sp()));
-          }
-        ls.print_cr(" of type: %s", _pending_async_exception->klass()->external_name());
-      }
       _pending_async_exception = NULL;
       clear_has_async_exception();
     }
@@ -1703,7 +1670,6 @@ void JavaThread::handle_special_runtime_exit_condition(bool check_asyncs) {
 }
 
 void JavaThread::send_thread_stop(oop java_throwable) {
-
   // Do not throw asynchronous exceptions against the compiler thread
   // (the compiler thread should not be a Java thread -- fix in 1.4.2)
   if (!can_call_java()) return;
@@ -1840,7 +1806,6 @@ int JavaThread::java_suspend_self() {
 // Note only the ThreadInVMfromNative transition can call this function
 // directly and when thread state is _thread_in_native_trans
 void JavaThread::check_safepoint_and_suspend_for_native_trans(JavaThread *thread) {
-
   JavaThread *curJT = JavaThread::current();
   bool do_self_suspend = thread->is_external_suspend();
 
@@ -2000,7 +1965,6 @@ void JavaThread::remove_stack_guard_pages() {
 }
 
 void JavaThread::enable_stack_reserved_zone() {
-
   // The base notation is from the stack's point of view, growing downward.
   // We need to adjust it to work correctly with guard_memory()
   address base = stack_reserved_zone_base() - stack_reserved_zone_size();
@@ -2017,7 +1981,6 @@ void JavaThread::enable_stack_reserved_zone() {
 }
 
 void JavaThread::disable_stack_reserved_zone() {
-
   // Simply return if called for a thread that does not use guard pages.
   if (_stack_guard_state == stack_guard_unused) return;
 
@@ -2034,7 +1997,6 @@ void JavaThread::disable_stack_reserved_zone() {
 }
 
 void JavaThread::enable_stack_yellow_reserved_zone() {
-
   // The base notation is from the stacks point of view, growing downward.
   // We need to adjust it to work correctly with guard_memory()
   address base = stack_red_zone_base();
@@ -2051,7 +2013,6 @@ void JavaThread::enable_stack_yellow_reserved_zone() {
 }
 
 void JavaThread::disable_stack_yellow_reserved_zone() {
-
   // Simply return if called for a thread that does not use guard pages.
   if (_stack_guard_state == stack_guard_unused) return;
 
@@ -2177,7 +2138,6 @@ void JavaThread::oops_do(OopClosure* f, CodeBlobClosure* cf) {
 }
 
 void JavaThread::nmethods_do(CodeBlobClosure* cf) {
-
   if (has_last_Java_frame()) {
     // Traverse the execution stack
     for (StackFrameStream fst(this); !fst.is_done(); fst.next()) {
@@ -2269,12 +2229,8 @@ void JavaThread::print_on_error(outputStream* st, char *buf, int buflen) const {
   if (osthread()) {
     st->print(", id=%d", osthread()->thread_id());
   }
-  st->print(", stack(" PTR_FORMAT "," PTR_FORMAT ")",
-            p2i(stack_end()), p2i(stack_base()));
+  st->print(", stack(" PTR_FORMAT "," PTR_FORMAT ")", p2i(stack_end()), p2i(stack_base()));
   st->print("]");
-
-  ThreadsSMRSupport::print_info_on(this, st);
-  return;
 }
 
 // Verification
@@ -2359,7 +2315,6 @@ ThreadPriority JavaThread::java_priority() const {
 }
 
 void JavaThread::prepare(jobject jni_thread, ThreadPriority prio) {
-
   // Link Java Thread object <-> C++ Thread
 
   // Get the C++ thread object (an oop) from the JNI handle (a jthread)
@@ -2478,7 +2433,6 @@ static void sweeper_thread_entry(JavaThread* thread, TRAPS) {
 // Create a CompilerThread
 CompilerThread::CompilerThread(CompileQueue* queue, CompilerCounters* counters) : JavaThread(&compiler_thread_entry) {
   _env   = NULL;
-  _log   = NULL;
   _task  = NULL;
   _queue = queue;
   _counters = counters;
@@ -2699,8 +2653,7 @@ void Threads::initialize_java_lang_classes(JavaThread* main_thread, TRAPS) {
   main_thread->set_threadObj(thread_object);
   // Set thread status to running since main thread has
   // been started and running.
-  java_lang_Thread::set_thread_status(thread_object,
-                                      java_lang_Thread::RUNNABLE);
+  java_lang_Thread::set_thread_status(thread_object, java_lang_Thread::RUNNABLE);
 
   // The VM creates objects of this class.
   initialize_class(vmSymbols::java_lang_Module(), CHECK);
@@ -2767,9 +2720,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   // Update/Initialize System properties after JDK version number is known
   Arguments::init_version_specific_system_properties();
-
-  // Make sure to initialize log configuration *before* parsing arguments
-  LogConfiguration::initialize(create_vm_timer.begin_time());
 
   // Parse arguments
   // Note: this internally calls os::init_container_support()
@@ -2911,7 +2861,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   // We need this to update the java.vm.info property in case any flags used
   // to initially define it have been changed. This is needed for both CDS and
-  // AOT, since UseSharedSpaces and UseAOT may be changed after java.vm.info
+  // AOT, since false and UseAOT may be changed after java.vm.info
   // is initially computed. See Abstract_VM_Version::vm_info_string().
   // This update must happen before we initialize the java classes, but
   // after any initialization logic that might modify the flags.
@@ -2930,7 +2880,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   // debug stuff, that does not work until all basic classes have been initialized.
   set_init_completed();
 
-  LogConfiguration::post_initialize();
   Metaspace::post_initialize();
 
   // Signal Dispatcher needs to be started before VMInit event is posted
@@ -3173,7 +3122,6 @@ void Threads::shutdown_vm_agents() {
   size_t num_symbol_entries = ARRAY_SIZE(on_unload_symbols);
   extern struct JavaVM_ main_vm;
   for (AgentLibrary* agent = Arguments::agents(); agent != NULL; agent = agent->next()) {
-
     // Find the Agent_OnUnload function.
     Agent_OnUnload_t unload_entry = CAST_TO_FN_PTR(Agent_OnUnload_t,
                                                    os::find_agent_function(agent,
@@ -3285,8 +3233,7 @@ bool Threads::destroy_vm() {
     while (Threads::number_of_non_daemon_threads() > 1)
       // This wait should make safepoint checks, wait without a timeout,
       // and wait as a suspend-equivalent condition.
-      Threads_lock->wait(!Mutex::_no_safepoint_check_flag, 0,
-                         Mutex::_as_suspend_equivalent_flag);
+      Threads_lock->wait(!Mutex::_no_safepoint_check_flag, 0, Mutex::_as_suspend_equivalent_flag);
   }
 
   EventShutdown e;
@@ -3294,9 +3241,6 @@ bool Threads::destroy_vm() {
     e.set_reason("No remaining non-daemon Java threads");
     e.commit();
   }
-
-  // Hang forever on exit if we are reporting an error.
-  os::wait_for_keypress_at_exit();
 
   // run Java level shutdown hooks
   thread->invoke_shutdown_hooks();
@@ -3347,8 +3291,6 @@ bool Threads::destroy_vm() {
     FREE_C_HEAP_ARRAY(jlong, JavaThread::_jvmci_old_thread_counters);
   }
 
-  LogConfiguration::finalize();
-
   return true;
 }
 
@@ -3397,7 +3339,6 @@ void Threads::add(JavaThread* p, bool force_daemon) {
 }
 
 void Threads::remove(JavaThread* p) {
-
   // Reclaim the objectmonitors from the omInUseList and omFreeList of the moribund thread.
   ObjectSynchronizer::omFlush(p);
 
@@ -3577,9 +3518,6 @@ void Threads::print_on(outputStream* st, bool print_stacks, bool internal_format
   st->print_cr("Full thread dump %s (%s %s):", Abstract_VM_Version::vm_name(), Abstract_VM_Version::vm_release(), Abstract_VM_Version::vm_info_string());
   st->cr();
 
-  ThreadsSMRSupport::print_info_on(st);
-  st->cr();
-
   ALL_JAVA_THREADS(p) {
     ResourceMark rm;
     p->print_on(st, print_extended_info);
@@ -3638,9 +3576,6 @@ class PrintOnErrorClosure : public ThreadClosure {
 // Don't print stack trace, as the stack may not be walkable. Don't allocate
 // memory (even in resource area), it might deadlock the error handler.
 void Threads::print_on_error(outputStream* st, Thread* current, char* buf, int buflen) {
-  ThreadsSMRSupport::print_info_on(st);
-  st->cr();
-
   bool found_current = false;
   st->print_cr("Java Threads: ( => current thread )");
   ALL_JAVA_THREADS(thread) {

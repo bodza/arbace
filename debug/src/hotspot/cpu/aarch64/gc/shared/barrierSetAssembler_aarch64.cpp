@@ -8,7 +8,6 @@
 #define __ masm->
 
 void BarrierSetAssembler::load_at(MacroAssembler* masm, DecoratorSet decorators, BasicType type, Register dst, Address src, Register tmp1, Register tmp_thread) {
-
   // LR is live.  It must be saved around calls.
 
   bool in_heap = (decorators & IN_HEAP) != 0;
@@ -89,7 +88,6 @@ void BarrierSetAssembler::obj_equals(MacroAssembler* masm, Register obj1, Regist
 
 void BarrierSetAssembler::try_resolve_jobject_in_native(MacroAssembler* masm, Register jni_env, Register obj, Register tmp, Label& slowpath) {
   // If mask changes we need to ensure that the inverse is still encodable as an immediate
-  STATIC_ASSERT(JNIHandles::weak_tag_mask == 1);
   __ andr(obj, obj, ~JNIHandles::weak_tag_mask);
   __ ldr(obj, Address(obj, 0));             // *obj
 }
@@ -173,7 +171,6 @@ void BarrierSetAssembler::eden_allocate(MacroAssembler* masm, Register obj, Regi
 }
 
 void BarrierSetAssembler::incr_allocated_bytes(MacroAssembler* masm, Register var_size_in_bytes, int con_size_in_bytes, Register t1) {
-
   __ ldr(t1, Address(rthread, in_bytes(JavaThread::allocated_bytes_offset())));
   if (var_size_in_bytes->is_valid()) {
     __ add(t1, t1, var_size_in_bytes);

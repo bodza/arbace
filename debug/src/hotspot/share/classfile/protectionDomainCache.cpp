@@ -2,8 +2,6 @@
 
 #include "classfile/protectionDomainCache.hpp"
 #include "classfile/systemDictionary.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/iterator.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oop.inline.hpp"
@@ -33,11 +31,6 @@ void ProtectionDomainCacheTable::unlink() {
       if (pd != NULL) {
         p = entry->next_addr();
       } else {
-        LogTarget(Debug, protectiondomain) lt;
-        if (lt.is_enabled()) {
-          LogStream ls(lt);
-          ls.print_cr("protection domain unlinked at %d", i);
-        }
         entry->literal().release();
         *p = entry->next();
         free_entry(entry);

@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "logging/log.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/timer.hpp"
 #include "utilities/ostream.hpp"
@@ -122,14 +121,12 @@ TraceCPUTime::~TraceCPUTime() {
       double real_time, user_time, system_time;
       valid = os::getTimesSecs(&real_time, &user_time, &system_time);
       if (valid) {
-
         user_secs = user_time - _starting_user_time;
         system_secs = system_time - _starting_system_time;
         real_secs = real_time - _starting_real_time;
 
         _logfile->print(" [Times: user=%3.2f sys=%3.2f real=%3.2f secs] ",
           user_secs, system_secs, real_secs);
-
       } else {
         _logfile->print("[Invalid result in TraceCPUTime]");
       }

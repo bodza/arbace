@@ -168,8 +168,6 @@ public:
 
     jshort _app_class_paths_start_index;  // Index of first app classpath entry
     jshort _app_module_paths_start_index; // Index of first module path entry
-    bool   _verify_local;                 // false setting
-    bool   _verify_remote;                // false setting
     bool   _has_platform_or_app_classes;  // Archive contains app classes
 
     void set_has_platform_or_app_classes(bool v) {
@@ -246,10 +244,8 @@ public:
   bool  open_for_read();
   void  open_for_write();
   void  write_header();
-  void  write_region(int region, char* base, size_t size,
-                     bool read_only, bool allow_exec);
-  size_t write_archive_heap_regions(GrowableArray<MemRegion> *heap_mem,
-                                    int first_region_id, int max_num_regions);
+  void  write_region(int region, char* base, size_t size, bool read_only, bool allow_exec);
+  size_t write_archive_heap_regions(GrowableArray<MemRegion> *heap_mem, int first_region_id, int max_num_regions);
   void  write_bytes(const void* buffer, int count);
   void  write_bytes_aligned(const void* buffer, int count);
   char* map_region(int i, char** top_ret);
@@ -268,9 +264,6 @@ public:
   // Errors.
   static void fail_stop(const char *msg, ...) ATTRIBUTE_PRINTF(1, 2);
   static void fail_continue(const char *msg, ...) ATTRIBUTE_PRINTF(1, 2);
-
-  bool is_in_shared_region(const void* p, int idx) { return false; };
-  void print_shared_spaces() { };
 
   // Stop CDS sharing and unmap CDS regions.
   static void stop_sharing_and_unmap(const char* msg);

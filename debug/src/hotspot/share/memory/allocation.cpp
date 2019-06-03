@@ -14,10 +14,7 @@
 #include "utilities/ostream.hpp"
 
 // allocate using malloc; will fail if no memory available
-char* AllocateHeap(size_t size,
-                   MEMFLAGS flags,
-                   const NativeCallStack& stack,
-                   AllocFailType alloc_failmode /* = AllocFailStrategy::EXIT_OOM*/) {
+char* AllocateHeap(size_t size, MEMFLAGS flags, const NativeCallStack& stack, AllocFailType alloc_failmode /* = AllocFailStrategy::EXIT_OOM*/) {
   char* p = (char*) os::malloc(size, flags, stack);
   if (p == NULL && alloc_failmode == AllocFailStrategy::EXIT_OOM) {
     vm_exit_out_of_memory(size, OOM_MALLOC_ERROR, "AllocateHeap");
@@ -25,16 +22,11 @@ char* AllocateHeap(size_t size,
   return p;
 }
 
-char* AllocateHeap(size_t size,
-                   MEMFLAGS flags,
-                   AllocFailType alloc_failmode /* = AllocFailStrategy::EXIT_OOM*/) {
+char* AllocateHeap(size_t size, MEMFLAGS flags, AllocFailType alloc_failmode /* = AllocFailStrategy::EXIT_OOM*/) {
   return AllocateHeap(size, flags, CALLER_PC);
 }
 
-char* ReallocateHeap(char *old,
-                     size_t size,
-                     MEMFLAGS flag,
-                     AllocFailType alloc_failmode) {
+char* ReallocateHeap(char *old, size_t size, MEMFLAGS flag, AllocFailType alloc_failmode) {
   char* p = (char*) os::realloc(old, size, flag, CALLER_PC);
   if (p == NULL && alloc_failmode == AllocFailStrategy::EXIT_OOM) {
     vm_exit_out_of_memory(size, OOM_MALLOC_ERROR, "ReallocateHeap");
@@ -54,9 +46,7 @@ void StackObj::operator delete(void* p) { ShouldNotCallThis(); }
 void* StackObj::operator new [](size_t size) throw() { ShouldNotCallThis(); return 0; }
 void StackObj::operator delete [](void* p) { ShouldNotCallThis(); }
 
-void* MetaspaceObj::operator new(size_t size, ClassLoaderData* loader_data,
-                                 size_t word_size,
-                                 MetaspaceObj::Type type, TRAPS) throw() {
+void* MetaspaceObj::operator new(size_t size, ClassLoaderData* loader_data, size_t word_size, MetaspaceObj::Type type, TRAPS) throw() {
   // Klass has it's own operator new
   return Metaspace::allocate(loader_data, word_size, type, THREAD);
 }

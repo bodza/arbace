@@ -20,12 +20,10 @@ size_t G1CMObjArrayProcessor::process_array_slice(objArrayOop obj, HeapWord* sta
 }
 
 size_t G1CMObjArrayProcessor::process_obj(oop obj) {
-
   return process_array_slice(objArrayOop(obj), (HeapWord*)obj, (size_t)objArrayOop(obj)->size());
 }
 
 size_t G1CMObjArrayProcessor::process_slice(HeapWord* slice) {
-
   // Find the start address of the objArrayOop.
   // Shortcut the BOT access if the given address is from a humongous object. The BOT
   // slide is fast enough for "smaller" objects in non-humongous regions, but is slower

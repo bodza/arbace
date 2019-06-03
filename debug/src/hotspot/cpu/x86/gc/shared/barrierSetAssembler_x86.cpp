@@ -25,8 +25,7 @@ void BarrierSetAssembler::load_at(MacroAssembler* masm, DecoratorSet decorators,
         } else {
           __ decode_heap_oop(dst);
         }
-      } else
-      {
+      } else {
         __ movptr(dst, src);
       }
     } else {
@@ -77,8 +76,7 @@ void BarrierSetAssembler::store_at(MacroAssembler* masm, DecoratorSet decorators
             __ encode_heap_oop(val);
           }
           __ movl(dst, val);
-        } else
-        {
+        } else {
           __ movptr(dst, val);
         }
       }

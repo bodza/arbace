@@ -14,7 +14,6 @@ class xmlTextStream : public outputStream {
   friend class xmlStream;
   friend class defaultStream; // tty
  private:
-
   xmlStream* _outer_xmlStream;
 
   xmlTextStream() { _outer_xmlStream = NULL; }

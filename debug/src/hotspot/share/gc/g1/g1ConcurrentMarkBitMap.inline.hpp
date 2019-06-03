@@ -7,7 +7,6 @@
 #include "utilities/bitMap.inline.hpp"
 
 inline bool G1CMBitMap::iterate(G1CMBitMapClosure* cl, MemRegion mr) {
-
   BitMap::idx_t const end_offset = addr_to_offset(mr.end());
   BitMap::idx_t offset = _bm.get_next_one_offset(addr_to_offset(mr.start()), end_offset);
 

@@ -171,7 +171,6 @@ bool DirectivesParser::push_key(const char* str, size_t len) {
 }
 
 bool DirectivesParser::push_key(const key* k) {
-
   // Exceeding the stack should not be possible with a valid compiler directive,
   // and an invalid should abort before this happens
   if (depth >= MAX_DEPTH) {
@@ -217,7 +216,6 @@ const DirectivesParser::key* DirectivesParser::pop_key() {
 }
 
 bool DirectivesParser::set_option_flag(JSON_TYPE t, JSON_VAL* v, const key* option_key, DirectiveSet* set) {
-
   void (DirectiveSet::*test)(void *args);
   test = option_key->set;
 
@@ -287,7 +285,6 @@ bool DirectivesParser::set_option_flag(JSON_TYPE t, JSON_VAL* v, const key* opti
 }
 
 bool DirectivesParser::set_option(JSON_TYPE t, JSON_VAL* v) {
-
   const key* option_key = pop_key();
   const key* enclosing_key = current_key();
 
@@ -307,7 +304,6 @@ bool DirectivesParser::set_option(JSON_TYPE t, JSON_VAL* v) {
   case type_flag:
   {
     if (current_directiveset == NULL) {
-
       if (!set_option_flag(t, v, option_key, current_directive->_c1_store)) {
         return false;
       }

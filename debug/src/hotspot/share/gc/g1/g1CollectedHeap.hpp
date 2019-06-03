@@ -243,8 +243,6 @@ private:
   // If not, we can skip a few steps.
   bool _has_humongous_reclaim_candidates;
 
-  G1HRPrinter _hr_printer;
-
   // It decides whether an explicit GC should start a concurrent cycle
   // instead of doing a STW GC. Currently, a concurrent cycle is
   // explicitly started if:
@@ -273,10 +271,6 @@ private:
   // cleanup code more (as all the regions that will be allocated by
   // this method will be found dead by the marking cycle).
   void allocate_dummy_regions() { };
-
-  // If the HR printer is active, dump the state of the regions in the
-  // heap after a compaction.
-  void print_hrm_post_compaction();
 
   // Create a memory mapper for auxiliary data structures of the given size and
   // translation factor.
@@ -355,19 +349,14 @@ private:
   //   humongous allocation requests should go to mem_allocate() which
   //   will satisfy them with a special path.
 
-  virtual HeapWord* allocate_new_tlab(size_t min_size,
-                                      size_t requested_size,
-                                      size_t* actual_size);
+  virtual HeapWord* allocate_new_tlab(size_t min_size, size_t requested_size, size_t* actual_size);
 
-  virtual HeapWord* mem_allocate(size_t word_size,
-                                 bool*  gc_overhead_limit_was_exceeded);
+  virtual HeapWord* mem_allocate(size_t word_size, bool*  gc_overhead_limit_was_exceeded);
 
   // First-level mutator allocation attempt: try to allocate out of
   // the mutator alloc region without taking the Heap_lock. This
   // should only be used for non-humongous allocations.
-  inline HeapWord* attempt_allocation(size_t min_word_size,
-                                      size_t desired_word_size,
-                                      size_t* actual_word_size);
+  inline HeapWord* attempt_allocation(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size);
 
   // Second-level mutator allocation attempt: take the Heap_lock and
   // retry the allocation attempt, potentially scheduling a GC
@@ -382,21 +371,18 @@ private:
   // at the end of a successful GC). expect_null_mutator_alloc_region
   // specifies whether the mutator alloc region is expected to be NULL
   // or not.
-  HeapWord* attempt_allocation_at_safepoint(size_t word_size,
-                                            bool expect_null_mutator_alloc_region);
+  HeapWord* attempt_allocation_at_safepoint(size_t word_size, bool expect_null_mutator_alloc_region);
 
   // These methods are the "callbacks" from the G1AllocRegion class.
 
   // For mutator alloc regions.
   HeapRegion* new_mutator_alloc_region(size_t word_size, bool force);
-  void retire_mutator_alloc_region(HeapRegion* alloc_region,
-                                   size_t allocated_bytes);
+  void retire_mutator_alloc_region(HeapRegion* alloc_region, size_t allocated_bytes);
 
   // For GC alloc regions.
   bool has_more_regions(InCSetState dest);
   HeapRegion* new_gc_alloc_region(size_t word_size, InCSetState dest);
-  void retire_gc_alloc_region(HeapRegion* alloc_region,
-                              size_t allocated_bytes, InCSetState dest);
+  void retire_gc_alloc_region(HeapRegion* alloc_region, size_t allocated_bytes, InCSetState dest);
 
   // - if explicit_gc is true, the GC is for a System.gc() etc,
   //   otherwise it's for a failed allocation.
@@ -544,8 +530,6 @@ public:
     return _old_marking_cycles_completed;
   }
 
-  G1HRPrinter* hr_printer() { return &_hr_printer; }
-
   // Allocates a new heap region instance.
   HeapRegion* new_heap_region(uint hrs_index, MemRegion mr);
 
@@ -562,11 +546,7 @@ public:
   // be freed up. The assumption is that this will be done later.
   // The locked parameter indicates if the caller has already taken
   // care of proper synchronization. This may allow some optimizations.
-  void free_region(HeapRegion* hr,
-                   FreeRegionList* free_list,
-                   bool skip_remset,
-                   bool skip_hot_card_cache = false,
-                   bool locked = false);
+  void free_region(HeapRegion* hr, FreeRegionList* free_list, bool skip_remset, bool skip_hot_card_cache = false, bool locked = false);
 
   // It dirties the cards that cover the block so that the post
   // write barrier never queues anything when updating objects on this
@@ -581,8 +561,7 @@ public:
   // list later).
   // The method assumes that only a single thread is ever calling
   // this for a particular region at once.
-  void free_humongous_region(HeapRegion* hr,
-                             FreeRegionList* free_list);
+  void free_humongous_region(HeapRegion* hr, FreeRegionList* free_list);
 
   // Facility for allocating in 'archive' regions in high heap memory and
   // recording the allocated ranges. These should all be called from the
@@ -601,8 +580,7 @@ public:
 
   // Optionally aligns the end address and returns the allocated ranges in
   // an array of MemRegions in order of ascending addresses.
-  void end_archive_alloc_range(GrowableArray<MemRegion>* ranges,
-                               size_t end_alignment_in_bytes = 0);
+  void end_archive_alloc_range(GrowableArray<MemRegion>* ranges, size_t end_alignment_in_bytes = 0);
 
   // Facility for allocating a fixed range within the heap and marking
   // the containing regions as 'archive'. For use at JVM init time, when the
@@ -630,7 +608,6 @@ public:
   oop materialize_archived_object(oop obj);
 
 private:
-
   // Shrink the garbage-first heap by at most the given size (in bytes!).
   // (Rounds down to a HeapRegion boundary.)
   void shrink(size_t expand_bytes);
@@ -796,7 +773,6 @@ private:
 
   G1CMSubjectToDiscoveryClosure _is_subject_to_discovery_cm;
 public:
-
   RefToScanQueue *task_queue(uint i) const;
 
   uint num_task_queues() const;
@@ -959,7 +935,6 @@ public:
   G1InCSetStateFastTestBiasedMappedArray _in_cset_fast_test;
 
  public:
-
   inline InCSetState in_cset_state(const oop obj);
 
   // Return "TRUE" iff the given object address is in the reserved
@@ -1014,12 +989,9 @@ public:
   // The _from_worker_offset version uses the HeapRegionClaimer and
   // the worker id to calculate a start offset to prevent all workers to
   // start from the point.
-  void heap_region_par_iterate_from_worker_offset(HeapRegionClosure* cl,
-                                                  HeapRegionClaimer* hrclaimer,
-                                                  uint worker_id) const;
+  void heap_region_par_iterate_from_worker_offset(HeapRegionClosure* cl, HeapRegionClaimer* hrclaimer, uint worker_id) const;
 
-  void heap_region_par_iterate_from_start(HeapRegionClosure* cl,
-                                          HeapRegionClaimer* hrclaimer) const;
+  void heap_region_par_iterate_from_start(HeapRegionClosure* cl, HeapRegionClaimer* hrclaimer) const;
 
   // Iterate over the regions (if any) in the current collection set.
   void collection_set_iterate(HeapRegionClosure* blk);

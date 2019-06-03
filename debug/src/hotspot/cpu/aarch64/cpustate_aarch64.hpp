@@ -364,7 +364,6 @@ private:
   FPSRRegister fpsr;
 
 public:
-
   CPUState() {
     gr[20].value.u64 = 0;  // establish initial condition for
                            // checkAssertions()

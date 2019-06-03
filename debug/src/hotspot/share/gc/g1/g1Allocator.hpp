@@ -39,9 +39,7 @@ private:
   void set_survivor_full();
   void set_old_full();
 
-  void reuse_retained_old_region(EvacuationInfo& evacuation_info,
-                                 OldGCAllocRegion* old,
-                                 HeapRegion** retained);
+  void reuse_retained_old_region(EvacuationInfo& evacuation_info, OldGCAllocRegion* old, HeapRegion** retained);
 
   // Accessors to the allocation regions.
   inline MutatorAllocRegion* mutator_alloc_region();
@@ -49,14 +47,10 @@ private:
   inline OldGCAllocRegion* old_gc_alloc_region();
 
   // Allocation attempt during GC for a survivor object / PLAB.
-  HeapWord* survivor_attempt_allocation(size_t min_word_size,
-                                               size_t desired_word_size,
-                                               size_t* actual_word_size);
+  HeapWord* survivor_attempt_allocation(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size);
 
   // Allocation attempt during GC for an old object / PLAB.
-  HeapWord* old_attempt_allocation(size_t min_word_size,
-                                          size_t desired_word_size,
-                                          size_t* actual_word_size);
+  HeapWord* old_attempt_allocation(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size);
 public:
   G1Allocator(G1CollectedHeap* heap);
 
@@ -212,8 +206,7 @@ public:
 
   // Return the memory ranges used in the current archive, after
   // aligning to the requested alignment.
-  void complete_archive(GrowableArray<MemRegion>* ranges,
-                        size_t end_alignment_in_bytes);
+  void complete_archive(GrowableArray<MemRegion>* ranges, size_t end_alignment_in_bytes);
 
   // The number of bytes allocated by this allocator.
   size_t used() {

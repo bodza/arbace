@@ -9,7 +9,7 @@
 //                     ALGORITHM DESCRIPTION - LOG()
 //                     ---------------------
 //
-//    x=2^k * mx, mx in [1,2)
+//    x = 2^k * mx, mx in [1,2)
 //
 //    Get B~1/mx based on the output of rcpss instruction (B0)
 //    B = int((B0*2^7+0.5))/2^7

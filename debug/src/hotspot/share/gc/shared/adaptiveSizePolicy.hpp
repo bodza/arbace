@@ -4,7 +4,6 @@
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/gcCause.hpp"
 #include "gc/shared/gcUtil.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.hpp"
 #include "memory/universe.hpp"
 
@@ -20,7 +19,6 @@ class AdaptiveSizePolicy : public CHeapObj<mtGC> {
  friend class PSGCAdaptivePolicyCounters;
  friend class CMSGCAdaptivePolicyCounters;
  protected:
-
   enum GCPolicyKind {
     _gc_adaptive_size_policy,
     _gc_ps_adaptive_size_policy,

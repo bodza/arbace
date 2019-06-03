@@ -147,7 +147,7 @@ void ciMethod::load_code() {
   // for details.
   _exception_handlers = (ciExceptionHandler**)arena->Amalloc(sizeof(ciExceptionHandler*) * (_handler_count + 1));
   if (_handler_count > 0) {
-    for (int i=0; i<_handler_count; i++) {
+    for (int i = 0; i<_handler_count; i++) {
       _exception_handlers[i] = new (arena) ciExceptionHandler(
                                 holder(),
             /* start    */      exc_table.start_pc(i),
@@ -396,7 +396,7 @@ ciCallProfile ciMethod::call_profile_at_bci(int bci) {
         // The call site count is > 0 in the case of a polymorphic virtual call.
         if (morphism > 0 && morphism == result._limit) {
            // The morphism <= MorphismLimit.
-           if ((morphism <  ciCallProfile::MorphismLimit) || (morphism == ciCallProfile::MorphismLimit && count == 0)) {
+           if ((morphism < ciCallProfile::MorphismLimit) || (morphism == ciCallProfile::MorphismLimit && count == 0)) {
              result._morphism = morphism;
            }
         }
@@ -1001,17 +1001,6 @@ int ciMethod::instructions_size() {
 }
 
 // ------------------------------------------------------------------
-// ciMethod::log_nmethod_identity
-void ciMethod::log_nmethod_identity(xmlStream* log) {
-  GUARDED_VM_ENTRY(
-    CompiledMethod* code = get_Method()->code();
-    if (code != NULL) {
-      code->log_identity(log);
-    }
-  )
-}
-
-// ------------------------------------------------------------------
 // ciMethod::is_not_reached
 bool ciMethod::is_not_reached(int bci) {
   check_is_loaded();
@@ -1080,14 +1069,6 @@ bool ciMethod::check_call(int refinfo_index, bool is_static) const {
 bool ciMethod::profile_aging() const {
   return UseCodeAging && (!MethodCounters::is_nmethod_hot(nmethod_age()) && !MethodCounters::is_nmethod_age_unset(nmethod_age()));
 }
-// ------------------------------------------------------------------
-// ciMethod::print_codes
-//
-// Print the bytecodes for this method.
-void ciMethod::print_codes_on(outputStream* st) {
-  check_is_loaded();
-  GUARDED_VM_ENTRY(get_Method()->print_codes_on(st);)
-}
 
 #define FETCH_FLAG_FROM_VM(flag_accessor) { \
   check_is_loaded(); \
@@ -1142,7 +1123,7 @@ bool ciMethod::is_unboxing_method() const {
   return false;
 }
 
-BCEscapeAnalyzer  *ciMethod::get_bcea() {
+BCEscapeAnalyzer *ciMethod::get_bcea() {
   ShouldNotReachHere();
   return NULL;
 }
@@ -1177,15 +1158,6 @@ void ciMethod::dump_replay_data(outputStream* st) {
                interpreter_invocation_count(),
                interpreter_throwout_count(),
                _instructions_size);
-}
-
-// ------------------------------------------------------------------
-// ciMethod::print_codes
-//
-// Print a range of the bytecodes for this method.
-void ciMethod::print_codes_on(int from, int to, outputStream* st) {
-  check_is_loaded();
-  GUARDED_VM_ENTRY(get_Method()->print_codes_on(from, to, st);)
 }
 
 // ------------------------------------------------------------------

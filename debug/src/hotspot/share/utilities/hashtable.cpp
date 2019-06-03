@@ -8,7 +8,6 @@
 #include "classfile/placeholders.hpp"
 #include "classfile/protectionDomainCache.hpp"
 #include "classfile/stringTable.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
@@ -89,7 +88,6 @@ template <class T, MEMFLAGS F> bool RehashableHashtable<T, F>::check_rehash_tabl
 // and could in the future change the size of the table.
 
 template <class T, MEMFLAGS F> void RehashableHashtable<T, F>::move_to(RehashableHashtable<T, F>* new_table) {
-
   // Initialize the global seed for hashing.
   _seed = AltHashing::compute_seed();
 
@@ -228,7 +226,6 @@ static int literal_size(ClassLoaderWeakHandle v) {
 }
 
 template <MEMFLAGS F> bool BasicHashtable<F>::resize(int new_size) {
-
   // Allocate new buckets
   HashtableBucket<F>* buckets_new = NEW_C_HEAP_ARRAY2_RETURN_NULL(HashtableBucket<F>, new_size, F, CURRENT_PC);
   if (buckets_new == NULL) {

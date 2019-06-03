@@ -1,7 +1,6 @@
 #ifndef SHARE_VM_MEMORY_METASPACE_ITERATOR_HPP
 #define SHARE_VM_MEMORY_METASPACE_ITERATOR_HPP
 
-#include "logging/log.hpp"
 #include "memory/allocation.hpp"
 #include "oops/array.hpp"
 #include "utilities/growableArray.hpp"

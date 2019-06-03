@@ -15,7 +15,6 @@ class InterpreterMacroAssembler: public MacroAssembler {
   virtual void call_VM_leaf_base(address entry_point, int number_of_arguments);
 
  protected:
-
   virtual void call_VM_base(Register oop_result, Register java_thread, Register last_java_sp, address  entry_point, int number_of_arguments, bool check_exceptions);
 
   // base routine for all dispatches
@@ -67,23 +66,15 @@ class InterpreterMacroAssembler: public MacroAssembler {
   }
 
   void get_unsigned_2_byte_index_at_bcp(Register reg, int bcp_offset);
-  void get_cache_and_index_at_bcp(Register cache,
-                                  Register index,
-                                  int bcp_offset,
-                                  size_t index_size = sizeof(u2));
+  void get_cache_and_index_at_bcp(Register cache, Register index, int bcp_offset, size_t index_size = sizeof(u2));
   void get_cache_and_index_and_bytecode_at_bcp(Register cache,
                                                Register index,
                                                Register bytecode,
                                                int byte_no,
                                                int bcp_offset,
                                                size_t index_size = sizeof(u2));
-  void get_cache_entry_pointer_at_bcp(Register cache,
-                                      Register tmp,
-                                      int bcp_offset,
-                                      size_t index_size = sizeof(u2));
-  void get_cache_index_at_bcp(Register index,
-                              int bcp_offset,
-                              size_t index_size = sizeof(u2));
+  void get_cache_entry_pointer_at_bcp(Register cache, Register tmp, int bcp_offset, size_t index_size = sizeof(u2));
+  void get_cache_index_at_bcp(Register index, int bcp_offset, size_t index_size = sizeof(u2));
 
   // load cpool->resolved_references(index);
   void load_resolved_reference_at_index(Register result, Register index, Register tmp = rscratch2);
@@ -163,10 +154,7 @@ class InterpreterMacroAssembler: public MacroAssembler {
   // installing an exception, and notifying jvmdi.
   // In earlyReturn case we only want to skip throwing an exception
   // and installing an exception.
-  void remove_activation(TosState state, Register ret_addr,
-                         bool throw_monitor_exception = true,
-                         bool install_monitor_exception = true,
-                         bool notify_jvmdi = true);
+  void remove_activation(TosState state, Register ret_addr, bool throw_monitor_exception = true, bool install_monitor_exception = true, bool notify_jvmdi = true);
   void get_method_counters(Register method, Register mcs, Label& skip);
 
   // Object locking
@@ -180,24 +168,14 @@ class InterpreterMacroAssembler: public MacroAssembler {
 
   void set_mdp_data_at(Register mdp_in, int constant, Register value);
   void increment_mdp_data_at(Address data, bool decrement = false);
-  void increment_mdp_data_at(Register mdp_in, int constant,
-                             bool decrement = false);
-  void increment_mdp_data_at(Register mdp_in, Register reg, int constant,
-                             bool decrement = false);
-  void increment_mask_and_jump(Address counter_addr,
-                               int increment, Address mask,
-                               Register scratch, bool preloaded,
-                               Condition cond, Label* where);
+  void increment_mdp_data_at(Register mdp_in, int constant, bool decrement = false);
+  void increment_mdp_data_at(Register mdp_in, Register reg, int constant, bool decrement = false);
+  void increment_mask_and_jump(Address counter_addr, int increment, Address mask, Register scratch, bool preloaded, Condition cond, Label* where);
   void set_mdp_flag_at(Register mdp_in, int flag_constant);
-  void test_mdp_data_at(Register mdp_in, int offset, Register value,
-                        Register test_value_out,
-                        Label& not_equal_continue);
+  void test_mdp_data_at(Register mdp_in, int offset, Register value, Register test_value_out, Label& not_equal_continue);
 
-  void record_klass_in_profile(Register receiver, Register mdp,
-                               Register reg2, bool is_virtual_call);
-  void record_klass_in_profile_helper(Register receiver, Register mdp,
-                                      Register reg2, int start_row,
-                                      Label& done, bool is_virtual_call);
+  void record_klass_in_profile(Register receiver, Register mdp, Register reg2, bool is_virtual_call);
+  void record_klass_in_profile_helper(Register receiver, Register mdp, Register reg2, int start_row, Label& done, bool is_virtual_call);
   void record_item_in_profile_helper(Register item, Register mdp,
                                      Register reg2, int start_row, Label& done, int total_rows,
                                      OffsetFunction item_offset_fn, OffsetFunction item_count_offset_fn,
@@ -212,17 +190,14 @@ class InterpreterMacroAssembler: public MacroAssembler {
   void profile_not_taken_branch(Register mdp);
   void profile_call(Register mdp);
   void profile_final_call(Register mdp);
-  void profile_virtual_call(Register receiver, Register mdp,
-                            Register scratch2,
-                            bool receiver_can_be_null = false);
+  void profile_virtual_call(Register receiver, Register mdp, Register scratch2, bool receiver_can_be_null = false);
   void profile_called_method(Register method, Register mdp, Register reg2);
   void profile_ret(Register return_bci, Register mdp);
   void profile_null_seen(Register mdp);
   void profile_typecheck(Register mdp, Register klass, Register scratch);
   void profile_typecheck_failed(Register mdp);
   void profile_switch_default(Register mdp);
-  void profile_switch_case(Register index_in_scratch, Register mdp,
-                           Register scratch2);
+  void profile_switch_case(Register index_in_scratch, Register mdp, Register scratch2);
 
   // Debugging
   // only if +VerifyOops && state == atos
@@ -230,14 +205,7 @@ class InterpreterMacroAssembler: public MacroAssembler {
   // only if +VerifyFPU  && (state == ftos || state == dtos)
   void verify_FPU(int stack_depth, TosState state = ftos);
 
-  typedef enum { NotifyJVMTI, SkipNotifyJVMTI } NotifyMethodExitMode;
-
-  // support for jvmti/dtrace
-  void notify_method_entry();
-  void notify_method_exit(TosState state, NotifyMethodExitMode mode);
-
  private:
-
   Register _locals_register; // register that contains the pointer to the locals
   Register _bcp_register; // register that contains the bcp
 

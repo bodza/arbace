@@ -16,9 +16,7 @@ class defaultStream : public xmlTextStream {
   static FILE* _error_stream;
 
   void init();
-  void init_log();
   fileStream* open_file(const char* log_name);
-  void start_log();
   void finish_log();
   void finish_log_on_error(char *buf, int buflen);
  public:
@@ -32,21 +30,14 @@ class defaultStream : public xmlTextStream {
   }
 
   ~defaultStream() {
-    if (has_log_file())  finish_log();
+    if (has_log_file())
+        finish_log();
   }
 
-  static inline FILE* output_stream() {
-    return DisplayVMOutputToStderr ? _error_stream : _output_stream;
-  }
-  static inline FILE* error_stream() {
-    return DisplayVMOutputToStdout ? _output_stream : _error_stream;
-  }
-  static inline int output_fd() {
-    return DisplayVMOutputToStderr ? _error_fd : _output_fd;
-  }
-  static inline int error_fd() {
-    return DisplayVMOutputToStdout ? _output_fd : _error_fd;
-  }
+  static inline FILE* output_stream() { return DisplayVMOutputToStderr ? _error_stream : _output_stream; }
+  static inline FILE* error_stream()  { return DisplayVMOutputToStdout ? _output_stream : _error_stream; }
+  static inline int output_fd()       { return DisplayVMOutputToStderr ? _error_fd : _output_fd; }
+  static inline int error_fd()        { return DisplayVMOutputToStdout ? _output_fd : _error_fd; }
 
   virtual void write(const char* s, size_t len);
 

@@ -44,7 +44,6 @@ class Linux {
   static uint32_t _os_version;
 
  protected:
-
   static julong _physical_memory;
   static pthread_t _main_thread;
   static Mutex* _createThread_lock;

@@ -14,7 +14,6 @@
 #include "classfile/vmSymbols.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "interpreter/bytecode.hpp"
-#include "logging/log.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/referenceType.hpp"
 #include "memory/resourceArea.hpp"
@@ -636,9 +635,7 @@ JVM_ENTRY(jclass, JVM_FindClassFromClass(JNIEnv *env, const char *name, jboolean
   }
   TempNewSymbol h_name = SymbolTable::new_symbol(name, CHECK_NULL);
   oop from_class_oop = JNIHandles::resolve(from);
-  Klass* from_class = (from_class_oop == NULL)
-                           ? (Klass*)NULL
-                           : java_lang_Class::as_Klass(from_class_oop);
+  Klass* from_class = (from_class_oop == NULL) ? (Klass*)NULL : java_lang_Class::as_Klass(from_class_oop);
   oop class_loader = NULL;
   oop protection_domain = NULL;
   if (from_class != NULL) {
@@ -647,8 +644,7 @@ JVM_ENTRY(jclass, JVM_FindClassFromClass(JNIEnv *env, const char *name, jboolean
   }
   Handle h_loader(THREAD, class_loader);
   Handle h_prot  (THREAD, protection_domain);
-  jclass result = find_class_from_class_loader(env, h_name, init, h_loader,
-                                               h_prot, true, thread);
+  jclass result = find_class_from_class_loader(env, h_name, init, h_loader, h_prot, true, thread);
   if (result != NULL) {
     oop mirror = JNIHandles::resolve_non_null(result);
     Klass* to_class = java_lang_Class::as_Klass(mirror);
@@ -912,7 +908,6 @@ static bool is_authorized(Handle context, InstanceKlass* klass, TRAPS) {
   // If there is a security manager and protection domain, check the access
   // in the protection domain, otherwise it is authorized.
   if (java_lang_System::has_security_manager()) {
-
     // For bootstrapping, if pd implies method isn't in the JDK, allow
     // this context to revert to older behavior.
     // In this case the isAuthorized field in AccessControlContext is also not
@@ -1054,7 +1049,7 @@ class RegisterArrayForGC {
  private:
   JavaThread *_thread;
  public:
-  RegisterArrayForGC(JavaThread *thread, GrowableArray<oop>* array)  {
+  RegisterArrayForGC(JavaThread *thread, GrowableArray<oop>* array) {
     _thread = thread;
     _thread->register_array_for_gc(array);
   }
@@ -1491,7 +1486,6 @@ static bool select_method(const methodHandle& method, bool want_constructor) {
 }
 
 static jobjectArray get_class_declared_methods_helper(JNIEnv *env, jclass ofClass, jboolean publicOnly, bool want_constructor, Klass* klass, TRAPS) {
-
   // Exclude primitive types and array types
   if (java_lang_Class::is_primitive(JNIHandles::resolve_non_null(ofClass)) || java_lang_Class::as_Klass(JNIHandles::resolve_non_null(ofClass))->is_array_klass()) {
     // Return empty array
@@ -2349,7 +2343,6 @@ JVM_END
 
 // Printing support //////////////////////////////////////////////////
 extern "C" {
-
 ATTRIBUTE_PRINTF(3, 0)
 int jio_vsnprintf(char *str, size_t count, const char *fmt, va_list args) {
   // Reject count values that are negative signed values converted to
@@ -3007,7 +3000,7 @@ JNIEXPORT void* JNICALL JVM_RawMonitorCreate(void) {
   return new Mutex(Mutex::native, "JVM_RawMonitorCreate");
 }
 
-JNIEXPORT void JNICALL  JVM_RawMonitorDestroy(void *mon) {
+JNIEXPORT void JNICALL JVM_RawMonitorDestroy(void *mon) {
   VM_Exit::block_if_vm_exited();
   JVMWrapper("JVM_RawMonitorDestroy");
   delete ((Mutex*) mon);
@@ -3028,9 +3021,7 @@ JNIEXPORT void JNICALL JVM_RawMonitorExit(void *mon) {
 
 // Shared JNI/JVM entry points //////////////////////////////////////////////////////////////
 
-jclass find_class_from_class_loader(JNIEnv* env, Symbol* name, jboolean init,
-                                    Handle loader, Handle protection_domain,
-                                    jboolean throwError, TRAPS) {
+jclass find_class_from_class_loader(JNIEnv* env, Symbol* name, jboolean init, Handle loader, Handle protection_domain, jboolean throwError, TRAPS) {
   // Security Note:
   //   The Java level wrapper will perform the necessary security check allowing
   //   us to pass the NULL as the initiating class loader.  The VM is responsible for

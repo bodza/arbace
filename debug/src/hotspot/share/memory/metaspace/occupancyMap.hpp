@@ -6,7 +6,6 @@
 #include "utilities/globalDefinitions.hpp"
 
 namespace metaspace {
-
 class Metachunk;
 
 // Helper for Occupancy Bitmap. A type trait to give an all-bits-are-one-unsigned constant.
@@ -21,7 +20,6 @@ template <> struct all_ones <uint32_t> { static const uint32_t value = 0xFFFFFFF
 // A bit in this bitmap represents one range of memory in the smallest
 // chunk size (SpecializedChunk or ClassSpecializedChunk).
 class OccupancyMap : public CHeapObj<mtInternal> {
-
   // The address range this map covers.
   const MetaWord* const _reference_address;
   const size_t _word_size;
@@ -137,7 +135,6 @@ class OccupancyMap : public CHeapObj<mtInternal> {
   }
 
  public:
-
   OccupancyMap(const MetaWord* reference_address, size_t word_size, size_t smallest_chunk_word_size);
   ~OccupancyMap();
 

@@ -304,7 +304,6 @@ void Rewriter::maybe_rewrite_ldc(address bcp, int offset, bool is_wide, bool rev
 
 // Rewrites a method given the index_map information
 void Rewriter::scan_method(Method* method, bool reverse, bool* invokespecial_error) {
-
   int nof_jsrs = 0;
   bool has_monitor_bytecodes = false;
   Bytecodes::Code c;
@@ -337,7 +336,7 @@ void Rewriter::scan_method(Method* method, bool reverse, bool* invokespecial_err
     }
 
     switch (c) {
-      case Bytecodes::_lookupswitch   : {
+      case Bytecodes::_lookupswitch: {
         Bytecode_lookupswitch bc(method, bcp);
         (*bcp) = (bc.number_of_pairs() < BinarySwitchThreshold ? Bytecodes::_fast_linearswitch : Bytecodes::_fast_binaryswitch);
         break;
@@ -348,13 +347,13 @@ void Rewriter::scan_method(Method* method, bool reverse, bool* invokespecial_err
         break;
       }
 
-      case Bytecodes::_invokespecial  : {
+      case Bytecodes::_invokespecial: {
         rewrite_invokespecial(bcp, prefix_length+1, reverse, invokespecial_error);
         break;
       }
 
-      case Bytecodes::_putstatic      :
-      case Bytecodes::_putfield       : {
+      case Bytecodes::_putstatic:
+      case Bytecodes::_putfield: {
         if (!reverse) {
           // Check if any final field of the class given as parameter is modified
           // outside of initializer methods of the class. Fields that are modified
@@ -444,7 +443,6 @@ methodHandle Rewriter::rewrite_jsrs(const methodHandle& method, TRAPS) {
 }
 
 void Rewriter::rewrite_bytecodes(TRAPS) {
-
   // determine index maps for Method* rewriting
   compute_index_maps();
 

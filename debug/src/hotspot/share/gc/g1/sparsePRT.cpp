@@ -10,10 +10,6 @@
 #include "runtime/atomic.hpp"
 #include "runtime/mutexLocker.hpp"
 
-// Check that the size of the SparsePRTEntry is evenly divisible by the maximum
-// member type to avoid SIGBUS when accessing them.
-STATIC_ASSERT(sizeof(SparsePRTEntry) % sizeof(int) == 0);
-
 void SparsePRTEntry::init(RegionIdx_t region_ind) {
   // Check that the card array element type can represent all cards in the region.
   // Choose a large SparsePRTEntry::card_elem_t (e.g. CardIdx_t) if required.
@@ -287,7 +283,6 @@ void SparsePRT::finish_cleanup_task(SparsePRTCleanupTask* sprt_cleanup_task) {
   SparsePRT* head = sprt_cleanup_task->head();
   SparsePRT* tail = sprt_cleanup_task->tail();
   if (head != NULL) {
-
     tail->set_next_expanded(_head_expanded_list);
     _head_expanded_list = head;
   }
@@ -379,7 +374,6 @@ void SparsePRT::expand() {
 }
 
 void SparsePRTCleanupTask::add(SparsePRT* sprt) {
-
   sprt->set_next_expanded(NULL);
   if (_tail != NULL) {
     _tail->set_next_expanded(sprt);

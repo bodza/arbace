@@ -37,7 +37,6 @@ class java_lang_String : AllStatic {
   static inline void set_coder(oop string, jbyte coder);
 
  public:
-
   // Coders
   enum Coder {
     CODER_LATIN1 =  0,
@@ -1493,7 +1492,6 @@ class InjectedField {
 
 class JavaClasses : AllStatic {
  private:
-
   static InjectedField _injected_fields[];
 
   static bool check_offset(const char *klass_name, int offset, const char *field_name, const char* field_sig) { return 0; };

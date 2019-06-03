@@ -20,7 +20,6 @@
 // the VM and perform checks upon leave of the VM.
 
 class InterfaceSupport: AllStatic {
-
  public:
   static void serialize_thread_state_with_handler(JavaThread* thread) {
     serialize_thread_state_internal(thread, true);
@@ -135,10 +134,8 @@ class ThreadInVMForHandshake : public ThreadStateTransition {
   }
 
  public:
-
   ThreadInVMForHandshake(JavaThread* thread) : ThreadStateTransition(thread),
       _original_state(thread->thread_state()) {
-
     if (thread->has_last_Java_frame()) {
       thread->frame_anchor()->make_walkable(thread);
     }
@@ -156,7 +153,7 @@ class ThreadInVMfromJava : public ThreadStateTransition {
   ThreadInVMfromJava(JavaThread* thread) : ThreadStateTransition(thread) {
     trans_from_java(_thread_in_vm);
   }
-  ~ThreadInVMfromJava()  {
+  ~ThreadInVMfromJava() {
     if (_thread->stack_yellow_reserved_zone_disabled()) {
       _thread->enable_stack_yellow_reserved_zone();
     }
@@ -184,7 +181,7 @@ class ThreadInVMfromUnknown {
       }
     }
   }
-  ~ThreadInVMfromUnknown()  {
+  ~ThreadInVMfromUnknown() {
     if (_thread) {
       ThreadStateTransition::transition_and_fence(_thread, _thread_in_vm, _thread_in_native);
     }
@@ -240,7 +237,7 @@ class ThreadInVMfromJavaNoAsyncException : public ThreadStateTransition {
   ThreadInVMfromJavaNoAsyncException(JavaThread* thread) : ThreadStateTransition(thread) {
     trans_from_java(_thread_in_vm);
   }
-  ~ThreadInVMfromJavaNoAsyncException()  {
+  ~ThreadInVMfromJavaNoAsyncException() {
     if (_thread->stack_yellow_reserved_zone_disabled()) {
       _thread->enable_stack_yellow_reserved_zone();
     }

@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "classfile/javaClasses.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/access.inline.hpp"
@@ -35,7 +34,6 @@ ResolvedMethodTable::ResolvedMethodTable()
 oop ResolvedMethodTable::lookup(int index, unsigned int hash, Method* method) {
   for (ResolvedMethodEntry* p = bucket(index); p != NULL; p = p->next()) {
     if (p->hash() == hash) {
-
       // Peek the object to check if it is the right target.
       oop target = p->object_no_keepalive();
 

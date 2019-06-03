@@ -459,18 +459,6 @@ public:
   ClassState  init_state()                 { return (ClassState)_init_state; }
   bool is_rewritten() const                { return (_misc_flags & _misc_rewritten) != 0; }
 
-  // defineClass specified verification
-  bool should_verify_class() const         {
-    return (_misc_flags & _misc_should_verify_class) != 0;
-  }
-  void set_should_verify_class(bool value) {
-    if (value) {
-      _misc_flags |= _misc_should_verify_class;
-    } else {
-      _misc_flags &= ~_misc_should_verify_class;
-    }
-  }
-
   // marking
   bool is_marked_dependent() const         { return _is_marked_dependent; }
   void set_is_marked_dependent(bool value) { _is_marked_dependent = value; }
@@ -553,8 +541,8 @@ public:
   static int find_method_by_name(const Array<Method*>* methods, const Symbol* name, int* end);
 
   // constant pool
-  ConstantPool* constants() const        { return _constants; }
-  void set_constants(ConstantPool* c)    { _constants = c; }
+  ConstantPool* constants() const     { return _constants; }
+  void set_constants(ConstantPool* c) { _constants = c; }
 
   // protection domain
   oop protection_domain() const;
@@ -563,7 +551,7 @@ public:
   objArrayOop signers() const;
 
   // host class
-  InstanceKlass* host_klass() const              {
+  InstanceKlass* host_klass() const   {
     InstanceKlass** hk = adr_host_klass();
     if (hk == NULL) {
       return NULL;
@@ -577,13 +565,13 @@ public:
       *addr = host;
     }
   }
-  bool has_host_klass() const              {
+  bool has_host_klass() const         {
     return adr_host_klass() != NULL;
   }
-  bool is_anonymous() const                {
+  bool is_anonymous() const           {
     return (_misc_flags & _misc_is_anonymous) != 0;
   }
-  void set_is_anonymous(bool value)        {
+  void set_is_anonymous(bool value)   {
     if (value) {
       _misc_flags |= _misc_is_anonymous;
     } else {
@@ -597,10 +585,10 @@ public:
     return is_anonymous() ? java_mirror() : class_loader();
   }
 
-  bool is_contended() const                {
+  bool is_contended() const           {
     return (_misc_flags & _misc_is_contended) != 0;
   }
-  void set_is_contended(bool value)        {
+  void set_is_contended(bool value)   {
     if (value) {
       _misc_flags |= _misc_is_contended;
     } else {
@@ -609,11 +597,10 @@ public:
   }
 
   // source file name
-  Symbol* source_file_name() const               {
-    return (_source_file_name_index == 0) ?
-      (Symbol*)NULL : _constants->symbol_at(_source_file_name_index);
+  Symbol* source_file_name() const    {
+    return (_source_file_name_index == 0) ? (Symbol*)NULL : _constants->symbol_at(_source_file_name_index);
   }
-  u2 source_file_name_index() const              {
+  u2 source_file_name_index() const   {
     return _source_file_name_index;
   }
   void set_source_file_name_index(u2 sourcefile_index) {
@@ -698,7 +685,6 @@ public:
     _misc_flags |= _misc_has_resolved_methods;
   }
 private:
-
   void set_kind(unsigned kind) {
     unsigned fmask = _misc_kind_field_mask << _misc_kind_field_pos;
     unsigned flags = _misc_flags & ~fmask;
@@ -711,7 +697,6 @@ private:
   }
 
 public:
-
   // Other is anything that is not one of the more specialized kinds of InstanceKlass.
   bool is_other_instance_klass() const        { return is_kind(_misc_kind_other); }
   bool is_reference_instance_klass() const    { return is_kind(_misc_kind_reference); }
@@ -745,16 +730,16 @@ public:
 
   // for adding methods, ConstMethod::UNSET_IDNUM means no more ids available
   inline u2 next_method_idnum();
-  void set_initial_method_idnum(u2 value)             { _idnum_allocated_count = value; }
+  void set_initial_method_idnum(u2 value)        { _idnum_allocated_count = value; }
 
   // generics support
-  Symbol* generic_signature() const                   {
+  Symbol* generic_signature() const              {
     return (_generic_signature_index == 0) ? (Symbol*)NULL : _constants->symbol_at(_generic_signature_index);
   }
-  u2 generic_signature_index() const                  {
+  u2 generic_signature_index() const             {
     return _generic_signature_index;
   }
-  void set_generic_signature_index(u2 sig_index)      {
+  void set_generic_signature_index(u2 sig_index) {
     _generic_signature_index = sig_index;
   }
 
@@ -1163,7 +1148,6 @@ class InnerClassesIterator : public StackObj {
   int _length;
   int _idx;
  public:
-
   InnerClassesIterator(const InstanceKlass* k) {
     _inner_classes = k->inner_classes();
     if (k->inner_classes() != NULL) {

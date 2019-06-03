@@ -46,7 +46,7 @@ private:
   void        restore();
 
   public:
-    WeakPreserveExceptionMark(Thread* pThread) :  _thread(pThread), _preserved_exception_oop()  {
+    WeakPreserveExceptionMark(Thread* pThread) : _thread(pThread), _preserved_exception_oop() {
       if (pThread->has_pending_exception()) {
         preserve();
       }

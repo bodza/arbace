@@ -63,7 +63,7 @@
     if (HAS_PENDING_EXCEPTION) { \
       return (value); \
     } \
-  } while (0)
+  } while (false)
 
 #define CHECK_JNI_EXCEPTION(env) \
   do { \
@@ -72,7 +72,7 @@
     if (HAS_PENDING_EXCEPTION) { \
       return; \
     } \
-  } while (0)
+  } while (false)
 
 bool WhiteBox::_used = false;
 volatile bool WhiteBox::compilation_locked = false;
@@ -197,7 +197,6 @@ static jint wb_stress_virtual_space_resize(size_t reserved_space_size, size_t ma
   os::init_random(seed);
 
   for (size_t i = 0; i < iterations; i++) {
-
     // Whether we will shrink or grow
     bool shrink = os::random() % 2L == 0;
 
@@ -404,7 +403,6 @@ WB_ENTRY(jobject, WB_G1AuxiliaryMemoryUsage(JNIEnv* env))
 WB_END
 
 class OldRegionsLivenessClosure: public HeapRegionClosure {
-
  private:
   const int _liveness;
   size_t _total_count;
@@ -816,9 +814,7 @@ static jobject box(JavaThread* thread, JNIEnv* env, Symbol* name, Symbol* sig, T
   ResourceMark rm(thread);
   jclass clazz = env->FindClass(name->as_C_string());
   CHECK_JNI_EXCEPTION_(env, NULL);
-  jmethodID methodID = env->GetStaticMethodID(clazz,
-        vmSymbols::valueOf_name()->as_C_string(),
-        sig->as_C_string());
+  jmethodID methodID = env->GetStaticMethodID(clazz, vmSymbols::valueOf_name()->as_C_string(), sig->as_C_string());
   CHECK_JNI_EXCEPTION_(env, NULL);
   jobject result = env->CallStaticObjectMethod(clazz, methodID, value);
   CHECK_JNI_EXCEPTION_(env, NULL);

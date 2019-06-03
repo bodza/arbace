@@ -25,7 +25,6 @@ ThreadCritical::ThreadCritical() {
 }
 
 ThreadCritical::~ThreadCritical() {
-
   tc_count--;
   if (tc_count == 0) {
     tc_owner = 0;

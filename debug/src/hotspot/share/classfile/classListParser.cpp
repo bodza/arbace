@@ -6,8 +6,6 @@
 #include "classfile/symbolTable.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "classfile/systemDictionaryShared.hpp"
-#include "logging/log.hpp"
-#include "logging/logTag.hpp"
 #include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/fieldType.hpp"
@@ -66,7 +64,7 @@ bool ClassListParser::parse_one_line() {
     int len = (int)strlen(_line);
     int i;
     // Replace \t\r\n with ' '
-    for (i=0; i<len; i++) {
+    for (i = 0; i<len; i++) {
       if (_line[i] == '\t' || _line[i] == '\r' || _line[i] == '\n') {
         _line[i] = ' ';
       }
@@ -190,7 +188,7 @@ bool ClassListParser::parse_int_option(const char* option_name, int* value) {
 void ClassListParser::print_specified_interfaces() {
   const int n = _interfaces->length();
   jio_fprintf(defaultStream::error_stream(), "Currently specified interfaces[%d] = {\n", n);
-  for (int i=0; i<n; i++) {
+  for (int i = 0; i<n; i++) {
     InstanceKlass* k = lookup_class_by_id(_interfaces->at(i));
     jio_fprintf(defaultStream::error_stream(), "  %4d = %s\n", _interfaces->at(i), k->name()->as_klass_external_name());
   }
@@ -225,7 +223,7 @@ void ClassListParser::error(const char *msg, ...) {
     jio_fprintf(defaultStream::error_stream(), "\n");
   } else {
     jio_fprintf(defaultStream::error_stream(), ":\n");
-    for (int i=0; i<_line_len; i++) {
+    for (int i = 0; i<_line_len; i++) {
       char c = _line[i];
       if (c == '\0') {
         jio_fprintf(defaultStream::error_stream(), "%s", " ");
@@ -234,7 +232,7 @@ void ClassListParser::error(const char *msg, ...) {
       }
     }
     jio_fprintf(defaultStream::error_stream(), "\n");
-    for (int i=0; i<error_index; i++) {
+    for (int i = 0; i<error_index; i++) {
       jio_fprintf(defaultStream::error_stream(), "%s", " ");
     }
     jio_fprintf(defaultStream::error_stream(), "^\n");
@@ -271,12 +269,10 @@ InstanceKlass* ClassListParser::load_class_from_source(Symbol* class_name, TRAPS
     if (k->local_interfaces()->length() != _interfaces->length()) {
       print_specified_interfaces();
       print_actual_interfaces(k);
-      error("The number of interfaces (%d) specified in class list does not match the class file (%d)",
-            _interfaces->length(), k->local_interfaces()->length());
+      error("The number of interfaces (%d) specified in class list does not match the class file (%d)", _interfaces->length(), k->local_interfaces()->length());
     }
 
-    if (!SystemDictionaryShared::add_non_builtin_klass(class_name, ClassLoaderData::the_null_class_loader_data(),
-                                                       k, THREAD)) {
+    if (!SystemDictionaryShared::add_non_builtin_klass(class_name, ClassLoaderData::the_null_class_loader_data(), k, THREAD)) {
       error("Duplicated class %s", _class_name);
     }
 
@@ -408,7 +404,7 @@ InstanceKlass* ClassListParser::lookup_interface_for_current_class(Symbol* inter
   }
 
   int i;
-  for (i=0; i<n; i++) {
+  for (i = 0; i<n; i++) {
     InstanceKlass* k = lookup_class_by_id(_interfaces->at(i));
     if (interface_name == k->name()) {
       return k;

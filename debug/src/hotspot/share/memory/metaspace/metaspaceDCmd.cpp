@@ -7,7 +7,6 @@
 #include "services/nmtCommon.hpp"
 
 namespace metaspace {
-
 MetaspaceDCmd::MetaspaceDCmd(outputStream* output, bool heap)
   : DCmdWithParser(output, heap)
   , _basic("basic", "Prints a basic summary (does not need a safepoint).", "BOOLEAN", false, "false")

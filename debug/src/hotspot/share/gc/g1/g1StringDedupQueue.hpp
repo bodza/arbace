@@ -36,7 +36,6 @@ public:
   G1StringDedupQueue();
 
 protected:
-
   // Blocks and waits for the queue to become non-empty.
   void wait_impl();
 

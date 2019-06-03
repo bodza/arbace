@@ -7,8 +7,6 @@
 
 #include "precompiled.hpp"
 
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/metaspace.hpp"
 #include "memory/metaspace/chunkManager.hpp"
 #include "memory/metaspace/metachunk.hpp"
@@ -20,7 +18,6 @@
 #include "runtime/safepoint.hpp"
 
 namespace metaspace {
-
 VirtualSpaceList::~VirtualSpaceList() {
   VirtualSpaceListIterator iter(virtual_space_list());
   while (iter.repeat()) {
@@ -184,13 +181,6 @@ void VirtualSpaceList::link_vs(VirtualSpaceNode* new_entry) {
   inc_reserved_words(new_entry->reserved_words());
   inc_committed_words(new_entry->committed_words());
   inc_virtual_space_count();
-  LogTarget(Trace, gc, metaspace) lt;
-  if (lt.is_enabled()) {
-    LogStream ls(lt);
-    VirtualSpaceNode* vsl = current_virtual_space();
-    ResourceMark rm;
-    vsl->print_on(&ls);
-  }
 }
 
 bool VirtualSpaceList::expand_node_by(VirtualSpaceNode* node, size_t min_words, size_t preferred_words) {
@@ -259,7 +249,6 @@ static size_t largest_possible_padding_size_for_chunk(size_t chunk_word_size, bo
 }
 
 Metachunk* VirtualSpaceList::get_new_chunk(size_t chunk_word_size, size_t suggested_commit_granularity) {
-
   // Allocate a chunk out of the current virtual space.
   Metachunk* next = current_virtual_space()->get_chunk_vs(chunk_word_size);
 

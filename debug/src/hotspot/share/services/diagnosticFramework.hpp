@@ -55,7 +55,6 @@ private:
   const size_t      _len;
   size_t      _cursor;
 public:
-
   DCmdIter(const char* str, char delim)
    : _str(str), _delim(delim), _len(::strlen(str)),
      _cursor(0) { }
@@ -404,7 +403,6 @@ public:
 // diagnosticCommand.cpp
 
 class DCmdRegistrant : public AllStatic {
-
 private:
     static void register_dcmds();
     static void register_dcmds_ext();

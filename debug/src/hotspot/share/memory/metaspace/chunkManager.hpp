@@ -12,7 +12,6 @@
 class TestVirtualSpaceNodeTest;
 
 namespace metaspace {
-
 typedef class FreeList<Metachunk> ChunkList;
 typedef BinaryTreeDictionary<Metachunk, FreeList<Metachunk> > ChunkTreeDictionary;
 
@@ -90,7 +89,6 @@ class ChunkManager : public CHeapObj<mtInternal> {
   Metachunk* split_chunk(size_t target_chunk_word_size, Metachunk* chunk);
 
  public:
-
   ChunkManager(bool is_class);
 
   // Add or delete (return) a chunk to the global freelist.

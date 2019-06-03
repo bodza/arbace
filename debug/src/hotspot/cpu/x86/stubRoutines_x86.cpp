@@ -214,7 +214,6 @@ uint32_t crc32c_f_pow_n(uint32_t n) {
 juint *StubRoutines::x86::_crc32c_table;
 
 void StubRoutines::x86::generate_CRC32C_table(bool is_pclmulqdq_table_supported) {
-
   static juint pow_n[CRC32C_NUM_PRECOMPUTED_CONSTANTS];
 
   crc32c_init_pow_2k();

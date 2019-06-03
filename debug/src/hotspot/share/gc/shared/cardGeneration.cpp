@@ -10,7 +10,6 @@
 #include "gc/shared/space.inline.hpp"
 #include "memory/iterator.hpp"
 #include "memory/memRegion.hpp"
-#include "logging/log.hpp"
 #include "runtime/java.hpp"
 
 CardGeneration::CardGeneration(ReservedSpace rs, size_t initial_byte_size, CardTableRS* remset) :
@@ -68,8 +67,6 @@ bool CardGeneration::grow_by(size_t bytes) {
 
     // update the space and generation capacity counters
     update_counters();
-
-    size_t new_mem_size = _virtual_space.committed_size();
   }
   return result;
 }
@@ -133,8 +130,6 @@ void CardGeneration::shrink(size_t bytes) {
   MemRegion mr(space()->bottom(), new_word_size);
   // Shrink the card table
   GenCollectedHeap::heap()->rem_set()->resize_covered_region(mr);
-
-  size_t new_mem_size = _virtual_space.committed_size();
 }
 
 // No young generation references, clear this generation's cards.

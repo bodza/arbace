@@ -12,7 +12,6 @@ void GCTimer::register_gc_start(const Ticks& time) {
 }
 
 void GCTimer::register_gc_end(const Ticks& time) {
-
   _gc_end = time;
 }
 
@@ -65,13 +64,11 @@ void PhasesStack::clear() {
 }
 
 void PhasesStack::push(int phase_index) {
-
   _phase_indices[_next_phase_level] = phase_index;
   _next_phase_level++;
 }
 
 int PhasesStack::pop() {
-
   _next_phase_level--;
   return _phase_indices[_next_phase_level];
 }
@@ -98,7 +95,6 @@ void TimePartitions::clear() {
 }
 
 void TimePartitions::report_gc_phase_start(const char* name, const Ticks& time, GCPhase::PhaseType type) {
-
   int level = _active_phases.count();
 
   GCPhase phase;
@@ -132,7 +128,6 @@ int TimePartitions::num_phases() const {
 }
 
 GCPhase* TimePartitions::phase_at(int index) const {
-
   return _phases->adr_at(index);
 }
 

@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "logging/log.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
 #include "runtime/os.inline.hpp"
 #include "services/attachListener.hpp"
@@ -246,7 +245,7 @@ BsdAttachOperation* BsdAttachListener::read_request(int s) {
     if (n == 0) {
       break;
     }
-    for (int i=0; i<n; i++) {
+    for (int i = 0; i<n; i++) {
       if (buf[off+i] == 0) {
         // EOS found
         str_count++;
@@ -285,7 +284,7 @@ BsdAttachOperation* BsdAttachListener::read_request(int s) {
 
   BsdAttachOperation* op = new BsdAttachOperation(name);
 
-  for (int i=0; i<AttachOperation::arg_count_max; i++) {
+  for (int i = 0; i<AttachOperation::arg_count_max; i++) {
     char* arg = args.next();
     if (arg == NULL) {
       op->set_arg(i, NULL);

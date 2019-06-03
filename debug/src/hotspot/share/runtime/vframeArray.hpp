@@ -26,7 +26,6 @@ class vframeArrayElement {
   friend class VMStructs;
 
   private:
-
     frame _frame;                                                // the interpreter frame we will unpack into
     int  _bci;                                                   // raw bci for this vframe
     bool _reexecute;                                             // whether we should reexecute this bytecode
@@ -36,7 +35,6 @@ class vframeArrayElement {
     StackValueCollection* _expressions;
 
   public:
-
   frame* iframe(void)                { return &_frame; }
 
   int bci(void) const;
@@ -83,7 +81,6 @@ class vframeArray: public CHeapObj<mtCompiler> {
   friend class VMStructs;
 
  private:
-
   // Here is what a vframeArray looks like in memory
 
   /*
@@ -121,7 +118,6 @@ class vframeArray: public CHeapObj<mtCompiler> {
   void set_location_valid(int i, bool valid) { _valid[i] = valid; }
 
  public:
-
   // Tells whether index is within bounds.
   bool is_within_bounds(int index) const        { return 0 <= index && index < frames(); }
 

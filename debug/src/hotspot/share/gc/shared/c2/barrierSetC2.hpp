@@ -145,10 +145,8 @@ protected:
   virtual Node* store_at_resolved(C2Access& access, C2AccessValue& val) const;
   virtual Node* load_at_resolved(C2Access& access, const Type* val_type) const;
 
-  virtual Node* atomic_cmpxchg_val_at_resolved(C2AtomicAccess& access, Node* expected_val,
-                                               Node* new_val, const Type* val_type) const;
-  virtual Node* atomic_cmpxchg_bool_at_resolved(C2AtomicAccess& access, Node* expected_val,
-                                                Node* new_val, const Type* value_type) const;
+  virtual Node* atomic_cmpxchg_val_at_resolved(C2AtomicAccess& access, Node* expected_val, Node* new_val, const Type* val_type) const;
+  virtual Node* atomic_cmpxchg_bool_at_resolved(C2AtomicAccess& access, Node* expected_val, Node* new_val, const Type* value_type) const;
   virtual Node* atomic_xchg_at_resolved(C2AtomicAccess& access, Node* new_val, const Type* val_type) const;
   virtual Node* atomic_add_at_resolved(C2AtomicAccess& access, Node* new_val, const Type* val_type) const;
 
@@ -157,10 +155,8 @@ public:
   virtual Node* store_at(C2Access& access, C2AccessValue& val) const;
   virtual Node* load_at(C2Access& access, const Type* val_type) const;
 
-  virtual Node* atomic_cmpxchg_val_at(C2AtomicAccess& access, Node* expected_val,
-                                      Node* new_val, const Type* val_type) const;
-  virtual Node* atomic_cmpxchg_bool_at(C2AtomicAccess& access, Node* expected_val,
-                                       Node* new_val, const Type* val_type) const;
+  virtual Node* atomic_cmpxchg_val_at(C2AtomicAccess& access, Node* expected_val, Node* new_val, const Type* val_type) const;
+  virtual Node* atomic_cmpxchg_bool_at(C2AtomicAccess& access, Node* expected_val, Node* new_val, const Type* val_type) const;
   virtual Node* atomic_xchg_at(C2AtomicAccess& access, Node* new_val, const Type* value_type) const;
   virtual Node* atomic_add_at(C2AtomicAccess& access, Node* new_val, const Type* value_type) const;
 

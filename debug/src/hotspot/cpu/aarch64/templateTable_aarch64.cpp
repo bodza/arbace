@@ -421,8 +421,7 @@ void TemplateTable::condy_helper(Label& Done)
   // What sort of thing are we loading?
   // x86 uses a shift and mask or wings it with a shift plus assert
   // the mask is not needed. aarch64 just uses bitfield extract
-  __ ubfxw(flags, flags, ConstantPoolCacheEntry::tos_state_shift,
-           ConstantPoolCacheEntry::tos_state_bits);
+  __ ubfxw(flags, flags, ConstantPoolCacheEntry::tos_state_shift, ConstantPoolCacheEntry::tos_state_bits);
 
   switch (bytecode()) {
     case Bytecodes::_ldc:
@@ -1045,8 +1044,7 @@ void TemplateTable::aastore() {
   __ load_klass(r1, r0);
   // Move superklass into r0
   __ load_klass(r0, r3);
-  __ ldr(r0, Address(r0,
-                     ObjArrayKlass::element_klass_offset()));
+  __ ldr(r0, Address(r0, ObjArrayKlass::element_klass_offset()));
   // Compress array + index*oopSize + 12 into a single register.  Frees r2.
 
   // Generate subtype check.  Blows r2, r5
@@ -1663,8 +1661,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
     __ load_unsigned_byte(rscratch1, Address(rbcp, r2));
     // compute return address as bci
     __ ldr(rscratch2, Address(rmethod, Method::const_offset()));
-    __ add(rscratch2, rscratch2,
-           in_bytes(ConstMethod::codes_offset()) - (is_wide ? 5 : 3));
+    __ add(rscratch2, rscratch2, in_bytes(ConstMethod::codes_offset()) - (is_wide ? 5 : 3));
     __ sub(r1, rbcp, rscratch2);
     __ push_i(r1);
     // Adjust the bcp by the 16-bit displacement in r2
@@ -1715,18 +1712,14 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
         // Increment the MDO backedge counter
         const Address mdo_backedge_counter(r1, in_bytes(MethodData::backedge_counter_offset()) + in_bytes(InvocationCounter::counter_offset()));
         const Address mask(r1, in_bytes(MethodData::backedge_mask_offset()));
-        __ increment_mask_and_jump(mdo_backedge_counter, increment, mask,
-                                   r0, rscratch1, false, Assembler::EQ,
-                                   UseOnStackReplacement ? &backedge_counter_overflow : &dispatch);
+        __ increment_mask_and_jump(mdo_backedge_counter, increment, mask, r0, rscratch1, false, Assembler::EQ, UseOnStackReplacement ? &backedge_counter_overflow : &dispatch);
         __ b(dispatch);
       }
       __ bind(no_mdo);
       // Increment backedge counter in MethodCounters*
       __ ldr(rscratch1, Address(rmethod, Method::method_counters_offset()));
       const Address mask(rscratch1, in_bytes(MethodCounters::backedge_mask_offset()));
-      __ increment_mask_and_jump(Address(rscratch1, be_offset), increment, mask,
-                                 r0, rscratch2, false, Assembler::EQ,
-                                 UseOnStackReplacement ? &backedge_counter_overflow : &dispatch);
+      __ increment_mask_and_jump(Address(rscratch1, be_offset), increment, mask, r0, rscratch2, false, Assembler::EQ, UseOnStackReplacement ? &backedge_counter_overflow : &dispatch);
     } else { // not TieredCompilation
       // increment counter
       __ ldr(rscratch2, Address(rmethod, Method::method_counters_offset()));
@@ -1826,8 +1819,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
 
       // remove activation
       // get sender esp
-      __ ldr(esp,
-          Address(rfp, frame::interpreter_frame_sender_sp_offset * wordSize));
+      __ ldr(esp, Address(rfp, frame::interpreter_frame_sender_sp_offset * wordSize));
       // remove frame anchor
       __ leave();
       // Ensure compiled code always sees stack at proper alignment
@@ -2094,7 +2086,6 @@ void TemplateTable::_return(TosState state)
   transition(state, state);
 
   if (_desc->bytecode() == Bytecodes::_return_register_finalizer) {
-
     __ ldr(c_rarg1, aaddress(0));
     __ load_klass(r3, c_rarg1);
     __ ldrw(r3, Address(r3, Klass::access_flags_offset()));
@@ -2261,8 +2252,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
 
   // x86 uses a shift and mask or wings it with a shift plus assert
   // the mask is not needed. aarch64 just uses bitfield extract
-  __ ubfxw(flags, raw_flags, ConstantPoolCacheEntry::tos_state_shift,
-           ConstantPoolCacheEntry::tos_state_bits);
+  __ ubfxw(flags, raw_flags, ConstantPoolCacheEntry::tos_state_shift, ConstantPoolCacheEntry::tos_state_bits);
 
   __ cbnz(flags, notByte);
 
@@ -3119,9 +3109,7 @@ void TemplateTable::_new() {
   __ br(Assembler::NE, slow_case);
 
   // get instance_size in InstanceKlass (scaled to a count of bytes)
-  __ ldrw(r3,
-          Address(r4,
-                  Klass::layout_helper_offset()));
+  __ ldrw(r3, Address(r4, Klass::layout_helper_offset()));
   // test to see if it has a finalizer or is malformed in some way
   __ tbnz(r3, exact_log2(Klass::_lh_instance_slow_path_bit), slow_case);
 

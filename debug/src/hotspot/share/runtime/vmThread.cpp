@@ -2,8 +2,6 @@
 
 #include "compiler/compileBroker.hpp"
 #include "gc/shared/collectedHeap.hpp"
-#include "logging/log.hpp"
-#include "logging/logConfiguration.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/method.hpp"
 #include "oops/oop.inline.hpp"
@@ -109,7 +107,6 @@ void VMOperationQueue::drain_list_oops_do(OopClosure* f) {
 //-----------------------------------------------------------------
 // High-level interface
 bool VMOperationQueue::add(VM_Operation *op) {
-
   // Encapsulates VM queue policy. Currently, that
   // only involves putting them on the right list
   if (op->evaluate_at_safepoint()) {
@@ -181,7 +178,6 @@ void VMThread::destroy() {
 }
 
 void VMThread::run() {
-
   this->initialize_named_thread();
 
   // Notify_lock wait checks on active_handles() to rewait in
@@ -338,7 +334,6 @@ bool VMThread::no_op_safepoint_needed(bool check_time) {
 }
 
 void VMThread::loop() {
-
   while (true) {
     VM_Operation* safepoint_ops = NULL;
     //
@@ -434,13 +429,12 @@ void VMThread::loop() {
           } else {
             safepoint_ops = NULL;
           }
-        } while(safepoint_ops != NULL);
+        } while (safepoint_ops != NULL);
 
         _vm_queue->set_drain_list(NULL);
 
         // Complete safepoint synchronization
         SafepointSynchronize::end();
-
       } else {  // not a safepoint operation
         evaluate_operation(_cur_vm_operation);
 

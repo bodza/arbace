@@ -170,7 +170,7 @@ public:
 
   template<typename F> bool iterate(F f);
   template<typename F> bool iterate(F f) const;
-}; // class Block
+};
 
 inline OopStorage::Block* OopStorage::AllocateList::head() {
   return const_cast<Block*>(_head);

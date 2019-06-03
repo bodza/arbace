@@ -93,13 +93,13 @@ inline int os::closedir(DIR *dirp) {
 
 #define RESTARTABLE(_cmd, _result) do { \
     _result = _cmd; \
-  } while(((int)_result == OS_ERR) && (errno == EINTR))
+  } while (((int)_result == OS_ERR) && (errno == EINTR))
 
 #define RESTARTABLE_RETURN_INT(_cmd) do { \
   int _result; \
   RESTARTABLE(_cmd, _result); \
   return _result; \
-} while(false)
+} while (false)
 
 inline bool os::numa_has_static_binding() { return true; }
 inline bool os::numa_has_group_homing() { return false; }

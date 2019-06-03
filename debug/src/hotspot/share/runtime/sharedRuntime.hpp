@@ -2,7 +2,6 @@
 #define SHARE_VM_RUNTIME_SHAREDRUNTIME_HPP
 
 #include "interpreter/bytecodeHistogram.hpp"
-#include "interpreter/bytecodeTracer.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "memory/allocation.hpp"
 #include "memory/resourceArea.hpp"
@@ -50,7 +49,7 @@ class SharedRuntime: AllStatic {
  public:
   static void generate_stubs(void);
 
-  // max bytes for each dtrace string parameter
+  // max bytes for each dtrace string parameter
   enum { max_dtrace_string_size = 256 };
 
   // The following arithmetic routines are used on platforms that do
@@ -208,12 +207,6 @@ class SharedRuntime: AllStatic {
 
   static void register_finalizer(JavaThread* thread, oopDesc* obj);
 
-  // dtrace notifications
-  static int dtrace_object_alloc(oopDesc* o, int size);
-  static int dtrace_object_alloc_base(Thread* thread, oopDesc* o, int size);
-  static int dtrace_method_entry(JavaThread* thread, Method* m);
-  static int dtrace_method_exit(JavaThread* thread, Method* m);
-
   // Utility method for retrieving the Java thread id, returns 0 if the
   // thread is not a well formed Java thread.
   static jlong get_java_tid(Thread* thread);
@@ -286,7 +279,6 @@ class SharedRuntime: AllStatic {
 #endif
 
  public:
-
   // Read the array of BasicTypes from a Java signature, and compute where
   // compiled Java code would like to put the results.  Values in reg_lo and
   // reg_hi refer to 4-byte quantities.  Values less than SharedInfo::stack0 are
@@ -516,7 +508,6 @@ class AdapterHandlerLibrary: public AllStatic {
   static AdapterHandlerEntry* get_adapter0(const methodHandle& method);
 
  public:
-
   static AdapterHandlerEntry* new_entry(AdapterFingerPrint* fingerprint, address i2c_entry, address c2i_entry, address c2i_unverified_entry);
   static void create_native_wrapper(const methodHandle& method);
   static AdapterHandlerEntry* get_adapter(const methodHandle& method);

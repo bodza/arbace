@@ -14,7 +14,6 @@ public:
   };
 
 private:
-
 public:
   static bool should_verify(int classpath_index) {
     return false;

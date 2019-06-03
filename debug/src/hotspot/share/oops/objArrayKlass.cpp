@@ -23,14 +23,12 @@
 #include "utilities/macros.hpp"
 
 ObjArrayKlass* ObjArrayKlass::allocate(ClassLoaderData* loader_data, int n, Klass* k, Symbol* name, TRAPS) {
-
   int size = ArrayKlass::static_size(ObjArrayKlass::header_size());
 
   return new (loader_data, size, THREAD) ObjArrayKlass(n, k, name);
 }
 
 Klass* ObjArrayKlass::allocate_objArray_klass(ClassLoaderData* loader_data, int n, Klass* element_klass, TRAPS) {
-
   // Eagerly allocate the direct array supertype.
   Klass* super_klass = NULL;
   if (!Universe::is_bootstrapping() || SystemDictionary::Object_klass_loaded()) {
@@ -74,7 +72,6 @@ Klass* ObjArrayKlass::allocate_objArray_klass(ClassLoaderData* loader_data, int 
   // Create type name for klass.
   Symbol* name = NULL;
   if (!element_klass->is_instance_klass() || (name = InstanceKlass::cast(element_klass)->array_name()) == NULL) {
-
     ResourceMark rm(THREAD);
     char *name_str = element_klass->name()->as_C_string();
     int len = element_klass->name()->utf8_length();
@@ -215,7 +212,6 @@ void ObjArrayKlass::do_copy(arrayOop s, size_t src_offset, arrayOop d, size_t ds
 }
 
 void ObjArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos, int length, TRAPS) {
-
   if (!d->is_objArray()) {
     ResourceMark rm(THREAD);
     stringStream ss;
@@ -274,7 +270,6 @@ void ObjArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos,
 }
 
 Klass* ObjArrayKlass::array_klass_impl(bool or_null, int n, TRAPS) {
-
   int dim = dimension();
   if (dim == n) return this;
 
@@ -291,7 +286,6 @@ Klass* ObjArrayKlass::array_klass_impl(bool or_null, int n, TRAPS) {
 
       // Check if another thread beat us
       if (higher_dimension() == NULL) {
-
         // Create multi-dim klass object and link them together
         Klass* k = ObjArrayKlass::allocate_objArray_klass(class_loader_data(), dim + 1, this, CHECK_NULL);
         ObjArrayKlass* ak = ObjArrayKlass::cast(k);
@@ -391,7 +385,6 @@ PackageEntry* ObjArrayKlass::package() const {
 void ObjArrayKlass::print_on(outputStream* st) const { }
 
 void ObjArrayKlass::print_value_on(outputStream* st) const {
-
   element_klass()->print_value_on(st);
   st->print("[]");
 }

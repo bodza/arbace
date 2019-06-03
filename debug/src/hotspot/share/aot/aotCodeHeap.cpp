@@ -188,7 +188,6 @@ AOTLib::AOTLib(void* handle, const char* name, int dso_id) : _valid(true), _dl_h
 
 AOTCodeHeap::AOTCodeHeap(AOTLib* lib) :
     CodeHeap("CodeHeap 'AOT'", CodeBlobType::AOT), _lib(lib), _classes(NULL), _code_to_aot(NULL) {
-
   _lib_symbols_initialized = false;
   _aot_id = 0;
 

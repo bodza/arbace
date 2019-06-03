@@ -50,14 +50,11 @@ jbyte* G1HotCardCache::insert(jbyte* card_ptr) {
   // card_ptr in favor of the other option, which would be starting over. This
   // should be OK since card_ptr will likely be the older card already when/if
   // this ever happens.
-  jbyte* previous_ptr = Atomic::cmpxchg(card_ptr,
-                                        &_hot_cache[masked_index],
-                                        current_ptr);
+  jbyte* previous_ptr = Atomic::cmpxchg(card_ptr, &_hot_cache[masked_index], current_ptr);
   return (previous_ptr == current_ptr) ? previous_ptr : card_ptr;
 }
 
 void G1HotCardCache::drain(CardTableEntryClosure* cl, uint worker_i) {
-
   while (_hot_cache_par_claimed_idx < _hot_cache_size) {
     size_t end_idx = Atomic::add(_hot_cache_par_chunk_size,
                                  &_hot_cache_par_claimed_idx);

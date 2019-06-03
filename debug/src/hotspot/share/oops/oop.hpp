@@ -116,7 +116,7 @@ class oopDesc {
   // Standard compare function returns negative value if o1 < o2
   //                                   0              if o1 == o2
   //                                   positive value if o1 > o2
-  inline static int  compare(oop o1, oop o2) {
+  inline static int compare(oop o1, oop o2) {
     void* o1_addr = (void*)o1;
     void* o2_addr = (void*)o2;
     if (o1_addr < o2_addr) {

@@ -5,7 +5,6 @@
 #include "gc/shared/space.inline.hpp"
 #include "memory/iterator.hpp"
 #include "memory/universe.hpp"
-#include "logging/log.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/java.hpp"
 #include "services/memTracker.hpp"
@@ -75,7 +74,6 @@ BlockOffsetArray::BlockOffsetArray(BlockOffsetSharedArray* array, MemRegion mr, 
 // The arguments follow the normal convention of denoting
 // a right-open interval: [start, end)
 void BlockOffsetArray::set_remainder_to_point_to_start(HeapWord* start, HeapWord* end, bool reducing) {
-
   check_reducing_assertion(reducing);
   if (start >= end) {
     // The start address is equal to the end address (or to
@@ -127,7 +125,6 @@ void BlockOffsetArray::set_remainder_to_point_to_start(HeapWord* start, HeapWord
 // above.
 void
 BlockOffsetArray::set_remainder_to_point_to_start_incl(size_t start_card, size_t end_card, bool reducing) {
-
   check_reducing_assertion(reducing);
   if (start_card > end_card) {
     return;
@@ -154,7 +151,6 @@ BlockOffsetArray::set_remainder_to_point_to_start_incl(size_t start_card, size_t
 // is an expensive check -- use with care and only under protection of
 // suitable flag.
 void BlockOffsetArray::check_all_cards(size_t start_card, size_t end_card) const {
-
   if (end_card < start_card) {
     return;
   }
@@ -469,7 +465,6 @@ HeapWord* BlockOffsetArrayNonContigSpace::block_start_unsafe(const void* addr) c
 }
 
 HeapWord* BlockOffsetArrayNonContigSpace::block_start_careful(const void* addr) const {
-
   // Must read this exactly once because it can be modified by parallel
   // allocation.
   HeapWord* ub = _unallocated_block;
@@ -510,7 +505,6 @@ size_t BlockOffsetArrayNonContigSpace::last_active_index() const {
 //////////////////////////////////////////////////////////////////////
 
 HeapWord* BlockOffsetArrayContigSpace::block_start_unsafe(const void* addr) const {
-
   // Otherwise, find the block start using the table.
   size_t index = _array->index_for(addr);
   // We must make sure that the offset table entry we use is valid.  If
@@ -554,7 +548,6 @@ HeapWord* BlockOffsetArrayContigSpace::block_start_unsafe(const void* addr) cons
 //
 
 void BlockOffsetArrayContigSpace::alloc_block_work(HeapWord* blk_start, HeapWord* blk_end) {
-
   // Mark the card that holds the offset into the block.  Note
   // that _next_offset_index and _next_offset_threshold are not
   // updated until the end of this method.

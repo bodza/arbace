@@ -11,7 +11,6 @@
 #include "interpreter/interpreterRuntime.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "interpreter/templateTable.hpp"
-#include "logging/log.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
@@ -315,8 +314,7 @@ IRT_END
 
 IRT_ENTRY(void, InterpreterRuntime::throw_delayed_StackOverflowError(JavaThread* thread))
   Handle exception = get_preinitialized_exception(SystemDictionary::StackOverflowError_klass(), CHECK);
-  java_lang_Throwable::set_message(exception(),
-          Universe::delayed_stack_overflow_error_message());
+  java_lang_Throwable::set_message(exception(), Universe::delayed_stack_overflow_error_message());
   // Increment counter for hs_err file reporting
   Atomic::inc(&Exceptions::_stack_overflow_errors);
   THROW_HANDLE(exception);
@@ -503,8 +501,7 @@ IRT_ENTRY(void, InterpreterRuntime::throw_IncompatibleClassChangeErrorVerbose(Ja
   ResourceMark rm(thread);
   char buf[1000];
   buf[0] = '\0';
-  jio_snprintf(buf, sizeof(buf),
-               "Class %s does not implement the requested interface %s",
+  jio_snprintf(buf, sizeof(buf), "Class %s does not implement the requested interface %s",
                recvKlass ? recvKlass->external_name() : "NULL",
                interfaceKlass ? interfaceKlass->external_name() : "NULL");
   THROW_MSG(vmSymbols::java_lang_IncompatibleClassChangeError(), buf);
@@ -1040,7 +1037,6 @@ IRT_LEAF(void, InterpreterRuntime::popframe_move_outgoing_args(JavaThread* threa
   Bytecode_invoke invoke(mh, bci);
   ArgumentSizeComputer asc(invoke.signature());
   int size_of_arguments = (asc.size() + (invoke.has_receiver() ? 1 : 0)); // receiver
-  Copy::conjoint_jbytes(src_address, dest_address,
-                       size_of_arguments * Interpreter::stackElementSize);
+  Copy::conjoint_jbytes(src_address, dest_address, size_of_arguments * Interpreter::stackElementSize);
 IRT_END
 #endif

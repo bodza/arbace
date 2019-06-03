@@ -10,7 +10,6 @@
 
 class DiscoveredList;
 class GCTimer;
-class LogStream;
 
 class ReferenceProcessorPhaseTimes : public CHeapObj<mtGC> {
   static const int number_of_subclasses_of_ref = REF_PHANTOM - REF_OTHER; // 5 - 1 = 4
@@ -45,28 +44,24 @@ class ReferenceProcessorPhaseTimes : public CHeapObj<mtGC> {
   double balance_queues_time_ms(ReferenceProcessor::RefProcPhases phase) const;
 
   void print_reference(ReferenceType ref_type, uint base_indent) const;
-
   void print_phase(ReferenceProcessor::RefProcPhases phase, uint indent) const;
-  void print_balance_time(LogStream* ls, ReferenceProcessor::RefProcPhases phase, uint indent) const;
-  void print_sub_phase(LogStream* ls, ReferenceProcessor::RefProcSubPhases sub_phase, uint indent) const;
-  void print_worker_time(LogStream* ls, WorkerDataArray<double>* worker_time, const char* ser_title, uint indent) const;
 
   static double uninitialized() { return -1.0; }
+
 public:
   ReferenceProcessorPhaseTimes(GCTimer* gc_timer, uint max_gc_threads);
   ~ReferenceProcessorPhaseTimes();
 
   WorkerDataArray<double>* phase2_worker_time_sec() const { return _phase2_worker_time_sec; }
   WorkerDataArray<double>* sub_phase_worker_time_sec(ReferenceProcessor::RefProcSubPhases phase) const;
-  void set_phase_time_ms(ReferenceProcessor::RefProcPhases phase, double par_phase_time_ms);
 
+  void set_phase_time_ms(ReferenceProcessor::RefProcPhases phase, double par_phase_time_ms);
   void set_sub_phase_total_phase_time_ms(ReferenceProcessor::RefProcSubPhases sub_phase, double ref_proc_time_ms);
 
   void set_total_time_ms(double total_time_ms) { _total_time_ms = total_time_ms; }
 
   void add_ref_cleared(ReferenceType ref_type, size_t count);
   void set_ref_discovered(ReferenceType ref_type, size_t count);
-
   void set_balance_queues_time_ms(ReferenceProcessor::RefProcPhases phase, double time_ms);
 
   void set_processing_is_mt(bool processing_is_mt) { _processing_is_mt = processing_is_mt; }

@@ -25,7 +25,6 @@ public:
 
 // Class Data Sharing Support
 class MetaspaceShared : AllStatic {
-
   // CDS support
   static ReservedSpace _shared_rs;
   static VirtualSpace _shared_vs;
@@ -102,19 +101,9 @@ class MetaspaceShared : AllStatic {
     return (p < MetaspaceObj::_shared_metaspace_top && p >= MetaspaceObj::_shared_metaspace_base);
   }
 
-  // Return true if given address is in the shared region corresponding to the idx
-  static bool is_in_shared_region(const void* p, int idx) { return false; };
-
-  static bool is_heap_region(int idx) {
-    { return false; };
-  }
-  static bool is_string_region(int idx) {
-    { return false; };
-  }
-  static bool is_open_archive_heap_region(int idx) {
-    { return false; };
-  }
-  static bool is_in_trampoline_frame(address addr) { return false; };
+  static bool is_heap_region(int idx)              { return false; }
+  static bool is_string_region(int idx)            { return false; }
+  static bool is_open_archive_heap_region(int idx) { return false; }
 
   static void allocate_cpp_vtable_clones();
   static intptr_t* clone_cpp_vtables(intptr_t* p);
@@ -138,8 +127,6 @@ class MetaspaceShared : AllStatic {
   static bool remapped_readwrite() {
     return false;
   }
-
-  static void print_shared_spaces();
 
   static bool try_link_class(InstanceKlass* ik, TRAPS);
   static void link_and_cleanup_shared_classes(TRAPS);

@@ -214,10 +214,6 @@
 //
 // * TODO-FIXME:
 //
-//   -- Add DTRACE probes for contended acquire, contended acquired, contended unlock
-//      We should also add DTRACE probes in the ParkEvent subsystem for
-//      Park-entry, Park-exit, and Unpark.
-//
 //   -- We have an excess of mutex-like constructs in the JVM, namely:
 //      1. objectMonitors for Java-level synchronization (synchronizer.cpp)
 //      2. low-level muxAcquire and muxRelease
@@ -410,7 +406,6 @@ inline int Monitor::AcquireOrPush(ParkEvent * ESelf) {
 // _owner is a higher-level logical concept.
 
 void Monitor::ILock(Thread * Self) {
-
   if (TryFast()) {
  Exeunt:
     return;
@@ -663,7 +658,6 @@ bool Monitor::notify_all() {
 }
 
 int Monitor::IWait(Thread * Self, jlong timo) {
-
   // Phases:
   // 1. Enqueue Self on WaitSet - currently prepend
   // 2. unlock - drop the outer lock
@@ -925,7 +919,6 @@ void Monitor::unlock() {
 // oversight, but I've replicated the original suspect logic in the new code ...
 
 void Monitor::jvm_raw_lock() {
-
   if (TryLock()) {
  Exeunt:
     // This can potentially be called by non-java Threads. Thus, the Thread::current_or_null()

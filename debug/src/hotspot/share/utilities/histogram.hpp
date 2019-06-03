@@ -22,7 +22,7 @@
 //  MyHistogramElement::MyHistogramElement(char* elementName) {
 //    _name = elementName;
 //
-//    if(MyHistogram == NULL)
+//    if (MyHistogram == NULL)
 //      MyHistogram = new Histogram("My Call Counts",100);
 //
 //    MyHistogram->add_element(this);

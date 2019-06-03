@@ -1,7 +1,5 @@
 #include "precompiled.hpp"
 
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/binaryTreeDictionary.inline.hpp"
 #include "memory/freeList.inline.hpp"
 #include "memory/metaspace/chunkManager.hpp"
@@ -16,7 +14,6 @@
 #include "utilities/ostream.hpp"
 
 namespace metaspace {
-
 ChunkManager::ChunkManager(bool is_class)
       : _is_class(is_class), _free_chunks_total(0), _free_chunks_count(0) {
   _free_chunks[SpecializedIndex].set_size(get_size_for_nonhumongous_chunktype(SpecializedIndex, is_class));
@@ -192,7 +189,6 @@ void ChunkManager::locked_print_sum_free_chunks(outputStream* st) {
 }
 
 ChunkList* ChunkManager::free_chunks(ChunkIndex index) {
-
   return &_free_chunks[index];
 }
 
@@ -237,7 +233,6 @@ ChunkList* ChunkManager::find_free_chunks_list(size_t word_size) {
 // chunk, are returned to the freelist. The pointer to the target chunk is returned.
 // Note that this chunk is supposed to be removed from the freelist right away.
 Metachunk* ChunkManager::split_chunk(size_t target_chunk_word_size, Metachunk* larger_chunk) {
-
   const ChunkIndex larger_chunk_index = larger_chunk->get_chunk_type();
   const ChunkIndex target_chunk_index = get_chunk_type_by_size(target_chunk_word_size, is_class());
 
@@ -270,7 +265,6 @@ Metachunk* ChunkManager::split_chunk(size_t target_chunk_word_size, Metachunk* l
   p += target_chunk->word_size();
 
   while (p < region_end) {
-
     // Find the largest chunk size which fits the alignment requirements at address p.
     ChunkIndex this_chunk_index = prev_chunk_index(larger_chunk_index);
     size_t this_chunk_word_size = 0;
@@ -306,7 +300,6 @@ Metachunk* ChunkManager::free_chunks_get(size_t word_size) {
   bool we_did_split_a_chunk = false;
 
   if (list_index(word_size) != HumongousIndex) {
-
     ChunkList* free_list = find_free_chunks_list(word_size);
 
     chunk = free_list->head();
@@ -328,7 +321,6 @@ Metachunk* ChunkManager::free_chunks_get(size_t word_size) {
       }
 
       if (larger_chunk != NULL) {
-
         // We found a larger chunk. Lets split it up:
         // - remove old chunk
         // - in its place, create new smaller chunks, with at least one chunk
@@ -350,7 +342,6 @@ Metachunk* ChunkManager::free_chunks_get(size_t word_size) {
 
     // Remove the chunk as the head of the list.
     free_list->remove_chunk(chunk);
-
   } else {
     chunk = humongous_dictionary()->get_chunk(word_size);
 
@@ -381,22 +372,6 @@ Metachunk* ChunkManager::chunk_freelist_allocate(size_t word_size) {
   Metachunk* chunk = free_chunks_get(word_size);
   if (chunk == NULL) {
     return NULL;
-  }
-
-  LogTarget(Trace, gc, metaspace, freelist) lt;
-  if (lt.is_enabled()) {
-    size_t list_count;
-    if (list_index(word_size) < HumongousIndex) {
-      ChunkList* list = find_free_chunks_list(word_size);
-      list_count = list->count();
-    } else {
-      list_count = humongous_dictionary()->total_count();
-    }
-    LogStream ls(lt);
-    ls.print("ChunkManager::chunk_freelist_allocate: " PTR_FORMAT " chunk " PTR_FORMAT "  size " SIZE_FORMAT " count " SIZE_FORMAT " ",
-             p2i(this), p2i(chunk), chunk->word_size(), list_count);
-    ResourceMark rm;
-    locked_print_free_chunks(&ls);
   }
 
   return chunk;
@@ -437,10 +412,6 @@ void ChunkManager::return_chunk_list(Metachunk* chunks) {
   if (chunks == NULL) {
     return;
   }
-  LogTarget(Trace, gc, metaspace, freelist) log;
-  if (log.is_enabled()) { // tracing
-    log.print("returning list of chunks...");
-  }
   unsigned num_chunks_returned = 0;
   size_t size_chunks_returned = 0;
   Metachunk* cur = chunks;
@@ -448,16 +419,8 @@ void ChunkManager::return_chunk_list(Metachunk* chunks) {
     // Capture the next link before it is changed
     // by the call to return_chunk_at_head();
     Metachunk* next = cur->next();
-    if (log.is_enabled()) { // tracing
-      num_chunks_returned ++;
-      size_chunks_returned += cur->word_size();
-    }
     return_single_chunk(cur);
     cur = next;
-  }
-  if (log.is_enabled()) { // tracing
-    log.print("returned %u chunks to freelist, total word size " SIZE_FORMAT ".",
-        num_chunks_returned, size_chunks_returned);
   }
 }
 

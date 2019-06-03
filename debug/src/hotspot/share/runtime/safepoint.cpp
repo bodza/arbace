@@ -14,8 +14,6 @@
 #include "gc/shared/strongRootsScope.hpp"
 #include "gc/shared/workgroup.hpp"
 #include "interpreter/interpreter.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
 #include "oops/oop.inline.hpp"
@@ -230,12 +228,6 @@ void SafepointSynchronize::begin() {
               //   steps >>= 1
               //   steps = MIN(steps, 2000-100)
               //   if (iterations != 0) steps -= NNN
-            }
-            LogTarget(Trace, safepoint) lt;
-            if (lt.is_enabled()) {
-              ResourceMark rm;
-              LogStream ls(lt);
-              cur_state->print_on(&ls);
             }
           }
         }
@@ -647,7 +639,6 @@ void SafepointSynchronize::check_for_lazy_critical_native(JavaThread *thread, Ja
 // Implementation of Safepoint callback point
 
 void SafepointSynchronize::block(JavaThread *thread) {
-
   // Threads shouldn't block if they are in the middle of printing, but...
   ttyLocker::break_tty_lock_for_safepoint(os::current_thread_id());
 
@@ -785,7 +776,7 @@ void SafepointSynchronize::print_safepoint_timeout(SafepointTimeoutReason reason
     // purposes (useful when there are lots of threads in the debugger).
     tty->cr();
     tty->print_cr("# SafepointSynchronize::begin: Timeout detected:");
-    if (reason ==  _spinning_timeout) {
+    if (reason == _spinning_timeout) {
       tty->print_cr("# SafepointSynchronize::begin: Timed out while spinning to reach a safepoint.");
     } else if (reason == _blocking_timeout) {
       tty->print_cr("# SafepointSynchronize::begin: Timed out while waiting for threads to stop.");
@@ -836,7 +827,6 @@ void ThreadSafepointState::destroy(JavaThread *thread) {
 }
 
 void ThreadSafepointState::examine_state_of_thread() {
-
   JavaThreadState state = _thread->thread_state();
 
   // Save the state at the start of safepoint processing.
@@ -949,7 +939,6 @@ void ThreadSafepointState::print_on(outputStream *st) const {
 
 // Block the thread at poll or poll return for safepoint/handshake.
 void ThreadSafepointState::handle_polling_page_exception() {
-
   // Check state.  block() will set thread state to thread_in_vm which will
   // cause the safepoint state _type to become _call_back.
   suspend_type t = type();

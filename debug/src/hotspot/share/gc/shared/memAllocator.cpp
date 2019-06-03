@@ -89,12 +89,12 @@ bool MemAllocator::Allocation::check_out_of_memory() {
   }
 
   if (!_overhead_limit_exceeded) {
-    // -XX:+false and -XX:OnOutOfMemoryError support
+    // -XX:OnOutOfMemoryError support
     report_java_out_of_memory("Java heap space");
 
     THROW_OOP_(Universe::out_of_memory_error_java_heap(), true);
   } else {
-    // -XX:+false and -XX:OnOutOfMemoryError support
+    // -XX:OnOutOfMemoryError support
     report_java_out_of_memory("GC overhead limit exceeded");
 
     THROW_OOP_(Universe::out_of_memory_error_gc_overhead_limit(), true);
@@ -135,7 +135,6 @@ HeapWord* MemAllocator::allocate_outside_tlab(Allocation& allocation) const {
 }
 
 HeapWord* MemAllocator::allocate_inside_tlab(Allocation& allocation) const {
-
   // Try allocating from an existing TLAB.
   HeapWord* mem = _thread->tlab().allocate(_word_size);
   if (mem != NULL) {

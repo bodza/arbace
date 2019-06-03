@@ -24,7 +24,6 @@ class G1HeapSizingPolicy: public CHeapObj<mtGC> {
 protected:
   G1HeapSizingPolicy(const G1CollectedHeap* g1h, const G1Analytics* analytics);
 public:
-
   // If an expansion would be appropriate, because recent GC overhead had
   // exceeded the desired limit, return an amount to expand by.
   virtual size_t expansion_amount();

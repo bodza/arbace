@@ -92,7 +92,6 @@ bool YoungGCTracer::should_send_promotion_outside_plab_event() const {
 }
 
 void YoungGCTracer::send_promotion_in_new_plab_event(Klass* klass, size_t obj_size, uint age, bool tenured, size_t plab_size) const {
-
   EventPromoteObjectInNewPLAB event;
   if (event.should_commit()) {
     event.set_gcId(GCId::current());
@@ -106,7 +105,6 @@ void YoungGCTracer::send_promotion_in_new_plab_event(Klass* klass, size_t obj_si
 }
 
 void YoungGCTracer::send_promotion_outside_plab_event(Klass* klass, size_t obj_size, uint age, bool tenured) const {
-
   EventPromoteObjectOutsidePLAB event;
   if (event.should_commit()) {
     event.set_gcId(GCId::current());
@@ -375,7 +373,6 @@ void GCTracer::send_meta_space_summary_event(GCWhen::Type when, const MetaspaceS
 
 class PhaseSender : public PhaseVisitor {
   void visit_pause(GCPhase* phase) {
-
     switch (phase->level()) {
       case 0: send_phase<EventGCPhasePause>(phase); break;
       case 1: send_phase<EventGCPhasePauseLevel1>(phase); break;
@@ -387,7 +384,6 @@ class PhaseSender : public PhaseVisitor {
   }
 
   void visit_concurrent(GCPhase* phase) {
-
     switch (phase->level()) {
       case 0: send_phase<EventGCPhaseConcurrent>(phase); break;
       default: /* Ignore sending this phase */ break;

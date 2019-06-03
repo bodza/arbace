@@ -136,11 +136,8 @@ public:
   int    num_gc_threads()               { return _num_gc_threads; }
   void   set_num_gc_threads(int count)  { _num_gc_threads = count; }
 
-  void   gc_begin(bool recordGCBeginTime, bool recordPreGCUsage,
-                  bool recordAccumulatedGCTime);
-  void   gc_end(bool recordPostGCUsage, bool recordAccumulatedGCTime,
-                bool recordGCEndTime, bool countCollection, GCCause::Cause cause,
-                bool allMemoryPoolsAffected);
+  void   gc_begin(bool recordGCBeginTime, bool recordPreGCUsage, bool recordAccumulatedGCTime);
+  void   gc_end(bool recordPostGCUsage, bool recordAccumulatedGCTime, bool recordGCEndTime, bool countCollection, GCCause::Cause cause, bool allMemoryPoolsAffected);
 
   void        reset_gc_stat()   { _num_collections = 0; _accumulated_timer.reset(); }
 

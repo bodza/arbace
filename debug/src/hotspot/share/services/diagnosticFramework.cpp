@@ -347,7 +347,6 @@ DCmdFactory* DCmdFactory::_DCmdFactoryList = NULL;
 bool DCmdFactory::_has_pending_jmx_notification = false;
 
 void DCmd::parse_and_execute(DCmdSource source, outputStream* out, const char* cmdline, char delim, TRAPS) {
-
   if (cmdline == NULL) return; // Nothing to do!
   DCmdIter iter(cmdline, '\n');
 
@@ -422,7 +421,6 @@ void DCmdFactory::send_notification_internal(TRAPS) {
     _has_pending_jmx_notification = false;
   }
   if (notif) {
-
     Klass* k = Management::com_sun_management_internal_DiagnosticCommandImpl_klass(CHECK);
     InstanceKlass* dcmd_mbean_klass = InstanceKlass::cast(k);
 

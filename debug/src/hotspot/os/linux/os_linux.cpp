@@ -8,7 +8,6 @@
 #include "compiler/compileBroker.hpp"
 #include "compiler/disassembler.hpp"
 #include "interpreter/interpreter.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/filemap.hpp"
 #include "oops/oop.inline.hpp"
@@ -438,7 +437,6 @@ sigset_t* os::Linux::vm_signals() {
 }
 
 void os::Linux::hotspot_sigmask(Thread* thread) {
-
   //Save caller's signal mask before setting VM signal mask
   sigset_t caller_sigmask;
   pthread_sigmask(SIG_BLOCK, NULL, &caller_sigmask);
@@ -577,8 +575,7 @@ void os::Linux::expand_stack_to(address bottom) {
 }
 
 bool os::Linux::manually_expand_stack(JavaThread * t, address addr) {
-
-  if (addr <  t->stack_base() && addr >= t->stack_reserved_zone_base()) {
+  if (addr < t->stack_base() && addr >= t->stack_reserved_zone_base()) {
     sigset_t mask_all, old_sigset;
     sigfillset(&mask_all);
     pthread_sigmask(SIG_SETMASK, &mask_all, &old_sigset);
@@ -594,7 +591,6 @@ bool os::Linux::manually_expand_stack(JavaThread * t, address addr) {
 
 // Thread start routine for all newly created threads
 static void *thread_native_entry(Thread *thread) {
-
   thread->record_stack_base_and_size();
 
   // Try to randomize the cache line index of hot stack frames.
@@ -650,7 +646,6 @@ static void *thread_native_entry(Thread *thread) {
 }
 
 bool os::create_thread(Thread* thread, ThreadType thr_type, size_t req_stack_size) {
-
   // Allocate the OSThread object
   OSThread* osthread = new OSThread(NULL, NULL);
   if (osthread == NULL) {
@@ -737,7 +732,6 @@ bool os::create_main_thread(JavaThread* thread) {
 }
 
 bool os::create_attached_thread(JavaThread* thread) {
-
   // Allocate the OSThread object
   OSThread* osthread = new OSThread(NULL, NULL);
 
@@ -798,7 +792,6 @@ void os::pd_start_thread(Thread* thread) {
 
 // Free Linux resources related to the OSThread
 void os::free_thread(OSThread* osthread) {
-
   // Restore caller's signal mask
   sigset_t sigmask = osthread->caller_sigmask();
   pthread_sigmask(SIG_SETMASK, &sigmask, NULL);
@@ -855,7 +848,6 @@ static bool find_vma(address addr, address* vma_low, address* vma_high) {
 // the VM in a new thread since JDK 6, we still have to allow for the use of the
 // JNI invocation API from a primordial thread.
 void os::Linux::capture_initial_stack(size_t max_size) {
-
   // max_size is either 0 (which means accept OS default for thread stacks) or
   // a user-specified value known to be at least the minimum needed. If we
   // are actually on the primordial thread we can make it appear that we have a
@@ -1055,7 +1047,6 @@ void os::Linux::capture_initial_stack(size_t max_size) {
 // Time since start-up in seconds to a fine granularity.
 // Used by VMSelfDestructTimer and the MemProfiler.
 double os::elapsedTime() {
-
   return ((double)os::elapsed_counter()) / os::elapsed_frequency(); // nanosecond resolution
 }
 
@@ -1121,7 +1112,7 @@ void os::Linux::clock_init() {
       // won't be a problem.
       struct timespec res;
       struct timespec tp;
-      if (clock_getres_func (CLOCK_MONOTONIC, &res) == 0 && clock_gettime_func(CLOCK_MONOTONIC, &tp)  == 0) {
+      if (clock_getres_func (CLOCK_MONOTONIC, &res) == 0 && clock_gettime_func(CLOCK_MONOTONIC, &tp) == 0) {
         // yes, monotonic clock is supported
         _clock_gettime = clock_gettime_func;
         return;
@@ -1221,7 +1212,6 @@ struct tm* os::localtime_pd(const time_t* clock, struct tm* res) {
 // called from signal handler. Before adding something to os::shutdown(), make
 // sure it is async-safe and can handle partially initialized VM.
 void os::shutdown() {
-
   // allow PerfMemory to attempt cleanup of any persistent resources
   perfMemory_exit();
 
@@ -1605,7 +1595,7 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
   arch_t lib_arch = { elf_head.e_machine,0,elf_head.e_ident[EI_CLASS], elf_head.e_ident[EI_DATA], NULL };
   int running_arch_index=-1;
 
-  for (unsigned int i=0; i < ARRAY_SIZE(arch_array); i++) {
+  for (unsigned int i = 0; i < ARRAY_SIZE(arch_array); i++) {
     if (running_arch_code == arch_array[i].code) {
       running_arch_index    = i;
     }
@@ -1744,7 +1734,6 @@ int os::get_loaded_modules_info(os::LoadedModulesCallbackFunc callback, void *pa
 
       // Filter by device id '00:00' so that we only get file system mapped files.
       if (strcmp(device, "00:00") != 0) {
-
         // Call callback with the fields of interest
         if (callback(name, (address)base, (address)top, param)) {
           // Oops abort, callback aborted
@@ -2006,7 +1995,6 @@ void os::Linux::print_container_info(outputStream* st) {
 }
 
 void os::print_memory_info(outputStream* st) {
-
   st->print("Memory:");
   st->print(" %dk page", os::vm_page_size()>>10);
 
@@ -3045,7 +3033,6 @@ static char* anon_mmap(char* requested_addr, size_t bytes, bool fixed) {
 // Returns address of memory or NULL. If req_addr was not NULL, will only return
 //  req_addr or NULL.
 static char* anon_mmap_aligned(size_t bytes, size_t alignment, char* req_addr) {
-
   size_t extra_size = bytes;
   if (req_addr == NULL && alignment > 0) {
     extra_size += alignment;
@@ -3124,9 +3111,7 @@ bool os::unguard_memory(char* addr, size_t size) {
 
 bool os::Linux::transparent_huge_pages_sanity_check(bool warn, size_t page_size) {
   bool result = false;
-  void *p = mmap(NULL, page_size * 2, PROT_READ|PROT_WRITE,
-                 MAP_ANONYMOUS|MAP_PRIVATE,
-                 -1, 0);
+  void *p = mmap(NULL, page_size * 2, PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE, -1, 0);
   if (p != MAP_FAILED) {
     void *aligned_p = align_up(p, page_size);
 
@@ -3144,9 +3129,7 @@ bool os::Linux::transparent_huge_pages_sanity_check(bool warn, size_t page_size)
 
 bool os::Linux::hugetlbfs_sanity_check(bool warn, size_t page_size) {
   bool result = false;
-  void *p = mmap(NULL, page_size, PROT_READ|PROT_WRITE,
-                 MAP_ANONYMOUS|MAP_PRIVATE|MAP_HUGETLB,
-                 -1, 0);
+  void *p = mmap(NULL, page_size, PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE|MAP_HUGETLB, -1, 0);
 
   if (p != MAP_FAILED) {
     // We don't know if this really is a huge page or not.
@@ -3294,7 +3277,6 @@ size_t os::Linux::setup_large_page_size() {
 
 bool os::Linux::setup_large_page_type(size_t page_size) {
   if (FLAG_IS_DEFAULT(UseHugeTLBFS) && FLAG_IS_DEFAULT(UseSHM) && FLAG_IS_DEFAULT(UseTransparentHugePages)) {
-
     // The type of large pages has not been specified by the user.
 
     // Try UseHugeTLBFS and then UseSHM.
@@ -3360,7 +3342,7 @@ void os::large_page_init() {
          !FLAG_IS_DEFAULT(LargePageSizeInBytes))) { \
       warning(format, __VA_ARGS__); \
     } \
-  } while (0)
+  } while (false)
 
 #define shm_warning(str) shm_warning_format("%s", str)
 
@@ -3368,10 +3350,9 @@ void os::large_page_init() {
   do { \
     int err = errno; \
     shm_warning_format(str " (error = %d)", err); \
-  } while (0)
+  } while (false)
 
 static char* shmat_with_alignment(int shmid, size_t bytes, size_t alignment) {
-
   if (!is_aligned(alignment, SHMLBA)) {
     ShouldNotReachHere();
     return NULL;
@@ -3476,7 +3457,6 @@ char* os::Linux::reserve_memory_special_shm(size_t bytes, size_t alignment, char
 }
 
 static void warn_on_large_pages_failure(char* req_addr, size_t bytes, int error) {
-
   bool warn_on_failure = UseLargePages && (!FLAG_IS_DEFAULT(UseLargePages) || !FLAG_IS_DEFAULT(UseHugeTLBFS) || !FLAG_IS_DEFAULT(LargePageSizeInBytes));
 
   if (warn_on_failure) {
@@ -3490,7 +3470,6 @@ static void warn_on_large_pages_failure(char* req_addr, size_t bytes, int error)
 char* os::Linux::reserve_memory_special_huge_tlbfs_only(size_t bytes,
                                                         char* req_addr,
                                                         bool exec) {
-
   int prot = exec ? PROT_READ|PROT_WRITE|PROT_EXEC : PROT_READ|PROT_WRITE;
   char* addr = (char*)::mmap(req_addr, bytes, prot,
                              MAP_PRIVATE|MAP_ANONYMOUS|MAP_HUGETLB,
@@ -3578,7 +3557,6 @@ char* os::Linux::reserve_memory_special_huge_tlbfs_mixed(size_t bytes, size_t al
 }
 
 char* os::Linux::reserve_memory_special_huge_tlbfs(size_t bytes, size_t alignment, char* req_addr, bool exec) {
-
   if (is_aligned(bytes, os::large_page_size()) && alignment <= os::large_page_size()) {
     return reserve_memory_special_huge_tlbfs_only(bytes, req_addr, exec);
   } else {
@@ -3588,7 +3566,6 @@ char* os::Linux::reserve_memory_special_huge_tlbfs(size_t bytes, size_t alignmen
 
 char* os::reserve_memory_special(size_t bytes, size_t alignment,
                                  char* req_addr, bool exec) {
-
   char* addr;
   if (UseSHM) {
     addr = os::Linux::reserve_memory_special_shm(bytes, alignment, req_addr, exec);
@@ -3625,7 +3602,6 @@ bool os::release_memory_special(char* base, size_t bytes) {
     if (res) {
       tkr.record((address)base, bytes);
     }
-
   } else {
     res = os::Linux::release_memory_special_impl(base, bytes);
   }
@@ -3961,7 +3937,6 @@ static void SR_handler(int sig, siginfo_t* siginfo, ucontext_t* context) {
           break;
         }
       }
-
     } else if (state == os::SuspendResume::SR_RUNNING) {
       // request was cancelled, continue
     } else {
@@ -4034,7 +4009,6 @@ static const int RANDOMLY_LARGE_INTEGER2 = 100;
 // returns true on success and false on error - really an error is fatal
 // but this seems the normal response to library errors
 static bool do_suspend(OSThread* osthread) {
-
   // mark as suspended and send signal
   if (osthread->sr.request_suspend() != os::SuspendResume::SR_SUSPEND_REQUEST) {
     // failed to switch, state wasn't running?
@@ -4071,7 +4045,6 @@ static bool do_suspend(OSThread* osthread) {
 }
 
 static void do_resume(OSThread* osthread) {
-
   if (osthread->sr.request_wakeup() != os::SuspendResume::SR_WAKEUP_REQUEST) {
     // failed to switch to WAKEUP_REQUEST
     ShouldNotReachHere();
@@ -4339,7 +4312,6 @@ jlong os::Linux::fast_thread_cpu_time(clockid_t clockid) {
 }
 
 void os::Linux::initialize_os_info() {
-
   struct utsname _uname;
 
   uint32_t major;
@@ -4354,10 +4326,8 @@ void os::Linux::initialize_os_info() {
 
   rc = uname(&_uname);
   if (rc != -1) {
-
     rc = sscanf(_uname.release,"%d.%d.%d", &major, &minor, &fix);
     if (rc == 3) {
-
       if (major < 256 && minor < 256 && fix < 256) {
         // Kernel version format is as expected,
         // set it overriding unknown state.
@@ -4454,7 +4424,7 @@ static void print_signal_handler(outputStream* st, int sig, char* buf, size_t bu
     if (!sigismember(&check_signal_done, sig)) { \
       os::Linux::check_signal_handler(sig); \
     } \
-  } while (0)
+  } while (false)
 
 // This method is a periodic task to check for misbehaving JNI applications
 // under CheckJNI, we can add any periodic checks here
@@ -4544,7 +4514,7 @@ void os::Linux::check_signal_handler(int sig) {
     if (sig == SHUTDOWN2_SIGNAL && !isatty(fileno(stdin))) {
       tty->print_cr("Running in non-interactive shell, %s handler is replaced by shell", exception_name(sig, buf, O_BUFLEN));
     }
-  } else if(os::Linux::get_our_sigflags(sig) != 0 && (int)act.sa_flags != os::Linux::get_our_sigflags(sig)) {
+  } else if (os::Linux::get_our_sigflags(sig) != 0 && (int)act.sa_flags != os::Linux::get_our_sigflags(sig)) {
     tty->print("Warning: %s handler flags ", exception_name(sig, buf, O_BUFLEN));
     tty->print("expected:");
     os::Posix::print_sa_flags(tty, os::Linux::get_our_sigflags(sig));
@@ -4609,7 +4579,6 @@ void os::pd_init_container_support() {
 
 // this is called _after_ the global arguments have been parsed
 jint os::init_2(void) {
-
   os::Posix::init_2();
 
   Linux::fast_thread_clock_init();
@@ -5261,7 +5230,6 @@ int os::fork_and_exec(char* cmd, bool use_vfork_if_available) {
   if (pid < 0) {
     // fork failed
     return -1;
-
   } else if (pid == 0) {
     // child process
 
@@ -5269,8 +5237,7 @@ int os::fork_and_exec(char* cmd, bool use_vfork_if_available) {
 
     // execve failed
     _exit(-1);
-
-  } else  {
+  } else {
     // copied from J2SE ..._waitForProcessExit() in UNIXProcess_md.c; we don't
     // care about the actual exit code, for now.
 

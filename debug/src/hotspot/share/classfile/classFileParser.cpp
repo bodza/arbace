@@ -15,8 +15,6 @@
 #include "classfile/verificationType.hpp"
 #include "classfile/verifier.hpp"
 #include "classfile/vmSymbols.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/oopFactory.hpp"
@@ -92,7 +90,6 @@ void ClassFileParser::set_class_bad_constant_seen(short bad_constant) {
 }
 
 void ClassFileParser::parse_constant_pool_entries(const ClassFileStream* const stream, ConstantPool* cp, const int length, TRAPS) {
-
   // Use a local copy of ClassFileStream. It helps the C++ compiler to optimize
   // this function (_current can be allocated in a register, with scalar
   // replacement of aggregates). The _current pointer is copied back to
@@ -310,7 +307,6 @@ static inline Symbol* check_symbol_at(const ConstantPool* cp, int index) {
 }
 
 void ClassFileParser::parse_constant_pool(const ClassFileStream* const stream, ConstantPool* const cp, const int length, TRAPS) {
-
   // parsing constant pool entries
   parse_constant_pool_entries(stream, cp, length, CHECK);
   if (class_bad_constant_seen() != 0) {
@@ -453,11 +449,9 @@ void ClassFileParser::patch_class(ConstantPool* cp, int class_index, Klass* k, S
 }
 
 void ClassFileParser::patch_constant_pool(ConstantPool* cp, int index, Handle patch, TRAPS) {
-
   BasicType patch_type = T_VOID;
 
   switch (cp->tag_at(index).value()) {
-
     case JVM_CONSTANT_UnresolvedClass: {
       // Patching a class means pre-resolving it.
       // The name in the constant pool is ignored.
@@ -534,7 +528,6 @@ static void initialize_hashtable(NameSigHash** table) {
 // NOTE: caller should guarantee that GC doesn't happen during the life cycle
 // of table since we don't expect Symbol*'s to move.
 static bool put_after_lookup(const Symbol* name, const Symbol* sig, NameSigHash** table) {
-
   // First lookup for duplicates
   int index = hash(name, sig);
   NameSigHash* entry = table[index];
@@ -559,7 +552,6 @@ static bool put_after_lookup(const Symbol* name, const Symbol* sig, NameSigHash*
 
 // Side-effects: populates the _local_interfaces field
 void ClassFileParser::parse_interfaces(const ClassFileStream* const stream, const int itfs_len, ConstantPool* const cp, bool* const has_nonstatic_concrete_methods, TRAPS) {
-
   if (itfs_len == 0) {
     _local_interfaces = Universe::the_empty_klass_array();
   } else {
@@ -702,7 +694,6 @@ static int skip_annotation(const u1* buffer, int limit, int index) {
 
 // Skip an annotation value.  Return >=limit if there is any problem.
 static int skip_annotation_value(const u1* buffer, int limit, int index) {
-
   // value := switch (tag:u1) {
   //   case B, C, I, S, Z, D, F, J, c: con:u2;
   //   case e: e_class:u2 e_name:u2;
@@ -749,8 +740,6 @@ static int skip_annotation_value(const u1* buffer, int limit, int index) {
 
 // Sift through annotations, looking for those significant to the VM:
 static void parse_annotations(const ConstantPool* const cp, const u1* buffer, int limit, AnnotationCollector* coll, ClassLoaderData* loader_data, TRAPS) {
-
-
   // annotations := do(nann:u2) {annotation}
   int index = 2; // read nann
   if (index >= limit)  return;
@@ -822,7 +811,6 @@ static void parse_annotations(const ConstantPool* const cp, const u1* buffer, in
 
 // Parse attributes for a field.
 void ClassFileParser::parse_field_attributes(const ClassFileStream* const cfs, u2 attributes_count, bool is_static, u2 signature_index, u2* const constantvalue_index_addr, bool* const is_synthetic_addr, u2* const generic_signature_index_addr, ClassFileParser::FieldAnnotationCollector* parsed_annotations, TRAPS) {
-
   u2 constantvalue_index = 0;
   u2 generic_signature_index = 0;
   bool is_synthetic = false;
@@ -1016,8 +1004,6 @@ class ClassFileParser::FieldAllocationCount : public ResourceObj {
 // Side-effects: populates the _fields, _fields_annotations,
 // _fields_type_annotations fields
 void ClassFileParser::parse_fields(const ClassFileStream* const cfs, bool is_interface, FieldAllocationCount* const fac, ConstantPool* cp, const int cp_size, u2* const java_fields_count_ptr, TRAPS) {
-
-
   cfs->guarantee_more(2, CHECK);  // length
   const u2 length = cfs->get_u2_fast();
   *java_fields_count_ptr = length;
@@ -1139,7 +1125,7 @@ void ClassFileParser::parse_fields(const ClassFileStream* const cfs, bool is_int
         bool duplicate = false;
         for (int i = 0; i < length; i++) {
           const FieldInfo* const f = FieldInfo::from_field_array(fa, i);
-          if (name      == cp->symbol_at(f->name_index()) && signature == cp->symbol_at(f->signature_index())) {
+          if (name == cp->symbol_at(f->name_index()) && signature == cp->symbol_at(f->signature_index())) {
             // Symbol is desclared in Java so skip this one
             duplicate = true;
             break;
@@ -1153,10 +1139,7 @@ void ClassFileParser::parse_fields(const ClassFileStream* const cfs, bool is_int
 
       // Injected field
       FieldInfo* const field = FieldInfo::from_field_array(fa, index);
-      field->initialize(JVM_ACC_FIELD_INTERNAL,
-                        injected[n].name_index,
-                        injected[n].signature_index,
-                        0);
+      field->initialize(JVM_ACC_FIELD_INTERNAL, injected[n].name_index, injected[n].signature_index, 0);
 
       const BasicType type = FieldType::basic_type(injected[n].signature());
 
@@ -1184,7 +1167,6 @@ void ClassFileParser::parse_fields(const ClassFileStream* const cfs, bool is_int
 }
 
 const ClassFileParser::unsafe_u2* ClassFileParser::parse_exception_table(const ClassFileStream* const cfs, u4 code_length, u4 exception_table_length, TRAPS) {
-
   const unsafe_u2* const exception_table_start = cfs->current();
 
   cfs->guarantee_more(8 * exception_table_length, CHECK_NULL); // start_pc, end_pc, handler_pc, catch_type_index
@@ -1194,7 +1176,6 @@ const ClassFileParser::unsafe_u2* ClassFileParser::parse_exception_table(const C
 }
 
 void ClassFileParser::parse_linenumber_table(u4 code_attribute_length, u4 code_length, CompressedLineNumberWriteStream**const write_stream, TRAPS) {
-
   const ClassFileStream* const cfs = _stream;
   unsigned int num_entries = cfs->get_u2(CHECK);
 
@@ -1221,7 +1202,6 @@ void ClassFileParser::parse_linenumber_table(u4 code_attribute_length, u4 code_l
 
 class LVT_Hash : public AllStatic {
  public:
-
   static bool equals(LocalVariableTableElement const& e0, LocalVariableTableElement const& e1) {
   /*
    * 3-tuple start_bci/length/slot has to be unique key,
@@ -1301,8 +1281,7 @@ void ClassFileParser::parse_type_array(u2 array_length, u4 code_length, u4* cons
   *u2_index = i2;
 }
 
-static const u1* parse_stackmap_table(const ClassFileStream* const cfs, u4 code_attribute_length, bool need_verify, TRAPS) {
-
+static const u1* parse_stackmap_table(const ClassFileStream* const cfs, u4 code_attribute_length, TRAPS) {
   if (0 == code_attribute_length) {
     return NULL;
   }
@@ -1312,14 +1291,10 @@ static const u1* parse_stackmap_table(const ClassFileStream* const cfs, u4 code_
   // check code_attribute_length first
   cfs->skip_u1(code_attribute_length, CHECK_NULL);
 
-  if (!need_verify) {
-    return NULL;
-  }
-  return stackmap_table_start;
+  return NULL;
 }
 
 const ClassFileParser::unsafe_u2* ClassFileParser::parse_checked_exceptions(const ClassFileStream* const cfs, u2* const checked_exceptions_length, u4 method_attribute_length, TRAPS) {
-
   cfs->guarantee_more(2, CHECK_NULL);  // checked_exceptions_length
   *checked_exceptions_length = cfs->get_u2_fast();
   const unsigned int size = (*checked_exceptions_length) * sizeof(CheckedExceptionElement) / sizeof(u2);
@@ -1329,7 +1304,6 @@ const ClassFileParser::unsafe_u2* ClassFileParser::parse_checked_exceptions(cons
 }
 
 void ClassFileParser::throwIllegalSignature(const char* type, const Symbol* name, const Symbol* sig, TRAPS) const {
-
   ResourceMark rm(THREAD);
   Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::java_lang_ClassFormatError(), "%s \"%s\" in class %s has illegal signature \"%s\"", type, name->as_C_string(), _class_name->as_C_string(), sig->as_C_string());
 }
@@ -1455,7 +1429,6 @@ void ClassFileParser::ClassAnnotationCollector::apply_to(InstanceKlass* ik) {
  *   - HotSpot internal LVT keeps natural ordering of class file LVT entries.
  */
 void ClassFileParser::copy_localvariable_table(const ConstMethod* cm, int lvt_cnt, u2* const localvariable_table_length, const unsafe_u2** const localvariable_table_start, int lvtt_cnt, u2* const localvariable_type_table_length, const unsafe_u2** const localvariable_type_table_start, TRAPS) {
-
   ResourceMark rm(THREAD);
 
   typedef ResourceHashtable<LocalVariableTableElement, LocalVariableTableElement*, &LVT_Hash::hash, &LVT_Hash::equals> LVT_HashTable;
@@ -1471,8 +1444,7 @@ void ClassFileParser::copy_localvariable_table(const ConstMethod* cm, int lvt_cn
     for (int idx = 0; idx < localvariable_table_length[tbl_no]; idx++, lvt++) {
       copy_lvt_element(&cf_lvt[idx], lvt);
       // If no duplicates, add LVT elem in hashtable.
-      if (table->put(*lvt, lvt) == false && false && _major_version >= JAVA_1_5_VERSION) {
-        classfile_parse_error("Duplicated LocalVariableTable attribute entry for '%s' in class file %s", _cp->symbol_at(lvt->name_cp_index)->as_utf8(), CHECK);
+      if (table->put(*lvt, lvt) == false) {
       }
     }
   }
@@ -1510,7 +1482,6 @@ void ClassFileParser::copy_method_annotations(ConstMethod* cm,
                                        const u1* annotation_default,
                                        int annotation_default_length,
                                        TRAPS) {
-
   AnnotationArray* a;
 
   if (runtime_visible_annotations_length + runtime_invisible_annotations_length > 0) {
@@ -1560,7 +1531,6 @@ void ClassFileParser::copy_method_annotations(ConstMethod* cm,
 // are added to klass's access_flags.
 
 Method* ClassFileParser::parse_method(const ClassFileStream* const cfs, bool is_interface, const ConstantPool* cp, AccessFlags* const promoted_flags, TRAPS) {
-
   ResourceMark rm(THREAD);
   // Parse fixed parts:
   // access_flags, name_index, descriptor_index, attributes_count
@@ -1713,7 +1683,6 @@ Method* ClassFileParser::parse_method(const ClassFileStream* const cfs, bool is_
         if (LoadLineNumberTables && cp->symbol_at(code_attribute_name_index) == vmSymbols::tag_line_number_table()) {
           // Parse and compress line number table
           parse_linenumber_table(code_attribute_length, code_length, &linenumber_table, CHECK_NULL);
-
         } else if (LoadLocalVariableTables && cp->symbol_at(code_attribute_name_index) == vmSymbols::tag_local_variable_table()) {
           // Parse local variable table
           if (!lvt_allocated) {
@@ -1766,7 +1735,7 @@ Method* ClassFileParser::parse_method(const ClassFileStream* const cfs, bool is_
           if (parsed_stackmap_attribute) {
             classfile_parse_error("Multiple StackMapTable attributes in class file %s", CHECK_NULL);
           }
-          stackmap_data = parse_stackmap_table(cfs, code_attribute_length, false, CHECK_NULL);
+          stackmap_data = parse_stackmap_table(cfs, code_attribute_length, CHECK_NULL);
           stackmap_data_length = code_attribute_length;
           parsed_stackmap_attribute = true;
         } else {
@@ -2004,7 +1973,6 @@ Method* ClassFileParser::parse_method(const ClassFileStream* const cfs, bool is_
 // are added to klass's access_flags.
 // Side-effects: populates the _methods field in the parser
 void ClassFileParser::parse_methods(const ClassFileStream* const cfs, bool is_interface, AccessFlags* promoted_flags, bool* has_final_method, bool* declares_nonstatic_concrete_methods, TRAPS) {
-
   cfs->guarantee_more(2, CHECK);  // length
   const u2 length = cfs->get_u2_fast();
   if (length == 0) {
@@ -2047,21 +2015,18 @@ static const intArray* sort_methods(Array<Method*>* methods) {
 
 // Parse generic_signature attribute for methods and fields
 u2 ClassFileParser::parse_generic_signature_attribute(const ClassFileStream* const cfs, TRAPS) {
-
   cfs->guarantee_more(2, CHECK_0);  // generic_signature_index
   const u2 generic_signature_index = cfs->get_u2_fast();
   return generic_signature_index;
 }
 
 void ClassFileParser::parse_classfile_sourcefile_attribute(const ClassFileStream* const cfs, TRAPS) {
-
   cfs->guarantee_more(2, CHECK);  // sourcefile_index
   const u2 sourcefile_index = cfs->get_u2_fast();
   set_class_sourcefile_index(sourcefile_index);
 }
 
 void ClassFileParser::parse_classfile_source_debug_extension_attribute(const ClassFileStream* const cfs, int length, TRAPS) {
-
   const u1* const sde_buffer = cfs->current();
   // Set stream position forward
   cfs->skip_u1(length, CHECK);
@@ -2174,13 +2139,11 @@ void ClassFileParser::parse_classfile_synthetic_attribute(TRAPS) {
 }
 
 void ClassFileParser::parse_classfile_signature_attribute(const ClassFileStream* const cfs, TRAPS) {
-
   const u2 signature_index = cfs->get_u2(CHECK);
   set_class_generic_signature_index(signature_index);
 }
 
 void ClassFileParser::parse_classfile_bootstrap_methods_attribute(const ClassFileStream* const cfs, ConstantPool* cp, u4 attribute_byte_length, TRAPS) {
-
   const u1* const current_start = cfs->current();
 
   guarantee_property(attribute_byte_length >= sizeof(u2), "Invalid BootstrapMethods attribute length %u in class file %s", attribute_byte_length, CHECK);
@@ -2234,7 +2197,6 @@ void ClassFileParser::parse_classfile_bootstrap_methods_attribute(const ClassFil
 }
 
 void ClassFileParser::parse_classfile_attributes(const ClassFileStream* const cfs, ConstantPool* cp, ClassFileParser::ClassAnnotationCollector* parsed_annotations, TRAPS) {
-
   // Set inner classes attribute to default sentinel
   _inner_classes = Universe::the_empty_short_array();
   // Set nest members attribute to default sentinel
@@ -2430,7 +2392,6 @@ void ClassFileParser::parse_classfile_attributes(const ClassFileStream* const cf
 }
 
 void ClassFileParser::apply_parsed_class_attributes(InstanceKlass* k) {
-
   if (_synthetic_flag)
     k->set_is_synthetic();
   if (_sourcefile_index != 0) {
@@ -2472,7 +2433,6 @@ void ClassFileParser::create_combined_annotations(TRAPS) {
 
 // Transfer ownership of metadata allocated to the InstanceKlass.
 void ClassFileParser::apply_parsed_class_metadata(InstanceKlass* this_klass, int java_fields_count, TRAPS) {
-
   _cp->set_pool_holder(this_klass);
   this_klass->set_constants(_cp);
   this_klass->set_fields(_fields, java_fields_count);
@@ -2516,7 +2476,7 @@ AnnotationArray* ClassFileParser::assemble_annotations(const u1* const runtime_v
   return annotations;
 }
 
-const InstanceKlass* ClassFileParser::parse_super_class(ConstantPool* const cp, const int super_class_index, const bool need_verify, TRAPS) {
+const InstanceKlass* ClassFileParser::parse_super_class(ConstantPool* const cp, const int super_class_index, TRAPS) {
   const InstanceKlass* super_klass = NULL;
 
   if (super_class_index != 0) {
@@ -2525,20 +2485,12 @@ const InstanceKlass* ClassFileParser::parse_super_class(ConstantPool* const cp, 
     bool is_array = false;
     if (cp->tag_at(super_class_index).is_klass()) {
       super_klass = InstanceKlass::cast(cp->resolved_klass_at(super_class_index));
-      if (need_verify)
-        is_array = super_klass->is_array_klass();
-    } else if (need_verify) {
-      is_array = (cp->klass_name_at(super_class_index)->byte_at(0) == JVM_SIGNATURE_ARRAY);
-    }
-    if (need_verify) {
-      guarantee_property(!is_array, "Bad superclass name in class file %s", CHECK_NULL);
     }
   }
   return super_klass;
 }
 
 static unsigned int compute_oop_map_count(const InstanceKlass* super, unsigned int nonstatic_oop_map_count, int first_nonstatic_oop_offset) {
-
   unsigned int map_count = NULL == super ? 0 : super->nonstatic_oop_map_count();
   if (nonstatic_oop_map_count > 0) {
     // We have oops to add to map
@@ -2577,7 +2529,6 @@ class ClassFileParser::FieldLayoutInfo : public ResourceObj {
 
 // Layout fields and fill in FieldLayoutInfo.  Could use more refactoring!
 void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount* fac, const ClassAnnotationCollector* parsed_annotations, FieldLayoutInfo* info, TRAPS) {
-
   // Field size and offset computation
   int nonstatic_field_size = _super_klass == NULL ? 0 : _super_klass->nonstatic_field_size();
 
@@ -2694,10 +2645,10 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
     // Fields order: oops, longs/doubles, ints, shorts/chars, bytes, padded fields
     next_nonstatic_oop_offset    = next_nonstatic_field_offset;
     next_nonstatic_double_offset = next_nonstatic_oop_offset + (nonstatic_oop_count * heapOopSize);
-  } else if( allocation_style == 1 ) {
+  } else if ( allocation_style == 1 ) {
     // Fields order: longs/doubles, ints, shorts/chars, bytes, oops, padded fields
     next_nonstatic_double_offset = next_nonstatic_field_offset;
-  } else if( allocation_style == 2 ) {
+  } else if ( allocation_style == 2 ) {
     // Fields allocation: oops fields in super and sub classes are together.
     if (nonstatic_field_size > 0 && _super_klass != NULL && _super_klass->nonstatic_oop_map_size() > 0) {
       const unsigned int map_count = _super_klass->nonstatic_oop_map_count();
@@ -2784,7 +2735,6 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
   // The field allocation type was temporarily stored in the offset slot.
   // oop fields are located before non-oop fields (static and non-static).
   for (AllFieldStream fs(_fields, cp); !fs.done(); fs.next()) {
-
     // skip already laid out fields
     if (fs.is_offset_set()) continue;
 
@@ -2889,7 +2839,6 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
   // Additionally, this should not break alignment for the fields, so we round the alignment up
   // for each field.
   if (nonstatic_contended_count > 0) {
-
     // if there is at least one contended field, we need to have pre-padding for them
     next_nonstatic_padded_offset += ContendedPaddingWidth;
 
@@ -2906,9 +2855,7 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
 
     int current_group = -1;
     while ((current_group = (int)bm.get_next_one_offset(current_group + 1)) != (int)bm.size()) {
-
       for (AllFieldStream fs(_fields, cp); !fs.done(); fs.next()) {
-
         // skip already laid out fields
         if (fs.is_offset_set()) continue;
 
@@ -3027,7 +2974,6 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
 }
 
 static void fill_oop_maps(const InstanceKlass* k, unsigned int nonstatic_oop_map_count, const int* nonstatic_oop_offsets, const unsigned int* nonstatic_oop_counts) {
-
   OopMapBlock* this_oop_map = k->start_of_nonstatic_oop_maps();
   const InstanceKlass* const super = k->superklass();
   const unsigned int super_count = super ? super->nonstatic_oop_map_count() : 0;
@@ -3061,7 +3007,6 @@ static void fill_oop_maps(const InstanceKlass* k, unsigned int nonstatic_oop_map
 }
 
 void ClassFileParser::set_precomputed_flags(InstanceKlass* ik) {
-
   const Klass* const super = ik->super();
 
   // Check if this klass has an empty finalize method (i.e. one with return bytecode only),
@@ -3110,7 +3055,6 @@ static void append_interfaces(GrowableArray<Klass*>* result, const Array<Klass*>
 }
 
 static Array<Klass*>* compute_transitive_interfaces(const InstanceKlass* super, Array<Klass*>* local_ifs, ClassLoaderData* loader_data, TRAPS) {
-
   // Compute maximum size for transitive interfaces
   int max_transitive_size = 0;
   int super_size = 0;
@@ -3168,7 +3112,6 @@ static Array<Klass*>* compute_transitive_interfaces(const InstanceKlass* super, 
 static void check_super_class_access(const InstanceKlass* this_klass, TRAPS) {
   const Klass* const super = this_klass->super();
   if (super != NULL) {
-
     // If the loader is not the boot loader then throw an exception if its
     // superclass is in package jdk.internal.reflect and its loader is not a
     // special reflection class loader
@@ -3249,7 +3192,6 @@ static void check_final_method_override(const InstanceKlass* this_klass, TRAPS) 
 
     // skip private, static, and <init> methods
     if ((!m->is_private() && !m->is_static()) && (m->name() != vmSymbols::object_initializer_name())) {
-
       const Symbol* const name = m->name();
       const Symbol* const signature = m->signature();
       const Klass* k = this_klass->super();
@@ -3370,7 +3312,6 @@ static void verify_class_version(u2 major, u2 minor, Symbol* class_name, TRAPS) 
           class_name->as_C_string(), major, minor);
         return;
       }
-
     } else { // minor != JAVA_PREVIEW_MINOR_VERSION
       if (major > max_version) {
         ResourceMark rm(THREAD);
@@ -3600,7 +3541,6 @@ jint ClassFileParser::layout_size() const {
 }
 
 static void check_methods_for_intrinsics(const InstanceKlass* ik, const Array<Method*>* methods) {
-
   // Set up Method*::intrinsic_id as soon as we know the names of methods.
   // (We used to do this lazily, but now we query it in Rewriter,
   // which is eagerly done for every method, so we might as well do it now,
@@ -3654,7 +3594,6 @@ InstanceKlass* ClassFileParser::create_instance_klass(bool changed_by_loadhook, 
 }
 
 void ClassFileParser::fill_instance_klass(InstanceKlass* ik, bool changed_by_loadhook, TRAPS) {
-
   // Set name and CLD before adding to CLD
   ik->set_class_loader_data(_loader_data);
   ik->set_name(_class_name);
@@ -3666,9 +3605,6 @@ void ClassFileParser::fill_instance_klass(InstanceKlass* ik, bool changed_by_loa
   _loader_data->add_class(ik, publicize);
 
   set_klass_to_deallocate(ik);
-
-  // Fill in information already parsed
-  ik->set_should_verify_class(false);
 
   // Not yet: supers are done below to support the new subtype-checking fields
   ik->set_nonstatic_field_size(_field_info->nonstatic_field_size);
@@ -3829,7 +3765,6 @@ void ClassFileParser::prepend_host_package_name(const InstanceKlass* host_klass,
 // host's package.  If the classes are in different packages then throw an IAE
 // exception.
 void ClassFileParser::fix_anonymous_class_name(TRAPS) {
-
   const jbyte* anon_last_slash = UTF8::strrchr(_class_name->base(), _class_name->utf8_length(), '/');
   if (anon_last_slash == NULL) {  // Unnamed package
     prepend_host_package_name(_host_klass, CHECK);
@@ -3898,12 +3833,11 @@ ClassFileParser::ClassFileParser(ClassFileStream* stream, Symbol* name, ClassLoa
   _has_empty_finalizer(false),
   _has_vanilla_constructor(false),
   _max_bootstrap_specifier_index(-1) {
-
   _class_name = name != NULL ? name : vmSymbols::unknown_class_name();
 
   if (_cp_patches != NULL) {
     int len = _cp_patches->length();
-    for (int i=0; i<len; i++) {
+    for (int i = 0; i<len; i++) {
       if (has_cp_patch_at(i)) {
         Handle patch = cp_patch_at(i);
         if (java_lang_String::is_instance(patch()) || java_lang_Class::is_instance(patch())) {
@@ -3994,7 +3928,6 @@ ClassFileParser::~ClassFileParser() {
 }
 
 void ClassFileParser::parse_stream(const ClassFileStream* const stream, TRAPS) {
-
   // BEGIN STREAM PARSING
   stream->guarantee_more(8, CHECK);  // magic, major, minor
   // Magic value
@@ -4082,22 +4015,9 @@ void ClassFileParser::parse_stream(const ClassFileStream* const stream, TRAPS) {
     fix_anonymous_class_name(CHECK);
   }
 
-  if (!is_internal()) {
-    LogTarget(Debug, class, preorder) lt;
-    if (lt.is_enabled()) {
-      ResourceMark rm(THREAD);
-      LogStream ls(lt);
-      ls.print("%s", _class_name->as_klass_external_name());
-      if (stream->source() != NULL) {
-        ls.print(" source: %s", stream->source());
-      }
-      ls.cr();
-    }
-  }
-
   // SUPERKLASS
   _super_class_index = stream->get_u2_fast();
-  _super_klass = parse_super_class(cp, _super_class_index, false, CHECK);
+  _super_klass = parse_super_class(cp, _super_class_index, CHECK);
 
   // Interfaces
   _itfs_len = stream->get_u2_fast();
@@ -4133,7 +4053,6 @@ void ClassFileParser::parse_stream(const ClassFileStream* const stream, TRAPS) {
 }
 
 void ClassFileParser::post_process_parsed_stream(const ClassFileStream* const stream, ConstantPool* cp, TRAPS) {
-
   // We check super class after class file is parsed and format is checked
   if (_super_class_index > 0 && NULL ==_super_klass) {
     Symbol* const super_class_name = cp->klass_name_at(_super_class_index);
@@ -4196,6 +4115,5 @@ void ClassFileParser::set_klass_to_deallocate(InstanceKlass* klass) { _klass_to_
 // Caller responsible for ResourceMark
 // clone stream with rewound position
 const ClassFileStream* ClassFileParser::clone_stream() const {
-
   return _stream->clone();
 }

@@ -183,7 +183,6 @@ void G1BarrierSetAssembler::g1_write_barrier_pre(MacroAssembler* masm, Register 
 }
 
 void G1BarrierSetAssembler::g1_write_barrier_post(MacroAssembler* masm, Register store_addr, Register new_val, Register thread, Register tmp, Register tmp2) {
-
   Address queue_index(thread, in_bytes(G1ThreadLocalData::dirty_card_queue_index_offset()));
   Address buffer(thread, in_bytes(G1ThreadLocalData::dirty_card_queue_buffer_offset()));
 

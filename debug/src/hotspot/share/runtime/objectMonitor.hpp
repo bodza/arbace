@@ -159,7 +159,7 @@ class ObjectMonitor {
           PerfDataManager::has_PerfData()) { \
         ObjectMonitor::_sync_ ## f->op_str; \
       } \
-    } while (0)
+    } while (false)
 
   static PerfCounter * _sync_ContendedLockAttempts;
   static PerfCounter * _sync_FutileWakeups;
@@ -255,7 +255,6 @@ class ObjectMonitor {
   }
 
  public:
-
   void*     object() const;
   void*     object_addr();
   void      set_object(void* obj);

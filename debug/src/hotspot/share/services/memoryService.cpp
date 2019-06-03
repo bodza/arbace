@@ -3,7 +3,6 @@
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "gc/shared/collectedHeap.hpp"
-#include "logging/logConfiguration.hpp"
 #include "memory/heap.hpp"
 #include "memory/memRegion.hpp"
 #include "memory/resourceArea.hpp"
@@ -139,7 +138,6 @@ void MemoryService::track_memory_pool_usage(MemoryPool* pool) {
 }
 
 void MemoryService::gc_begin(GCMemoryManager* manager, bool recordGCBeginTime, bool recordAccumulatedGCTime, bool recordPreGCUsage, bool recordPeakUsage) {
-
   manager->gc_begin(recordGCBeginTime, recordPreGCUsage, recordAccumulatedGCTime);
 
   // Track the peak memory usage when GC begins

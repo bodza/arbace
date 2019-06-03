@@ -166,7 +166,6 @@ ciConstantPoolCache* ciInstanceKlass::field_cache() {
 // ciInstanceKlass::get_canonical_holder
 //
 ciInstanceKlass* ciInstanceKlass::get_canonical_holder(int offset) {
-
   if (offset < instanceOopDesc::base_offset_in_bytes()) {
     // All header offsets belong properly to java/lang/Object.
     return CURRENT_ENV->Object_klass();
@@ -393,7 +392,6 @@ static int sort_field_by_offset(ciField** a, ciField** b) {
 // ------------------------------------------------------------------
 // ciInstanceKlass::compute_nonstatic_fields
 int ciInstanceKlass::compute_nonstatic_fields() {
-
   if (_nonstatic_fields != NULL)
     return _nonstatic_fields->length();
 
@@ -489,7 +487,6 @@ bool ciInstanceKlass::compute_injected_fields_helper() {
 }
 
 void ciInstanceKlass::compute_injected_fields() {
-
   int has_injected_fields = 0;
   if (super() != NULL && super()->has_injected_fields()) {
     has_injected_fields = 1;

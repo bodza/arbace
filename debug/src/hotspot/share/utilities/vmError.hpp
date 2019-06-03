@@ -65,7 +65,6 @@ class VMError : public AllStatic {
   static bool _error_reported;
 
  public:
-
   // set signal handlers on Solaris/Linux or the default exception filter
   // on Windows, to handle recursive crashes.
   static void reset_signal_handlers();
@@ -107,7 +106,6 @@ class VMError : public AllStatic {
   static jlong get_step_start_time();
 
 public:
-
   // return a string to describe the error
   static char* error_string(char* buf, int buflen);
 

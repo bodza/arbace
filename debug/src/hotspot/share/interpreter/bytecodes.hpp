@@ -269,7 +269,7 @@ class Bytecodes: AllStatic {
     // at run time.
     //
     // Rewritten at CDS dump time to | Original bytecode
-    // _invoke_virtual rewritten on sparc, will be disabled if UseSharedSpaces turned on.
+    // _invoke_virtual rewritten on sparc, will be disabled if false turned on.
     // ------------------------------+------------------
     _nofast_getfield      ,          //  <- _getfield
     _nofast_putfield      ,          //  <- _putfield

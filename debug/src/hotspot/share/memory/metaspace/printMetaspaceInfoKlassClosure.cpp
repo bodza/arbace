@@ -7,7 +7,6 @@
 #include "utilities/ostream.hpp"
 
 namespace metaspace {
-
 PrintMetaspaceInfoKlassClosure::PrintMetaspaceInfoKlassClosure(outputStream* out, bool do_print)
 : _out(out), _do_print(do_print)
 , _num_classes(0), _num_instance_classes(0), _num_array_classes(0) {

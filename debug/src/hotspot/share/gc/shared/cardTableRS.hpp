@@ -139,15 +139,11 @@ public:
   // Iterate over the portion of the card-table which covers the given
   // region mr in the given space and apply cl to any dirty sub-regions
   // of mr. Clears the dirty cards as they are processed.
-  void non_clean_card_iterate_possibly_parallel(Space* sp, MemRegion mr,
-                                                OopsInGenClosure* cl, CardTableRS* ct,
-                                                uint n_threads);
+  void non_clean_card_iterate_possibly_parallel(Space* sp, MemRegion mr, OopsInGenClosure* cl, CardTableRS* ct, uint n_threads);
 
   // Work method used to implement non_clean_card_iterate_possibly_parallel()
   // above in the parallel case.
-  virtual void non_clean_card_iterate_parallel_work(Space* sp, MemRegion mr,
-                                                    OopsInGenClosure* cl, CardTableRS* ct,
-                                                    uint n_threads);
+  virtual void non_clean_card_iterate_parallel_work(Space* sp, MemRegion mr, OopsInGenClosure* cl, CardTableRS* ct, uint n_threads);
 
   // This is an array, one element per covered region of the card table.
   // Each entry is itself an array, with one element per chunk in the

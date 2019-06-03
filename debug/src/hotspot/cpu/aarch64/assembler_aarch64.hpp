@@ -126,7 +126,6 @@ class Instruction_aarch64 {
   Assembler *assem;
 
 public:
-
   Instruction_aarch64(class Assembler *as) {
     insn = 0;
     assem = as;
@@ -270,7 +269,6 @@ namespace ext
 // Addressing modes
 class Address {
  public:
-
   enum mode { no_mode, base_plus_offset, pre, post, post_reg, pcrel,
               base_plus_offset_reg, literal };
 
@@ -503,16 +501,12 @@ class Address {
 
 // Convience classes
 class RuntimeAddress: public Address {
-
   public:
-
   RuntimeAddress(address target) : Address(target, relocInfo::runtime_call_type) { }
 };
 
 class OopAddress: public Address {
-
   public:
-
   OopAddress(address target) : Address(target, relocInfo::oop_type) { }
 };
 
@@ -527,14 +521,11 @@ class ExternalAddress: public Address {
   }
 
  public:
-
   ExternalAddress(address target) : Address(target, reloc_for_target(target)) { }
 };
 
 class InternalAddress: public Address {
-
   public:
-
   InternalAddress(address target) : Address(target, relocInfo::internal_word_type) { }
 };
 
@@ -546,13 +537,11 @@ typedef enum {
 } prfop;
 
 class Assembler : public AbstractAssembler {
-
   void emit_long(jint x) {
     AbstractAssembler::emit_int32(x);
   }
 
 public:
-
   enum { instruction_size = 4 };
 
   Address adjust(Register base, int offset, bool preIncrement) {
@@ -637,8 +626,7 @@ public:
 
 #undef INSN
 
-  void add_sub_immediate(Register Rd, Register Rn, unsigned uimm, int op,
-                         int negated_op);
+  void add_sub_immediate(Register Rd, Register Rn, unsigned uimm, int op, int negated_op);
 
   // Add/subtract (immediate)
 #define INSN(NAME, decode, negated) \
@@ -820,7 +808,7 @@ public:
   enum Condition
     { EQ, NE, HS, CS=HS, LO, CC=LO, MI, PL, VS, VC, HI, LS, GE, LT, GT, LE, AL, NV };
 
-  void br(Condition  cond, address dest) {
+  void br(Condition cond, address dest) {
     long offset = (dest - pc()) >> 2;
     starti;
     f(0b0101010, 31, 25), f(0, 24), sf(offset, 23, 5), f(0, 4), f(cond, 3, 0);
@@ -878,9 +866,7 @@ public:
 #undef INSN
 
   // System
-  void system(int op0, int op1, int CRn, int CRm, int op2,
-              Register rt = dummy_reg)
-  {
+  void system(int op0, int op1, int CRn, int CRm, int op2, Register rt = dummy_reg) {
     starti;
     f(0b11010101000, 31, 21);
     f(op0, 20, 19);
@@ -1064,8 +1050,7 @@ public:
 
 #define INSN2(NAME, sz, op, o0) /* Two registers */ \
   void NAME(Register Rt, Register Rn) { \
-    load_store_exclusive(dummy_reg, Rt, dummy_reg, \
-                         Rn, sz, op, o0); \
+    load_store_exclusive(dummy_reg, Rt, dummy_reg, Rn, sz, op, o0); \
   }
 
 #define INSN_FOO(NAME, sz, op, o0) /* Three registers, encoded differently */ \
@@ -1194,8 +1179,7 @@ public:
   } \
   void NAME(Register Rt, address dest, relocInfo::relocType rtype) { \
     InstructionMark im(this); \
-    guarantee(rtype == relocInfo::internal_word_type, \
-              "only internal_word_type relocs make sense here"); \
+    guarantee(rtype == relocInfo::internal_word_type, "only internal_word_type relocs make sense here"); \
     code_section()->relocate(inst_mark(), InternalAddress(dest).rspec()); \
     NAME(Rt, dest); \
   } \
@@ -1370,8 +1354,7 @@ public:
 
   // Logical (shifted register)
 #define INSN(NAME, size, op, N) \
-  void NAME(Register Rd, Register Rn, Register Rm, \
-            enum shift_kind kind = LSL, unsigned shift = 0) { \
+  void NAME(Register Rd, Register Rn, Register Rm, enum shift_kind kind = LSL, unsigned shift = 0) { \
     starti; \
     f(N, 21); \
     zrf(Rm, 16), zrf(Rn, 5), zrf(Rd, 0); \
@@ -1409,8 +1392,7 @@ void mvnw(Register Rd, Register Rm, enum shift_kind kind = LSL, unsigned shift =
 
   // Add/subtract (shifted register)
 #define INSN(NAME, size, op) \
-  void NAME(Register Rd, Register Rn, Register Rm, \
-            enum shift_kind kind, unsigned shift = 0) { \
+  void NAME(Register Rd, Register Rn, Register Rm, enum shift_kind kind, unsigned shift = 0) { \
     starti; \
     f(0, 21); \
     zrf(Rd, 0), zrf(Rn, 5), zrf(Rm, 16); \
@@ -1431,16 +1413,13 @@ void mvnw(Register Rd, Register Rm, enum shift_kind kind = LSL, unsigned shift =
 
   // Add/subtract (extended register)
 #define INSN(NAME, op) \
-  void NAME(Register Rd, Register Rn, Register Rm, \
-           ext::operation option, int amount = 0) { \
+  void NAME(Register Rd, Register Rn, Register Rm, ext::operation option, int amount = 0) { \
     starti; \
     zrf(Rm, 16), srf(Rn, 5), srf(Rd, 0); \
     add_sub_extended_reg(op, 0b01011, Rd, Rn, Rm, 0b00, option, amount); \
   }
 
-  void add_sub_extended_reg(unsigned op, unsigned decode,
-    Register Rd, Register Rn, Register Rm,
-    unsigned opt, ext::operation option, unsigned imm) {
+  void add_sub_extended_reg(unsigned op, unsigned decode, Register Rd, Register Rn, Register Rm, unsigned opt, ext::operation option, unsigned imm) {
     guarantee(imm <= 4, "shift amount must be < 4");
     f(op, 31, 29), f(decode, 28, 24), f(opt, 23, 22), f(1, 21);
     f(option, 15, 13), f(imm, 12, 10);
@@ -1454,8 +1433,7 @@ void mvnw(Register Rd, Register Rm, enum shift_kind kind = LSL, unsigned shift =
 #undef INSN
 
 #define INSN(NAME, op) \
-  void NAME(Register Rd, Register Rn, Register Rm, \
-           ext::operation option, int amount = 0) { \
+  void NAME(Register Rd, Register Rn, Register Rm, ext::operation option, int amount = 0) { \
     starti; \
     zrf(Rm, 16), srf(Rn, 5), zrf(Rd, 0); \
     add_sub_extended_reg(op, 0b01011, Rd, Rn, Rm, 0b00, option, amount); \
@@ -1736,8 +1714,7 @@ public:
   }
 
 #define INSN(NAME, op31, type, o1, o0) \
-  void NAME(FloatRegister Vd, FloatRegister Vn, FloatRegister Vm, \
-            FloatRegister Va) { \
+  void NAME(FloatRegister Vd, FloatRegister Vn, FloatRegister Vm, FloatRegister Va) { \
     data_processing(op31, type, o1, o0, Vd, Vn, Vm, Va); \
   }
 
@@ -1766,8 +1743,7 @@ public:
   }
 
 #define INSN(NAME, op31, type, op1, op2) \
-  void NAME(FloatRegister Vd, FloatRegister Vn, \
-            FloatRegister Vm, Condition cond) { \
+  void NAME(FloatRegister Vd, FloatRegister Vn, FloatRegister Vm, Condition cond) { \
     fp_conditional_select(op31, type, op1, op2, cond, Vd, Vn, Vm); \
   }
 
@@ -1865,7 +1841,6 @@ private:
   }
 
 public:
-
   void fmovs(FloatRegister Vn, double value) {
     if (value)
       fmov_imm(Vn, value, 0b00);
@@ -1936,7 +1911,6 @@ public:
  * as SIMD registers.
  */
  public:
-
   enum SIMD_Arrangement {
        T8B, T16B, T4H, T8H, T2S, T4S, T1D, T2D, T1Q
   };
@@ -1960,7 +1934,6 @@ public:
 #undef INSN
 
  private:
-
   void ld_st(FloatRegister Vt, SIMD_Arrangement T, Register Xn, int op1, int op2) {
     starti;
     f(0,31), f((int)T & 1, 30);
@@ -2001,7 +1974,6 @@ public:
   }
 
  public:
-
 #define INSN1(NAME, op1, op2) \
   void NAME(FloatRegister Vt, SIMD_Arrangement T, const Address &a) { \
     ld_st(Vt, T, a, op1, op2, 1); \
@@ -2269,7 +2241,7 @@ public:
     f(0, 31), f(Tb & 1, 30), f(0b1011110, 29, 23), f((1 << ((Tb>>1)+3))|shift, 22, 16);
     f(0b101001, 15, 10), rf(Vn, 5), rf(Vd, 0);
   }
-  void ushll2(FloatRegister Vd, SIMD_Arrangement Ta, FloatRegister Vn,  SIMD_Arrangement Tb, int shift) {
+  void ushll2(FloatRegister Vd, SIMD_Arrangement Ta, FloatRegister Vn, SIMD_Arrangement Tb, int shift) {
     ushll(Vd, Ta, Vn, Tb, shift);
   }
 
@@ -2400,7 +2372,6 @@ public:
 private:
   INSN(_rbit, 1, 0b00101);
 public:
-
 #undef ASSERTION
 
 #define ASSERTION (T == T8B || T == T16B)

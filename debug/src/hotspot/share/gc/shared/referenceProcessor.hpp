@@ -299,11 +299,7 @@ public:
   // The caller is responsible for taking care of potential
   // interference with concurrent operations on these lists
   // (or predicates involved) by other threads.
-  void preclean_discovered_references(BoolObjectClosure* is_alive,
-                                      OopClosure*        keep_alive,
-                                      VoidClosure*       complete_gc,
-                                      YieldClosure*      yield,
-                                      GCTimer*           gc_timer);
+  void preclean_discovered_references(BoolObjectClosure* is_alive, OopClosure*        keep_alive, VoidClosure*       complete_gc, YieldClosure*      yield, GCTimer*           gc_timer);
 
 private:
   // Returns the name of the discovered reference list
@@ -314,11 +310,7 @@ private:
   // the attributes mentioned in preclean_discovered_references().
   // Supports both normal and fine grain yielding.
   // Returns whether the operation should be aborted.
-  bool preclean_discovered_reflist(DiscoveredList&    refs_list,
-                                   BoolObjectClosure* is_alive,
-                                   OopClosure*        keep_alive,
-                                   VoidClosure*       complete_gc,
-                                   YieldClosure*      yield);
+  bool preclean_discovered_reflist(DiscoveredList& refs_list, BoolObjectClosure* is_alive, OopClosure* keep_alive, VoidClosure* complete_gc, YieldClosure* yield);
 
   // round-robin mod _num_queues (not: _not_ mod _max_num_queues)
   uint next_id() {
@@ -329,13 +321,9 @@ private:
     return id;
   }
   DiscoveredList* get_discovered_list(ReferenceType rt);
-  inline void add_to_discovered_list_mt(DiscoveredList& refs_list, oop obj,
-                                        HeapWord* discovered_addr);
+  inline void add_to_discovered_list_mt(DiscoveredList& refs_list, oop obj, HeapWord* discovered_addr);
 
   void clear_discovered_references(DiscoveredList& refs_list);
-
-  void log_reflist(const char* prefix, DiscoveredList list[], uint num_active_queues);
-  void log_reflist_counts(DiscoveredList ref_lists[], uint num_active_queues) { };
 
   // Balances reference queues.
   void balance_queues(DiscoveredList refs_lists[]);
@@ -506,7 +494,6 @@ public:
     _rp(rp),
     _discoverer(span),
     _old_discoverer(rp->is_subject_to_discovery_closure()) {
-
     rp->set_is_subject_to_discovery_closure(&_discoverer);
   }
 
@@ -599,7 +586,6 @@ class ReferenceProcessorMTProcMutator: StackObj {
 // reference processing.
 class AbstractRefProcTaskExecutor {
 public:
-
   // Abstract tasks to execute.
   class ProcessTask;
 

@@ -6,7 +6,6 @@
 #include "interp_masm_aarch64.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
-#include "logging/log.hpp"
 #include "oops/arrayOop.hpp"
 #include "oops/markOop.hpp"
 #include "oops/method.hpp"
@@ -19,7 +18,6 @@
 #include "runtime/thread.inline.hpp"
 
 void InterpreterMacroAssembler::narrow(Register result) {
-
   // Get method->_constMethod->_result_type
   ldr(rscratch1, Address(rfp, frame::interpreter_frame_method_offset * wordSize));
   ldr(rscratch1, Address(rscratch1, Method::const_offset()));
@@ -164,7 +162,6 @@ void InterpreterMacroAssembler::load_resolved_klass_at_offset(Register cpool, Re
 // Kills:
 //      r2, r5
 void InterpreterMacroAssembler::gen_subtype_check(Register Rsub_klass, Label& ok_is_subtype) {
-
   // Profile the not-null value's klass.
   profile_typecheck(r2, Rsub_klass, r5); // blows r2, reloads r5
 
@@ -476,17 +473,10 @@ void InterpreterMacroAssembler::remove_activation(TosState state, bool throw_mon
 
   bind(no_unlock);
 
-  // jvmti support
-  if (notify_jvmdi) {
-    notify_method_exit(state, NotifyJVMTI);    // preserve TOSCA
-  } else {
-    notify_method_exit(state, SkipNotifyJVMTI); // preserve TOSCA
-  }
-
   // remove activation
   // get sender esp
-  ldr(esp,
-      Address(rfp, frame::interpreter_frame_sender_sp_offset * wordSize));
+  ldr(esp, Address(rfp, frame::interpreter_frame_sender_sp_offset * wordSize));
+
   if (StackReservedPages > 0) {
     // testing if reserved zone needs to be re-enabled
     Label no_reserved_zone_enabling;
@@ -1148,10 +1138,6 @@ void InterpreterMacroAssembler::verify_oop(Register reg, TosState state) {
 
 void InterpreterMacroAssembler::verify_FPU(int stack_depth, TosState state) { }
 
-void InterpreterMacroAssembler::notify_method_entry() { }
-
-void InterpreterMacroAssembler::notify_method_exit(TosState state, NotifyMethodExitMode mode) { }
-
 // Jump if ((*counter_addr += increment) & mask) satisfies the condition.
 void InterpreterMacroAssembler::increment_mask_and_jump(Address counter_addr, int increment, Address mask, Register scratch, Register scratch2, bool preloaded, Condition cond, Label* where) {
   if (!preloaded) {
@@ -1317,7 +1303,6 @@ void InterpreterMacroAssembler::profile_return_type(Register mdp, Register ret, 
     test_method_data_pointer(mdp, profile_continue);
 
     if (MethodData::profile_return_jsr292_only()) {
-
       // If we don't profile all invoke bytecodes we must make sure
       // it's a bytecode we indeed profile. We can't go back to the
       // begining of the ProfileData we intend to update to check its

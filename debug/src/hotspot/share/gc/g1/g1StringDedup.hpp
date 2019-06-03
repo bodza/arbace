@@ -38,7 +38,6 @@ class G1StringDedupUnlinkOrOopsDoClosure;
 //
 class G1StringDedup : public StringDedup {
 private:
-
   // Candidate selection policies, returns true if the given object is
   // candidate for string deduplication.
   static bool is_candidate_from_mark(oop obj);

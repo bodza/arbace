@@ -97,21 +97,21 @@ class ciMethod : public ciMetadata {
   void assert_call_type_ok(int bci);
 
  public:
-  void check_is_loaded() const                   { }
+  void check_is_loaded() const                  { }
 
   // Basic method information.
-  ciFlags flags() const                          { check_is_loaded(); return _flags; }
-  ciSymbol* name() const                         { return _name; }
-  ciInstanceKlass* holder() const                { return _holder; }
+  ciFlags flags() const                         { check_is_loaded(); return _flags; }
+  ciSymbol* name() const                        { return _name; }
+  ciInstanceKlass* holder() const               { return _holder; }
   ciMethodData* method_data();
   ciMethodData* method_data_or_null();
 
   // Signature information.
-  ciSignature* signature() const                 { return _signature; }
-  ciType*      return_type() const               { return _signature->return_type(); }
-  int          arg_size_no_receiver() const      { return _signature->size(); }
+  ciSignature* signature() const                { return _signature; }
+  ciType*      return_type() const              { return _signature->return_type(); }
+  int          arg_size_no_receiver() const     { return _signature->size(); }
   // Can only be used on loaded ciMethods
-  int          arg_size() const                  {
+  int          arg_size() const                 {
     check_is_loaded();
     return _signature->size() + (_flags.is_static() ? 0 : 1);
   }
@@ -261,7 +261,6 @@ class ciMethod : public ciMetadata {
   bool can_be_osr_compiled(int entry_bci);
   void set_not_compilable(const char* reason = NULL);
   bool has_compiled_code();
-  void log_nmethod_identity(xmlStream* log);
   bool is_not_reached(int bci);
   bool was_executed_more_than(int times);
   bool has_unloaded_classes_in_signature();
@@ -314,13 +313,6 @@ class ciMethod : public ciMetadata {
   // Replay data methods
   void dump_name_as_ascii(outputStream* st);
   void dump_replay_data(outputStream* st);
-
-  // Print the bytecodes of this method.
-  void print_codes_on(outputStream* st);
-  void print_codes() {
-    print_codes_on(tty);
-  }
-  void print_codes_on(int from, int to, outputStream* st);
 
   // Print the name of this method in various incarnations.
   void print_name(outputStream* st = tty);

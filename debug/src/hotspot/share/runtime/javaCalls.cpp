@@ -86,7 +86,6 @@ JavaCallWrapper::JavaCallWrapper(const methodHandle& callee_method, Handle recei
 }
 
 JavaCallWrapper::~JavaCallWrapper() {
-
   // restore previous handle block & Java frame linkage
   JNIHandleBlock *_old_handles = _thread->active_handles();
   _thread->set_active_handles(_handles);
@@ -278,7 +277,6 @@ void JavaCalls::call(JavaValue* result, const methodHandle& method, JavaCallArgu
 }
 
 void JavaCalls::call_helper(JavaValue* result, const methodHandle& method, JavaCallArguments* args, TRAPS) {
-
   JavaThread* thread = (JavaThread*)THREAD;
 
   CHECK_UNHANDLED_OOPS_ONLY(thread->clear_unhandled_oops();)

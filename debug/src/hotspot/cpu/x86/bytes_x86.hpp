@@ -16,7 +16,6 @@ class Bytes: AllStatic {
   // Efficient reading and writing of unaligned unsigned data in platform-specific byte ordering
   template <typename T>
   static inline T get_native(const void* p) {
-
     T x;
 
     if (is_aligned(p, sizeof(T))) {
@@ -30,7 +29,6 @@ class Bytes: AllStatic {
 
   template <typename T>
   static inline void put_native(void* p, T x) {
-
     if (is_aligned(p, sizeof(T))) {
       *(T*)p = x;
     } else {

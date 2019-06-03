@@ -222,7 +222,7 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
   do_bool_flag(VerifyOops)
 
 #define BOXED_BOOLEAN(name, value) oop name = ((jboolean)(value) ? boxedTrue() : boxedFalse())
-#define BOXED_DOUBLE(name, value) oop name; do { jvalue p; p.d = (jdouble) (value); name = java_lang_boxing_object::create(T_DOUBLE, &p, CHECK_NULL); } while(0)
+#define BOXED_DOUBLE(name, value) oop name; do { jvalue p; p.d = (jdouble) (value); name = java_lang_boxing_object::create(T_DOUBLE, &p, CHECK_NULL); } while (false)
 #define BOXED_LONG(name, value) \
   oop name; \
   do { \
@@ -236,7 +236,7 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
     } else { \
       name = (*e)(); \
     } \
-  } while (0)
+  } while (false)
 
 #define CSTRING_TO_JSTRING(name, value) \
   Handle name; \
@@ -251,7 +251,7 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
         name = (*e); \
       } \
     } \
-  } while (0)
+  } while (false)
 
 jobjectArray readConfiguration0(JNIEnv *env, TRAPS) {
   ResourceMark rm;

@@ -3,7 +3,6 @@
 #include "gc/shared/cardTable.hpp"
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/space.inline.hpp"
-#include "logging/log.hpp"
 #include "memory/virtualspace.hpp"
 #include "runtime/java.hpp"
 #include "runtime/os.hpp"
@@ -61,14 +60,11 @@ void CardTable::initialize() {
     vm_exit_during_initialization("Could not allocate card table committed region set.");
   }
 
-  const size_t rs_align = _page_size == (size_t) os::vm_page_size() ? 0 :
-    MAX2(_page_size, (size_t) os::vm_allocation_granularity());
+  const size_t rs_align = _page_size == (size_t) os::vm_page_size() ? 0 : MAX2(_page_size, (size_t) os::vm_allocation_granularity());
   ReservedSpace heap_rs(_byte_map_size, rs_align, false);
 
   MemTracker::record_virtual_memory_type((address)heap_rs.base(), mtGC);
 
-  os::trace_page_sizes("Card Table", _guard_index + 1, _guard_index + 1,
-                       _page_size, heap_rs.base(), heap_rs.size());
   if (!heap_rs.is_reserved()) {
     vm_exit_during_initialization("Could not reserve enough space for the card marking array");
   }
@@ -83,8 +79,7 @@ void CardTable::initialize() {
   jbyte* guard_card = &_byte_map[_guard_index];
   HeapWord* guard_page = align_down((HeapWord*)guard_card, _page_size);
   _guard_region = MemRegion(guard_page, _page_size);
-  os::commit_memory_or_exit((char*)guard_page, _page_size, _page_size,
-                            !ExecMem, "card table last card");
+  os::commit_memory_or_exit((char*)guard_page, _page_size, _page_size, !ExecMem, "card table last card");
   *guard_card = last_card;
 }
 
@@ -286,7 +281,7 @@ void CardTable::dirty_card_iterate(MemRegion mr, MemRegionClosure* cl) {
     MemRegion mri = mr.intersection(_covered[i]);
     if (!mri.is_empty()) {
       jbyte *cur_entry, *next_entry, *limit;
-      for (cur_entry = byte_for(mri.start()), limit = byte_for(mri.last()); cur_entry <= limit; cur_entry  = next_entry) {
+      for (cur_entry = byte_for(mri.start()), limit = byte_for(mri.last()); cur_entry <= limit; cur_entry = next_entry) {
         next_entry = cur_entry + 1;
         if (*cur_entry == dirty_card) {
           size_t dirty_cards;
@@ -306,7 +301,7 @@ MemRegion CardTable::dirty_card_range_after_reset(MemRegion mr, bool reset, int 
     MemRegion mri = mr.intersection(_covered[i]);
     if (!mri.is_empty()) {
       jbyte* cur_entry, *next_entry, *limit;
-      for (cur_entry = byte_for(mri.start()), limit = byte_for(mri.last()); cur_entry <= limit; cur_entry  = next_entry) {
+      for (cur_entry = byte_for(mri.start()), limit = byte_for(mri.last()); cur_entry <= limit; cur_entry = next_entry) {
         next_entry = cur_entry + 1;
         if (*cur_entry == dirty_card) {
           size_t dirty_cards;

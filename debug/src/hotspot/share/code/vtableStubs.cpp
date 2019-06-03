@@ -3,7 +3,6 @@
 #include "code/vtableStubs.hpp"
 #include "compiler/compileBroker.hpp"
 #include "compiler/disassembler.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/instanceKlass.hpp"
@@ -119,7 +118,6 @@ void VtableStubs::bookkeeping(MacroAssembler* masm, outputStream* out, VtableStu
 }
 
 address VtableStubs::find_stub(bool is_vtable_stub, int vtable_index) {
-
   VtableStub* s = ShareVtableStubs ? lookup(is_vtable_stub, vtable_index) : NULL;
   if (s == NULL) {
     if (is_vtable_stub) {

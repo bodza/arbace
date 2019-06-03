@@ -3,7 +3,6 @@
 #include "memory/resourceArea.hpp"
 
 void CompiledDirectStaticCall::set_to_far(const methodHandle& callee, address entry) {
-
   set_destination_mt_safe(entry);
 }
 

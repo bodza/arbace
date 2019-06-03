@@ -8,8 +8,6 @@
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/oopStorage.inline.hpp"
 #include "gc/shared/oopStorageParState.inline.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/filemap.hpp"
 #include "memory/metaspaceShared.hpp"
@@ -257,8 +255,7 @@ oop StringTable::intern(oop string, TRAPS) {
   ResourceMark rm(THREAD);
   int length;
   Handle h_string (THREAD, string);
-  jchar* chars = java_lang_String::as_unicode_string(string, length,
-                                                     CHECK_NULL);
+  jchar* chars = java_lang_String::as_unicode_string(string, length, CHECK_NULL);
   oop result = intern(h_string, chars, length, CHECK_NULL);
   return result;
 }

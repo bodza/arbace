@@ -92,11 +92,11 @@ void MacroAssembler::generate__ieee754_rem_pio2(address npio2_hw, address two_ov
     cmp(rscratch2, ix);
     br(LE, X_IS_MEDIUM_OR_LARGE);
 
-    block_comment("if(ix<0x4002d97c) {...  /* |x| ~< 3pi/4 */ "); {
+    block_comment("if (ix<0x4002d97c) {... /* |x| ~< 3pi/4 */ "); {
       cmp(X, zr);
       br(LT, X_IS_NEGATIVE);
 
-      block_comment("if(hx>0) {"); {
+      block_comment("if (hx>0) {"); {
         fsubd(v2, v0, v1); // v2 = z = x - pio2_1
         cmp(ix, rscratch1, LSR, 32);
         mov(n, 1);
@@ -178,14 +178,14 @@ void MacroAssembler::generate__ieee754_rem_pio2(address npio2_hw, address two_ov
       cmp(ix, jv);
       br(NE, X_IS_MEDIUM_BRANCH_DONE);
 
-      block_comment("else block for if(n<32&&ix!=npio2_hw[n-1])"); {
+      block_comment("else block for if (n<32&&ix!=npio2_hw[n-1])"); {
         bind(LARGE_ELSE);
           fmovd(jx, v4);
           lsr(tmp5, ix, 20);                       // j = ix >> 20
           lsl(jx, jx, 1);
           sub(tmp3, tmp5, jx, LSR, 32 + 20 + 1);   // r7 = j-(((*(i0+(int*)&y[0]))>>20)&0x7ff);
 
-          block_comment("if(i>16)"); {
+          block_comment("if (i>16)"); {
             cmp(tmp3, 16);
             br(LE, X_IS_MEDIUM_BRANCH_DONE);
             // i > 16. 2nd iteration needed
@@ -201,7 +201,7 @@ void MacroAssembler::generate__ieee754_rem_pio2(address npio2_hw, address two_ov
             lsl(jx, jx, 1);
             sub(tmp3, tmp5, jx, LSR, 32 + 20 + 1); // r7 = j-(((*(i0+(int*)&y[0]))>>20)&0x7ff);
 
-            block_comment("if(i>49)"); {
+            block_comment("if (i>49)"); {
               cmp(tmp3, 49);
               br(LE, X_IS_MEDIUM_BRANCH_DONE);
               // 3rd iteration need, 151 bits acc
@@ -242,7 +242,7 @@ void MacroAssembler::generate__ieee754_rem_pio2(address npio2_hw, address two_ov
       movw(i, 24);
       fmovd(v26, jv);                              // v26 = z
 
-      block_comment("unrolled for(i=0;i<2;i++) {tx[i] = (double)((int)(z));z = (z-tx[i])*two24A; }"); {
+      block_comment("unrolled for (i = 0;i<2;i++) {tx[i] = (double)((int)(z));z = (z-tx[i])*two24A; }"); {
         // tx[0,1,2] = v6,v7,v26
         frintzd(v6, v26);                          // v6 = (double)((int)v26)
         sdivw(jv, rscratch2, i);                   // jv = (e0 - 3)/24
@@ -254,7 +254,7 @@ void MacroAssembler::generate__ieee754_rem_pio2(address npio2_hw, address two_ov
         fsubd(v26, v26, v7);
       }
 
-      block_comment("nx calculation with unrolled while(tx[nx-1]==zeroA) nx--;"); {
+      block_comment("nx calculation with unrolled while (tx[nx-1]==zeroA) nx--;"); {
         fcmpd(v26, 0.0d);                          // if NE then jx == 2. else it's 1 or 0
         add(iqBase, sp, 480);                      // base of iq[]
         fmuld(v3, v26, v10);
@@ -421,10 +421,10 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
     // (20 + 20 + 20) x 8 + 20 x 4 = 560 bytes. From lower to upper addresses it
     // will contain f[20], fq[20], q[20], iq[20]
     // now initialize f[20] indexes 0..m (inclusive)
-    // for(i=0;i<=m;i++,j++) f[i] = (j<0)? zeroB : /* NOTE: converted to double */ ipio2[j]; // (double) ipio2[j];
+    // for (i = 0;i<=m;i++,j++) f[i] = (j<0)? zeroB : /* NOTE: converted to double */ ipio2[j]; // (double) ipio2[j];
     mov(tmp5, sp);
 
-    block_comment("for(i=0;i<=m;i++,j++) f[i] = (j<0)? zeroB : /* NOTE: converted to double */ ipio2[j]; // (double) ipio2[j];"); {
+    block_comment("for (i = 0;i<=m;i++,j++) f[i] = (j<0)? zeroB : /* NOTE: converted to double */ ipio2[j]; // (double) ipio2[j];"); {
         eorw(i, i, i);
         br(GE, INIT_F_COPY);
       bind(INIT_F_ZERO);
@@ -450,8 +450,8 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
     addw(tmp5, rscratch1, 1023);
     addw(tmp4, tmp4, 1023);
     // Unroll following for(s) depending on jx in [0,1,2]
-    // for (i=0;i<=jk;i++) {
-    //   for(j=0,fw=0.0;j<=jx;j++) fw += x[j]*f[jx+i-j]; q[i] = fw;
+    // for (i = 0;i<=jk;i++) {
+    //   for (j = 0,fw=0.0;j<=jx;j++) fw += x[j]*f[jx+i-j]; q[i] = fw;
     // }
     // Unrolling for jx == 0 case:
     //   q[0] = x[0] * f[0]
@@ -596,10 +596,10 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
       cmpw(ih, zr);
       br(LE, IH_HANDLED);
 
-    block_comment("if(ih>) {"); {
+    block_comment("if (ih>) {"); {
       // use rscratch2 as carry
 
-      block_comment("for(i=0;i<jz ;i++) {...}"); {
+      block_comment("for (i = 0;i<jz ;i++) {...}"); {
           addw(n, n, 1);
           eorw(i, i, i);
           eorw(rscratch2, rscratch2, rscratch2);
@@ -619,7 +619,7 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
           br(LT, IH_FOR);
       }
 
-      block_comment("if(q0>0) {"); {
+      block_comment("if (q0>0) {"); {
         cmpw(rscratch1, zr);
         br(LE, IH_AFTER_SWITCH);
         // tmp3 still has iq[jz-1] value. no need to reload
@@ -634,7 +634,7 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
         cmpw(ih, 2);
         br(NE, IH_HANDLED);
 
-        block_comment("if(ih==2) {"); {
+        block_comment("if (ih==2) {"); {
           fmovd(v25, 1.0d);
           fsubd(v18, v25, v18);                            // z = one - z;
           cbzw(rscratch2, IH_HANDLED);
@@ -646,8 +646,7 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
       fcmpd(v18, 0.0d);
       br(NE, RECOMP_CHECK_DONE_NOT_ZERO);
 
-      block_comment("if(z==zeroB) {"); {
-
+      block_comment("if (z==zeroB) {"); {
         block_comment("for (i=jz-1;i>=jk;i--) j |= iq[i];"); {
             subw(i, jz, 1);
             eorw(j, j, j);
@@ -662,8 +661,8 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
         }
         cbnzw(j, RECOMP_CHECK_DONE);
 
-        block_comment("if(j==0) {"); {
-            // for(k=1;iq[jk-k]==0;k++); // let's unroll it. jk == 4. So, read
+        block_comment("if (j==0) {"); {
+            // for (k = 1;iq[jk-k]==0;k++); // let's unroll it. jk == 4. So, read
             // iq[3], iq[2], iq[1], iq[0] until non-zero value
             ldp(tmp1, tmp3, iqBase);               // iq[0..3]
             movw(j, 2);
@@ -674,7 +673,7 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
             addw(i, jz, 1);
             csincw(j, j, j, NE);
 
-          block_comment("for(i=jz+1;i<=jz+k;i++) {...}"); {
+          block_comment("for (i=jz+1;i<=jz+k;i++) {...}"); {
               addw(jz, i, j); // i = jz+1, j = k-1. j+i = jz+k (which is a new jz)
             bind(RECOMP_FOR2);
               addw(tmp1, jv, i);
@@ -683,7 +682,7 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
               strd(v29, Address(sp, tmp2, Address::lsl(3)));
               // f[jx+i] = /* NOTE: converted to double */ ipio2[jv+i]; //(double) ipio2[jv+i];
               // since jx = 0, 1 or 2 we can unroll it:
-              // for(j=0,fw=0.0;j<=jx;j++) fw += x[j]*f[jx+i-j];
+              // for (j = 0,fw=0.0;j<=jx;j++) fw += x[j]*f[jx+i-j];
               // f[jx+i-j] == (for first iteration) f[jx+i], which is already v29
               add(tmp2, sp, tmp2, ext::uxtx, 3); // address of f[jx+i]
               ldpd(v4, v5, Address(tmp2, -16)); // load f[jx+i-2] and f[jx+i-1]
@@ -708,7 +707,7 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
       fcmpd(v18, 0.0d);
       br(EQ, Z_IS_ZERO);
 
-      block_comment("else block of if(z==0.0) {"); {
+      block_comment("else block of if (z==0.0) {"); {
         bind(RECOMP_CHECK_DONE_NOT_ZERO);
           fmuld(v18, v18, v22);
           fcmpd(v18, v10);                                   // v10 is stil two24A
@@ -729,7 +728,7 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
           b(Z_ZERO_CHECK_DONE);
       }
 
-      block_comment("if(z==0.0) {"); {
+      block_comment("if (z==0.0) {"); {
         bind(Z_IS_ZERO);
           subw(jz, jz, 1);
           ldrw(tmp1, Address(iqBase, jz, Address::lsl(2)));
@@ -745,7 +744,7 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
         mov(i, jz);
         fmovd(v30, tmp2);
 
-        block_comment("for(i=jz;i>=0;i--) {q[i] = fw*(double)iq[i]; fw*=twon24; }"); {
+        block_comment("for (i=jz;i>=0;i--) {q[i] = fw*(double)iq[i]; fw*=twon24; }"); {
           bind(CONVERTION_FOR);
             ldrw(tmp1, Address(iqBase, i, Address::lsl(2)));
             scvtfwd(v31, tmp1);
@@ -759,11 +758,11 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
         // reusing twoOverPiBase
         lea(twoOverPiBase, ExternalAddress(pio2));
 
-      block_comment("compute PIo2[0,...,jp]*q[jz,...,0]. for(i=jz;i>=0;i--) {...}"); {
+      block_comment("compute PIo2[0,...,jp]*q[jz,...,0]. for (i=jz;i>=0;i--) {...}"); {
           movw(i, jz);
           movw(tmp2, zr); // tmp2 will keep jz - i == 0 at start
         bind(COMP_FOR);
-          // for(fw=0.0,k=0;k<=jp&&k<=jz-i;k++) fw += PIo2[k]*q[i+k];
+          // for (fw=0.0,k = 0;k<=jp&&k<=jz-i;k++) fw += PIo2[k]*q[i+k];
           fmovd(v30, 0.0d);
           add(tmp5, qBase, i, LSL, 3); // address of q[i+k] for k==0
           movw(tmp3, 4);
@@ -772,7 +771,7 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
           add(tmp1, qBase, i, LSL, 3); // used as q[i] address
           cselw(tmp3, tmp2, tmp3, LE); // min(jz - i, jp)
 
-          block_comment("for(fw=0.0,k=0;k<=jp&&k<=jz-i;k++) fw += PIo2[k]*q[i+k];"); {
+          block_comment("for (fw=0.0,k = 0;k<=jp&&k<=jz-i;k++) fw += PIo2[k]*q[i+k];"); {
             bind(COMP_INNER_LOOP);
               ldrd(v18, Address(tmp1, tmp4, Address::lsl(3)));          // q[i+k]
               ldrd(v19, Address(twoOverPiBase, tmp4, Address::lsl(3))); // PIo2[k]
@@ -807,7 +806,7 @@ void MacroAssembler::generate__kernel_rem_pio2(address two_over_pi, address pio2
           fnegd(v4, v4);
         bind(FW_Y0_NO_NEGATION);
 
-        block_comment("for (i=1;i<=jz;i++) fw += fq[i];"); {
+        block_comment("for (i = 1;i<=jz;i++) fw += fq[i];"); {
             movw(i, 1);
               cmpw(jz, 1);
             br(LT, FW_FOR2_DONE);
@@ -884,7 +883,7 @@ void MacroAssembler::generate_kernel_sin(FloatRegister x, bool iyIsOne, address 
   ld1(S1, S2, S3, S4, T1D, Address(rscratch2));
   fmuld(v, z, x); // v =  z*x;
 
-  block_comment("calculate r =  S2+z*(S3+z*(S4+z*(S5+z*S6)))"); {
+  block_comment("calculate r = S2+z*(S3+z*(S4+z*(S5+z*S6)))"); {
     fmaddd(r, z, S6, S5);
     // initialize "half" in current block to utilize 2nd FPU. However, it's
     // not a part of this block
@@ -985,14 +984,14 @@ void MacroAssembler::generate_kernel_cos(FloatRegister x, address dcos_coef) {
     fmovd(one, 1.0d);
     cmp(ix, rscratch1);
     br(GT, IX_IS_LARGE);
-    block_comment("if(ix < 0x3FD33333) return one - (0.5*z - (z*r - x*y))"); {
+    block_comment("if (ix < 0x3FD33333) return one - (0.5*z - (z*r - x*y))"); {
       // return 1.0 - (0.5*z - (z*r - x*y)) = 1.0 - (0.5*z + (x*y - z*r))
       fmsubd(v0, x, r, y);
       fmaddd(v0, half, z, v0);
       fsubd(v0, one, v0);
       b(DONE);
     }
-  block_comment("if(ix >= 0x3FD33333)"); {
+  block_comment("if (ix >= 0x3FD33333)"); {
     bind(IX_IS_LARGE);
       movz(rscratch2, 0x3FE9, 16);
       cmp(ix, rscratch2);
@@ -1004,7 +1003,7 @@ void MacroAssembler::generate_kernel_cos(FloatRegister x, address dcos_coef) {
       }
       b(QX_SET);
     bind(SET_QX_CONST);
-      block_comment("if(ix > 0x3fe90000) qx = 0.28125;"); {
+      block_comment("if (ix > 0x3fe90000) qx = 0.28125;"); {
         fmovd(qx, 0.28125d);
       }
     bind(QX_SET);
@@ -1051,7 +1050,7 @@ void MacroAssembler::generate_dsin_dcos(bool isCos, address npio2_hw, address tw
       lsr(ix, absX, 32);                             // set ix
       br(GT, TINY_X);                                // handle tiny x (|x| < 2^-27)
       cmp(ix, rscratch1, LSR, 32);
-      br(LE, EARLY_CASE);                            // if(ix <= 0x3fe921fb) return
+      br(LE, EARLY_CASE);                            // if (ix <= 0x3fe921fb) return
       cmp(absX, r10);
       br(LT, ARG_REDUCTION);
       // X is NaN or INF(i.e. 0x7FF* or 0xFFF*). Return NaN (mantissa != 0).
@@ -1060,7 +1059,7 @@ void MacroAssembler::generate_dsin_dcos(bool isCos, address npio2_hw, address tw
       fmovd(v0, r10);
       ret(lr);
     }
-  block_comment("kernel_sin/kernel_cos: if(ix<0x3e400000) {<fast return>}"); {
+  block_comment("kernel_sin/kernel_cos: if (ix<0x3e400000) {<fast return>}"); {
     bind(TINY_X);
       if (isCos) {
         fmovd(v0, 1.0d);

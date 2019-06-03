@@ -119,7 +119,6 @@ inline void BitMap::par_clear_range(idx_t beg, idx_t end, RangeSizeHint hint) {
 
 inline BitMap::idx_t
 BitMap::get_next_one_offset(idx_t l_offset, idx_t r_offset) const {
-
   if (l_offset == r_offset) {
     return l_offset;
   }
@@ -154,7 +153,6 @@ BitMap::get_next_one_offset(idx_t l_offset, idx_t r_offset) const {
 
 inline BitMap::idx_t
 BitMap::get_next_zero_offset(idx_t l_offset, idx_t r_offset) const {
-
   if (l_offset == r_offset) {
     return l_offset;
   }

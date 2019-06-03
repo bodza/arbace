@@ -10,7 +10,6 @@
 #define __ masm->
 
 void CardTableBarrierSetAssembler::store_check(MacroAssembler* masm, Register obj, Address dst) {
-
   BarrierSet* bs = BarrierSet::barrier_set();
 
   CardTableBarrierSet* ctbs = barrier_set_cast<CardTableBarrierSet>(bs);

@@ -158,22 +158,22 @@ static int __kernel_rem_pio2(double *x, double *y, int e0, int nx, int prec, con
 
   /* determine jx,jv,q0, note that 3>q0 */
   jx =  nx-1;
-  jv = (e0-3)/24; if(jv<0) jv=0;
+  jv = (e0-3)/24; if (jv<0) jv=0;
   q0 =  e0-24*(jv+1);
 
   /* set up f[0] to f[jx+jk] where f[jx+jk] = ipio2[jv+jk] */
   j = jv-jx; m = jx+jk;
-  for (i=0;i<=m;i++,j++) f[i] = (j<0)? zeroB : (double) ipio2[j];
+  for (i = 0;i<=m;i++,j++) f[i] = (j<0)? zeroB : (double) ipio2[j];
 
   /* compute q[0],q[1],...q[jk] */
-  for (i=0;i<=jk;i++) {
-    for (j=0,fw=0.0;j<=jx;j++) fw += x[j]*f[jx+i-j]; q[i] = fw;
+  for (i = 0;i<=jk;i++) {
+    for (j = 0,fw=0.0;j<=jx;j++) fw += x[j]*f[jx+i-j]; q[i] = fw;
   }
 
   jz = jk;
 recompute:
   /* distill q[] into iq[] reversingly */
-  for (i=0,j=jz,z=q[jz];j>0;i++,j--) {
+  for (i = 0,j=jz,z=q[jz];j>0;i++,j--) {
     fw    =  (double)((int)(twon24* z));
     iq[i] =  (int)(z-two24B*fw);
     z     =  q[j-1]+fw;
@@ -190,12 +190,12 @@ recompute:
     iq[jz-1] -= i<<(24-q0);
     ih = iq[jz-1]>>(23-q0);
   }
-  else if(q0==0) ih = iq[jz-1]>>23;
-  else if(z>=0.5) ih=2;
+  else if (q0==0) ih = iq[jz-1]>>23;
+  else if (z>=0.5) ih=2;
 
   if (ih>0) {    /* q > 0.5 */
     n += 1; carry = 0;
-    for (i=0;i<jz ;i++) {        /* compute 1-q */
+    for (i = 0;i<jz ;i++) {        /* compute 1-q */
       j = iq[i];
       if (carry==0) {
         if (j!=0) {
@@ -222,11 +222,11 @@ recompute:
     j = 0;
     for (i=jz-1;i>=jk;i--) j |= iq[i];
     if (j==0) { /* need recomputation */
-      for (k=1;iq[jk-k]==0;k++);   /* k = no. of terms needed */
+      for (k = 1;iq[jk-k]==0;k++);   /* k = no. of terms needed */
 
       for (i=jz+1;i<=jz+k;i++) {   /* add q[jz+1] to q[jz+k] */
         f[jx+i] = (double) ipio2[jv+i];
-        for (j=0,fw=0.0;j<=jx;j++) fw += x[j]*f[jx+i-j];
+        for (j = 0,fw=0.0;j<=jx;j++) fw += x[j]*f[jx+i-j];
         q[i] = fw;
       }
       jz += k;
@@ -256,7 +256,7 @@ recompute:
 
   /* compute PIo2[0,...,jp]*q[jz,...,0] */
   for (i=jz;i>=0;i--) {
-    for (fw=0.0,k=0;k<=jp&&k<=jz-i;k++) fw += PIo2[k]*q[i+k];
+    for (fw=0.0,k = 0;k<=jp&&k<=jz-i;k++) fw += PIo2[k]*q[i+k];
     fq[jz-i] = fw;
   }
 
@@ -273,7 +273,7 @@ recompute:
     for (i=jz;i>=0;i--) fw += fq[i];
     y[0] = (ih==0)? fw: -fw;
     fw = fq[0]-fw;
-    for (i=1;i<=jz;i++) fw += fq[i];
+    for (i = 1;i<=jz;i++) fw += fq[i];
     y[1] = (ih==0)? fw: -fw;
     break;
   case 3:       /* painful */
@@ -428,7 +428,7 @@ static int __ieee754_rem_pio2(double x, double *y) {
   *(1-i0+(int*)&z) = *(1-i0+(int*)&x);
   e0    = (ix>>20)-1046;        /* e0 = ilogb(z)-23; */
   *(i0+(int*)&z) = ix - (e0<<20);
-  for (i=0;i<2;i++) {
+  for (i = 0;i<2;i++) {
     tx[i] = (double)((int)(z));
     z     = (z-tx[i])*two24A;
   }
@@ -481,7 +481,7 @@ static double __kernel_sin(double x, double y, int iy) {
         int ix;
         ix = high(x)&0x7fffffff;                /* high word of x */
         if (ix<0x3e400000)                       /* |x| < 2**-27 */
-           { if((int)x==0) return x; }            /* generate inexact */
+           { if ((int)x==0) return x; }            /* generate inexact */
         z       =  x*x;
         v       =  z*x;
         r       =  S2+z*(S3+z*(S4+z*(S5+z*S6)));
@@ -560,7 +560,7 @@ static double __kernel_cos(double x, double y) {
  * kernel tan function on [-pi/4, pi/4], pi/4 ~ 0.7854
  * Input x is assumed to be bounded by ~pi/4 in magnitude.
  * Input y is the tail of x.
- * Input k indicates whether tan (if k=1) or
+ * Input k indicates whether tan (if k = 1) or
  * -1/tan (if k= -1) is returned.
  *
  * Algorithm
@@ -593,7 +593,7 @@ static double __kernel_cos(double x, double y) {
 static const double
 pio4  =  7.85398163397448278999e-01, /* 0x3FE921FB, 0x54442D18 */
 pio4lo=  3.06161699786838301793e-17, /* 0x3C81A626, 0x33145C07 */
-T[] =  {
+T[] = {
   3.33333333333334091986e-01, /* 0x3FD55555, 0x55555563 */
   1.33333333333201242699e-01, /* 0x3FC11111, 0x1110FE7A */
   5.39682539762260521377e-02, /* 0x3FABA1BA, 0x1BB341FE */
@@ -710,7 +710,7 @@ static double __kernel_tan(double x, double y, int iy) {
  */
 
 JRT_LEAF(jdouble, SharedRuntime::dsin(jdouble x))
-  double y[2],z=0.0;
+  double y[2],z = 0.0;
   int n, ix;
 
   /* High word of x. */
@@ -768,7 +768,7 @@ JRT_END
  */
 
 JRT_LEAF(jdouble, SharedRuntime::dcos(jdouble x))
-  double y[2],z=0.0;
+  double y[2],z = 0.0;
   int n, ix;
 
   /* High word of x. */
@@ -825,7 +825,7 @@ JRT_END
  */
 
 JRT_LEAF(jdouble, SharedRuntime::dtan(jdouble x))
-  double y[2],z=0.0;
+  double y[2],z = 0.0;
   int n, ix;
 
   /* High word of x. */

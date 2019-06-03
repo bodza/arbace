@@ -6,7 +6,6 @@
 class outputStream;
 
 namespace metaspace {
-
 class MetaspaceDCmd : public DCmdWithParser {
   DCmdArgument<bool> _basic;
   DCmdArgument<bool> _show_loaders;

@@ -24,7 +24,7 @@ static void print_flag_error_message_bounds(const char* name, char* buffer) {
     range->print(&stream);
     const char* range_string = stream.as_string();
     size_t j = strlen(buffer);
-    for (size_t i=0; j<TEMP_BUF_SIZE-1; i++) {
+    for (size_t i = 0; j<TEMP_BUF_SIZE-1; i++) {
       if (range_string[i] == '\0') {
         break;
       } else if (range_string[i] != ' ') {

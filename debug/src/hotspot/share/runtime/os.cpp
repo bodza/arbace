@@ -10,10 +10,7 @@
 #include "code/icBuffer.hpp"
 #include "code/vtableStubs.hpp"
 #include "gc/shared/vmGCOperations.hpp"
-#include "logging/log.hpp"
 #include "interpreter/interpreter.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oop.inline.hpp"
@@ -176,7 +173,6 @@ char* os::iso8601_time(char* buffer, size_t buffer_length, bool utc) {
 }
 
 OSReturn os::set_priority(Thread* thread, ThreadPriority p) {
-
   if ((p >= MinPriority && p <= MaxPriority) || (p == CriticalPriority && thread->is_ConcurrentGC_thread())) {
     int priority = java_to_os_priority[p];
     return set_native_priority(thread, priority);
@@ -223,7 +219,6 @@ bool os::committed_in_range(address start, size_t size, address& committed_start
 // when we called get_current_directory. This way we avoid another buffer
 // of size MAX_PATH.
 static bool conc_path_file_and_check(char *buffer, char *printbuffer, size_t printbuflen, const char* pname, char lastchar, const char* fname) {
-
   // Concatenate path and file name, but don't print double path separators.
   const char *filesep = (lastchar == os::file_separator()[0]) ? "" : os::file_separator();
   int ret = jio_snprintf(printbuffer, printbuflen, "%s%s%s", pname, filesep, fname);
@@ -607,7 +602,6 @@ void* os::realloc(void *memblock, size_t size, MEMFLAGS flags) {
 }
 
 void* os::realloc(void *memblock, size_t size, MEMFLAGS memflags, const NativeCallStack& stack) {
-
   // For the test flag -XX:MallocMaxTestWords
   if (has_reached_max_malloc_test_peak(size)) {
     return NULL;
@@ -708,7 +702,6 @@ void os::abort(bool dump_core) {
 // Helper functions for fatal error handler
 
 void os::print_hex_dump(outputStream* st, address start, address end, int unitsize) {
-
   start = align_down(start, unitsize);
 
   int cols = 0;
@@ -1028,7 +1021,6 @@ char* os::format_boot_path(const char* format_string,
                            int home_len,
                            char fileSep,
                            char pathSep) {
-
     // Scan the format string to determine the length of the actual
     // boot classpath, and handle platform dependencies as well.
     int formatted_path_len = 0;
@@ -1343,7 +1335,6 @@ static const char* errno_to_string(int e, bool short_text) {
     const char* short_text;
     const char* long_text;
   } table [] = {
-
     ALL_SHARED_ENUMS(DEFINE_ENTRY)
 
     // The following enums are not defined on all platforms.
@@ -1372,32 +1363,8 @@ static const char* errno_to_string(int e, bool short_text) {
   return short_text ? table[i].short_text : table[i].long_text;
 }
 
-const char* os::strerror(int e) {
-  return errno_to_string(e, false);
-}
-
-const char* os::errno_name(int e) {
-  return errno_to_string(e, true);
-}
-
-void os::trace_page_sizes(const char* str, const size_t* page_sizes, int count) {
-  LogTarget(Info, pagesize) log;
-  if (log.is_enabled()) {
-    LogStream out(log);
-
-    out.print("%s: ", str);
-    for (int i = 0; i < count; ++i) {
-      out.print(" " SIZE_FORMAT, page_sizes[i]);
-    }
-    out.cr();
-  }
-}
-
-#define trace_page_size_params(size) byte_size_in_exact_unit(size), exact_unit_for_byte_size(size)
-
-void os::trace_page_sizes(const char* str, const size_t region_min_size, const size_t region_max_size, const size_t page_size, const char* base, const size_t size) { }
-
-void os::trace_page_sizes_for_requested_size(const char* str, const size_t requested_size, const size_t page_size, const size_t alignment, const char* base, const size_t size) { }
+const char* os::strerror(int e)   { return errno_to_string(e, false); }
+const char* os::errno_name(int e) { return errno_to_string(e, true); }
 
 // This is the working definition of a server class machine:
 // >= 2 physical CPU's and >=2GB of memory, with some fuzz

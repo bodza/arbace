@@ -39,7 +39,7 @@ inline void KlassInfoEntry::add_subclass(KlassInfoEntry* cie) {
 int KlassInfoEntry::compare(KlassInfoEntry* e1, KlassInfoEntry* e2) {
   if (e1->_instance_words > e2->_instance_words) {
     return -1;
-  } else if(e1->_instance_words < e2->_instance_words) {
+  } else if (e1->_instance_words < e2->_instance_words) {
     return 1;
   }
   // Sort alphabetically, note 'Z' < '[' < 'a', but it's better to group
@@ -225,7 +225,7 @@ void KlassInfoHisto::print_elements(outputStream* st) const {
   // simplify the formatting (ILP32 vs LP64) - store the sum in 64-bit
   int64_t total = 0;
   uint64_t totalw = 0;
-  for (int i=0; i < elements()->length(); i++) {
+  for (int i = 0; i < elements()->length(); i++) {
     st->print("%4d: ", i+1);
     elements()->at(i)->print_on(st);
     total += elements()->at(i)->count();
@@ -274,7 +274,7 @@ bool KlassInfoHisto::is_selected(const char *col_name) {
 void KlassInfoHisto::print_title(outputStream* st, bool csv_format, bool selected[], int width_table[], const char *name_table[]) {
   if (csv_format) {
     st->print("Index,Super");
-    for (int c=0; c<KlassSizeStats::_num_columns; c++) {
+    for (int c = 0; c<KlassSizeStats::_num_columns; c++) {
        if (selected[c]) { st->print(",%s", name_table[c]); }
     }
     st->print(",ClassName");
@@ -492,11 +492,11 @@ void KlassInfoHisto::print_class_stats(outputStream* st, bool csv_format, const 
   _selected_columns = columns;
 
   memset(&sz_sum, 0, sizeof(sz_sum));
-  for (int c=0; c<KlassSizeStats::_num_columns; c++) {
+  for (int c = 0; c<KlassSizeStats::_num_columns; c++) {
     selected[c] = is_selected(name_table[c]);
   }
 
-  for (i=0; i < elements()->length(); i++) {
+  for (i = 0; i < elements()->length(); i++) {
     elements()->at(i)->set_index(i+1);
   }
 
@@ -506,7 +506,7 @@ void KlassInfoHisto::print_class_stats(outputStream* st, bool csv_format, const 
     if (pass == 2) {
       print_title(st, csv_format, selected, width_table, name_table);
     }
-    for (i=0; i < elements()->length(); i++) {
+    for (i = 0; i < elements()->length(); i++) {
       KlassInfoEntry* e = (KlassInfoEntry*)elements()->at(i);
       const Klass* k = e->klass();
 
@@ -519,7 +519,7 @@ void KlassInfoHisto::print_class_stats(outputStream* st, bool csv_format, const 
 
       if (pass == 1) {
         // Add the stats for this class to the overall totals.
-        for (int c=0; c<KlassSizeStats::_num_columns; c++) {
+        for (int c = 0; c<KlassSizeStats::_num_columns; c++) {
           colsum_table[c] += col_table[c];
         }
       } else {
@@ -537,13 +537,13 @@ void KlassInfoHisto::print_class_stats(outputStream* st, bool csv_format, const 
 
         if (csv_format) {
           st->print("%ld,%d", e->index(), super_index);
-          for (int c=0; c<KlassSizeStats::_num_columns; c++) {
+          for (int c = 0; c<KlassSizeStats::_num_columns; c++) {
             if (selected[c]) { st->print("," JULONG_FORMAT, col_table[c]); }
           }
           st->print(",%s",e->name());
         } else {
           st->print("%5ld %5d", e->index(), super_index);
-          for (int c=0; c<KlassSizeStats::_num_columns; c++) {
+          for (int c = 0; c<KlassSizeStats::_num_columns; c++) {
             if (selected[c]) { print_julong(st, width_table[c], col_table[c]); }
           }
           st->print(" %s", e->name());
@@ -560,7 +560,7 @@ void KlassInfoHisto::print_class_stats(outputStream* st, bool csv_format, const 
     if (pass == 1) {
       // Calculate the minimum width needed for the column by accounting for the
       // column header width and the width of the largest value in the column.
-      for (int c=0; c<KlassSizeStats::_num_columns; c++) {
+      for (int c = 0; c<KlassSizeStats::_num_columns; c++) {
         width_table[c] = col_width(colsum_table[c], name_table[c]);
       }
     }
@@ -571,19 +571,19 @@ void KlassInfoHisto::print_class_stats(outputStream* st, bool csv_format, const 
   // Print the column totals.
   if (csv_format) {
     st->print(",");
-    for (int c=0; c<KlassSizeStats::_num_columns; c++) {
+    for (int c = 0; c<KlassSizeStats::_num_columns; c++) {
       if (selected[c]) { st->print("," JULONG_FORMAT, colsum_table[c]); }
     }
   } else {
     st->print("           ");
-    for (int c=0; c<KlassSizeStats::_num_columns; c++) {
+    for (int c = 0; c<KlassSizeStats::_num_columns; c++) {
       if (selected[c]) { print_julong(st, width_table[c], colsum_table[c]); }
     }
     st->print(" Total");
     if (sz_sum._total_bytes > 0) {
       st->cr();
       st->print("           ");
-      for (int c=0; c<KlassSizeStats::_num_columns; c++) {
+      for (int c = 0; c<KlassSizeStats::_num_columns; c++) {
         if (selected[c]) {
           switch (c) {
           case KlassSizeStats::_index_inst_size:
@@ -677,7 +677,7 @@ void HeapInspection::heap_inspection(outputStream* st) {
   ResourceMark rm;
 
   if (_print_help) {
-    for (int c=0; c<KlassSizeStats::_num_columns; c++) {
+    for (int c = 0; c<KlassSizeStats::_num_columns; c++) {
       st->print("%s:\n\t", name_table[c]);
       const int max_col = 60;
       int col = 0;
@@ -732,7 +732,6 @@ class FindInstanceClosure : public ObjectClosure {
 };
 
 void HeapInspection::find_instances_at_safepoint(Klass* k, GrowableArray<oop>* result) {
-
   // Ensure that the heap is parsable
   Universe::heap()->ensure_parsability(false);  // no need to retire TALBs
 

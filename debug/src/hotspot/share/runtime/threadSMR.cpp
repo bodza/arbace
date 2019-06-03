@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "runtime/jniHandles.inline.hpp"
 #include "runtime/thread.inline.hpp"
@@ -348,7 +347,6 @@ void SafeThreadsListPtr::acquire_stable_list() {
 // Fast path way to acquire a stable ThreadsList.
 //
 void SafeThreadsListPtr::acquire_stable_list_fast_path() {
-
   ThreadsList* threads;
 
   // Stable recording of a hazard ptr for SMR. This code does not use
@@ -399,7 +397,6 @@ void SafeThreadsListPtr::acquire_stable_list_fast_path() {
 // reference counting.
 //
 void SafeThreadsListPtr::acquire_stable_list_nested_path() {
-
   // The thread already has a hazard ptr (ThreadsList ref) so we need
   // to create a nested ThreadsListHandle with the current ThreadsList
   // since it might be different than our current hazard ptr. To remedy
@@ -439,7 +436,6 @@ void SafeThreadsListPtr::release_stable_list() {
       _thread->dec_nested_threads_hazard_ptr_cnt();
     }
     _list->dec_nested_handle_cnt();
-
   } else {
     // The normal case: a leaf ThreadsListHandle. This merely requires setting
     // the thread hazard ptr back to NULL.
@@ -561,7 +557,6 @@ bool ThreadsList::includes(const JavaThread * const p) const {
 // new copy of the specified ThreadsList with the specified JavaThread
 // removed.
 ThreadsList *ThreadsList::remove_thread(ThreadsList* list, JavaThread* java_thread) {
-
   uint i = (uint)list->find_index_of_JavaThread(java_thread);
   const uint index = i;
   const uint new_length = list->_length - 1;
@@ -817,7 +812,6 @@ void ThreadsSMRSupport::set_delete_notify() {
 // ThreadsListHandle.
 //
 void ThreadsSMRSupport::smr_delete(JavaThread *thread) {
-
   bool has_logged_once = false;
   elapsedTimer timer;
   if (EnableThreadSMRStatistics) {
@@ -905,113 +899,5 @@ void SafeThreadsListPtr::print_on(outputStream* st) {
   } else {
     // Nested hazard ptrs.
     st->print(", _nested_threads_hazard_ptr=" INTPTR_FORMAT, p2i(_list));
-  }
-}
-
-// Log Threads class SMR info.
-void ThreadsSMRSupport::log_statistics() {
-  LogTarget(Info, thread, smr) log;
-  if (log.is_enabled()) {
-    LogStream out(log);
-    print_info_on(&out);
-  }
-}
-
-// Print SMR info for a thread to a given output stream.
-void ThreadsSMRSupport::print_info_on(const Thread* thread, outputStream* st) {
-  if (thread->_threads_hazard_ptr != NULL) {
-    st->print(" _threads_hazard_ptr=" INTPTR_FORMAT, p2i(thread->_threads_hazard_ptr));
-  }
-  if (EnableThreadSMRStatistics && thread->_threads_list_ptr != NULL) {
-    // The count is only interesting if we have a _threads_list_ptr.
-    st->print(", _nested_threads_hazard_ptr_cnt=%u", thread->_nested_threads_hazard_ptr_cnt);
-  }
-  if (SafepointSynchronize::is_at_safepoint() || Thread::current() == thread) {
-    // It is only safe to walk the list if we're at a safepoint or the
-    // calling thread is walking its own list.
-    SafeThreadsListPtr* current = thread->_threads_list_ptr;
-    if (current != NULL) {
-      // Skip the top nesting level as it is always printed above.
-      current = current->previous();
-    }
-    while (current != NULL) {
-      current->print_on(st);
-      current = current->previous();
-    }
-  }
-}
-
-// Print Threads class SMR info.
-void ThreadsSMRSupport::print_info_on(outputStream* st) {
-  // Only grab the Threads_lock if we don't already own it and if we
-  // are not reporting an error.
-  // Note: Not grabbing the Threads_lock during error reporting is
-  // dangerous because the data structures we want to print can be
-  // freed concurrently. However, grabbing the Threads_lock during
-  // error reporting can be equally dangerous since this thread might
-  // block during error reporting or a nested error could leave the
-  // Threads_lock held. The classic no win scenario.
-  //
-  MutexLockerEx ml((Threads_lock->owned_by_self() || VMError::is_error_reported()) ? NULL : Threads_lock);
-
-  st->print_cr("Threads class SMR info:");
-  st->print_cr("_java_thread_list=" INTPTR_FORMAT ", length=%u, elements={", p2i(_java_thread_list), _java_thread_list->length());
-  print_info_elements_on(st, _java_thread_list);
-  st->print_cr("}");
-  if (_to_delete_list != NULL) {
-    st->print_cr("_to_delete_list=" INTPTR_FORMAT ", length=%u, elements={", p2i(_to_delete_list), _to_delete_list->length());
-    print_info_elements_on(st, _to_delete_list);
-    st->print_cr("}");
-    for (ThreadsList *t_list = _to_delete_list->next_list(); t_list != NULL; t_list = t_list->next_list()) {
-      st->print("next-> " INTPTR_FORMAT ", length=%u, elements={", p2i(t_list), t_list->length());
-      print_info_elements_on(st, t_list);
-      st->print_cr("}");
-    }
-  }
-  if (!EnableThreadSMRStatistics) {
-    return;
-  }
-  st->print_cr("_java_thread_list_alloc_cnt=" UINT64_FORMAT ", _java_thread_list_free_cnt=" UINT64_FORMAT ", _java_thread_list_max=%u, _nested_thread_list_max=%u",
-               _java_thread_list_alloc_cnt,
-               _java_thread_list_free_cnt,
-               _java_thread_list_max,
-               _nested_thread_list_max);
-  if (_tlh_cnt > 0) {
-    st->print_cr("_tlh_cnt=%u, _tlh_times=%u, avg_tlh_time=%0.2f, _tlh_time_max=%u",
-                 _tlh_cnt, _tlh_times,
-                 ((double) _tlh_times / _tlh_cnt),
-                 _tlh_time_max);
-  }
-  if (_deleted_thread_cnt > 0) {
-    st->print_cr("_deleted_thread_cnt=%u, _deleted_thread_times=%u, avg_deleted_thread_time=%0.2f, _deleted_thread_time_max=%u",
-                 _deleted_thread_cnt, _deleted_thread_times,
-                 ((double) _deleted_thread_times / _deleted_thread_cnt),
-                 _deleted_thread_time_max);
-  }
-  st->print_cr("_delete_lock_wait_cnt=%u, _delete_lock_wait_max=%u", _delete_lock_wait_cnt, _delete_lock_wait_max);
-  st->print_cr("_to_delete_list_cnt=%u, _to_delete_list_max=%u", _to_delete_list_cnt, _to_delete_list_max);
-}
-
-// Print ThreadsList elements (4 per line).
-void ThreadsSMRSupport::print_info_elements_on(outputStream* st, ThreadsList* t_list) {
-  uint cnt = 0;
-  JavaThreadIterator jti(t_list);
-  for (JavaThread *jt = jti.first(); jt != NULL; jt = jti.next()) {
-    st->print(INTPTR_FORMAT, p2i(jt));
-    if (cnt < t_list->length() - 1) {
-      // Separate with comma or comma-space except for the last one.
-      if (((cnt + 1) % 4) == 0) {
-        // Four INTPTR_FORMAT fit on an 80 column line so end the
-        // current line with just a comma.
-        st->print_cr(",");
-      } else {
-        // Not the last one on the current line so use comma-space:
-        st->print(", ");
-      }
-    } else {
-      // Last one so just end the current line.
-      st->cr();
-    }
-    cnt++;
   }
 }

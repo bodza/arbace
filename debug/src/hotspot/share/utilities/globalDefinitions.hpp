@@ -614,7 +614,6 @@ inline int type2aelembytes(BasicType t, bool allow_address = false) { return _ty
 // JavaValue serves as a container for arbitrary Java values.
 
 class JavaValue {
-
  public:
   typedef union JavaCallValue {
     jfloat   f;
@@ -980,23 +979,19 @@ inline int log2_intptr(intptr_t x) {
 }
 
 inline int log2_int(int x) {
-  STATIC_ASSERT(sizeof(int) <= sizeof(uintptr_t));
   return log2_intptr((uintptr_t)x);
 }
 
 inline int log2_jint(jint x) {
-  STATIC_ASSERT(sizeof(jint) <= sizeof(uintptr_t));
   return log2_intptr((uintptr_t)x);
 }
 
 inline int log2_uint(uint x) {
-  STATIC_ASSERT(sizeof(uint) <= sizeof(uintptr_t));
   return log2_intptr((uintptr_t)x);
 }
 
 //  A negative value of 'x' will return '63'
 inline int log2_jlong(jlong x) {
-  STATIC_ASSERT(sizeof(jlong) <= sizeof(julong));
   return log2_long((julong)x);
 }
 

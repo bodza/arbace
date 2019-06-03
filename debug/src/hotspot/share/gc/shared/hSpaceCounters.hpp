@@ -21,10 +21,7 @@ class HSpaceCounters: public CHeapObj<mtGC> {
   char*         _name_space;
 
  public:
-
-  HSpaceCounters(const char* name_space, const char* name, int ordinal,
-                 size_t max_size, size_t initial_capacity);
-
+  HSpaceCounters(const char* name_space, const char* name, int ordinal, size_t max_size, size_t initial_capacity);
   ~HSpaceCounters();
 
   void update_capacity(size_t v);

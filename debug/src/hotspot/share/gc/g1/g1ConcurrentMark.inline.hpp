@@ -36,7 +36,6 @@ inline bool G1ConcurrentMark::mark_in_next_bitmap(uint const worker_id, oop cons
 }
 
 inline bool G1ConcurrentMark::mark_in_next_bitmap(uint const worker_id, HeapRegion* const hr, oop const obj, size_t const obj_size) {
-
   if (hr->obj_allocated_since_next_marking(obj)) {
     return false;
   }
@@ -92,7 +91,6 @@ inline bool G1CMTask::is_below_finger(oop obj, HeapWord* global_finger) const {
 
 template<bool scan>
 inline void G1CMTask::process_grey_task_entry(G1TaskQueueEntry task_entry) {
-
   if (scan) {
     if (task_entry.is_array_slice()) {
       _words_scanned += _objArray_processor.process_slice(task_entry.slice());

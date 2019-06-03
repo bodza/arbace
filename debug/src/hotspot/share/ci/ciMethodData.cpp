@@ -64,7 +64,6 @@ void ciMethodData::load_extra_data() {
   DataLayout* end_src = mdo->args_data_limit();
   DataLayout* dp_dst  = extra_data_base();
   for (;; dp_src = MethodData::next_extra(dp_src), dp_dst = MethodData::next_extra(dp_dst)) {
-
     // New traps in the MDO may have been added since we copied the
     // data (concurrent deoptimizations before we acquired
     // extra_data_lock above) or can be removed (a safepoint may occur

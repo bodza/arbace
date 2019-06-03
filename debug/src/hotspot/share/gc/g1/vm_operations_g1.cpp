@@ -6,7 +6,6 @@
 #include "gc/shared/gcId.hpp"
 #include "gc/g1/vm_operations_g1.hpp"
 #include "gc/shared/gcTimer.hpp"
-#include "gc/shared/gcTraceTime.inline.hpp"
 #include "gc/shared/isGCActiveMark.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
 
@@ -134,7 +133,6 @@ void VM_G1CollectForAllocation::doit_epilogue() {
   // that just started (or maybe one that was already in progress) to
   // finish.
   if (GCCause::is_user_requested_gc(_gc_cause) && _should_initiate_conc_mark) {
-
     G1CollectedHeap* g1h = G1CollectedHeap::heap();
 
     // In the doit() method we saved g1h->old_marking_cycles_completed()
@@ -146,8 +144,7 @@ void VM_G1CollectForAllocation::doit_epilogue() {
 
     // If the condition has already been reached, there's no point in
     // actually taking the lock and doing the wait.
-    if (g1h->old_marking_cycles_completed() <=
-                                          _old_marking_cycles_completed_before) {
+    if (g1h->old_marking_cycles_completed() <= _old_marking_cycles_completed_before) {
       // The following is largely copied from CMS
 
       Thread* thr = Thread::current();
@@ -155,8 +152,7 @@ void VM_G1CollectForAllocation::doit_epilogue() {
       ThreadToNativeFromVM native(jt);
 
       MutexLockerEx x(FullGCCount_lock, Mutex::_no_safepoint_check_flag);
-      while (g1h->old_marking_cycles_completed() <=
-                                          _old_marking_cycles_completed_before) {
+      while (g1h->old_marking_cycles_completed() <= _old_marking_cycles_completed_before) {
         FullGCCount_lock->wait(Mutex::_no_safepoint_check_flag);
       }
     }
@@ -165,9 +161,7 @@ void VM_G1CollectForAllocation::doit_epilogue() {
 
 void VM_CGC_Operation::doit() {
   GCIdMark gc_id_mark(_gc_id);
-  GCTraceCPUTime tcpu;
   G1CollectedHeap* g1h = G1CollectedHeap::heap();
-  GCTraceTime(Info, gc) t(_printGCMessage, g1h->concurrent_mark()->gc_timer_cm(), GCCause::_no_gc, true);
   TraceCollectorStats tcs(g1h->g1mm()->conc_collection_counters());
   SvcGCMarker sgcm(SvcGCMarker::CONCURRENT);
   IsGCActiveMark x;

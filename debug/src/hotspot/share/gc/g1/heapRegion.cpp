@@ -12,8 +12,6 @@
 #include "gc/g1/heapRegionTracer.hpp"
 #include "gc/shared/genOopClosures.inline.hpp"
 #include "gc/shared/space.inline.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/iterator.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/access.inline.hpp"
@@ -86,7 +84,6 @@ void HeapRegion::setup_heap_region_size(size_t initial_heap_size, size_t max_hea
 }
 
 void HeapRegion::hr_clear(bool keep_remset, bool clear_space, bool locked) {
-
   set_young_index_in_cset(-1);
   uninstall_surv_rate_group();
   set_free();
@@ -166,7 +163,6 @@ void HeapRegion::set_closed_archive() {
 }
 
 void HeapRegion::set_starts_humongous(HeapWord* obj_top, size_t fill_size) {
-
   report_region_type_change(G1HeapRegionTraceType::StartsHumongous);
   _type.set_starts_humongous();
   _humongous_start_region = this;
@@ -175,7 +171,6 @@ void HeapRegion::set_starts_humongous(HeapWord* obj_top, size_t fill_size) {
 }
 
 void HeapRegion::set_continues_humongous(HeapRegion* first_hr) {
-
   report_region_type_change(G1HeapRegionTraceType::ContinuesHumongous);
   _type.set_continues_humongous();
   _humongous_start_region = first_hr;
@@ -184,7 +179,6 @@ void HeapRegion::set_continues_humongous(HeapRegion* first_hr) {
 }
 
 void HeapRegion::clear_humongous() {
-
   _humongous_start_region = NULL;
 
   _bot_part.set_object_can_span(false);
@@ -206,7 +200,6 @@ HeapRegion::HeapRegion(uint hrm_index, G1BlockOffsetTable* bot, MemRegion mr) :
 }
 
 void HeapRegion::initialize(MemRegion mr, bool clear_space, bool mangle_space) {
-
   G1ContiguousSpace::initialize(mr, clear_space, mangle_space);
 
   hr_clear(false /*par*/, false /*clear_space*/);
@@ -431,40 +424,12 @@ public:
   template <class T>
   void verify_liveness(T* p) {
     T heap_oop = RawAccess<>::oop_load(p);
-    Log(gc, verify) log;
     if (!CompressedOops::is_null(heap_oop)) {
       oop obj = CompressedOops::decode_not_null(heap_oop);
-      bool failed = false;
       if (!_g1h->is_in_closed_subset(obj) || _g1h->is_obj_dead_cond(obj, _vo)) {
-        MutexLockerEx x(ParGCRareEvent_lock,
-          Mutex::_no_safepoint_check_flag);
+        MutexLockerEx x(ParGCRareEvent_lock, Mutex::_no_safepoint_check_flag);
 
-        if (!_failures) {
-          log.error("----------");
-        }
-        ResourceMark rm;
-        if (!_g1h->is_in_closed_subset(obj)) {
-          HeapRegion* from = _g1h->heap_region_containing((HeapWord*)p);
-          log.error("Field " PTR_FORMAT " of live obj " PTR_FORMAT " in region [" PTR_FORMAT ", " PTR_FORMAT ")",
-            p2i(p), p2i(_containing_obj), p2i(from->bottom()), p2i(from->end()));
-          LogStream ls(log.error());
-          print_object(&ls, _containing_obj);
-          HeapRegion* const to = _g1h->heap_region_containing(obj);
-          log.error("points to obj " PTR_FORMAT " in region " HR_FORMAT " remset %s", p2i(obj), HR_FORMAT_PARAMS(to), to->rem_set()->get_state_str());
-        } else {
-          HeapRegion* from = _g1h->heap_region_containing((HeapWord*)p);
-          HeapRegion* to = _g1h->heap_region_containing((HeapWord*)obj);
-          log.error("Field " PTR_FORMAT " of live obj " PTR_FORMAT " in region [" PTR_FORMAT ", " PTR_FORMAT ")",
-            p2i(p), p2i(_containing_obj), p2i(from->bottom()), p2i(from->end()));
-          LogStream ls(log.error());
-          print_object(&ls, _containing_obj);
-          log.error("points to dead obj " PTR_FORMAT " in region [" PTR_FORMAT ", " PTR_FORMAT ")",
-            p2i(obj), p2i(to->bottom()), p2i(to->end()));
-          print_object(&ls, obj);
-        }
-        log.error("----------");
         _failures = true;
-        failed = true;
         _n_failures++;
       }
     }
@@ -485,7 +450,6 @@ public:
   template <class T>
   void verify_remembered_set(T* p) {
     T heap_oop = RawAccess<>::oop_load(p);
-    Log(gc, verify) log;
     if (!CompressedOops::is_null(heap_oop)) {
       oop obj = CompressedOops::decode_not_null(heap_oop);
       HeapRegion* from = _g1h->heap_region_containing((HeapWord*)p);
@@ -497,24 +461,8 @@ public:
 
         bool is_bad = !(from->is_young() || to->rem_set()->contains_reference(p) || (_containing_obj->is_objArray() ? cv_field == dirty : cv_obj == dirty || cv_field == dirty));
         if (is_bad) {
-          MutexLockerEx x(ParGCRareEvent_lock,
-            Mutex::_no_safepoint_check_flag);
+          MutexLockerEx x(ParGCRareEvent_lock, Mutex::_no_safepoint_check_flag);
 
-          if (!_failures) {
-            log.error("----------");
-          }
-          log.error("Missing rem set entry:");
-          log.error("Field " PTR_FORMAT " of obj " PTR_FORMAT ", in region " HR_FORMAT,
-            p2i(p), p2i(_containing_obj), HR_FORMAT_PARAMS(from));
-          ResourceMark rm;
-          LogStream ls(log.error());
-          _containing_obj->print_on(&ls);
-          log.error("points to obj " PTR_FORMAT " in region " HR_FORMAT " remset %s", p2i(obj), HR_FORMAT_PARAMS(to), to->rem_set()->get_state_str());
-          if (oopDesc::is_oop(obj)) {
-            obj->print_on(&ls);
-          }
-          log.error("Obj head CTE = %d, field CTE = %d.", cv_obj, cv_field);
-          log.error("----------");
           _failures = true;
           _n_failures++;
         }

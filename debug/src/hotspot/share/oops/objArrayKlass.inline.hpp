@@ -23,7 +23,6 @@ void ObjArrayKlass::oop_oop_iterate_elements(objArrayOop a, OopClosureType* clos
 
 template <typename T, class OopClosureType>
 void ObjArrayKlass::oop_oop_iterate_elements_bounded(objArrayOop a, OopClosureType* closure, void* low, void* high) {
-
   T* const l = (T*)low;
   T* const h = (T*)high;
 

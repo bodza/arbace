@@ -30,7 +30,6 @@ bool SymbolTable::_lookup_shared_first = false;
 CompactHashtable<Symbol*, char> SymbolTable::_shared_table;
 
 Symbol* SymbolTable::allocate_symbol(const u1* name, int len, bool c_heap, TRAPS) {
-
   Symbol* sym;
 
   if (c_heap) {
@@ -147,7 +146,6 @@ void SymbolTable::possibly_parallel_unlink(int* processed, int* removed) {
 // Create a new table and using alternate hash code, populate the new table
 // with the existing strings.   Set flag to use the alternate hash code afterwards.
 void SymbolTable::rehash_table() {
-
   // Create a new symbol table
   SymbolTable* new_table = new SymbolTable();
 
@@ -285,7 +283,7 @@ Symbol* SymbolTable::lookup(const Symbol* sym, int begin, int end, TRAPS) {
   } else {
     buffer = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, len);
   }
-  for (int i=0; i<len; i++) {
+  for (int i = 0; i<len; i++) {
     buffer[i] = name[i];
   }
   // Make sure there is no safepoint in the code above since name can't move.
@@ -366,7 +364,7 @@ void SymbolTable::add(ClassLoaderData* loader_data, const constantPoolHandle& cp
                                 cp_indices, hashValues, CHECK);
   if (!added) {
     // do it the hard way
-    for (int i=0; i<names_count; i++) {
+    for (int i = 0; i<names_count; i++) {
       int index = table->hash_to_index(hashValues[i]);
       bool c_heap = !loader_data->is_the_null_class_loader_data();
       Symbol* sym = table->basic_add(index, (u1*)names[i], lengths[i], hashValues[i], c_heap, CHECK);
@@ -390,7 +388,6 @@ Symbol* SymbolTable::new_permanent_symbol(const char* name, TRAPS) {
 }
 
 Symbol* SymbolTable::basic_add(int index_arg, u1 *name, int len, unsigned int hashValue_arg, bool c_heap, TRAPS) {
-
   // Don't allow symbols to be created which cannot fit in a Symbol*.
   if (len > Symbol::max_length()) {
     THROW_MSG_0(vmSymbols::java_lang_InternalError(), "name is too long to represent");
@@ -430,7 +427,6 @@ Symbol* SymbolTable::basic_add(int index_arg, u1 *name, int len, unsigned int ha
 // This version of basic_add adds symbols in batch from the constant pool
 // parsing.
 bool SymbolTable::basic_add(ClassLoaderData* loader_data, const constantPoolHandle& cp, int names_count, const char** names, int* lengths, int* cp_indices, unsigned int* hashValues, TRAPS) {
-
   // Check symbol names are not too long.  If any are too long, don't add any.
   for (int i = 0; i< names_count; i++) {
     if (lengths[i] > Symbol::max_length()) {
@@ -441,7 +437,7 @@ bool SymbolTable::basic_add(ClassLoaderData* loader_data, const constantPoolHand
   // Cannot hit a safepoint in this function because the "this" pointer can move.
   NoSafepointVerifier nsv;
 
-  for (int i=0; i<names_count; i++) {
+  for (int i = 0; i<names_count; i++) {
     // Check if the symbol table has been rehashed, if so, need to recalculate
     // the hash value.
     unsigned int hashValue;

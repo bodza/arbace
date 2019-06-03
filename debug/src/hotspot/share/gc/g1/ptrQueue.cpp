@@ -128,7 +128,6 @@ void PtrQueueSet::reduce_free_list() {
 }
 
 void PtrQueue::handle_zero_index() {
-
   // This thread records the full buffer and allocates a new one (while
   // holding the lock if there is one).
   if (_buf != NULL) {
@@ -137,7 +136,6 @@ void PtrQueue::handle_zero_index() {
     }
 
     if (_lock) {
-
       BufferNode* node = BufferNode::make_node_from_buffer(_buf, index());
       _buf = NULL;         // clear shared _buf field
 

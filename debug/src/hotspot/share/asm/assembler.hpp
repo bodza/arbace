@@ -70,12 +70,10 @@ class Label {
 
   Label(const Label&) { ShouldNotReachHere(); }
  protected:
-
   // The label will be bound to a location near its users.
   bool _is_near;
 
  public:
-
   /**
    * After binding, be sure 'patch_instructions' is called later to link
    */
@@ -209,7 +207,6 @@ class AbstractAssembler : public ResourceObj {
   };
 
  public:
-
   // Creation
   AbstractAssembler(CodeBuffer* code);
 
@@ -267,7 +264,7 @@ class AbstractAssembler : public ResourceObj {
   void relocate(RelocationHolder const& rspec, int format = 0) {
     code_section()->relocate(code_section()->end(), rspec, format);
   }
-  void relocate(   relocInfo::relocType rtype, int format = 0) {
+  void relocate(relocInfo::relocType rtype, int format = 0) {
     code_section()->relocate(code_section()->end(), rtype, format);
   }
 

@@ -12,7 +12,6 @@
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
 #include "jvmci/jvmciEnv.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
@@ -206,7 +205,6 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
   // skip the exception cache update (i.e., just leave continuation==NULL).
   address continuation = NULL;
   if (guard_pages_enabled) {
-
     // New exception handling mechanism can support inlined methods
     // with exception handlers since the mappings are from PC to PC
 

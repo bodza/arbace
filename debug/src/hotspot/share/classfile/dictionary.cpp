@@ -5,8 +5,6 @@
 #include "classfile/protectionDomainCache.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "classfile/systemDictionaryShared.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/iterator.hpp"
 #include "memory/metaspaceClosure.hpp"
 #include "memory/resourceArea.hpp"
@@ -121,7 +119,6 @@ bool Dictionary::resize_if_needed() {
 }
 
 bool DictionaryEntry::contains_protection_domain(oop protection_domain) const {
-
   if (oopDesc::equals(protection_domain, instance_klass()->protection_domain())) {
     // Succeeds trivially
     return true;
@@ -143,11 +140,6 @@ void DictionaryEntry::add_protection_domain(Dictionary* dict, Handle protection_
     //          via a store to _pd_set.
     release_set_pd_set(new_head);
   }
-  LogTarget(Trace, protectiondomain) lt;
-  if (lt.is_enabled()) {
-    LogStream ls(lt);
-    print_count(&ls);
-  }
 }
 
 // During class loading we may have cached a protection domain that has
@@ -157,16 +149,6 @@ void Dictionary::clean_cached_protection_domains(DictionaryEntry* probe) {
   ProtectionDomainEntry* prev = NULL;
   while (current != NULL) {
     if (current->object_no_keepalive() == NULL) {
-      LogTarget(Debug, protectiondomain) lt;
-      if (lt.is_enabled()) {
-        ResourceMark rm;
-        // Print out trace information
-        LogStream ls(lt);
-        ls.print_cr("PD in set is not alive:");
-        ls.print("class loader: "); loader_data()->class_loader()->print_value_on(&ls);
-        ls.print(" loading: "); probe->instance_klass()->print_value_on(&ls);
-        ls.cr();
-      }
       if (probe->pd_set() == current) {
         probe->set_pd_set(current->next());
       } else {
@@ -298,7 +280,6 @@ InstanceKlass* Dictionary::find_class(int index, unsigned int hash, Symbol* name
 // that table is static.
 
 InstanceKlass* Dictionary::find_shared_class(int index, unsigned int hash, Symbol* name) {
-
   DictionaryEntry* entry = get_entry(index, hash, name);
   return (entry != NULL) ? entry->instance_klass() : NULL;
 }

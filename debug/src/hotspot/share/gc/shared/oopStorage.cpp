@@ -2,8 +2,6 @@
 
 #include "gc/shared/oopStorage.inline.hpp"
 #include "gc/shared/oopStorageParState.inline.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/globals.hpp"
@@ -169,8 +167,6 @@ OopStorage::Block::Block(const OopStorage* owner, void* memory) :
   _deferred_updates_next(NULL),
   _release_refcount(0)
 {
-  STATIC_ASSERT(_data_pos == 0);
-  STATIC_ASSERT(section_size * section_count == ARRAY_SIZE(_data));
 }
 
 OopStorage::Block::~Block() {
@@ -182,7 +178,6 @@ OopStorage::Block::~Block() {
 
 size_t OopStorage::Block::allocation_size() {
   // _data must be first member, so aligning Block aligns _data.
-  STATIC_ASSERT(_data_pos == 0);
   return sizeof(Block) + block_alignment - sizeof(void*);
 }
 
@@ -239,7 +234,6 @@ void OopStorage::Block::set_active_index(size_t index) {
 }
 
 size_t OopStorage::Block::active_index_safe(const Block* block) {
-  STATIC_ASSERT(sizeof(intptr_t) == sizeof(block->_active_index));
   return SafeFetchN((intptr_t*)&block->_active_index, 0);
 }
 
@@ -263,7 +257,6 @@ oop* OopStorage::Block::allocate() {
 
 OopStorage::Block* OopStorage::Block::new_block(const OopStorage* owner) {
   // _data must be first member: aligning block => aligning _data.
-  STATIC_ASSERT(_data_pos == 0);
   size_t size_needed = allocation_size();
   void* memory = NEW_C_HEAP_ARRAY_RETURN_NULL(char, size_needed, mtGC);
   if (memory == NULL) {
@@ -285,7 +278,6 @@ void OopStorage::Block::delete_block(const Block& block) {
 // require additional validation of the result.
 OopStorage::Block*
 OopStorage::Block::block_for_ptr(const OopStorage* owner, const oop* ptr) {
-  STATIC_ASSERT(_data_pos == 0);
   // Const-ness of ptr is not related to const-ness of containing block.
   // Blocks are allocated section-aligned, so get the containing section.
   oop* section_start = align_down(const_cast<oop*>(ptr), block_alignment);
@@ -522,17 +514,6 @@ public:
 
 OopStorage::Block* OopStorage::find_block_or_null(const oop* ptr) const {
   return Block::block_for_ptr(this, ptr);
-}
-
-static void log_release_transitions(uintx releasing, uintx old_allocated, const OopStorage* owner, const void* block) {
-  Log(oopstorage, blocks) log;
-  LogStream ls(log.debug());
-  if (is_full_bitmask(old_allocated)) {
-    ls.print_cr("%s: block not full " PTR_FORMAT, owner->name(), p2i(block));
-  }
-  if (releasing == old_allocated) {
-    ls.print_cr("%s: block empty " PTR_FORMAT, owner->name(), p2i(block));
-  }
 }
 
 void OopStorage::Block::release_entries(uintx releasing, Block* volatile* deferred_list) {

@@ -78,7 +78,6 @@ protected:
   }
 
 public:
-
   HeapRegion* hr() const { return OrderAccess::load_acquire(&_hr); }
 
   jint occupied() const {
@@ -314,7 +313,6 @@ void OtherRegionsTable::add_reference(OopOrNarrowOopStar from, uint tid) {
     // Confirm that it's really not there...
     prt = find_region_table(ind, from_hr);
     if (prt == NULL) {
-
       CardIdx_t card_index = card_within_region(from, from_hr);
 
       if (G1HRRSUseSparseTable && _sparse_table.add_card(from_hrm_ind, card_index)) {
@@ -537,7 +535,6 @@ bool OtherRegionsTable::contains_reference_locked(OopOrNarrowOopStar from) const
                                           hr);
   if (prt != NULL) {
     return prt->contains_reference(from);
-
   } else {
     CardIdx_t card_index = card_within_region(from, hr);
     return _sparse_table.contains_card(hr_ind, card_index);

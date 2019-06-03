@@ -206,18 +206,10 @@ class Universe: AllStatic {
     return m;
   }
 
-  static void     set_narrow_oop_base(address base) {
-    _narrow_oop._base    = base;
-  }
-  static void     set_narrow_klass_base(address base) {
-    _narrow_klass._base   = base;
-  }
-  static void     set_narrow_klass_range(uint64_t range) {
-     _narrow_klass_range = range;
-  }
-  static void     set_narrow_oop_use_implicit_null_checks(bool use) {
-    _narrow_oop._use_implicit_null_checks   = use;
-  }
+  static void set_narrow_oop_base(address base)                 { _narrow_oop._base = base; }
+  static void set_narrow_klass_base(address base)               { _narrow_klass._base = base; }
+  static void set_narrow_klass_range(uint64_t range)            { _narrow_klass_range = range; }
+  static void set_narrow_oop_use_implicit_null_checks(bool use) { _narrow_oop._use_implicit_null_checks = use; }
 
   // Debugging
   static int _verify_count;                           // number of verifies done
@@ -376,17 +368,16 @@ class Universe: AllStatic {
   static address  narrow_oop_base()                  { return  _narrow_oop._base; }
   // Test whether bits of addr and possible offsets into the heap overlap.
   static bool     is_disjoint_heap_base_address(address addr) {
-    return (((uint64_t)(intptr_t)addr) &
-            (((uint64_t)UCONST64(0xFFFFffffFFFFffff)) >> (32-LogMinObjAlignmentInBytes))) == 0;
+    return (((uint64_t)(intptr_t)addr) & (((uint64_t)UCONST64(0xFFFFffffFFFFffff)) >> (32 - LogMinObjAlignmentInBytes))) == 0;
   }
   // Check for disjoint base compressed oops.
-  static bool     narrow_oop_base_disjoint()        {
+  static bool     narrow_oop_base_disjoint() {
     return _narrow_oop._base != NULL && is_disjoint_heap_base_address(_narrow_oop._base);
   }
   // Check for real heapbased compressed oops.
   // We must subtract the base as the bits overlap.
   // If we negate above function, we also get unscaled and zerobased.
-  static bool     narrow_oop_base_overlaps()          {
+  static bool     narrow_oop_base_overlaps() {
     return _narrow_oop._base != NULL && !is_disjoint_heap_base_address(_narrow_oop._base);
   }
   static bool  is_narrow_oop_base(void* addr)             { return (narrow_oop_base() == (address)addr); }
@@ -407,13 +398,8 @@ class Universe: AllStatic {
   static void     print_compressed_oops_mode(outputStream* st);
 
   // this is set in vm_version on sparc (and then reset in universe afaict)
-  static void     set_narrow_oop_shift(int shift)         {
-    _narrow_oop._shift   = shift;
-  }
-
-  static void     set_narrow_klass_shift(int shift)       {
-    _narrow_klass._shift   = shift;
-  }
+  static void     set_narrow_oop_shift(int shift)         { _narrow_oop._shift = shift; }
+  static void     set_narrow_klass_shift(int shift)       { _narrow_klass._shift = shift; }
 
   // Reserve Java heap and determine CompressedOops mode
   static ReservedSpace reserve_heap(size_t heap_size, size_t alignment);

@@ -20,7 +20,6 @@ MetadataOnStackBuffer* MetadataOnStackMark::_current_buffer = NULL;
 // the relocator and dummy constant pools.  None of these appear anywhere except
 // in metadata Handles.
 MetadataOnStackMark::MetadataOnStackMark(bool redefinition_walk) {
-
   Threads::metadata_handles_do(Metadata::mark_on_stack);
 
   if (redefinition_walk) {
@@ -42,7 +41,7 @@ MetadataOnStackMark::~MetadataOnStackMark() {
   while (buffer != NULL) {
     // Clear on stack state for all metadata.
     size_t size = buffer->size();
-    for (size_t i  = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
       Metadata* md = buffer->at(i);
       md->set_on_stack(false);
     }
@@ -93,7 +92,6 @@ MetadataOnStackBuffer* MetadataOnStackMark::allocate_buffer() {
 
 // Record which objects are marked so we can unmark the same objects.
 void MetadataOnStackMark::record(Metadata* m) {
-
   MetadataOnStackBuffer* buffer = _current_buffer;
 
   if (buffer != NULL && buffer->is_full()) {

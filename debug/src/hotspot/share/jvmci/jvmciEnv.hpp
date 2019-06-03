@@ -33,7 +33,6 @@ class JVMCIEnv : StackObj {
   friend class Dependencies;  // for get_object, during logging
 
 public:
-
   enum CodeInstallResult {
      ok,
      dependencies_failed,
@@ -87,7 +86,6 @@ private:
                            constantTag     tag);
 
   private:
-
   // Is this thread currently in the VM state?
   static bool is_in_vm();
 

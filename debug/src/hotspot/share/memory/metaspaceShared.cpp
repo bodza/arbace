@@ -13,8 +13,6 @@
 #include "code/codeCache.hpp"
 #include "interpreter/bytecodeStream.hpp"
 #include "interpreter/bytecodes.hpp"
-#include "logging/log.hpp"
-#include "logging/logMessage.hpp"
 #include "memory/filemap.hpp"
 #include "memory/metaspace.hpp"
 #include "memory/metaspaceClosure.hpp"
@@ -176,16 +174,14 @@ char* MetaspaceShared::read_only_space_alloc(size_t num_bytes) {
 }
 
 void MetaspaceShared::initialize_runtime_shared_and_meta_spaces() {
-
   // If using shared space, open the file that contains the shared space
   // and map in the memory before initializing the rest of metaspace (so
   // the addresses don't conflict)
   address cds_address = NULL;
   FileMapInfo* mapinfo = new FileMapInfo();
 
-  // Open the shared archive file, read and validate the header. If
-  // initialization fails, shared spaces [UseSharedSpaces] are
-  // disabled and the file is closed.
+  // Open the shared archive file, read and validate the header. If initialization fails,
+  // shared spaces [false] are disabled and the file is closed.
   // Map in spaces now also
   if (mapinfo->initialize() && map_shared_spaces(mapinfo)) {
     size_t cds_total = core_spaces_size();
@@ -256,8 +252,7 @@ void MetaspaceShared::initialize_dumptime_shared_and_meta_spaces() {
   Metaspace::initialize_class_space(tmp_class_space);
   tty->print_cr("narrow_klass_base = " PTR_FORMAT ", narrow_klass_shift = %d", p2i(Universe::narrow_klass_base()), Universe::narrow_klass_shift());
 
-  tty->print_cr("Allocated temporary class space: " SIZE_FORMAT " bytes at " PTR_FORMAT,
-                CompressedClassSpaceSize, p2i(tmp_class_space.base()));
+  tty->print_cr("Allocated temporary class space: " SIZE_FORMAT " bytes at " PTR_FORMAT, CompressedClassSpaceSize, p2i(tmp_class_space.base()));
 
   // Start with 0 committed bytes. The memory will be committed as needed by
   // MetaspaceShared::commit_shared_space_to().
@@ -266,28 +261,11 @@ void MetaspaceShared::initialize_dumptime_shared_and_meta_spaces() {
   }
 
   _mc_region.init(&_shared_rs);
-  tty->print_cr("Allocated shared space: " SIZE_FORMAT " bytes at " PTR_FORMAT,
-                _shared_rs.size(), p2i(_shared_rs.base()));
+  tty->print_cr("Allocated shared space: " SIZE_FORMAT " bytes at " PTR_FORMAT, _shared_rs.size(), p2i(_shared_rs.base()));
 }
 
 // Called by universe_post_init()
-void MetaspaceShared::post_initialize(TRAPS) {
-  if (UseSharedSpaces) {
-    int size = FileMapInfo::get_number_of_shared_paths();
-    if (size > 0) {
-      SystemDictionaryShared::allocate_shared_data_arrays(size, THREAD);
-      FileMapInfo::FileMapHeader* header = FileMapInfo::current_info()->header();
-      ClassLoaderExt::init_paths_start_index(header->_app_class_paths_start_index);
-      ClassLoaderExt::init_app_module_paths_start_index(header->_app_module_paths_start_index);
-    }
-  }
-
-  if (false) {
-    if (SharedArchiveConfigFile) {
-      read_extra_data(SharedArchiveConfigFile, THREAD);
-    }
-  }
-}
+void MetaspaceShared::post_initialize(TRAPS) { }
 
 void MetaspaceShared::read_extra_data(const char* filename, TRAPS) {
   HashtableTextDump reader(filename);
@@ -400,17 +378,7 @@ void MetaspaceShared::serialize_well_known_classes(SerializeClosure* soc) {
 }
 
 address MetaspaceShared::cds_i2i_entry_code_buffers(size_t total_size) {
-  if (false) {
-    if (_cds_i2i_entry_code_buffers == NULL) {
-      _cds_i2i_entry_code_buffers = (address)misc_code_space_alloc(total_size);
-      _cds_i2i_entry_code_buffers_size = total_size;
-    }
-  } else if (UseSharedSpaces) {
-  } else {
-    return NULL;
-  }
-
-  return _cds_i2i_entry_code_buffers;
+  return NULL;
 }
 
 // CDS code for dumping shared archive.
@@ -786,7 +754,6 @@ public:
 // in the shared spaces.
 class DumpAllocStats : public ResourceObj {
 public:
-
   // Here's poor man's enum inheritance
 #define SHAREDSPACE_OBJ_TYPES_DO(f) \
   METASPACE_OBJ_TYPES_DO(f) \
@@ -845,15 +812,13 @@ private:
   void dump_symbols();
   char* dump_read_only_tables();
   void print_region_stats();
-  void print_heap_region_stats(GrowableArray<MemRegion> *heap_mem,
-                               const char *name, const size_t total_size);
+  void print_heap_region_stats(GrowableArray<MemRegion> *heap_mem, const char *name, const size_t total_size);
 public:
-
   VMOp_Type type() const { return VMOp_PopulateDumpSharedSpace; }
   void doit();   // outline because gdb sucks
   static void write_region(FileMapInfo* mapinfo, int region, DumpRegion* space, bool read_only,  bool allow_exec);
   bool allow_nested_vm_operations() const { return true; }
-}; // class VM_PopulateDumpSharedSpace
+};
 
 class SortedSymbolClosure: public SymbolClosure {
   GrowableArray<Symbol*> _symbols;
@@ -1050,7 +1015,7 @@ public:
 
   static void iterate_roots(MetaspaceClosure* it) {
     GrowableArray<Symbol*>* symbols = _ssc->get_sorted_symbols();
-    for (int i=0; i<symbols->length(); i++) {
+    for (int i = 0; i<symbols->length(); i++) {
       it->push(symbols->adr_at(i));
     }
     if (_global_klass_objects != NULL) {
@@ -1408,17 +1373,13 @@ void MetaspaceShared::preload_and_dump(TRAPS) {
       if (class_list_path_len >= 3) {
         if (strcmp(class_list_path_str + class_list_path_len - 3, "lib") != 0) {
           if (class_list_path_len < JVM_MAXPATHLEN - 4) {
-            jio_snprintf(class_list_path_str + class_list_path_len,
-                         sizeof(class_list_path_str) - class_list_path_len,
-                         "%slib", os::file_separator());
+            jio_snprintf(class_list_path_str + class_list_path_len, sizeof(class_list_path_str) - class_list_path_len, "%slib", os::file_separator());
             class_list_path_len += 4;
           }
         }
       }
       if (class_list_path_len < JVM_MAXPATHLEN - 10) {
-        jio_snprintf(class_list_path_str + class_list_path_len,
-                     sizeof(class_list_path_str) - class_list_path_len,
-                     "%sclasslist", os::file_separator());
+        jio_snprintf(class_list_path_str + class_list_path_len, sizeof(class_list_path_str) - class_list_path_len, "%sclasslist", os::file_separator());
       }
       class_list_path = class_list_path_str;
     } else {
@@ -1551,24 +1512,6 @@ public:
   bool reading() const { return true; }
 };
 
-// Return true if given address is in the misc data region
-bool MetaspaceShared::is_in_shared_region(const void* p, int idx) {
-  return UseSharedSpaces && FileMapInfo::current_info()->is_in_shared_region(p, idx);
-}
-
-bool MetaspaceShared::is_in_trampoline_frame(address addr) {
-  if (UseSharedSpaces && is_in_shared_region(addr, MetaspaceShared::mc)) {
-    return true;
-  }
-  return false;
-}
-
-void MetaspaceShared::print_shared_spaces() {
-  if (UseSharedSpaces) {
-    FileMapInfo::current_info()->print_shared_spaces();
-  }
-}
-
 // Map shared spaces at requested addresses and return if succeeded.
 bool MetaspaceShared::map_shared_spaces(FileMapInfo* mapinfo) {
   size_t image_alignment = mapinfo->alignment();
@@ -1616,11 +1559,9 @@ bool MetaspaceShared::map_shared_spaces(FileMapInfo* mapinfo) {
     // Release the entire mapped region
     shared_rs.release();
     // If -Xshare:on is specified, print out the error message and exit VM,
-    // otherwise, set UseSharedSpaces to false and continue.
-    if (false) {
-      vm_exit_during_initialization("Unable to use shared archive.", "Failed map_region for using -Xshare:on.");
-    } else {
-      FLAG_SET_DEFAULT(UseSharedSpaces, false);
+    // otherwise, set false to false and continue.
+    {
+      FLAG_SET_DEFAULT(false, false);
     }
     return false;
   }
@@ -1670,8 +1611,7 @@ void MetaspaceShared::initialize_shared_spaces() {
 
 // JVM/TI RedefineClasses() support:
 bool MetaspaceShared::remap_shared_readonly_as_readwrite() {
-
-  if (UseSharedSpaces) {
+  if (false) {
     // remap the shared readonly space to shared readwrite, private
     FileMapInfo* mapinfo = FileMapInfo::current_info();
     if (!mapinfo->remap_shared_readonly_as_readwrite()) {

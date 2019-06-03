@@ -10,13 +10,10 @@
 #include "code/scopeDesc.hpp"
 #include "compiler/abstractCompiler.hpp"
 #include "compiler/compileBroker.hpp"
-#include "compiler/compileLog.hpp"
 #include "compiler/compilerDirectives.hpp"
 #include "compiler/directivesParser.hpp"
 #include "compiler/disassembler.hpp"
 #include "interpreter/bytecode.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/method.inline.hpp"
@@ -42,7 +39,6 @@
 //---------------------------------------------------------------------------------
 
 ExceptionCache::ExceptionCache(Handle exception, address pc, address handler) {
-
   _count = 0;
   _exception_type = exception->klass();
   _next = NULL;
@@ -141,7 +137,7 @@ PcDesc* PcDescCache::find_pc_desc(int pc_offset, bool approximate) {
 
 void PcDescCache::add_pc_desc(PcDesc* pc_desc) {
   // Update the LRU cache by shifting pc_desc forward.
-  for (int i = 0; i < cache_size; i++)  {
+  for (int i = 0; i < cache_size; i++) {
     PcDesc* next = _pc_descs[i];
     _pc_descs[i] = pc_desc;
     pc_desc = next;
@@ -507,18 +503,6 @@ nmethod::nmethod(
   }
 }
 
-// Print a short set of xml attributes to identify this nmethod.  The
-// output should be embedded in some other element.
-void nmethod::log_identity(xmlStream* log) const {
-  log->print(" compile_id='%d'", compile_id());
-  const char* nm_kind = compile_kind();
-  if (nm_kind != NULL)  log->print(" compile_kind='%s'", nm_kind);
-  log->print(" compiler='%s'", compiler_name());
-  if (TieredCompilation) {
-    log->print(" level='%d'", comp_level());
-  }
-}
-
 // Print out more verbose output usually for a newly created nmethod.
 void nmethod::print_on(outputStream* st, const char* msg) const {
   if (st != NULL) {
@@ -546,25 +530,9 @@ void nmethod::print_nmethod(bool printmethod) {
   // then print the requested information
   if (printmethod) {
     print_code();
-    print_pcs();
     if (oop_maps()) {
       oop_maps()->print();
     }
-  }
-  if (printmethod || CompilerOracle::has_option_string(_method, "false")) {
-    print_scopes();
-  }
-  if (printmethod || CompilerOracle::has_option_string(_method, "false")) {
-    print_relocations();
-  }
-  if (printmethod || CompilerOracle::has_option_string(_method, "false")) {
-    print_dependencies();
-  }
-  if (printmethod) {
-    print_handler_table();
-    print_nul_chk_table();
-    print_recorded_oops();
-    print_recorded_metadata();
   }
   if (xtty != NULL) {
     xtty->tail("print_nmethod");
@@ -664,7 +632,6 @@ void nmethod::mark_as_seen_on_stack() {
 // there are no activations on the stack, not in use by the VM,
 // and not in use by the ServiceThread)
 bool nmethod::can_convert_to_zombie() {
-
   // Since the nmethod sweeper only does partial sweep the sweeper's traversal
   // count can be greater than the stack traversal count before it hits the
   // nmethod for the second time.
@@ -683,7 +650,6 @@ void nmethod::inc_decompile_count() {
 }
 
 void nmethod::make_unloaded(oop cause) {
-
   post_compiled_method_unload();
 
   // This nmethod is being unloaded, make sure that dependencies
@@ -693,15 +659,6 @@ void nmethod::make_unloaded(oop cause) {
   flush_dependencies(/*delete_immediately*/false);
 
   // Break cycle between nmethod & method
-  LogTarget(Trace, class, unload, nmethod) lt;
-  if (lt.is_enabled()) {
-    LogStream ls(lt);
-    ls.print("making nmethod " INTPTR_FORMAT " unloadable, Method*(" INTPTR_FORMAT "), cause(" INTPTR_FORMAT ") ", p2i(this), p2i(_method), p2i(cause));
-     if (cause != NULL) {
-       cause->print_value_on(&ls);
-     }
-     ls.cr();
-  }
   // Unlink the osr method, so we do not look this up again
   if (is_osr_method()) {
     // Invalidate the osr nmethod only once
@@ -736,9 +693,6 @@ void nmethod::make_unloaded(oop cause) {
 
   _state = unloaded;
 
-  // Log the unloading.
-  log_state_change();
-
   // The method can only be unloaded after the pointer to the installed code
   // Java wrapper is no longer alive. Here we need to clear out this weak
   // reference to the dead object.
@@ -755,16 +709,10 @@ void nmethod::invalidate_osr_method() {
   }
 }
 
-void nmethod::log_state_change() const {
-  const char *state_msg = _state == zombie ? "made zombie" : "made not entrant";
-  CompileTask::print_ul(this, state_msg);
-}
-
 /**
  * Common functionality for both make_not_entrant and make_zombie
  */
 bool nmethod::make_not_entrant_or_zombie(int state) {
-
   if (_state == state) {
     // Avoid taking the lock if already in required state.
     // This is safe from races because the state is an end-state,
@@ -836,9 +784,6 @@ bool nmethod::make_not_entrant_or_zombie(int state) {
 
     // Change state
     _state = state;
-
-    // Log the transition once
-    log_state_change();
 
     // Invalidate while holding the patching lock
     maybe_invalidate_installed_code();
@@ -995,7 +940,6 @@ void nmethod::post_compiled_method_unload() {
 }
 
 bool nmethod::unload_if_dead_at(RelocIterator* iter_at_oop, BoolObjectClosure *is_alive) {
-
   oop_Relocation* r = iter_at_oop->oop_reloc();
   // Traverse those oops directly embedded in the code.
   // Other oops (oop_index>0) are seen as part of scopes_oops.
@@ -1143,11 +1087,6 @@ bool nmethod::test_set_oops_do_mark() {
           break;
       }
       // Mark was clear when we first saw this guy.
-      LogTarget(Trace, gc, nmethod) lt;
-      if (lt.is_enabled()) {
-        LogStream ls(lt);
-        CompileTask::print(&ls, this, "oops_do, mark", /*short_form:*/ true);
-      }
       return false;
     }
   }
@@ -1167,12 +1106,6 @@ void nmethod::oops_do_marking_epilogue() {
   while (cur != NMETHOD_SENTINEL) {
     nmethod* next = cur->_oops_do_mark_link;
     cur->_oops_do_mark_link = NULL;
-
-    LogTarget(Trace, gc, nmethod) lt;
-    if (lt.is_enabled()) {
-      LogStream ls(lt);
-      CompileTask::print(&ls, cur, "oops_do, unmark", /*short_form:*/ true);
-    }
     cur = next;
   }
   nmethod* required = _oops_do_mark_nmethods;
@@ -1206,7 +1139,6 @@ inline bool includes(void* p, void* from, void* to) {
 }
 
 void nmethod::copy_scopes_pcs(PcDesc* pcs, int count) {
-
   // Search for MethodHandle invokes and tag the nmethod.
   for (int i = 0; i < count; i++) {
     if (pcs[i].is_method_handle_invoke()) {
@@ -1326,7 +1258,6 @@ void nmethod::check_all_dependencies(DepChange& changes) {
             tty->print_cr("Failed dependency:");
             changes.print();
             nm->print();
-            nm->print_dependencies();
             ShouldNotReachHere();
           }
         }
@@ -1446,7 +1377,6 @@ public:
 };
 
 void nmethod::verify() {
-
   // Hmm. OSR methods can be deopted but not marked as zombie or not_entrant
   // seems odd.
 
@@ -1735,7 +1665,7 @@ void nmethod::print_nmethod_labels(outputStream* stream, address block_begin) co
         VMReg snd = regs[sig_index].second();
         if (fst->is_reg()) {
           stream->print("%s", fst->name());
-          if (snd->is_valid())  {
+          if (snd->is_valid()) {
             stream->print(":%s", snd->name());
           }
         } else if (fst->is_stack()) {

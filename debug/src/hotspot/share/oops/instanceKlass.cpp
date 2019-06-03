@@ -17,9 +17,6 @@
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "interpreter/oopMapCache.hpp"
 #include "interpreter/rewriter.hpp"
-#include "logging/log.hpp"
-#include "logging/logMessage.hpp"
-#include "logging/logStream.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/heapInspection.hpp"
 #include "memory/iterator.inline.hpp"
@@ -52,7 +49,6 @@
 #include "c1/c1_Compiler.hpp"
 
 static inline bool is_class_loader(const Symbol* class_name, const ClassFileParser& parser) {
-
   if (class_name == vmSymbols::java_lang_ClassLoader()) {
     return true;
   }
@@ -136,7 +132,6 @@ InstanceKlass* InstanceKlass::nest_host(Symbol* validationException, TRAPS) {
 
       // JVMS 5.4.4 indicates package check comes first
       if (is_same_class_package(k)) {
-
         // Now check actual membership. We can't be a member if our "host" is
         // not an instance class.
         if (k->is_instance_klass()) {
@@ -172,7 +167,6 @@ InstanceKlass* InstanceKlass::nest_host(Symbol* validationException, TRAPS) {
 // or we are k's nest_host - all of which is covered by comparing the two
 // resolved_nest_hosts
 bool InstanceKlass::has_nestmate_access_to(InstanceKlass* k, TRAPS) {
-
   // Per JVMS 5.4.4 we first resolve and validate the current class, then
   // the target class k. Resolution exceptions will be passed on by upper
   // layers. IncompatibleClassChangeErrors from membership validation failures
@@ -304,7 +298,6 @@ void InstanceKlass::deallocate_interfaces(ClassLoaderData* loader_data, const Kl
 // This function deallocates the metadata and C heap pointers that the
 // InstanceKlass points to.
 void InstanceKlass::deallocate_contents(ClassLoaderData* loader_data) {
-
   // Orphan the mirror first, CMS thinks it's still live.
   if (java_mirror() != NULL) {
     java_lang_Class::set_klass(java_mirror(), NULL);
@@ -500,7 +493,7 @@ void InstanceKlass::initialize(TRAPS) {
 bool InstanceKlass::verify_code(bool throw_verifyerror, TRAPS) {
   // 1) Verify the bytecodes
   Verifier::Mode mode = throw_verifyerror ? Verifier::ThrowException : Verifier::NoException;
-  return Verifier::verify(this, mode, should_verify_class(), THREAD);
+  return Verifier::verify(this, mode, false, THREAD);
 }
 
 // Used exclusively by the shared spaces dump mechanism to prevent
@@ -952,7 +945,7 @@ bool InstanceKlass::is_same_or_direct_interface(Klass *k) const {
 }
 
 objArrayOop InstanceKlass::allocate_objArray(int n, int length, TRAPS) {
-  if (length < 0)  {
+  if (length < 0) {
     THROW_MSG_0(vmSymbols::java_lang_NegativeArraySizeException(), err_msg("%d", length));
   }
   if (length > arrayOopDesc::max_array_length(T_OBJECT)) {
@@ -1055,14 +1048,6 @@ void InstanceKlass::call_class_initializer(TRAPS) {
   }
 
   methodHandle h_method(THREAD, class_initializer());
-  LogTarget(Info, class, init) lt;
-  if (lt.is_enabled()) {
-    ResourceMark rm;
-    LogStream ls(lt);
-    ls.print("%d Initializing ", call_class_initializer_counter++);
-    name()->print_value_on(&ls);
-    ls.print_cr("%s (" INTPTR_FORMAT ")", h_method() == NULL ? "(no method)" : "", p2i(this));
-  }
   if (h_method() != NULL) {
     JavaCallArguments args; // No arguments
     JavaValue result(T_VOID);
@@ -1628,7 +1613,6 @@ void InstanceKlass::ensure_space_for_methodids(int start_offset) {
 // the VMThread or have cache consistency issues.
 //
 jmethodID InstanceKlass::get_jmethod_id_fetch_or_update(size_t idnum, jmethodID new_id, jmethodID* new_jmeths, jmethodID* to_dealloc_id_p, jmethodID** to_dealloc_jmeths_p) {
-
   // reacquire the cache - we are locked, single threaded or at a safepoint
   jmethodID* jmeths = methods_jmethod_ids_acquire();
   jmethodID  id     = NULL;
@@ -1670,7 +1654,6 @@ jmethodID InstanceKlass::get_jmethod_id_fetch_or_update(size_t idnum, jmethodID 
 // value at index idnum if there is one.
 //
 void InstanceKlass::get_jmethod_id_length_value(jmethodID* cache, size_t idnum, size_t *length_p, jmethodID* id_p) {
-
   // cache size is stored in element[0], other elements offset by one
   *length_p = (size_t)cache[0];
   if (*length_p <= idnum) {  // cache is too short
@@ -1767,7 +1750,6 @@ bool InstanceKlass::supers_have_passed_fingerprint_checks() {
 }
 
 bool InstanceKlass::should_store_fingerprint(bool is_anonymous) {
-
   // In all other cases we might set the _misc_has_passed_fingerprint_check bit,
   // but do not store the 64-bit fingerprint to save space.
   return false;
@@ -2074,14 +2056,12 @@ ModuleEntry* InstanceKlass::module() const {
 }
 
 void InstanceKlass::set_package(ClassLoaderData* loader_data, TRAPS) {
-
   // ensure java/ packages only loaded by boot or platform builtin loaders
   check_prohibited_package(name(), loader_data, CHECK);
 
   TempNewSymbol pkg_name = package_from_name(name(), CHECK);
 
   if (pkg_name != NULL && loader_data != NULL) {
-
     // Find in class loader's package entry table.
     _package_entry = loader_data->packages()->lookup_only(pkg_name);
 
@@ -2553,7 +2533,6 @@ class VerifyFieldClosure: public BasicOopIterateClosure {
 };
 
 void InstanceKlass::verify_on(outputStream* st) {
-
   // Verify Klass
   Klass::verify_on(st);
 
@@ -2622,20 +2601,7 @@ void InstanceKlass::verify_on(outputStream* st) {
   if (method_ordering() != NULL) {
     Array<int>* method_ordering = this->method_ordering();
     int length = method_ordering->length();
-    if (UseSharedSpaces && length != 0) {
-      guarantee(length == methods()->length(), "invalid method ordering length");
-      jlong sum = 0;
-      for (int j = 0; j < length; j++) {
-        int original_index = method_ordering->at(j);
-        guarantee(original_index >= 0, "invalid method ordering index");
-        guarantee(original_index < length, "invalid method ordering index");
-        sum += original_index;
-      }
-      // Verify sum of indices 0,1,...,length-1
-      guarantee(sum == ((jlong)length*(length-1))/2, "invalid method ordering sum");
-    } else {
-      guarantee(length == 0, "invalid method ordering length");
-    }
+    guarantee(length == 0, "invalid method ordering length");
   }
 
   // Verify default methods

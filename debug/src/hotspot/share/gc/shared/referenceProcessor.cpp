@@ -5,11 +5,9 @@
 #include "gc/shared/collectedHeap.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "gc/shared/gcTimer.hpp"
-#include "gc/shared/gcTraceTime.inline.hpp"
 #include "gc/shared/referencePolicy.hpp"
 #include "gc/shared/referenceProcessor.inline.hpp"
 #include "gc/shared/referenceProcessorPhaseTimes.hpp"
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/access.inline.hpp"
@@ -47,7 +45,6 @@ void ReferenceProcessor::init_statics() {
 }
 
 void ReferenceProcessor::enable_discovery(bool check_no_refs) {
-
   // Someone could have modified the value of the static
   // field in the j.l.r.SoftReference class that holds the
   // soft reference timestamp clock using reflection or
@@ -144,7 +141,6 @@ ReferenceProcessorStats ReferenceProcessor::process_discovered_references(
   VoidClosure*                  complete_gc,
   AbstractRefProcTaskExecutor*  task_executor,
   ReferenceProcessorPhaseTimes* phase_times) {
-
   double start_time = os::elapsedTime();
 
   // Stop treating discovered references specially.
@@ -233,9 +229,7 @@ void DiscoveredListIterator::clear_referent() {
 }
 
 void DiscoveredListIterator::enqueue() {
-  HeapAccess<AS_NO_KEEPALIVE>::oop_store_at(_current_discovered,
-                                            java_lang_ref_Reference::discovered_offset,
-                                            _next_discovered);
+  HeapAccess<AS_NO_KEEPALIVE>::oop_store_at(_current_discovered, java_lang_ref_Reference::discovered_offset, _next_discovered);
 }
 
 void DiscoveredListIterator::complete_enqueue() {
@@ -249,7 +243,6 @@ void DiscoveredListIterator::complete_enqueue() {
 }
 
 inline void log_dropped_ref(const DiscoveredListIterator& iter, const char* reason) { }
-
 inline void log_enqueued_ref(const DiscoveredListIterator& iter, const char* reason) { }
 
 size_t ReferenceProcessor::process_soft_ref_reconsider_work(DiscoveredList&    refs_list,
@@ -321,7 +314,7 @@ size_t ReferenceProcessor::process_soft_weak_final_refs_work(DiscoveredList&    
   return iter.removed();
 }
 
-size_t ReferenceProcessor::process_final_keep_alive_work(DiscoveredList& refs_list, OopClosure*     keep_alive, VoidClosure*    complete_gc) {
+size_t ReferenceProcessor::process_final_keep_alive_work(DiscoveredList& refs_list, OopClosure* keep_alive, VoidClosure* complete_gc) {
   DiscoveredListIterator iter(refs_list, keep_alive, NULL);
   while (iter.has_next()) {
     iter.load_ptrs();
@@ -343,10 +336,7 @@ size_t ReferenceProcessor::process_final_keep_alive_work(DiscoveredList& refs_li
   return iter.removed();
 }
 
-size_t ReferenceProcessor::process_phantom_refs_work(DiscoveredList&    refs_list,
-                                          BoolObjectClosure* is_alive,
-                                          OopClosure*        keep_alive,
-                                          VoidClosure*       complete_gc) {
+size_t ReferenceProcessor::process_phantom_refs_work(DiscoveredList& refs_list, BoolObjectClosure* is_alive, OopClosure* keep_alive, VoidClosure* complete_gc) {
   DiscoveredListIterator iter(refs_list, keep_alive, is_alive);
   while (iter.has_next()) {
     iter.load_ptrs();
@@ -418,23 +408,14 @@ size_t ReferenceProcessor::total_reference_count(ReferenceType type) const {
 
 class RefProcPhase1Task : public AbstractRefProcTaskExecutor::ProcessTask {
 public:
-  RefProcPhase1Task(ReferenceProcessor&           ref_processor,
-                    ReferenceProcessorPhaseTimes* phase_times,
-                    ReferencePolicy*              policy)
+  RefProcPhase1Task(ReferenceProcessor& ref_processor, ReferenceProcessorPhaseTimes* phase_times, ReferencePolicy* policy)
     : ProcessTask(ref_processor, true /* marks_oops_alive */, phase_times),
       _policy(policy) { }
 
-  virtual void work(uint worker_id,
-                    BoolObjectClosure& is_alive,
-                    OopClosure& keep_alive,
-                    VoidClosure& complete_gc)
+  virtual void work(uint worker_id, BoolObjectClosure& is_alive, OopClosure& keep_alive, VoidClosure& complete_gc)
   {
     RefProcSubPhasesWorkerTimeTracker tt(ReferenceProcessor::SoftRefSubPhase1, _phase_times, worker_id);
-    size_t const removed = _ref_processor.process_soft_ref_reconsider_work(_ref_processor._discoveredSoftRefs[worker_id],
-                                                                           _policy,
-                                                                           &is_alive,
-                                                                           &keep_alive,
-                                                                           &complete_gc);
+    size_t const removed = _ref_processor.process_soft_ref_reconsider_work(_ref_processor._discoveredSoftRefs[worker_id], _policy, &is_alive, &keep_alive, &complete_gc);
     _phase_times->add_ref_cleared(REF_SOFT, removed);
   }
 private:
@@ -442,28 +423,16 @@ private:
 };
 
 class RefProcPhase2Task: public AbstractRefProcTaskExecutor::ProcessTask {
-  void run_phase2(uint worker_id,
-                  DiscoveredList list[],
-                  BoolObjectClosure& is_alive,
-                  OopClosure& keep_alive,
-                  bool do_enqueue_and_clear,
-                  ReferenceType ref_type) {
-    size_t const removed = _ref_processor.process_soft_weak_final_refs_work(list[worker_id],
-                                                                            &is_alive,
-                                                                            &keep_alive,
-                                                                            do_enqueue_and_clear);
+  void run_phase2(uint worker_id, DiscoveredList list[], BoolObjectClosure& is_alive, OopClosure& keep_alive, bool do_enqueue_and_clear, ReferenceType ref_type) {
+    size_t const removed = _ref_processor.process_soft_weak_final_refs_work(list[worker_id], &is_alive, &keep_alive, do_enqueue_and_clear);
     _phase_times->add_ref_cleared(ref_type, removed);
   }
 
 public:
-  RefProcPhase2Task(ReferenceProcessor& ref_processor,
-                    ReferenceProcessorPhaseTimes* phase_times)
+  RefProcPhase2Task(ReferenceProcessor& ref_processor, ReferenceProcessorPhaseTimes* phase_times)
     : ProcessTask(ref_processor, false /* marks_oops_alive */, phase_times) { }
 
-  virtual void work(uint worker_id,
-                    BoolObjectClosure& is_alive,
-                    OopClosure& keep_alive,
-                    VoidClosure& complete_gc) {
+  virtual void work(uint worker_id, BoolObjectClosure& is_alive, OopClosure& keep_alive, VoidClosure& complete_gc) {
     RefProcWorkerTimeTracker t(_phase_times->phase2_worker_time_sec(), worker_id);
     {
       RefProcSubPhasesWorkerTimeTracker tt(ReferenceProcessor::SoftRefSubPhase2, _phase_times, worker_id);
@@ -485,14 +454,10 @@ public:
 
 class RefProcPhase3Task: public AbstractRefProcTaskExecutor::ProcessTask {
 public:
-  RefProcPhase3Task(ReferenceProcessor&           ref_processor,
-                    ReferenceProcessorPhaseTimes* phase_times)
+  RefProcPhase3Task(ReferenceProcessor& ref_processor, ReferenceProcessorPhaseTimes* phase_times)
     : ProcessTask(ref_processor, true /* marks_oops_alive */, phase_times) { }
 
-  virtual void work(uint worker_id,
-                    BoolObjectClosure& is_alive,
-                    OopClosure& keep_alive,
-                    VoidClosure& complete_gc)
+  virtual void work(uint worker_id, BoolObjectClosure& is_alive, OopClosure& keep_alive, VoidClosure& complete_gc)
   {
     RefProcSubPhasesWorkerTimeTracker tt(ReferenceProcessor::FinalRefSubPhase3, _phase_times, worker_id);
     _ref_processor.process_final_keep_alive_work(_ref_processor._discoveredFinalRefs[worker_id], &keep_alive, &complete_gc);
@@ -501,41 +466,16 @@ public:
 
 class RefProcPhase4Task: public AbstractRefProcTaskExecutor::ProcessTask {
 public:
-  RefProcPhase4Task(ReferenceProcessor&           ref_processor,
-                    ReferenceProcessorPhaseTimes* phase_times)
+  RefProcPhase4Task(ReferenceProcessor& ref_processor, ReferenceProcessorPhaseTimes* phase_times)
     : ProcessTask(ref_processor, false /* marks_oops_alive */, phase_times) { }
 
-  virtual void work(uint worker_id,
-                    BoolObjectClosure& is_alive,
-                    OopClosure& keep_alive,
-                    VoidClosure& complete_gc)
+  virtual void work(uint worker_id, BoolObjectClosure& is_alive, OopClosure& keep_alive, VoidClosure& complete_gc)
   {
     RefProcSubPhasesWorkerTimeTracker tt(ReferenceProcessor::PhantomRefSubPhase4, _phase_times, worker_id);
-    size_t const removed = _ref_processor.process_phantom_refs_work(_ref_processor._discoveredPhantomRefs[worker_id],
-                                                                    &is_alive,
-                                                                    &keep_alive,
-                                                                    &complete_gc);
+    size_t const removed = _ref_processor.process_phantom_refs_work(_ref_processor._discoveredPhantomRefs[worker_id], &is_alive, &keep_alive, &complete_gc);
     _phase_times->add_ref_cleared(REF_PHANTOM, removed);
   }
 };
-
-void ReferenceProcessor::log_reflist(const char* prefix, DiscoveredList list[], uint num_active_queues) {
-  LogTarget(Trace, gc, ref) lt;
-
-  if (!lt.is_enabled()) {
-    return;
-  }
-
-  size_t total = 0;
-
-  LogStream ls(lt);
-  ls.print("%s", prefix);
-  for (uint i = 0; i < num_active_queues; i++) {
-    ls.print(SIZE_FORMAT " ", list[i].length());
-    total += list[i].length();
-  }
-  ls.print_cr("(" SIZE_FORMAT ")", total);
-}
 
 void ReferenceProcessor::set_active_mt_degree(uint v) {
   _num_queues = v;
@@ -576,8 +516,6 @@ void ReferenceProcessor::maybe_balance_queues(DiscoveredList refs_lists[]) {
 void ReferenceProcessor::balance_queues(DiscoveredList ref_lists[]) {
   // calculate total length
   size_t total_refs = 0;
-
-  log_reflist_counts(ref_lists, _max_num_queues);
 
   for (uint i = 0; i < _max_num_queues; ++i) {
     total_refs += ref_lists[i].length();
@@ -644,7 +582,6 @@ bool ReferenceProcessor::is_mt_processing_set_up(AbstractRefProcTaskExecutor* ta
 }
 
 void ReferenceProcessor::process_soft_ref_reconsider(BoolObjectClosure* is_alive, OopClosure* keep_alive, VoidClosure* complete_gc, AbstractRefProcTaskExecutor* task_executor, ReferenceProcessorPhaseTimes* phase_times) {
-
   size_t const num_soft_refs = total_count(_discoveredSoftRefs);
   phase_times->set_ref_discovered(REF_SOFT, num_soft_refs);
 
@@ -663,7 +600,6 @@ void ReferenceProcessor::process_soft_ref_reconsider(BoolObjectClosure* is_alive
 
   RefProcPhaseTimeTracker tt(RefPhase1, phase_times);
 
-  log_reflist("Phase1 Soft before", _discoveredSoftRefs, _max_num_queues);
   if (_processing_is_mt) {
     RefProcPhase1Task phase1(*this, phase_times, _current_soft_ref_policy);
     task_executor->execute(phase1, num_queues());
@@ -678,11 +614,9 @@ void ReferenceProcessor::process_soft_ref_reconsider(BoolObjectClosure* is_alive
 
     phase_times->add_ref_cleared(REF_SOFT, removed);
   }
-  log_reflist("Phase1 Soft after", _discoveredSoftRefs, _max_num_queues);
 }
 
 void ReferenceProcessor::process_soft_weak_final_refs(BoolObjectClosure* is_alive, OopClosure* keep_alive, VoidClosure* complete_gc, AbstractRefProcTaskExecutor* task_executor, ReferenceProcessorPhaseTimes* phase_times) {
-
   size_t const num_soft_refs = total_count(_discoveredSoftRefs);
   size_t const num_weak_refs = total_count(_discoveredWeakRefs);
   size_t const num_final_refs = total_count(_discoveredFinalRefs);
@@ -707,9 +641,6 @@ void ReferenceProcessor::process_soft_weak_final_refs(BoolObjectClosure* is_aliv
 
   RefProcPhaseTimeTracker tt(RefPhase2, phase_times);
 
-  log_reflist("Phase2 Soft before", _discoveredSoftRefs, _max_num_queues);
-  log_reflist("Phase2 Weak before", _discoveredWeakRefs, _max_num_queues);
-  log_reflist("Phase2 Final before", _discoveredFinalRefs, _max_num_queues);
   if (_processing_is_mt) {
     RefProcPhase2Task phase2(*this, phase_times);
     task_executor->execute(phase2, num_queues());
@@ -749,11 +680,9 @@ void ReferenceProcessor::process_soft_weak_final_refs(BoolObjectClosure* is_aliv
   }
   verify_total_count_zero(_discoveredSoftRefs, "SoftReference");
   verify_total_count_zero(_discoveredWeakRefs, "WeakReference");
-  log_reflist("Phase2 Final after", _discoveredFinalRefs, _max_num_queues);
 }
 
 void ReferenceProcessor::process_final_keep_alive(OopClosure* keep_alive, VoidClosure* complete_gc, AbstractRefProcTaskExecutor* task_executor, ReferenceProcessorPhaseTimes* phase_times) {
-
   size_t const num_final_refs = total_count(_discoveredFinalRefs);
 
   phase_times->set_processing_is_mt(_processing_is_mt);
@@ -786,7 +715,6 @@ void ReferenceProcessor::process_final_keep_alive(OopClosure* keep_alive, VoidCl
 }
 
 void ReferenceProcessor::process_phantom_refs(BoolObjectClosure* is_alive, OopClosure* keep_alive, VoidClosure* complete_gc, AbstractRefProcTaskExecutor* task_executor, ReferenceProcessorPhaseTimes* phase_times) {
-
   size_t const num_phantom_refs = total_count(_discoveredPhantomRefs);
   phase_times->set_ref_discovered(REF_PHANTOM, num_phantom_refs);
 
@@ -806,7 +734,6 @@ void ReferenceProcessor::process_phantom_refs(BoolObjectClosure* is_alive, OopCl
   // Phase 4: Walk phantom references appropriately.
   RefProcPhaseTimeTracker tt(RefPhase4, phase_times);
 
-  log_reflist("Phase4 Phantom before", _discoveredPhantomRefs, _max_num_queues);
   if (_processing_is_mt) {
     RefProcPhase4Task phase4(*this, phase_times);
     task_executor->execute(phase4, num_queues());
@@ -866,7 +793,7 @@ inline DiscoveredList* ReferenceProcessor::get_discovered_list(ReferenceType rt)
 }
 
 inline void
-ReferenceProcessor::add_to_discovered_list_mt(DiscoveredList& refs_list, oop             obj, HeapWord*       discovered_addr) {
+ReferenceProcessor::add_to_discovered_list_mt(DiscoveredList& refs_list, oop obj, HeapWord* discovered_addr) {
   // First we must make sure this object is only enqueued once. CAS in a non null
   // discovered_addr.
   oop current_head = refs_list.head();
@@ -881,7 +808,6 @@ ReferenceProcessor::add_to_discovered_list_mt(DiscoveredList& refs_list, oop    
     // is necessary.
     refs_list.set_head(obj);
     refs_list.inc_length(1);
-
   } else {
     // If retest was non NULL, another thread beat us to it:
     // The reference has already been discovered...
@@ -1020,71 +946,43 @@ void ReferenceProcessor::preclean_discovered_references(BoolObjectClosure* is_al
   // These lists can be handled here in any order and, indeed, concurrently.
 
   // Soft references
-  {
-    GCTraceTime(Debug, gc, ref) tm("Preclean SoftReferences", gc_timer);
-    log_reflist("SoftRef before: ", _discoveredSoftRefs, _max_num_queues);
-    for (uint i = 0; i < _max_num_queues; i++) {
-      if (yield->should_return()) {
-        return;
-      }
-      if (preclean_discovered_reflist(_discoveredSoftRefs[i], is_alive,
-                                      keep_alive, complete_gc, yield)) {
-        log_reflist("SoftRef abort: ", _discoveredSoftRefs, _max_num_queues);
-        return;
-      }
+  for (uint i = 0; i < _max_num_queues; i++) {
+    if (yield->should_return()) {
+      return;
     }
-    log_reflist("SoftRef after: ", _discoveredSoftRefs, _max_num_queues);
+    if (preclean_discovered_reflist(_discoveredSoftRefs[i], is_alive, keep_alive, complete_gc, yield)) {
+      return;
+    }
   }
 
   // Weak references
-  {
-    GCTraceTime(Debug, gc, ref) tm("Preclean WeakReferences", gc_timer);
-    log_reflist("WeakRef before: ", _discoveredWeakRefs, _max_num_queues);
-    for (uint i = 0; i < _max_num_queues; i++) {
-      if (yield->should_return()) {
-        return;
-      }
-      if (preclean_discovered_reflist(_discoveredWeakRefs[i], is_alive,
-                                      keep_alive, complete_gc, yield)) {
-        log_reflist("WeakRef abort: ", _discoveredWeakRefs, _max_num_queues);
-        return;
-      }
+  for (uint i = 0; i < _max_num_queues; i++) {
+    if (yield->should_return()) {
+      return;
     }
-    log_reflist("WeakRef after: ", _discoveredWeakRefs, _max_num_queues);
+    if (preclean_discovered_reflist(_discoveredWeakRefs[i], is_alive, keep_alive, complete_gc, yield)) {
+      return;
+    }
   }
 
   // Final references
-  {
-    GCTraceTime(Debug, gc, ref) tm("Preclean FinalReferences", gc_timer);
-    log_reflist("FinalRef before: ", _discoveredFinalRefs, _max_num_queues);
-    for (uint i = 0; i < _max_num_queues; i++) {
-      if (yield->should_return()) {
-        return;
-      }
-      if (preclean_discovered_reflist(_discoveredFinalRefs[i], is_alive,
-                                      keep_alive, complete_gc, yield)) {
-        log_reflist("FinalRef abort: ", _discoveredFinalRefs, _max_num_queues);
-        return;
-      }
+  for (uint i = 0; i < _max_num_queues; i++) {
+    if (yield->should_return()) {
+      return;
     }
-    log_reflist("FinalRef after: ", _discoveredFinalRefs, _max_num_queues);
+    if (preclean_discovered_reflist(_discoveredFinalRefs[i], is_alive, keep_alive, complete_gc, yield)) {
+      return;
+    }
   }
 
   // Phantom references
-  {
-    GCTraceTime(Debug, gc, ref) tm("Preclean PhantomReferences", gc_timer);
-    log_reflist("PhantomRef before: ", _discoveredPhantomRefs, _max_num_queues);
-    for (uint i = 0; i < _max_num_queues; i++) {
-      if (yield->should_return()) {
-        return;
-      }
-      if (preclean_discovered_reflist(_discoveredPhantomRefs[i], is_alive,
-                                      keep_alive, complete_gc, yield)) {
-        log_reflist("PhantomRef abort: ", _discoveredPhantomRefs, _max_num_queues);
-        return;
-      }
+  for (uint i = 0; i < _max_num_queues; i++) {
+    if (yield->should_return()) {
+      return;
     }
-    log_reflist("PhantomRef after: ", _discoveredPhantomRefs, _max_num_queues);
+    if (preclean_discovered_reflist(_discoveredPhantomRefs[i], is_alive, keep_alive, complete_gc, yield)) {
+      return;
+    }
   }
 }
 
@@ -1120,7 +1018,6 @@ bool ReferenceProcessor::preclean_discovered_reflist(DiscoveredList& refs_list, 
 }
 
 const char* ReferenceProcessor::list_name(uint i) {
-
    int j = i / _max_num_queues;
    switch (j) {
      case 0: return "SoftRef";
@@ -1135,7 +1032,6 @@ const char* ReferenceProcessor::list_name(uint i) {
 uint RefProcMTDegreeAdjuster::ergo_proc_thread_count(size_t ref_count,
                                                      uint max_threads,
                                                      RefProcPhases phase) const {
-
   if (use_max_threads(phase) || (ReferencesPerThread == 0)) {
     return max_threads;
   }

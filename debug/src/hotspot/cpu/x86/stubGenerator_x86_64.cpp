@@ -36,7 +36,6 @@ const int MXCSR_MASK = 0xFFC0;  // Mask out any pending exceptions
 
 class StubGenerator: public StubCodeGenerator {
  private:
-
 #define inc_counter_np(counter) ((void)0)
 
   // Call stubs are used to call Java from C
@@ -1899,8 +1898,7 @@ class StubGenerator: public StubCodeGenerator {
 
     Label L_miss;
 
-    __ check_klass_subtype_fast_path(sub_klass, super_klass, noreg,        &L_success, &L_miss, NULL,
-                                     super_check_offset);
+    __ check_klass_subtype_fast_path(sub_klass, super_klass, noreg,        &L_success, &L_miss, NULL, super_check_offset);
     __ check_klass_subtype_slow_path(sub_klass, super_klass, noreg, noreg, &L_success, NULL);
 
     // Fall through on failure!
@@ -1925,7 +1923,6 @@ class StubGenerator: public StubCodeGenerator {
   //    rax == -1^K - failure, where K is partial transfer count
   //
   address generate_checkcast_copy(const char *name, address *entry, bool dest_uninitialized = false) {
-
     Label L_load_element, L_store_element, L_do_card_marks, L_done;
 
     // Input registers (after setup_arg_regs)
@@ -2076,7 +2073,6 @@ class StubGenerator: public StubCodeGenerator {
   // to a long, int, short, or byte copy loop.
   //
   address generate_unsafe_copy(const char *name, address byte_copy_entry, address short_copy_entry, address int_copy_entry, address long_copy_entry) {
-
     Label L_long_aligned, L_int_aligned, L_short_aligned;
 
     // Input registers (before setup_arg_regs)
@@ -2177,7 +2173,6 @@ class StubGenerator: public StubCodeGenerator {
                                 address byte_copy_entry, address short_copy_entry,
                                 address int_copy_entry, address oop_copy_entry,
                                 address long_copy_entry, address checkcast_copy_entry) {
-
     Label L_failed, L_failed_0, L_objArray;
     Label L_copy_bytes, L_copy_shorts, L_copy_ints, L_copy_longs;
 
@@ -2358,10 +2353,8 @@ class StubGenerator: public StubCodeGenerator {
     // Identically typed arrays can be copied without element-wise checks.
     arraycopy_range_checks(src, src_pos, dst, dst_pos, r11_length, r10, L_failed);
 
-    __ lea(from, Address(src, src_pos, TIMES_OOP,
-                 arrayOopDesc::base_offset_in_bytes(T_OBJECT))); // src_addr
-    __ lea(to,   Address(dst, dst_pos, TIMES_OOP,
-                 arrayOopDesc::base_offset_in_bytes(T_OBJECT))); // dst_addr
+    __ lea(from, Address(src, src_pos, TIMES_OOP, arrayOopDesc::base_offset_in_bytes(T_OBJECT))); // src_addr
+    __ lea(to,   Address(dst, dst_pos, TIMES_OOP, arrayOopDesc::base_offset_in_bytes(T_OBJECT))); // dst_addr
     __ movl2ptr(count, r11_length); // length
   __ BIND(L_plain_copy);
     __ jump(RuntimeAddress(oop_copy_entry));
@@ -2805,7 +2798,7 @@ class StubGenerator: public StubCodeGenerator {
     __ movdqu(xmm_temp, Address(from, pos, Address::times_1, 0));   // get next 16 bytes of input
     __ pxor  (xmm_result, xmm_temp);               // xor with the current r vector
     __ pxor  (xmm_result, xmm_key0);               // do the aes rounds
-    for (int rnum = XMM_REG_NUM_KEY_FIRST + 1; rnum  <= XMM_REG_NUM_KEY_FIRST + 11; rnum++) {
+    for (int rnum = XMM_REG_NUM_KEY_FIRST + 1; rnum <= XMM_REG_NUM_KEY_FIRST + 11; rnum++) {
       __ aesenc(xmm_result, as_XMMRegister(rnum));
     }
     __ aesenclast(xmm_result, xmm_key12);
@@ -2826,7 +2819,7 @@ class StubGenerator: public StubCodeGenerator {
     __ movdqu(xmm_temp, Address(from, pos, Address::times_1, 0));   // get next 16 bytes of input
     __ pxor  (xmm_result, xmm_temp);               // xor with the current r vector
     __ pxor  (xmm_result, xmm_key0);               // do the aes rounds
-    for (int rnum = XMM_REG_NUM_KEY_FIRST + 1; rnum  <= XMM_REG_NUM_KEY_FIRST + 13; rnum++) {
+    for (int rnum = XMM_REG_NUM_KEY_FIRST + 1; rnum <= XMM_REG_NUM_KEY_FIRST + 13; rnum++) {
       __ aesenc(xmm_result, as_XMMRegister(rnum));
     }
     load_key(xmm_temp, key, 0xe0);
@@ -2994,7 +2987,7 @@ class StubGenerator: public StubCodeGenerator {
       __ cmpptr(len_reg, PARALLEL_FACTOR * AESBlockSize); // see if at least 4 blocks left
       __ jcc(Assembler::less, L_singleBlock_loopTopHead[k]);
 
-      if  (k != 0) {
+      if (k != 0) {
         __ movdqu(xmm15, Address(rsp, 2 * wordSize));
         __ movdqu(xmm1, Address(rsp, 4 * wordSize));
       }
@@ -4398,7 +4391,6 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
    *       rax   - int crc result
    */
   address generate_updateBytesCRC32() {
-
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "updateBytesCRC32");
 
@@ -4573,7 +4565,6 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
    *
    */
   address generate_squareToLen() {
-
     __ align(CodeEntryAlignment);
     StubCodeMark mark(this, "StubRoutines", "squareToLen");
 
@@ -5104,7 +5095,7 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
       StubRoutines::_aescrypt_encryptBlock = generate_aescrypt_encryptBlock();
       StubRoutines::_aescrypt_decryptBlock = generate_aescrypt_decryptBlock();
       StubRoutines::_cipherBlockChaining_encryptAESCrypt = generate_cipherBlockChaining_encryptAESCrypt();
-      if (VM_Version::supports_vaes() &&  VM_Version::supports_avx512vl() && VM_Version::supports_avx512dq()) {
+      if (VM_Version::supports_vaes() && VM_Version::supports_avx512vl() && VM_Version::supports_avx512dq()) {
         StubRoutines::_cipherBlockChaining_decryptAESCrypt = generate_cipherBlockChaining_decryptVectorAESCrypt();
       } else {
         StubRoutines::_cipherBlockChaining_decryptAESCrypt = generate_cipherBlockChaining_decryptAESCrypt_Parallel();
@@ -5176,7 +5167,7 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
       generate_initial();
     }
   }
-}; // end class declaration
+};
 
 void StubGenerator_generate(CodeBuffer* code, bool all) {
   StubGenerator g(code, all);

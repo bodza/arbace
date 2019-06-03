@@ -4,7 +4,6 @@
 #include "gc/g1/g1IHOPControl.hpp"
 #include "gc/g1/g1Predictions.hpp"
 #include "gc/shared/gcTrace.hpp"
-#include "logging/log.hpp"
 
 G1IHOPControl::G1IHOPControl(double initial_ihop_percent) :
   _initial_ihop_percent(initial_ihop_percent),
@@ -19,14 +18,11 @@ void G1IHOPControl::update_target_occupancy(size_t new_target_occupancy) {
 }
 
 void G1IHOPControl::update_allocation_info(double allocation_time_s, size_t allocated_bytes, size_t additional_buffer_size) {
-
   _last_allocation_time_s = allocation_time_s;
   _last_allocated_bytes = allocated_bytes;
 }
 
-void G1IHOPControl::print() {
-  size_t cur_conc_mark_start_threshold = get_conc_mark_start_threshold();
-}
+void G1IHOPControl::print() { }
 
 void G1IHOPControl::send_trace_event(G1NewTracer* tracer) {
   tracer->report_basic_ihop_statistics(get_conc_mark_start_threshold(), _target_occupancy, G1CollectedHeap::heap()->used(), _last_allocated_bytes, _last_allocation_time_s, last_marking_length_s());
@@ -79,9 +75,7 @@ size_t G1AdaptiveIHOPControl::get_conc_mark_start_threshold() {
       _last_unrestrained_young_size;
 
     size_t internal_threshold = actual_target_threshold();
-    size_t predicted_initiating_threshold = predicted_needed_bytes_during_marking < internal_threshold ?
-                                            internal_threshold - predicted_needed_bytes_during_marking :
-                                            0;
+    size_t predicted_initiating_threshold = predicted_needed_bytes_during_marking < internal_threshold ? internal_threshold - predicted_needed_bytes_during_marking : 0;
     return predicted_initiating_threshold;
   } else {
     // Use the initial value.
@@ -104,7 +98,6 @@ void G1AdaptiveIHOPControl::update_marking_length(double marking_length_s) {
 
 void G1AdaptiveIHOPControl::print() {
   G1IHOPControl::print();
-  size_t actual_target = actual_target_threshold();
 }
 
 void G1AdaptiveIHOPControl::send_trace_event(G1NewTracer* tracer) {

@@ -23,7 +23,6 @@
 #include "utilities/macros.hpp"
 
 void G1RootProcessor::worker_has_discovered_all_strong_classes() {
-
   uint new_value = (uint)Atomic::add(1, &_n_workers_discovered_strong_classes);
   if (new_value == n_workers()) {
     // This thread is last. Notify the others.
@@ -33,7 +32,6 @@ void G1RootProcessor::worker_has_discovered_all_strong_classes() {
 }
 
 void G1RootProcessor::wait_until_all_strong_classes_discovered() {
-
   if ((uint)_n_workers_discovered_strong_classes != n_workers()) {
     MonitorLockerEx ml(&_lock, Mutex::_no_safepoint_check_flag);
     while ((uint)_n_workers_discovered_strong_classes != n_workers()) {

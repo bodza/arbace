@@ -51,7 +51,6 @@ private:
   void check_index(size_t index, const char* msg) const { };
 
 public:
-
   // Return the number of slots needed for an offset array
   // that covers mem_region_words words.
   static size_t compute_size(size_t mem_region_words) {
@@ -148,8 +147,7 @@ private:
   // starting at "*threshold_", and for any other indices crossed by the
   // block.  Updates "*threshold_" and "*index_" to correspond to the first
   // index after the block end.
-  void alloc_block_work(HeapWord** threshold_, size_t* index_,
-                        HeapWord* blk_start, HeapWord* blk_end);
+  void alloc_block_work(HeapWord** threshold_, size_t* index_, HeapWord* blk_start, HeapWord* blk_end);
 
   void check_all_cards(size_t left_card, size_t right_card) const;
 

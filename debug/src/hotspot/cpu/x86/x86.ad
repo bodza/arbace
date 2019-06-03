@@ -1180,7 +1180,6 @@ source_hpp %{
 class NativeJump;
 
 class CallStubImpl {
-
   //--------------------------------------------------------------
   //---<  Used for optimization in Compile::shorten_branches  >---
   //--------------------------------------------------------------
@@ -1198,9 +1197,7 @@ class CallStubImpl {
 };
 
 class HandlerImpl {
-
  public:
-
   static int emit_exception_handler(CodeBuffer &cbuf);
   static int emit_deopt_handler(CodeBuffer& cbuf);
 
@@ -1228,7 +1225,6 @@ source %{
 // Emit exception handler code.
 // Stuff framesize into a register and call a VM stub routine.
 int HandlerImpl::emit_exception_handler(CodeBuffer& cbuf) {
-
   // Note that the code buffer's insts_mark is always relative to insts.
   // That's why we must use the macroassembler to generate a handler.
   MacroAssembler _masm(&cbuf);
@@ -1245,7 +1241,6 @@ int HandlerImpl::emit_exception_handler(CodeBuffer& cbuf) {
 
 // Emit deopt handler code.
 int HandlerImpl::emit_deopt_handler(CodeBuffer& cbuf) {
-
   // Note that the code buffer's insts_mark is always relative to insts.
   // That's why we must use the macroassembler to generate a handler.
   MacroAssembler _masm(&cbuf);
@@ -1716,7 +1711,7 @@ static inline jint replicate4_imm(int con, int width) {
   int bit_width = width * 8;
   jint val = con;
   val &= (1 << bit_width) - 1;  // mask off sign bits
-  while(bit_width < 32) {
+  while (bit_width < 32) {
     val |= (val << bit_width);
     bit_width <<= 1;
   }
@@ -1728,7 +1723,7 @@ static inline jlong replicate8_imm(int con, int width) {
   int bit_width = width * 8;
   jlong val = con;
   val &= (((jlong) 1) << bit_width) - 1;  // mask off sign bits
-  while(bit_width < 64) {
+  while (bit_width < 64) {
     val |= (val << bit_width);
     bit_width <<= 1;
   }
@@ -2430,8 +2425,7 @@ instruct absF_reg_reg(vlRegF dst, vlRegF src) %{
   format %{ "vandps  $dst, $src, [0x7fffffff]\t# abs float by sign masking" %}
   ins_encode %{
     int vector_len = 0;
-    __ vandps($dst$$XMMRegister, $src$$XMMRegister,
-              ExternalAddress(float_signmask()), vector_len);
+    __ vandps($dst$$XMMRegister, $src$$XMMRegister, ExternalAddress(float_signmask()), vector_len);
   %}
   ins_pipe(pipe_slow);
 %}
@@ -2456,8 +2450,7 @@ instruct absD_reg_reg(vlRegD dst, vlRegD src) %{
             "# abs double by sign masking" %}
   ins_encode %{
     int vector_len = 0;
-    __ vandpd($dst$$XMMRegister, $src$$XMMRegister,
-              ExternalAddress(double_signmask()), vector_len);
+    __ vandpd($dst$$XMMRegister, $src$$XMMRegister, ExternalAddress(double_signmask()), vector_len);
   %}
   ins_pipe(pipe_slow);
 %}
@@ -2479,8 +2472,7 @@ instruct negF_reg_reg(vlRegF dst, vlRegF src) %{
   ins_cost(150);
   format %{ "vnegatess  $dst, $src, [0x80000000]\t# neg float by sign flipping" %}
   ins_encode %{
-    __ vnegatess($dst$$XMMRegister, $src$$XMMRegister,
-                 ExternalAddress(float_signflip()));
+    __ vnegatess($dst$$XMMRegister, $src$$XMMRegister, ExternalAddress(float_signflip()));
   %}
   ins_pipe(pipe_slow);
 %}
@@ -2504,8 +2496,7 @@ instruct negD_reg_reg(vlRegD dst, vlRegD src) %{
   format %{ "vnegatesd  $dst, $src, [0x8000000000000000]\t"
             "# neg double by sign flipping" %}
   ins_encode %{
-    __ vnegatesd($dst$$XMMRegister, $src$$XMMRegister,
-                 ExternalAddress(double_signflip()));
+    __ vnegatesd($dst$$XMMRegister, $src$$XMMRegister, ExternalAddress(double_signflip()));
   %}
   ins_pipe(pipe_slow);
 %}
@@ -2799,7 +2790,7 @@ instruct loadV64_qword(vecZ dst, memory mem) %{
   ins_pipe( pipe_slow );
 %}
 
-instruct MoveVecZ2Leg(legVecZ dst, vecZ  src) %{
+instruct MoveVecZ2Leg(legVecZ dst, vecZ src) %{
   match(Set dst src);
   format %{ "vmovdquq $dst k0,$src\t! Move vector (64 bytes)" %}
   ins_encode %{
@@ -2809,7 +2800,7 @@ instruct MoveVecZ2Leg(legVecZ dst, vecZ  src) %{
   ins_pipe( fpu_reg_reg );
 %}
 
-instruct MoveLeg2VecZ(vecZ dst, legVecZ  src) %{
+instruct MoveLeg2VecZ(vecZ dst, legVecZ src) %{
   match(Set dst src);
   format %{ "vmovdquq $dst k0,$src\t! Move vector (64 bytes)" %}
   ins_encode %{

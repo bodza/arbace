@@ -97,7 +97,6 @@ class arrayOopDesc : public oopDesc {
   // overflow. We also need to make sure that this will not overflow a size_t on
   // 32 bit platforms when we convert it to a byte size.
   static int32_t max_array_length(BasicType type) {
-
     const size_t max_element_words_per_size_t = align_down((SIZE_MAX/HeapWordSize - header_size(type)), MinObjAlignment);
     const size_t max_elements_per_size_t = HeapWordSize * max_element_words_per_size_t / type2aelembytes(type);
     if ((size_t)max_jint < max_elements_per_size_t) {

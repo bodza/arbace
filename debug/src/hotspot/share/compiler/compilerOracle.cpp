@@ -58,7 +58,6 @@ enum OracleCommand {
   InlineCommand,
   DontInlineCommand,
   CompileOnlyCommand,
-  LogCommand,
   OptionCommand,
   QuietCommand,
   HelpCommand,
@@ -73,7 +72,6 @@ static const char * command_names[] = {
   "inline",
   "dontinline",
   "compileonly",
-  "log",
   "option",
   "quiet",
   "help"
@@ -92,7 +90,6 @@ class TypedMethodOptionMatcher : public MethodMatcher {
   const char*   _option;
   OptionType    _type;
  public:
-
   union {
     bool bool_value;
     intx intx_value;
@@ -259,7 +256,6 @@ static void add_option_string(TypedMethodOptionMatcher* matcher, const char* opt
   matcher->set_value<T>(value);
   option_list = matcher;
   any_set = true;
-  return;
 }
 
 static bool check_predicate(OracleCommand command, const methodHandle& method) {
@@ -267,15 +263,11 @@ static bool check_predicate(OracleCommand command, const methodHandle& method) {
 }
 
 static void add_predicate(OracleCommand command, BasicMatcher* bm) {
-  if (command == LogCommand && lists[LogCommand] == NULL) {
-    tty->print_cr("Warning:  +false must be enabled in order for individual methods to be logged.");
-  }
   bm->set_next(lists[command]);
   lists[command] = bm;
   if ((command != DontInlineCommand) && (command != InlineCommand)) {
     any_set = true;
   }
-  return;
 }
 
 template<typename T>
@@ -333,16 +325,11 @@ bool CompilerOracle::should_print_methods() {
   return lists[PrintCommand] != NULL;
 }
 
-bool CompilerOracle::should_log(const methodHandle& method) {
-  return false;
-}
-
 bool CompilerOracle::should_break_at(const methodHandle& method) {
   return check_predicate(BreakCommand, method);
 }
 
 static OracleCommand parse_command_name(const char * line, int* bytes_read) {
-
   *bytes_read = 0;
   char command[33];
   int result = sscanf(line, "%32[a-z]%n", command, bytes_read);
@@ -515,7 +502,6 @@ int skip_whitespace(char* line) {
 }
 
 void CompilerOracle::print_parse_error(const char*& error_msg, char* original_line) {
-
   ttyLocker ttyl;
   tty->print_cr("CompileCommand: An error occurred during parsing");
   tty->print_cr("Line: %s", original_line);
@@ -727,9 +713,6 @@ void compilerOracle_init() {
   if (lists[PrintCommand] != NULL) {
     if (PrintAssembly) {
       warning("CompileCommand and/or %s file contains 'print' commands, but PrintAssembly is also enabled", default_cc_file);
-    } else if (FLAG_IS_DEFAULT(false)) {
-      warning("printing of assembly code is enabled; turning on false to gain additional output");
-      false = true;
     }
   }
 }

@@ -8,7 +8,6 @@ class ModuleEntryTable;
 class Symbol;
 
 class Modules : AllStatic {
-
 public:
   // define_module defines a module containing the specified packages. It binds the
   // module to its class loader by creating the ModuleEntry record in the

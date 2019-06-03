@@ -15,7 +15,6 @@ class G1CollectedHeap;
 // replaced.
 
 class G1AllocRegion {
-
 private:
   // The active allocating region we are currently allocating out
   // of. The invariant is that if this object is initialized (i.e.,
@@ -71,20 +70,15 @@ protected:
   void reset_alloc_region();
 
   // Perform a non-MT-safe allocation out of the given region.
-  inline HeapWord* allocate(HeapRegion* alloc_region,
-                            size_t word_size);
+  inline HeapWord* allocate(HeapRegion* alloc_region, size_t word_size);
 
   // Perform a MT-safe allocation out of the given region.
-  inline HeapWord* par_allocate(HeapRegion* alloc_region,
-                                size_t word_size);
+  inline HeapWord* par_allocate(HeapRegion* alloc_region, size_t word_size);
   // Perform a MT-safe allocation out of the given region, with the given
   // minimum and desired size. Returns the actual size allocated (between
   // minimum and desired size) in actual_word_size if the allocation has been
   // successful.
-  inline HeapWord* par_allocate(HeapRegion* alloc_region,
-                                size_t min_word_size,
-                                size_t desired_word_size,
-                                size_t* actual_word_size);
+  inline HeapWord* par_allocate(HeapRegion* alloc_region, size_t min_word_size, size_t desired_word_size, size_t* actual_word_size);
 
   // Ensure that the region passed as a parameter has been filled up
   // so that noone else can allocate out of it any more.
@@ -104,8 +98,7 @@ protected:
   static G1CollectedHeap* _g1h;
 
   virtual HeapRegion* allocate_new_region(size_t word_size, bool force) = 0;
-  virtual void retire_region(HeapRegion* alloc_region,
-                             size_t allocated_bytes) = 0;
+  virtual void retire_region(HeapRegion* alloc_region, size_t allocated_bytes) = 0;
 
   G1AllocRegion(const char* name, bool bot_updates);
 
@@ -170,11 +163,7 @@ public:
   // is returned after it's been retired.
   virtual HeapRegion* release();
 
-  void trace(const char* str,
-             size_t min_word_size = 0,
-             size_t desired_word_size = 0,
-             size_t actual_word_size = 0,
-             HeapWord* result = NULL) { };
+  void trace(const char* str, size_t min_word_size = 0, size_t desired_word_size = 0, size_t actual_word_size = 0, HeapWord* result = NULL) { };
 };
 
 class MutatorAllocRegion : public G1AllocRegion {

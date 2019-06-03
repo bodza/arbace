@@ -33,7 +33,6 @@ short Assembler::SIMD_Size_in_bytes[] = {
 };
 
 void entry(CodeBuffer *cb) {
-
   Assembler _masm(cb);
   address entry = __ pc();
 }
@@ -49,7 +48,6 @@ void Assembler::emit_data64(jlong data, relocInfo::relocType rtype, int format) 
 }
 
 void Assembler::emit_data64(jlong data, RelocationHolder const& rspec, int format) {
-
   // Do not use AbstractAssembler::relocate, which is not intended for
   // embedded words.  Instead, relocate to the enclosing instruction.
   code_section()->relocate(inst_mark(), rspec, format);

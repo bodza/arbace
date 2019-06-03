@@ -604,9 +604,7 @@ public:
 // recorded. No counter is associated with the type and a single type
 // is tracked (unlike VirtualCallData).
 class TypeEntries {
-
 public:
-
   // A single cell is used to record information for a type:
   // - the cell is initialized to 0
   // - when a type is discovered it is stored in the cell
@@ -697,7 +695,6 @@ public:
 // profiled object is to be found so that the interpreter can locate
 // it quickly.
 class TypeStackSlotEntries : public TypeEntries {
-
 private:
   enum {
     stack_slot_entry,
@@ -718,7 +715,6 @@ private:
   }
 
 public:
-
   TypeStackSlotEntries(int base_off, int nb_entries)
     : TypeEntries(base_off), _number_of_entries(nb_entries) { }
 
@@ -779,7 +775,6 @@ public:
 // Type entry used for return from a call. A single cell to record the
 // type.
 class ReturnTypeEntry : public TypeEntries {
-
 private:
   enum {
     cell_count = 1
@@ -837,7 +832,6 @@ private:
   }
 
 public:
-
   static int header_cell_count() {
     return 1;
   }
@@ -1049,7 +1043,6 @@ public:
   }
 
   Klass* receiver(uint row) const {
-
     Klass* recv = (Klass*)intptr_at(receiver_cell_index(row));
     return recv;
   }
@@ -1162,7 +1155,6 @@ public:
   }
 
   Method* method(uint row) const {
-
     Method* method = (Method*)intptr_at(method_cell_index(row));
     return method;
   }
@@ -1615,7 +1607,6 @@ public:
 };
 
 class ArgInfoData : public ArrayData {
-
 public:
   ArgInfoData(DataLayout* layout) : ArrayData(layout) { }
 
@@ -1641,7 +1632,6 @@ public:
 // A ParametersTypeData is used to access profiling information about
 // types of parameters to a method
 class ParametersTypeData : public ArrayData {
-
 private:
   TypeStackSlotEntries _parameters;
 
@@ -1827,7 +1817,7 @@ public:
     _trap_hist_limit    = 24 +5,   // decoupled from Deoptimization::Reason_LIMIT
     _trap_hist_mask     = max_jubyte,
     _extra_data_count   = 4     // extra DataLayout headers, for trap history
-  }; // Public flag values
+  };
 private:
   uint _nof_decompiles;             // count of all nmethod removals
   uint _nof_overflow_recompiles;    // recompile count, excluding recomp. bits
@@ -1918,10 +1908,9 @@ private:
   void post_initialize(BytecodeStream* stream);
 
   // hint accessors
-  int      hint_di() const  { return _hint_di; }
-  void set_hint_di(int di)  {
-    _hint_di = di;
-  }
+  int      hint_di() const { return _hint_di; }
+  void set_hint_di(int di) { _hint_di = di; }
+
   ProfileData* data_before(int bci) {
     // avoid SEGV on this edge case
     if (data_size() == 0)

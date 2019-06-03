@@ -60,14 +60,6 @@ void HeapRegionManager::uncommit_regions(uint start, size_t num_regions) {
   guarantee(num_regions >= 1, "Need to specify at least one region to uncommit, tried to uncommit zero regions at %u", start);
   guarantee(_num_committed >= num_regions, "pre-condition");
 
-  // Print before uncommitting.
-  if (G1CollectedHeap::heap()->hr_printer()->is_active()) {
-    for (uint i = start; i < start + num_regions; i++) {
-      HeapRegion* hr = at(i);
-      G1CollectedHeap::heap()->hr_printer()->uncommit(hr);
-    }
-  }
-
   _num_committed -= (uint)num_regions;
 
   _available_map.par_clear_range(start, start + num_regions, BitMap::unknown_range);
@@ -99,9 +91,6 @@ void HeapRegionManager::make_regions_available(uint start, uint num_regions, Wor
 
   for (uint i = start; i < start + num_regions; i++) {
     HeapRegion* hr = at(i);
-    if (G1CollectedHeap::heap()->hr_printer()->is_active()) {
-      G1CollectedHeap::heap()->hr_printer()->commit(hr);
-    }
     HeapWord* bottom = G1CollectedHeap::heap()->bottom_addr_for_region(i);
     MemRegion mr(bottom, bottom + HeapRegion::GrainWords);
 
@@ -315,7 +304,6 @@ void HeapRegionManager::par_iterate(HeapRegionClosure* blk, HeapRegionClaimer* h
 }
 
 uint HeapRegionManager::shrink_by(uint num_regions_to_remove) {
-
   if (num_regions_to_remove == 0) {
     return 0;
   }

@@ -268,7 +268,6 @@ GrowableArray<JVMFlagRange*>* JVMFlagRangeList::_ranges = NULL;
 
 // Check the ranges of all flags that have them
 void JVMFlagRangeList::init(void) {
-
   _ranges = new (ResourceObj::C_HEAP, mtArguments) GrowableArray<JVMFlagRange*>(INITIAL_RANGES_SIZE, true);
 
   emit_range_no(NULL VM_FLAGS(EMIT_RANGE_DEVELOPER_FLAG,
@@ -323,7 +322,7 @@ void JVMFlagRangeList::init(void) {
 
 JVMFlagRange* JVMFlagRangeList::find(const char* name) {
   JVMFlagRange* found = NULL;
-  for (int i=0; i<length(); i++) {
+  for (int i = 0; i<length(); i++) {
     JVMFlagRange* range = at(i);
     if (strcmp(range->name(), name) == 0) {
       found = range;
@@ -349,7 +348,7 @@ void JVMFlagRangeList::print(outputStream* st, const char* name, RangeStrFunc de
 
 bool JVMFlagRangeList::check_ranges() {
   bool status = true;
-  for (int i=0; i<length(); i++) {
+  for (int i = 0; i<length(); i++) {
     JVMFlagRange* range = at(i);
     if (range->check(true) != JVMFlag::SUCCESS) status = false;
   }

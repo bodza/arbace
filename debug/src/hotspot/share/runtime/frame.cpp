@@ -91,7 +91,6 @@ address frame::raw_pc() const {
 // actual frame. To do that use patch_pc.
 //
 void frame::set_pc(address newpc ) {
-
   // Unsafe to use the is_deoptimzed tester after changing pc
   _deopt_state = unknown;
   _pc = newpc;
@@ -194,7 +193,6 @@ bool frame::can_be_deoptimized() const {
 void frame::deoptimize(JavaThread* thread) {
   // This is a fix for register window patching race
   if (NeedsDeoptSuspend && Thread::current() != thread) {
-
     // It is possible especially with DeoptimizeALot/DeoptimizeRandom that
     // we could see the frame again and ask for it to be deoptimized since
     // it might move for a long time. That is harmless and we just ignore it.
@@ -383,7 +381,6 @@ const char* frame::print_name() const {
 }
 
 void frame::print_value_on(outputStream* st, JavaThread *thread) const {
-
   st->print("%s frame (sp=" INTPTR_FORMAT " unextended sp=" INTPTR_FORMAT, print_name(), p2i(sp()), p2i(unextended_sp()));
   if (sp() != NULL)
     st->print(", fp=" INTPTR_FORMAT ", real_fp=" INTPTR_FORMAT ", pc=" INTPTR_FORMAT,
@@ -794,7 +791,6 @@ class CompiledArgumentOopFinder: public SignatureInfo {
  public:
   CompiledArgumentOopFinder(Symbol* signature, bool has_receiver, bool has_appendix, OopClosure* f, frame fr,  const RegisterMap* reg_map)
     : SignatureInfo(signature) {
-
     // initialize CompiledArgumentOopFinder
     _f         = f;
     _offset    = 0;

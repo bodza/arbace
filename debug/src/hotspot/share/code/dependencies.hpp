@@ -32,7 +32,6 @@ class ciEnv;
 class nmethod;
 class OopRecorder;
 class xmlStream;
-class CompileLog;
 class DepChange;
 class   KlassDepChange;
 class   CallSiteDepChange;
@@ -265,9 +264,6 @@ class Dependencies: public ResourceObj {
   // State for making a new set of dependencies:
   OopRecorder* _oop_recorder;
 
-  // Logging support
-  CompileLog* _log;
-
   address  _content_bytes;  // everything but the oop references, encoded
   size_t   _size_in_bytes;
 
@@ -276,7 +272,7 @@ class Dependencies: public ResourceObj {
   Dependencies(ciEnv* env) {
     initialize(env);
   }
-  Dependencies(Arena* arena, OopRecorder* oop_recorder, CompileLog* log);
+  Dependencies(Arena* arena, OopRecorder* oop_recorder);
 
  private:
   // Check for a valid context type.
@@ -396,40 +392,10 @@ class Dependencies: public ResourceObj {
   }
 
   OopRecorder* oop_recorder() { return _oop_recorder; }
-  CompileLog*  log()          { return _log; }
 
   void copy_to(nmethod* nm);
 
   DepType validate_dependencies(CompileTask* task, bool counter_changed, char** failure_detail = NULL);
-
-  void log_all_dependencies();
-
-  void log_dependency(DepType dept, GrowableArray<ciBaseObject*>* args) {
-    ResourceMark rm;
-    int argslen = args->length();
-    write_dependency_to(log(), dept, args);
-    guarantee(argslen == args->length(), "args array cannot grow inside nested ResoureMark scope");
-  }
-
-  void log_dependency(DepType dept,
-                      ciBaseObject* x0,
-                      ciBaseObject* x1 = NULL,
-                      ciBaseObject* x2 = NULL) {
-    if (log() == NULL) {
-      return;
-    }
-    ResourceMark rm;
-    GrowableArray<ciBaseObject*>* ciargs = new GrowableArray<ciBaseObject*>(dep_args(dept));
-    ciargs->push(x0);
-
-    if (x1 != NULL) {
-      ciargs->push(x1);
-    }
-    if (x2 != NULL) {
-      ciargs->push(x2);
-    }
-    log_dependency(dept, ciargs);
-  }
 
   class DepArgument : public ResourceObj {
    private:
@@ -441,27 +407,21 @@ class Dependencies: public ResourceObj {
     DepArgument(oop v): _is_oop(true), _value(v), _valid(true) { }
     DepArgument(Metadata* v): _is_oop(false), _value(v), _valid(true) { }
 
-    bool is_null() const               { return _value == NULL; }
-    bool is_oop() const                { return _is_oop; }
-    bool is_metadata() const           { return !_is_oop; }
-    bool is_klass() const              { return is_metadata() && metadata_value()->is_klass(); }
-    bool is_method() const              { return is_metadata() && metadata_value()->is_method(); }
+    bool is_null() const             { return _value == NULL; }
+    bool is_oop() const              { return _is_oop; }
+    bool is_metadata() const         { return !_is_oop; }
+    bool is_klass() const            { return is_metadata() && metadata_value()->is_klass(); }
+    bool is_method() const           { return is_metadata() && metadata_value()->is_method(); }
 
-    oop oop_value() const              { return (oop) _value; }
+    oop oop_value() const            { return (oop) _value; }
     Metadata* metadata_value() const { return (Metadata*) _value; }
   };
-
-  static void print_dependency(DepType dept, GrowableArray<DepArgument>* args, Klass* witness = NULL, outputStream* st = tty);
 
  private:
   // helper for encoding common context types as zero:
   static ciKlass* ctxk_encoded_as_null(DepType dept, ciBaseObject* x);
-
   static Klass* ctxk_encoded_as_null(DepType dept, Metadata* x);
 
-  static void write_dependency_to(CompileLog* log, DepType dept, GrowableArray<ciBaseObject*>* args, Klass* witness = NULL);
-  static void write_dependency_to(CompileLog* log, DepType dept, GrowableArray<DepArgument>* args, Klass* witness = NULL);
-  static void write_dependency_to(xmlStream* xtty, DepType dept, GrowableArray<DepArgument>* args, Klass* witness = NULL);
  public:
   // Use this to iterate over an nmethod's dependency set.
   // Works on new and old dependency sets.
@@ -542,12 +502,6 @@ class Dependencies: public ResourceObj {
     // A lighter version:  Checks only around recent changes in a class
     // hierarchy.  (See Universe::flush_dependents_on.)
     Klass* spot_check_dependency_at(DepChange& changes);
-
-    // Log the current dependency to xtty or compilation log.
-    void log_dependency(Klass* witness = NULL);
-
-    // Print the current dependency to tty.
-    void print_dependency(Klass* witness = NULL, bool verbose = false, outputStream* st = tty);
   };
   friend class Dependencies::DepStream;
 };
@@ -585,12 +539,8 @@ class DepChange : public StackObj {
   virtual void mark_for_deoptimization(nmethod* nm) = 0;
 
   // Subclass casting with assertions.
-  KlassDepChange*    as_klass_change() {
-    return (KlassDepChange*) this;
-  }
-  CallSiteDepChange* as_call_site_change() {
-    return (CallSiteDepChange*) this;
-  }
+  KlassDepChange* as_klass_change()        { return (KlassDepChange*) this; }
+  CallSiteDepChange* as_call_site_change() { return (CallSiteDepChange*) this; }
 
   void print();
 

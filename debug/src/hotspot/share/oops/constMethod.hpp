@@ -203,12 +203,8 @@ private:
   u2                _orig_method_idnum;          // Original unique identification number for the method
 
   // Constructor
-  ConstMethod(int byte_code_size,
-              InlineTableSizes* sizes,
-              MethodType is_overpass,
-              int size);
+  ConstMethod(int byte_code_size, InlineTableSizes* sizes, MethodType is_overpass, int size);
 public:
-
   static ConstMethod* allocate(ClassLoaderData* loader_data, int byte_code_size, InlineTableSizes* sizes, MethodType mt, TRAPS);
 
   bool is_constMethod() const { return true; }
@@ -281,7 +277,7 @@ public:
     _fingerprint = initval;
   }
 
-  uint64_t fingerprint() const                   {
+  uint64_t fingerprint() const {
     // Since reads aren't atomic for 64 bits, if any of the high or low order
     // word is the initial value, return 0.  See init_fingerprint for initval.
     uint high_fp = (uint)(_fingerprint >> 32);
@@ -298,22 +294,22 @@ public:
   }
 
   // name
-  int name_index() const                         { return _name_index; }
-  void set_name_index(int index)                 { _name_index = index; }
+  int name_index() const              { return _name_index; }
+  void set_name_index(int index)      { _name_index = index; }
 
   // signature
-  int signature_index() const                    { return _signature_index; }
-  void set_signature_index(int index)            { _signature_index = index; }
+  int signature_index() const         { return _signature_index; }
+  void set_signature_index(int index) { _signature_index = index; }
 
   // generics support
-  int generic_signature_index() const            {
+  int generic_signature_index() const {
     if (has_generic_signature()) {
       return *generic_signature_index_addr();
     } else {
       return 0;
     }
   }
-  void set_generic_signature_index(u2 index)    {
+  void set_generic_signature_index(u2 index) {
     u2* addr = generic_signature_index_addr();
     *addr = index;
   }
@@ -382,7 +378,7 @@ public:
     { return (_flags & _has_default_annotations) != 0; }
 
   AnnotationArray** method_annotations_addr() const;
-  AnnotationArray* method_annotations() const  {
+  AnnotationArray* method_annotations() const {
     return has_method_annotations() ? *(method_annotations_addr()) : NULL;
   }
   void set_method_annotations(AnnotationArray* anno) {
@@ -422,7 +418,7 @@ public:
   void copy_annotations_from(ClassLoaderData* loader_data, ConstMethod* cm, TRAPS);
 
   // byte codes
-  void    set_code(address code) {
+  void set_code(address code) {
     if (code_size() > 0) {
       memcpy(code_base(), code, code_size());
     }

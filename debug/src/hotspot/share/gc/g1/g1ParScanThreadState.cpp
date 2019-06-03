@@ -87,7 +87,6 @@ void G1ParScanThreadState::trim_queue() {
 }
 
 HeapWord* G1ParScanThreadState::allocate_in_next_plab(InCSetState const state, InCSetState* dest, size_t word_sz, bool previous_plab_refill_failed) {
-
   // Right now we only have two types of regions (young / old) so
   // let's keep the logic here simple. We can generalize it when necessary.
   if (dest->is_young()) {
@@ -247,7 +246,6 @@ const size_t* G1ParScanThreadStateSet::surviving_young_words() const {
 }
 
 void G1ParScanThreadStateSet::flush() {
-
   for (uint worker_index = 0; worker_index < _n_workers; ++worker_index) {
     G1ParScanThreadState* pss = _states[worker_index];
 
@@ -263,7 +261,6 @@ void G1ParScanThreadStateSet::flush() {
 }
 
 oop G1ParScanThreadState::handle_evacuation_failure_par(oop old, markOop m) {
-
   oop forward_ptr = old->forward_to_atomic(old, memory_order_relaxed);
   if (forward_ptr == NULL) {
     // Forward-to-self succeeded. We are the "owner" of the object.
@@ -271,7 +268,6 @@ oop G1ParScanThreadState::handle_evacuation_failure_par(oop old, markOop m) {
 
     if (!r->evacuation_failed()) {
       r->set_evacuation_failed(true);
-     _g1h->hr_printer()->evac_failure(r);
     }
 
     _g1h->preserve_mark_during_evac_failure(_worker_id, old, m);

@@ -22,7 +22,6 @@
 #define PerfWrapper(arg) /* Unimplemented at this time */
 
 static char* jstr_to_utf(JNIEnv *env, jstring str, TRAPS) {
-
   char* utfstr = NULL;
 
   if (str == NULL) {
@@ -195,7 +194,6 @@ PERF_ENTRY(jobject, Perf_CreateByteArray(JNIEnv *env, jobject perf, jstring name
   PerfByteArray* pbv = NULL;
 
   if (units == PerfData::U_String) {
-
     if (variability == PerfData::V_Constant) {
       // create the string constant
       pbv = PerfDataManager::create_string_constant(NULL_NS, (char*)name_utf, (char*)value_local, CHECK_NULL);
@@ -249,7 +247,6 @@ PERF_END
 #define CBA_ARGS    CC "(" JLS "II[BI)" BB
 
 static JNINativeMethod perfmethods[] = {
-
   { CC "attach",              CC "(" JLS "II)" BB, FN_PTR(Perf_Attach)},
   { CC "detach",              CC "(" BB ")V",      FN_PTR(Perf_Detach)},
   { CC "createLong",          CL_ARGS,             FN_PTR(Perf_CreateLong)},

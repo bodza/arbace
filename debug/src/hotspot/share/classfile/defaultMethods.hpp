@@ -11,7 +11,6 @@ class Method;
 
 class DefaultMethods : AllStatic {
  public:
-
   // Analyzes class and determines which default methods are inherited
   // from interfaces (and has no other implementation).  For each method
   // (and each different signature the method could have), create an

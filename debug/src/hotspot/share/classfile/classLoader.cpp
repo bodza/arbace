@@ -15,9 +15,6 @@
 #include "compiler/compileBroker.hpp"
 #include "interpreter/bytecodeStream.hpp"
 #include "interpreter/oopMapCache.hpp"
-#include "logging/log.hpp"
-#include "logging/logStream.hpp"
-#include "logging/logTag.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/filemap.hpp"
 #include "memory/oopFactory.hpp"
@@ -234,10 +231,7 @@ ClassFileStream* ClassPathDirEntry::open_stream(const char* name, TRAPS) {
         }
         FREE_RESOURCE_ARRAY(char, path, path_len);
         // Resource allocated
-        return new ClassFileStream(buffer,
-                                   st.st_size,
-                                   _dir,
-                                   ClassFileStream::verify);
+        return new ClassFileStream(buffer, st.st_size, _dir);
       }
     }
   }
@@ -303,10 +297,7 @@ ClassFileStream* ClassPathZipEntry::open_stream(const char* name, TRAPS) {
     ClassLoader::perf_sys_classfile_bytes_read()->inc(filesize);
   }
   // Resource allocated
-  return new ClassFileStream(buffer,
-                             filesize,
-                             _zip_name,
-                             ClassFileStream::verify);
+  return new ClassFileStream(buffer, filesize, _zip_name);
 }
 
 // invoke function for each entry in the zip file
@@ -348,28 +339,7 @@ void ModuleClassPathList::add_to_list(ClassPathEntry* new_entry) {
   }
 }
 
-void ClassLoader::trace_class_path(const char* msg, const char* name) {
-  LogTarget(Info, class, path) lt;
-  if (lt.is_enabled()) {
-    LogStream ls(lt);
-    if (msg) {
-      ls.print("%s", msg);
-    }
-    if (name) {
-      if (strlen(name) < 256) {
-        ls.print("%s", name);
-      } else {
-        // For very long paths, we need to print each character separately,
-        // as print_cr() has a length limit
-        while (name[0] != '\0') {
-          ls.print("%c", name[0]);
-          name++;
-        }
-      }
-    }
-    ls.cr();
-  }
-}
+void ClassLoader::trace_class_path(const char* msg, const char* name) { }
 
 void ClassLoader::setup_bootstrap_search_path() {
   const char* sys_class_path = Arguments::get_sysclasspath();
@@ -497,7 +467,6 @@ void ClassLoader::setup_boot_search_path(const char *class_path) {
 // During an exploded modules build, each module defined to the boot loader
 // will be added to the ClassLoader::_exploded_entries array.
 void ClassLoader::add_to_exploded_build_list(Symbol* module_sym, TRAPS) {
-
   // Find the module's symbol
   ResourceMark rm(THREAD);
   const char *module_name = module_sym->as_C_string();
@@ -768,7 +737,6 @@ int ClassLoader::crc32(int crc, const char* buf, int len) {
 // classes are loaded by the boot loader) that at least one of the package's
 // classes has been loaded.
 bool ClassLoader::add_package(const char *fullq_class_name, s2 classpath_index, TRAPS) {
-
   // Get package name from fully qualified class name.
   ResourceMark rm;
   const char *cp = package_from_name(fullq_class_name);
@@ -843,7 +811,6 @@ objArrayOop ClassLoader::get_system_packages(TRAPS) {
 // caller needs ResourceMark
 const char* ClassLoader::file_name_for_class_name(const char* class_name,
                                                   int class_name_len) {
-
   static const char class_suffix[] = ".class";
 
   char* const file_name = NEW_RESOURCE_ARRAY(char, class_name_len + sizeof(class_suffix)); // includes term NULL
@@ -919,7 +886,6 @@ ClassFileStream* ClassLoader::search_module_entries(const GrowableArray<ModuleCl
 
 // Called by the boot classloader to load classes
 InstanceKlass* ClassLoader::load_class(Symbol* name, bool search_append_only, TRAPS) {
-
   ResourceMark rm(THREAD);
   HandleMark hm(THREAD);
 
@@ -1186,7 +1152,7 @@ void PerfClassTraceTime::initialize() {
 
   // stop the current active thread-local timer to measure inclusive time
   _prev_active_event = -1;
-  for (int i=0; i < EVENT_TYPE_COUNT; i++) {
+  for (int i = 0; i < EVENT_TYPE_COUNT; i++) {
      if (_timers[i].is_active()) {
        _prev_active_event = i;
        _timers[i].stop();

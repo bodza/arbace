@@ -37,7 +37,6 @@ private:
   static bool _shared_string_mapped;
   static bool _alt_hash;
 private:
-
    // Set if one bucket is out of balance due to hash algorithm deficiency
   StringTableHash* _local_table;
   size_t _current_size;

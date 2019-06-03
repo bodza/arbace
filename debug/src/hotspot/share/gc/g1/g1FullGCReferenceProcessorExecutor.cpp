@@ -5,7 +5,6 @@
 #include "gc/g1/g1FullGCMarker.hpp"
 #include "gc/g1/g1FullGCOopClosures.inline.hpp"
 #include "gc/g1/g1FullGCReferenceProcessorExecutor.hpp"
-#include "gc/shared/gcTraceTime.inline.hpp"
 #include "gc/shared/referenceProcessor.hpp"
 #include "gc/shared/referenceProcessorPhaseTimes.hpp"
 #include "memory/iterator.inline.hpp"
@@ -55,7 +54,6 @@ void G1FullGCReferenceProcessingExecutor::execute(ProcessTask& proc_task, uint e
 }
 
 void G1FullGCReferenceProcessingExecutor::execute(STWGCTimer* timer, G1FullGCTracer* tracer) {
-  GCTraceTime(Debug, gc, phases) debug("Phase 1: Reference Processing", timer);
   // Process reference objects found during marking.
   G1FullGCMarker* marker = _collector->marker(0);
   G1IsAliveClosure is_alive(_collector->mark_bitmap());

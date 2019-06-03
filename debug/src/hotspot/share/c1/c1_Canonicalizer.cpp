@@ -209,14 +209,12 @@ void Canonicalizer::do_ArrayLength(ArrayLength* x) {
     if (na->length() != NULL && (length = na->length()->as_Constant()) != NULL) {
       set_constant(length->type()->as_IntConstant()->value());
     }
-
   } else if ((ct = x->array()->as_Constant()) != NULL) {
     // Constant arrays have constant lengths.
     ArrayConstant* cnst = ct->type()->as_ArrayConstant();
     if (cnst != NULL) {
       set_constant(cnst->value()->length());
     }
-
   } else if ((lf = x->array()->as_LoadField()) != NULL) {
     ciField* field = lf->field();
     if (field->is_static_constant()) {
@@ -429,7 +427,7 @@ void Canonicalizer::do_IfOp(IfOp* x) {
 
 void Canonicalizer::do_Intrinsic(Intrinsic* x) {
   switch (x->id()) {
-  case vmIntrinsics::_floatToRawIntBits   : {
+  case vmIntrinsics::_floatToRawIntBits: {
     FloatConstant* c = x->argument_at(0)->type()->as_FloatConstant();
     if (c != NULL) {
       JavaValue v;
@@ -438,7 +436,7 @@ void Canonicalizer::do_Intrinsic(Intrinsic* x) {
     }
     break;
   }
-  case vmIntrinsics::_intBitsToFloat      : {
+  case vmIntrinsics::_intBitsToFloat: {
     IntConstant* c = x->argument_at(0)->type()->as_IntConstant();
     if (c != NULL) {
       JavaValue v;
@@ -456,7 +454,7 @@ void Canonicalizer::do_Intrinsic(Intrinsic* x) {
     }
     break;
   }
-  case vmIntrinsics::_longBitsToDouble    : {
+  case vmIntrinsics::_longBitsToDouble: {
     LongConstant* c = x->argument_at(0)->type()->as_LongConstant();
     if (c != NULL) {
       JavaValue v;
@@ -465,8 +463,7 @@ void Canonicalizer::do_Intrinsic(Intrinsic* x) {
     }
     break;
   }
-  case vmIntrinsics::_isInstance          : {
-
+  case vmIntrinsics::_isInstance: {
     InstanceConstant* c = x->argument_at(0)->type()->as_InstanceConstant();
     if (c != NULL && !c->value()->is_null_object()) {
       // ciInstance::java_mirror_type() returns non-NULL only for Java mirrors
@@ -485,8 +482,7 @@ void Canonicalizer::do_Intrinsic(Intrinsic* x) {
     }
     break;
   }
-  case vmIntrinsics::_isPrimitive        : {
-
+  case vmIntrinsics::_isPrimitive: {
     // Class.isPrimitive is known on constant classes:
     InstanceConstant* c = x->argument_at(0)->type()->as_InstanceConstant();
     if (c != NULL && !c->value()->is_null_object()) {
@@ -886,7 +882,7 @@ static bool match_index_and_scale(Instruction* instr, Instruction** index, int* 
   return false;
 }
 
-static bool match(UnsafeRawOp* x, Instruction** base, Instruction** index, int*          log2_scale) {
+static bool match(UnsafeRawOp* x, Instruction** base, Instruction** index, int* log2_scale) {
   ArithmeticOp* root = x->base()->as_ArithmeticOp();
   if (root == NULL) return false;
   // Limit ourselves to addition for now

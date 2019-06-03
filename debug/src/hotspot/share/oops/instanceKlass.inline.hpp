@@ -115,7 +115,6 @@ ALWAYSINLINE int InstanceKlass::oop_oop_iterate(oop obj, OopClosureType* closure
 
 template <typename T, class OopClosureType>
 ALWAYSINLINE int InstanceKlass::oop_oop_iterate_reverse(oop obj, OopClosureType* closure) {
-
   oop_oop_iterate_oop_maps_reverse<T>(obj, closure);
 
   return size_helper();

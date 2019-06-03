@@ -9,9 +9,7 @@
 #include "gc/g1/g1FullGCPrepareTask.hpp"
 #include "gc/g1/g1HotCardCache.hpp"
 #include "gc/g1/heapRegion.inline.hpp"
-#include "gc/shared/gcTraceTime.inline.hpp"
 #include "gc/shared/referenceProcessor.hpp"
-#include "logging/log.hpp"
 #include "memory/iterator.inline.hpp"
 #include "oops/oop.inline.hpp"
 #include "utilities/ticks.hpp"
@@ -136,7 +134,6 @@ void G1FullGCPrepareTask::G1CalculatePointersClosure::prepare_for_compaction(Hea
 }
 
 void G1FullGCPrepareTask::prepare_serial_compaction() {
-  GCTraceTime(Debug, gc, phases) debug("Phase 2: Prepare Serial Compaction", collector()->scope()->timer());
   // At this point we know that no regions were completely freed by
   // the parallel compaction. That means that the last region of
   // all compaction queues still have data in them. We try to compact

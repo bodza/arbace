@@ -32,7 +32,6 @@ bool is_power_of_2_t(T x) {
 
 template <typename T, typename A>
 inline T align_up(T size, A alignment) {
-
   T ret = align_up_(size, alignment);
 
   return ret;
@@ -40,7 +39,6 @@ inline T align_up(T size, A alignment) {
 
 template <typename T, typename A>
 inline T align_down(T size, A alignment) {
-
   T ret = align_down_(size, alignment);
 
   return ret;
@@ -48,7 +46,6 @@ inline T align_down(T size, A alignment) {
 
 template <typename T, typename A>
 inline bool is_aligned(T size, A alignment) {
-
   return is_aligned_(size, alignment);
 }
 

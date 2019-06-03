@@ -5,7 +5,6 @@
 #include "compiler/compileBroker.hpp"
 #include "compiler/disassembler.hpp"
 #include "gc/shared/gcConfig.hpp"
-#include "logging/logConfiguration.hpp"
 #include "memory/resourceArea.hpp"
 #include "prims/whitebox.hpp"
 #include "runtime/arguments.hpp"
@@ -149,7 +148,6 @@ void VMError::print_stack_trace(outputStream* st, JavaThread* jt, char* buf, int
 }
 
 void VMError::print_native_stack(outputStream* st, frame fr, Thread* t, char* buf, int buf_size) {
-
   // see if it's a valid frame
   if (fr.pc()) {
     st->print_cr("Native frames: (J=compiled Java code, A=aot compiled Java code, j=interpreted, Vv=VM code, C=native code)");
@@ -327,7 +325,6 @@ jlong VMError::get_step_start_time() {
 }
 
 void VMError::report(outputStream* st, bool _verbose) {
-
 # define BEGIN if (_current_step == 0) { _current_step = __LINE__;
 # define STEP(s) } if (_current_step < __LINE__) { _current_step = __LINE__; _current_step_info = s; \
   record_step_start_time(); _step_did_timeout = false;
@@ -798,13 +795,6 @@ void VMError::report(outputStream* st, bool _verbose) {
        st->cr();
      }
 
-  STEP("printing log configuration")
-    if (_verbose) {
-      st->print_cr("Logging:");
-      LogConfiguration::describe_current_configuration(st);
-      st->cr();
-    }
-
   STEP("printing all environment variables")
 
      if (_verbose) {
@@ -877,7 +867,6 @@ void VMError::report(outputStream* st, bool _verbose) {
 // crash and thread specific information.  If output is added above, it should be added
 // here also, if it is safe to call during a running process.
 void VMError::print_vm_info(outputStream* st) {
-
   char buf[O_BUFLEN];
   report_vm_version(st, buf, sizeof(buf));
 
@@ -975,11 +964,6 @@ void VMError::print_vm_info(outputStream* st) {
     st->print_cr("Unsupported internal testing APIs have been used.");
     st->cr();
   }
-
-  // STEP("printing log configuration")
-  st->print_cr("Logging:");
-  LogConfiguration::describe(st);
-  st->cr();
 
   // STEP("printing all environment variables")
 
@@ -1157,7 +1141,6 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
   }
   intptr_t mytid = os::current_thread_id();
   if (first_error_tid == -1 && Atomic::cmpxchg(mytid, &first_error_tid, (intptr_t)-1) == -1) {
-
     // Initialize time stamps to use the same base.
     out.time_stamp().update_to(1);
     log.time_stamp().update_to(1);
@@ -1188,7 +1171,6 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
       e.set_reason("VM Error");
       e.commit();
     }
-
   } else {
     // If UseOsErrorReporting we call this for each level of the call stack
     // while searching for the exception handler.  Only the first level needs
@@ -1204,7 +1186,6 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
 
       // error reporting is not MT-safe, block current thread
       os::infinite_sleep();
-
     } else {
       if (recursive_error_count++ > 30) {
         out.print_raw_cr("[Too many errors, abort]");
@@ -1435,7 +1416,6 @@ void VMError::report_java_out_of_memory(const char* message) {
 // timeout or the whole of error reporting hit ErrorLogTimeout). Interrupt
 // the reporting thread if that is the case.
 bool VMError::check_timeout() {
-
   if (ErrorLogTimeout == 0) {
     return false;
   }

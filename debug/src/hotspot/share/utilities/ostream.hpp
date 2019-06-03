@@ -146,7 +146,7 @@ class ttyUnlocker: StackObj {
  private:
   bool _was_locked;
  public:
-  ttyUnlocker()  {
+  ttyUnlocker() {
     _was_locked = ttyLocker::release_tty_if_locked();
   }
   ~ttyUnlocker() {

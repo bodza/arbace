@@ -113,7 +113,6 @@ class ClassLoader: AllStatic {
     APP_LOADER  = 3       /* AppClassLoader */
   };
  protected:
-
   // Performance counters
   static PerfCounter* _perf_accumulated_time;
   static PerfCounter* _perf_classes_inited;
@@ -195,7 +194,6 @@ class ClassLoader: AllStatic {
   static ClassPathEntry* create_class_path_entry(const char *path, const struct stat* st, bool throw_exception, bool is_boot_append, TRAPS);
 
  public:
-
   // If the package for the fully qualified class name is in the boot
   // loader's package entry table then add_package() sets the classpath_index
   // field so that get_system_package() will know to return a non-null value
@@ -386,7 +384,6 @@ class PerfClassTraceTime {
   int              _prev_active_event;
 
  public:
-
   inline PerfClassTraceTime(PerfLongCounter* timep,     /* counter incremented with inclusive time */
                             PerfLongCounter* selftimep, /* counter incremented with exclusive time */
                             PerfLongCounter* eventp,    /* event counter */

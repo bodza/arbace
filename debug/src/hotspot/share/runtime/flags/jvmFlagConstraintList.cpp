@@ -277,7 +277,7 @@ void JVMFlagConstraintList::init(void) {
 
 JVMFlagConstraint* JVMFlagConstraintList::find(const char* name) {
   JVMFlagConstraint* found = NULL;
-  for (int i=0; i<length(); i++) {
+  for (int i = 0; i<length(); i++) {
     JVMFlagConstraint* constraint = at(i);
     if (strcmp(constraint->name(), name) == 0) {
       found = constraint;
@@ -303,7 +303,7 @@ bool JVMFlagConstraintList::check_constraints(JVMFlagConstraint::ConstraintType 
   _validating_type = type;
 
   bool status = true;
-  for (int i=0; i<length(); i++) {
+  for (int i = 0; i<length(); i++) {
     JVMFlagConstraint* constraint = at(i);
     if (type != constraint->type()) continue;
     if (constraint->apply(true) != JVMFlag::SUCCESS) status = false;

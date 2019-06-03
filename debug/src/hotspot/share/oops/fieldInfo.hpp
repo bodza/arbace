@@ -64,10 +64,7 @@ class FieldInfo {
     return ((FieldInfo*)(fields + index * field_slots));
   }
 
-  void initialize(u2 access_flags,
-                  u2 name_index,
-                  u2 signature_index,
-                  u2 initval_index) {
+  void initialize(u2 access_flags, u2 name_index, u2 signature_index, u2 initval_index) {
     _shorts[access_flags_offset] = access_flags;
     _shorts[name_index_offset] = name_index;
     _shorts[signature_index_offset] = signature_index;
@@ -142,8 +139,8 @@ class FieldInfo {
     return cp->symbol_at(index);
   }
 
-  void set_access_flags(u2 val)                  { _shorts[access_flags_offset] = val; }
-  void set_offset(u4 val)                        {
+  void set_access_flags(u2 val) { _shorts[access_flags_offset] = val; }
+  void set_offset(u4 val)       {
     val = val << FIELDINFO_TAG_SIZE; // make room for tag
     _shorts[low_packed_offset] = extract_low_short_from_int(val) | FIELDINFO_TAG_OFFSET;
     _shorts[high_packed_offset] = extract_high_short_from_int(val);

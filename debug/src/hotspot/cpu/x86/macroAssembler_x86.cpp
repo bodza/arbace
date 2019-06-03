@@ -95,7 +95,6 @@ void MacroAssembler::call_VM_leaf_base(address entry_point, int num_args) {
 }
 
 void MacroAssembler::cmp64(Register src1, AddressLiteral src2) {
-
   if (reachable(src2)) {
     cmpq(src1, as_Address(src2));
   } else {
@@ -499,7 +498,7 @@ void MacroAssembler::bang_stack_size(Register size, Register tmp) {
   // Bang down shadow pages too.
   // At this point, (tmp-0) is the last address touched, so don't
   // touch it again.  (It was touched as (tmp-pagesize) but then tmp
-  // was post-decremented.)  Skip this address by starting at i=1, and
+  // was post-decremented.)  Skip this address by starting at i = 1, and
   // touch a few more pages below.  N.B.  It is important to touch all
   // the way down including all pages in the shadow zone.
   for (int i = 1; i < ((int)JavaThread::stack_shadow_zone_size() / os::vm_page_size()); i++) {
@@ -674,7 +673,6 @@ int MacroAssembler::biased_locking_enter(Register lock_reg, Register obj_reg, Re
 }
 
 void MacroAssembler::biased_locking_exit(Register obj_reg, Register temp_reg, Label& done) {
-
   // Check for biased locking unlock case, which is a no-op
   // Note: we do not have to check the thread ID for two reasons.
   // First, the interpreter checks for IllegalMonitorStateException at
@@ -791,7 +789,6 @@ void MacroAssembler::call_VM(Register oop_result, Register last_java_sp, address
 }
 
 void MacroAssembler::call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1, Register arg_2, bool check_exceptions) {
-
   pass_arg2(this, arg_2);
   pass_arg1(this, arg_1);
   call_VM(oop_result, last_java_sp, entry_point, 2, check_exceptions);
@@ -878,7 +875,6 @@ void MacroAssembler::call_VM_base(Register oop_result, Register java_thread, Reg
 }
 
 void MacroAssembler::call_VM_helper(Register oop_result, address entry_point, int number_of_arguments, bool check_exceptions) {
-
   // Calculate the value for last_Java_sp
   // somewhat subtle. call_VM does an intermediate call
   // which places a return address on the stack just under the
@@ -910,7 +906,6 @@ void MacroAssembler::call_VM_leaf(address entry_point, Register arg_0) {
 }
 
 void MacroAssembler::call_VM_leaf(address entry_point, Register arg_0, Register arg_1) {
-
   pass_arg1(this, arg_1);
   pass_arg0(this, arg_0);
   call_VM_leaf(entry_point, 2);
@@ -929,7 +924,6 @@ void MacroAssembler::super_call_VM_leaf(address entry_point, Register arg_0) {
 }
 
 void MacroAssembler::super_call_VM_leaf(address entry_point, Register arg_0, Register arg_1) {
-
   pass_arg1(this, arg_1);
   pass_arg0(this, arg_0);
   MacroAssembler::call_VM_leaf_base(entry_point, 2);
@@ -1544,7 +1538,7 @@ int MacroAssembler::load_unsigned_byte(Register dst, Address src) {
   // According to Intel Doc. AP-526, "Zero-Extension of Short", p.16,
   // and "3.9 Partial Register Penalties", p. 22).
   int off;
-  if (true ||  VM_Version::is_P6() || src.uses(dst)) {
+  if (true || VM_Version::is_P6() || src.uses(dst)) {
     off = offset();
     movzbl(dst, src); // movzxb
   } else {
@@ -2370,7 +2364,6 @@ void MacroAssembler::vxorps(XMMRegister dst, XMMRegister nds, AddressLiteral src
 
 void MacroAssembler::clear_jweak_tag(Register possibly_jweak) {
   const int32_t inverted_jweak_mask = ~static_cast<int32_t>(JNIHandles::weak_tag_mask);
-  STATIC_ASSERT(inverted_jweak_mask == -2); // otherwise check this code
   // The inverted mask is sign-extended
   andptr(possibly_jweak, inverted_jweak_mask);
 }
@@ -2917,7 +2910,7 @@ class FPU_Register {
   int32_t _m1;
   int16_t _ex;
 
-  bool is_indefinite() const           {
+  bool is_indefinite() const {
     return _ex == -1 && _m1 == (int32_t)0xC0000000 && _m0 == 0;
   }
 
@@ -3470,7 +3463,6 @@ void MacroAssembler::reinit_heapbase() {
 
 // C2 compiled method's prolog code.
 void MacroAssembler::verified_entry(int framesize, int stack_bang_size, bool fp_mode_24b) {
-
   // WARNING: Initial instruction MUST be 5 bytes or longer so that
   // NativeJump::patch_verified_entry will be able to patch out the entry
   // code safely. The push to verify stack depth is ok at 5 bytes,
@@ -3842,7 +3834,6 @@ void MacroAssembler::generate_fill(BasicType t, bool aligned, Register to, Regis
 }
 
 void MacroAssembler::encode_iso_array(Register src, Register dst, Register len, XMMRegister tmp1Reg, XMMRegister tmp2Reg, XMMRegister tmp3Reg, XMMRegister tmp4Reg, Register tmp5, Register result) {
-
   // rsi: src
   // rdi: dst
   // rdx: len
@@ -3892,7 +3883,6 @@ void MacroAssembler::encode_iso_array(Register src, Register dst, Register len, 
       bind(L_copy_32_chars_exit);
       subptr(len, 16);
       jccb(Assembler::greater, L_copy_16_chars_exit);
-
     } else if (UseSSE42Intrinsics) {
       movl(tmp5, 0xff00ff00);   // create mask to test for Unicode chars in vector
       movdl(tmp1Reg, tmp5);
@@ -4397,7 +4387,6 @@ void MacroAssembler::vectorized_mismatch(Register obja, Register objb, Register 
   jcc(Assembler::less, VECTOR4_TAIL);
 
   if (UseAVX >= 2) {
-
     cmpq(length, 16);
     jcc(Assembler::equal, VECTOR16_LOOP);
     jcc(Assembler::less, VECTOR8_LOOP);
@@ -4558,7 +4547,7 @@ void MacroAssembler::square_rshift(Register x, Register xlen, Register z, Regist
   // Perform square and right shift by 1
   // Handle odd xlen case first, then for even xlen do the following
   // jlong carry = 0;
-  // for (int j=0, i=0; j < xlen; j+=2, i+=4) {
+  // for (int j = 0, i = 0; j < xlen; j+=2, i+=4) {
   //     huge_128 product = x[j:j+1] * x[j:j+1];
   //     z[i:i+1] = (carry << 63) | (jlong)(product >>> 65);
   //     z[i+2:i+3] = (jlong)(product >>> 1);
@@ -4675,7 +4664,6 @@ void MacroAssembler::add_one_64(Register z, Register zlen, Register carry, Regis
  *
  */
 void MacroAssembler::lshift_by_1(Register x, Register len, Register z, Register zlen, Register tmp1, Register tmp2, Register tmp3, Register tmp4) {
-
   Label L_fifth_loop, L_fifth_loop_exit;
 
   // Fifth loop
@@ -4743,7 +4731,6 @@ void MacroAssembler::lshift_by_1(Register x, Register len, Register z, Register 
  *
  */
 void MacroAssembler::square_to_len(Register x, Register len, Register z, Register zlen, Register tmp1, Register tmp2, Register tmp3, Register tmp4, Register tmp5, Register rdxReg, Register raxReg) {
-
   Label L_second_loop, L_second_loop_exit, L_third_loop, L_third_loop_exit, fifth_loop, fifth_loop_exit, L_last_x, L_multiply;
   push(tmp1);
   push(tmp2);
@@ -4856,7 +4843,6 @@ void MacroAssembler::square_to_len(Register x, Register len, Register z, Registe
  *
  */
 void MacroAssembler::mul_add_128_x_32_loop(Register out, Register in, Register offset, Register len, Register tmp1, Register tmp2, Register tmp3, Register tmp4, Register tmp5, Register rdxReg, Register raxReg) {
-
   Label L_first_loop, L_first_loop_exit;
 
   movl(tmp1, len);
@@ -4924,7 +4910,6 @@ void MacroAssembler::mul_add_128_x_32_loop(Register out, Register in, Register o
  * Multiply the in[] by word k and add to out[], return the carry in rax
  */
 void MacroAssembler::mul_add(Register out, Register in, Register offs, Register len, Register k, Register tmp1, Register tmp2, Register tmp3, Register tmp4, Register tmp5, Register rdxReg, Register raxReg) {
-
   Label L_carry, L_last_in, L_done;
 
 // carry = 0;
@@ -5521,7 +5506,6 @@ void MacroAssembler::char_array_compress(Register src, Register dst, Register le
   if ((UseAVX > 2) && // AVX512
     VM_Version::supports_avx512vlbw() &&
     VM_Version::supports_bmi2()) {
-
     Label copy_32_loop, copy_loop_tail, below_threshold;
 
     // alignment
@@ -5714,7 +5698,6 @@ void MacroAssembler::byte_array_inflate(Register src, Register dst, Register len
   if ((UseAVX > 2) && // AVX512
     VM_Version::supports_avx512vlbw() &&
     VM_Version::supports_bmi2()) {
-
     Label copy_32_loop, copy_tail;
     Register tmp3_aliased = len;
 

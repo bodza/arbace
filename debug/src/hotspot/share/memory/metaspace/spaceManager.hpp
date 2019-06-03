@@ -14,14 +14,12 @@ class outputStream;
 class Mutex;
 
 namespace metaspace {
-
 //  SpaceManager - used by Metaspace to handle allocations
 class SpaceManager : public CHeapObj<mtClass> {
   friend class ::ClassLoaderMetaspace;
   friend class Metadebug;
 
  private:
-
   // protects allocations
   Mutex* const _lock;
 
@@ -38,7 +36,6 @@ class SpaceManager : public CHeapObj<mtClass> {
   Metachunk* _current_chunk;
 
   enum {
-
     // Maximum number of small chunks to allocate to a SpaceManager
     small_chunk_limit = 4,
 

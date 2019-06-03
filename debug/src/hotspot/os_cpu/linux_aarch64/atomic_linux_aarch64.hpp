@@ -21,10 +21,7 @@ struct Atomic::PlatformAdd
 
 template<size_t byte_size>
 template<typename T>
-inline T Atomic::PlatformXchg<byte_size>::operator()(T exchange_value,
-                                                     T volatile* dest,
-                                                     atomic_memory_order order) const {
-  STATIC_ASSERT(byte_size == sizeof(T));
+inline T Atomic::PlatformXchg<byte_size>::operator()(T exchange_value, T volatile* dest, atomic_memory_order order) const {
   T res = __sync_lock_test_and_set(dest, exchange_value);
   FULL_MEM_BARRIER;
   return res;
@@ -32,15 +29,10 @@ inline T Atomic::PlatformXchg<byte_size>::operator()(T exchange_value,
 
 template<size_t byte_size>
 template<typename T>
-inline T Atomic::PlatformCmpxchg<byte_size>::operator()(T exchange_value,
-                                                        T volatile* dest,
-                                                        T compare_value,
-                                                        atomic_memory_order order) const {
-  STATIC_ASSERT(byte_size == sizeof(T));
+inline T Atomic::PlatformCmpxchg<byte_size>::operator()(T exchange_value, T volatile* dest, T compare_value, atomic_memory_order order) const {
   if (order == memory_order_relaxed) {
     T value = compare_value;
-    __atomic_compare_exchange(dest, &value, &exchange_value, /*weak*/false,
-                              __ATOMIC_RELAXED, __ATOMIC_RELAXED);
+    __atomic_compare_exchange(dest, &value, &exchange_value, /*weak*/false, __ATOMIC_RELAXED, __ATOMIC_RELAXED);
     return value;
   } else {
     return __sync_val_compare_and_swap(dest, compare_value, exchange_value);

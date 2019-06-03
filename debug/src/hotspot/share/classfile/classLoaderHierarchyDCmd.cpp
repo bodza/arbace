@@ -48,11 +48,9 @@ class BranchTracker : public StackObj {
   // - branch spacing: how many spaces between branches are printed.
 
 public:
-
   enum { max_depth = 64, twig_len = 2, branch_spacing = 5 };
 
 private:
-
   char _branches[max_depth];
   int _pos;
 
@@ -84,8 +82,7 @@ public:
       : _tr(tr)  { _tr.push(has_branch_here); }
     ~Mark() { _tr.pop(); }
   };
-
-}; // end: BranchTracker
+};
 
 struct LoadedClassInfo : public ResourceObj {
 public:
@@ -98,7 +95,6 @@ public:
 };
 
 class LoaderTreeNode : public ResourceObj {
-
   // We walk the CLDG and, for each CLD which is non-anonymous, add
   // a tree node.
   // To add a node we need its parent node; if the parent node does not yet
@@ -125,9 +121,7 @@ class LoaderTreeNode : public ResourceObj {
   // one.
   int _num_folded;
 
-  void print_with_childs(outputStream* st, BranchTracker& branchtracker,
-      bool print_classes, bool verbose) const {
-
+  void print_with_childs(outputStream* st, BranchTracker& branchtracker, bool print_classes, bool verbose) const {
     ResourceMark rm;
 
     if (_cld == NULL) {
@@ -258,7 +252,6 @@ class LoaderTreeNode : public ResourceObj {
   }
 
 public:
-
   LoaderTreeNode(const oop loader_oop)
     : _loader_oop(loader_oop), _cld(NULL), _child(NULL), _next(NULL),
       _classes(NULL), _anon_classes(NULL), _num_classes(0), _num_anon_classes(0),
@@ -368,7 +361,6 @@ public:
 };
 
 class LoaderInfoScanClosure : public CLDClosure {
-
   const bool _print_classes;
   const bool _verbose;
   LoaderTreeNode* _root;
@@ -382,7 +374,6 @@ class LoaderInfoScanClosure : public CLDClosure {
   }
 
   LoaderTreeNode* find_node_or_add_empty_node(oop loader_oop) {
-
     if (loader_oop == NULL) {
       return _root;
     }
@@ -421,7 +412,6 @@ public:
   }
 
   void do_cld (ClassLoaderData* cld) {
-
     // We do not display unloading loaders, for now.
     if (cld->is_unloading()) {
       return;

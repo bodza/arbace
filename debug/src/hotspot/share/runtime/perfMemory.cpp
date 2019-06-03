@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "jvm.h"
-#include "logging/log.hpp"
 #include "memory/allocation.inline.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/java.hpp"
@@ -32,14 +31,12 @@ PerfDataPrologue*        PerfMemory::_prologue = NULL;
 bool                     PerfMemory::_destroyed = false;
 
 void perfMemory_init() {
-
   if (!UsePerfData) return;
 
   PerfMemory::initialize();
 }
 
 void perfMemory_exit() {
-
   if (!UsePerfData) return;
   if (!PerfMemory::is_usable()) return;
 
@@ -64,7 +61,6 @@ void perfMemory_exit() {
 }
 
 void PerfMemory::initialize() {
-
   if (is_initialized())
     // initialization already performed
     return;
@@ -75,7 +71,6 @@ void PerfMemory::initialize() {
   create_memory_region(capacity);
 
   if (_start == NULL) {
-
     // the PerfMemory region could not be created as desired. Rather
     // than terminating the JVM, we revert to creating the instrumentation
     // on the C heap. When running in this mode, external monitoring
@@ -83,7 +78,6 @@ void PerfMemory::initialize() {
     //
     _prologue = NEW_C_HEAP_OBJ(PerfDataPrologue, mtInternal);
   } else {
-
     // the PerfMemory region was created as expected.
     //
     _prologue = (PerfDataPrologue *)_start;
@@ -113,11 +107,9 @@ void PerfMemory::initialize() {
 }
 
 void PerfMemory::destroy() {
-
   if (!is_usable()) return;
 
   if (_start != NULL) {
-
     // this state indicates that the contiguous memory region was successfully
     // and that persistent resources may need to be cleaned up. This is
     // expected to be the typical condition.
@@ -133,14 +125,12 @@ void PerfMemory::destroy() {
 // was aligned on a double word boundary when created.
 //
 char* PerfMemory::alloc(size_t size) {
-
   if (!UsePerfData) return NULL;
 
   MutexLocker ml(PerfDataMemAlloc_lock);
 
   // check that there is enough memory for this request
   if ((_top + size) >= _end) {
-
     _prologue->overflow += (jint)size;
 
     return NULL;

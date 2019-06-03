@@ -14,7 +14,6 @@ class StubAssembler;
 // by the Compiler1.
 
 #define RUNTIME1_STUBS(stub, last_entry) \
-  stub(dtrace_object_alloc) \
   stub(unwind_exception) \
   stub(forward_exception) \
   stub(throw_range_check_failed)       /* throws ArrayIndexOutOfBoundsException */ \

@@ -31,7 +31,6 @@ public:
   template<typename T> struct Translate : public FalseType { };
 
 private:
-
   template<typename T,
            typename U,
            bool same_size = sizeof(T) == sizeof(U),
@@ -67,7 +66,6 @@ private:
 // compared to the union trick.
 template<typename T, typename U>
 inline T PrimitiveConversions::cast_using_union(U x) {
-  STATIC_ASSERT(sizeof(T) == sizeof(U));
   union { T t; U u; };
   u = x;
   return t;
@@ -80,9 +78,7 @@ inline T PrimitiveConversions::cast_using_union(U x) {
 
 // Give an informative error if the sizes differ.
 template<typename T, typename U>
-struct PrimitiveConversions::Cast<T, U, false> {
-  STATIC_ASSERT(sizeof(T) == sizeof(U));
-};
+struct PrimitiveConversions::Cast<T, U, false> { };
 
 // Conversion between integral types.
 template<typename T, typename U>

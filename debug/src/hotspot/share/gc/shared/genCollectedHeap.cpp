@@ -16,7 +16,6 @@
 #include "gc/shared/gcLocker.hpp"
 #include "gc/shared/gcPolicyCounters.hpp"
 #include "gc/shared/gcTrace.hpp"
-#include "gc/shared/gcTraceTime.inline.hpp"
 #include "gc/shared/genCollectedHeap.hpp"
 #include "gc/shared/genOopClosures.inline.hpp"
 #include "gc/shared/generationSpec.hpp"
@@ -129,8 +128,6 @@ char* GenCollectedHeap::allocate(size_t alignment,
 
   *heap_rs = Universe::reserve_heap(total_reserved, alignment);
 
-  os::trace_page_sizes("Heap", collector_policy()->min_heap_byte_size(), total_reserved, alignment, heap_rs->base(), heap_rs->size());
-
   return heap_rs->base();
 }
 
@@ -203,7 +200,7 @@ bool GenCollectedHeap::should_try_older_generation_allocation(size_t word_size) 
   return    (word_size > heap_word_size(young_capacity)) || GCLocker::is_active_and_needs_gc() || incremental_collection_failed();
 }
 
-HeapWord* GenCollectedHeap::expand_heap_and_allocate(size_t size, bool   is_tlab) {
+HeapWord* GenCollectedHeap::expand_heap_and_allocate(size_t size, bool is_tlab) {
   HeapWord* result = NULL;
   if (_old_gen->should_allocate(size, is_tlab)) {
     result = _old_gen->expand_and_allocate(size, is_tlab);
@@ -335,9 +332,7 @@ HeapWord* GenCollectedHeap::attempt_allocation(size_t size, bool is_tlab, bool f
 }
 
 HeapWord* GenCollectedHeap::mem_allocate(size_t size, bool* gc_overhead_limit_was_exceeded) {
-  return mem_allocate_work(size,
-                           false /* is_tlab */,
-                           gc_overhead_limit_was_exceeded);
+  return mem_allocate_work(size, false /* is_tlab */, gc_overhead_limit_was_exceeded);
 }
 
 bool GenCollectedHeap::must_clear_all_soft_refs() {
@@ -346,7 +341,6 @@ bool GenCollectedHeap::must_clear_all_soft_refs() {
 
 void GenCollectedHeap::collect_generation(Generation* gen, bool full, size_t size, bool is_tlab, bool run_verification, bool clear_soft_refs, bool restore_marks_for_biased_locking) {
   FormatBuffer<> title("Collect gen: %s", gen->short_name());
-  GCTraceTime(Trace, gc, phases) t1(title);
   TraceCollectorStats tcs(gen->counters());
   TraceMemoryManagerStats tmms(gen->gc_manager(), gc_cause());
 
@@ -452,9 +446,6 @@ void GenCollectedHeap::do_collection(bool full, bool clear_all_soft_refs, size_t
       gc_string.append("Full");
     }
 
-    GCTraceCPUTime tcpu;
-    GCTraceTime(Info, gc) t(gc_string, NULL, gc_cause(), true);
-
     gc_prologue(complete);
     increment_total_collections(complete);
 
@@ -495,7 +486,6 @@ void GenCollectedHeap::do_collection(bool full, bool clear_all_soft_refs, size_t
       if (do_young_collection) {
         // We did a young GC. Need a new GC id for the old GC.
         GCIdMark gc_id_mark;
-        GCTraceTime(Info, gc) t("Pause Full", NULL, gc_cause(), true);
         collect_generation(_old_gen, full, size, is_tlab, run_verification && VerifyGCLevel <= 1, do_clear_all_soft_refs, true);
       } else {
         // No young GC done. Use the same GC id as was set up earlier in this method.
@@ -664,12 +654,10 @@ void GenCollectedHeap::process_roots(StrongRootsScope* scope, ScanningOption so,
 
   if (!_process_strong_tasks->is_task_claimed(GCH_PS_CodeCache_oops_do)) {
     if (so & SO_ScavengeCodeCache) {
-
       // We only visit parts of the CodeCache when scavenging.
       CodeCache::scavenge_root_nmethods_do(code_roots);
     }
     if (so & SO_AllCodeCache) {
-
       // CMSCollector uses this to do intermediate-strength collections.
       // We scan the entire code cache, since CodeCache::do_unloading is not called.
       CodeCache::blobs_do(code_roots);
@@ -1020,7 +1008,6 @@ class GenGCPrologueClosure: public GenCollectedHeap::GenClosure {
 };
 
 void GenCollectedHeap::gc_prologue(bool full) {
-
   // Fill TLAB's and such
   CollectedHeap::accumulate_statistics_all_tlabs();
   ensure_parsability(true);   // retire TLABs

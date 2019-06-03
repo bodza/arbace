@@ -28,7 +28,6 @@ public:
   virtual void do_oop(narrowOop* p) { do_oop_work(p); }
   virtual void do_oop(      oop* p) { do_oop_work(p); }
   template <class T> void do_oop_work(T* p) {
-
     T const o = RawAccess<>::oop_load(p);
     if (CompressedOops::is_null(o)) {
       return;
@@ -184,7 +183,6 @@ public:
   }
 
   bool do_heap_region(HeapRegion *hr) {
-
     if (_hrclaimer->claim_region(hr->hrm_index())) {
       if (hr->evacuation_failed()) {
         bool during_initial_mark = _g1h->collector_state()->in_initial_mark_gc();

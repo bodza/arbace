@@ -9,7 +9,6 @@
 class MetachunkTest;
 
 namespace metaspace {
-
 class VirtualSpaceNode;
 
 //  Metachunk - Quantum of allocation from a Virtualspace
@@ -51,7 +50,6 @@ inline bool is_valid_chunkorigin(ChunkOrigin origin) {
 }
 
 class Metachunk : public Metabase<Metachunk> {
-
   friend class ::MetachunkTest;
 
   // The VirtualSpaceNode containing this chunk.

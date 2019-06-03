@@ -3,7 +3,6 @@
 #include "jvm.h"
 #include "classfile/compactHashtable.inline.hpp"
 #include "classfile/javaClasses.hpp"
-#include "logging/logMessage.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceShared.hpp"
 #include "oops/compressedOops.inline.hpp"
@@ -19,7 +18,7 @@ CompactHashtableWriter::CompactHashtableWriter(int num_buckets, CompactHashtable
   _num_buckets = num_buckets;
   _num_entries = 0;
   _buckets = NEW_C_HEAP_ARRAY(GrowableArray<Entry>*, _num_buckets, mtSymbol);
-  for (int i=0; i<_num_buckets; i++) {
+  for (int i = 0; i<_num_buckets; i++) {
     _buckets[i] = new (ResourceObj::C_HEAP, mtSymbol) GrowableArray<Entry>(0, true, mtSymbol);
   }
 
@@ -89,7 +88,7 @@ void CompactHashtableWriter::dump_table(NumberSeq* summary) {
       // regular bucket, each entry is a symbol (hash, offset) pair
       _compact_buckets->at_put(index, BUCKET_INFO(offset, REGULAR_BUCKET_TYPE));
 
-      for (int i=0; i<bucket_size; i++) {
+      for (int i = 0; i<bucket_size; i++) {
         Entry ent = bucket->at(i);
         _compact_entries->at_put(offset++, u4(ent.hash())); // write entry hash
         _compact_entries->at_put(offset++, ent.value());
@@ -115,27 +114,7 @@ void CompactHashtableWriter::dump(SimpleCompactHashtable *cht, const char* table
 
   int table_bytes = _stats->bucket_bytes + _stats->hashentry_bytes;
   address base_address = address(MetaspaceShared::shared_rs()->base());
-  cht->init(base_address,  _num_entries, _num_buckets,
-            _compact_buckets->data(), _compact_entries->data());
-
-  LogMessage(cds, hashtables) msg;
-  if (msg.is_info()) {
-    double avg_cost = 0.0;
-    if (_num_entries > 0) {
-      avg_cost = double(table_bytes)/double(_num_entries);
-    }
-    msg.info("Shared %s table stats -------- base: " PTR_FORMAT,
-                         table_name, (intptr_t)base_address);
-    msg.info("Number of entries       : %9d", _num_entries);
-    msg.info("Total bytes used        : %9d", table_bytes);
-    msg.info("Average bytes per entry : %9.3f", avg_cost);
-    msg.info("Average bucket size     : %9.3f", summary.avg());
-    msg.info("Variance of bucket size : %9.3f", summary.variance());
-    msg.info("Std. dev. of bucket size: %9.3f", summary.sd());
-    msg.info("Empty buckets           : %9d", _num_empty_buckets);
-    msg.info("Value_Only buckets      : %9d", _num_value_only_buckets);
-    msg.info("Other buckets           : %9d", _num_other_buckets);
-  }
+  cht->init(base_address,  _num_entries, _num_buckets, _compact_buckets->data(), _compact_entries->data());
 }
 
 /////////////////////////////////////////////////////////////
@@ -178,7 +157,6 @@ void SimpleCompactHashtable::serialize(SerializeClosure* soc) {
 }
 
 bool SimpleCompactHashtable::exists(u4 value) {
-
   if (_entry_count == 0) {
     return false;
   }
@@ -410,7 +388,7 @@ jchar HashtableTextDump::unescape(const char* from, const char* end, int count) 
 
   corrupted_if(from + count > end, "Truncated");
 
-  for (int i=0; i<count; i++) {
+  for (int i = 0; i<count; i++) {
     char c = *from++;
     switch (c) {
     case '0': case '1': case '2': case '3': case '4':

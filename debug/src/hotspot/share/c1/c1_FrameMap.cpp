@@ -121,7 +121,6 @@ Register  FrameMap::_cpu_rnr2reg [FrameMap::nof_cpu_regs];
 int       FrameMap::_cpu_reg2rnr [FrameMap::nof_cpu_regs];
 
 FrameMap::FrameMap(ciMethod* method, int monitors, int reserved_argument_area_size) {
-
   _framesize = -1;
   _num_spills = -1;
 

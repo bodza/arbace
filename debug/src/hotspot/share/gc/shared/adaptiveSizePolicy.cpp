@@ -6,7 +6,6 @@
 #include "gc/shared/gcUtil.inline.hpp"
 #include "gc/shared/softRefPolicy.hpp"
 #include "gc/shared/workgroup.hpp"
-#include "logging/log.hpp"
 #include "runtime/timer.hpp"
 #include "utilities/ostream.hpp"
 
@@ -294,7 +293,6 @@ double AdaptiveSizePolicy::decaying_gc_cost() const {
     // Decay the major gc cost?
     if (time_since_last_major_gc >
         ((double) AdaptiveSizeMajorGCDecayTimeScale) * avg_major_interval) {
-
       // Decay using the time-since-last-major-gc
       decayed_major_gc_cost = decaying_major_gc_cost();
     }
@@ -314,7 +312,6 @@ void AdaptiveSizePolicy::clear_generation_free_space_flags() {
 }
 
 void AdaptiveSizePolicy::check_gc_overhead_limit(size_t young_live, size_t eden_live, size_t max_old_gen_size, size_t max_eden_size, bool is_full_gc, GCCause::Cause gc_cause, SoftRefPolicy* soft_ref_policy) {
-
   // Ignore explicit GC's.  Exiting here does not set the flag and
   // does not reset the count.  Updating of the averages for system
   // GC's is still controlled by UseAdaptiveSizePolicyWithSystemGC.

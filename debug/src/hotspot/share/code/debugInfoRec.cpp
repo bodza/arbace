@@ -41,15 +41,13 @@ public:
     _hash = hash;
   }
 
-  DIR_Chunk* find_match(GrowableArray<DIR_Chunk*>* arr,
-                        int start_index,
-                        DebugInformationRecorder* dir) {
+  DIR_Chunk* find_match(GrowableArray<DIR_Chunk*>* arr, int start_index, DebugInformationRecorder* dir) {
     int end_index = arr->length();
     int hash = this->_hash, length = this->_length;
     address buf = dir->stream()->buffer();
     for (int i = end_index; --i >= start_index; ) {
       DIR_Chunk* that = arr->at(i);
-      if (hash   == that->_hash && length == that->_length && 0 == memcmp(buf + this->_offset, buf + that->_offset, length)) {
+      if (hash == that->_hash && length == that->_length && 0 == memcmp(buf + this->_offset, buf + that->_offset, length)) {
         return that;
       }
     }
@@ -74,14 +72,7 @@ public:
   }
 };
 
-static inline bool compute_recording_non_safepoints() {
-  // If the flag is set manually, use it, whether true or false.
-  return false;
-}
-
-DebugInformationRecorder::DebugInformationRecorder(OopRecorder* oop_recorder)
-  : _recording_non_safepoints(compute_recording_non_safepoints())
-{
+DebugInformationRecorder::DebugInformationRecorder(OopRecorder* oop_recorder) {
   _pcs_size   = 100;
   _pcs        = NEW_RESOURCE_ARRAY(PcDesc, _pcs_size);
   _pcs_length = 0;
@@ -115,12 +106,10 @@ void DebugInformationRecorder::add_safepoint(int pc_offset, OopMap* map) {
 }
 
 void DebugInformationRecorder::add_non_safepoint(int pc_offset) {
-
   add_new_pc_offset(pc_offset);
 }
 
 void DebugInformationRecorder::add_new_pc_offset(int pc_offset) {
-
   // add the pcdesc
   if (_pcs_length == _pcs_size) {
     // Expand
@@ -252,26 +241,6 @@ void DebugInformationRecorder::dump_object_pool(GrowableArray<ScopeValue*>* obje
 }
 
 void DebugInformationRecorder::end_scopes(int pc_offset, bool is_safepoint) {
-
-  // Try to compress away an equivalent non-safepoint predecessor.
-  // (This only works because we have previously recognized redundant
-  // scope trees and made them use a common scope_decode_offset.)
-  if (_pcs_length >= 2 && recording_non_safepoints()) {
-    PcDesc* last = last_pc();
-    PcDesc* prev = prev_pc();
-    // If prev is (a) not a safepoint and (b) has the same
-    // stream pointer, then it can be coalesced into the last.
-    // This is valid because non-safepoints are only sought
-    // with pc_desc_near, which (when it misses prev) will
-    // search forward until it finds last.
-    // In addition, it does not matter if the last PcDesc
-    // is for a safepoint or not.
-    if (_prev_safepoint_pc < prev->pc_offset() && prev->is_same_info(last)) {
-      prev->set_pc_offset(pc_offset);
-      _pcs_length -= 1;
-    }
-  }
-
   // We have just recorded this safepoint.
   // Remember it in case the previous paragraph needs to know.
   if (is_safepoint) {

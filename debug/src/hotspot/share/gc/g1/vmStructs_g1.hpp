@@ -61,9 +61,7 @@
   declare_constant(BarrierSet::G1BarrierSet) \
   declare_constant(G1CardTable::g1_young_gen)
 
-#define VM_TYPES_G1GC(declare_type, \
-                      declare_toplevel_type, \
-                      declare_integer_type) \
+#define VM_TYPES_G1GC(declare_type, declare_toplevel_type, declare_integer_type) \
  \
   declare_toplevel_type(G1HeapRegionTable) \
  \

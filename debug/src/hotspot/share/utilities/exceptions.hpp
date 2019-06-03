@@ -187,10 +187,10 @@ class Exceptions {
 #define THREAD_AND_LOCATION                      THREAD, __FILE__, __LINE__
 
 #define THROW_OOP(e) \
-  { Exceptions::_throw_oop(THREAD_AND_LOCATION, e);                             return; }
+  { Exceptions::_throw_oop(THREAD_AND_LOCATION, e); return; }
 
 #define THROW_HANDLE(e) \
-  { Exceptions::_throw(THREAD_AND_LOCATION, e);                             return; }
+  { Exceptions::_throw(THREAD_AND_LOCATION, e); return; }
 
 #define THROW(name) \
   { Exceptions::_throw_msg(THREAD_AND_LOCATION, name, NULL); return; }
@@ -205,13 +205,13 @@ class Exceptions {
   { Exceptions::_throw_msg(THREAD_AND_LOCATION, name, message, loader, protection_domain); return; }
 
 #define THROW_ARG(name, signature, args) \
-  { Exceptions::_throw_args(THREAD_AND_LOCATION, name, signature, args);   return; }
+  { Exceptions::_throw_args(THREAD_AND_LOCATION, name, signature, args); return; }
 
 #define THROW_OOP_(e, result) \
-  { Exceptions::_throw_oop(THREAD_AND_LOCATION, e);                           return result; }
+  { Exceptions::_throw_oop(THREAD_AND_LOCATION, e); return result; }
 
 #define THROW_HANDLE_(e, result) \
-  { Exceptions::_throw(THREAD_AND_LOCATION, e);                           return result; }
+  { Exceptions::_throw(THREAD_AND_LOCATION, e); return result; }
 
 #define THROW_(name, result) \
   { Exceptions::_throw_msg(THREAD_AND_LOCATION, name, NULL); return result; }

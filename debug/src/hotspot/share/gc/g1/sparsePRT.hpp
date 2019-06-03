@@ -84,7 +84,6 @@ public:
 };
 
 class RSHashTable : public CHeapObj<mtGC> {
-
   friend class RSHashTableIter;
 
   // Inverse maximum hash table occupancy used.

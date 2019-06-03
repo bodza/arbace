@@ -33,7 +33,6 @@ class nmethod : public CompiledMethod {
   friend class NMethodSweeper;
   friend class CodeCache;  // scavengable oops
  private:
-
   // Shared fields for all nmethod's
   int       _entry_bci;        // != InvocationEntryBci if this nmethod is an on-stack replacement method
   jmethodID _jmethod_id;       // Cache of method()->jmethod_id()
@@ -300,19 +299,19 @@ class nmethod : public CompiledMethod {
   // alive.  It is used when an uncommon trap happens.  Returns true
   // if this thread changed the state of the nmethod or false if
   // another thread performed the transition.
-  bool  make_not_entrant() {
+  bool make_not_entrant() {
     return make_not_entrant_or_zombie(not_entrant);
   }
-  bool  make_not_used()    { return make_not_entrant(); }
-  bool  make_zombie()      { return make_not_entrant_or_zombie(zombie); }
+  bool make_not_used()    { return make_not_entrant(); }
+  bool make_zombie()      { return make_not_entrant_or_zombie(zombie); }
 
   // used by jvmti to track if the unload event has been reported
-  bool  unload_reported()                         { return _unload_reported; }
-  void  set_unload_reported()                     { _unload_reported = true; }
+  bool unload_reported()                          { return _unload_reported; }
+  void set_unload_reported()                      { _unload_reported = true; }
 
   int get_state() const { return _state; }
 
-  void  make_unloaded(oop cause);
+  void make_unloaded(oop cause);
 
   bool has_dependencies()                         { return dependencies_size() != 0; }
   void flush_dependencies(bool delete_immediately);
@@ -360,7 +359,6 @@ public:
   void     set_scavenge_root_link(nmethod *n)          { _scavenge_root_link = n; }
 
  public:
-
   // Sweeper support
   long  stack_traversal_mark()                    { return _stack_traversal_mark; }
   void  set_stack_traversal_mark(long l)          { _stack_traversal_mark = l; }
@@ -431,7 +429,6 @@ public:
   void clear_speculation_log();
 
  public:
-
  protected:
   virtual bool do_unloading_oops(address low_boundary, BoolObjectClosure* is_alive);
   // See comment for _jvmci_installed_code_triggers_unloading field.
@@ -481,16 +478,7 @@ public:
 
   // printing support
   void print()                          const;
-  void print_relocations()                        { };
-  void print_pcs()                                { };
-  void print_scopes()                             { };
-  void print_dependencies()                       { };
   void print_value_on(outputStream* st) const     { };
-  void print_calls(outputStream* st)              { };
-  void print_handler_table()                      { };
-  void print_nul_chk_table()                      { };
-  void print_recorded_oops()                      { };
-  void print_recorded_metadata()                  { };
 
   void maybe_print_nmethod(DirectiveSet* directive);
   void print_nmethod(bool print_code);
@@ -498,10 +486,6 @@ public:
   // need to re-define this from CodeBlob else the overload hides it
   virtual void print_on(outputStream* st) const { CodeBlob::print_on(st); }
   void print_on(outputStream* st, const char* msg) const;
-
-  // Logging
-  void log_identity(xmlStream* log) const;
-  void log_state_change() const;
 
   // Prints block-level comments, including nmethod specific block labels:
   virtual void print_block_comment(outputStream* stream, address block_begin) const {
@@ -574,7 +558,6 @@ class nmethodLocker : public StackObj {
   CompiledMethod* _nm;
 
  public:
-
   // note: nm can be NULL
   // Only JvmtiDeferredEvent::compiled_method_unload_event()
   // should pass zombie_ok == true.

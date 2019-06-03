@@ -619,79 +619,6 @@ JVM_AssertionStatusDirectives(JNIEnv *env, jclass unused);
 JNIEXPORT jboolean JNICALL
 JVM_SupportsCX8(void);
 
-/*
- * com.sun.dtrace.jsdt support
- */
-
-#define JVM_TRACING_DTRACE_VERSION 1
-
-/*
- * Structure to pass one probe description to JVM
- */
-typedef struct {
-    jmethodID method;
-    jstring   function;
-    jstring   name;
-    void*            reserved[4];     // for future use
-} JVM_DTraceProbe;
-
-/**
- * Encapsulates the stability ratings for a DTrace provider field
- */
-typedef struct {
-    jint nameStability;
-    jint dataStability;
-    jint dependencyClass;
-} JVM_DTraceInterfaceAttributes;
-
-/*
- * Structure to pass one provider description to JVM
- */
-typedef struct {
-    jstring                       name;
-    JVM_DTraceProbe*              probes;
-    jint                          probe_count;
-    JVM_DTraceInterfaceAttributes providerAttributes;
-    JVM_DTraceInterfaceAttributes moduleAttributes;
-    JVM_DTraceInterfaceAttributes functionAttributes;
-    JVM_DTraceInterfaceAttributes nameAttributes;
-    JVM_DTraceInterfaceAttributes argsAttributes;
-    void*                         reserved[4]; // for future use
-} JVM_DTraceProvider;
-
-/*
- * Get the version number the JVM was built with
- */
-JNIEXPORT jint JNICALL
-JVM_DTraceGetVersion(JNIEnv* env);
-
-/*
- * Register new probe with given signature, return global handle
- *
- * The version passed in is the version that the library code was
- * built with.
- */
-JNIEXPORT jlong JNICALL
-JVM_DTraceActivate(JNIEnv* env, jint version, jstring module_name, jint providers_count, JVM_DTraceProvider* providers);
-
-/*
- * Check JSDT probe
- */
-JNIEXPORT jboolean JNICALL
-JVM_DTraceIsProbeEnabled(JNIEnv* env, jmethodID method);
-
-/*
- * Destroy custom DOF
- */
-JNIEXPORT void JNICALL
-JVM_DTraceDispose(JNIEnv* env, jlong activation_handle);
-
-/*
- * Check to see if DTrace is supported by OS
- */
-JNIEXPORT jboolean JNICALL
-JVM_DTraceIsSupported(JNIEnv* env);
-
 /*************************************************************************
  PART 2: Support for the Verifier and Class File Format Checker
  ************************************************************************/
@@ -988,10 +915,7 @@ JVM_IsSameClassPackage(JNIEnv *env, jclass class1, jclass class2);
  * Returns JNI_FALSE if verification fails. A detailed error message
  * will be places in msg_buf, whose length is specified by buf_len.
  */
-typedef jboolean (*verifier_fn_t)(JNIEnv *env,
-                                  jclass cb,
-                                  char * msg_buf,
-                                  jint buf_len);
+typedef jboolean (*verifier_fn_t)(JNIEnv *env, jclass cb, char * msg_buf, jint buf_len);
 
 /*
  * Support for a VM-independent class format checker.

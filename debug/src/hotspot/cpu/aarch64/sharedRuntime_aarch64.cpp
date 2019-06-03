@@ -7,7 +7,6 @@
 #include "code/vtableStubs.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interp_masm.hpp"
-#include "logging/log.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/compiledICHolder.hpp"
 #include "runtime/safepointMechanism.hpp"
@@ -29,9 +28,7 @@
 const int StackAlignmentInSlots = StackAlignmentInBytes / VMRegImpl::stack_slot_size;
 
 class SimpleRuntimeFrame {
-
   public:
-
   // Most of the runtime stubs have this simple frame layout.
   // This class exists to make the layout shared in one place.
   // Offsets are for compiler stack slots, which are jints.
@@ -140,7 +137,6 @@ void RegisterSaver::restore_live_registers(MacroAssembler* masm, bool restore_ve
 }
 
 void RegisterSaver::restore_result_registers(MacroAssembler* masm) {
-
   // Just restore result register. Only used by deoptimization. By
   // now any callee save register that needs to be restored to a c2
   // caller of the deoptee has been extracted into the vframeArray
@@ -206,15 +202,13 @@ static int reg2offset_out(VMReg r) {
 // least get some advantage out of it.
 
 int SharedRuntime::java_calling_convention(const BasicType *sig_bt, VMRegPair *regs, int total_args_passed, int is_outgoing) {
-
   // Create the mapping between argument positions and
   // registers.
   static const Register INT_ArgReg[Argument::n_int_register_parameters_j] = {
     j_rarg0, j_rarg1, j_rarg2, j_rarg3, j_rarg4, j_rarg5, j_rarg6, j_rarg7
   };
   static const FloatRegister FP_ArgReg[Argument::n_float_register_parameters_j] = {
-    j_farg0, j_farg1, j_farg2, j_farg3,
-    j_farg4, j_farg5, j_farg6, j_farg7
+    j_farg0, j_farg1, j_farg2, j_farg3, j_farg4, j_farg5, j_farg6, j_farg7
   };
 
   uint int_args = 0;
@@ -364,9 +358,7 @@ static void gen_c2i_adapter(MacroAssembler *masm, int total_args_passed, int com
         // sign extend??
         __ ldrw(rscratch1, Address(sp, ld_off));
         __ str(rscratch1, Address(sp, st_off));
-
       } else {
-
         __ ldr(rscratch1, Address(sp, ld_off));
 
         // Two VMREgs|OptoRegs can be T_OBJECT, T_ADDRESS, T_DOUBLE, T_LONG
@@ -412,7 +404,6 @@ static void gen_c2i_adapter(MacroAssembler *masm, int total_args_passed, int com
 }
 
 void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed, int comp_args_on_stack, const BasicType *sig_bt, const VMRegPair *regs) {
-
   // Note: r13 contains the senderSP on entry. We must preserve it since
   // we may do a i2c -> c2i transition if we lose a race where compiled
   // code goes non-entrant while we get args ready.
@@ -686,7 +677,6 @@ AdapterHandlerEntry* SharedRuntime::generate_i2c2i_adapters(MacroAssembler *masm
 }
 
 int SharedRuntime::c_calling_convention(const BasicType *sig_bt, VMRegPair *regs, VMRegPair *regs2, int total_args_passed) {
-
 // We return the amount of VMRegImpl stack slots we need to reserve for all
 // the arguments NOT counting out_preserve_stack_slots.
 
@@ -785,7 +775,6 @@ static void move32_64(MacroAssembler* masm, VMRegPair src, VMRegPair dst) {
 
 // An oop arg. Must pass a handle not the oop itself
 static void object_move(MacroAssembler* masm, OopMap* map, int oop_handle_offset, int framesize_in_slots, VMRegPair src, VMRegPair dst, bool is_receiver, int* receiver_offset) {
-
   // must pass a handle. First figure out the location we use as a handle
 
   Register rHandle = dst.first()->is_stack() ? rscratch2 : dst.first()->as_Register();
@@ -793,7 +782,6 @@ static void object_move(MacroAssembler* masm, OopMap* map, int oop_handle_offset
   // See if oop is NULL if it is we need no handle
 
   if (src.first()->is_stack()) {
-
     // Oop is already on the stack as an argument
     int offset_in_older_frame = src.first()->reg2stack() + SharedRuntime::out_preserve_stack_slots();
     map->set_oop(VMRegImpl::stack2reg(offset_in_older_frame + framesize_in_slots));
@@ -807,7 +795,6 @@ static void object_move(MacroAssembler* masm, OopMap* map, int oop_handle_offset
     __ cmp(rscratch1, zr);
     __ csel(rHandle, zr, rHandle, Assembler::EQ);
   } else {
-
     // Oop is in an a register we must store it to the space we reserve
     // on the stack for oop_handles and pass a handle if oop is non-NULL
 
@@ -1550,11 +1537,8 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
 
   // Pre-load a static method's oop into c_rarg1.
   if (method->is_static() && !is_critical_native) {
-
     //  load oop into a register
-    __ movoop(c_rarg1,
-              JNIHandles::make_local(method->method_holder()->java_mirror()),
-              /*immediate*/true);
+    __ movoop(c_rarg1, JNIHandles::make_local(method->method_holder()->java_mirror()), /*immediate*/true);
 
     // Now handlize the static class mirror it's known not-null.
     __ str(c_rarg1, Address(sp, klass_offset));
@@ -1576,15 +1560,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
 
   __ set_last_Java_frame(sp, noreg, (address)the_pc, rscratch1);
 
-  Label dtrace_method_entry, dtrace_method_entry_done;
-  {
-    unsigned long offset;
-    __ adrp(rscratch1, ExternalAddress((address)&false), offset);
-    __ ldrb(rscratch1, Address(rscratch1, offset));
-    __ cbnzw(rscratch1, dtrace_method_entry);
-    __ bind(dtrace_method_entry_done);
-  }
-
   // Lock a synchronized method
 
   // Register definitions used by locking and unlocking
@@ -1599,7 +1574,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
   Label lock_done;
 
   if (method->is_synchronized()) {
-
     const int mark_word_offset = BasicLock::displaced_header_offset_in_bytes();
 
     // Get the handle (the 2nd argument)
@@ -1769,7 +1743,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
   Label unlock_done;
   Label slow_path_unlock;
   if (method->is_synchronized()) {
-
     // Get locked oop from the handle we passed to jni
     __ ldr(obj_reg, Address(oop_handle_reg, 0));
 
@@ -1806,15 +1779,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
     }
 
     __ bind(done);
-  }
-
-  Label dtrace_method_exit, dtrace_method_exit_done;
-  {
-    unsigned long offset;
-    __ adrp(rscratch1, ExternalAddress((address)&false), offset);
-    __ ldrb(rscratch1, Address(rscratch1, offset));
-    __ cbnzw(rscratch1, dtrace_method_exit);
-    __ bind(dtrace_method_exit_done);
   }
 
   __ reset_last_Java_frame(false);
@@ -1858,7 +1822,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
 
   // Slow path locking & unlocking
   if (method->is_synchronized()) {
-
     __ block_comment("Slow path lock {");
     __ bind(slow_path_lock);
 
@@ -1948,33 +1911,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
 
     __ b(safepoint_in_progress_done);
     __ block_comment("} safepoint");
-  }
-
-  // SLOW PATH dtrace support
-  {
-    __ block_comment("dtrace entry {");
-    __ bind(dtrace_method_entry);
-
-    // We have all of the arguments setup at this point. We must not touch any register
-    // argument registers at this point (what if we save/restore them there are no oop?
-
-    save_args(masm, total_c_args, c_arg, out_regs);
-    __ mov_metadata(c_rarg1, method());
-    __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_entry), rthread, c_rarg1);
-    restore_args(masm, total_c_args, c_arg, out_regs);
-    __ b(dtrace_method_entry_done);
-    __ block_comment("} dtrace entry");
-  }
-
-  {
-    __ block_comment("dtrace exit {");
-    __ bind(dtrace_method_exit);
-    save_native_result(masm, ret_type, stack_slots);
-    __ mov_metadata(c_rarg1, method());
-    __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_method_exit), rthread, c_rarg1);
-    restore_native_result(masm, ret_type, stack_slots);
-    __ b(dtrace_method_exit_done);
-    __ block_comment("} dtrace exit");
   }
 
   __ flush();
@@ -2107,9 +2043,7 @@ void SharedRuntime::generate_deopt_blob() {
     __ movw(rcpool, (int32_t)Deoptimization::Unpack_reexecute);
     __ mov(c_rarg0, rthread);
     __ movw(c_rarg2, rcpool); // exec mode
-    __ lea(rscratch1,
-           RuntimeAddress(CAST_FROM_FN_PTR(address,
-                                           Deoptimization::uncommon_trap)));
+    __ lea(rscratch1, RuntimeAddress(CAST_FROM_FN_PTR(address, Deoptimization::uncommon_trap)));
     __ blrt(rscratch1, 2, 0, MacroAssembler::ret_type_integral);
     __ bind(retaddr);
     oop_maps->add_gc_map( __ pc()-start, map->deep_copy());
@@ -2178,8 +2112,7 @@ void SharedRuntime::generate_deopt_blob() {
   __ set_last_Java_frame(sp, noreg, retaddr, rscratch1);
 #ifdef ASSERT0
   { Label L;
-    __ ldr(rscratch1, Address(rthread,
-                              JavaThread::last_Java_fp_offset()));
+    __ ldr(rscratch1, Address(rthread, JavaThread::last_Java_fp_offset()));
     __ cbz(rscratch1, L);
     __ stop("SharedRuntime::generate_deopt_blob: last_Java_fp not cleared");
     __ bind(L);
@@ -2405,9 +2338,7 @@ void SharedRuntime::generate_uncommon_trap_blob() {
 
   __ mov(c_rarg0, rthread);
   __ movw(c_rarg2, (unsigned)Deoptimization::Unpack_uncommon_trap);
-  __ lea(rscratch1,
-         RuntimeAddress(CAST_FROM_FN_PTR(address,
-                                         Deoptimization::uncommon_trap)));
+  __ lea(rscratch1, RuntimeAddress(CAST_FROM_FN_PTR(address, Deoptimization::uncommon_trap)));
   __ blrt(rscratch1, 2, 0, MacroAssembler::ret_type_integral);
   __ bind(retaddr);
 
@@ -2637,7 +2568,6 @@ SafepointBlob* SharedRuntime::generate_handler_blob(address call_ptr, int poll_t
 // must do any gc of the args.
 //
 RuntimeStub* SharedRuntime::generate_resolve_blob(address destination, const char* name) {
-
   // allocate space for the code
   ResourceMark rm;
 
@@ -2746,7 +2676,6 @@ RuntimeStub* SharedRuntime::generate_resolve_blob(address destination, const cha
 //
 
 void OptoRuntime::generate_exception_blob() {
-
   // Allocate space for the code
   ResourceMark rm;
   // Setup code generation tools

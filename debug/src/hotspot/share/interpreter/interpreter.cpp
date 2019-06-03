@@ -54,7 +54,6 @@ void InterpreterCodelet::print_on(outputStream* st) const {
 CodeletMark::CodeletMark(InterpreterMacroAssembler*& masm, const char* description, Bytecodes::Code bytecode) :
   _clet((InterpreterCodelet*)AbstractInterpreter::code()->request(codelet_size())),
   _cb(_clet->code_begin(), _clet->code_size()) {
-
   // Initialize Codelet attributes.
   _clet->initialize(description, bytecode);
   // Create assembler for code generation.

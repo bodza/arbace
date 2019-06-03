@@ -52,7 +52,6 @@ class aarch64 {
   static bool _completed;
 
  public:
-
   static address get_previous_fp_entry()
   {
     return _get_previous_fp_entry;

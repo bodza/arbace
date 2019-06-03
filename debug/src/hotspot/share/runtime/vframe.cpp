@@ -86,7 +86,6 @@ javaVFrame* vframe::java_sender() const {
 // ------------- javaVFrame --------------
 
 GrowableArray<MonitorInfo*>* javaVFrame::locked_monitors() {
-
   GrowableArray<MonitorInfo*>* mons = monitors();
   GrowableArray<MonitorInfo*>* result = new GrowableArray<MonitorInfo*>(mons->length());
   if (mons->is_empty()) return result;
@@ -270,7 +269,6 @@ Method* interpretedVFrame::method() const {
 }
 
 static StackValue* create_stack_value_from_oop_map(const InterpreterOopMap& oop_mask, int index, const intptr_t* const addr) {
-
   // categorize using oop_mask
   if (oop_mask.is_oop(index)) {
     // reference (oop) "r"
@@ -282,7 +280,6 @@ static StackValue* create_stack_value_from_oop_map(const InterpreterOopMap& oop_
 }
 
 static bool is_in_expression_stack(const frame& fr, const intptr_t* const addr) {
-
   // Ensure to be 'inside' the expresion stack (i.e., addr >= sp for Intel).
   // In case of exceptions, the expression stack is invalid and the sp
   // will be reset to express this condition.
@@ -294,7 +291,6 @@ static bool is_in_expression_stack(const frame& fr, const intptr_t* const addr) 
 }
 
 static void stack_locals(StackValueCollection* result, int length, const InterpreterOopMap& oop_mask, const frame& fr) {
-
   for (int i = 0; i < length; ++i) {
     const intptr_t* const addr = fr.interpreter_frame_local_at(i);
 
@@ -305,7 +301,6 @@ static void stack_locals(StackValueCollection* result, int length, const Interpr
 }
 
 static void stack_expressions(StackValueCollection* result, int length, int max_locals, const InterpreterOopMap& oop_mask, const frame& fr) {
-
   for (int i = 0; i < length; ++i) {
     const intptr_t* addr = fr.interpreter_frame_expression_stack_at(i);
     if (!is_in_expression_stack(fr, addr)) {
@@ -341,7 +336,6 @@ StackValueCollection* interpretedVFrame::expressions() const {
  *
  */
 StackValueCollection* interpretedVFrame::stack_data(bool expressions) const {
-
   InterpreterOopMap oop_mask;
   method()->mask_for(bci(), &oop_mask);
   const int mask_len = oop_mask.number_of_entries();

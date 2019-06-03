@@ -28,7 +28,6 @@ uint64_t OopEncodingHeapMax = 0;
 // Something to help porters sleep at night
 
 void basic_types_init() {
-
   if (JavaPriority1_To_OSPriority != -1 )
     os::java_to_os_priority[1] = JavaPriority1_To_OSPriority;
   if (JavaPriority2_To_OSPriority != -1 )
@@ -229,15 +228,3 @@ size_t lcm(size_t a, size_t b) {
 
     return size_t(result);
 }
-
-// Test that nth_bit macro and friends behave as
-// expected, even with low-precedence operators.
-
-STATIC_ASSERT(nth_bit(3)   == 0x8);
-STATIC_ASSERT(nth_bit(1|2) == 0x8);
-
-STATIC_ASSERT(right_n_bits(3)   == 0x7);
-STATIC_ASSERT(right_n_bits(1|2) == 0x7);
-
-STATIC_ASSERT(left_n_bits(3)   == (intptr_t) 0xE000000000000000);
-STATIC_ASSERT(left_n_bits(1|2) == (intptr_t) 0xE000000000000000);

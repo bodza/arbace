@@ -37,7 +37,6 @@ G1CardCounts::G1CardCounts(G1CollectedHeap *g1h) :
 }
 
 void G1CardCounts::initialize(G1RegionToSpaceMapper* mapper) {
-
   if (G1ConcRSHotCardLimit > 0) {
     // The max value we can store in the counts table is
     // max_jubyte. Guarantee the value of the hot

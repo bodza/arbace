@@ -51,10 +51,10 @@ CompiledRFrame::CompiledRFrame(frame fr, JavaThread* thread)
   init();
 }
 
-DeoptimizedRFrame::DeoptimizedRFrame(frame fr, JavaThread* thread, RFrame*const  callee)
+DeoptimizedRFrame::DeoptimizedRFrame(frame fr, JavaThread* thread, RFrame* const callee)
 : InterpretedRFrame(fr, thread, callee) { }
 
-RFrame* RFrame::new_RFrame(frame fr, JavaThread* thread, RFrame*const  callee) {
+RFrame* RFrame::new_RFrame(frame fr, JavaThread* thread, RFrame* const callee) {
   RFrame* rf = NULL;
   int dist = callee ? callee->distance() : -1;
   if (fr.is_interpreted_frame()) {

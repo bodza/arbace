@@ -4,7 +4,6 @@
 #include "utilities/globalDefinitions.hpp"
 #include "memory/allocation.hpp"
 #include "runtime/os.hpp"
-#include "logging/log.hpp"
 #include "osContainer_linux.hpp"
 
 #define PER_CPU_SHARES 1024
@@ -193,7 +192,6 @@ void OSContainer::init() {
     fstype[0] = '\0';
     char *s =  strstr(p, " - ");
     if (s != NULL && sscanf(s, " - %s", fstype) == 1 && strcmp(fstype, "cgroup") == 0) {
-
       if (strstr(p, "memory") != NULL) {
         int matched = sscanf(p, "%d %d %d:%d %s %s", &mountid, &parentid, &major, &minor, tmproot, tmpmount);
         if (matched == 6) {

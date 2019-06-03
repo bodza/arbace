@@ -146,12 +146,10 @@ JVMFlag::Error MaxMetaspaceFreeRatioConstraintFunc(uintx value, bool verbose) {
 }
 
 JVMFlag::Error InitialTenuringThresholdConstraintFunc(uintx value, bool verbose) {
-
   return JVMFlag::SUCCESS;
 }
 
 JVMFlag::Error MaxTenuringThresholdConstraintFunc(uintx value, bool verbose) {
-
   // MaxTenuringThreshold=0 means NeverTenure=false && AlwaysTenure=true
   if ((value == 0) && (NeverTenure || !AlwaysTenure)) {
     JVMFlag::printError(verbose,
@@ -206,8 +204,7 @@ static JVMFlag::Error MaxSizeForHeapAlignment(const char* name, size_t value, bo
   if (UseG1GC) {
     // For G1 GC, we don't know until G1CollectorPolicy is created.
     heap_alignment = MaxSizeForHeapAlignmentG1();
-  } else
-  {
+  } else {
     heap_alignment = CollectorPolicy::compute_heap_alignment();
   }
 

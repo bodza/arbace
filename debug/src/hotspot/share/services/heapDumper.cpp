@@ -531,7 +531,6 @@ jlong DumpWriter::current_offset() {
 }
 
 void DumpWriter::seek_to_offset(jlong off) {
-
   // need to flush before seeking
   flush();
 
@@ -582,7 +581,6 @@ void DumpWriter::write_classID(Klass* k) {
 
 class DumperSupport : AllStatic {
  public:
-
   // write a header of the given type
   static void write_header(DumpWriter* writer, hprofTag tag, u4 len);
 
@@ -1437,7 +1435,7 @@ class VM_HeapDumper : public VM_GC_Operation {
   }
   ~VM_HeapDumper() {
     if (_stack_traces != NULL) {
-      for (int i=0; i < _num_threads; i++) {
+      for (int i = 0; i < _num_threads; i++) {
         delete _stack_traces[i];
       }
       FREE_C_HEAP_ARRAY(ThreadStackTrace*, _stack_traces);
@@ -1583,7 +1581,6 @@ int VM_HeapDumper::do_thread(JavaThread* java_thread, u4 thread_serial_num) {
 
   int stack_depth = 0;
   if (java_thread->has_last_Java_frame()) {
-
     // vframes are resource allocated
     Thread* current_thread = Thread::current();
     ResourceMark rm(current_thread);
@@ -1601,7 +1598,6 @@ int VM_HeapDumper::do_thread(JavaThread* java_thread, u4 thread_serial_num) {
     while (vf != NULL) {
       blk.set_frame_number(stack_depth);
       if (vf->is_java_frame()) {
-
         // java frame (interpreted, compiled, ...)
         javaVFrame *jvf = javaVFrame::cast(vf);
         if (!(jvf->method()->is_native())) {
@@ -1645,7 +1641,6 @@ int VM_HeapDumper::do_thread(JavaThread* java_thread, u4 thread_serial_num) {
         // increment only for Java frames
         stack_depth++;
         last_entry_frame = NULL;
-
       } else {
         // externalVFrame - if it's an entry frame then report any JNI locals
         // as roots when we find the corresponding native javaVFrame
@@ -1666,7 +1661,7 @@ int VM_HeapDumper::do_thread(JavaThread* java_thread, u4 thread_serial_num) {
 // write a HPROF_GC_ROOT_THREAD_OBJ record for each java thread. Then walk
 // the stack so that locals and JNI locals are dumped.
 void VM_HeapDumper::do_threads() {
-  for (int i=0; i < _num_threads; i++) {
+  for (int i = 0; i < _num_threads; i++) {
     JavaThread* thread = _stack_traces[i]->thread();
     oop threadObj = thread->threadObj();
     u4 thread_serial_num = i+1;
@@ -1704,7 +1699,6 @@ void VM_HeapDumper::do_threads() {
 // roots.
 
 void VM_HeapDumper::doit() {
-
   HandleMark hm;
   CollectedHeap* ch = Universe::heap();
 
@@ -1822,7 +1816,7 @@ void VM_HeapDumper::dump_stack_traces() {
         DumperSupport::dump_stack_frame(writer(), ++frame_serial_num, oome_serial_num, _oome_constructor, 0);
         extra_frames++;
       }
-      for (int j=0; j < depth; j++) {
+      for (int j = 0; j < depth; j++) {
         StackFrameInfo* frame = stack_trace->stack_frame_at(j);
         Method* m = frame->method();
         int class_serial_num = _klass_map->find(m->method_holder());
@@ -1837,7 +1831,7 @@ void VM_HeapDumper::dump_stack_traces() {
       writer()->write_u4(stack_serial_num);      // stack trace serial number
       writer()->write_u4((u4) _num_threads);     // thread serial number
       writer()->write_u4(depth);                 // frame count
-      for (int j=1; j <= depth; j++) {
+      for (int j = 1; j <= depth; j++) {
         writer()->write_id(thread_frame_start + j);
       }
     }

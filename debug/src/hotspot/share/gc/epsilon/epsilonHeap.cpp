@@ -73,7 +73,6 @@ EpsilonHeap* EpsilonHeap::heap() {
 }
 
 HeapWord* EpsilonHeap::allocate_work(size_t size) {
-
   HeapWord* res = _space->par_allocate(size);
 
   while (res == NULL) {

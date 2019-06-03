@@ -148,9 +148,7 @@ private:
 
   inline InCSetState next_state(InCSetState const state, markOop const m, uint& age);
 
-  void report_promotion_event(InCSetState const dest_state,
-                              oop const old, size_t word_sz, uint age,
-                              HeapWord * const obj_ptr) const;
+  void report_promotion_event(InCSetState const dest_state, oop const old, size_t word_sz, uint age, HeapWord * const obj_ptr) const;
 
   inline bool needs_partial_trimming() const;
   inline bool is_partially_trimmed() const;

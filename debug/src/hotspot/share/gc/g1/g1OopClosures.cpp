@@ -22,7 +22,6 @@ void G1CLDScanClosure::do_cld(ClassLoaderData* cld) {
   // If the class loader data has not been dirtied we know that there's
   // no references into  the young gen and we can skip it.
   if (!_process_only_dirty || cld->has_modified_oops()) {
-
     // Tell the closure that this class loader data is the CLD to scavenge
     // and is the one to dirty if oops are left pointing into the young gen.
     _closure->set_scanned_cld(cld);

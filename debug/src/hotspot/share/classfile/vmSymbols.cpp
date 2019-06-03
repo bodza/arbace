@@ -35,8 +35,7 @@ extern "C" {
 static const char* vm_symbol_bodies = VM_SYMBOLS_DO(VM_SYMBOL_BODY, VM_ALIAS_IGNORE);
 
 void vmSymbols::initialize(TRAPS) {
-
-  if (!UseSharedSpaces) {
+  {
     const char* string = &vm_symbol_bodies[0];
     for (int index = (int)FIRST_SID; index < (int)SID_LIMIT; index++) {
       Symbol* sym = SymbolTable::new_permanent_symbol(string, CHECK);
@@ -303,7 +302,6 @@ bool vmIntrinsics::is_intrinsic_available(vmIntrinsics::ID id) {
 }
 
 bool vmIntrinsics::is_intrinsic_disabled(vmIntrinsics::ID id) {
-
   // Canonicalize DisableIntrinsic to contain only ',' as a separator.
   // Note, DirectiveSet may not be created at this point yet since this code
   // is called from initial stub geenration code.
@@ -330,7 +328,6 @@ bool vmIntrinsics::is_disabled_by_flags(const methodHandle& method) {
 }
 
 bool vmIntrinsics::is_disabled_by_flags(vmIntrinsics::ID id) {
-
   // -XX:-InlineNatives disables nearly all intrinsics except the ones listed in
   // the following switch statement.
   if (!InlineNatives) {
@@ -658,7 +655,6 @@ vmIntrinsics::ID vmIntrinsics::find_id_impl(vmSymbols::SID holder,
                                             vmSymbols::SID name,
                                             vmSymbols::SID sig,
                                             jshort flags) {
-
   // Let the C compiler build the decision tree.
 
 #define VM_INTRINSIC_CASE(id, klass, name, sig, fcode) \

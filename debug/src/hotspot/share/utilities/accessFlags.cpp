@@ -11,7 +11,7 @@ void AccessFlags::atomic_set_bits(jint bits) {
     old_flags = _flags;
     new_flags = old_flags | bits;
     f = Atomic::cmpxchg(new_flags, &_flags, old_flags);
-  } while(f != old_flags);
+  } while (f != old_flags);
 }
 
 void AccessFlags::atomic_clear_bits(jint bits) {
@@ -21,7 +21,7 @@ void AccessFlags::atomic_clear_bits(jint bits) {
     old_flags = _flags;
     new_flags = old_flags & ~bits;
     f = Atomic::cmpxchg(new_flags, &_flags, old_flags);
-  } while(f != old_flags);
+  } while (f != old_flags);
 }
 
 void accessFlags_init() { }

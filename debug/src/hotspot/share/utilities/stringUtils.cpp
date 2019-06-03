@@ -20,7 +20,6 @@ int StringUtils::replace_no_expand(char* string, const char* from, const char* t
 }
 
 double StringUtils::similarity(const char* str1, size_t len1, const char* str2, size_t len2) {
-
   // filter out zero-length strings else we will underflow on len-1 below
   if (len1 == 0 || len2 == 0) {
     return 0.0;

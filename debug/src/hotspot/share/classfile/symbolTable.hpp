@@ -191,10 +191,10 @@ public:
   static Symbol* new_symbol(const char* utf8_buffer, int length, TRAPS) {
     return lookup(utf8_buffer, length, THREAD);
   }
-  static Symbol*       new_symbol(const char* name, TRAPS) {
+  static Symbol* new_symbol(const char* name, TRAPS) {
     return new_symbol(name, (int)strlen(name), THREAD);
   }
-  static Symbol*       new_symbol(const Symbol* sym, int begin, int end, TRAPS) {
+  static Symbol* new_symbol(const Symbol* sym, int begin, int end, TRAPS) {
     return lookup(sym, begin, end, THREAD);
   }
 

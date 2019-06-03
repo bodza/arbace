@@ -20,7 +20,6 @@ ConstMethod* ConstMethod::allocate(ClassLoaderData* loader_data, int byte_code_s
 }
 
 ConstMethod::ConstMethod(int byte_code_size, InlineTableSizes* sizes, MethodType method_type, int size) {
-
   NoSafepointVerifier no_safepoint;
   init_fingerprint();
   set_constants(NULL);

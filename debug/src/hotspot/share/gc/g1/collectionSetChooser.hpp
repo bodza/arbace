@@ -5,7 +5,6 @@
 #include "utilities/growableArray.hpp"
 
 class CollectionSetChooser: public CHeapObj<mtGC> {
-
   GrowableArray<HeapRegion*> _regions;
 
   // Unfortunately, GrowableArray uses ints for length and indexes. To
@@ -45,7 +44,6 @@ class CollectionSetChooser: public CHeapObj<mtGC> {
   // addition of regions
   uint calculate_parallel_work_chunk_size(uint n_workers, uint n_regions) const;
 public:
-
   // Return the current candidate region to be considered for
   // collection without removing it from the CSet chooser.
   HeapRegion* peek() {

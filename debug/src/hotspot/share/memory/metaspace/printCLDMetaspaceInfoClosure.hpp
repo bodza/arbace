@@ -9,7 +9,6 @@
 class outputStream;
 
 namespace metaspace {
-
 class PrintCLDMetaspaceInfoClosure : public CLDClosure {
 private:
   outputStream* const _out;
@@ -19,7 +18,6 @@ private:
   const bool          _break_down_by_chunktype;
 
 public:
-
   uintx                           _num_loaders;
   uintx                           _num_loaders_without_metaspace;
   uintx                           _num_loaders_unloading;

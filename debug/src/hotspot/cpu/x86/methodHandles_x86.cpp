@@ -29,7 +29,6 @@ void MethodHandles::load_klass_from_Class(MacroAssembler* _masm, Register klass_
 #define NONZERO(x) (x)
 
 void MethodHandles::jump_from_method_handle(MacroAssembler* _masm, Register method, Register temp, bool for_compiler_entry) {
-
    Label L_no_such_method;
    __ testptr(rbx, rbx);
    __ jcc(Assembler::zero, L_no_such_method);
@@ -97,7 +96,6 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   address entry_point = __ pc();
 
   if (VerifyMethodHandles) {
-
     Label L;
     BLOCK_COMMENT("verify_intrinsic_id {");
     __ cmpw(Address(rbx_method, Method::intrinsic_id_offset_in_bytes()), (int) iid);
@@ -116,9 +114,7 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
   int ref_kind = signature_polymorphic_intrinsic_ref_kind(iid);
   if (ref_kind == 0 || MethodHandles::ref_kind_has_receiver(ref_kind)) {
     __ movptr(rdx_argp, Address(rbx_method, Method::const_offset()));
-    __ load_sized_value(rdx_argp,
-                        Address(rdx_argp, ConstMethod::size_of_parameters_offset()),
-                        sizeof(u2), /*is_signed*/ false);
+    __ load_sized_value(rdx_argp, Address(rdx_argp, ConstMethod::size_of_parameters_offset()), sizeof(u2), /*is_signed*/ false);
     rdx_first_arg_addr = __ argument_address(rdx_argp, -1);
   }
 
@@ -132,7 +128,6 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
 
   if (iid == vmIntrinsics::_invokeBasic) {
     generate_method_handle_dispatch(_masm, iid, rcx_mh, noreg, not_for_compiler_entry);
-
   } else {
     // Adjust argument list by popping the trailing MemberName argument.
     Register rcx_recv = noreg;
@@ -160,13 +155,11 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm, vmInt
   if (iid == vmIntrinsics::_invokeBasic) {
     // indirect through MH.form.vmentry.vmtarget
     jump_to_lambda_form(_masm, receiver_reg, rbx_method, temp1, for_compiler_entry);
-
   } else {
     // The method is a member invoker used by direct method handles.
     if (VerifyMethodHandles) {
       // make sure the trailing argument really is a MemberName (caller responsibility)
-      verify_klass(_masm, member_reg, SystemDictionary::WK_KLASS_ENUM_NAME(java_lang_invoke_MemberName),
-                   "MemberName required for invokeVirtual etc.");
+      verify_klass(_masm, member_reg, SystemDictionary::WK_KLASS_ENUM_NAME(java_lang_invoke_MemberName), "MemberName required for invokeVirtual etc.");
     }
 
     Address member_clazz(    member_reg, NONZERO(java_lang_invoke_MemberName::clazz_offset_in_bytes()));
