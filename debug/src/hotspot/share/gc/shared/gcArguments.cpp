@@ -11,7 +11,7 @@ void GCArguments::initialize() {
     MarkSweepAlwaysCompactCount = 1;  // Move objects every gc.
   }
 
-  if (!(UseParallelGC || UseParallelOldGC) && FLAG_IS_DEFAULT(ScavengeBeforeFullGC)) {
+  if (FLAG_IS_DEFAULT(ScavengeBeforeFullGC)) {
     FLAG_SET_DEFAULT(ScavengeBeforeFullGC, false);
   }
 

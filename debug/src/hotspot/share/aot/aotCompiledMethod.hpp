@@ -160,7 +160,6 @@ private:
 
   virtual void print_value_on(outputStream *stream) const;
   virtual void print_block_comment(outputStream *stream, address block_begin) const { }
-  virtual void verify() { }
 
   virtual int comp_level() const { return CompLevel_aot; }
   virtual address verified_entry_point() const { return _code + _meta->verified_entry_offset(); }
@@ -260,7 +259,6 @@ public:
   virtual address get_resolve_call_stub(bool is_optimized) const { return _call->plt_resolve_call(); }
   virtual void set_destination_mt_safe(address dest) { _call->set_destination_mt_safe(dest); }
   virtual void set_to_interpreted(const methodHandle& method, CompiledICInfo& info);
-  virtual void verify() const { _call->verify(); }
 
   virtual bool is_call_to_interpreted(address dest) const { return (dest == _call->plt_c2i_stub()); }
   // TODO: assume for now that patching of aot code (got cell) is safe.

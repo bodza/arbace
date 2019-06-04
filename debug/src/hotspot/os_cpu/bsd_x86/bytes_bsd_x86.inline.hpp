@@ -77,7 +77,7 @@ inline u8 Bytes::swap_u8(u8 x) {
 #else
 // Helper function for swap_u8
 inline u8 Bytes::swap_u8_base(u4 x, u4 y) {
-  return (((u8)swap_u4(x))<<32) | swap_u4(y);
+  return (((u8)swap_u4(x)) << 32) | swap_u4(y);
 }
 
 inline u8 Bytes::swap_u8(u8 x) {

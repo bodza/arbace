@@ -42,7 +42,7 @@ void InvocationCounter::print() {
 }
 
 void InvocationCounter::print_short() {
-  tty->print(" [%d%s;%s]", count(), carry()?"+carry":"", state_as_short_string(state()));
+  tty->print(" [%d%s;%s]", count(), carry() ? "+carry" : "", state_as_short_string(state()));
 }
 
 // Initialization
@@ -109,7 +109,7 @@ void InvocationCounter::reinitialize(bool delay_overflow) {
   }
 
   InterpreterInvocationLimit = CompileThreshold << number_of_noncount_bits;
-  InterpreterProfileLimit = ((CompileThreshold * InterpreterProfilePercentage) / 100)<< number_of_noncount_bits;
+  InterpreterProfileLimit = ((CompileThreshold * InterpreterProfilePercentage) / 100) << number_of_noncount_bits;
 
   // When methodData is collected, the backward branch limit is compared against a
   // methodData counter, rather than an InvocationCounter.  In the former case, we

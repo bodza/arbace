@@ -51,8 +51,7 @@ class GCStats;
 struct ScratchBlock {
   ScratchBlock* next;
   size_t num_words;
-  HeapWord scratch_space[1];  // Actually, of size "num_words-2" (assuming
-                              // first two fields are word-sized.)
+  HeapWord scratch_space[1];  // Actually, of size "num_words-2" (assuming first two fields are word-sized.)
 };
 
 class Generation: public CHeapObj<mtGC> {
@@ -374,10 +373,6 @@ class Generation: public CHeapObj<mtGC> {
   virtual void* get_data_recorder(int thr_num) { return NULL; }
   virtual void sample_eden_chunk() { }
 
-  // Some generations may require some cleanup actions before allowing
-  // a verification.
-  virtual void prepare_for_verify() { }
-
   // Accessing "marks".
 
   // This function gives a generation a chance to note a point between
@@ -473,8 +468,6 @@ class Generation: public CHeapObj<mtGC> {
 
   virtual void print() const;
   virtual void print_on(outputStream* st) const;
-
-  virtual void verify() = 0;
 
   struct StatRecord {
     int invocations;

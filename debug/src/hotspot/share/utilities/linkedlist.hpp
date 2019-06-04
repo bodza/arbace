@@ -266,7 +266,7 @@ template <class E, ResourceObj::allocation_type T = ResourceObj::C_HEAP,
  protected:
   // Create new linked list node object in specified storage
   LinkedListNode<E>* new_node(const E& e) const {
-     switch(T) {
+     switch (T) {
        case ResourceObj::ARENA: {
          return new(_arena) LinkedListNode<E>(e);
        }

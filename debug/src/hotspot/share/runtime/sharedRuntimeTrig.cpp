@@ -157,26 +157,26 @@ static int __kernel_rem_pio2(double *x, double *y, int e0, int nx, int prec, con
   jp = jk;
 
   /* determine jx,jv,q0, note that 3>q0 */
-  jx =  nx-1;
-  jv = (e0-3)/24; if (jv<0) jv=0;
-  q0 =  e0-24*(jv+1);
+  jx =  nx - 1;
+  jv = (e0-3)/24; if (jv < 0) jv=0;
+  q0 =  e0-24*(jv + 1);
 
   /* set up f[0] to f[jx+jk] where f[jx+jk] = ipio2[jv+jk] */
   j = jv-jx; m = jx+jk;
-  for (i = 0;i<=m;i++,j++) f[i] = (j<0)? zeroB : (double) ipio2[j];
+  for (i = 0; i <= m; i++, j++) f[i] = (j < 0) ? zeroB : (double) ipio2[j];
 
   /* compute q[0],q[1],...q[jk] */
-  for (i = 0;i<=jk;i++) {
-    for (j = 0,fw=0.0;j<=jx;j++) fw += x[j]*f[jx+i-j]; q[i] = fw;
+  for (i = 0; i <= jk; i++) {
+    for (j = 0, fw = 0.0; j <= jx; j++) fw += x[j] * f[jx + i - j]; q[i] = fw;
   }
 
   jz = jk;
 recompute:
   /* distill q[] into iq[] reversingly */
-  for (i = 0,j=jz,z=q[jz];j>0;i++,j--) {
+  for (i = 0,j=jz,z=q[jz];j > 0;i++,j--) {
     fw    =  (double)((int)(twon24* z));
     iq[i] =  (int)(z-two24B*fw);
-    z     =  q[j-1]+fw;
+    z     =  q[j - 1] + fw;
   }
 
   /* compute n */
@@ -190,43 +190,43 @@ recompute:
     iq[jz-1] -= i<<(24-q0);
     ih = iq[jz-1]>>(23-q0);
   }
-  else if (q0==0) ih = iq[jz-1]>>23;
-  else if (z>=0.5) ih=2;
+  else if (q0 == 0) ih = iq[jz-1]>>23;
+  else if (z >= 0.5) ih=2;
 
-  if (ih>0) {    /* q > 0.5 */
+  if (ih > 0) {    /* q > 0.5 */
     n += 1; carry = 0;
     for (i = 0;i<jz ;i++) {        /* compute 1-q */
       j = iq[i];
-      if (carry==0) {
-        if (j!=0) {
+      if (carry == 0) {
+        if (j != 0) {
           carry = 1; iq[i] = 0x1000000- j;
         }
       } else  iq[i] = 0xffffff - j;
     }
     if (q0>0) {          /* rare case: chance is 1 in 12 */
-      switch(q0) {
+      switch (q0) {
       case 1:
         iq[jz-1] &= 0x7fffff; break;
       case 2:
         iq[jz-1] &= 0x3fffff; break;
       }
     }
-    if (ih==2) {
+    if (ih == 2) {
       z = one - z;
-      if (carry!=0) z -= scalbnA(one,q0);
+      if (carry != 0) z -= scalbnA(one,q0);
     }
   }
 
   /* check if recomputation is needed */
-  if (z==zeroB) {
+  if (z == zeroB) {
     j = 0;
-    for (i=jz-1;i>=jk;i--) j |= iq[i];
-    if (j==0) { /* need recomputation */
+    for (i = jz - 1; i >= jk; i--) j |= iq[i];
+    if (j == 0) { /* need recomputation */
       for (k = 1;iq[jk-k]==0;k++);   /* k = no. of terms needed */
 
-      for (i=jz+1;i<=jz+k;i++) {   /* add q[jz+1] to q[jz+k] */
+      for (i=jz+1;i <= jz+k;i++) {   /* add q[jz+1] to q[jz+k] */
         f[jx+i] = (double) ipio2[jv+i];
-        for (j = 0,fw=0.0;j<=jx;j++) fw += x[j]*f[jx+i-j];
+        for (j = 0,fw=0.0;j <= jx;j++) fw += x[j]*f[jx+i-j];
         q[i] = fw;
       }
       jz += k;
@@ -235,12 +235,12 @@ recompute:
   }
 
   /* chop off zero terms */
-  if (z==0.0) {
+  if (z == 0.0) {
     jz -= 1; q0 -= 24;
-    while (iq[jz]==0) { jz--; q0-=24; }
+    while (iq[jz]==0) { jz--; q0 -= 24; }
   } else { /* break z into 24-bit if necessary */
     z = scalbnA(z,-q0);
-    if (z>=two24B) {
+    if (z >= two24B) {
       fw = (double)((int)(twon24*z));
       iq[jz] = (int)(z-two24B*fw);
       jz += 1; q0 += 24;
@@ -250,45 +250,45 @@ recompute:
 
   /* convert integer "bit" chunk to floating-point value */
   fw = scalbnA(one,q0);
-  for (i=jz;i>=0;i--) {
-    q[i] = fw*(double)iq[i]; fw*=twon24;
+  for (i=jz;i >= 0;i--) {
+    q[i] = fw*(double)iq[i]; fw *= twon24;
   }
 
   /* compute PIo2[0,...,jp]*q[jz,...,0] */
-  for (i=jz;i>=0;i--) {
-    for (fw=0.0,k = 0;k<=jp&&k<=jz-i;k++) fw += PIo2[k]*q[i+k];
+  for (i=jz;i >= 0;i--) {
+    for (fw=0.0,k = 0;k <= jp && k <= jz-i;k++) fw += PIo2[k]*q[i+k];
     fq[jz-i] = fw;
   }
 
   /* compress fq[] into y[] */
-  switch(prec) {
+  switch (prec) {
   case 0:
     fw = 0.0;
-    for (i=jz;i>=0;i--) fw += fq[i];
-    y[0] = (ih==0)? fw: -fw;
+    for (i=jz;i >= 0;i--) fw += fq[i];
+    y[0] = (ih == 0) ? fw : -fw;
     break;
   case 1:
   case 2:
     fw = 0.0;
-    for (i=jz;i>=0;i--) fw += fq[i];
-    y[0] = (ih==0)? fw: -fw;
+    for (i=jz;i >= 0;i--) fw += fq[i];
+    y[0] = (ih == 0) ? fw : -fw;
     fw = fq[0]-fw;
-    for (i = 1;i<=jz;i++) fw += fq[i];
-    y[1] = (ih==0)? fw: -fw;
+    for (i = 1;i <= jz;i++) fw += fq[i];
+    y[1] = (ih == 0) ? fw : -fw;
     break;
   case 3:       /* painful */
-    for (i=jz;i>0;i--) {
+    for (i=jz;i > 0;i--) {
       fw      = fq[i-1]+fq[i];
       fq[i]  += fq[i-1]-fw;
       fq[i-1] = fw;
     }
-    for (i=jz;i>1;i--) {
+    for (i=jz;i > 1;i--) {
       fw      = fq[i-1]+fq[i];
       fq[i]  += fq[i-1]-fw;
       fq[i-1] = fw;
     }
-    for (fw=0.0,i=jz;i>=2;i--) fw += fq[i];
-    if (ih==0) {
+    for (fw=0.0,i=jz;i >= 2;i--) fw += fq[i];
+    if (ih == 0) {
       y[0] =  fq[0]; y[1] =  fq[1]; y[2] =  fw;
     } else {
       y[0] = -fq[0]; y[1] = -fq[1]; y[2] = -fw;
@@ -358,13 +358,13 @@ static int __ieee754_rem_pio2(double x, double *y) {
 
   i0 = ((*(int*)&two24A)>>30)^1;        /* high word index */
   hx = *(i0+(int*)&x);          /* high word of x */
-  ix = hx&0x7fffffff;
-  if (ix<=0x3fe921fb)   /* |x| ~<= pi/4 , no need for reduction */
+  ix = hx & 0x7fffffff;
+  if (ix <= 0x3fe921fb)   /* |x| ~<= pi/4 , no need for reduction */
     { y[0] = x; y[1] = 0; return 0; }
-  if (ix<0x4002d97c) {  /* |x| < 3pi/4, special case with n=+-1 */
-    if (hx>0) {
+  if (ix < 0x4002d97c) {  /* |x| < 3pi/4, special case with n=+-1 */
+    if (hx > 0) {
       z = x - pio2_1;
-      if (ix!=0x3ff921fb) {    /* 33+53 bit pi is good enough */
+      if (ix != 0x3ff921fb) {    /* 33+53 bit pi is good enough */
         y[0] = z - pio2_1t;
         y[1] = (z-y[0])-pio2_1t;
       } else {                /* near pi/2, use 33+33+53 bit pi */
@@ -375,7 +375,7 @@ static int __ieee754_rem_pio2(double x, double *y) {
       return 1;
     } else {    /* negative x */
       z = x + pio2_1;
-      if (ix!=0x3ff921fb) {    /* 33+53 bit pi is good enough */
+      if (ix != 0x3ff921fb) {    /* 33+53 bit pi is good enough */
         y[0] = z + pio2_1t;
         y[1] = (z-y[0])+pio2_1t;
       } else {                /* near pi/2, use 33+33+53 bit pi */
@@ -386,26 +386,26 @@ static int __ieee754_rem_pio2(double x, double *y) {
       return -1;
     }
   }
-  if (ix<=0x413921fb) { /* |x| ~<= 2^19*(pi/2), medium size */
+  if (ix <= 0x413921fb) { /* |x| ~<= 2^19*(pi/2), medium size */
     t  = fabsd(x);
     n  = (int) (t*invpio2+half);
     fn = (double)n;
     r  = t-fn*pio2_1;
     w  = fn*pio2_1t;    /* 1st round good to 85 bit */
-    if (n<32&&ix!=npio2_hw[n-1]) {
+    if (n < 32 && ix != npio2_hw[n-1]) {
       y[0] = r-w;       /* quick check no cancellation */
     } else {
-      j  = ix>>20;
+      j  = ix >> 20;
       y[0] = r-w;
       i = j-(((*(i0+(int*)&y[0]))>>20)&0x7ff);
-      if (i>16) {  /* 2nd iteration needed, good to 118 */
+      if (i > 16) {  /* 2nd iteration needed, good to 118 */
         t  = r;
         w  = fn*pio2_2;
         r  = t-w;
         w  = fn*pio2_2t-((t-r)-w);
         y[0] = r-w;
         i = j-(((*(i0+(int*)&y[0]))>>20)&0x7ff);
-        if (i>49)  {     /* 3rd iteration need, 151 bits acc */
+        if (i > 49)  {     /* 3rd iteration need, 151 bits acc */
           t  = r;       /* will cover all possible cases */
           w  = fn*pio2_3;
           r  = t-w;
@@ -415,20 +415,20 @@ static int __ieee754_rem_pio2(double x, double *y) {
       }
     }
     y[1] = (r-y[0])-w;
-    if (hx<0)    { y[0] = -y[0]; y[1] = -y[1]; return -n; }
+    if (hx < 0)    { y[0] = -y[0]; y[1] = -y[1]; return -n; }
     else         return n;
   }
   /*
    * all other (large) arguments
    */
-  if (ix>=0x7ff00000) {          /* x is inf or NaN */
+  if (ix >= 0x7ff00000) {          /* x is inf or NaN */
     y[0]=y[1]=x-x; return 0;
   }
   /* set z = scalbn(|x|,ilogb(x)-23) */
   *(1-i0+(int*)&z) = *(1-i0+(int*)&x);
-  e0    = (ix>>20)-1046;        /* e0 = ilogb(z)-23; */
-  *(i0+(int*)&z) = ix - (e0<<20);
-  for (i = 0;i<2;i++) {
+  e0    = (ix >> 20)-1046;        /* e0 = ilogb(z)-23; */
+  *(i0+(int*)&z) = ix - (e0 << 20);
+  for (i = 0;i < 2;i++) {
     tx[i] = (double)((int)(z));
     z     = (z-tx[i])*two24A;
   }
@@ -436,7 +436,7 @@ static int __ieee754_rem_pio2(double x, double *y) {
   nx = 3;
   while (tx[nx-1]==zeroA) nx--;  /* skip zero term */
   n  =  __kernel_rem_pio2(tx,y,e0,nx,2,two_over_pi);
-  if (hx<0) { y[0] = -y[0]; y[1] = -y[1]; return -n; }
+  if (hx < 0) { y[0] = -y[0]; y[1] = -y[1]; return -n; }
   return n;
 }
 
@@ -448,7 +448,7 @@ static int __ieee754_rem_pio2(double x, double *y) {
  *
  * Algorithm
  *      1. Since sin(-x) = -sin(x), we need only to consider positive x.
- *      2. if x < 2^-27 (hx<0x3e400000 0), return x with inexact if x!=0.
+ *      2. if x < 2^-27 (hx < 0x3e400000 0), return x with inexact if x != 0.
  *      3. sin(x) is approximated by a polynomial of degree 13 on
  *         [0,pi/4]
  *                               3            13
@@ -480,12 +480,12 @@ static double __kernel_sin(double x, double y, int iy) {
         double z,r,v;
         int ix;
         ix = high(x)&0x7fffffff;                /* high word of x */
-        if (ix<0x3e400000)                       /* |x| < 2**-27 */
-           { if ((int)x==0) return x; }            /* generate inexact */
+        if (ix < 0x3e400000)                       /* |x| < 2**-27 */
+           { if ((int)x == 0) return x; }            /* generate inexact */
         z       =  x*x;
         v       =  z*x;
         r       =  S2+z*(S3+z*(S4+z*(S5+z*S6)));
-        if (iy==0) return x+v*(S1+z*r);
+        if (iy == 0) return x+v*(S1+z*r);
         else      return x-((z*(half*y-v*r)-y)-v*S1);
 }
 
@@ -497,7 +497,7 @@ static double __kernel_sin(double x, double y, int iy) {
  *
  * Algorithm
  *      1. Since cos(-x) = cos(x), we need only to consider positive x.
- *      2. if x < 2^-27 (hx<0x3e400000 0), return 1 with inexact if x!=0.
+ *      2. if x < 2^-27 (hx < 0x3e400000 0), return 1 with inexact if x != 0.
  *      3. cos(x) is approximated by a polynomial of degree 14 on
  *         [0,pi/4]
  *                                       4            14
@@ -533,26 +533,26 @@ C5  =  2.08757232129817482790e-09, /* 0x3E21EE9E, 0xBDB4B1C4 */
 C6  = -1.13596475577881948265e-11; /* 0xBDA8FAE9, 0xBE8838D4 */
 
 static double __kernel_cos(double x, double y) {
-  double a,h,z,r,qx=0;
+  double a, h, z, r, qx = 0;
   int ix;
-  ix = high(x)&0x7fffffff;              /* ix = |x|'s high word*/
-  if (ix<0x3e400000) {                   /* if x < 2**27 */
-    if (((int)x)==0) return one;         /* generate inexact */
+  ix = high(x) & 0x7fffffff;              /* ix = |x|'s high word*/
+  if (ix < 0x3e400000) {                   /* if x < 2**27 */
+    if (((int)x) == 0) return one;         /* generate inexact */
   }
-  z  = x*x;
+  z  = x * x;
   r  = z*(C1+z*(C2+z*(C3+z*(C4+z*(C5+z*C6)))));
   if (ix < 0x3FD33333)                   /* if |x| < 0.3 */
-    return one - (0.5*z - (z*r - x*y));
+    return one - (0.5 * z - (z * r - x * y));
   else {
     if (ix > 0x3fe90000) {               /* x > 0.78125 */
       qx = 0.28125;
     } else {
-      set_high(&qx, ix-0x00200000); /* x/4 */
+      set_high(&qx, ix - 0x00200000); /* x/4 */
       set_low(&qx, 0);
     }
-    h = 0.5*z-qx;
-    a = one-qx;
-    return a - (h - (z*r-x*y));
+    h = 0.5 * z - qx;
+    a = one - qx;
+    return a - (h - (z * r - x * y));
   }
 }
 
@@ -565,7 +565,7 @@ static double __kernel_cos(double x, double y) {
  *
  * Algorithm
  *      1. Since tan(-x) = -tan(x), we need only to consider positive x.
- *      2. if x < 2^-28 (hx<0x3e300000 0), return x with inexact if x!=0.
+ *      2. if x < 2^-28 (hx < 0x3e300000 0), return x with inexact if x != 0.
  *      3. tan(x) is approximated by a odd polynomial of degree 27 on
  *         [0,0.67434]
  *                               3             27
@@ -610,12 +610,12 @@ T[] = {
 };
 
 static double __kernel_tan(double x, double y, int iy) {
-  double z,r,v,w,s;
-  int ix,hx;
+  double z, r, v, w, s;
+  int ix, hx;
   hx = high(x);           /* high word of x */
-  ix = hx&0x7fffffff;     /* high word of |x| */
-  if (ix<0x3e300000) {                     /* x < 2**-28 */
-    if ((int)x==0) {                       /* generate inexact */
+  ix = hx & 0x7fffffff;     /* high word of |x| */
+  if (ix < 0x3e300000) {                     /* x < 2**-28 */
+    if ((int)x == 0) {                       /* generate inexact */
       if (((ix | low(x)) | (iy + 1)) == 0)
         return one / fabsd(x);
       else {
@@ -635,40 +635,39 @@ static double __kernel_tan(double x, double y, int iy) {
       }
     }
   }
-  if (ix>=0x3FE59428) {                    /* |x|>=0.6744 */
-    if (hx<0) { x = -x; y = -y; }
-    z = pio4-x;
-    w = pio4lo-y;
-    x = z+w; y = 0.0;
+  if (ix >= 0x3FE59428) {                    /* |x|>=0.6744 */
+    if (hx < 0) { x = -x; y = -y; }
+    z = pio4 - x;
+    w = pio4lo - y;
+    x = z + w; y = 0.0;
   }
-  z       =  x*x;
-  w       =  z*z;
+  z = x*x;
+  w = z*z;
   /* Break x^5*(T[1]+x^2*T[2]+...) into
    *    x^5(T[1]+x^4*T[3]+...+x^20*T[11]) +
    *    x^5(x^2*(T[2]+x^4*T[4]+...+x^22*[T12]))
    */
   r = T[1]+w*(T[3]+w*(T[5]+w*(T[7]+w*(T[9]+w*T[11]))));
   v = z*(T[2]+w*(T[4]+w*(T[6]+w*(T[8]+w*(T[10]+w*T[12])))));
-  s = z*x;
-  r = y + z*(s*(r+v)+y);
-  r += T[0]*s;
-  w = x+r;
-  if (ix>=0x3FE59428) {
+  s = z *x;
+  r = y + z * (s * (r + v) + y);
+  r += T[0] * s;
+  w = x + r;
+  if (ix >= 0x3FE59428) {
     v = (double)iy;
-    return (double)(1-((hx>>30)&2))*(v-2.0*(x-(w*w/(w+v)-r)));
+    return (double)(1 - ((hx >> 30) & 2)) * (v - 2.0 * (x - (w * w / (w + v) - r)));
   }
-  if (iy==1) return w;
-  else {          /* if allow error up to 2 ulp,
-                     simply return -1.0/(x+r) here */
+  if (iy == 1) return w;
+  else {          /* if allow error up to 2 ulp, simply return -1.0/(x+r) here */
     /*  compute -1.0/(x+r) accurately */
-    double a,t;
+    double a, t;
     z  = w;
     set_low(&z, 0);
     v  = r-(z - x);     /* z+v = r+x */
-    t = a  = -1.0/w;    /* a = -1.0/w */
+    t = a  = -1.0 / w;    /* a = -1.0/w */
     set_low(&t, 0);
-    s  = 1.0+t*z;
-    return t+a*(s+t*v);
+    s  = 1.0 + t * z;
+    return t + a * (s + t * v);
   }
 }
 
@@ -721,12 +720,12 @@ JRT_LEAF(jdouble, SharedRuntime::dsin(jdouble x))
   if (ix <= 0x3fe921fb) return __kernel_sin(x,z,0);
 
   /* sin(Inf or NaN) is NaN */
-  else if (ix>=0x7ff00000) return x-x;
+  else if (ix >= 0x7ff00000) return x-x;
 
   /* argument reduction needed */
   else {
     n = __ieee754_rem_pio2(x,y);
-    switch(n&3) {
+    switch (n & 3) {
     case 0: return  __kernel_sin(y[0],y[1],1);
     case 1: return  __kernel_cos(y[0],y[1]);
     case 2: return -__kernel_sin(y[0],y[1],1);
@@ -779,17 +778,17 @@ JRT_LEAF(jdouble, SharedRuntime::dcos(jdouble x))
   if (ix <= 0x3fe921fb) return __kernel_cos(x,z);
 
   /* cos(Inf or NaN) is NaN */
-  else if (ix>=0x7ff00000) return x-x;
+  else if (ix >= 0x7ff00000) return x-x;
 
   /* argument reduction needed */
   else {
     n = __ieee754_rem_pio2(x,y);
-    switch(n&3) {
+    switch (n & 3) {
     case 0: return  __kernel_cos(y[0],y[1]);
     case 1: return -__kernel_sin(y[0],y[1],1);
     case 2: return -__kernel_cos(y[0],y[1]);
     default:
-      return  __kernel_sin(y[0],y[1],1);
+      return __kernel_sin(y[0],y[1],1);
     }
   }
 JRT_END
@@ -836,12 +835,12 @@ JRT_LEAF(jdouble, SharedRuntime::dtan(jdouble x))
   if (ix <= 0x3fe921fb) return __kernel_tan(x,z,1);
 
   /* tan(Inf or NaN) is NaN */
-  else if (ix>=0x7ff00000) return x-x;            /* NaN */
+  else if (ix >= 0x7ff00000) return x-x;            /* NaN */
 
   /* argument reduction needed */
   else {
     n = __ieee754_rem_pio2(x,y);
-    return __kernel_tan(y[0],y[1],1-((n&1)<<1)); /*   1 -- n even
+    return __kernel_tan(y[0],y[1],1-((n & 1) << 1)); /*   1 -- n even
                                                      -1 -- n odd */
   }
 JRT_END

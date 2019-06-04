@@ -583,7 +583,7 @@ LEAF(Phi, Instruction)
   bool is_local() const     { return _index >= 0; }
   bool is_on_stack() const  { return !is_local(); }
   int  local_index() const  { return _index; }
-  int  stack_index() const  { return -(_index+1); }
+  int  stack_index() const  { return -(_index + 1); }
 
   Value operand_at(int i) const;
   int  operand_count() const;
@@ -2417,8 +2417,8 @@ class BlockPair: public CompilationResourceObj {
   BlockPair(BlockBegin* from, BlockBegin* to): _from(from), _to(to) { }
   BlockBegin* from() const { return _from; }
   BlockBegin* to() const   { return _to; }
-  bool is_same(BlockBegin* from, BlockBegin* to) const { return  _from == from && _to == to; }
-  bool is_same(BlockPair* p) const { return  _from == p->from() && _to == p->to(); }
+  bool is_same(BlockBegin* from, BlockBegin* to) const { return _from == from && _to == to; }
+  bool is_same(BlockPair* p) const { return _from == p->from() && _to == p->to(); }
   void set_to(BlockBegin* b)   { _to = b; }
   void set_from(BlockBegin* b) { _from = b; }
 };

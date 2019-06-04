@@ -12,7 +12,6 @@
 #include "services/memoryManager.hpp"
 #include "services/memoryPool.hpp"
 #include "services/memoryService.hpp"
-#include "services/gcNotifier.hpp"
 
 MemoryManager::MemoryManager(const char* name) : _name(name) {
   _num_pools = 0;
@@ -187,7 +186,7 @@ void GCMemoryManager::gc_begin(bool recordGCBeginTime, bool recordPreGCUsage, bo
   }
   // _num_collections now increases in gc_end, to count completed collections
   if (recordGCBeginTime) {
-    _current_gc_stat->set_index(_num_collections+1);
+    _current_gc_stat->set_index(_num_collections + 1);
     _current_gc_stat->set_start_time(Management::timestamp());
   }
 
@@ -248,7 +247,7 @@ void GCMemoryManager::gc_end(bool recordPostGCUsage, bool recordAccumulatedGCTim
     }
 
     if (is_notification_enabled()) {
-      GCNotifier::pushNotification(this, _gc_end_message, GCCause::to_string(cause));
+      NULL::pushNotification(this, _gc_end_message, GCCause::to_string(cause));
     }
   }
 }

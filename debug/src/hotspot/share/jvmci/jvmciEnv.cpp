@@ -124,10 +124,7 @@ Klass* JVMCIEnv::get_klass_by_name_impl(Klass* accessing_klass, const constantPo
 Klass* JVMCIEnv::get_klass_by_name(Klass* accessing_klass, Symbol* klass_name, bool require_local) {
   ResourceMark rm;
   constantPoolHandle cpool;
-  return get_klass_by_name_impl(accessing_klass,
-                                cpool,
-                                klass_name,
-                                require_local);
+  return get_klass_by_name_impl(accessing_klass, cpool, klass_name, require_local);
 }
 
 // ------------------------------------------------------------------

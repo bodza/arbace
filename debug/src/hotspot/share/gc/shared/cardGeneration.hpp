@@ -50,8 +50,6 @@ class CardGeneration: public Generation {
 
   virtual void invalidate_remembered_set();
 
-  virtual void prepare_for_verify();
-
   // Grow generation with specified size (returns false if unable to grow)
   bool grow_by(size_t bytes);
   // Grow generation to reserved size.

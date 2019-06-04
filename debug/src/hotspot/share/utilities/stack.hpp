@@ -80,8 +80,7 @@ public:
   // max_cache_size:  maxmium number of *segments* to cache
   // max_size:        maximum number of items allowed, rounded to a multiple of
   //                  the segment size (0 == unlimited)
-  inline Stack(size_t segment_size = _default_segment_size,
-               size_t max_cache_size = 4, size_t max_size = 0);
+  inline Stack(size_t segment_size = _default_segment_size, size_t max_cache_size = 4, size_t max_size = 0);
   inline ~Stack() { clear(true); }
 
   inline bool is_empty() const { return this->_cur_seg == NULL; }

@@ -33,8 +33,7 @@ public:
   static inline void    put_int(jint *from, intptr_t *to, int& pos) { *(jint *)(to + pos++) = *from; }
 
 #ifdef AMD64
-  // Longs are stored in native format in one JavaCallArgument slot at
-  // *(to+1).
+  // Longs are stored in native format in one JavaCallArgument slot at *(to+1).
   static inline void put_long(jlong from, intptr_t *to) {
     *(jlong*) (to + 1) = from;
   }

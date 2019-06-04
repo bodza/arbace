@@ -218,11 +218,6 @@ void VMThread::run() {
 
   if (VerifyBeforeExit) {
     HandleMark hm(VMThread::vm_thread());
-    // Among other things, this ensures that Eden top is correct.
-    Universe::heap()->prepare_for_verify();
-    // Silent verification so as not to pollute normal output,
-    // unless we really asked for it.
-    Universe::verify();
   }
 
   CompileBroker::set_should_block();
@@ -568,10 +563,4 @@ void VMThread::execute(VM_Operation* op) {
 void VMThread::oops_do(OopClosure* f, CodeBlobClosure* cf) {
   Thread::oops_do(f, cf);
   _vm_queue->oops_do(f);
-}
-
-//------------------------------------------------------------------------------------------------------------------
-
-void VMThread::verify() {
-  oops_do(&VerifyOopClosure::verify_oop, NULL);
 }

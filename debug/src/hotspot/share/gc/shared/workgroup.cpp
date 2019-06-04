@@ -383,7 +383,7 @@ void SubTasksDone::all_tasks_completed(uint n_threads) {
   uint old;
   do {
     old = observed;
-    observed = Atomic::cmpxchg(old+1, &_threads_completed, old);
+    observed = Atomic::cmpxchg(old + 1, &_threads_completed, old);
   } while (observed != old);
   // If this was the last thread checking in, clear the tasks.
   uint adjusted_thread_count = (n_threads == 0 ? 1 : n_threads);
@@ -410,7 +410,7 @@ bool SequentialSubTasksDone::valid() {
 bool SequentialSubTasksDone::is_task_claimed(uint& t) {
   t = _n_claimed;
   while (t < _n_tasks) {
-    uint res = Atomic::cmpxchg(t+1, &_n_claimed, t);
+    uint res = Atomic::cmpxchg(t + 1, &_n_claimed, t);
     if (res == t) {
       return false;
     }
@@ -422,13 +422,13 @@ bool SequentialSubTasksDone::is_task_claimed(uint& t) {
 bool SequentialSubTasksDone::all_tasks_completed() {
   uint complete = _n_completed;
   while (true) {
-    uint res = Atomic::cmpxchg(complete+1, &_n_completed, complete);
+    uint res = Atomic::cmpxchg(complete + 1, &_n_completed, complete);
     if (res == complete) {
       break;
     }
     complete = res;
   }
-  if (complete+1 == _n_threads) {
+  if (complete + 1 == _n_threads) {
     clear();
     return true;
   }

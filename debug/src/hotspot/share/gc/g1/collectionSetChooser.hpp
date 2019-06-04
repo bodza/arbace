@@ -118,10 +118,6 @@ public:
   // Return the reclaimable bytes that remain to be collected on
   // all the candidate regions in the CSet chooser.
   size_t remaining_reclaimable_bytes() { return _remaining_reclaimable_bytes; }
-
-  // Returns true if the used portion of "_regions" is properly
-  // sorted, otherwise asserts false.
-  void verify() { };
 };
 
 class CSetChooserParUpdater : public StackObj {

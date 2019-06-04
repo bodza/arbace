@@ -56,7 +56,7 @@ void Rewriter::restore_bytecodes() {
   int len = _methods->length();
   bool invokespecial_error = false;
 
-  for (int i = len-1; i >= 0; i--) {
+  for (int i = len - 1; i >= 0; i--) {
     Method* method = _methods->at(i);
     scan_method(method, true, &invokespecial_error);
   }
@@ -348,7 +348,7 @@ void Rewriter::scan_method(Method* method, bool reverse, bool* invokespecial_err
       }
 
       case Bytecodes::_invokespecial: {
-        rewrite_invokespecial(bcp, prefix_length+1, reverse, invokespecial_error);
+        rewrite_invokespecial(bcp, prefix_length + 1, reverse, invokespecial_error);
         break;
       }
 
@@ -395,18 +395,18 @@ void Rewriter::scan_method(Method* method, bool reverse, bool* invokespecial_err
       case Bytecodes::_invokestatic   :
       case Bytecodes::_invokeinterface:
       case Bytecodes::_invokehandle   : // if reverse=true
-        rewrite_member_reference(bcp, prefix_length+1, reverse);
+        rewrite_member_reference(bcp, prefix_length + 1, reverse);
         break;
       case Bytecodes::_invokedynamic:
-        rewrite_invokedynamic(bcp, prefix_length+1, reverse);
+        rewrite_invokedynamic(bcp, prefix_length + 1, reverse);
         break;
       case Bytecodes::_ldc:
       case Bytecodes::_fast_aldc:  // if reverse=true
-        maybe_rewrite_ldc(bcp, prefix_length+1, false, reverse);
+        maybe_rewrite_ldc(bcp, prefix_length + 1, false, reverse);
         break;
       case Bytecodes::_ldc_w:
       case Bytecodes::_fast_aldc_w:  // if reverse=true
-        maybe_rewrite_ldc(bcp, prefix_length+1, true, reverse);
+        maybe_rewrite_ldc(bcp, prefix_length + 1, true, reverse);
         break;
       case Bytecodes::_jsr            : // fall through
       case Bytecodes::_jsr_w          : nof_jsrs++;                   break;
@@ -466,7 +466,7 @@ void Rewriter::rewrite_bytecodes(TRAPS) {
   int len = _methods->length();
   bool invokespecial_error = false;
 
-  for (int i = len-1; i >= 0; i--) {
+  for (int i = len - 1; i >= 0; i--) {
     Method* method = _methods->at(i);
     scan_method(method, false, &invokespecial_error);
     if (invokespecial_error) {
@@ -519,7 +519,7 @@ Rewriter::Rewriter(InstanceKlass* klass, const constantPoolHandle& cpool, Array<
   // rewritten in the RO section of the shared archive.
   // Relocated bytecodes don't have to be restored, only the cp cache entries
   int len = _methods->length();
-  for (int i = len-1; i >= 0; i--) {
+  for (int i = len - 1; i >= 0; i--) {
     methodHandle m(THREAD, _methods->at(i));
 
     if (m->has_jsrs()) {

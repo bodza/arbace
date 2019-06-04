@@ -66,7 +66,6 @@ class PcDesc {
   address real_pc(const CompiledMethod* code) const;
 
   void print(CompiledMethod* code);
-  bool verify(CompiledMethod* code);
 };
 
 #endif

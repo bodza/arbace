@@ -319,6 +319,5 @@ bool G1ConcurrentRefine::do_refinement_step(uint worker_id) {
   maybe_activate_more_threads(worker_id, curr_buffer_num);
 
   // Process the next buffer, if there are enough left.
-  return dcqs.refine_completed_buffer_concurrently(worker_id + worker_id_offset(),
-                                                   deactivation_threshold(worker_id));
+  return dcqs.refine_completed_buffer_concurrently(worker_id + worker_id_offset(), deactivation_threshold(worker_id));
 }

@@ -186,7 +186,6 @@ class ClassLoaderData;
 class MetaspaceClosure;
 
 class MetaspaceObj {
-  friend class MetaspaceShared;
   // When CDS is enabled, all shared metaspace objects are mapped
   // into a single contiguous memory block, so we can use these
   // two pointers to quickly determine if something is in the
@@ -231,7 +230,7 @@ class MetaspaceObj {
   };
 
   static const char * type_name(Type type) {
-    switch(type) {
+    switch (type) {
     METASPACE_OBJ_TYPES_DO(METASPACE_OBJ_TYPE_NAME_CASE)
     default:
       ShouldNotReachHere();

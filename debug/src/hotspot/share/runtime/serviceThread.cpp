@@ -6,9 +6,6 @@
 #include "runtime/serviceThread.hpp"
 #include "runtime/mutexLocker.hpp"
 #include "runtime/os.hpp"
-#include "services/diagnosticArgument.hpp"
-#include "services/diagnosticFramework.hpp"
-#include "services/gcNotifier.hpp"
 #include "services/lowMemoryDetector.hpp"
 
 ServiceThread* ServiceThread::_instance = NULL;
@@ -66,8 +63,8 @@ void ServiceThread::service_thread_entry(JavaThread* jt, TRAPS) {
 
       MutexLockerEx ml(Service_lock, Mutex::_no_safepoint_check_flag);
       while (!(sensors_changed = LowMemoryDetector::has_pending_requests()) &&
-              !(has_gc_notification_event = GCNotifier::has_event()) &&
-              !(has_dcmd_notification_event = DCmdFactory::has_pending_jmx_notification()) &&
+              !(has_gc_notification_event = NULL::has_event()) &&
+              !(has_dcmd_notification_event = NULL::has_pending_jmx_notification()) &&
               !(stringtable_work = StringTable::has_work())) {
         // wait until one of the sensors has pending requests, or there is a
         // pending JVMTI event or JMX GC notification to post
@@ -84,11 +81,11 @@ void ServiceThread::service_thread_entry(JavaThread* jt, TRAPS) {
     }
 
     if (has_gc_notification_event) {
-        GCNotifier::sendNotification(CHECK);
+        NULL::sendNotification(CHECK);
     }
 
     if (has_dcmd_notification_event) {
-      DCmdFactory::send_notification(CHECK);
+      NULL::send_notification(CHECK);
     }
   }
 }

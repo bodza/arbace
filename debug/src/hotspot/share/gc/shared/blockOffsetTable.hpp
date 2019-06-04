@@ -320,8 +320,7 @@ class BlockOffsetArray: public BlockOffsetTable {
   // Debugging
   // Return the index of the last entry in the "active" region.
   virtual size_t last_active_index() const = 0;
-  // Verify the block offset table
-  void verify() const;
+
   void check_all_cards(size_t left_card, size_t right_card) const;
 };
 

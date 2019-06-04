@@ -163,8 +163,7 @@ LIR_Address* LIRGenerator::emit_array_address(LIR_Opr array_opr, LIR_Opr index_o
 
   LIR_Address* addr;
   if (index_opr->is_constant()) {
-    addr = new LIR_Address(array_opr,
-                           offset_in_bytes + (intx)(index_opr->as_jint()) * elem_size, type);
+    addr = new LIR_Address(array_opr, offset_in_bytes + (intx)(index_opr->as_jint()) * elem_size, type);
   } else {
     if (offset_in_bytes) {
       LIR_Opr tmp = new_pointer_register();
@@ -172,10 +171,7 @@ LIR_Address* LIRGenerator::emit_array_address(LIR_Opr array_opr, LIR_Opr index_o
       array_opr = tmp;
       offset_in_bytes = 0;
     }
-    addr =  new LIR_Address(array_opr,
-                            index_opr,
-                            LIR_Address::scale(type),
-                            offset_in_bytes, type);
+    addr =  new LIR_Address(array_opr, index_opr, LIR_Address::scale(type), offset_in_bytes, type);
   }
   return addr;
 }
@@ -215,7 +211,7 @@ void LIRGenerator::increment_counter(address counter, BasicType type, int step) 
 
 void LIRGenerator::increment_counter(LIR_Address* addr, int step) {
   LIR_Opr imm = NULL;
-  switch(addr->type()) {
+  switch (addr->type()) {
   case T_INT:
     imm = LIR_OprFact::intConst(step);
     break;
@@ -409,7 +405,7 @@ void LIRGenerator::do_ArithmeticOp_Long(ArithmeticOp* x) {
   } else {
     // add, sub, mul
     left.load_item();
-    if (! right.is_register()) {
+    if (!right.is_register()) {
       if (x->op() == Bytecodes::_lmul || ! right.is_constant() || ! Assembler::operand_valid_for_add_sub_immediate(right.get_jlong_constant())) {
         right.load_item();
       } else { // add, sub
@@ -863,10 +859,7 @@ void LIRGenerator::do_update_CRC32(Intrinsic* x) {
         offset = 0;
       }
 
-      LIR_Address* a = new LIR_Address(base_op,
-                                       index,
-                                       offset,
-                                       T_BYTE);
+      LIR_Address* a = new LIR_Address(base_op, index, offset, T_BYTE);
       BasicTypeList signature(3);
       signature.append(T_INT);
       signature.append(T_ADDRESS);
@@ -940,10 +933,7 @@ void LIRGenerator::do_update_CRC32C(Intrinsic* x) {
         offset = 0;
       }
 
-      LIR_Address* a = new LIR_Address(base_op,
-                                       index,
-                                       offset,
-                                       T_BYTE);
+      LIR_Address* a = new LIR_Address(base_op, index, offset, T_BYTE);
       BasicTypeList signature(3);
       signature.append(T_INT);
       signature.append(T_ADDRESS);
@@ -1263,7 +1253,7 @@ void LIRGenerator::volatile_field_load(LIR_Address* address, LIR_Opr result, Cod
   // membar it's possible for a simple Dekker test to fail if loads
   // use LD;DMB but stores use STLR.  This can happen if C2 compiles
   // the stores in one method and C1 compiles the loads in another.
-  if (! UseBarriersForVolatile) {
+  if (!UseBarriersForVolatile) {
     __ membar();
   }
 

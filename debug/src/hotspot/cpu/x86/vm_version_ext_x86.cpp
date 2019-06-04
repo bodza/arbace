@@ -551,7 +551,7 @@ int VM_Version_Ext::cpu_detailed_description(char* const buf, size_t buf_len) {
     _cpuid_info.ext_cpuid1_edx);
 
   if (outputLen < 0 || (size_t) outputLen >= buf_len - 1) {
-    if (buf_len > 0) { buf[buf_len-1] = '\0'; }
+    if (buf_len > 0) { buf[buf_len - 1] = '\0'; }
     return OS_ERR;
   }
 
@@ -614,7 +614,7 @@ jlong VM_Version_Ext::max_qualified_cpu_freq_from_brand_string(void) {
   if (Hz_location != NULL) {
     if (*(Hz_location + 1) == 'z') {
       // switch on y in "yHz"
-      switch(*(Hz_location - 1)) {
+      switch (*(Hz_location - 1)) {
         case 'M' :
           // Set multiplier to frequency is in Hz
           multiplier = MEGA;

@@ -63,81 +63,8 @@ ProfileData::ProfileData() {
   _data = NULL;
 }
 
-char* ProfileData::print_data_on_helper(const MethodData* md) const {
-  DataLayout* dp  = md->extra_data_base();
-  DataLayout* end = md->args_data_limit();
-  stringStream ss;
-  for (;; dp = MethodData::next_extra(dp)) {
-    switch(dp->tag()) {
-    case DataLayout::speculative_trap_data_tag:
-      if (dp->bci() == bci()) {
-        SpeculativeTrapData* data = new SpeculativeTrapData(dp);
-        int trap = data->trap_state();
-        char buf[100];
-        ss.print("trap/");
-        data->method()->print_short_name(&ss);
-        ss.print("(%s) ", Deoptimization::format_trap_state(buf, sizeof(buf), trap));
-      }
-      break;
-    case DataLayout::bit_data_tag:
-      break;
-    case DataLayout::no_tag:
-    case DataLayout::arg_info_data_tag:
-      return ss.as_string();
-      break;
-    default:
-      fatal("unexpected tag %d", dp->tag());
-    }
-  }
-  return NULL;
-}
-
-void ProfileData::print_data_on(outputStream* st, const MethodData* md) const {
-  print_data_on(st, print_data_on_helper(md));
-}
-
-void ProfileData::print_shared(outputStream* st, const char* name, const char* extra) const {
-  st->print("bci: %d", bci());
-  st->fill_to(tab_width_one);
-  st->print("%s", name);
-  tab(st);
-  int trap = trap_state();
-  if (trap != 0) {
-    char buf[100];
-    st->print("trap(%s) ", Deoptimization::format_trap_state(buf, sizeof(buf), trap));
-  }
-  if (extra != NULL) {
-    st->print("%s", extra);
-  }
-  int flags = data()->flags();
-  if (flags != 0) {
-    st->print("flags(%d) ", flags);
-  }
-}
-
 void ProfileData::tab(outputStream* st, bool first) const {
   st->fill_to(first ? tab_width_one : tab_width_two);
-}
-
-// ==================================================================
-// BitData
-//
-// A BitData corresponds to a one-bit flag.  This is used to indicate
-// whether a checkcast bytecode has seen a null value.
-
-void BitData::print_data_on(outputStream* st, const char* extra) const {
-  print_shared(st, "BitData", extra);
-  st->cr();
-}
-
-// ==================================================================
-// CounterData
-//
-// A CounterData corresponds to a simple counter.
-
-void CounterData::print_data_on(outputStream* st, const char* extra) const {
-  print_shared(st, "CounterData", extra);
-  st->print_cr("count(%u)", count());
 }
 
 // ==================================================================
@@ -160,11 +87,6 @@ void JumpData::post_initialize(BytecodeStream* stream, MethodData* mdo) {
   int target_di = mdo->bci_to_di(target);
   int offset = target_di - my_di;
   set_displacement(offset);
-}
-
-void JumpData::print_data_on(outputStream* st, const char* extra) const {
-  print_shared(st, "JumpData", extra);
-  st->print_cr("taken(%u) displacement(%d)", taken(), displacement());
 }
 
 int TypeStackSlotEntries::compute_cell_count(Symbol* signature, bool include_receiver, int max) {
@@ -307,49 +229,6 @@ void TypeEntries::print_klass(outputStream* st, intptr_t k) {
   }
 }
 
-void TypeStackSlotEntries::print_data_on(outputStream* st) const {
-  for (int i = 0; i < _number_of_entries; i++) {
-    _pd->tab(st);
-    st->print("%d: stack(%u) ", i, stack_slot(i));
-    print_klass(st, type(i));
-    st->cr();
-  }
-}
-
-void ReturnTypeEntry::print_data_on(outputStream* st) const {
-  _pd->tab(st);
-  print_klass(st, type());
-  st->cr();
-}
-
-void CallTypeData::print_data_on(outputStream* st, const char* extra) const {
-  CounterData::print_data_on(st, extra);
-  if (has_arguments()) {
-    tab(st, true);
-    st->print("argument types");
-    _args.print_data_on(st);
-  }
-  if (has_return()) {
-    tab(st, true);
-    st->print("return type");
-    _ret.print_data_on(st);
-  }
-}
-
-void VirtualCallTypeData::print_data_on(outputStream* st, const char* extra) const {
-  VirtualCallData::print_data_on(st, extra);
-  if (has_arguments()) {
-    tab(st, true);
-    st->print("argument types");
-    _args.print_data_on(st);
-  }
-  if (has_return()) {
-    tab(st, true);
-    st->print("return type");
-    _ret.print_data_on(st);
-  }
-}
-
 // ==================================================================
 // ReceiverTypeData
 //
@@ -385,61 +264,6 @@ void VirtualCallData::clean_weak_method_links() {
       clear_method_row(row);
     }
   }
-}
-
-void ReceiverTypeData::print_receiver_data_on(outputStream* st) const {
-  uint row;
-  int entries = 0;
-  for (row = 0; row < row_limit(); row++) {
-    if (receiver(row) != NULL)  entries++;
-  }
-  st->print_cr("count(%u) nonprofiled_count(%u) entries(%u)", count(), nonprofiled_count(), entries);
-  int total = count();
-  for (row = 0; row < row_limit(); row++) {
-    if (receiver(row) != NULL) {
-      total += receiver_count(row);
-    }
-  }
-  for (row = 0; row < row_limit(); row++) {
-    if (receiver(row) != NULL) {
-      tab(st);
-      receiver(row)->print_value_on(st);
-      st->print_cr("(%u %4.2f)", receiver_count(row), (float) receiver_count(row) / (float) total);
-    }
-  }
-}
-void ReceiverTypeData::print_data_on(outputStream* st, const char* extra) const {
-  print_shared(st, "ReceiverTypeData", extra);
-  print_receiver_data_on(st);
-}
-
-void VirtualCallData::print_method_data_on(outputStream* st) const {
-  uint row;
-  int entries = 0;
-  for (row = 0; row < method_row_limit(); row++) {
-    if (method(row) != NULL) entries++;
-  }
-  tab(st);
-  st->print_cr("method_entries(%u)", entries);
-  int total = count();
-  for (row = 0; row < method_row_limit(); row++) {
-    if (method(row) != NULL) {
-      total += method_count(row);
-    }
-  }
-  for (row = 0; row < method_row_limit(); row++) {
-    if (method(row) != NULL) {
-      tab(st);
-      method(row)->print_value_on(st);
-      st->print_cr("(%u %4.2f)", method_count(row), (float) method_count(row) / (float) total);
-    }
-  }
-}
-
-void VirtualCallData::print_data_on(outputStream* st, const char* extra) const {
-  print_shared(st, "VirtualCallData", extra);
-  print_receiver_data_on(st);
-  print_method_data_on(st);
 }
 
 // ==================================================================
@@ -486,22 +310,6 @@ address RetData::fixup_ret(int return_bci, MethodData* h_mdo) {
   return mdp;
 }
 
-void RetData::print_data_on(outputStream* st, const char* extra) const {
-  print_shared(st, "RetData", extra);
-  uint row;
-  int entries = 0;
-  for (row = 0; row < row_limit(); row++) {
-    if (bci(row) != no_bci)  entries++;
-  }
-  st->print_cr("count(%u) entries(%u)", count(), entries);
-  for (row = 0; row < row_limit(); row++) {
-    if (bci(row) != no_bci) {
-      tab(st);
-      st->print_cr("bci(%d: count(%u) displacement(%d))", bci(row), bci_count(row), bci_displacement(row));
-    }
-  }
-}
-
 // ==================================================================
 // BranchData
 //
@@ -515,13 +323,6 @@ void BranchData::post_initialize(BytecodeStream* stream, MethodData* mdo) {
   int target_di = mdo->bci_to_di(target);
   int offset = target_di - my_di;
   set_displacement(offset);
-}
-
-void BranchData::print_data_on(outputStream* st, const char* extra) const {
-  print_shared(st, "BranchData", extra);
-  st->print_cr("taken(%u) displacement(%d)", taken(), displacement());
-  tab(st);
-  st->print_cr("not taken(%u)", not_taken());
 }
 
 // ==================================================================
@@ -583,25 +384,6 @@ void MultiBranchData::post_initialize(BytecodeStream* stream, MethodData* mdo) {
   }
 }
 
-void MultiBranchData::print_data_on(outputStream* st, const char* extra) const {
-  print_shared(st, "MultiBranchData", extra);
-  st->print_cr("default_count(%u) displacement(%d)", default_count(), default_displacement());
-  int cases = number_of_cases();
-  for (int i = 0; i < cases; i++) {
-    tab(st);
-    st->print_cr("count(%u) displacement(%d)", count_at(i), displacement_at(i));
-  }
-}
-
-void ArgInfoData::print_data_on(outputStream* st, const char* extra) const {
-  print_shared(st, "ArgInfoData", extra);
-  int nargs = number_of_args();
-  for (int i = 0; i < nargs; i++) {
-    st->print("  0x%x", arg_modified(i));
-  }
-  st->cr();
-}
-
 int ParametersTypeData::compute_cell_count(Method* m) {
   if (!MethodData::profile_parameters_for_method(m)) {
     return 0;
@@ -620,18 +402,6 @@ void ParametersTypeData::post_initialize(BytecodeStream* stream, MethodData* mdo
 
 bool ParametersTypeData::profiling_enabled() {
   return MethodData::profile_parameters();
-}
-
-void ParametersTypeData::print_data_on(outputStream* st, const char* extra) const {
-  st->print("parameter types"); // FIXME extra ignored?
-  _parameters.print_data_on(st);
-}
-
-void SpeculativeTrapData::print_data_on(outputStream* st, const char* extra) const {
-  print_shared(st, "SpeculativeTrapData", extra);
-  tab(st);
-  method()->print_short_name(st);
-  st->cr();
 }
 
 // ==================================================================
@@ -812,7 +582,7 @@ int MethodData::compute_allocation_size_in_bytes(const methodHandle& method) {
 
   // Add a cell to record information about modified arguments.
   int arg_size = method->size_of_parameters();
-  object_size += DataLayout::compute_size_in_bytes(arg_size+1);
+  object_size += DataLayout::compute_size_in_bytes(arg_size + 1);
 
   // Reserve room for an area of the MDO dedicated to profiling of
   // parameters
@@ -1057,9 +827,9 @@ void MethodData::initialize() {
   DataLayout *dp = data_layout_at(data_size + extra_size);
 
   int arg_size = method()->size_of_parameters();
-  dp->initialize(DataLayout::arg_info_data_tag, 0, arg_size+1);
+  dp->initialize(DataLayout::arg_info_data_tag, 0, arg_size + 1);
 
-  int arg_data_size = DataLayout::compute_size_in_bytes(arg_size+1);
+  int arg_data_size = DataLayout::compute_size_in_bytes(arg_size + 1);
   object_size += extra_size + arg_data_size;
 
   int parms_cell = ParametersTypeData::compute_cell_count(method());
@@ -1189,7 +959,7 @@ ProfileData* MethodData::bci_to_data(int bci) {
 
 DataLayout* MethodData::next_extra(DataLayout* dp) {
   int nb_cells = 0;
-  switch(dp->tag()) {
+  switch (dp->tag()) {
   case DataLayout::bit_data_tag:
   case DataLayout::no_tag:
     nb_cells = BitData::static_cell_count();
@@ -1209,7 +979,7 @@ ProfileData* MethodData::bci_to_extra_data_helper(int bci, Method* m, DataLayout
   for (;; dp = next_extra(dp)) {
     // No need for "OrderAccess::load_acquire" ops,
     // since the data structure is monotonic.
-    switch(dp->tag()) {
+    switch (dp->tag()) {
     case DataLayout::no_tag:
       return NULL;
     case DataLayout::arg_info_data_tag:
@@ -1305,52 +1075,11 @@ void MethodData::print_on(outputStream* st) const {
   st->print("method data for ");
   method()->print_value_on(st);
   st->cr();
-  print_data_on(st);
 }
 
 void MethodData::print_value_on(outputStream* st) const {
   st->print("method data for ");
   method()->print_value_on(st);
-}
-
-void MethodData::print_data_on(outputStream* st) const {
-  ResourceMark rm;
-  ProfileData* data = first_data();
-  if (_parameters_type_data_di != no_parameters) {
-    parameters_type_data()->print_data_on(st);
-  }
-  for ( ; is_valid(data); data = next_data(data)) {
-    st->print("%d", dp_to_di(data->dp()));
-    st->fill_to(6);
-    data->print_data_on(st, this);
-  }
-  st->print_cr("--- Extra data:");
-  DataLayout* dp    = extra_data_base();
-  DataLayout* end   = args_data_limit();
-  for (;; dp = next_extra(dp)) {
-    // No need for "OrderAccess::load_acquire" ops,
-    // since the data structure is monotonic.
-    switch(dp->tag()) {
-    case DataLayout::no_tag:
-      continue;
-    case DataLayout::bit_data_tag:
-      data = new BitData(dp);
-      break;
-    case DataLayout::speculative_trap_data_tag:
-      data = new SpeculativeTrapData(dp);
-      break;
-    case DataLayout::arg_info_data_tag:
-      data = new ArgInfoData(dp);
-      dp = end; // ArgInfoData is at the end of extra data section.
-      break;
-    default:
-      fatal("unexpected tag %d", dp->tag());
-    }
-    st->print("%d", dp_to_di(data->dp()));
-    st->fill_to(6);
-    data->print_data_on(st);
-    if (dp >= end) return;
-  }
 }
 
 // Verification
@@ -1530,7 +1259,7 @@ void MethodData::clean_extra_data(CleanExtraDataClosure* cl) {
 
   int shift = 0;
   for (; dp < end; dp = next_extra(dp)) {
-    switch(dp->tag()) {
+    switch (dp->tag()) {
     case DataLayout::speculative_trap_data_tag: {
       SpeculativeTrapData* data = new SpeculativeTrapData(dp);
       Method* m = data->method();

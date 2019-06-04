@@ -382,7 +382,7 @@ public:
         return true;
       }
     } else {
-      for ( int i = 0 ; i < _objs->length(); i++ ) {
+      for (int i = 0 ; i < _objs->length(); i++) {
         markOop mark = (_objs->at(i))()->mark();
         if (mark->has_bias_pattern()) {
           return true;

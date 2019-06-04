@@ -28,7 +28,7 @@
 /*      arr->append(h);                                                  */
 /*    }                                                                  */
 /* }                                                                     */
-/* if (arr->length() != 0 ) {                                            */
+/* if (arr->length() != 0) {                                            */
 /*    oop bad_oop = arr->at(0)(); // Handle is BAD HERE.                 */
 /*    ...                                                                */
 /* }                                                                     */
@@ -73,7 +73,7 @@ class GenericGrowableArray : public ResourceObj {
   bool on_stack () { return _arena == NULL; }
   bool on_arena () { return _arena >  (Arena*)1; }
 
-  // This GA will use the resource stack for storage if c_heap==false,
+  // This GA will use the resource stack for storage if c_heap == false,
   // Else it will use the C heap.  Use clear_and_deallocate to avoid leaks.
   GenericGrowableArray(int initial_size, int initial_len, bool c_heap, MEMFLAGS flags = mtNone) {
     _len = initial_len;
@@ -202,7 +202,7 @@ template<class E> class GrowableArray : public GenericGrowableArray {
   }
 
   E top() const {
-    return _data[_len-1];
+    return _data[_len - 1];
   }
 
   E last() const {
@@ -233,7 +233,7 @@ template<class E> class GrowableArray : public GenericGrowableArray {
       if (i >= _max) grow(i);
       for (int j = _len; j <= i; j++)
         _data[j] = fill;
-      _len = i+1;
+      _len = i + 1;
     }
     return _data[i];
   }
@@ -258,7 +258,7 @@ template<class E> class GrowableArray : public GenericGrowableArray {
   }
 
   int find_from_end(const E& elem) const {
-    for (int i = _len-1; i >= 0; i--) {
+    for (int i = _len - 1; i >= 0; i--) {
       if (_data[i] == elem) return i;
     }
     return -1;
@@ -273,7 +273,7 @@ template<class E> class GrowableArray : public GenericGrowableArray {
 
   int find_from_end(void* token, bool f(void*, E)) const {
     // start at the end of the array
-    for (int i = _len-1; i >= 0; i--) {
+    for (int i = _len - 1; i >= 0; i--) {
       if (f(token, _data[i])) return i;
     }
     return -1;
@@ -282,7 +282,7 @@ template<class E> class GrowableArray : public GenericGrowableArray {
   void remove(const E& elem) {
     for (int i = 0; i < _len; i++) {
       if (_data[i] == elem) {
-        for (int j = i + 1; j < _len; j++) _data[j-1] = _data[j];
+        for (int j = i + 1; j < _len; j++) _data[j - 1] = _data[j];
         _len--;
         return;
       }
@@ -292,7 +292,7 @@ template<class E> class GrowableArray : public GenericGrowableArray {
 
   // The order is preserved.
   void remove_at(int index) {
-    for (int j = index + 1; j < _len; j++) _data[j-1] = _data[j];
+    for (int j = index + 1; j < _len; j++) _data[j - 1] = _data[j];
     _len--;
   }
 
@@ -405,7 +405,7 @@ template<class E> void GrowableArray<E>::raw_at_put_grow(int i, const E& p, cons
       if (i >= _max) grow(i);
       for (int j = _len; j < i; j++)
         _data[j] = fill;
-      _len = i+1;
+      _len = i + 1;
     }
     _data[i] = p;
 }

@@ -309,7 +309,7 @@ bool CodeCache::heap_available(int code_blob_type) {
 }
 
 const char* CodeCache::get_code_heap_flag_name(int code_blob_type) {
-  switch(code_blob_type) {
+  switch (code_blob_type) {
   case CodeBlobType::NonNMethod:
     return "NonNMethodCodeHeapSize";
     break;
@@ -1025,17 +1025,6 @@ void CodeCache::flush_dependents_on_method(const methodHandle& m_h) {
 
     // Make the dependent methods not entrant
     make_marked_nmethods_not_entrant();
-  }
-}
-
-void CodeCache::verify() {
-  FOR_ALL_HEAPS(heap) {
-    (*heap)->verify();
-    FOR_ALL_BLOBS(cb, *heap) {
-      if (cb->is_alive()) {
-        cb->verify();
-      }
-    }
   }
 }
 

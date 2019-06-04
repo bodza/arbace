@@ -94,10 +94,6 @@ class ScopeDesc : public ResourceObj {
   GrowableArray<ScopeValue*>* decode_object_values(int decode_offset);
 
   DebugInfoReadStream* stream_at(int decode_offset) const;
-
- public:
-  // Verification
-  void verify();
 };
 
 #endif

@@ -883,13 +883,9 @@ namespace AccessInternal {
               size_t length) {
       typedef RawAccessBarrier<decorators & RAW_DECORATOR_MASK> Raw;
       if (HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value) {
-        return Raw::oop_arraycopy(src_obj, src_offset_in_bytes, src_raw,
-                                  dst_obj, dst_offset_in_bytes, dst_raw,
-                                  length);
+        return Raw::oop_arraycopy(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
       } else {
-        return Raw::arraycopy(src_obj, src_offset_in_bytes, src_raw,
-                              dst_obj, dst_offset_in_bytes, dst_raw,
-                              length);
+        return Raw::arraycopy(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
       }
     }
 
@@ -901,14 +897,10 @@ namespace AccessInternal {
               size_t length) {
       if (UseCompressedOops) {
         const DecoratorSet expanded_decorators = decorators | convert_compressed_oops;
-        return PreRuntimeDispatch::arraycopy<expanded_decorators>(src_obj, src_offset_in_bytes, src_raw,
-                                                                  dst_obj, dst_offset_in_bytes, dst_raw,
-                                                                  length);
+        return PreRuntimeDispatch::arraycopy<expanded_decorators>(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
       } else {
         const DecoratorSet expanded_decorators = decorators & ~convert_compressed_oops;
-        return PreRuntimeDispatch::arraycopy<expanded_decorators>(src_obj, src_offset_in_bytes, src_raw,
-                                                                  dst_obj, dst_offset_in_bytes, dst_raw,
-                                                                  length);
+        return PreRuntimeDispatch::arraycopy<expanded_decorators>(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
       }
     }
 
@@ -920,13 +912,9 @@ namespace AccessInternal {
               size_t length) {
       if (is_hardwired_primitive<decorators>()) {
         const DecoratorSet expanded_decorators = decorators | AS_RAW;
-        return PreRuntimeDispatch::arraycopy<expanded_decorators>(src_obj, src_offset_in_bytes, src_raw,
-                                                                  dst_obj, dst_offset_in_bytes, dst_raw,
-                                                                  length);
+        return PreRuntimeDispatch::arraycopy<expanded_decorators>(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
       } else {
-        return RuntimeDispatch<decorators, T, BARRIER_ARRAYCOPY>::arraycopy(src_obj, src_offset_in_bytes, src_raw,
-                                                                            dst_obj, dst_offset_in_bytes, dst_raw,
-                                                                            length);
+        return RuntimeDispatch<decorators, T, BARRIER_ARRAYCOPY>::arraycopy(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
       }
     }
 
@@ -1091,9 +1079,7 @@ namespace AccessInternal {
   inline bool arraycopy_reduce_types(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
                                      arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw,
                                      size_t length) {
-    return PreRuntimeDispatch::arraycopy<decorators>(src_obj, src_offset_in_bytes, src_raw,
-                                                     dst_obj, dst_offset_in_bytes, dst_raw,
-                                                     length);
+    return PreRuntimeDispatch::arraycopy<decorators>(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
   }
 
   template <DecoratorSet decorators>
@@ -1101,20 +1087,15 @@ namespace AccessInternal {
                                      arrayOop dst_obj, size_t dst_offset_in_bytes, HeapWord* dst_raw,
                                      size_t length) {
     const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP;
-    return PreRuntimeDispatch::arraycopy<expanded_decorators>(src_obj, src_offset_in_bytes, src_raw,
-                                                              dst_obj, dst_offset_in_bytes, dst_raw,
-                                                              length);
+    return PreRuntimeDispatch::arraycopy<expanded_decorators>(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
   }
 
   template <DecoratorSet decorators>
   inline bool arraycopy_reduce_types(arrayOop src_obj, size_t src_offset_in_bytes, narrowOop* src_raw,
                                      arrayOop dst_obj, size_t dst_offset_in_bytes, narrowOop* dst_raw,
                                      size_t length) {
-    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP |
-                                             INTERNAL_RT_USE_COMPRESSED_OOPS;
-    return PreRuntimeDispatch::arraycopy<expanded_decorators>(src_obj, src_offset_in_bytes, src_raw,
-                                                              dst_obj, dst_offset_in_bytes, dst_raw,
-                                                              length);
+    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP | INTERNAL_RT_USE_COMPRESSED_OOPS;
+    return PreRuntimeDispatch::arraycopy<expanded_decorators>(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
   }
 
   // Step 1: Set default decorators. This step remembers if a type was volatile
@@ -1193,9 +1174,7 @@ namespace AccessInternal {
     const DecoratorSet expanded_decorators = DecoratorFixup<
       (!HasDecorator<decorators, MO_DECORATOR_MASK>::value) ?
       (MO_SEQ_CST | decorators) : decorators>::value;
-    return atomic_cmpxchg_reduce_types<expanded_decorators>(new_decayed_value,
-                                                            const_cast<DecayedP*>(addr),
-                                                            compare_decayed_value);
+    return atomic_cmpxchg_reduce_types<expanded_decorators>(new_decayed_value, const_cast<DecayedP*>(addr), compare_decayed_value);
   }
 
   template <DecoratorSet decorators, typename T>
@@ -1212,8 +1191,7 @@ namespace AccessInternal {
     const DecoratorSet final_decorators = expanded_decorators |
                                           (HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value ?
                                            INTERNAL_CONVERT_COMPRESSED_OOP : INTERNAL_EMPTY);
-    return PreRuntimeDispatch::atomic_cmpxchg_at<final_decorators>(new_decayed_value, base,
-                                                                   offset, compare_decayed_value);
+    return PreRuntimeDispatch::atomic_cmpxchg_at<final_decorators>(new_decayed_value, base, offset, compare_decayed_value);
   }
 
   template <DecoratorSet decorators, typename P, typename T>
@@ -1224,8 +1202,7 @@ namespace AccessInternal {
     DecayedT new_decayed_value = new_value;
     // atomic_xchg is only available in SEQ_CST flavour.
     const DecoratorSet expanded_decorators = DecoratorFixup<decorators | MO_SEQ_CST>::value;
-    return atomic_xchg_reduce_types<expanded_decorators>(new_decayed_value,
-                                                         const_cast<DecayedP*>(addr));
+    return atomic_xchg_reduce_types<expanded_decorators>(new_decayed_value, const_cast<DecayedP*>(addr));
   }
 
   template <DecoratorSet decorators, typename T>

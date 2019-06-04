@@ -10,8 +10,6 @@
 #include "utilities/ostream.hpp"
 #include "c1/c1_Runtime1.hpp"
 
-void NativeCall::verify() { }
-
 void NativeInstruction::wrote(int offset) {
   ICache::invalidate_word(addr_at(offset));
 }
@@ -20,8 +18,6 @@ void NativeLoadGot::report_and_fail() const {
   tty->print_cr("Addr: " INTPTR_FORMAT, p2i(instruction_address()));
   fatal("not a indirect rip mov to rbx");
 }
-
-void NativeLoadGot::verify() const { }
 
 address NativeLoadGot::got_address() const {
   return MacroAssembler::target_addr_for_insn((address)this);
@@ -98,8 +94,6 @@ void NativePltCall::set_stub_to_clean() {
   jump->set_jump_destination((address)-1);
 }
 
-void NativePltCall::verify() const { }
-
 address NativeGotJump::got_address() const {
   return MacroAssembler::target_addr_for_insn((address)this);
 }
@@ -113,8 +107,6 @@ bool NativeGotJump::is_GotJump() const {
   NativeInstruction *insn = nativeInstruction_at(addr_at(3 * NativeInstruction::instruction_size));
   return insn->encoding() == 0xd61f0200; // br x16
 }
-
-void NativeGotJump::verify() const { }
 
 address NativeCall::destination() const {
   address addr = (address)this;
@@ -182,10 +174,6 @@ address NativeCall::get_trampoline() {
 void NativeCall::insert(address code_pos, address entry) { Unimplemented(); }
 
 //-------------------------------------------------------------------
-
-void NativeMovConstReg::verify() {
-  // make sure code pattern is actually mov reg64, imm64 instructions
-}
 
 intptr_t NativeMovConstReg::data() const {
   // das(uint64_t(instruction_address()),2);
@@ -259,11 +247,7 @@ void NativeMovRegMem::set_offset(int x) {
   }
 }
 
-void NativeMovRegMem::verify() { }
-
 //--------------------------------------------------------------------------------
-
-void NativeJump::verify() { }
 
 void NativeJump::check_verified_entry_alignment(address entry, address verified_entry) { }
 
@@ -414,8 +398,6 @@ void NativeJump::patch_verified_entry(address entry, address verified_entry, add
 
   ICache::invalidate_range(verified_entry, instruction_size);
 }
-
-void NativeGeneralJump::verify() { }
 
 void NativeGeneralJump::insert_unconditional(address code_pos, address entry) {
   NativeGeneralJump* n_jump = (NativeGeneralJump*)code_pos;

@@ -2,7 +2,6 @@
 
 #include "memory/allocation.hpp"
 #include "memory/allocation.inline.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
 #include "runtime/atomic.hpp"

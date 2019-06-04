@@ -91,7 +91,7 @@ static inline bool match_desc(PcDesc* pc, int pc_offset, bool approximate) {
   if (!approximate)
     return pc->pc_offset() == pc_offset;
   else
-    return (pc-1)->pc_offset() < pc_offset && pc_offset <= pc->pc_offset();
+    return (pc - 1)->pc_offset() < pc_offset && pc_offset <= pc->pc_offset();
 }
 
 void PcDescCache::reset_to(PcDesc* initial_pc_desc) {
@@ -597,7 +597,7 @@ void nmethod::verify_clean_inline_caches() {
   ResourceMark rm;
   RelocIterator iter(this, oops_reloc_begin());
   while (iter.next()) {
-    switch(iter.type()) {
+    switch (iter.type()) {
       case relocInfo::virtual_call_type:
       case relocInfo::opt_virtual_call_type: {
         CompiledIC *ic = CompiledIC_at(&iter);
@@ -942,7 +942,7 @@ void nmethod::post_compiled_method_unload() {
 bool nmethod::unload_if_dead_at(RelocIterator* iter_at_oop, BoolObjectClosure *is_alive) {
   oop_Relocation* r = iter_at_oop->oop_reloc();
   // Traverse those oops directly embedded in the code.
-  // Other oops (oop_index>0) are seen as part of scopes_oops.
+  // Other oops (oop_index > 0) are seen as part of scopes_oops.
   if (r->oop_is_immediate() && r->oop_value() != NULL) {
     // Unload this nmethod if the oop is dead.
     if (can_unload(is_alive, r->oop_addr())) {
@@ -1006,7 +1006,7 @@ void nmethod::metadata_do(void f(Metadata*)) {
       if (iter.type() == relocInfo::metadata_type ) {
         metadata_Relocation* r = iter.metadata_reloc();
         // In this metadata, we must only follow those metadatas directly embedded in
-        // the code.  Other metadatas (oop_index>0) are seen as part of
+        // the code.  Other metadatas (oop_index > 0) are seen as part of
         // the metadata section below.
         if (r->metadata_is_immediate() && r->metadata_value() != NULL) {
           Metadata* md = r->metadata_value();
@@ -1049,7 +1049,7 @@ void nmethod::oops_do(OopClosure* f, bool allow_zombie) {
       if (iter.type() == relocInfo::oop_type ) {
         oop_Relocation* r = iter.oop_reloc();
         // In this loop, we must only follow those oops directly embedded in
-        // the code.  Other oops (oop_index>0) are seen as part of scopes_oops.
+        // the code.  Other oops (oop_index > 0) are seen as part of scopes_oops.
         if (r->oop_is_immediate() && r->oop_value() != NULL) {
           f->do_oop(r->oop_addr());
         }
@@ -1151,7 +1151,7 @@ void nmethod::copy_scopes_pcs(PcDesc* pcs, int count) {
   memcpy(scopes_pcs_begin(), pcs, size);
 
   // Adjust the final sentinel downward.
-  PcDesc* last_pc = &scopes_pcs_begin()[count-1];
+  PcDesc* last_pc = &scopes_pcs_begin()[count - 1];
   last_pc->set_pc_offset(content_size() + 1);
   for (; last_pc + 1 < scopes_pcs_end(); last_pc += 1) {
     // Fill any rounding gaps with copies of the last record.
@@ -1400,12 +1400,6 @@ void nmethod::verify() {
     fatal("findNMethod did not find this nmethod (" INTPTR_FORMAT ")", p2i(this));
   }
 
-  for (PcDesc* p = scopes_pcs_begin(); p < scopes_pcs_end(); p++) {
-    if (! p->verify(this)) {
-      tty->print_cr("\t\tin nmethod at " INTPTR_FORMAT " (pcs)", p2i(this));
-    }
-  }
-
   VerifyOopsClosure voc(this);
   oops_do(&voc);
   Universe::heap()->verify_nmethod(this);
@@ -1424,14 +1418,6 @@ void nmethod::verify_interrupt_point(address call_site) {
       MutexLocker ml_verify (CompiledIC_lock);
       CompiledIC_at(this, call_site);
     }
-  }
-
-  PcDesc* pd = pc_desc_at(nativeCall_at(call_site)->return_address());
-  for (ScopeDesc* sd = new ScopeDesc(this, pd->scope_decode_offset(),
-                                     pd->obj_decode_offset(), pd->should_reexecute(), pd->rethrow_exception(),
-                                     pd->return_oop());
-       !sd->is_top(); sd = sd->sender()) {
-    sd->verify();
   }
 }
 
@@ -1600,11 +1586,9 @@ const char* nmethod::reloc_string_for(u_char* begin, u_char* end) {
 
 // Return a the last scope in (begin..end]
 ScopeDesc* nmethod::scope_desc_in(address begin, address end) {
-  PcDesc* p = pc_desc_near(begin+1);
+  PcDesc* p = pc_desc_near(begin + 1);
   if (p != NULL && p->real_pc(this) <= end) {
-    return new ScopeDesc(this, p->scope_decode_offset(),
-                         p->obj_decode_offset(), p->should_reexecute(), p->rethrow_exception(),
-                         p->return_oop());
+    return new ScopeDesc(this, p->scope_decode_offset(), p->obj_decode_offset(), p->should_reexecute(), p->rethrow_exception(), p->return_oop());
   }
   return NULL;
 }
@@ -1851,14 +1835,6 @@ public:
     CompiledDirectStaticCall* csc = CompiledDirectStaticCall::at(instruction_address());
     {
       csc->set_to_interpreted(method, info.entry());
-    }
-  }
-
-  virtual void verify() const {
-    // make sure code pattern is actually a call imm32 instruction
-    _call->verify();
-    if (os::is_MP()) {
-      _call->verify_alignment();
     }
   }
 

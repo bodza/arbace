@@ -360,7 +360,7 @@ Node* BarrierSetC2::atomic_cmpxchg_bool_at_resolved(C2AtomicAccess& access, Node
       }
     }
   } else {
-    switch(access.type()) {
+    switch (access.type()) {
       case T_BYTE: {
         if (is_weak_cas) {
           load_store = kit->gvn().transform(new WeakCompareAndSwapBNode(kit->control(), mem, adr, new_val, expected_val, mo));
@@ -454,7 +454,7 @@ Node* BarrierSetC2::atomic_add_at_resolved(C2AtomicAccess& access, Node* new_val
   const TypePtr* adr_type = access.addr().type();
   Node* mem = access.memory();
 
-  switch(access.type()) {
+  switch (access.type()) {
     case T_BYTE:
       load_store = kit->gvn().transform(new GetAndAddBNode(kit->control(), mem, adr, new_val, adr_type));
       break;

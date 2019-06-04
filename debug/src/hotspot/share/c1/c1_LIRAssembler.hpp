@@ -216,8 +216,6 @@ class LIR_Assembler: public CompilationResourceObj {
   void on_spin_wait();
   void get_thread(LIR_Opr result);
 
-  void verify_oop_map(CodeEmitInfo* info);
-
   void atomic_op(LIR_Code code, LIR_Opr src, LIR_Opr data, LIR_Opr dest, LIR_Opr tmp);
 
 #include CPU_HEADER(c1_LIRAssembler)

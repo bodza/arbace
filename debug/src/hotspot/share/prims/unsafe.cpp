@@ -713,13 +713,13 @@ Unsafe_DefineAnonymousClass_impl(JNIEnv *env, jclass host_class, jbyteArray data
   if (cp_patches_h.not_null()) {
     int alen = cp_patches_h->length();
 
-    for (int i = alen-1; i >= 0; i--) {
+    for (int i = alen - 1; i >= 0; i--) {
       oop p = cp_patches_h->obj_at(i);
       if (p != NULL) {
         Handle patch(THREAD, p);
 
         if (cp_patches == NULL) {
-          cp_patches = new GrowableArray<Handle>(i+1, i+1, Handle());
+          cp_patches = new GrowableArray<Handle>(i + 1, i + 1, Handle());
         }
 
         cp_patches->at_put(i, patch);
@@ -730,13 +730,7 @@ Unsafe_DefineAnonymousClass_impl(JNIEnv *env, jclass host_class, jbyteArray data
   ClassFileStream st(class_bytes, class_bytes_length, host_source, ClassFileStream::verify);
 
   Symbol* no_class_name = NULL;
-  Klass* anonk = SystemDictionary::parse_stream(no_class_name,
-                                                host_loader,
-                                                host_domain,
-                                                &st,
-                                                InstanceKlass::cast(host_klass),
-                                                cp_patches,
-                                                CHECK_NULL);
+  Klass* anonk = SystemDictionary::parse_stream(no_class_name, host_loader, host_domain, &st, InstanceKlass::cast(host_klass), cp_patches, CHECK_NULL);
   if (anonk == NULL) {
     return NULL;
   }
@@ -917,7 +911,7 @@ UNSAFE_ENTRY(jint, Unsafe_GetLoadAverage0(JNIEnv *env, jobject unsafe, jdoubleAr
   }
 
   // if successful, ret is the number of samples actually retrieved.
-  switch(ret) {
+  switch (ret) {
     case 3: a->double_at_put(2, (jdouble)la[2]); // fall through
     case 2: a->double_at_put(1, (jdouble)la[1]); // fall through
     case 1: a->double_at_put(0, (jdouble)la[0]); break;

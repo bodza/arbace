@@ -267,11 +267,3 @@ void PackageEntry::print(outputStream* st) {
                _classpath_index, _export_flags == PKG_EXP_UNQUALIFIED,
                _export_flags == PKG_EXP_ALLUNNAMED, p2i(next()));
 }
-
-void PackageEntryTable::verify() {
-  verify_table<PackageEntry>("Package Entry Table");
-}
-
-void PackageEntry::verify() {
-  guarantee(name() != NULL, "A package entry must have a corresponding symbol name.");
-}

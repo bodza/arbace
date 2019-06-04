@@ -17,7 +17,6 @@
 #include "gc/shared/gcLocker.inline.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
 #include "oops/klass.hpp"
@@ -166,19 +165,19 @@ JRT_LEAF(jdouble, SharedRuntime::f2d(jfloat x))
 JRT_END
 
 JRT_LEAF(int,  SharedRuntime::fcmpl(float x, float y))
-  return x>y ? 1 : (x==y ? 0 : -1);  /* x<y or is_nan*/
+  return x>y ? 1 : (x == y ? 0 : -1);  /* x<y or is_nan*/
 JRT_END
 
 JRT_LEAF(int,  SharedRuntime::fcmpg(float x, float y))
-  return x<y ? -1 : (x==y ? 0 : 1);  /* x>y or is_nan */
+  return x<y ? -1 : (x == y ? 0 : 1);  /* x>y or is_nan */
 JRT_END
 
 JRT_LEAF(int,  SharedRuntime::dcmpl(double x, double y))
-  return x>y ? 1 : (x==y ? 0 : -1); /* x<y or is_nan */
+  return x>y ? 1 : (x == y ? 0 : -1); /* x<y or is_nan */
 JRT_END
 
 JRT_LEAF(int,  SharedRuntime::dcmpg(double x, double y))
-  return x<y ? -1 : (x==y ? 0 : 1);  /* x>y or is_nan */
+  return x<y ? -1 : (x == y ? 0 : 1);  /* x>y or is_nan */
 JRT_END
 
 // Functions to return the opposite of the aeabi functions for nan.
@@ -576,7 +575,6 @@ address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread, a
         // deoptimization blob and uncommon trap blob bang the stack
         // in a debug VM to verify the correctness of the compiled
         // method stack banging.
-        Events::log_exception(thread, "StackOverflowError at " INTPTR_FORMAT, p2i(pc));
         return StubRoutines::throw_StackOverflowError_entry();
       }
 
@@ -592,13 +590,11 @@ address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread, a
           if (vt_stub == NULL) return NULL;
 
           if (vt_stub->is_abstract_method_error(pc)) {
-            Events::log_exception(thread, "AbstractMethodError at " INTPTR_FORMAT, p2i(pc));
             // Instead of throwing the abstract method error here directly, we re-resolve
             // and will throw the AbstractMethodError during resolve. As a result, we'll
             // get a more detailed error message.
             return SharedRuntime::get_handle_wrong_method_stub();
           } else {
-            Events::log_exception(thread, "NullPointerException at vtable entry " INTPTR_FORMAT, p2i(pc));
             return StubRoutines::throw_NullPointerException_at_call_entry();
           }
         } else {
@@ -618,7 +614,6 @@ address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread, a
               // Allow normal crash reporting to handle this
               return NULL;
             }
-            Events::log_exception(thread, "NullPointerException in code blob at " INTPTR_FORMAT, p2i(pc));
             // There is no handler here, so we will simply unwind.
             return StubRoutines::throw_NullPointerException_at_call_entry();
           }
@@ -630,13 +625,11 @@ address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread, a
             // => the nmethod is not yet active (i.e., the frame
             // is not set up yet) => use return address pushed by
             // caller => don't push another return address
-            Events::log_exception(thread, "NullPointerException in IC check " INTPTR_FORMAT, p2i(pc));
             return StubRoutines::throw_NullPointerException_at_call_entry();
           }
 
           if (cm->method()->is_method_handle_intrinsic()) {
             // exception happened inside MH dispatch code, similar to a vtable stub
-            Events::log_exception(thread, "NullPointerException in MH adapter " INTPTR_FORMAT, p2i(pc));
             return StubRoutines::throw_NullPointerException_at_call_entry();
           }
 
@@ -673,11 +666,6 @@ address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread, a
       default: ShouldNotReachHere();
     }
 
-    if (exception_kind == IMPLICIT_NULL) {
-      Events::log_exception(thread, "Implicit null exception at " INTPTR_FORMAT " to " INTPTR_FORMAT, p2i(pc), p2i(target_pc));
-    } else {
-      Events::log_exception(thread, "Implicit division by zero exception at " INTPTR_FORMAT " to " INTPTR_FORMAT, p2i(pc), p2i(target_pc));
-    }
     return target_pc;
   }
 
@@ -1212,7 +1200,7 @@ methodHandle SharedRuntime::reresolve_call_site(JavaThread *thread, TRAPS) {
     nmethodLocker nmlock(caller_nm);
 
     if (call_addr != NULL) {
-      RelocIterator iter(caller_nm, call_addr, call_addr+1);
+      RelocIterator iter(caller_nm, call_addr, call_addr + 1);
       int ret = iter.next(); // Get item
       if (ret) {
         if (iter.type() == relocInfo::static_call_type) {
@@ -1530,7 +1518,7 @@ class AdapterFingerPrint : public CHeapObj<mtCode> {
     // The fingerprint is based on the BasicType signature encoded
     // into an array of ints with eight entries per int.
     int* ptr;
-    int len = (total_args_passed + (_basic_types_per_int-1)) / _basic_types_per_int;
+    int len = (total_args_passed + (_basic_types_per_int - 1)) / _basic_types_per_int;
     if (len <= _compact_int_count) {
       _value._compact[0] = _value._compact[1] = _value._compact[2] = 0;
       // Storing the signature encoded as signed chars hits about 98%
@@ -2093,7 +2081,7 @@ JRT_LEAF(intptr_t*, SharedRuntime::OSR_migration_begin( JavaThread *thread))
 
   // Copy the locals.  Order is preserved so that loading of longs works.
   // Since there's no GC I can copy the oops blindly.
-  Copy::disjoint_words((HeapWord*)fr.interpreter_frame_local_at(max_locals-1), (HeapWord*)&buf[0], max_locals);
+  Copy::disjoint_words((HeapWord*)fr.interpreter_frame_local_at(max_locals - 1), (HeapWord*)&buf[0], max_locals);
 
   // Inflate locks.  Copy the displaced headers.  Be careful, there can be holes.
   int i = max_locals;

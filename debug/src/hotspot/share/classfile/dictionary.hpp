@@ -60,11 +60,7 @@ public:
   bool is_valid_protection_domain(unsigned int hash, Symbol* name, Handle protection_domain);
   void add_protection_domain(int index, unsigned int hash, InstanceKlass* klass, Handle protection_domain, TRAPS);
 
-  // Sharing support
-  void reorder_dictionary_for_sharing() { };
-
   void print_on(outputStream* st) const;
-  void verify();
   DictionaryEntry* bucket(int i) const {
     return (DictionaryEntry*)Hashtable<InstanceKlass*, mtClass>::bucket(i);
   }
@@ -141,14 +137,6 @@ class DictionaryEntry : public HashtableEntry<InstanceKlass*, mtClass> {
     return true;
   }
 
-  void verify_protection_domain_set() {
-    for (ProtectionDomainEntry* current = pd_set(); // accessed at a safepoint
-                                current != NULL;
-                                current = current->_next) {
-      current->_pd_cache->object_no_keepalive()->verify();
-    }
-  }
-
   bool equals(const Symbol* class_name) const {
     InstanceKlass* klass = (InstanceKlass*)literal();
     return (klass->name() == class_name);
@@ -163,8 +151,6 @@ class DictionaryEntry : public HashtableEntry<InstanceKlass*, mtClass> {
     }
     st->print_cr("pd set count = #%d", count);
   }
-
-  void verify();
 };
 
 // Entry in a SymbolPropertyTable, mapping a single Symbol*
@@ -272,8 +258,6 @@ public:
   void oops_do(OopClosure* f);
 
   void methods_do(void f(Method*));
-
-  void verify();
 
   SymbolPropertyEntry* bucket(int i) {
     return (SymbolPropertyEntry*) Hashtable<Symbol*, mtSymbol>::bucket(i);

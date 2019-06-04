@@ -171,7 +171,6 @@ class SpaceManager : public CHeapObj<mtClass> {
   void print_on(outputStream* st) const;
   void locked_print_chunks_in_use_on(outputStream* st) const;
 
-  void verify();
   void verify_chunk_size(Metachunk* chunk);
 
   // This adjusts the size given to be greater than the minimum allocation size in

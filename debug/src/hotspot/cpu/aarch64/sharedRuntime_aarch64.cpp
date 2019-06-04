@@ -69,7 +69,7 @@ class RegisterSaver {
     // Capture info about frame layout
   enum layout {
                 fpu_state_off = 0,
-                fpu_state_end = fpu_state_off+FPUStateSizeInWords-1,
+                fpu_state_end = fpu_state_off+FPUStateSizeInWords - 1,
                 // The frame sender code expects that rfp will be in
                 // the "natural" place and will override any oopMap
                 // setting for it. We must therefore force the layout
@@ -548,7 +548,7 @@ static void generate_i2c_adapter_name(char *result, int total_args_passed, const
   strcpy(result, "i2c(");
   int idx = 4;
   for (int i = 0; i < total_args_passed; i++) {
-    switch(sig_bt[i]) {
+    switch (sig_bt[i]) {
     case T_BOOLEAN:
       result[idx++] = 'Z';
       break;
@@ -932,7 +932,7 @@ void SharedRuntime::restore_native_result(MacroAssembler *masm, BasicType ret_ty
 }
 static void save_args(MacroAssembler *masm, int arg_count, int first_arg, VMRegPair *args) {
   RegSet x;
-  for ( int i = first_arg ; i < arg_count ; i++ ) {
+  for (int i = first_arg ; i < arg_count ; i++) {
     if (args[i].first()->is_Register()) {
       x = x + args[i].first()->as_Register();
     } else if (args[i].first()->is_FloatRegister()) {
@@ -944,13 +944,13 @@ static void save_args(MacroAssembler *masm, int arg_count, int first_arg, VMRegP
 
 static void restore_args(MacroAssembler *masm, int arg_count, int first_arg, VMRegPair *args) {
   RegSet x;
-  for ( int i = first_arg ; i < arg_count ; i++ ) {
+  for (int i = first_arg ; i < arg_count ; i++) {
     if (args[i].first()->is_Register()) {
       x = x + args[i].first()->as_Register();
     }
   }
   __ pop(x, sp);
-  for ( int i = arg_count - 1 ; i >= first_arg ; i-- ) {
+  for (int i = arg_count - 1 ; i >= first_arg ; i--) {
     if (args[i].first()->is_Register()) {
     } else if (args[i].first()->is_FloatRegister()) {
       __ ldrd(args[i].first()->as_FloatRegister(), Address(__ post(sp, 2 * wordSize)));
@@ -1225,14 +1225,14 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
       out_sig_bt[argc++] = T_OBJECT;
     }
 
-    for (int i = 0; i < total_in_args ; i++ ) {
+    for (int i = 0; i < total_in_args ; i++) {
       out_sig_bt[argc++] = in_sig_bt[i];
     }
   } else {
     Thread* THREAD = Thread::current();
     in_elem_bt = NEW_RESOURCE_ARRAY(BasicType, total_in_args);
     SignatureStream ss(method->signature());
-    for (int i = 0; i < total_in_args ; i++ ) {
+    for (int i = 0; i < total_in_args ; i++) {
       if (in_sig_bt[i] == T_ARRAY) {
         // Arrays are passed as int, elem* pair
         out_sig_bt[argc++] = T_INT;
@@ -1282,7 +1282,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
     // for register arguments.
     int double_slots = 0;
     int single_slots = 0;
-    for ( int i = 0; i < total_in_args; i++) {
+    for (int i = 0; i < total_in_args; i++) {
       if (in_regs[i].first()->is_Register()) {
         const Register reg = in_regs[i].first()->as_Register();
         switch (in_sig_bt[i]) {
@@ -2252,8 +2252,7 @@ void SharedRuntime::generate_deopt_blob() {
 
   // Set an oopmap for the call site
   // Use the same PC we used for the last java frame
-  oop_maps->add_gc_map(the_pc - start,
-                       new OopMap( frame_size_in_words, 0 ));
+  oop_maps->add_gc_map(the_pc - start, new OopMap(frame_size_in_words, 0));
 
   // Clear fp AND pc
   __ reset_last_Java_frame(true);

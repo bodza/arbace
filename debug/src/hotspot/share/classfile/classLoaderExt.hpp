@@ -13,12 +13,6 @@ public:
     max_classpath_index = 0x7fff
   };
 
-private:
-public:
-  static bool should_verify(int classpath_index) {
-    return false;
-  }
-
   static void setup_search_paths() { };
   static void setup_module_paths(TRAPS) { };
 };

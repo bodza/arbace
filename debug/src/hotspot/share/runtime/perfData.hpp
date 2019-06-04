@@ -517,10 +517,7 @@ class PerfStringVariable : public PerfString {
     // sampling of string variables are not yet supported
     void sample() { }
 
-    PerfStringVariable(CounterNS ns, const char* namep, jint max_length,
-                       const char* initial_value)
-                      : PerfString(ns, namep, V_Variable, max_length+1,
-                                   initial_value) { }
+    PerfStringVariable(CounterNS ns, const char* namep, jint max_length, const char* initial_value) : PerfString(ns, namep, V_Variable, max_length + 1, initial_value) { }
 
   public:
     inline void set_value(const char* val) { set_string(val); }

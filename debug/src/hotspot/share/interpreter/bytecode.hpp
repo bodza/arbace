@@ -116,10 +116,9 @@ class LookupswitchPair {
 
 class Bytecode_lookupswitch: public Bytecode {
  public:
-  Bytecode_lookupswitch(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
+  Bytecode_lookupswitch(Method* method, address bcp): Bytecode(method, bcp) { }
   // Defined in ciStreams.hpp
   inline Bytecode_lookupswitch(const ciBytecodeStream* stream);
-  void verify() const { };
 
   // Attributes
   int  default_offset() const                    { return get_aligned_Java_u4_at(1 + 0*jintSize); }
@@ -131,10 +130,9 @@ class Bytecode_lookupswitch: public Bytecode {
 
 class Bytecode_tableswitch: public Bytecode {
  public:
-  Bytecode_tableswitch(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
+  Bytecode_tableswitch(Method* method, address bcp): Bytecode(method, bcp) { }
   // Defined in ciStreams.hpp
   inline Bytecode_tableswitch(const ciBytecodeStream* stream);
-  void verify() const { };
 
   // Attributes
   int  default_offset() const                    { return get_aligned_Java_u4_at(1 + 0*jintSize); }
@@ -175,8 +173,7 @@ class Bytecode_invoke: public Bytecode_member_ref {
   Bytecode_invoke(const methodHandle& method, int bci, bool unused)  : Bytecode_member_ref(method, bci) { }
 
  public:
-  Bytecode_invoke(const methodHandle& method, int bci)  : Bytecode_member_ref(method, bci) { verify(); }
-  void verify() const;
+  Bytecode_invoke(const methodHandle& method, int bci)  : Bytecode_member_ref(method, bci) { }
 
   // Attributes
   methodHandle static_target(TRAPS);             // "specified" method   (from constant pool)
@@ -215,7 +212,7 @@ inline Bytecode_invoke Bytecode_invoke_check(const methodHandle& method, int bci
 // Abstraction for all field accesses (put/get field/static)
 class Bytecode_field: public Bytecode_member_ref {
  public:
-  Bytecode_field(const methodHandle& method, int bci)  : Bytecode_member_ref(method, bci) { verify(); }
+  Bytecode_field(const methodHandle& method, int bci)  : Bytecode_member_ref(method, bci) { }
 
   // Testers
   bool is_getfield() const                       { return java_code() == Bytecodes::_getfield; }
@@ -223,21 +220,16 @@ class Bytecode_field: public Bytecode_member_ref {
   bool is_getstatic() const                      { return java_code() == Bytecodes::_getstatic; }
   bool is_putstatic() const                      { return java_code() == Bytecodes::_putstatic; }
 
-  bool is_getter() const                         { return is_getfield()  || is_getstatic(); }
+  bool is_getter() const                         { return is_getfield() || is_getstatic(); }
   bool is_static() const                         { return is_getstatic() || is_putstatic(); }
 
-  bool is_valid() const                          { return is_getfield()   ||
-                                                          is_putfield()   ||
-                                                          is_getstatic()  ||
-                                                          is_putstatic(); }
-  void verify() const;
+  bool is_valid() const                          { return is_getfield() || is_putfield() || is_getstatic() || is_putstatic(); }
 };
 
 // Abstraction for checkcast
 class Bytecode_checkcast: public Bytecode {
  public:
-  Bytecode_checkcast(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const { }
+  Bytecode_checkcast(Method* method, address bcp): Bytecode(method, bcp) { }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_checkcast); };
@@ -246,8 +238,7 @@ class Bytecode_checkcast: public Bytecode {
 // Abstraction for instanceof
 class Bytecode_instanceof: public Bytecode {
  public:
-  Bytecode_instanceof(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const { }
+  Bytecode_instanceof(Method* method, address bcp): Bytecode(method, bcp) { }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_instanceof); };
@@ -255,8 +246,7 @@ class Bytecode_instanceof: public Bytecode {
 
 class Bytecode_new: public Bytecode {
  public:
-  Bytecode_new(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const { }
+  Bytecode_new(Method* method, address bcp): Bytecode(method, bcp) { }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_new); };
@@ -264,8 +254,7 @@ class Bytecode_new: public Bytecode {
 
 class Bytecode_multianewarray: public Bytecode {
  public:
-  Bytecode_multianewarray(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const { }
+  Bytecode_multianewarray(Method* method, address bcp): Bytecode(method, bcp) { }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_multianewarray); };
@@ -273,8 +262,7 @@ class Bytecode_multianewarray: public Bytecode {
 
 class Bytecode_anewarray: public Bytecode {
  public:
-  Bytecode_anewarray(Method* method, address bcp): Bytecode(method, bcp) { verify(); }
-  void verify() const { }
+  Bytecode_anewarray(Method* method, address bcp): Bytecode(method, bcp) { }
 
   // Returns index
   long index() const   { return get_index_u2(Bytecodes::_anewarray); };
@@ -288,11 +276,7 @@ class Bytecode_loadconstant: public Bytecode {
   int raw_index() const;
 
  public:
-  Bytecode_loadconstant(const methodHandle& method, int bci): Bytecode(method(), method->bcp_from(bci)), _method(method()) { verify(); }
-
-  void verify() const {
-    Bytecodes::Code stdc = Bytecodes::java_code(code());
-  }
+  Bytecode_loadconstant(const methodHandle& method, int bci): Bytecode(method(), method->bcp_from(bci)), _method(method()) { }
 
   // Only non-standard bytecodes (fast_aldc) have reference cache indexes.
   bool has_cache_index() const { return code() >= Bytecodes::number_of_java_codes; }

@@ -13,7 +13,7 @@ int StringUtils::replace_no_expand(char* string, const char* from, const char* t
     memmove(dst, to, to_len);                       // does not copy trailing 0 of <to>
     dst += to_len;                                  // skip over the replacement.
     memmove(dst, left_over, strlen(left_over) + 1); // copies the trailing 0 of <left_over>
-    ++ replace_count;
+    ++replace_count;
   }
 
   return replace_count;
@@ -30,7 +30,7 @@ double StringUtils::similarity(const char* str1, size_t len1, const char* str2, 
 
   for (size_t i = 0; i < len1 - 1; i++) {
     for (size_t j = 0; j < len2 - 1; j++) {
-      if ((str1[i] == str2[j]) && (str1[i+1] == str2[j+1])) {
+      if ((str1[i] == str2[j]) && (str1[i + 1] == str2[j + 1])) {
         ++hit;
         break;
       }

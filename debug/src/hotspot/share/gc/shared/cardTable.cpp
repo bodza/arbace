@@ -92,8 +92,8 @@ int CardTable::find_covering_region_by_base(HeapWord* base) {
   // If we didn't find it, create a new one.
   // Move the ones above up, to maintain sorted order.
   for (int j = _cur_covered_regions; j > i; j--) {
-    _covered[j] = _covered[j-1];
-    _committed[j] = _committed[j-1];
+    _covered[j] = _covered[j - 1];
+    _committed[j] = _committed[j - 1];
   }
   int res = i;
   _cur_covered_regions++;
@@ -338,11 +338,6 @@ void CardTable::invalidate(MemRegion mr) {
   }
 }
 
-void CardTable::verify() {
-  verify_guard();
-}
-
 void CardTable::print_on(outputStream* st) const {
-  st->print_cr("Card table byte_map: [" INTPTR_FORMAT "," INTPTR_FORMAT "] _byte_map_base: " INTPTR_FORMAT,
-               p2i(_byte_map), p2i(_byte_map + _byte_map_size), p2i(_byte_map_base));
+  st->print_cr("Card table byte_map: [" INTPTR_FORMAT "," INTPTR_FORMAT "] _byte_map_base: " INTPTR_FORMAT, p2i(_byte_map), p2i(_byte_map + _byte_map_size), p2i(_byte_map_base));
 }

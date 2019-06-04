@@ -76,14 +76,14 @@ template <class T> class ValueRecorder : public StackObj {
       // Index entries are ints.  The LSBit is a collision indicator.
       _collision_bit_shift = 0,
       _collision_bit = 1,
-      _index_shift = _collision_bit_shift+1
+      _index_shift = _collision_bit_shift + 1
     };
     int _cache[_cache_size];
     static juint cache_index(X handle) {
       juint ci = (int) (intptr_t) handle;
-      ci ^= ci >> (BitsPerByte*2);
-      ci += ci >> (BitsPerByte*1);
-      return ci & (_cache_size-1);
+      ci ^= ci >> (BitsPerByte * 2);
+      ci += ci >> (BitsPerByte * 1);
+      return ci & (_cache_size - 1);
     }
     int* cache_location(X handle) {
       return &_cache[ cache_index(handle) ];

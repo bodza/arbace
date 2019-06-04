@@ -811,7 +811,7 @@ IRT_ENTRY(nmethod*, InterpreterRuntime::frequency_counter_overflow_inner(JavaThr
     if (UseBiasedLocking) {
       ResourceMark rm;
       GrowableArray<Handle>* objects_to_revoke = new GrowableArray<Handle>();
-      for ( BasicObjectLock *kptr = last_frame.monitor_end(); kptr < last_frame.monitor_begin(); kptr = last_frame.next_monitor(kptr)) {
+      for (BasicObjectLock *kptr = last_frame.monitor_end(); kptr < last_frame.monitor_begin(); kptr = last_frame.next_monitor(kptr)) {
         if (kptr->obj() != NULL ) {
           objects_to_revoke->append(Handle(THREAD, kptr->obj()));
         }

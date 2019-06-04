@@ -172,7 +172,7 @@ void AOTCompiledMethod::metadata_do(void f(Metadata*)) {
       if (iter.type() == relocInfo::metadata_type ) {
         metadata_Relocation* r = iter.metadata_reloc();
         // In this metadata, we must only follow those metadatas directly embedded in
-        // the code.  Other metadatas (oop_index>0) are seen as part of
+        // the code.  Other metadatas (oop_index > 0) are seen as part of
         // the metadata section below.
         if (r->metadata_is_immediate() && r->metadata_value() != NULL) {
           Metadata* md = r->metadata_value();

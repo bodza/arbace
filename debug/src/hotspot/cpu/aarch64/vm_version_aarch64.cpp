@@ -18,27 +18,27 @@
 #endif
 
 #ifndef HWCAP_AES
-#define HWCAP_AES   (1<<3)
+#define HWCAP_AES   (1 << 3)
 #endif
 
 #ifndef HWCAP_PMULL
-#define HWCAP_PMULL (1<<4)
+#define HWCAP_PMULL (1 << 4)
 #endif
 
 #ifndef HWCAP_SHA1
-#define HWCAP_SHA1  (1<<5)
+#define HWCAP_SHA1  (1 << 5)
 #endif
 
 #ifndef HWCAP_SHA2
-#define HWCAP_SHA2  (1<<6)
+#define HWCAP_SHA2  (1 << 6)
 #endif
 
 #ifndef HWCAP_CRC32
-#define HWCAP_CRC32 (1<<7)
+#define HWCAP_CRC32 (1 << 7)
 #endif
 
 #ifndef HWCAP_ATOMICS
-#define HWCAP_ATOMICS (1<<8)
+#define HWCAP_ATOMICS (1 << 8)
 #endif
 
 int VM_Version::_cpu;
@@ -146,7 +146,7 @@ void VM_Version::get_processor_features() {
     char buf[128], *p;
     while (fgets(buf, sizeof (buf), f) != NULL) {
       if (p = strchr(buf, ':')) {
-        long v = strtol(p+1, NULL, 0);
+        long v = strtol(p + 1, NULL, 0);
         if (strncmp(buf, "CPU implementer", sizeof "CPU implementer" - 1) == 0) {
           _cpu = v;
           cpu_lines++;

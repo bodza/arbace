@@ -53,7 +53,7 @@ address AbstractAssembler::start_a_const(int required_space, int required_align)
   CodeBuffer*  cb = code();
   CodeSection* cs = cb->consts();
   address end = cs->end();
-  int pad = -(intptr_t)end & (required_align-1);
+  int pad = -(intptr_t)end & (required_align - 1);
   if (cs->maybe_expand_to_ensure_remaining(pad + required_space)) {
     if (cb->blob() == NULL)  return NULL;
     end = cs->end();  // refresh pointer

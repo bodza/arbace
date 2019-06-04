@@ -56,7 +56,7 @@ void SparsePRTEntry::copy_cards(SparsePRTEntry* e) const {
 float RSHashTable::TableOccupancyFactor = 0.5f;
 
 RSHashTable::RSHashTable(size_t capacity) :
-  _capacity(capacity), _capacity_mask(capacity-1),
+  _capacity(capacity), _capacity_mask(capacity - 1),
   _occupied_entries(0), _occupied_cards(0),
   _entries(NULL),
   _buckets(NEW_C_HEAP_ARRAY(int, capacity, mtGC)),
@@ -84,7 +84,7 @@ void RSHashTable::clear() {
   guarantee(_entries != NULL, "INV");
   guarantee(_buckets != NULL, "INV");
 
-  guarantee(_capacity <= ((size_t)1 << (sizeof(int)*BitsPerByte-1)) - 1, "_capacity too large");
+  guarantee(_capacity <= ((size_t)1 << (sizeof(int) * BitsPerByte - 1)) - 1, "_capacity too large");
 
   // This will put -1 == NullEntry in the key field of all entries.
   memset((void*)_entries, NullEntry, _num_entries * SparsePRTEntry::size());

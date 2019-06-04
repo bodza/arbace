@@ -1031,10 +1031,8 @@ void LIR_Assembler::mem2reg(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
       __ decode_heap_oop(dest->as_register());
     }
 
-    // Load barrier has not yet been applied, so ZGC can't verify the oop here
-    if (!UseZGC) {
-      __ verify_oop(dest->as_register());
-    }
+    // Load barrier has not yet been applied
+    __ verify_oop(dest->as_register());
   } else if (type == T_ADDRESS && addr->disp() == oopDesc::klass_offset_in_bytes()) {
     if (UseCompressedClassPointers) {
       __ decode_klass_not_null(dest->as_register());
@@ -1079,7 +1077,7 @@ void LIR_Assembler::emit_opBranch(LIR_OpBranch* op) {
     Assembler::Condition acond = Assembler::zero;
     if (op->code() == lir_cond_float_branch) {
       __ jcc(Assembler::parity, *(op->ublock()->label()));
-      switch(op->cond()) {
+      switch (op->cond()) {
         case lir_cond_equal:        acond = Assembler::equal;      break;
         case lir_cond_notEqual:     acond = Assembler::notEqual;   break;
         case lir_cond_less:         acond = Assembler::below;      break;
@@ -1883,7 +1881,7 @@ void LIR_Assembler::arith_fpu_implementation(LIR_Code code, int left_index, int 
 
 void LIR_Assembler::intrinsic_op(LIR_Code code, LIR_Opr value, LIR_Opr tmp, LIR_Opr dest, LIR_Op* op) {
   if (value->is_double_xmm()) {
-    switch(code) {
+    switch (code) {
       case lir_abs :
         {
           if (UseAVX > 2 && !VM_Version::supports_avx512vl()) {
@@ -1899,13 +1897,13 @@ void LIR_Assembler::intrinsic_op(LIR_Code code, LIR_Opr value, LIR_Opr tmp, LIR_
 
       case lir_sqrt: __ sqrtsd(dest->as_xmm_double_reg(), value->as_xmm_double_reg()); break;
       // all other intrinsics are not available in the SSE instruction set, so FPU is used
-      default      : ShouldNotReachHere();
+      default: ShouldNotReachHere();
     }
   } else if (value->is_double_fpu()) {
-    switch(code) {
-      case lir_abs   : __ fabs(); break;
-      case lir_sqrt  : __ fsqrt(); break;
-      default      : ShouldNotReachHere();
+    switch (code) {
+      case lir_abs  : __ fabs(); break;
+      case lir_sqrt : __ fsqrt(); break;
+      default: ShouldNotReachHere();
     }
   } else {
     Unimplemented();

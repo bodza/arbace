@@ -182,7 +182,7 @@ address JNI_FastGetField::generate_fast_get_long_field() {
 
   __ ret (0);
 
-  slowcase_entry_pclist[count-1] = __ pc();
+  slowcase_entry_pclist[count - 1] = __ pc();
   slowcase_entry_pclist[count++] = __ pc();
   __ bind (slow);
   __ pop  (rsi);

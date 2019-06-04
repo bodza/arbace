@@ -259,7 +259,7 @@ bool ciInstanceKlass::is_in_package_impl(const char* packagename, int len) {
     return false;
 
   // Make sure it's not actually in a subpackage:
-  if (name()->index_of_at(len+1, "/", 1) >= 0)
+  if (name()->index_of_at(len + 1, "/", 1) >= 0)
     return false;
 
   return true;

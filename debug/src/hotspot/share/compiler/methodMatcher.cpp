@@ -72,7 +72,7 @@ bool MethodMatcher::canonicalize(char * line, const char *& error_msg) {
   if (have_colon) {
     // Don't allow multiple '::'
     if (colon[2] != '\0') {
-      if (strstr(colon+2, "::")) {
+      if (strstr(colon + 2, "::")) {
         error_msg = "Method pattern only allows one '::' allowed";
         return false;
       }
@@ -259,7 +259,7 @@ void MethodMatcher::parse_method_pattern(char*& line, const char*& error_msg, Me
       line++;
       sig[0] = '(';
       // scan the rest
-      if (1 == sscanf(line, "%1022[[);/" RANGEBASE "]%n", sig+1, &bytes_read)) {
+      if (1 == sscanf(line, "%1022[[);/" RANGEBASE "]%n", sig + 1, &bytes_read)) {
         if (strchr(sig, '*') != NULL) {
           error_msg = " Wildcard * not allowed in signature";
           return;

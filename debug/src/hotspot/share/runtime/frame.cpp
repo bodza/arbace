@@ -666,7 +666,7 @@ class EntryFrameOopFinder: public SignatureInfo {
 
   void arguments_do(OopClosure* f) {
     _f = f;
-    if (!_is_static) oop_at_offset_do(_offset+1); // do the receiver
+    if (!_is_static) oop_at_offset_do(_offset + 1); // do the receiver
     iterate_parameters();
   }
 };
@@ -893,20 +893,6 @@ void frame::metadata_do(void f(Metadata*)) {
     Method* m = this->interpreter_frame_method();
     f(m);
   }
-}
-
-void frame::verify(const RegisterMap* map) {
-  // for now make sure receiver type is correct
-  if (is_interpreted_frame()) {
-    Method* method = interpreter_frame_method();
-    guarantee(method->is_method(), "method is wrong in frame::verify");
-    if (!method->is_static()) {
-      // fetch the receiver
-      oop* p = (oop*) interpreter_frame_local_at(0);
-      // make sure we have the right receiver type
-    }
-  }
-  oops_do_internal(&VerifyOopClosure::verify_oop, NULL, (RegisterMap*)map, false);
 }
 
 //-----------------------------------------------------------------------------------

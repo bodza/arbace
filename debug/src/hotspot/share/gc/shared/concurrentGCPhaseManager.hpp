@@ -3,7 +3,7 @@
 
 #include "memory/allocation.hpp"
 
-// Manage concurrent phase information, to support WhiteBox testing.
+// Manage concurrent phase information, to support NULL testing.
 // Managers are stack allocated.  Managers may be nested, to support
 // nested subphases.
 class ConcurrentGCPhaseManager : public StackObj {

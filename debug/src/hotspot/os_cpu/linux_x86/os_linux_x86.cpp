@@ -563,8 +563,8 @@ bool os::supports_sse() {
   if (uname(&uts) != 0 ) return false; // uname fails?
   char *minor_string;
   int major = strtol(uts.release,&minor_string,10);
-  int minor = strtol(minor_string+1,NULL,10);
-  bool result = (major > 2 || (major==2 && minor >= 4));
+  int minor = strtol(minor_string + 1, NULL, 10);
+  bool result = (major > 2 || (major == 2 && minor >= 4));
   return result;
 #endif
 }
@@ -750,7 +750,7 @@ void os::workaround_expand_exec_shield_cs_limit() {
    */
   if (os::is_primordial_thread()) {
     address limit = Linux::initial_thread_stack_bottom();
-    if (! DisablePrimordialThreadGuardPages) {
+    if (!DisablePrimordialThreadGuardPages) {
       limit += JavaThread::stack_red_zone_size() + JavaThread::stack_yellow_zone_size();
     }
     os::Linux::expand_stack_to(limit);

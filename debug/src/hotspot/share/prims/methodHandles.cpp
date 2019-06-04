@@ -340,7 +340,7 @@ Symbol* MethodHandles::signature_polymorphic_intrinsic_name(vmIntrinsics::ID iid
 }
 
 Bytecodes::Code MethodHandles::signature_polymorphic_intrinsic_bytecode(vmIntrinsics::ID id) {
-  switch(id) {
+  switch (id) {
     case vmIntrinsics::_linkToVirtual:   return Bytecodes::_invokevirtual;
     case vmIntrinsics::_linkToInterface: return Bytecodes::_invokeinterface;
     case vmIntrinsics::_linkToStatic:    return Bytecodes::_invokestatic;
@@ -535,9 +535,9 @@ void MethodHandles::print_as_basic_type_signature_on(outputStream* st, Symbol* s
     case 'L':
       {
         if (prev_type)  st->put(',');
-        int start = i+1, slash = start;
+        int start = i + 1, slash = start;
         while (++i < len && (ch = sig->byte_at(i)) != ';') {
-          if (ch == '/' || ch == '.' || ch == '$')  slash = i+1;
+          if (ch == '/' || ch == '.' || ch == '$')  slash = i + 1;
         }
         if (slash < i)  start = slash;
         if (!keep_basic_names) {
@@ -884,7 +884,7 @@ int MethodHandles::find_MemberNames(Klass* k, Symbol* name, Symbol* sig, int mfl
           return -99;  // caller bug!
         oop saved = MethodHandles::init_field_MemberName(result, st.field_descriptor());
         if (!oopDesc::equals(saved, result()))
-          results->obj_at_put(rfill-1, saved);  // show saved instance to user
+          results->obj_at_put(rfill - 1, saved);  // show saved instance to user
       } else if (++overflow >= overflow_limit) {
         match_flags = 0; break; // got tired of looking at overflow
       }
@@ -936,7 +936,7 @@ int MethodHandles::find_MemberNames(Klass* k, Symbol* name, Symbol* sig, int mfl
         CallInfo info(m, NULL, CHECK_0);
         oop saved = MethodHandles::init_method_MemberName(result, info);
         if (!oopDesc::equals(saved, result()))
-          results->obj_at_put(rfill-1, saved);  // show saved instance to user
+          results->obj_at_put(rfill - 1, saved);  // show saved instance to user
       } else if (++overflow >= overflow_limit) {
         match_flags = 0; break; // got tired of looking at overflow
       }

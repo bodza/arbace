@@ -416,7 +416,7 @@ void jniCheck::validate_class_descriptor(JavaThread* thr, const char* name) {
 
   if (len >= 2 &&
       name[0] == JVM_SIGNATURE_CLASS &&            // 'L'
-      name[len-1] == JVM_SIGNATURE_ENDCLASS ) {    // ';'
+      name[len - 1] == JVM_SIGNATURE_ENDCLASS ) {    // ';'
     char msg[JVM_MAXPATHLEN];
     jio_snprintf(msg, JVM_MAXPATHLEN, "%s%s%s", warn_bad_class_descriptor1, name, warn_bad_class_descriptor2);
     ReportJNIWarning(thr, msg);

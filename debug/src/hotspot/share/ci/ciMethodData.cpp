@@ -74,7 +74,7 @@ void ciMethodData::load_extra_data() {
       memcpy(dp_dst, dp_src, ((intptr_t)MethodData::next_extra(dp_src)) - ((intptr_t)dp_src));
     }
 
-    switch(tag) {
+    switch (tag) {
     case DataLayout::speculative_trap_data_tag: {
       ciSpeculativeTrapData data_dst(dp_dst);
       SpeculativeTrapData   data_src(dp_src);
@@ -143,7 +143,7 @@ void ciMethodData::load_data() {
   _current_mileage = MethodData::mileage_of(mdo->method());
   _invocation_counter = mdo->invocation_count();
   _backedge_counter = mdo->backedge_count();
-  _state = mdo->is_mature()? mature_state: immature_state;
+  _state = mdo->is_mature() ? mature_state : immature_state;
 
   _eflags = mdo->eflags();
   _arg_local = mdo->arg_local();
@@ -231,7 +231,7 @@ ciProfileData* ciMethodData::bci_to_extra_data(int bci, ciMethod* m, bool& two_f
   DataLayout* end = args_data_limit();
   two_free_slots = false;
   for (;dp < end; dp = MethodData::next_extra(dp)) {
-    switch(dp->tag()) {
+    switch (dp->tag()) {
     case DataLayout::no_tag:
       _saw_free_extra_data = true;  // observed an empty slot (common case)
       two_free_slots = (MethodData::next_extra(dp)->tag() == DataLayout::no_tag);
@@ -316,7 +316,7 @@ int ciMethodData::trap_recompiled_at(ciProfileData* data) {
   if (data == NULL) {
     return (_saw_free_extra_data? 0: -1);  // (see previous method)
   } else {
-    return Deoptimization::trap_state_is_recompiled(data->trap_state())? 1: 0;
+    return Deoptimization::trap_state_is_recompiled(data->trap_state()) ? 1 : 0;
   }
 }
 
@@ -520,7 +520,7 @@ void ciMethodData::dump_replay_data_extra_data_helper(outputStream* out, int rou
   DataLayout* end = args_data_limit();
 
   for (;dp < end; dp = MethodData::next_extra(dp)) {
-    switch(dp->tag()) {
+    switch (dp->tag()) {
     case DataLayout::no_tag:
     case DataLayout::arg_info_data_tag:
       return;

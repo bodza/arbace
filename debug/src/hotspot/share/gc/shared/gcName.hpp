@@ -22,7 +22,7 @@ enum GCName {
 class GCNameHelper {
  public:
   static const char* to_string(GCName name) {
-    switch(name) {
+    switch (name) {
       case ParallelOld: return "ParallelOld";
       case SerialOld: return "SerialOld";
       case PSMarkSweep: return "PSMarkSweep";

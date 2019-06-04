@@ -19,24 +19,6 @@ void NativeLoadGot::report_and_fail() const {
   fatal("not a indirect rip mov to rbx");
 }
 
-void NativeLoadGot::verify() const {
-  if (has_rex) {
-    int rex = ubyte_at(0);
-    if (rex != rex_prefix) {
-      report_and_fail();
-    }
-  }
-
-  int inst = ubyte_at(rex_size);
-  if (inst != instruction_code) {
-    report_and_fail();
-  }
-  int modrm = ubyte_at(rex_size + 1);
-  if (modrm != modrm_rbx_code && modrm != modrm_rax_code) {
-    report_and_fail();
-  }
-}
-
 intptr_t NativeLoadGot::data() const {
   return *(intptr_t *) got_address();
 }
@@ -108,35 +90,9 @@ void NativePltCall::set_stub_to_clean() {
   jump->set_jump_destination((address)-1);
 }
 
-void NativePltCall::verify() const {
-  // Make sure code pattern is actually a call rip+off32 instruction.
-  int inst = ubyte_at(0);
-  if (inst != instruction_code) {
-    tty->print_cr("Addr: " INTPTR_FORMAT " Code: 0x%x", p2i(instruction_address()), inst);
-    fatal("not a call rip+off32");
-  }
-}
-
 address NativeGotJump::destination() const {
   address *got_entry = (address *) got_address();
   return *got_entry;
-}
-
-void NativeGotJump::verify() const {
-  int inst = ubyte_at(0);
-  if (inst != instruction_code) {
-    tty->print_cr("Addr: " INTPTR_FORMAT " Code: 0x%x", p2i(instruction_address()), inst);
-    fatal("not a indirect rip jump");
-  }
-}
-
-void NativeCall::verify() {
-  // Make sure code pattern is actually a call imm32 instruction.
-  int inst = ubyte_at(0);
-  if (inst != instruction_code) {
-    tty->print_cr("Addr: " INTPTR_FORMAT " Code: 0x%x", p2i(instruction_address()), inst);
-    fatal("not a call disp32");
-  }
 }
 
 address NativeCall::destination() const {
@@ -159,7 +115,7 @@ void NativeCall::insert(address code_pos, address entry) {
   guarantee(disp == (intptr_t)(jint)disp, "must be 32-bit offset");
 #endif
   *code_pos = instruction_code;
-  *((int32_t *)(code_pos+1)) = (int32_t) disp;
+  *((int32_t *)(code_pos + 1)) = (int32_t) disp;
   ICache::invalidate_range(code_pos, instruction_size);
 }
 
@@ -270,21 +226,6 @@ void NativeCall::set_destination_mt_safe(address dest) {
     // Impossible:  One or the other must be atomically writable.
     ShouldNotReachHere();
   }
-}
-
-void NativeMovConstReg::verify() {
-#ifdef AMD64
-  // make sure code pattern is actually a mov reg64, imm64 instruction
-  if ((ubyte_at(0) != Assembler::REX_W && ubyte_at(0) != Assembler::REX_WB) || (ubyte_at(1) & (0xff ^ register_mask)) != 0xB8) {
-    print();
-    fatal("not a REX.W[B] mov reg64, imm64");
-  }
-#else
-  // make sure code pattern is actually a mov reg, imm32 instruction
-  u_char test_byte = *(u_char*)instruction_address();
-  u_char test_byte_2 = test_byte & ( 0xff ^ register_mask);
-  if (test_byte_2 != instruction_code) fatal("not a mov reg, imm32");
-#endif
 }
 
 void NativeMovConstReg::print() {
@@ -422,53 +363,8 @@ void NativeMovRegMem::set_offset(int x) {
   set_int_at(off, x);
 }
 
-void NativeMovRegMem::verify() {
-  // make sure code pattern is actually a mov [reg+offset], reg instruction
-  u_char test_byte = *(u_char*)instruction_address();
-  switch (test_byte) {
-    case instruction_code_reg2memb:  // 0x88 movb a, r
-    case instruction_code_reg2mem:   // 0x89 movl a, r (can be movq in 64bit)
-    case instruction_code_mem2regb:  // 0x8a movb r, a
-    case instruction_code_mem2reg:   // 0x8b movl r, a (can be movq in 64bit)
-      break;
-
-    case instruction_code_mem2reg_movslq: // 0x63 movsql r, a
-    case instruction_code_mem2reg_movzxb: // 0xb6 movzbl r, a (movzxb)
-    case instruction_code_mem2reg_movzxw: // 0xb7 movzwl r, a (movzxw)
-    case instruction_code_mem2reg_movsxb: // 0xbe movsbl r, a (movsxb)
-    case instruction_code_mem2reg_movsxw: // 0xbf  movswl r, a (movsxw)
-      break;
-
-    case instruction_code_float_s:   // 0xd9 fld_s a
-    case instruction_code_float_d:   // 0xdd fld_d a
-    case instruction_code_xmm_load:  // 0x10 movsd xmm, a
-    case instruction_code_xmm_store: // 0x11 movsd a, xmm
-    case instruction_code_xmm_lpd:   // 0x12 movlpd xmm, a
-      break;
-
-    case instruction_code_lea:       // 0x8d lea r, a
-      break;
-
-    default:
-          fatal ("not a mov [reg+offs], reg instruction");
-  }
-}
-
 void NativeMovRegMem::print() {
   tty->print_cr(PTR_FORMAT ": mov reg, [reg + %x]", p2i(instruction_address()), offset());
-}
-
-//-------------------------------------------------------------------
-
-void NativeLoadAddress::verify() {
-  // make sure code pattern is actually a mov [reg+offset], reg instruction
-  u_char test_byte = *(u_char*)instruction_address();
-  if ((test_byte == instruction_prefix_wide || test_byte == instruction_prefix_wide_extended)) {
-    test_byte = *(u_char*)(instruction_address() + 1);
-  }
-  if (! ((test_byte == lea_instruction_code) || (test_byte == mov64_instruction_code))) {
-    fatal ("not a lea reg, [reg+offs] instruction");
-  }
 }
 
 void NativeLoadAddress::print() {
@@ -476,17 +372,6 @@ void NativeLoadAddress::print() {
 }
 
 //--------------------------------------------------------------------------------
-
-void NativeJump::verify() {
-  if (*(u_char*)instruction_address() != instruction_code) {
-    // far jump
-    NativeMovConstReg* mov = nativeMovConstReg_at(instruction_address());
-    NativeInstruction* jmp = nativeInstruction_at(mov->next_instruction_address());
-    if (!jmp->is_jump_reg()) {
-      fatal("not a jump instruction");
-    }
-  }
-}
 
 void NativeJump::insert(address code_pos, address entry) {
   intptr_t disp = (intptr_t)entry - ((intptr_t)code_pos + 1 + 4);
@@ -574,15 +459,6 @@ address NativeFarJump::jump_destination() const {
   return (address)mov->data();
 }
 
-void NativeFarJump::verify() {
-  if (is_far_jump()) {
-    NativeMovConstReg* mov = nativeMovConstReg_at(addr_at(0));
-    NativeInstruction* jmp = nativeInstruction_at(mov->next_instruction_address());
-    if (jmp->is_jump_reg()) return;
-  }
-  fatal("not a jump instruction");
-}
-
 void NativePopReg::insert(address code_pos, Register reg) {
   *code_pos = (u_char)(instruction_code | reg->encoding());
   ICache::invalidate_range(code_pos, instruction_size);
@@ -593,8 +469,6 @@ void NativeIllegalInstruction::insert(address code_pos) {
   ICache::invalidate_range(code_pos, instruction_size);
 }
 
-void NativeGeneralJump::verify() { }
-
 void NativeGeneralJump::insert_unconditional(address code_pos, address entry) {
   intptr_t disp = (intptr_t)entry - ((intptr_t)code_pos + 1 + 4);
 #ifdef AMD64
@@ -602,7 +476,7 @@ void NativeGeneralJump::insert_unconditional(address code_pos, address entry) {
 #endif
 
   *code_pos = unconditional_long_jump;
-  *((int32_t *)(code_pos+1)) = (int32_t) disp;
+  *((int32_t *)(code_pos + 1)) = (int32_t) disp;
   ICache::invalidate_range(code_pos, instruction_size);
 }
 

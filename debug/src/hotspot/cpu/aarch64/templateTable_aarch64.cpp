@@ -1263,15 +1263,15 @@ void TemplateTable::iop2(Operation op)
   // r0 <== r1 op r0
   __ pop_i(r1);
   switch (op) {
-  case add  : __ addw(r0, r1, r0); break;
-  case sub  : __ subw(r0, r1, r0); break;
-  case mul  : __ mulw(r0, r1, r0); break;
-  case _and : __ andw(r0, r1, r0); break;
-  case _or  : __ orrw(r0, r1, r0); break;
-  case _xor : __ eorw(r0, r1, r0); break;
+  case add  : __ addw(r0, r1, r0);  break;
+  case sub  : __ subw(r0, r1, r0);  break;
+  case mul  : __ mulw(r0, r1, r0);  break;
+  case _and : __ andw(r0, r1, r0);  break;
+  case _or  : __ orrw(r0, r1, r0);  break;
+  case _xor : __ eorw(r0, r1, r0);  break;
   case shl  : __ lslvw(r0, r1, r0); break;
   case shr  : __ asrvw(r0, r1, r0); break;
-  case ushr : __ lsrvw(r0, r1, r0);break;
+  case ushr : __ lsrvw(r0, r1, r0); break;
   default   : ShouldNotReachHere();
   }
 }
@@ -1282,12 +1282,12 @@ void TemplateTable::lop2(Operation op)
   // r0 <== r1 op r0
   __ pop_l(r1);
   switch (op) {
-  case add  : __ add(r0, r1, r0); break;
-  case sub  : __ sub(r0, r1, r0); break;
-  case mul  : __ mul(r0, r1, r0); break;
+  case add  : __ add(r0, r1, r0);  break;
+  case sub  : __ sub(r0, r1, r0);  break;
+  case mul  : __ mul(r0, r1, r0);  break;
   case _and : __ andr(r0, r1, r0); break;
-  case _or  : __ orr(r0, r1, r0); break;
-  case _xor : __ eor(r0, r1, r0); break;
+  case _or  : __ orr(r0, r1, r0);  break;
+  case _xor : __ eor(r0, r1, r0);  break;
   default   : ShouldNotReachHere();
   }
 }
@@ -2047,10 +2047,10 @@ void TemplateTable::fast_binaryswitch() {
     __ csel(j, h, j, Assembler::LT);
     // i = h if (key >= array[h].fast_match())
     __ csel(i, h, i, Assembler::GE);
-    // while (i+1 < j)
+    // while (i + 1 < j)
     __ bind(entry);
-    __ addw(h, i, 1);          // i+1
-    __ cmpw(h, j);             // i+1 < j
+    __ addw(h, i, 1);          // i + 1
+    __ cmpw(h, j);             // i + 1 < j
     __ br(Assembler::LT, loop);
   }
 
@@ -2238,7 +2238,7 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static, RewriteContr
   // membar it's possible for a simple Dekker test to fail if loads
   // use LDR;DMB but stores use STLR.  This can happen if C2 compiles
   // the stores in one method and we interpret the loads in another.
-  if (! UseBarriersForVolatile) {
+  if (!UseBarriersForVolatile) {
     Label notVolatile;
     __ tbz(raw_flags, ConstantPoolCacheEntry::is_volatile_shift, notVolatile);
     __ membar(MacroAssembler::AnyAny);
@@ -2665,7 +2665,7 @@ void TemplateTable::fast_accessfield(TosState state)
   // membar it's possible for a simple Dekker test to fail if loads
   // use LDR;DMB but stores use STLR.  This can happen if C2 compiles
   // the stores in one method and we interpret the loads in another.
-  if (! UseBarriersForVolatile) {
+  if (!UseBarriersForVolatile) {
     Label notVolatile;
     __ tbz(r3, ConstantPoolCacheEntry::is_volatile_shift, notVolatile);
     __ membar(MacroAssembler::AnyAny);
@@ -2726,7 +2726,7 @@ void TemplateTable::fast_xaccess(TosState state)
   // membar it's possible for a simple Dekker test to fail if loads
   // use LDR;DMB but stores use STLR.  This can happen if C2 compiles
   // the stores in one method and we interpret the loads in another.
-  if (! UseBarriersForVolatile) {
+  if (!UseBarriersForVolatile) {
     Label notVolatile;
     __ ldrw(r3, Address(r2, in_bytes(ConstantPoolCache::base_offset() + ConstantPoolCacheEntry::flags_offset())));
     __ tbz(r3, ConstantPoolCacheEntry::is_volatile_shift, notVolatile);

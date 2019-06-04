@@ -54,19 +54,6 @@ class ChunkManager : public CHeapObj<mtInternal> {
   size_t sum_free_chunks();
   size_t sum_free_chunks_count();
 
-  void locked_verify_free_chunks_total();
-  void slow_locked_verify_free_chunks_total() {
-    if (VerifyMetaspace) {
-      locked_verify_free_chunks_total();
-    }
-  }
-  void locked_verify_free_chunks_count();
-  void slow_locked_verify_free_chunks_count() {
-    if (VerifyMetaspace) {
-      locked_verify_free_chunks_count();
-    }
-  }
-
   // Given a pointer to a chunk, attempts to merge it with neighboring
   // free chunks to form a bigger chunk. Returns true if successful.
   bool attempt_to_coalesce_around_chunk(Metachunk* chunk, ChunkIndex target_chunk_type);
@@ -161,23 +148,6 @@ class ChunkManager : public CHeapObj<mtInternal> {
                                          size_free_chunks_in_bytes(MediumIndex),
                                          size_free_chunks_in_bytes(HumongousIndex));
   }
-
-  // Debug support
-  void verify();
-  void slow_verify() {
-    if (VerifyMetaspace) {
-      verify();
-    }
-  }
-  void locked_verify();
-  void slow_locked_verify() {
-    if (VerifyMetaspace) {
-      locked_verify();
-    }
-  }
-
-  void locked_print_free_chunks(outputStream* st);
-  void locked_print_sum_free_chunks(outputStream* st);
 
   // Fill in current statistic values to the given statistics object.
   void collect_statistics(ChunkManagerStatistics* out) const;

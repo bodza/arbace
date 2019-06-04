@@ -14,7 +14,7 @@ enum G1YCType {
 class G1YCTypeHelper {
  public:
   static const char* to_string(G1YCType type) {
-    switch(type) {
+    switch (type) {
       case Normal: return "Normal";
       case InitialMark: return "Initial Mark";
       case DuringMarkOrRebuild: return "During Mark";

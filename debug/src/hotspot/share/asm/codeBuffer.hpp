@@ -282,8 +282,8 @@ class CodeBuffer: public StackObj {
 
  private:
   enum {
-    sect_bits = 2,      // assert (SECT_LIMIT <= (1<<sect_bits))
-    sect_mask = (1<<sect_bits)-1
+    sect_bits = 2,      // assert (SECT_LIMIT <= (1 << sect_bits))
+    sect_mask = (1 << sect_bits)-1
   };
 
   const char*  _name;
@@ -484,13 +484,13 @@ class CodeBuffer: public StackObj {
   // allocated size of any and all recorded oops
   csize_t total_oop_size() const {
     OopRecorder* recorder = oop_recorder();
-    return (recorder == NULL)? 0: recorder->oop_size();
+    return (recorder == NULL) ? 0 : recorder->oop_size();
   }
 
   // allocated size of any and all recorded metadata
   csize_t total_metadata_size() const {
     OopRecorder* recorder = oop_recorder();
-    return (recorder == NULL)? 0: recorder->metadata_size();
+    return (recorder == NULL) ? 0 : recorder->metadata_size();
   }
 
   // Configuration functions, called immediately after the CB is constructed.

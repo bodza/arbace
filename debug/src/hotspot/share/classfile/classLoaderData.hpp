@@ -104,7 +104,6 @@ class ClassLoaderDataGraph : public AllStatic {
   // VM_CounterDecay iteration support
   static InstanceKlass* try_get_next_class();
 
-  static void verify_dictionary();
   static void print_dictionary(outputStream* st);
   static void print_dictionary_statistics(outputStream* st);
 
@@ -129,7 +128,6 @@ class ClassLoaderDataGraph : public AllStatic {
 
   static void print_on(outputStream * const out) { };
   static void print() { print_on(tty); }
-  static void verify();
 
   // instance and array class counters
   static inline size_t num_instance_classes();
@@ -344,7 +342,6 @@ class ClassLoaderData : public CHeapObj<mtClass> {
   void print_on(outputStream* out) const { };
   void print_value()                               { print_value_on(tty); }
   void print_value_on(outputStream* out) const;
-  void verify();
 
   OopHandle add_handle(Handle h);
   void remove_handle(OopHandle h);

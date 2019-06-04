@@ -116,8 +116,6 @@ class VMThread: public NamedThread {
   // GC support
   void oops_do(OopClosure* f, CodeBlobClosure* cf);
 
-  void verify();
-
   // Performance measurement
   static PerfCounter* perf_accumulated_vm_operation_time()               { return _perf_accumulated_vm_operation_time; }
 

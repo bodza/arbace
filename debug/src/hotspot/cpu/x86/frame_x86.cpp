@@ -111,7 +111,7 @@ bool frame::safe_for_sender(JavaThread *thread) {
       }
       sender_unextended_sp = sender_sp;
       // On Intel the return_address is always the word on the stack
-      sender_pc = (address) *(sender_sp-1);
+      sender_pc = (address) *(sender_sp - 1);
       // Note: frame::sender_sp_offset is only valid for compiled frame
       saved_fp = (intptr_t*) *(sender_sp - frame::sender_sp_offset);
     }
@@ -358,7 +358,7 @@ frame frame::sender_for_compiled_frame(RegisterMap* map) const {
   intptr_t* unextended_sp = sender_sp;
 
   // On Intel the return_address is always the word on the stack
-  address sender_pc = (address) *(sender_sp-1);
+  address sender_pc = (address) *(sender_sp - 1);
 
   // This is the saved value of EBP which may or may not really be an FP.
   // It is only an FP if the sender is an interpreter frame (or C1?).
@@ -402,10 +402,10 @@ frame frame::sender(RegisterMap* map) const {
 
 bool frame::is_interpreted_frame_valid(JavaThread* thread) const {
   // These are reasonable sanity checks
-  if (fp() == 0 || (intptr_t(fp()) & (wordSize-1)) != 0) {
+  if (fp() == 0 || (intptr_t(fp()) & (wordSize - 1)) != 0) {
     return false;
   }
-  if (sp() == 0 || (intptr_t(sp()) & (wordSize-1)) != 0) {
+  if (sp() == 0 || (intptr_t(sp()) & (wordSize - 1)) != 0) {
     return false;
   }
   if (fp() + interpreter_frame_initial_sp_offset < sp()) {

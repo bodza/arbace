@@ -157,17 +157,14 @@ class Monitor : public CHeapObj<mtInternal> {
    Monitor() ;
 
  public:
-  Monitor(int rank, const char* name, bool allow_vm_block = false,
-          SafepointCheckRequired safepoint_check_required = _safepoint_check_always);
+  Monitor(int rank, const char* name, bool allow_vm_block = false, SafepointCheckRequired safepoint_check_required = _safepoint_check_always);
   ~Monitor();
 
   // Wait until monitor is notified (or times out).
   // Defaults are to make safepoint checks, wait time is forever (i.e.,
   // zero), and not a suspend-equivalent condition. Returns true if wait
   // times out; otherwise returns false.
-  bool wait(bool no_safepoint_check = !_no_safepoint_check_flag,
-            long timeout = 0,
-            bool as_suspend_equivalent = !_as_suspend_equivalent_flag);
+  bool wait(bool no_safepoint_check = !_no_safepoint_check_flag, long timeout = 0, bool as_suspend_equivalent = !_as_suspend_equivalent_flag);
   bool notify();
   bool notify_all();
 
@@ -208,8 +205,7 @@ class PaddedMonitor : public Monitor {
   };
   char _padding[PADDING_LEN];
  public:
-  PaddedMonitor(int rank, const char *name, bool allow_vm_block = false,
-               SafepointCheckRequired safepoint_check_required = _safepoint_check_always) :
+  PaddedMonitor(int rank, const char *name, bool allow_vm_block = false, SafepointCheckRequired safepoint_check_required = _safepoint_check_always) :
     Monitor(rank, name, allow_vm_block, safepoint_check_required) { };
 };
 
@@ -238,8 +234,7 @@ class PaddedMonitor : public Monitor {
 
 class Mutex : public Monitor {      // degenerate Monitor
  public:
-   Mutex(int rank, const char *name, bool allow_vm_block = false,
-         SafepointCheckRequired safepoint_check_required = _safepoint_check_always);
+   Mutex(int rank, const char *name, bool allow_vm_block = false, SafepointCheckRequired safepoint_check_required = _safepoint_check_always);
   // default destructor
  private:
    bool notify ()    { ShouldNotReachHere(); return false; }
@@ -257,8 +252,7 @@ class PaddedMutex : public Mutex {
   };
   char _padding[PADDING_LEN];
 public:
-  PaddedMutex(int rank, const char *name, bool allow_vm_block = false,
-              SafepointCheckRequired safepoint_check_required = _safepoint_check_always) :
+  PaddedMutex(int rank, const char *name, bool allow_vm_block = false, SafepointCheckRequired safepoint_check_required = _safepoint_check_always) :
     Mutex(rank, name, allow_vm_block, safepoint_check_required) { };
 };
 

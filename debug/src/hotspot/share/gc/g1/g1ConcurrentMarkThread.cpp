@@ -180,7 +180,7 @@ bool G1ConcurrentMarkThread::request_concurrent_phase(const char* phase_name) {
   while (!ConcurrentGCPhaseManager::wait_for_phase(phase, phase_manager_stack())) {
     if ((phase != G1ConcurrentPhase::IDLE) && !during_cycle()) {
       // If idle and the goal is !idle, start a collection.
-      G1CollectedHeap::heap()->collect(GCCause::_wb_conc_mark);
+      G1CollectedHeap::heap()->collect(GCCause::NULL);
     }
   }
   return true;

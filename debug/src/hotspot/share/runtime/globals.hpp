@@ -812,7 +812,7 @@
           "Use a mutex to serialize output to tty") \
  \
   diagnostic(bool, DisplayVMOutput, true, \
-          "Display all VM output on the tty, independently of false") \
+          "Display all VM output on the tty") \
  \
   product(bool, DisplayVMOutputToStderr, false, \
           "If DisplayVMOutput is true, display all VM output to stderr") \
@@ -1130,7 +1130,7 @@
           "Number of runtime stub nodes to show in profile") \
  \
   product(intx, ProfileIntervalsTicks, 100, \
-          "Number of ticks between printing of interval profile (+false)") \
+          "Number of ticks between printing of interval profile") \
           range(0, max_intx) \
  \
   develop(intx, DontYieldALotInterval, 10, \
@@ -1785,37 +1785,6 @@
           "0=off, 1=conservative, 2=aggressive") \
           range(0, 2) \
  \
-  /* Serviceability Support */ \
- \
-  product(bool, DisableAttachMechanism, false, \
-          "Disable mechanism that allows tools to attach to this VM") \
- \
-  product(bool, StartAttachListener, false, \
-          "Always start Attach Listener at VM startup") \
- \
-  product(bool, EnableDynamicAgentLoading, true, \
-          "Allow tools to load agents with the attach mechanism") \
- \
-  /* Shared spaces */ \
- \
-  product(bool, false, true, \
-          "Use shared spaces for metadata") \
- \
-  product(size_t, SharedBaseAddress, 32*G, \
-          "Address to allocate shared memory region for class data") \
-          range(0, SIZE_MAX) \
- \
-  product(ccstr, SharedArchiveConfigFile, NULL, \
-          "Data to add to the CDS archive file") \
- \
-  product(uintx, SharedSymbolTableBucketSize, 4, \
-          "Average number of symbols per bucket in shared table") \
-          range(2, 246) \
- \
-  diagnostic(bool, IgnoreUnverifiableClassesDuringDump, true, \
-          "Do not quit -Xshare:dump even if we encounter unverifiable " \
-          "classes. Just exclude them from the shared dictionary.") \
- \
   diagnostic(bool, VerifyMethodHandles, trueInDebug, \
           "perform extra checks when constructing method handles") \
  \
@@ -1836,7 +1805,7 @@
           "resolution; 2+: stress test the BCI API by calling more BSMs " \
           "via that API, instead of with the eagerly-resolved array.") \
  \
-  diagnostic(bool, PauseAtStartup,      false, \
+  diagnostic(bool, PauseAtStartup, false, \
           "Causes the VM to pause at startup time and wait for the pause " \
           "file to be removed (default: ./vm.paused.<pid>)") \
  \
@@ -1876,10 +1845,6 @@
  \
   product(bool, AllowNonVirtualCalls, false, \
           "Obey the ACC_SUPER flag and allow invokenonvirtual calls") \
- \
-  product(ccstr, DumpLoadedClassList, NULL, \
-          "Dump the names all loaded classes, that could be stored into " \
-          "the CDS archive, in the specified file") \
  \
   product(ccstr, SharedClassListFile, NULL, \
           "Override the default CDS class list") \
@@ -1926,15 +1891,12 @@
  \
   diagnostic(bool, CompilerDirectivesPrint, false, \
              "Print compiler directives on installation.") \
-  diagnostic(int,  CompilerDirectivesLimit, 50, \
+  diagnostic(int, CompilerDirectivesLimit, 50, \
              "Limit on number of compiler directives.") \
  \
   product(ccstr, AllocateHeapAt, NULL, \
           "Path to the directoy where a temporary file will be created " \
           "to use as the backing store for Java Heap.") \
- \
-  develop(bool, VerifyMetaspace, false, \
-          "Verify metaspace on chunk movements.") \
  \
   diagnostic(bool, ShowRegistersOnAssert, false, \
           "On internal errors, include registers in error report.") \

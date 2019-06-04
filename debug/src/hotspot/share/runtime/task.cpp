@@ -91,6 +91,6 @@ void PeriodicTask::disenroll() {
   _num_tasks--;
 
   for (; index < _num_tasks; index++) {
-    _tasks[index] = _tasks[index+1];
+    _tasks[index] = _tasks[index + 1];
   }
 }

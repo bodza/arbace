@@ -4,7 +4,6 @@
 #include "memory/allocation.hpp"
 #include "runtime/safepoint.hpp"
 #include "runtime/thread.inline.hpp"
-#include "services/memBaseline.hpp"
 #include "services/memTracker.hpp"
 
 /*
@@ -199,7 +198,7 @@ bool MemBaseline::aggregate_virtual_memory_allocation_sites() {
 }
 
 MallocSiteIterator MemBaseline::malloc_sites(SortingOrder order) {
-  switch(order) {
+  switch (order) {
     case by_size:
       malloc_sites_to_size_order();
       break;
@@ -217,7 +216,7 @@ MallocSiteIterator MemBaseline::malloc_sites(SortingOrder order) {
 }
 
 VirtualMemorySiteIterator MemBaseline::virtual_memory_sites(SortingOrder order) {
-  switch(order) {
+  switch (order) {
     case by_size:
       virtual_memory_sites_to_size_order();
       break;

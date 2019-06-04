@@ -1192,8 +1192,8 @@ public:
     } else {
       unspill(tmp1, true, src_offset);
       spill(tmp1, true, dst_offset);
-      unspill(tmp1, true, src_offset+8);
-      spill(tmp1, true, dst_offset+8);
+      unspill(tmp1, true, src_offset + 8);
+      spill(tmp1, true, dst_offset + 8);
     }
   }
 };

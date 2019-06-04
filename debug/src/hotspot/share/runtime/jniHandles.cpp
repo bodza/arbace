@@ -232,22 +232,9 @@ void JNIHandles::print_on(outputStream* st) {
 
 class VerifyJNIHandles: public OopClosure {
 public:
-  virtual void do_oop(oop* root) {
-    (*root)->verify();
-  }
+  virtual void do_oop(oop* root) { }
   virtual void do_oop(narrowOop* root) { ShouldNotReachHere(); }
 };
-
-void JNIHandles::verify() {
-  VerifyJNIHandles verify_handle;
-
-  oops_do(&verify_handle);
-
-  // JNI weaks are handled concurrently in ZGC, so they can't be verified here
-  if (!UseZGC) {
-    weak_oops_do(&verify_handle);
-  }
-}
 
 // This method is implemented here to avoid circular includes between
 // jniHandles.hpp and thread.hpp.
@@ -260,8 +247,8 @@ void jni_handles_init() {
   JNIHandles::initialize();
 }
 
-int             JNIHandleBlock::_blocks_allocated     = 0;
-JNIHandleBlock* JNIHandleBlock::_block_free_list      = NULL;
+int             JNIHandleBlock::_blocks_allocated = 0;
+JNIHandleBlock* JNIHandleBlock::_block_free_list  = NULL;
 
 JNIHandleBlock* JNIHandleBlock::allocate_block(Thread* thread) {
   JNIHandleBlock* block;

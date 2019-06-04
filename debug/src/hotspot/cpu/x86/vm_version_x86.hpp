@@ -763,13 +763,13 @@ public:
   static bool supports_sse()      { return (_features & CPU_SSE) != 0; }
   static bool supports_sse2()     { return (_features & CPU_SSE2) != 0; }
   static bool supports_sse3()     { return (_features & CPU_SSE3) != 0; }
-  static bool supports_ssse3()    { return (_features & CPU_SSSE3)!= 0; }
+  static bool supports_ssse3()    { return (_features & CPU_SSSE3) != 0; }
   static bool supports_sse4_1()   { return (_features & CPU_SSE4_1) != 0; }
   static bool supports_sse4_2()   { return (_features & CPU_SSE4_2) != 0; }
   static bool supports_popcnt()   { return (_features & CPU_POPCNT) != 0; }
   static bool supports_avx()      { return (_features & CPU_AVX) != 0; }
   static bool supports_avx2()     { return (_features & CPU_AVX2) != 0; }
-  static bool supports_tsc()      { return (_features & CPU_TSC)    != 0; }
+  static bool supports_tsc()      { return (_features & CPU_TSC) != 0; }
   static bool supports_aes()      { return (_features & CPU_AES) != 0; }
   static bool supports_erms()     { return (_features & CPU_ERMS) != 0; }
   static bool supports_clmul()    { return (_features & CPU_CLMUL) != 0; }

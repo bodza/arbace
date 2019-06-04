@@ -122,7 +122,7 @@ bool frame::safe_for_sender(JavaThread *thread) {
         return false;
       }
       sender_unextended_sp = sender_sp;
-      sender_pc = (address) *(sender_sp-1);
+      sender_pc = (address) *(sender_sp - 1);
       // Note: frame::sender_sp_offset is only valid for compiled frame
       saved_fp = (intptr_t*) *(sender_sp - frame::sender_sp_offset);
     }
@@ -377,7 +377,7 @@ frame frame::sender_for_compiled_frame(RegisterMap* map) const {
   intptr_t* unextended_sp = l_sender_sp;
 
   // the return_address is always the word on the stack
-  address sender_pc = (address) *(l_sender_sp-1);
+  address sender_pc = (address) *(l_sender_sp - 1);
 
   intptr_t** saved_fp_addr = (intptr_t**) (l_sender_sp - frame::sender_sp_offset);
 
@@ -428,10 +428,10 @@ frame frame::sender(RegisterMap* map) const {
 
 bool frame::is_interpreted_frame_valid(JavaThread* thread) const {
   // These are reasonable sanity checks
-  if (fp() == 0 || (intptr_t(fp()) & (wordSize-1)) != 0) {
+  if (fp() == 0 || (intptr_t(fp()) & (wordSize - 1)) != 0) {
     return false;
   }
-  if (sp() == 0 || (intptr_t(sp()) & (wordSize-1)) != 0) {
+  if (sp() == 0 || (intptr_t(sp()) & (wordSize - 1)) != 0) {
     return false;
   }
   if (fp() + interpreter_frame_initial_sp_offset < sp()) {
@@ -581,7 +581,7 @@ static void printbc(Method *m, intptr_t bcx) {
 }
 
 void internal_pf(unsigned long sp, unsigned long fp, unsigned long pc, unsigned long bcx) {
-  if (! fp)
+  if (!fp)
     return;
 
   DESCRIBE_FP_OFFSET(return_addr);

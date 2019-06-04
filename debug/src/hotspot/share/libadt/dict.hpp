@@ -80,7 +80,7 @@ int32_t cmpkey(const void *key1, const void *key2);
 //------------------------------Iteration--------------------------------------
 // The class of dictionary iterators.  Fails in the presences of modifications
 // to the dictionary during iteration (including searches).
-// Usage:  for ( DictI i(dict); i.test(); ++i ) { body = i.key; body = i.value; }
+// Usage:  for (DictI i(dict); i.test(); ++i) { body = i.key; body = i.value; }
 class DictI {
  private:
   const Dict *_d;               // Dictionary being iterated over

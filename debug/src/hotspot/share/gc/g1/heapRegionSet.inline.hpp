@@ -8,12 +8,10 @@ inline void HeapRegionSetBase::add(HeapRegion* hr) {
 
   _length++;
   hr->set_containing_set(this);
-  verify_region(hr);
 }
 
 inline void HeapRegionSetBase::remove(HeapRegion* hr) {
   check_mt_safety();
-  verify_region(hr);
 
   hr->set_containing_set(NULL);
   _length--;
@@ -90,7 +88,6 @@ inline HeapRegion* FreeRegionList::remove_from_tail_impl() {
 
 inline HeapRegion* FreeRegionList::remove_region(bool from_head) {
   check_mt_safety();
-  verify_optional();
 
   if (is_empty()) {
     return NULL;

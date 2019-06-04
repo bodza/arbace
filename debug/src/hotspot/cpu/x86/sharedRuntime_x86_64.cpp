@@ -66,7 +66,7 @@ class RegisterSaver {
     DEF_ZMM_OFFS(16),
     DEF_ZMM_OFFS(17),
     // 18..31 are implied in range usage
-    fpu_state_end = fpu_state_off + ((FPUStateSizeInWords-1)*wordSize / BytesPerInt),
+    fpu_state_end = fpu_state_off + ((FPUStateSizeInWords - 1) * wordSize / BytesPerInt),
     fpu_stateH_end,
     r15_off, r15H_off,
     r14_off, r14H_off,
@@ -1157,7 +1157,7 @@ void SharedRuntime::restore_native_result(MacroAssembler *masm, BasicType ret_ty
 }
 
 static void save_args(MacroAssembler *masm, int arg_count, int first_arg, VMRegPair *args) {
-    for ( int i = first_arg; i < arg_count; i++ ) {
+    for (int i = first_arg; i < arg_count; i++) {
       if (args[i].first()->is_Register()) {
         __ push(args[i].first()->as_Register());
       } else if (args[i].first()->is_XMMRegister()) {
@@ -1168,7 +1168,7 @@ static void save_args(MacroAssembler *masm, int arg_count, int first_arg, VMRegP
 }
 
 static void restore_args(MacroAssembler *masm, int arg_count, int first_arg, VMRegPair *args) {
-    for ( int i = arg_count - 1; i >= first_arg; i-- ) {
+    for (int i = arg_count - 1; i >= first_arg; i--) {
       if (args[i].first()->is_Register()) {
         __ pop(args[i].first()->as_Register());
       } else if (args[i].first()->is_XMMRegister()) {
@@ -1178,18 +1178,12 @@ static void restore_args(MacroAssembler *masm, int arg_count, int first_arg, VMR
     }
 }
 
-static void save_or_restore_arguments(MacroAssembler* masm,
-                                      const int stack_slots,
-                                      const int total_in_args,
-                                      const int arg_save_area,
-                                      OopMap* map,
-                                      VMRegPair* in_regs,
-                                      BasicType* in_sig_bt) {
+static void save_or_restore_arguments(MacroAssembler* masm, const int stack_slots, const int total_in_args, const int arg_save_area, OopMap* map, VMRegPair* in_regs, BasicType* in_sig_bt) {
   // if map is non-NULL then the code should store the values,
   // otherwise it should load them.
   int slot = arg_save_area;
   // Save down double word first
-  for ( int i = 0; i < total_in_args; i++) {
+  for (int i = 0; i < total_in_args; i++) {
     if (in_regs[i].first()->is_XMMRegister() && in_sig_bt[i] == T_DOUBLE) {
       int offset = slot * VMRegImpl::stack_slot_size;
       slot += VMRegImpl::slots_per_word;
@@ -1213,7 +1207,7 @@ static void save_or_restore_arguments(MacroAssembler* masm,
     }
   }
   // Save or restore single word registers
-  for ( int i = 0; i < total_in_args; i++) {
+  for (int i = 0; i < total_in_args; i++) {
     if (in_regs[i].first()->is_Register()) {
       int offset = slot * VMRegImpl::stack_slot_size;
       slot++;
@@ -1609,10 +1603,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     vmIntrinsics::ID iid = method->intrinsic_id();
     intptr_t start = (intptr_t)__ pc();
     int vep_offset = ((intptr_t)__ pc()) - start;
-    gen_special_dispatch(masm,
-                         method,
-                         in_sig_bt,
-                         in_regs);
+    gen_special_dispatch(masm, method, in_sig_bt, in_regs);
     int frame_complete = ((intptr_t)__ pc()) - start;  // not complete, period
     __ flush();
     int stack_slots = SharedRuntime::out_preserve_stack_slots();  // no out slots at all, actually
@@ -1669,14 +1660,14 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
       out_sig_bt[argc++] = T_OBJECT;
     }
 
-    for (int i = 0; i < total_in_args; i++ ) {
+    for (int i = 0; i < total_in_args; i++) {
       out_sig_bt[argc++] = in_sig_bt[i];
     }
   } else {
     Thread* THREAD = Thread::current();
     in_elem_bt = NEW_RESOURCE_ARRAY(BasicType, total_in_args);
     SignatureStream ss(method->signature());
-    for (int i = 0; i < total_in_args; i++ ) {
+    for (int i = 0; i < total_in_args; i++) {
       if (in_sig_bt[i] == T_ARRAY) {
         // Arrays are passed as int, elem* pair
         out_sig_bt[argc++] = T_INT;
@@ -1726,7 +1717,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     // for register arguments.
     int double_slots = 0;
     int single_slots = 0;
-    for ( int i = 0; i < total_in_args; i++) {
+    for (int i = 0; i < total_in_args; i++) {
       if (in_regs[i].first()->is_Register()) {
         const Register reg = in_regs[i].first()->as_Register();
         switch (in_sig_bt[i]) {
@@ -2126,7 +2117,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
       break; // can't de-handlize until after safepoint check
   case T_VOID: break;
   case T_LONG: break;
-  default       : ShouldNotReachHere();
+  default: ShouldNotReachHere();
   }
 
   // Switch thread to "native transition" state before reading the synchronization state.
@@ -2682,8 +2673,7 @@ void SharedRuntime::generate_deopt_blob() {
 
   // Set an oopmap for the call site
   // Use the same PC we used for the last java frame
-  oop_maps->add_gc_map(the_pc - start,
-                       new OopMap( frame_size_in_words, 0 ));
+  oop_maps->add_gc_map(the_pc - start, new OopMap(frame_size_in_words, 0));
 
   // Clear fp AND pc
   __ reset_last_Java_frame(true);
@@ -3016,7 +3006,7 @@ montgomery_multiply(unsigned long a[], unsigned long b[], unsigned long n[], uns
 
   for (i = len; i < 2*len; i++) {
     int j;
-    for (j = i-len+1; j < len; j++) {
+    for (j = i - len + 1; j < len; j++) {
       MACC(a[j], b[i-j], t0, t1, t2);
       MACC(m[j], n[i-j], t0, t1, t2);
     }
@@ -3040,7 +3030,7 @@ montgomery_square(unsigned long a[], unsigned long n[], unsigned long m[], unsig
 
   for (i = 0; i < len; i++) {
     int j;
-    int end = (i+1)/2;
+    int end = (i + 1) / 2;
     for (j = 0; j < end; j++) {
       MACC2(a[j], a[i-j], t0, t1, t2);
       MACC(m[j], n[i-j], t0, t1, t2);
@@ -3057,9 +3047,9 @@ montgomery_square(unsigned long a[], unsigned long n[], unsigned long m[], unsig
     t0 = t1; t1 = t2; t2 = 0;
   }
 
-  for (i = len; i < 2*len; i++) {
-    int start = i-len+1;
-    int end = start + (len - start)/2;
+  for (i = len; i < 2 * len; i++) {
+    int start = i - len + 1;
+    int end = start + (len - start) / 2;
     int j;
     for (j = start; j < end; j++) {
       MACC2(a[j], a[i-j], t0, t1, t2);

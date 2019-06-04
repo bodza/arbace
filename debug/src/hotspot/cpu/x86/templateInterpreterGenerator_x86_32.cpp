@@ -417,8 +417,7 @@ address TemplateInterpreterGenerator::generate_math_entry(AbstractInterpreter::M
       }
       __ addptr(rsp, 2*wordSize);
     break;
-    default                              :
-        ShouldNotReachHere();
+    default: ShouldNotReachHere();
   }
 
   // return double result in xmm0 for interpreter and compilers.

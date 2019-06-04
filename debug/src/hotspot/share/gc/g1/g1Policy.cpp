@@ -645,19 +645,12 @@ void G1Policy::record_collection_pause_end(double pause_time_ms, size_t cards_sc
   } else {
     update_rs_time_goal_ms -= scan_hcc_time_ms;
   }
-  _g1h->concurrent_refine()->adjust(average_time_ms(G1GCPhaseTimes::UpdateRS),
-                                    phase_times()->sum_thread_work_items(G1GCPhaseTimes::UpdateRS),
-                                    update_rs_time_goal_ms);
-
-  cset_chooser()->verify();
+  _g1h->concurrent_refine()->adjust(average_time_ms(G1GCPhaseTimes::UpdateRS), phase_times()->sum_thread_work_items(G1GCPhaseTimes::UpdateRS), update_rs_time_goal_ms);
 }
 
 G1IHOPControl* G1Policy::create_ihop_control(const G1Predictions* predictor) {
   if (G1UseAdaptiveIHOP) {
-    return new G1AdaptiveIHOPControl(InitiatingHeapOccupancyPercent,
-                                     predictor,
-                                     G1ReservePercent,
-                                     G1HeapWastePercent);
+    return new G1AdaptiveIHOPControl(InitiatingHeapOccupancyPercent, predictor, G1ReservePercent, G1HeapWastePercent);
   } else {
     return new G1StaticIHOPControl(InitiatingHeapOccupancyPercent);
   }

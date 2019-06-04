@@ -108,7 +108,7 @@ void PathString::append_value(const char *value) {
     if (_value != NULL) {
       len += strlen(_value);
     }
-    sp = AllocateHeap(len+2, mtArguments);
+    sp = AllocateHeap(len + 2, mtArguments);
     if (sp != NULL) {
       if (_value != NULL) {
         strcpy(sp, _value);
@@ -229,27 +229,6 @@ static void logOption(const char* opt) {
   }
 }
 
-bool needs_module_property_warning = false;
-
-#define MODULE_PROPERTY_PREFIX "jdk.module."
-#define MODULE_PROPERTY_PREFIX_LEN 11
-#define ADDEXPORTS "addexports"
-#define ADDEXPORTS_LEN 10
-#define ADDREADS "addreads"
-#define ADDREADS_LEN 8
-#define ADDOPENS "addopens"
-#define ADDOPENS_LEN 8
-#define PATCH "patch"
-#define PATCH_LEN 5
-#define ADDMODS "addmods"
-#define ADDMODS_LEN 7
-#define LIMITMODS "limitmods"
-#define LIMITMODS_LEN 9
-#define PATH "path"
-#define PATH_LEN 4
-#define UPGRADE_PATH "upgrade.path"
-#define UPGRADE_PATH_LEN 12
-
 void Arguments::add_init_library(const char* name, char* options) {
   _libraryList.add(new AgentLibrary(name, options, false, NULL));
 }
@@ -274,26 +253,6 @@ void Arguments::add_loaded_agent(const char* name, char* options, bool absolute_
 // Return TRUE if option matches 'property', or 'property=', or 'property.'.
 static bool matches_property_suffix(const char* option, const char* property, size_t len) {
   return ((strncmp(option, property, len) == 0) && (option[len] == '=' || option[len] == '.' || option[len] == '\0'));
-}
-
-// Return true if property starts with "jdk.module." and its ensuing chars match
-// any of the reserved module properties.
-// property should be passed without the leading "-D".
-bool Arguments::is_internal_module_property(const char* property) {
-  if (strncmp(property, MODULE_PROPERTY_PREFIX, MODULE_PROPERTY_PREFIX_LEN) == 0) {
-    const char* property_suffix = property + MODULE_PROPERTY_PREFIX_LEN;
-    if (matches_property_suffix(property_suffix, ADDEXPORTS, ADDEXPORTS_LEN) ||
-        matches_property_suffix(property_suffix, ADDREADS, ADDREADS_LEN) ||
-        matches_property_suffix(property_suffix, ADDOPENS, ADDOPENS_LEN) ||
-        matches_property_suffix(property_suffix, PATCH, PATCH_LEN) ||
-        matches_property_suffix(property_suffix, ADDMODS, ADDMODS_LEN) ||
-        matches_property_suffix(property_suffix, LIMITMODS, LIMITMODS_LEN) ||
-        matches_property_suffix(property_suffix, PATH, PATH_LEN) ||
-        matches_property_suffix(property_suffix, UPGRADE_PATH, UPGRADE_PATH_LEN)) {
-      return true;
-    }
-  }
-  return false;
 }
 
 // Process java launcher properties.
@@ -459,25 +418,20 @@ void Arguments::init_version_specific_system_properties() {
 //   "Obsolete Flags" section of the table.
 // - All expired options should be removed from the table.
 static SpecialFlag const special_jvm_flags[] = {
-  // -------------- Deprecated Flags --------------
-  // --- Non-alias flags - sorted by obsolete_in then expired_in:
-  { "UseConcMarkSweepGC",           JDK_Version::jdk(9), JDK_Version::undefined(), JDK_Version::undefined() },
-  { "MonitorInUseLists",            JDK_Version::jdk(10),JDK_Version::undefined(), JDK_Version::undefined() },
-  { "MaxRAMFraction",               JDK_Version::jdk(10),  JDK_Version::undefined(), JDK_Version::undefined() },
-  { "MinRAMFraction",               JDK_Version::jdk(10),  JDK_Version::undefined(), JDK_Version::undefined() },
-  { "InitialRAMFraction",           JDK_Version::jdk(10),  JDK_Version::undefined(), JDK_Version::undefined() },
-  { "UseMembar",                    JDK_Version::jdk(10), JDK_Version::undefined(), JDK_Version::undefined() },
-  { "IgnoreUnverifiableClassesDuringDump", JDK_Version::jdk(10),  JDK_Version::undefined(), JDK_Version::undefined() },
-  { "CompilerThreadHintNoPreempt",  JDK_Version::jdk(11), JDK_Version::jdk(12), JDK_Version::jdk(13) },
-  { "VMThreadHintNoPreempt",        JDK_Version::jdk(11), JDK_Version::jdk(12), JDK_Version::jdk(13) },
-  { "AllowNonVirtualCalls",         JDK_Version::jdk(11), JDK_Version::jdk(12), JDK_Version::jdk(13) },
-
-  // --- Deprecated alias flags (see also aliased_jvm_flags) - sorted by obsolete_in then expired_in:
-  { "DefaultMaxRAMFraction",        JDK_Version::jdk(8),  JDK_Version::undefined(), JDK_Version::undefined() },
-
-  // -------------- Obsolete Flags - sorted by expired_in --------------
-  { "UseAppCDS",                     JDK_Version::undefined(), JDK_Version::jdk(11), JDK_Version::jdk(12) },
-  { "InlineNotify",                  JDK_Version::undefined(), JDK_Version::jdk(11), JDK_Version::jdk(12) },
+  // -------------- Deprecated flags ----------
+  { "MonitorInUseLists",           JDK_Version::jdk(10), JDK_Version::undefined(), JDK_Version::undefined() },
+  { "MaxRAMFraction",              JDK_Version::jdk(10), JDK_Version::undefined(), JDK_Version::undefined() },
+  { "MinRAMFraction",              JDK_Version::jdk(10), JDK_Version::undefined(), JDK_Version::undefined() },
+  { "InitialRAMFraction",          JDK_Version::jdk(10), JDK_Version::undefined(), JDK_Version::undefined() },
+  { "UseMembar",                   JDK_Version::jdk(10), JDK_Version::undefined(), JDK_Version::undefined() },
+  { "CompilerThreadHintNoPreempt", JDK_Version::jdk(11), JDK_Version::jdk(12), JDK_Version::jdk(13) },
+  { "VMThreadHintNoPreempt",       JDK_Version::jdk(11), JDK_Version::jdk(12), JDK_Version::jdk(13) },
+  { "AllowNonVirtualCalls",        JDK_Version::jdk(11), JDK_Version::jdk(12), JDK_Version::jdk(13) },
+  // ------------ Deprecated alias flags ------
+  { "DefaultMaxRAMFraction",       JDK_Version::jdk(8),  JDK_Version::undefined(), JDK_Version::undefined() },
+  // -------------- Obsolete flags ------------
+  { "UseAppCDS",                   JDK_Version::undefined(), JDK_Version::jdk(11), JDK_Version::jdk(12) },
+  { "InlineNotify",                JDK_Version::undefined(), JDK_Version::jdk(11), JDK_Version::jdk(12) },
 
   { NULL, JDK_Version(0), JDK_Version(0) }
 };
@@ -613,7 +567,7 @@ Arguments::ArgsRange Arguments::check_memory_size(julong size, julong min_size, 
 
 // Describe an argument out of range error
 void Arguments::describe_range_error(ArgsRange errcode) {
-  switch(errcode) {
+  switch (errcode) {
   case arg_too_big:
     jio_fprintf(defaultStream::error_stream(), "The specified size exceeds the maximum representable size.\n");
     break;
@@ -976,7 +930,7 @@ bool Arguments::process_argument(const char* arg, jboolean ignore_unrecognized, 
   if (arg_len <= BUFLEN) {
     // Construct a string which consists only of the argument name without '+', '-', or '='.
     char stripped_argname[BUFLEN+1]; // +1 for '\0'
-    jio_snprintf(stripped_argname, arg_len+1, "%s", argname); // +1 for '\0'
+    jio_snprintf(stripped_argname, arg_len + 1, "%s", argname); // +1 for '\0'
     if (is_obsolete_flag(stripped_argname, &since)) {
       if (strcmp(stripped_argname, "UseAppCDS") != 0) {
         char version[256];
@@ -1488,7 +1442,7 @@ jint Arguments::set_aggressive_heap_flags() {
   }
 
   // OldPLABSize is the size of the buffers in the old gen that
-  // UseParallelGC uses to promote live data that doesn't fit in the
+  // ... uses to promote live data that doesn't fit in the
   // survivor spaces.  At any given time, there's one for each gc thread.
   // The default size is 1kw. These buffers are rarely used, since the
   // survivor spaces are usually big enough.  For specjbb, however, there
@@ -1501,11 +1455,6 @@ jint Arguments::set_aggressive_heap_flags() {
   // number of PLAB allocation events during gc.  The value of 8kw
   // was arrived at by experimenting with specjbb.
   if (FLAG_SET_CMDLINE(size_t, OldPLABSize, 8 * K) != JVMFlag::SUCCESS) { // Note: this is in words
-    return JNI_EINVAL;
-  }
-
-  // Enable parallel GC and adaptive generation sizing
-  if (FLAG_SET_CMDLINE(bool, UseParallelGC, true) != JVMFlag::SUCCESS) {
     return JNI_EINVAL;
   }
 
@@ -1744,7 +1693,7 @@ jint Arguments::parse_vm_init_args(const JavaVMInitArgs *java_tool_options_args,
 }
 
 // Checks if name in command-line argument -agent{lib,path}:name[=options]
-// represents a valid JDWP agent.  is_path==true denotes that we
+// represents a valid JDWP agent.  is_path == true denotes that we
 // are dealing with -agentpath (case where name is a path), otherwise with
 // -agentlib
 bool valid_jdwp_agent(char *name, bool is_path) {
@@ -1796,7 +1745,7 @@ int Arguments::process_patch_mod_option(const char* patch_mod_tail, bool* patch_
   } else {
     // Pick out the module name
     size_t module_len = module_equal - patch_mod_tail;
-    char* module_name = NEW_C_HEAP_ARRAY_RETURN_NULL(char, module_len+1, mtArguments);
+    char* module_name = NEW_C_HEAP_ARRAY_RETURN_NULL(char, module_len + 1, mtArguments);
     if (module_name != NULL) {
       memcpy(module_name, patch_mod_tail, module_len);
       *(module_name + module_len) = '\0';
@@ -1906,8 +1855,8 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
 
         char *options = NULL;
         if (pos != NULL) {
-          size_t len2 = strlen(pos+1) + 1; // options start after ':'.  Final zero must be copied.
-          options = (char*)memcpy(NEW_C_HEAP_ARRAY(char, len2, mtArguments), pos+1, len2);
+          size_t len2 = strlen(pos + 1) + 1; // options start after ':'.  Final zero must be copied.
+          options = (char*)memcpy(NEW_C_HEAP_ARRAY(char, len2, mtArguments), pos + 1, len2);
         }
         if (strcmp(name, "jdwp") == 0) {
           jio_fprintf(defaultStream::error_stream(), "Debugging agents are not supported in this VM\n");
@@ -1983,18 +1932,6 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
       if (FLAG_SET_CMDLINE(bool, ClassUnloading, false) != JVMFlag::SUCCESS) {
         return JNI_EINVAL;
       }
-    // -Xconcgc
-    } else if (match_option(option, "-Xconcgc")) {
-      if (FLAG_SET_CMDLINE(bool, UseConcMarkSweepGC, true) != JVMFlag::SUCCESS) {
-        return JNI_EINVAL;
-      }
-      handle_extra_cms_flags("-Xconcgc uses UseConcMarkSweepGC");
-    // -Xnoconcgc
-    } else if (match_option(option, "-Xnoconcgc")) {
-      if (FLAG_SET_CMDLINE(bool, UseConcMarkSweepGC, false) != JVMFlag::SUCCESS) {
-        return JNI_EINVAL;
-      }
-      handle_extra_cms_flags("-Xnoconcgc uses UseConcMarkSweepGC");
     // -Xbatch
     } else if (match_option(option, "-Xbatch")) {
       if (FLAG_SET_CMDLINE(bool, BackgroundCompilation, false) != JVMFlag::SUCCESS) {
@@ -2088,13 +2025,6 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
       if (FLAG_SET_CMDLINE(uintx, ReservedCodeCacheSize, (uintx)long_ReservedCodeCacheSize) != JVMFlag::SUCCESS) {
         return JNI_EINVAL;
       }
-    // -green
-    } else if (match_option(option, "-green")) {
-      jio_fprintf(defaultStream::error_stream(), "Green threads support not available\n");
-          return JNI_EINVAL;
-    // -native
-    } else if (match_option(option, "-native")) {
-          // HotSpot always uses native threads, ignore silently for compatibility
     // -Xrs
     } else if (match_option(option, "-Xrs")) {
           // Classic/EVM option, new functionality
@@ -2122,41 +2052,14 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
       if (FLAG_SET_CMDLINE(size_t, NewSizeThreadIncrease, 16 * K) != JVMFlag::SUCCESS) {  // 20Kb per thread added to new generation
         return JNI_EINVAL;
       }
-
       // -Xinternalversion
     } else if (match_option(option, "-Xinternalversion")) {
       jio_fprintf(defaultStream::output_stream(), "%s\n", VM_Version::internal_vm_info_string());
       vm_exit(0);
     // -D
     } else if (match_option(option, "-D", &tail)) {
-      const char* value;
-      if (match_option(option, "-Djava.endorsed.dirs=", &value) && *value!= '\0' && strcmp(value, "\"\"") != 0) {
-        // abort if -Djava.endorsed.dirs is set
-        jio_fprintf(defaultStream::output_stream(),
-          "-Djava.endorsed.dirs=%s is not supported. Endorsed standards and standalone APIs\n"
-          "in modular form will be supported via the concept of upgradeable modules.\n", value);
-        return JNI_EINVAL;
-      }
-      if (match_option(option, "-Djava.ext.dirs=", &value) && *value != '\0' && strcmp(value, "\"\"") != 0) {
-        // abort if -Djava.ext.dirs is set
-        jio_fprintf(defaultStream::output_stream(), "-Djava.ext.dirs=%s is not supported.  Use -classpath instead.\n", value);
-        return JNI_EINVAL;
-      }
-      // Check for module related properties.  They must be set using the modules
-      // options. For example: use "--add-modules=java.sql", not
-      // "-Djdk.module.addmods=java.sql"
-      if (is_internal_module_property(option->optionString + 2)) {
-        needs_module_property_warning = true;
-        continue;
-      }
-
       if (!add_property(tail)) {
         return JNI_ENOMEM;
-      }
-      // Out of the box management support
-      if (match_option(option, "-Dcom.sun.management", &tail)) {
-        jio_fprintf(defaultStream::output_stream(), "-Dcom.sun.management is not supported in this VM.\n");
-        return JNI_ERR;
       }
     // -Xint
     } else if (match_option(option, "-Xint")) {
@@ -2168,36 +2071,6 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
     } else if (match_option(option, "-Xcomp")) {
       // for testing the compiler; turn off all flags that inhibit compilation
           set_mode_flags(_comp);
-    // -Xshare:dump
-    } else if (match_option(option, "-Xshare:dump")) {
-      if (FLAG_SET_CMDLINE(bool, false, true) != JVMFlag::SUCCESS) {
-        return JNI_EINVAL;
-      }
-      set_mode_flags(_int);     // Prevent compilation, which creates objects
-    // -Xshare:on
-    } else if (match_option(option, "-Xshare:on")) {
-      if (FLAG_SET_CMDLINE(bool, false, true) != JVMFlag::SUCCESS) {
-        return JNI_EINVAL;
-      }
-      if (FLAG_SET_CMDLINE(bool, false, true) != JVMFlag::SUCCESS) {
-        return JNI_EINVAL;
-      }
-    // -Xshare:auto
-    } else if (match_option(option, "-Xshare:auto")) {
-      if (FLAG_SET_CMDLINE(bool, false, true) != JVMFlag::SUCCESS) {
-        return JNI_EINVAL;
-      }
-      if (FLAG_SET_CMDLINE(bool, false, false) != JVMFlag::SUCCESS) {
-        return JNI_EINVAL;
-      }
-    // -Xshare:off
-    } else if (match_option(option, "-Xshare:off")) {
-      if (FLAG_SET_CMDLINE(bool, false, false) != JVMFlag::SUCCESS) {
-        return JNI_EINVAL;
-      }
-      if (FLAG_SET_CMDLINE(bool, false, false) != JVMFlag::SUCCESS) {
-        return JNI_EINVAL;
-      }
     // JNI hooks
     } else if (match_option(option, "-Xcheck", &tail)) {
       if (!strcmp(tail, ":jni")) {
@@ -2793,10 +2666,6 @@ jint Arguments::match_special_option_and_act(const JavaVMInitArgs* args, ScopedV
       JVMFlag::printFlags(tty, false);
       vm_exit(0);
     }
-    if (match_option(option, "-XX:off", &tail)) {
-      jio_fprintf(defaultStream::error_stream(), "Native Memory Tracking is not supported in this VM\n");
-      return JNI_ERR;
-    }
   }
   return JNI_OK;
 }
@@ -2811,15 +2680,6 @@ static void print_options(const JavaVMInitArgs *args) {
   }
 }
 
-void Arguments::handle_extra_cms_flags(const char* msg) {
-  SpecialFlag flag;
-  const char *flag_name = "UseConcMarkSweepGC";
-  if (lookup_special_flag(flag_name, flag)) {
-    handle_aliases_and_deprecation(flag_name, /* print warning */ true);
-    warning("%s", msg);
-  }
-}
-
 // Parse entry point called from JNI_CreateJavaVM
 
 jint Arguments::parse(const JavaVMInitArgs* initial_cmd_args) {
@@ -2831,7 +2691,6 @@ jint Arguments::parse(const JavaVMInitArgs* initial_cmd_args) {
   // If flag "-XX:Flags=flags-file" is used it will be the first option to be processed.
   const char* hotspotrc = ".hotspotrc";
   bool settings_file_specified = false;
-  bool needs_hotspotrc_warning = false;
   ScopedVMInitArgs initial_java_tool_options_args("env_var='JAVA_TOOL_OPTIONS'");
   ScopedVMInitArgs initial_java_options_args("env_var='_JAVA_OPTIONS'");
 
@@ -2887,14 +2746,8 @@ jint Arguments::parse(const JavaVMInitArgs* initial_cmd_args) {
 
   // Parse specified settings file
   if (settings_file_specified) {
-    if (!process_settings_file(flags_file, true,
-                               cur_cmd_args->ignoreUnrecognized)) {
+    if (!process_settings_file(flags_file, true, cur_cmd_args->ignoreUnrecognized)) {
       return JNI_EINVAL;
-    }
-  } else {
-    struct stat buf;
-    if (os::stat(hotspotrc, &buf) == 0) {
-      needs_hotspotrc_warning = true;
     }
   }
 
@@ -2909,15 +2762,6 @@ jint Arguments::parse(const JavaVMInitArgs* initial_cmd_args) {
 
   if (result != JNI_OK) {
     return result;
-  }
-
-  // Delay warning until here so that we've had a chance to process the -XX:-false flag
-  if (needs_hotspotrc_warning) {
-    warning("%s file is present but has been ignored.  Run with -XX:Flags=%s to load the file.", hotspotrc, hotspotrc);
-  }
-
-  if (needs_module_property_warning) {
-    warning("Ignoring system property options whose names match the '-Djdk.module.*'. names that are reserved for internal use.");
   }
 
 #if defined(_ALLBSD_SOURCE)
@@ -3005,10 +2849,6 @@ jint Arguments::adjust_after_os() {
   if (UseNUMA) {
     if (!FLAG_IS_DEFAULT(AllocateHeapAt)) {
       FLAG_SET_ERGO(bool, UseNUMA, false);
-    } else if (UseParallelGC || UseParallelOldGC) {
-      if (FLAG_IS_DEFAULT(MinHeapDeltaBytes)) {
-         FLAG_SET_DEFAULT(MinHeapDeltaBytes, 64*M);
-      }
     }
     // UseNUMAInterleaving is set to ON for all collectors and
     // platforms when UseNUMA is set to ON. NUMA-aware collectors

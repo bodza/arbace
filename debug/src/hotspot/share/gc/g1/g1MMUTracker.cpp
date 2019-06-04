@@ -20,7 +20,7 @@ G1MMUTracker::G1MMUTracker(double time_slice, double max_gc_time) :
 G1MMUTrackerQueue::G1MMUTrackerQueue(double time_slice, double max_gc_time) :
   G1MMUTracker(time_slice, max_gc_time),
   _head_index(0),
-  _tail_index(trim_index(_head_index+1)),
+  _tail_index(trim_index(_head_index + 1)),
   _no_entries(0) { }
 
 void G1MMUTrackerQueue::remove_expired_entries(double current_time) {
@@ -94,7 +94,7 @@ double G1MMUTrackerQueue::when_sec(double current_time, double pause_time) {
     return 0.0;
 
   int index = _tail_index;
-  while ( 1 ) {
+  while (true) {
     G1MMUTrackerQueueElem *elem = &_array[index];
     if (elem->end_time() > limit) {
       if (elem->start_time() > limit)
@@ -102,9 +102,9 @@ double G1MMUTrackerQueue::when_sec(double current_time, double pause_time) {
       else
         diff -= elem->end_time() - limit;
       if (is_double_leq_0(diff))
-        return  elem->end_time() + diff + _time_slice - adjusted_pause_time - current_time;
+        return elem->end_time() + diff + _time_slice - adjusted_pause_time - current_time;
     }
-    index = trim_index(index+1);
+    index = trim_index(index + 1);
     guarantee(index != trim_index(_head_index + 1), "should not go past head");
   }
 }

@@ -208,9 +208,6 @@ class Space: public CHeapObj<mtGC> {
   virtual ContiguousSpace* toContiguousSpace() {
     return NULL;
   }
-
-  // Debugging
-  virtual void verify() const = 0;
 };
 
 // A MemRegionClosure (ResourceObj) whose "do_MemRegion" function applies an
@@ -585,11 +582,7 @@ class ContiguousSpace: public CompactibleSpace {
     return this;
   }
 
-  // Debugging
-  virtual void verify() const;
-
-  // Used to increase collection frequency.  "factor" of 0 means entire
-  // space.
+  // Used to increase collection frequency.  "factor" of 0 means entire space.
   void allocate_temporary_filler(int factor);
 };
 
@@ -683,9 +676,6 @@ class OffsetTableContigSpace: public ContiguousSpace {
   virtual HeapWord* cross_threshold(HeapWord* start, HeapWord* end);
 
   virtual void print_on(outputStream* st) const;
-
-  // Debugging
-  void verify() const;
 };
 
 // Class TenuredSpace is used by TenuredGeneration

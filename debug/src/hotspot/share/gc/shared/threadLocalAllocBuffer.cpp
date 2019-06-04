@@ -203,18 +203,6 @@ size_t ThreadLocalAllocBuffer::initial_desired_size() {
   return init_sz;
 }
 
-void ThreadLocalAllocBuffer::verify() {
-  HeapWord* p = start();
-  HeapWord* t = top();
-  HeapWord* prev_p = NULL;
-  while (p < t) {
-    oop(p)->verify();
-    prev_p = p;
-    p += oop(p)->size();
-  }
-  guarantee(p == top(), "end of last object must match end of space");
-}
-
 void ThreadLocalAllocBuffer::set_sample_end() {
   size_t heap_words_remaining = pointer_delta(_end, _top);
   size_t bytes_until_sample = myThread()->heap_sampler().bytes_until_sample();

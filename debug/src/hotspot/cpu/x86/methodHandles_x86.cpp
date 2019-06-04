@@ -21,8 +21,7 @@
 
 void MethodHandles::load_klass_from_Class(MacroAssembler* _masm, Register klass_reg) {
   if (VerifyMethodHandles)
-    verify_klass(_masm, klass_reg, SystemDictionary::WK_KLASS_ENUM_NAME(java_lang_Class),
-                 "MH argument is a Class");
+    verify_klass(_masm, klass_reg, SystemDictionary::WK_KLASS_ENUM_NAME(java_lang_Class), "MH argument is a Class");
   __ movptr(klass_reg, Address(klass_reg, java_lang_Class::klass_offset_in_bytes()));
 }
 

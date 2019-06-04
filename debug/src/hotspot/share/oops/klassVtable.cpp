@@ -5,7 +5,6 @@
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "interpreter/linkResolver.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
 #include "oops/instanceKlass.hpp"
@@ -21,10 +20,6 @@
 
 inline InstanceKlass* klassVtable::ik() const {
   return InstanceKlass::cast(_klass);
-}
-
-bool klassVtable::is_preinitialized_vtable() {
-  return _klass->is_shared() && !MetaspaceShared::remapped_readwrite();
 }
 
 // this function computes the vtable size (including the size needed for miranda
@@ -107,12 +102,6 @@ int klassVtable::index_of(Method* m, int len) const {
 int klassVtable::initialize_from_super(Klass* super) {
   if (super == NULL) {
     return 0;
-  } else if (is_preinitialized_vtable()) {
-    // A shared class' vtable is preinitialized at dump time. No need to copy
-    // methods from super class for shared class, as that was already done
-    // during archiving time. However, if Jvmti has redefined a class,
-    // copy super class's vtable in case the super class has changed.
-    return super->vtable().length();
   } else {
     // copy methods from superKlass
     klassVtable superVtable = super->vtable();
@@ -176,11 +165,7 @@ void klassVtable::initialize_vtable(bool checkconstraints, TRAPS) {
           // needs new entry
           if (needs_new_entry) {
             put_method_at(mh(), initialized);
-            if (is_preinitialized_vtable()) {
-              // At runtime initialize_vtable is rerun for a shared class
-              // (loaded by the non-boot loader) as part of link_class_impl().
-              // The dumptime vtable index should be the same as the runtime index.
-            } else {
+            {
               def_vtable_indices->at_put(i, initialized); //set vtable index
             }
             initialized++;
@@ -264,7 +249,7 @@ bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHand
   // Since vtable and itable indices share the same storage, don't touch
   // the default method's real vtable/itable index.
   // default_vtable_indices stores the vtable value relative to this inheritor
-  if (default_index >= 0 ) {
+  if (default_index >= 0) {
     is_default = true;
     def_vtable_indices = klass->default_vtable_indices();
   } else {
@@ -333,15 +318,7 @@ bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHand
 
   Symbol* target_classname = target_klass->name();
   for (int i = 0; i < super_vtable_len; i++) {
-    Method* super_method;
-    if (is_preinitialized_vtable()) {
-      // If this is a shared class, the vtable is already in the final state (fully
-      // initialized). Need to look at the super's vtable.
-      klassVtable superVtable = super->vtable();
-      super_method = superVtable.method_at(i);
-    } else {
-      super_method = method_at(i);
-    }
+    Method* super_method = method_at(i);
     // Check if method name matches.  Ignore match if klass is an interface and the
     // matching method is a non-public java.lang.Object method.  (See JVMS 5.4.3.4)
     // This is safe because the method at this slot should never get invoked.
@@ -406,13 +383,7 @@ bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHand
           target_method()->set_vtable_index(i);
         } else {
           if (def_vtable_indices != NULL) {
-            if (is_preinitialized_vtable()) {
-              // At runtime initialize_vtable is rerun as part of link_class_impl()
-              // for a shared class loaded by the non-boot loader.
-              // The dumptime vtable index should be the same as the runtime index.
-            } else {
-              def_vtable_indices->at_put(default_index, i);
-            }
+            def_vtable_indices->at_put(default_index, i);
           }
         }
       } else {
@@ -425,14 +396,7 @@ bool klassVtable::update_inherited_vtable(InstanceKlass* klass, const methodHand
 }
 
 void klassVtable::put_method_at(Method* m, int index) {
-  if (is_preinitialized_vtable()) {
-    // At runtime initialize_vtable is rerun as part of link_class_impl()
-    // for shared class loaded by the non-boot loader to obtain the loader
-    // constraints based on the runtime classloaders' context. The dumptime
-    // method at the vtable index should be the same as the runtime method.
-  } else {
-    table()[index].set(m);
-  }
+  table()[index].set(m);
 }
 
 // Find out if a method "m" with superclass "super", loader "classloader" and
@@ -708,17 +672,13 @@ void klassVtable::get_mirandas(GrowableArray<Method*>* new_mirandas, GrowableArr
   int num_local_ifs = local_interfaces->length();
   for (int i = 0; i < num_local_ifs; i++) {
     InstanceKlass *ik = InstanceKlass::cast(local_interfaces->at(i));
-    add_new_mirandas_to_lists(new_mirandas, all_mirandas,
-                              ik->methods(), class_methods,
-                              default_methods, super, is_interface);
+    add_new_mirandas_to_lists(new_mirandas, all_mirandas, ik->methods(), class_methods, default_methods, super, is_interface);
     // iterate thru each local's super interfaces
     Array<Klass*>* super_ifs = ik->transitive_interfaces();
     int num_super_ifs = super_ifs->length();
     for (int j = 0; j < num_super_ifs; j++) {
       InstanceKlass *sik = InstanceKlass::cast(super_ifs->at(j));
-      add_new_mirandas_to_lists(new_mirandas, all_mirandas,
-                                sik->methods(), class_methods,
-                                default_methods, super, is_interface);
+      add_new_mirandas_to_lists(new_mirandas, all_mirandas, sik->methods(), class_methods, default_methods, super, is_interface);
     }
   }
 }
@@ -730,9 +690,7 @@ void klassVtable::get_mirandas(GrowableArray<Method*>* new_mirandas, GrowableArr
 // The vtable_index is discovered by searching from the end of the vtable
 int klassVtable::fill_in_mirandas(int initialized) {
   GrowableArray<Method*> mirandas(20);
-  get_mirandas(&mirandas, NULL, ik()->super(), ik()->methods(),
-               ik()->default_methods(), ik()->local_interfaces(),
-               klass()->is_interface());
+  get_mirandas(&mirandas, NULL, ik()->super(), ik()->methods(), ik()->default_methods(), ik()->local_interfaces(), klass()->is_interface());
   for (int i = 0; i < mirandas.length(); i++) {
     put_method_at(mirandas.at(i), initialized);
     ++initialized;
@@ -856,7 +814,7 @@ int klassItable::method_count_for_interface(Klass* interf) {
   int nof_methods = methods->length();
   int length = 0;
   while (nof_methods > 0) {
-    Method* m = methods->at(nof_methods-1);
+    Method* m = methods->at(nof_methods - 1);
     if (m->has_itable_index()) {
       length = m->itable_index() + 1;
       break;
@@ -1055,27 +1013,6 @@ Method* klassItable::method_for_itable_index(Klass* intf, int itable_index) {
   return m;
 }
 
-void klassVtable::verify(outputStream* st, bool forced) {
-  // make sure table is initialized
-  if (!Universe::is_fully_initialized()) return;
-  oop* end_of_obj = (oop*)_klass + _klass->size();
-  oop* end_of_vtable = (oop *)&table()[_length];
-  if (end_of_vtable > end_of_obj) {
-    fatal("klass %s: klass object too short (vtable extends beyond end)", _klass->internal_name());
-  }
-
-  for (int i = 0; i < _length; i++) table()[i].verify(this, st);
-  // verify consistency with superKlass vtable
-  Klass* super = _klass->super();
-  if (super != NULL) {
-    InstanceKlass* sk = InstanceKlass::cast(super);
-    klassVtable vt = sk->vtable();
-    for (int i = 0; i < vt.length(); i++) {
-      verify_against(st, &vt, i);
-    }
-  }
-}
-
 void klassVtable::verify_against(outputStream* st, klassVtable* vt, int index) {
   vtableEntry* vte = &vt->table()[index];
   if (vte->method()->name()      != table()[index].method()->name() ||
@@ -1083,16 +1020,4 @@ void klassVtable::verify_against(outputStream* st, klassVtable* vt, int index) {
     fatal("mismatched name/signature of vtable entries");
   }
 }
-
-void vtableEntry::verify(klassVtable* vt, outputStream* st) {
-  Klass* vtklass = vt->klass();
-  if (vtklass->is_instance_klass() && (InstanceKlass::cast(vtklass)->major_version() >= klassVtable::VTABLE_TRANSITIVE_OVERRIDE_VERSION)) {
-  }
-  if (method() != NULL) {
-    method()->verify();
-    // we sub_type, because it could be a miranda method
-    if (!vtklass->is_subtype_of(method()->method_holder())) {
-      fatal("vtableEntry " PTR_FORMAT ": method is from subclass", p2i(this));
-    }
- }
 }

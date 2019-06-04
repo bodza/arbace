@@ -8,7 +8,6 @@
 #include "gc/g1/g1CollectorState.hpp"
 #include "gc/g1/g1ConcurrentMark.inline.hpp"
 #include "gc/g1/g1ConcurrentMarkThread.inline.hpp"
-#include "gc/g1/g1HeapVerifier.hpp"
 #include "gc/g1/g1OopClosures.inline.hpp"
 #include "gc/g1/g1Policy.hpp"
 #include "gc/g1/g1RegionMarkStatsCache.inline.hpp"
@@ -862,22 +861,6 @@ void G1ConcurrentMark::mark_from_roots() {
   _concurrent_workers->run_task(&marking_task);
 }
 
-void G1ConcurrentMark::verify_during_pause(G1HeapVerifier::G1VerifyType type, VerifyOption vo, const char* caller) {
-  G1HeapVerifier* verifier = _g1h->verifier();
-
-  verifier->verify_region_sets_optional();
-
-  if (VerifyDuringGC) {
-    size_t const BufLen = 512;
-    char buffer[BufLen];
-
-    jio_snprintf(buffer, BufLen, "During GC (%s)", caller);
-    verifier->verify(type, vo, buffer);
-  }
-
-  verifier->check_bitmaps(caller);
-}
-
 class G1UpdateRemSetTrackingBeforeRebuildTask : public AbstractGangTask {
   G1CollectedHeap* _g1h;
   G1ConcurrentMark* _cm;
@@ -1004,8 +987,6 @@ void G1ConcurrentMark::remark() {
 
   double start = os::elapsedTime();
 
-  verify_during_pause(G1HeapVerifier::G1VerifyRemark, VerifyOption_G1UsePrevMarking, "Remark before");
-
   finalize_marking();
 
   double mark_work_end = os::elapsedTime();
@@ -1040,15 +1021,11 @@ void G1ConcurrentMark::remark() {
 
     compute_new_sizes();
 
-    verify_during_pause(G1HeapVerifier::G1VerifyRemark, VerifyOption_G1UsePrevMarking, "Remark after");
-
     // Completely reset the marking state since marking completed
     reset_at_marking_complete();
   } else {
     // We overflowed.  Restart concurrent marking.
     _restart_for_overflow = true;
-
-    verify_during_pause(G1HeapVerifier::G1VerifyRemark, VerifyOption_G1UsePrevMarking, "Remark overflow");
 
     // Clear the marking state because we will be restarting
     // marking due to overflowing the global mark stack.
@@ -1178,14 +1155,10 @@ void G1ConcurrentMark::cleanup() {
 
   double start = os::elapsedTime();
 
-  verify_during_pause(G1HeapVerifier::G1VerifyCleanup, VerifyOption_G1UsePrevMarking, "Cleanup before");
-
   {
     G1UpdateRemSetTrackingAfterRebuild cl(_g1h);
     _g1h->heap_region_iterate(&cl);
   }
-
-  verify_during_pause(G1HeapVerifier::G1VerifyCleanup, VerifyOption_G1UsePrevMarking, "Cleanup after");
 
   // We need to make this be a "collection" so any collection pause that
   // races with it goes around and waits for Cleanup to finish.

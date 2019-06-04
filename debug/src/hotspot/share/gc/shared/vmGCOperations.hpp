@@ -26,8 +26,7 @@
 //     prevents multiple gc requests and manages lock on heap;
 //
 //  VM_GC_HeapInspection
-//   - prints class histogram on SIGBREAK if false
-//     is specified; and also the attach "inspectheap" operation
+//   - the attach "inspectheap" operation
 //
 //  VM_CollectForAllocation
 //  VM_GenCollectForAllocation
@@ -55,10 +54,7 @@ class VM_GC_Operation: public VM_Operation {
   virtual bool skip_operation() const;
 
  public:
-  VM_GC_Operation(uint gc_count_before,
-                  GCCause::Cause _cause,
-                  uint full_gc_count_before = 0,
-                  bool full = false) {
+  VM_GC_Operation(uint gc_count_before, GCCause::Cause _cause, uint full_gc_count_before = 0, bool full = false) {
     _full = full;
     _prologue_succeeded = false;
     _gc_count_before    = gc_count_before;
@@ -160,10 +156,7 @@ class VM_GenCollectFull: public VM_GC_Operation {
  private:
   GenCollectedHeap::GenerationType _max_generation;
  public:
-  VM_GenCollectFull(uint gc_count_before,
-                    uint full_gc_count_before,
-                    GCCause::Cause gc_cause,
-                    GenCollectedHeap::GenerationType max_generation)
+  VM_GenCollectFull(uint gc_count_before, uint full_gc_count_before, GCCause::Cause gc_cause, GenCollectedHeap::GenerationType max_generation)
     : VM_GC_Operation(gc_count_before, gc_cause, full_gc_count_before, true /* full */),
       _max_generation(max_generation) { }
   ~VM_GenCollectFull() { }

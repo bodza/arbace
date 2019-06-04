@@ -36,17 +36,17 @@ Dict::Dict(CmpKey initcmp, Hash inithash) : _hash(inithash), _cmp(initcmp), _are
 
   // Precompute table of null character hashes
   if (!initflag ) {             // Not initializated yet?
-    xsum[0] = (1<<shft[0])+1;   // Initialize
-    for (i = 1; i<MAXID; i++) {
-      xsum[i] = (1<<shft[i])+1+xsum[i-1];
+    xsum[0] = (1 << shft[0]) + 1;   // Initialize
+    for (i = 1; i < MAXID; i++) {
+      xsum[i] = (1 << shft[i]) + 1 + xsum[i - 1];
     }
     initflag = 1;               // Never again
   }
 
   _size = 16;                   // Size is a power of 2
   _cnt = 0;                     // Dictionary is empty
-  _bin = (bucket*)_arena->Amalloc_4(sizeof(bucket)*_size);
-  memset((void*)_bin,0,sizeof(bucket)*_size);
+  _bin = (bucket*)_arena->Amalloc_4(sizeof(bucket) * _size);
+  memset((void*)_bin, 0, sizeof(bucket) * _size);
 }
 
 Dict::Dict(CmpKey initcmp, Hash inithash, Arena *arena, int size)
@@ -55,9 +55,9 @@ Dict::Dict(CmpKey initcmp, Hash inithash, Arena *arena, int size)
 
   // Precompute table of null character hashes
   if (!initflag ) {             // Not initializated yet?
-    xsum[0] = (1<<shft[0])+1;   // Initialize
-    for (i = 1; i<MAXID; i++) {
-      xsum[i] = (1<<shft[i])+1+xsum[i-1];
+    xsum[0] = (1 << shft[0]) + 1;   // Initialize
+    for (i = 1; i < MAXID; i++) {
+      xsum[i] = (1 << shft[i]) + 1 + xsum[i - 1];
     }
     initflag = 1;               // Never again
   }
@@ -72,22 +72,13 @@ Dict::Dict(CmpKey initcmp, Hash inithash, Arena *arena, int size)
 
 //------------------------------~Dict------------------------------------------
 // Delete an existing dictionary.
-Dict::~Dict() {
-  /*
-  tty->print("~Dict %d/%d: ",_cnt,_size);
-  for ( uint i = 0; i < _size; i++) // For complete new table do
-    tty->print("%d ",_bin[i]._cnt);
-  tty->print("\n");*/
-  /*for ( uint i = 0; i<_size; i++ ) {
-    FREE_FAST( _bin[i]._keyvals );
-    } */
-}
+Dict::~Dict() { }
 
 //------------------------------Clear----------------------------------------
 // Zap to empty; ready for re-use
 void Dict::Clear() {
   _cnt = 0;                     // Empty contents
-  for ( uint i = 0; i<_size; i++ )
+  for (uint i = 0; i<_size; i++)
     _bin[i]._cnt = 0;           // Empty buckets, but leave allocated
   // Leave _size & _bin alone, under the assumption that dictionary will
   // grow to this size again.
@@ -120,7 +111,7 @@ void Dict::doubhash(void) {
 
     for (j = 0; j < b->_cnt; ) {           // Rehash all keys in this bucket
       void *key = b->_keyvals[j + j];
-      if ((_hash(key) & (_size-1)) != i) { // Moving to hi bucket?
+      if ((_hash(key) & (_size - 1)) != i) { // Moving to hi bucket?
         nb->_keyvals[nbcnt + nbcnt] = key;
         nb->_keyvals[nbcnt + nbcnt + 1] = b->_keyvals[j + j + 1];
         nb->_cnt = nbcnt = nbcnt + 1;
@@ -140,7 +131,7 @@ void Dict::doubhash(void) {
 Dict::Dict( const Dict &d ) : _size(d._size), _cnt(d._cnt), _hash(d._hash),_cmp(d._cmp), _arena(d._arena) {
   _bin = (bucket*)_arena->Amalloc_4(sizeof(bucket)*_size);
   memcpy( (void*)_bin, (void*)d._bin, sizeof(bucket)*_size );
-  for ( uint i = 0; i<_size; i++ ) {
+  for (uint i = 0; i<_size; i++) {
     if (!_bin[i]._keyvals ) continue;
     _bin[i]._keyvals=(void**)_arena->Amalloc_4( sizeof(void *)*_bin[i]._max*2);
     memcpy( _bin[i]._keyvals, d._bin[i]._keyvals,_bin[i]._cnt*2*sizeof(void*));
@@ -157,14 +148,14 @@ Dict &Dict::operator =( const Dict &d ) {
     _size = d._size;
   }
   uint i;
-  for ( i = 0; i<_size; i++ ) // All buckets are empty
+  for (i = 0; i<_size; i++) // All buckets are empty
     _bin[i]._cnt = 0;           // But leave bucket allocations alone
   _cnt = d._cnt;
   *(Hash*)(&_hash) = d._hash;
   *(CmpKey*)(&_cmp) = d._cmp;
-  for ( i = 0; i<_size; i++ ) {
+  for (i = 0; i<_size; i++) {
     bucket *b = &d._bin[i];     // Shortcut to source bucket
-    for ( uint j = 0; j<b->_cnt; j++ )
+    for (uint j = 0; j<b->_cnt; j++)
       Insert( b->_keyvals[j+j], b->_keyvals[j+j+1] );
   }
   return *this;
@@ -178,9 +169,9 @@ Dict &Dict::operator =( const Dict &d ) {
 // list.  This moves a commonly searched-for value towards the list head.
 void *Dict::Insert(void *key, void *val, bool replace) {
   uint hash = _hash( key );     // Get hash key
-  uint i = hash & (_size-1);    // Get hash key, corrected for size
+  uint i = hash & (_size - 1);    // Get hash key, corrected for size
   bucket *b = &_bin[i];         // Handy shortcut
-  for ( uint j = 0; j<b->_cnt; j++ ) {
+  for (uint j = 0; j<b->_cnt; j++) {
     if (!_cmp(key,b->_keyvals[j+j])) {
       if (!replace) {
         return b->_keyvals[j+j+1];
@@ -194,7 +185,7 @@ void *Dict::Insert(void *key, void *val, bool replace) {
   }
   if (++_cnt > _size ) {        // Hash table is full
     doubhash();                 // Grow whole table if too full
-    i = hash & (_size-1);       // Rehash
+    i = hash & (_size - 1);       // Rehash
     b = &_bin[i];               // Handy shortcut
   }
   if (b->_cnt == b->_max ) {    // Must grow bucket?
@@ -215,9 +206,9 @@ void *Dict::Insert(void *key, void *val, bool replace) {
 //------------------------------Delete---------------------------------------
 // Find & remove a value from dictionary. Return old value.
 void *Dict::Delete(void *key) {
-  uint i = _hash( key ) & (_size-1);    // Get hash key, corrected for size
+  uint i = _hash( key ) & (_size - 1);    // Get hash key, corrected for size
   bucket *b = &_bin[i];         // Handy shortcut
-  for ( uint j = 0; j<b->_cnt; j++ )
+  for (uint j = 0; j<b->_cnt; j++)
     if (!_cmp(key,b->_keyvals[j+j])) {
       void *prior = b->_keyvals[j+j+1];
       b->_cnt--;                // Remove key/value from lo bucket
@@ -233,9 +224,9 @@ void *Dict::Delete(void *key) {
 // Find a key-value pair in the given dictionary.  If not found, return NULL.
 // If found, move key-value pair towards head of list.
 void *Dict::operator [](const void *key) const {
-  uint i = _hash( key ) & (_size-1);    // Get hash key, corrected for size
+  uint i = _hash( key ) & (_size - 1);    // Get hash key, corrected for size
   bucket *b = &_bin[i];         // Handy shortcut
-  for ( uint j = 0; j<b->_cnt; j++ )
+  for (uint j = 0; j<b->_cnt; j++)
     if (!_cmp(key,b->_keyvals[j+j]))
       return b->_keyvals[j+j+1];
   return NULL;
@@ -249,7 +240,7 @@ int32_t Dict::operator ==(const Dict &d2) const {
   if (_cnt != d2._cnt ) return 0;
   if (_hash != d2._hash ) return 0;
   if (_cmp != d2._cmp ) return 0;
-  for ( uint i = 0; i < _size; i++) {      // For complete hash table do
+  for (uint i = 0; i < _size; i++) {      // For complete hash table do
     bucket *b = &_bin[i];       // Handy shortcut
     if (b->_cnt != d2._bin[i]._cnt ) return 0;
     if (memcmp(b->_keyvals, d2._bin[i]._keyvals, b->_cnt*2*sizeof(void*)))
@@ -286,8 +277,8 @@ int hashstr(const void *t) {
   register const char *s = (const char *)t;
 
   while ( ((c = *s++) != '\0') && (k < MAXID-1)) { // Get characters till null or MAXID-1
-    c = (c<<1)+1;               // Characters are always odd!
-    sum += c + (c<<shft[k++]);  // Universal hash function
+    c = (c << 1)+1;               // Characters are always odd!
+    sum += c + (c << shft[k++]);  // Universal hash function
   }
   return (int)((sum+xsum[k]) >> 1); // Hash key, un-modulo'd table size
 }
@@ -331,7 +322,7 @@ void DictI::reset( const Dict *dict ) {
 // Find the next key-value pair in the dictionary, or return a NULL key and
 // value.
 void DictI::operator ++(void) {
-  if (_j-- ) {                  // Still working in current bin?
+  if (_j--) {                  // Still working in current bin?
     _key   = _d->_bin[_i]._keyvals[_j+_j];
     _value = _d->_bin[_i]._keyvals[_j+_j+1];
     return;

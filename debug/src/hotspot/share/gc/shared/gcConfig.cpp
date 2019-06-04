@@ -41,15 +41,6 @@ static const SupportedGC SupportedGCs[] = {
 GCArguments* GCConfig::_arguments = NULL;
 bool GCConfig::_gc_selected_ergonomically = false;
 
-void GCConfig::fail_if_unsupported_gc_is_selected() {
-       FAIL_IF_SELECTED(UseConcMarkSweepGC, true);
-  FAIL_IF_SELECTED(UseParallelGC,      true);
-  FAIL_IF_SELECTED(UseParallelOldGC,   true);
-    FAIL_IF_SELECTED(UseSerialGC,        true);
-    FAIL_IF_SELECTED(UseParallelOldGC,   false);
-         FAIL_IF_SELECTED(UseZGC,             true);
-}
-
 void GCConfig::select_gc_ergonomically() {
   if (os::is_server_class_machine()) {
     FLAG_SET_ERGO_IF_DEFAULT(bool, UseG1GC, true);
@@ -85,9 +76,6 @@ bool GCConfig::is_exactly_one_gc_selected() {
 }
 
 GCArguments* GCConfig::select_gc() {
-  // Fail immediately if an unsupported GC is selected
-  fail_if_unsupported_gc_is_selected();
-
   if (is_no_gc_selected()) {
     // Try select GC ergonomically
     select_gc_ergonomically();

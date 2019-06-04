@@ -69,8 +69,6 @@ void SpaceManager::locked_print_chunks_in_use_on(outputStream* st) const {
     st->print("SpaceManager: " UINTX_FORMAT " %s chunks.",
         num_chunks_by_type(i), chunk_size_name(i));
   }
-
-  chunk_manager()->locked_print_free_chunks(st);
 }
 
 size_t SpaceManager::calc_chunk_size(size_t word_size) {
@@ -195,8 +193,6 @@ void SpaceManager::account_for_spacemanager_death() {
 SpaceManager::~SpaceManager() {
   MutexLockerEx fcl(MetaspaceExpand_lock, Mutex::_no_safepoint_check_flag);
 
-  chunk_manager()->slow_locked_verify();
-
   account_for_spacemanager_death();
 
   // Add all the chunks in use by this space manager
@@ -205,8 +201,6 @@ SpaceManager::~SpaceManager() {
   // Follow each list of chunks-in-use and add them to the
   // free lists.  Each list is NULL terminated.
   chunk_manager()->return_chunk_list(chunk_list());
-
-  chunk_manager()->slow_locked_verify();
 
   if (_block_freelists != NULL) {
     delete _block_freelists;
@@ -308,13 +302,6 @@ MetaWord* SpaceManager::allocate_work(size_t word_size) {
   }
 
   return result;
-}
-
-void SpaceManager::verify() {
-  Metachunk* curr = chunk_list();
-  while (curr != NULL) {
-    curr = curr->next();
-  }
 }
 
 void SpaceManager::verify_chunk_size(Metachunk* chunk) {

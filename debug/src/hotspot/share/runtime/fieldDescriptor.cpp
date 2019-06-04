@@ -83,5 +83,4 @@ void fieldDescriptor::reinitialize(InstanceKlass* ik, int index) {
   _access_flags = accessFlags_from(f->access_flags());
   guarantee(f->name_index() != 0 && f->signature_index() != 0, "bad constant pool index for fieldDescriptor");
   _index = index;
-  verify();
 }

@@ -117,7 +117,7 @@ JVMFlag::Error OnStackReplacePercentageConstraintFunc(intx value, bool verbose) 
       return JVMFlag::VIOLATES_CONSTRAINT;
     }
   } else {
-    if (OnStackReplacePercentage < 0 ) {
+    if (OnStackReplacePercentage < 0) {
       JVMFlag::printError(verbose, "OnStackReplacePercentage (" INTX_FORMAT ") must be non-negative\n", OnStackReplacePercentage);
       return JVMFlag::VIOLATES_CONSTRAINT;
     }

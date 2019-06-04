@@ -2,7 +2,6 @@
 
 #include "aot/aotLoader.hpp"
 #include "gc/shared/collectedHeap.hpp"
-#include "memory/filemap.hpp"
 #include "memory/metaspace.hpp"
 #include "memory/metaspace/chunkManager.hpp"
 #include "memory/metaspace/metachunk.hpp"
@@ -10,7 +9,6 @@
 #include "memory/metaspace/printCLDMetaspaceInfoClosure.hpp"
 #include "memory/metaspace/spaceManager.hpp"
 #include "memory/metaspace/virtualSpaceList.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/metaspaceTracer.hpp"
 #include "memory/universe.hpp"
 #include "runtime/init.hpp"
@@ -345,7 +343,6 @@ size_t MetaspaceUtils::free_chunks_total_words(Metaspace::MetadataType mdtype) {
   if (chunk_manager == NULL) {
     return 0;
   }
-  chunk_manager->slow_verify();
   return chunk_manager->free_chunks_total_words();
 }
 
@@ -700,13 +697,7 @@ void MetaspaceUtils::print_metaspace_map(outputStream* out, Metaspace::MetadataT
   }
 }
 
-void MetaspaceUtils::verify_free_chunks() {
-  Metaspace::chunk_manager_metadata()->verify();
-  if (Metaspace::using_class_space()) {
-    Metaspace::chunk_manager_class()->verify();
-  }
-}
-
+void MetaspaceUtils::verify_free_chunks() { }
 void MetaspaceUtils::verify_metrics() { }
 
 // Utils to check if a pointer or range is part of a committed metaspace region.
@@ -765,10 +756,8 @@ void Metaspace::set_narrow_klass_base_and_shift(address metaspace_base, address 
 
   Universe::set_narrow_klass_base(lower_base);
 
-  // CDS uses LogKlassAlignmentInBytes for narrow_klass_shift. See
-  // MetaspaceShared::initialize_dumptime_shared_and_meta_spaces() for
-  // how dump time narrow_klass_shift is set. Although, CDS can work
-  // with zero-shift mode also, to be consistent with AOT it uses
+  // CDS uses LogKlassAlignmentInBytes for narrow_klass_shift. Although,
+  // CDS can work with zero-shift mode also, to be consistent with AOT it uses
   // LogKlassAlignmentInBytes for klass shift so archived java heap objects
   // can be used at same time as AOT code.
   if ((uint64_t)(higher_address - lower_base) <= UnscaledClassSpaceMax) {
@@ -795,7 +784,7 @@ void Metaspace::allocate_metaspace_compressed_klass_ptrs(char* requested_addr, a
     metaspace_rs = ReservedSpace(compressed_class_space_size(), _reserve_alignment, large_pages, requested_addr);
   }
 
-  if (! metaspace_rs.is_reserved()) {
+  if (!metaspace_rs.is_reserved()) {
     // Aarch64: Try to align metaspace so that we can decode a compressed
     // klass with a single MOVK instruction.  We can do this iff the
     // compressed class base is a multiple of 4G.
@@ -1035,8 +1024,7 @@ void Metaspace::purge(MetadataType mdtype) {
 }
 
 void Metaspace::purge() {
-  MutexLockerEx cl(MetaspaceExpand_lock,
-                   Mutex::_no_safepoint_check_flag);
+  MutexLockerEx cl(MetaspaceExpand_lock, Mutex::_no_safepoint_check_flag);
   purge(NonClassType);
   if (using_class_space()) {
     purge(ClassType);
@@ -1044,9 +1032,6 @@ void Metaspace::purge() {
 }
 
 bool Metaspace::contains(const void* ptr) {
-  if (MetaspaceShared::is_in_shared_metaspace(ptr)) {
-    return true;
-  }
   return contains_non_shared(ptr);
 }
 
@@ -1125,9 +1110,9 @@ MetaWord* ClassLoaderMetaspace::allocate(size_t word_size, Metaspace::MetadataTy
 
   // Don't use class_vsm() unless UseCompressedClassPointers is true.
   if (Metaspace::is_class_space_allocation(mdtype)) {
-    return  class_vsm()->allocate(word_size);
+    return class_vsm()->allocate(word_size);
   } else {
-    return  vsm()->allocate(word_size);
+    return vsm()->allocate(word_size);
   }
 }
 
@@ -1187,13 +1172,6 @@ void ClassLoaderMetaspace::print_on(outputStream* out) const {
     if (Metaspace::using_class_space()) {
       class_vsm()->print_on(out);
     }
-  }
-}
-
-void ClassLoaderMetaspace::verify() {
-  vsm()->verify();
-  if (Metaspace::using_class_space()) {
-    class_vsm()->verify();
   }
 }
 

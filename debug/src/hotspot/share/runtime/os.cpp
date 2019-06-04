@@ -29,8 +29,6 @@
 #include "runtime/thread.inline.hpp"
 #include "runtime/threadSMR.hpp"
 #include "runtime/vm_version.hpp"
-#include "services/attachListener.hpp"
-#include "services/mallocTracker.hpp"
 #include "services/memTracker.hpp"
 #include "services/nmtCommon.hpp"
 #include "services/threadService.hpp"
@@ -273,7 +271,7 @@ bool os::dll_locate_lib(char *buffer, size_t buflen, const char* pname, const ch
       }
     } else {
       // A definite path.
-      const char lastchar = pname[pnamelen-1];
+      const char lastchar = pname[pnamelen - 1];
       retval = conc_path_file_and_check(buffer, buffer, buflen, pname, lastchar, fullfname);
     }
   }
@@ -308,11 +306,6 @@ static void signal_thread_entry(JavaThread* thread, TRAPS) {
 
     switch (sig) {
       case SIGBREAK: {
-        // Check if the signal is a trigger to start the Attach Listener - in that
-        // case don't print stack traces.
-        if (!DisableAttachMechanism && AttachListener::is_init_trigger()) {
-          continue;
-        }
         // Print stack traces
         // Any SIGBREAK operations added here should make sure to flush
         // the output stream (e.g. tty->flush()) after output.  See 4803766.
@@ -323,7 +316,6 @@ static void signal_thread_entry(JavaThread* thread, TRAPS) {
         VMThread::execute(&jni_op);
         VM_FindDeadlocks op1(tty);
         VMThread::execute(&op1);
-        Universe::print_heap_at_SIGBREAK();
         break;
       }
       default: {
@@ -1544,11 +1536,8 @@ char* os::map_memory(int fd, const char* file_name, size_t file_offset,
   return result;
 }
 
-char* os::remap_memory(int fd, const char* file_name, size_t file_offset,
-                             char *addr, size_t bytes, bool read_only,
-                             bool allow_exec) {
-  return pd_remap_memory(fd, file_name, file_offset, addr, bytes,
-                    read_only, allow_exec);
+char* os::remap_memory(int fd, const char* file_name, size_t file_offset, char *addr, size_t bytes, bool read_only, bool allow_exec) {
+  return pd_remap_memory(fd, file_name, file_offset, addr, bytes, read_only, allow_exec);
 }
 
 bool os::unmap_memory(char *addr, size_t bytes) {

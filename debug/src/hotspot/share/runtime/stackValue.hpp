@@ -57,7 +57,7 @@ class StackValue : public ResourceObj {
     _integer_value = value;
   }
 
-  BasicType type() const { return  _type; }
+  BasicType type() const { return _type; }
 
   bool equal(StackValue *value) {
     if (_type != value->_type) return false;

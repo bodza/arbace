@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "classfile/altHashing.hpp"
-#include "classfile/compactHashtable.inline.hpp"
 #include "classfile/javaClasses.inline.hpp"
 #include "classfile/stringTable.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -9,8 +8,6 @@
 #include "gc/shared/oopStorage.inline.hpp"
 #include "gc/shared/oopStorageParState.inline.hpp"
 #include "memory/allocation.inline.hpp"
-#include "memory/filemap.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
 #include "oops/access.inline.hpp"
@@ -23,7 +20,6 @@
 #include "runtime/safepointVerifiers.hpp"
 #include "runtime/timerTrace.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
-#include "services/diagnosticCommand.hpp"
 #include "utilities/concurrentHashTable.inline.hpp"
 #include "utilities/concurrentHashTableTasks.inline.hpp"
 #include "utilities/macros.hpp"
@@ -39,16 +35,12 @@
 
 // --------------------------------------------------------------------------
 StringTable* StringTable::_the_table = NULL;
-bool StringTable::_shared_string_mapped = false;
-CompactHashtable<oop, char> StringTable::_shared_table;
 bool StringTable::_alt_hash = false;
 
 static juint murmur_seed = 0;
 
 uintx hash_string(const jchar* s, int len, bool useAlt) {
-  return  useAlt ?
-    AltHashing::murmur3_32(murmur_seed, s, len) :
-    java_lang_String::hash_code(s, len);
+  return useAlt ? AltHashing::murmur3_32(murmur_seed, s, len) : java_lang_String::hash_code(s, len);
 }
 
 class StringTableConfig : public StringTableHash::BaseConfig {
@@ -203,10 +195,6 @@ oop StringTable::lookup(Symbol* symbol) {
 
 oop StringTable::lookup(jchar* name, int len) {
   unsigned int hash = java_lang_String::hash_code(name, len);
-  oop string = StringTable::the_table()->lookup_shared(name, len, hash);
-  if (string != NULL) {
-    return string;
-  }
   if (StringTable::_alt_hash) {
     hash = hash_string(name, len, true);
   }
@@ -274,19 +262,14 @@ oop StringTable::intern(const char* utf8_string, TRAPS) {
 oop StringTable::intern(Handle string_or_null_h, jchar* name, int len, TRAPS) {
   // shared table always uses java_lang_String::hash_code
   unsigned int hash = java_lang_String::hash_code(name, len);
-  oop found_string = StringTable::the_table()->lookup_shared(name, len, hash);
-  if (found_string != NULL) {
-    return found_string;
-  }
   if (StringTable::_alt_hash) {
     hash = hash_string(name, len, true);
   }
-  found_string = StringTable::the_table()->do_lookup(name, len, hash);
+  oop found_string = StringTable::the_table()->do_lookup(name, len, hash);
   if (found_string != NULL) {
     return found_string;
   }
-  return StringTable::the_table()->do_intern(string_or_null_h, name, len,
-                                             hash, CHECK_NULL);
+  return StringTable::the_table()->do_intern(string_or_null_h, name, len, hash, CHECK_NULL);
 }
 
 class StringTableCreateEntry : public StackObj {
@@ -573,57 +556,6 @@ void StringTable::print_table_statistics(outputStream* st, const char* table_nam
   _local_table->statistics_to(Thread::current(), sz, st, table_name);
 }
 
-// Verification
-class VerifyStrings : StackObj {
- public:
-  bool operator()(WeakHandle<vm_string_table_data>* val) {
-    oop s = val->peek();
-    return true;
-  };
-};
-
-// This verification is part of Universe::verify() and needs to be quick.
-void StringTable::verify() {
-  Thread* thr = Thread::current();
-  VerifyStrings vs;
-  if (!the_table()->_local_table->try_scan(thr, vs)) {
-  }
-}
-
-// Verification and comp
-class VerifyCompStrings : StackObj {
-  GrowableArray<oop>* _oops;
- public:
-  size_t _errors;
-  VerifyCompStrings(GrowableArray<oop>* oops) : _oops(oops), _errors(0) { }
-  bool operator()(WeakHandle<vm_string_table_data>* val) {
-    oop s = val->resolve();
-    if (s == NULL) {
-      return true;
-    }
-    int len = _oops->length();
-    for (int i = 0; i < len; i++) {
-      bool eq = java_lang_String::equals(s, _oops->at(i));
-      if (eq) {
-        _errors++;
-      }
-    }
-    _oops->push(s);
-    return true;
-  };
-};
-
-size_t StringTable::verify_and_compare_entries() {
-  Thread* thr = Thread::current();
-  GrowableArray<oop>* oops = new (ResourceObj::C_HEAP, mtInternal) GrowableArray<oop>((int)the_table()->_current_size, true);
-
-  VerifyCompStrings vcs(oops);
-  if (!the_table()->_local_table->try_scan(thr, vcs)) {
-  }
-  delete oops;
-  return vcs._errors;
-}
-
 // Dumping
 class PrintString : StackObj {
   Thread* _thr;
@@ -655,7 +587,6 @@ class PrintString : StackObj {
       }
 
       _st->print("%d: ", utf8_length);
-      HashtableTextDump::put_utf8(_st, utf8_string, utf8_length);
     }
     _st->cr();
     return true;
@@ -673,29 +604,5 @@ void StringTable::dump(outputStream* st, bool verbose) {
     if (!the_table()->_local_table->try_scan(thr, ps)) {
       st->print_cr("dump unavailable at this moment");
     }
-  }
-}
-
-// Utility for dumping strings
-StringtableDCmd::StringtableDCmd(outputStream* output, bool heap) :
-                                 DCmdWithParser(output, heap),
-  _verbose("-verbose", "Dump the content of each string in the table", "BOOLEAN", false, "false") {
-  _dcmdparser.add_dcmd_option(&_verbose);
-}
-
-void StringtableDCmd::execute(DCmdSource source, TRAPS) {
-  VM_DumpHashtable dumper(output(), VM_DumpHashtable::DumpStrings,
-                         _verbose.value());
-  VMThread::execute(&dumper);
-}
-
-int StringtableDCmd::num_arguments() {
-  ResourceMark rm;
-  StringtableDCmd* dcmd = new StringtableDCmd(NULL, false);
-  if (dcmd != NULL) {
-    DCmdMark mark(dcmd);
-    return dcmd->_dcmdparser.num_arguments();
-  } else {
-    return 0;
   }
 }

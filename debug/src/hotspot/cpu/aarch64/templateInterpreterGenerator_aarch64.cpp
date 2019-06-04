@@ -95,7 +95,7 @@ address TemplateInterpreterGenerator::generate_slow_signature_handler() {
   // here.  It will be loaded with the JNIEnv* later.
   __ ldr(c_rarg1, Address(sp, 1 * wordSize));
   for (int i = c_rarg2->encoding(); i <= c_rarg7->encoding(); i += 2) {
-    Register rm = as_Register(i), rn = as_Register(i+1);
+    Register rm = as_Register(i), rn = as_Register(i + 1);
     __ ldp(rm, rn, Address(sp, i * wordSize));
   }
 
@@ -458,22 +458,22 @@ address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state, i
 address TemplateInterpreterGenerator::generate_result_handler_for(BasicType type) {
     address entry = __ pc();
   switch (type) {
-  case T_BOOLEAN: __ c2bool(r0);         break;
-  case T_CHAR   : __ uxth(r0, r0);       break;
-  case T_BYTE   : __ sxtb(r0, r0);        break;
-  case T_SHORT  : __ sxth(r0, r0);        break;
-  case T_INT    : __ uxtw(r0, r0);        break;  // FIXME: We almost certainly don't need this
-  case T_LONG   : /* nothing to do */        break;
-  case T_VOID   : /* nothing to do */        break;
-  case T_FLOAT  : /* nothing to do */        break;
-  case T_DOUBLE : /* nothing to do */        break;
+  case T_BOOLEAN: __ c2bool(r0);      break;
+  case T_CHAR   : __ uxth(r0, r0);    break;
+  case T_BYTE   : __ sxtb(r0, r0);    break;
+  case T_SHORT  : __ sxth(r0, r0);    break;
+  case T_INT    : __ uxtw(r0, r0);    break;  // FIXME: We almost certainly don't need this
+  case T_LONG   : /* nothing to do */ break;
+  case T_VOID   : /* nothing to do */ break;
+  case T_FLOAT  : /* nothing to do */ break;
+  case T_DOUBLE : /* nothing to do */ break;
   case T_OBJECT :
     // retrieve result from frame
     __ ldr(r0, Address(rfp, frame::interpreter_frame_oop_temp_offset*wordSize));
     // and verify it
     __ verify_oop(r0);
     break;
-  default       : ShouldNotReachHere();
+  default: ShouldNotReachHere();
   }
   __ ret(lr);                                  // return from result handler
   return entry;
@@ -753,7 +753,7 @@ void TemplateInterpreterGenerator::generate_fixed_frame(bool native_call) {
   __ stp(zr, r13, Address(sp, 8 * wordSize));
 
   // Move SP out of the way
-  if (! native_call) {
+  if (!native_call) {
     __ ldr(rscratch1, Address(rmethod, Method::const_offset()));
     __ ldrh(rscratch1, Address(rscratch1, ConstMethod::max_stack_offset()));
     __ add(rscratch1, rscratch1, frame::interpreter_frame_monitor_size() + 2);

@@ -39,7 +39,6 @@
 #include "runtime/safepointVerifiers.hpp"
 #include "runtime/signature.hpp"
 #include "runtime/timer.hpp"
-#include "services/classLoadingService.hpp"
 #include "services/threadService.hpp"
 #include "utilities/align.hpp"
 #include "utilities/bitMap.inline.hpp"
@@ -213,7 +212,7 @@ void ClassFileParser::parse_constant_pool_entries(const ClassFileStream* const s
       }
       case JVM_CONSTANT_Double: {
         // A mangled type might cause you to overrun allocated memory
-        guarantee_property(index+1 < length, "Invalid constant pool entry %u in class file %s", index, CHECK);
+        guarantee_property(index + 1 < length, "Invalid constant pool entry %u in class file %s", index, CHECK);
         cfs->guarantee_more(9, CHECK);  // bytes, tag/access_flags
         const u8 bytes = cfs->get_u8_fast();
         cp->double_at_put(index, *(jdouble*)&bytes);
@@ -232,7 +231,7 @@ void ClassFileParser::parse_constant_pool_entries(const ClassFileStream* const s
         u2  utf8_length = cfs->get_u2_fast();
         const u1* utf8_buffer = cfs->current();
         // Got utf8 string, guarantee utf8_length+1 bytes, set stream position forward.
-        cfs->guarantee_more(utf8_length+1, CHECK);  // utf8 string, tag/access_flags
+        cfs->guarantee_more(utf8_length + 1, CHECK);  // utf8 string, tag/access_flags
         cfs->skip_u1_fast(utf8_length);
 
         if (has_cp_patch_at(index)) {
@@ -1034,9 +1033,7 @@ void ClassFileParser::parse_fields(const ClassFileStream* const cfs, bool is_int
   // index. After parsing all fields, the data are copied to a permanent
   // array and any unused slots will be discarded.
   ResourceMark rm(THREAD);
-  u2* const fa = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD,
-                                              u2,
-                                              total_fields * (FieldInfo::field_slots + 1));
+  u2* const fa = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, u2, total_fields * (FieldInfo::field_slots + 1));
 
   // The generic signature slots start after all other fields' data.
   int generic_signature_slot = total_fields * FieldInfo::field_slots;
@@ -1872,8 +1869,6 @@ Method* ClassFileParser::parse_method(const ClassFileStream* const cfs, bool is_
 
   Method* const m = Method::allocate(_loader_data, code_length, access_flags, &sizes, ConstMethod::NORMAL, CHECK_NULL);
 
-  ClassLoadingService::add_class_method_size(m->size()*wordSize);
-
   // Fill in information from fixed part (access_flags already set)
   m->set_constants(_cp);
   m->set_name_index(name_index);
@@ -2645,10 +2640,10 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
     // Fields order: oops, longs/doubles, ints, shorts/chars, bytes, padded fields
     next_nonstatic_oop_offset    = next_nonstatic_field_offset;
     next_nonstatic_double_offset = next_nonstatic_oop_offset + (nonstatic_oop_count * heapOopSize);
-  } else if ( allocation_style == 1 ) {
+  } else if (allocation_style == 1 ) {
     // Fields order: longs/doubles, ints, shorts/chars, bytes, oops, padded fields
     next_nonstatic_double_offset = next_nonstatic_field_offset;
-  } else if ( allocation_style == 2 ) {
+  } else if (allocation_style == 2 ) {
     // Fields allocation: oops fields in super and sub classes are together.
     if (nonstatic_field_size > 0 && _super_klass != NULL && _super_klass->nonstatic_oop_map_size() > 0) {
       const unsigned int map_count = _super_klass->nonstatic_oop_map_count();
@@ -3207,11 +3202,7 @@ static void check_final_method_override(const InstanceKlass* this_klass, TRAPS) 
 
           if (super_m->is_final() && !super_m->is_static() && !super_m->access_flags().is_private()) {
             // matching method in super is final, and not static or private
-            bool can_access = Reflection::verify_member_access(this_klass,
-                                                               super_m->method_holder(),
-                                                               super_m->method_holder(),
-                                                               super_m->access_flags(),
-                                                              false, false, CHECK);
+            bool can_access = Reflection::verify_member_access(this_klass, super_m->method_holder(), super_m->method_holder(), super_m->access_flags(), false, false, CHECK);
             if (can_access) {
               // this class can access super final method and therefore override
               ResourceMark rm(THREAD);
@@ -3358,7 +3349,7 @@ bool ClassFileParser::verify_unqualified_name(const char* name, unsigned int len
         // check for '//' or leading or trailing '/' which are not legal
         // unqualified name must not be empty
         if (type == ClassFileParser::LegalClass) {
-          if (p == name || p+1 >= name+length || *(p+1) == '/') {
+          if (p == name || p + 1 >= name+length || *(p + 1) == '/') {
            return false;
           }
         } else {
@@ -3723,8 +3714,6 @@ void ClassFileParser::fill_instance_klass(InstanceKlass* ik, bool changed_by_loa
   if (_has_nonstatic_concrete_methods) {
     DefaultMethods::generate_default_methods(ik, _all_mirandas, CHECK);
   }
-
-  ClassLoadingService::notify_class_loaded(ik, false /* not shared class */);
 
   // If we reach here, all is well.
   // Now remove the InstanceKlass* from the _klass_to_deallocate field

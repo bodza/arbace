@@ -75,9 +75,7 @@ class Universe: AllStatic {
   friend class SystemDictionary;
   friend class ReservedHeapSpace;
   friend class VMStructs;
-  friend class VM_PopulateDumpSharedSpace;
   friend class Metaspace;
-  friend class MetaspaceShared;
 
   friend jint  universe_init();
   friend void  universe2_init();
@@ -212,10 +210,6 @@ class Universe: AllStatic {
   static void set_narrow_oop_use_implicit_null_checks(bool use) { _narrow_oop._use_implicit_null_checks = use; }
 
   // Debugging
-  static int _verify_count;                           // number of verifies done
-
-  // True during call to verify().  Should only be set/cleared in verify().
-  static bool _verify_in_progress;
   static long verify_flags;
 
   static uintptr_t _verify_oop_mask;
@@ -365,7 +359,7 @@ class Universe: AllStatic {
   static const char* narrow_oop_mode_to_string(NARROW_OOP_MODE mode);
   static char*    preferred_heap_base(size_t heap_size, size_t alignment, NARROW_OOP_MODE mode);
   static char*    preferred_metaspace_base(size_t heap_size, NARROW_OOP_MODE mode);
-  static address  narrow_oop_base()                  { return  _narrow_oop._base; }
+  static address  narrow_oop_base()                  { return _narrow_oop._base; }
   // Test whether bits of addr and possible offsets into the heap overlap.
   static bool     is_disjoint_heap_base_address(address addr) {
     return (((uint64_t)(intptr_t)addr) & (((uint64_t)UCONST64(0xFFFFffffFFFFffff)) >> (32 - LogMinObjAlignmentInBytes))) == 0;
@@ -381,15 +375,15 @@ class Universe: AllStatic {
     return _narrow_oop._base != NULL && !is_disjoint_heap_base_address(_narrow_oop._base);
   }
   static bool  is_narrow_oop_base(void* addr)             { return (narrow_oop_base() == (address)addr); }
-  static int      narrow_oop_shift()                      { return  _narrow_oop._shift; }
-  static bool     narrow_oop_use_implicit_null_checks()   { return  _narrow_oop._use_implicit_null_checks; }
+  static int      narrow_oop_shift()                      { return _narrow_oop._shift; }
+  static bool     narrow_oop_use_implicit_null_checks()   { return _narrow_oop._use_implicit_null_checks; }
 
   // For UseCompressedClassPointers
-  static address  narrow_klass_base()                     { return  _narrow_klass._base; }
+  static address  narrow_klass_base()                     { return _narrow_klass._base; }
   static bool  is_narrow_klass_base(void* addr)           { return (narrow_klass_base() == (address)addr); }
-  static uint64_t narrow_klass_range()                    { return  _narrow_klass_range; }
-  static int      narrow_klass_shift()                    { return  _narrow_klass._shift; }
-  static bool     narrow_klass_use_implicit_null_checks() { return  _narrow_klass._use_implicit_null_checks; }
+  static uint64_t narrow_klass_range()                    { return _narrow_klass_range; }
+  static int      narrow_klass_shift()                    { return _narrow_klass._shift; }
+  static bool     narrow_klass_use_implicit_null_checks() { return _narrow_klass._use_implicit_null_checks; }
 
   static address* narrow_ptrs_base_addr()                 { return &_narrow_ptrs_base; }
   static void     set_narrow_ptrs_base(address a)         { _narrow_ptrs_base = a; }
@@ -448,33 +442,20 @@ class Universe: AllStatic {
     Verify_All = -1
   };
   static void initialize_verify_flags();
-  static bool should_verify_subset(uint subset);
-  static bool verify_in_progress() { return _verify_in_progress; }
-  static void verify(VerifyOption option, const char* prefix);
-  static void verify(const char* prefix) {
-    verify(VerifyOption_Default, prefix);
-  }
-  static void verify() {
-    verify("");
-  }
 
-  static int  verify_count()       { return _verify_count; }
   static void print_on(outputStream* st);
-  static void print_heap_at_SIGBREAK();
-  static void print_heap_before_gc();
-  static void print_heap_after_gc();
 
   // The non-oop pattern (see compiledIC.hpp, etc)
-  static void*   non_oop_word();
+  static void* non_oop_word();
 
   // Oop verification (see MacroAssembler::verify_oop)
-  static uintptr_t verify_oop_mask()          { return 0; };
-  static uintptr_t verify_oop_bits()          { return 0; };
-  static uintptr_t verify_mark_bits()         { return 0; };
-  static uintptr_t verify_mark_mask()         { return 0; };
+  static uintptr_t verify_oop_mask()  { return 0; };
+  static uintptr_t verify_oop_bits()  { return 0; };
+  static uintptr_t verify_mark_bits() { return 0; };
+  static uintptr_t verify_mark_mask() { return 0; };
 
   // Compiler support
-  static int base_vtable_size()               { return _base_vtable_size; }
+  static int base_vtable_size()       { return _base_vtable_size; }
 };
 
 class DeferredObjAllocEvent : public CHeapObj<mtInternal> {

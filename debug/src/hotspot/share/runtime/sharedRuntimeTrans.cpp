@@ -97,44 +97,44 @@ static double __ieee754_log(double x) {
 
   k = 0;
   if (hx < 0x00100000) {                   /* x < 2**-1022  */
-    if (((hx&0x7fffffff)|lx)==0)
-      return -two54/zero;             /* log(+-0)=-inf */
-    if (hx<0) return (x-x)/zero;   /* log(-#) = NaN */
+    if (((hx & 0x7fffffff)|lx) == 0)
+      return -two54 / zero;             /* log(+-0)=-inf */
+    if (hx < 0) return (x-x) / zero;   /* log(-#) = NaN */
     k -= 54; x *= two54; /* subnormal number, scale up x */
     hx = high(x);             /* high word of x */
   }
   if (hx >= 0x7ff00000) return x+x;
-  k += (hx>>20)-1023;
+  k += (hx >> 20)-1023;
   hx &= 0x000fffff;
-  i = (hx+0x95f64)&0x100000;
-  set_high(&x, hx|(i^0x3ff00000)); /* normalize x or x/2 */
-  k += (i>>20);
-  f = x-1.0;
-  if ((0x000fffff&(2+hx))<3) {  /* |f| < 2**-20 */
-    if (f==zero) {
-      if (k==0) return zero;
-      else { dk=(double)k; return dk*ln2_hi+dk*ln2_lo; }
+  i = (hx + 0x95f64) & 0x100000;
+  set_high(&x, hx | (i ^ 0x3ff00000)); /* normalize x or x/2 */
+  k += (i >> 20);
+  f = x - 1.0;
+  if ((0x000fffff & (2 + hx))<3) {  /* |f| < 2**-20 */
+    if (f == zero) {
+      if (k == 0) return zero;
+      else { dk = (double)k; return dk * ln2_hi + dk * ln2_lo; }
     }
-    R = f*f*(0.5-0.33333333333333333*f);
-    if (k==0) return f-R; else { dk=(double)k;
-    return dk*ln2_hi-((R-dk*ln2_lo)-f); }
+    R = f * f * (0.5 - 0.33333333333333333 * f);
+    if (k == 0) return f - R; else { dk = (double)k;
+    return dk * ln2_hi - ((R - dk * ln2_lo) - f); }
   }
-  s = f/(2.0+f);
+  s = f / (2.0 + f);
   dk = (double)k;
-  z = s*s;
-  i = hx-0x6147a;
-  w = z*z;
-  j = 0x6b851-hx;
+  z = s * s;
+  i = hx - 0x6147a;
+  w = z * z;
+  j = 0x6b851 - hx;
   t1= w*(Lg2+w*(Lg4+w*Lg6));
   t2= z*(Lg1+w*(Lg3+w*(Lg5+w*Lg7)));
   i |= j;
   R = t2+t1;
-  if (i>0) {
+  if (i > 0) {
     hfsq=0.5*f*f;
-    if (k==0) return f-(hfsq-s*(hfsq+R)); else
+    if (k == 0) return f-(hfsq-s*(hfsq+R)); else
       return dk*ln2_hi-((hfsq-(s*(hfsq+R)+dk*ln2_lo))-f);
   } else {
-    if (k==0) return f-s*(f-R); else
+    if (k == 0) return f-s*(f-R); else
       return dk*ln2_hi-((s*(f-R)-dk*ln2_lo)-f);
   }
 }
@@ -152,7 +152,7 @@ JRT_END
  *        ivln10   = 1/log(10) rounded.
  *    Then
  *            n = ilogb(x),
- *            if (n<0)  n = n+1;
+ *            if (n < 0)  n = n+1;
  *            x = scalbn(x,-n);
  *            log10(x) := n*log10_2hi + (n*log10_2lo + ivln10*log(x))
  *
@@ -191,20 +191,20 @@ static double __ieee754_log10(double x) {
 
   k = 0;
   if (hx < 0x00100000) {                  /* x < 2**-1022  */
-    if (((hx&0x7fffffff)|lx)==0)
-      return -two54/zero;             /* log(+-0)=-inf */
-    if (hx<0) return (x-x)/zero;        /* log(-#) = NaN */
+    if (((hx & 0x7fffffff) | lx) == 0)
+      return -two54 / zero;             /* log(+-0)=-inf */
+    if (hx < 0) return (x - x) / zero;        /* log(-#) = NaN */
     k -= 54; x *= two54; /* subnormal number, scale up x */
     hx = high(x);                /* high word of x */
   }
-  if (hx >= 0x7ff00000) return x+x;
-  k += (hx>>20)-1023;
-  i  = ((unsigned)k&0x80000000)>>31;
-  hx = (hx&0x000fffff)|((0x3ff-i)<<20);
-  y  = (double)(k+i);
+  if (hx >= 0x7ff00000) return x + x;
+  k += (hx >> 20) - 1023;
+  i  = ((unsigned)k & 0x80000000) >> 31;
+  hx = (hx & 0x000fffff) | ((0x3ff - i) << 20);
+  y  = (double)(k + i);
   set_high(&x, hx);
-  z  = y*log10_2lo + ivln10*__ieee754_log(x);
-  return  z+y*log10_2hi;
+  z  = y * log10_2lo + ivln10 * __ieee754_log(x);
+  return z + y * log10_2hi;
 }
 
 JRT_LEAF(jdouble, SharedRuntime::dlog10(jdouble x))
@@ -297,15 +297,15 @@ static double __ieee754_exp(double x) {
   unsigned hx;
 
   hx  = high(x);                /* high word of x */
-  xsb = (hx>>31)&1;             /* sign bit of x */
+  xsb = (hx >> 31)&1;             /* sign bit of x */
   hx &= 0x7fffffff;             /* high word of |x| */
 
   /* filter out non-finite argument */
   if (hx >= 0x40862E42) {                        /* if |x|>=709.78... */
-    if (hx>=0x7ff00000) {
-      if (((hx&0xfffff)|low(x))!=0)
-        return x+x;             /* NaN */
-      else return (xsb==0)? x:0.0;      /* exp(+-inf)={inf,0} */
+    if (hx >= 0x7ff00000) {
+      if (((hx & 0xfffff) | low(x)) != 0)
+        return x + x;             /* NaN */
+      else return (xsb == 0) ? x : 0.0;      /* exp(+-inf)={inf,0} */
     }
     if (x > o_threshold) return hugeX*hugeX; /* overflow */
     if (x < u_threshold) return twom1000*twom1000; /* underflow */
@@ -331,13 +331,13 @@ static double __ieee754_exp(double x) {
   /* x is now in primary range */
   t  = x*x;
   c  = x - t*(P1+t*(P2+t*(P3+t*(P4+t*P5))));
-  if (k==0)      return one-((x*c)/(c-2.0)-x);
-  else          y = one-((lo-(x*c)/(2.0-c))-hi);
+  if (k == 0)      return one-((x*c)/(c - 2.0)-x);
+  else          y = one-((lo-(x*c)/(2.0 - c))-hi);
   if (k >= -1021) {
-    set_high(&y, high(y) + (k<<20)); /* add k to y's exponent */
+    set_high(&y, high(y) + (k << 20)); /* add k to y's exponent */
     return y;
   } else {
-    set_high(&y, high(y) + ((k+1000)<<20)); /* add k to y's exponent */
+    set_high(&y, high(y) + ((k + 1000) << 20)); /* add k to y's exponent */
     return y*twom1000;
   }
 }
@@ -426,13 +426,13 @@ double __ieee754_pow(double x, double y) {
   i0 = ((*(int*)&one)>>29)^1; i1=1-i0;
   hx = high(x); lx = low(x);
   hy = high(y); ly = low(y);
-  ix = hx&0x7fffffff;  iy = hy&0x7fffffff;
+  ix = hx & 0x7fffffff;  iy = hy & 0x7fffffff;
 
-  /* y==zero: x**0 = 1 */
-  if ((iy|ly)==0) return one;
+  /* y == zero: x**0 = 1 */
+  if ((iy|ly) == 0) return one;
 
   /* +-NaN return x+y */
-  if (ix > 0x7ff00000 || ((ix==0x7ff00000)&&(lx!=0)) || iy > 0x7ff00000 || ((iy==0x7ff00000)&&(ly!=0)))
+  if (ix > 0x7ff00000 || ((ix == 0x7ff00000)&&(lx != 0)) || iy > 0x7ff00000 || ((iy == 0x7ff00000)&&(ly != 0)))
     return x+y;
 
   /* determine if y is an odd int when x < 0
@@ -440,65 +440,65 @@ double __ieee754_pow(double x, double y) {
    * yisint = 1 ... y is an odd int
    * yisint = 2 ... y is an even int
    */
-  yisint  = 0;
-  if (hx<0) {
-    if (iy>=0x43400000) yisint = 2; /* even integer y */
-    else if (iy>=0x3ff00000) {
-      k = (iy>>20)-0x3ff;          /* exponent */
-      if (k>20) {
-        j = ly>>(52-k);
-        if ((unsigned)(j<<(52-k))==ly) yisint = 2-(j&1);
-      } else if (ly==0) {
-        j = iy>>(20-k);
-        if ((j<<(20-k))==iy) yisint = 2-(j&1);
+  yisint = 0;
+  if (hx < 0) {
+    if (iy >= 0x43400000) yisint = 2; /* even integer y */
+    else if (iy >= 0x3ff00000) {
+      k = (iy >> 20) - 0x3ff;          /* exponent */
+      if (k > 20) {
+        j = ly >> (52 - k);
+        if ((unsigned)(j << (52 - k)) == ly) yisint = 2 - (j & 1);
+      } else if (ly == 0) {
+        j = iy >> (20 - k);
+        if ((j << (20 - k)) == iy) yisint = 2 - (j & 1);
       }
     }
   }
 
   /* special value of y */
-  if (ly==0) {
-    if (iy==0x7ff00000) {       /* y is +-inf */
-      if (((ix-0x3ff00000)|lx)==0)
-        return  y - y;  /* inf**+-1 is NaN */
+  if (ly == 0) {
+    if (iy == 0x7ff00000) {       /* y is +-inf */
+      if (((ix - 0x3ff00000) | lx) == 0)
+        return y - y;  /* inf**+-1 is NaN */
       else if (ix >= 0x3ff00000)/* (|x|>1)**+-inf = inf,0 */
-        return (hy>=0)? y: zeroX;
+        return (hy >= 0) ? y : zeroX;
       else                      /* (|x|<1)**-,+inf = inf,0 */
-        return (hy<0)?-y: zeroX;
+        return (hy < 0) ? -y : zeroX;
     }
-    if (iy==0x3ff00000) {        /* y is  +-1 */
-      if (hy<0) return one/x; else return x;
+    if (iy == 0x3ff00000) {        /* y is  +-1 */
+      if (hy < 0) return one/x; else return x;
     }
-    if (hy==0x40000000) return x*x; /* y is  2 */
-    if (hy==0x3fe00000) {        /* y is  0.5 */
-      if (hx>=0) /* x >= +0 */
+    if (hy == 0x40000000) return x*x; /* y is  2 */
+    if (hy == 0x3fe00000) {        /* y is  0.5 */
+      if (hx >= 0) /* x >= +0 */
         return sqrt(x);
     }
   }
 
   ax   = fabsd(x);
   /* special value of x */
-  if (lx==0) {
-    if (ix==0x7ff00000||ix==0||ix==0x3ff00000) {
+  if (lx == 0) {
+    if (ix == 0x7ff00000 || ix == 0 || ix == 0x3ff00000) {
       z = ax;                   /*x is +-0,+-inf,+-1*/
-      if (hy<0) z = one/z;       /* z = (1/|x|) */
-      if (hx<0) {
-        if (((ix-0x3ff00000)|yisint)==0) {
+      if (hy < 0) z = one/z;       /* z = (1/|x|) */
+      if (hx < 0) {
+        if (((ix - 0x3ff00000) | yisint) == 0) {
 #ifdef CAN_USE_NAN_DEFINE
           z = NAN;
 #else
           z = (z-z)/(z-z); /* (-1)**non-int is NaN */
 #endif
-        } else if (yisint==1)
-          z = -1.0*z;           /* (x<0)**odd = -(|x|**odd) */
+        } else if (yisint == 1)
+          z = -1.0*z;           /* (x < 0)**odd = -(|x|**odd) */
       }
       return z;
     }
   }
 
-  n = (hx>>31)+1;
+  n = (hx >> 31)+1;
 
-  /* (x<0)**(non-int) is NaN */
-  if ((n|yisint)==0)
+  /* (x < 0)**(non-int) is NaN */
+  if ((n|yisint) == 0)
 #ifdef CAN_USE_NAN_DEFINE
     return NAN;
 #else
@@ -506,17 +506,17 @@ double __ieee754_pow(double x, double y) {
 #endif
 
   s = one; /* s (sign of result -ve**odd) = -1 else = 1 */
-  if ((n|(yisint-1))==0) s = -one;/* (-ve)**(odd int) */
+  if ((n | (yisint - 1)) == 0) s = -one;/* (-ve)**(odd int) */
 
   /* |y| is huge */
-  if (iy>0x41e00000) { /* if |y| > 2**31 */
-    if (iy>0x43f00000) {  /* if |y| > 2**64, must o/uflow */
-      if (ix<=0x3fefffff) return (hy<0)? hugeX*hugeX:tiny*tiny;
-      if (ix>=0x3ff00000) return (hy>0)? hugeX*hugeX:tiny*tiny;
+  if (iy > 0x41e00000) { /* if |y| > 2**31 */
+    if (iy > 0x43f00000) {  /* if |y| > 2**64, must o/uflow */
+      if (ix <= 0x3fefffff) return (hy < 0) ? hugeX*hugeX:tiny*tiny;
+      if (ix >= 0x3ff00000) return (hy > 0) ? hugeX*hugeX:tiny*tiny;
     }
     /* over/underflow if x is not close to one */
-    if (ix<0x3fefffff) return (hy<0)? s*hugeX*hugeX:s*tiny*tiny;
-    if (ix>0x3ff00000) return (hy>0)? s*hugeX*hugeX:s*tiny*tiny;
+    if (ix < 0x3fefffff) return (hy < 0) ? s*hugeX*hugeX:s*tiny*tiny;
+    if (ix > 0x3ff00000) return (hy > 0) ? s*hugeX*hugeX:s*tiny*tiny;
     /* now |1-x| is tiny <= 2**-20, suffice to compute
        log(x) by x-x^2/2+x^3/3-x^4/4 */
     t = ax-one;         /* t has 20 trailing zeros */
@@ -530,15 +530,15 @@ double __ieee754_pow(double x, double y) {
     double ss,s2,s_h,s_l,t_h,t_l;
     n = 0;
     /* take care subnormal number */
-    if (ix<0x00100000)
+    if (ix < 0x00100000)
       { ax *= two53; n -= 53; ix = high(ax); }
     n  += ((ix)>>20)-0x3ff;
-    j  = ix&0x000fffff;
+    j  = ix & 0x000fffff;
     /* determine interval */
-    ix = j|0x3ff00000;          /* normalize ix */
-    if (j<=0x3988E) k = 0;         /* |x|<sqrt(3/2) */
-    else if (j<0xBB67A) k = 1;     /* |x|<sqrt(3)   */
-    else { k = 0;n+=1;ix -= 0x00100000; }
+    ix = j | 0x3ff00000;          /* normalize ix */
+    if (j <= 0x3988E) k = 0;         /* |x|<sqrt(3/2) */
+    else if (j < 0xBB67A) k = 1;     /* |x|<sqrt(3)   */
+    else { k = 0; n += 1; ix -= 0x00100000; }
     set_high(&ax, ix);
 
     /* compute ss = s_h+s_l = (x-1)/(x+1) or (x-1.5)/(x+1.5) */
@@ -549,17 +549,17 @@ double __ieee754_pow(double x, double y) {
     set_low(&s_h, 0);
     /* t_h=ax+bp[k] High */
     t_h = zeroX;
-    set_high(&t_h, ((ix>>1)|0x20000000)+0x00080000+(k<<18));
+    set_high(&t_h, ((ix >> 1)|0x20000000)+0x00080000+(k << 18));
     t_l = ax - (t_h-bp[k]);
     s_l = v*((u-s_h*t_h)-s_h*t_l);
     /* compute log(ax) */
-    s2 = ss*ss;
+    s2 = ss * ss;
     r = s2*s2*(L1X+s2*(L2X+s2*(L3X+s2*(L4X+s2*(L5X+s2*L6X)))));
-    r += s_l*(s_h+ss);
-    s2  = s_h*s_h;
-    t_h = 3.0+s2+r;
+    r += s_l * (s_h + ss);
+    s2  = s_h * s_h;
+    t_h = 3.0 + s2 + r;
     set_low(&t_h, 0);
-    t_l = r-((t_h-3.0)-s2);
+    t_l = r - ((t_h - 3.0) - s2);
     /* u+v = ss*(1+...) */
     u = s_h*t_h;
     v = s_l*t_h+t_l*ss;
@@ -584,32 +584,32 @@ double __ieee754_pow(double x, double y) {
   z = p_l+p_h;
   j = high(z);
   i = low(z);
-  if (j>=0x40900000) {                          /* z >= 1024 */
-    if (((j-0x40900000)|i)!=0)                   /* if z > 1024 */
+  if (j >= 0x40900000) {                          /* z >= 1024 */
+    if (((j - 0x40900000) | i) != 0)                   /* if z > 1024 */
       return s*hugeX*hugeX;                     /* overflow */
     else {
       if (p_l+ovt>z-p_h) return s*hugeX*hugeX;   /* overflow */
     }
-  } else if ((j&0x7fffffff)>=0x4090cc00 ) {      /* z <= -1075 */
-    if (((j-0xc090cc00)|i)!=0)           /* z < -1075 */
+  } else if ((j & 0x7fffffff) >= 0x4090cc00) {      /* z <= -1075 */
+    if (((j - 0xc090cc00) | i) != 0)           /* z < -1075 */
       return s*tiny*tiny;               /* underflow */
     else {
-      if (p_l<=z-p_h) return s*tiny*tiny;        /* underflow */
+      if (p_l <= z-p_h) return s*tiny*tiny;        /* underflow */
     }
   }
   /*
    * compute 2**(p_h+p_l)
    */
-  i = j&0x7fffffff;
-  k = (i>>20)-0x3ff;
+  i = j & 0x7fffffff;
+  k = (i >> 20)-0x3ff;
   n = 0;
-  if (i>0x3fe00000) {            /* if |z| > 0.5, set n = [z+0.5] */
-    n = j+(0x00100000>>(k+1));
-    k = ((n&0x7fffffff)>>20)-0x3ff;     /* new k for n */
+  if (i > 0x3fe00000) {            /* if |z| > 0.5, set n = [z+0.5] */
+    n = j+(0x00100000>>(k + 1));
+    k = ((n & 0x7fffffff)>>20)-0x3ff;     /* new k for n */
     t = zeroX;
-    set_high(&t, (n&~(0x000fffff>>k)));
-    n = ((n&0x000fffff)|0x00100000)>>(20-k);
-    if (j<0) n = -n;
+    set_high(&t, (n&~(0x000fffff >> k)));
+    n = ((n & 0x000fffff)|0x00100000)>>(20-k);
+    if (j < 0) n = -n;
     p_h -= t;
   }
   t = p_l+p_h;
@@ -623,9 +623,9 @@ double __ieee754_pow(double x, double y) {
   r  = (z*t1)/(t1-two)-(w+z*w);
   z  = one-(r-z);
   j  = high(z);
-  j += (n<<20);
-  if ((j>>20)<=0) z = scalbnA(z,n);       /* subnormal output */
-  else set_high(&z, high(z) + (n<<20));
+  j += (n << 20);
+  if ((j >> 20)<=0) z = scalbnA(z,n);       /* subnormal output */
+  else set_high(&z, high(z) + (n << 20));
   return s*z;
 }
 

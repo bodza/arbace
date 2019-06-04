@@ -1175,7 +1175,7 @@ void LinkResolver::resolve_invoke(CallInfo& result, Handle& recv, const methodHa
   Symbol* name = attached_method->name();
   Symbol* type = attached_method->signature();
   LinkInfo link_info(defc, name, type);
-  switch(byte) {
+  switch (byte) {
     case Bytecodes::_invokevirtual:
       resolve_virtual_call(result, recv, recv->klass(), link_info,
                            /*check_null_and_abstract=*/true, CHECK);

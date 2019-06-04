@@ -173,7 +173,7 @@ OopMap* RegisterSaver::save_live_registers(MacroAssembler* masm, int additional_
   // debug-info recordings, as well as let GC find all oops.
 
   OopMapSet *oop_maps = new OopMapSet();
-  OopMap* map =  new OopMap( frame_words, 0 );
+  OopMap* map = new OopMap(frame_words, 0);
 
 #define STACK_OFFSET(x) VMRegImpl::stack2reg((x) + additional_frame_words)
 #define NEXTREG(x) (x)->as_VMReg()->next()
@@ -191,7 +191,7 @@ OopMap* RegisterSaver::save_live_registers(MacroAssembler* masm, int additional_
   for (int n = 0; n < FloatRegisterImpl::number_of_registers; n++) {
     FloatRegister freg_name = as_FloatRegister(n);
     map->set_callee_saved(STACK_OFFSET(off), freg_name->as_VMReg());
-    map->set_callee_saved(STACK_OFFSET(off+1), NEXTREG(freg_name));
+    map->set_callee_saved(STACK_OFFSET(off + 1), NEXTREG(freg_name));
     off += delta;
   }
   off = xmm0_off;
@@ -199,7 +199,7 @@ OopMap* RegisterSaver::save_live_registers(MacroAssembler* masm, int additional_
   for (int n = 0; n < num_xmm_regs; n++) {
     XMMRegister xmm_name = as_XMMRegister(n);
     map->set_callee_saved(STACK_OFFSET(off), xmm_name->as_VMReg());
-    map->set_callee_saved(STACK_OFFSET(off+1), NEXTREG(xmm_name));
+    map->set_callee_saved(STACK_OFFSET(off + 1), NEXTREG(xmm_name));
     off += delta;
   }
 #undef NEXTREG
@@ -270,9 +270,9 @@ void RegisterSaver::restore_result_registers(MacroAssembler* masm) {
   __ frstor(Address(rsp, 0));      // Restore fpu state
 
   // Recover XMM & FPU state
-  if (UseSSE == 1 ) {
+  if (UseSSE == 1) {
     __ movflt(xmm0, Address(rsp, xmm0_off*wordSize));
-  } else if (UseSSE >= 2 ) {
+  } else if (UseSSE >= 2) {
     __ movdbl(xmm0, Address(rsp, xmm0_off*wordSize));
   }
   __ movptr(rax, Address(rsp, rax_off*wordSize));
@@ -359,7 +359,7 @@ int SharedRuntime::java_calling_convention(const BasicType *sig_bt, VMRegPair *r
 
   // Pass doubles & longs aligned on the stack.  First count stack slots for doubles
   int i;
-  for ( i = 0; i < total_args_passed; i++) {
+  for (i = 0; i < total_args_passed; i++) {
     if (sig_bt[i] == T_DOUBLE ) {
       // first 2 doubles go in registers
       if (freg_arg0 == fltarg_flt_dbl ) freg_arg0 = i;
@@ -373,9 +373,9 @@ int SharedRuntime::java_calling_convention(const BasicType *sig_bt, VMRegPair *r
   int dstack = 0;             // Separate counter for placing doubles
 
   // Now pick where all else goes.
-  for ( i = 0; i < total_args_passed; i++) {
+  for (i = 0; i < total_args_passed; i++) {
     // From the type and the argument number (count) compute the location
-    switch( sig_bt[i] ) {
+    switch (sig_bt[i]) {
     case T_SHORT:
     case T_CHAR:
     case T_BYTE:
@@ -384,10 +384,10 @@ int SharedRuntime::java_calling_convention(const BasicType *sig_bt, VMRegPair *r
     case T_ARRAY:
     case T_OBJECT:
     case T_ADDRESS:
-      if (reg_arg0 == 9999 ) {
+      if (reg_arg0 == 9999) {
         reg_arg0 = i;
         regs[i].set1(rcx->as_VMReg());
-      } else if (reg_arg1 == 9999 ) {
+      } else if (reg_arg1 == 9999) {
         reg_arg1 = i;
         regs[i].set1(rdx->as_VMReg());
       } else {
@@ -828,9 +828,9 @@ int SharedRuntime::c_calling_convention(const BasicType *sig_bt, VMRegPair *regs
 
   uint    stack = 0;        // All arguments on stack
 
-  for ( int i = 0; i < total_args_passed; i++) {
+  for (int i = 0; i < total_args_passed; i++) {
     // From the type and the argument number (count) compute the location
-    switch( sig_bt[i] ) {
+    switch (sig_bt[i]) {
     case T_BOOLEAN:
     case T_CHAR:
     case T_FLOAT:
@@ -1037,7 +1037,7 @@ static void save_or_restore_arguments(MacroAssembler* masm,
   // otherwise it should load them.
   int handle_index = 0;
   // Save down double word first
-  for ( int i = 0; i < total_in_args; i++) {
+  for (int i = 0; i < total_in_args; i++) {
     if (in_regs[i].first()->is_XMMRegister() && in_sig_bt[i] == T_DOUBLE) {
       int slot = handle_index * VMRegImpl::slots_per_word + arg_save_area;
       int offset = slot * VMRegImpl::stack_slot_size;
@@ -1066,7 +1066,7 @@ static void save_or_restore_arguments(MacroAssembler* masm,
     }
   }
   // Save or restore single word registers
-  for ( int i = 0; i < total_in_args; i++) {
+  for (int i = 0; i < total_in_args; i++) {
     if (in_regs[i].first()->is_Register()) {
       int slot = handle_index++ * VMRegImpl::slots_per_word + arg_save_area;
       int offset = slot * VMRegImpl::stack_slot_size;
@@ -1297,10 +1297,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     vmIntrinsics::ID iid = method->intrinsic_id();
     intptr_t start = (intptr_t)__ pc();
     int vep_offset = ((intptr_t)__ pc()) - start;
-    gen_special_dispatch(masm,
-                         method,
-                         in_sig_bt,
-                         in_regs);
+    gen_special_dispatch(masm, method, in_sig_bt, in_regs);
     int frame_complete = ((intptr_t)__ pc()) - start;  // not complete, period
     __ flush();
     int stack_slots = SharedRuntime::out_preserve_stack_slots();  // no out slots at all, actually
@@ -1356,14 +1353,14 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
       out_sig_bt[argc++] = T_OBJECT;
     }
 
-    for (int i = 0; i < total_in_args ; i++ ) {
+    for (int i = 0; i < total_in_args ; i++) {
       out_sig_bt[argc++] = in_sig_bt[i];
     }
   } else {
     Thread* THREAD = Thread::current();
     in_elem_bt = NEW_RESOURCE_ARRAY(BasicType, total_in_args);
     SignatureStream ss(method->signature());
-    for (int i = 0; i < total_in_args ; i++ ) {
+    for (int i = 0; i < total_in_args ; i++) {
       if (in_sig_bt[i] == T_ARRAY) {
         // Arrays are passed as int, elem* pair
         out_sig_bt[argc++] = T_INT;
@@ -1413,7 +1410,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     // for register arguments.
     int double_slots = 0;
     int single_slots = 0;
-    for ( int i = 0; i < total_in_args; i++) {
+    for (int i = 0; i < total_in_args; i++) {
       if (in_regs[i].first()->is_Register()) {
         const Register reg = in_regs[i].first()->as_Register();
         switch (in_sig_bt[i]) {
@@ -1614,7 +1611,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   // vectors we have in our possession. We simply walk the java vector to
   // get the source locations and the c vector to get the destinations.
 
-  int c_arg = is_critical_native ? 0 : (method->is_static() ? 2 : 1 );
+  int c_arg = is_critical_native ? 0 : (method->is_static() ? 2 : 1);
 
   // Record rsp-based slot for receiver on stack for non-static methods
   int receiver_offset = -1;
@@ -1634,7 +1631,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   // Are free to temporaries if we have to do  stack to steck moves.
   // All inbound args are referenced based on rbp, and all outbound args via rsp.
 
-  for (int i = 0; i < total_in_args ; i++, c_arg++ ) {
+  for (int i = 0; i < total_in_args ; i++, c_arg++) {
     switch (in_sig_bt[i]) {
       case T_ARRAY:
         if (is_critical_native) {
@@ -1805,7 +1802,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
       break; // can't de-handlize until after safepoint check
   case T_VOID: break;
   case T_LONG: break;
-  default       : ShouldNotReachHere();
+  default: ShouldNotReachHere();
   }
 
   // Switch thread to "native transition" state before reading the synchronization state.
@@ -2343,8 +2340,8 @@ void SharedRuntime::generate_deopt_blob() {
   __ movptr(Address(rsp, RegisterSaver::raxOffset()*wordSize), rax);
   __ movptr(Address(rsp, RegisterSaver::rdxOffset()*wordSize), rdx);
   __ fstp_d(Address(rsp, RegisterSaver::fpResultOffset()*wordSize));   // Pop float stack and store in local
-  if (UseSSE>=2 ) __ movdbl(Address(rsp, RegisterSaver::xmm0Offset()*wordSize), xmm0);
-  if (UseSSE==1 ) __ movflt(Address(rsp, RegisterSaver::xmm0Offset()*wordSize), xmm0);
+  if (UseSSE >= 2) __ movdbl(Address(rsp, RegisterSaver::xmm0Offset()*wordSize), xmm0);
+  if (UseSSE == 1) __ movflt(Address(rsp, RegisterSaver::xmm0Offset()*wordSize), xmm0);
 
   // Set up the args to unpack_frame
 
@@ -2360,7 +2357,7 @@ void SharedRuntime::generate_deopt_blob() {
   // restore return values to their stack-slots with the new SP.
   __ call(RuntimeAddress(CAST_FROM_FN_PTR(address, Deoptimization::unpack_frames)));
   // Set an oopmap for the call site
-  oop_maps->add_gc_map( __ pc()-start, new OopMap( frame_size_in_words, 0 ));
+  oop_maps->add_gc_map( __ pc()-start, new OopMap(frame_size_in_words, 0));
 
   // rax, contains the return result type
   __ push(rax);
@@ -2383,14 +2380,14 @@ void SharedRuntime::generate_deopt_blob() {
   __ jcc (Assembler::notZero, results_done);
 
   // return float value as expected by interpreter
-  if (UseSSE>=1 ) __ movflt(xmm0, Address(rsp, (RegisterSaver::xmm0Offset() + additional_words + 1)*wordSize));
-  else            __ fld_d(Address(rsp, (RegisterSaver::fpResultOffset() + additional_words + 1)*wordSize));
+  if (UseSSE >= 1) __ movflt(xmm0, Address(rsp, (RegisterSaver::xmm0Offset() + additional_words + 1)*wordSize));
+  else             __ fld_d(Address(rsp, (RegisterSaver::fpResultOffset() + additional_words + 1)*wordSize));
   __ jmp(results_done);
 
   // return double value as expected by interpreter
   __ bind(yes_double_value);
-  if (UseSSE>=2 ) __ movdbl(xmm0, Address(rsp, (RegisterSaver::xmm0Offset() + additional_words + 1)*wordSize));
-  else            __ fld_d(Address(rsp, (RegisterSaver::fpResultOffset() + additional_words + 1)*wordSize));
+  if (UseSSE >= 2) __ movdbl(xmm0, Address(rsp, (RegisterSaver::xmm0Offset() + additional_words + 1)*wordSize));
+  else             __ fld_d(Address(rsp, (RegisterSaver::fpResultOffset() + additional_words + 1)*wordSize));
 
   __ bind(results_done);
 

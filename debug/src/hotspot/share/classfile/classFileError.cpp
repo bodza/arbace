@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "classfile/classFileParser.hpp"
-#include "classfile/stackMapTable.hpp"
 #include "classfile/verifier.hpp"
 #include "memory/resourceArea.hpp"
 
@@ -36,8 +35,3 @@ void ClassFileParser::classfile_parse_error(const char* msg, const char* name, c
 }
 
 PRAGMA_DIAG_POP
-
-void StackMapStream::stackmap_format_error(const char* msg, TRAPS) {
-  ResourceMark rm(THREAD);
-  Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::java_lang_ClassFormatError(), "StackMapTable format error: %s", msg);
-}

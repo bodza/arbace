@@ -611,7 +611,7 @@ void VM_Version::get_processor_features() {
                (supports_sse()  ? ", sse"  : ""),
                (supports_sse2() ? ", sse2" : ""),
                (supports_sse3() ? ", sse3" : ""),
-               (supports_ssse3()? ", ssse3": ""),
+               (supports_ssse3() ? ", ssse3": ""),
                (supports_sse4_1() ? ", sse4.1" : ""),
                (supports_sse4_2() ? ", sse4.2" : ""),
                (supports_popcnt() ? ", popcnt" : ""),
@@ -916,7 +916,7 @@ void VM_Version::get_processor_features() {
           warning("MaxVectorSize must be <= 32");
         FLAG_SET_DEFAULT(MaxVectorSize, 32);
       }
-    } else if (UseAVX > 2 ) {
+    } else if (UseAVX > 2) {
       if (MaxVectorSize > 64) {
         if (!FLAG_IS_DEFAULT(MaxVectorSize))
           warning("MaxVectorSize must be <= 64");
@@ -1028,7 +1028,7 @@ void VM_Version::get_processor_features() {
     }
 
     // some defaults for AMD family 15h
-    if (cpu_family() == 0x15 ) {
+    if (cpu_family() == 0x15) {
       // On family 15h processors default is no sw prefetch
       if (FLAG_IS_DEFAULT(AllocatePrefetchStyle)) {
         FLAG_SET_DEFAULT(AllocatePrefetchStyle, 0);
@@ -1047,7 +1047,7 @@ void VM_Version::get_processor_features() {
     }
 
     // Some defaults for AMD family 17h
-    if (cpu_family() == 0x17 ) {
+    if (cpu_family() == 0x17) {
       // On family 17h processors use XMM and UnalignedLoadStores for Array Copy
       if (supports_sse2() && FLAG_IS_DEFAULT(UseXMMForArrayCopy)) {
         FLAG_SET_DEFAULT(UseXMMForArrayCopy, true);
@@ -1062,7 +1062,7 @@ void VM_Version::get_processor_features() {
     if (FLAG_IS_DEFAULT(UseStoreImmI16)) {
       UseStoreImmI16 = false; // don't use it on Intel cpus
     }
-    if (cpu_family() == 6 || cpu_family() == 15 ) {
+    if (cpu_family() == 6 || cpu_family() == 15) {
       if (FLAG_IS_DEFAULT(UseAddressNop)) {
         // Use it on all Intel cpus starting from PentiumPro
         UseAddressNop = true;

@@ -23,7 +23,6 @@
 #include "gc/shared/oopStorage.inline.hpp"
 #include "interpreter/bytecodeStream.hpp"
 #include "interpreter/interpreter.hpp"
-#include "memory/filemap.hpp"
 #include "memory/metaspaceClosure.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
@@ -51,14 +50,11 @@
 #include "runtime/orderAccess.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/signature.hpp"
-#include "services/classLoadingService.hpp"
-#include "services/diagnosticCommand.hpp"
 #include "services/threadService.hpp"
 #include "utilities/macros.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 
 PlaceholderTable*      SystemDictionary::_placeholders        = NULL;
-Dictionary*            SystemDictionary::_shared_dictionary   = NULL;
 LoaderConstraintTable* SystemDictionary::_loader_constraints  = NULL;
 ResolutionErrorTable*  SystemDictionary::_resolution_errors   = NULL;
 SymbolPropertyTable*   SystemDictionary::_invoke_method_table = NULL;
@@ -589,12 +585,8 @@ Klass* SystemDictionary::resolve_instance_class_or_null(Symbol* name, Handle cla
   }
 
   // If the class is in the placeholder table, class loading is in progress
-  if (super_load_in_progress && havesupername==true) {
-    k = handle_parallel_super_load(name,
-                                   superclassname,
-                                   class_loader,
-                                   protection_domain,
-                                   lockObject, THREAD);
+  if (super_load_in_progress && havesupername == true) {
+    k = handle_parallel_super_load(name, superclassname, class_loader, protection_domain, lockObject, THREAD);
     if (HAS_PENDING_EXCEPTION) {
       return NULL;
     }
@@ -713,8 +705,7 @@ Klass* SystemDictionary::resolve_instance_class_or_null(Symbol* name, Handle cla
           { // Grabbing the Compile_lock prevents systemDictionary updates
             // during compilations.
             MutexLocker mu(Compile_lock, THREAD);
-            update_dictionary(d_hash, p_index, p_hash,
-              k, class_loader, THREAD);
+            update_dictionary(d_hash, p_index, p_hash, k, class_loader, THREAD);
           }
         }
       }
@@ -777,8 +768,7 @@ Klass* SystemDictionary::find(Symbol* class_name, Handle class_loader, Handle pr
 
   Dictionary* dictionary = loader_data->dictionary();
   unsigned int d_hash = dictionary->compute_hash(class_name);
-  return dictionary->find(d_hash, class_name,
-                          protection_domain);
+  return dictionary->find(d_hash, class_name, protection_domain);
 }
 
 // Look for a loaded instance or array klass by name.  Do not do any loading.
@@ -1114,8 +1104,7 @@ void SystemDictionary::define_instance_class(InstanceKlass* k, TRAPS) {
 
     // Add to systemDictionary - so other classes can see it.
     // Grabs and releases SystemDictionary_lock
-    update_dictionary(d_hash, p_index, p_hash,
-                      k, class_loader_h, THREAD);
+    update_dictionary(d_hash, p_index, p_hash, k, class_loader_h, THREAD);
   }
   k->eager_initialize(THREAD);
 
@@ -1126,12 +1115,12 @@ void SystemDictionary::define_instance_class(InstanceKlass* k, TRAPS) {
 // All parallel class loaders, including bootstrap classloader
 // lock a placeholder entry for this class/class_loader pair
 // to allow parallel defines of different classes for this class loader
-// With AllowParallelDefine flag==true, in case they do not synchronize around
+// With AllowParallelDefine flag == true, in case they do not synchronize around
 // FindLoadedClass/DefineClass, calls, we check for parallel
 // loading for them, wait if a defineClass is in progress
 // and return the initial requestor's results
 // This flag does not apply to the bootstrap classloader.
-// With AllowParallelDefine flag==false, call through to define_instance_class
+// With AllowParallelDefine flag == false, call through to define_instance_class
 // which will throw LinkageError: duplicate class definition.
 // False is the requested default.
 // For better performance, the class loaders should synchronize
@@ -1668,8 +1657,7 @@ bool SystemDictionary::add_loader_constraint(Symbol* class_name, Handle class_lo
     MutexLocker mu_s(SystemDictionary_lock, THREAD);
     InstanceKlass* klass1 = find_class(d_hash1, constraint_name, dictionary1);
     InstanceKlass* klass2 = find_class(d_hash2, constraint_name, dictionary2);
-    return constraints()->add_entry(constraint_name, klass1, class_loader1,
-                                    klass2, class_loader2);
+    return constraints()->add_entry(constraint_name, klass1, class_loader1, klass2, class_loader2);
   }
 }
 
@@ -1913,12 +1901,10 @@ Handle SystemDictionary::find_java_mirror_for_type(Symbol* signature, Klass* acc
     }
     Klass* constant_type_klass;
     if (failure_mode == SignatureStream::ReturnNull) {
-      constant_type_klass = resolve_or_null(type, class_loader, protection_domain,
-                                            CHECK_(empty));
+      constant_type_klass = resolve_or_null(type, class_loader, protection_domain, CHECK_(empty));
     } else {
       bool throw_error = (failure_mode == SignatureStream::NCDFError);
-      constant_type_klass = resolve_or_fail(type, class_loader, protection_domain,
-                                            throw_error, CHECK_(empty));
+      constant_type_klass = resolve_or_fail(type, class_loader, protection_domain, throw_error, CHECK_(empty));
     }
     if (constant_type_klass == NULL) {
       return Handle();  // report failure this way
@@ -1929,8 +1915,7 @@ Handle SystemDictionary::find_java_mirror_for_type(Symbol* signature, Klass* acc
     if (accessing_klass != NULL) {
       Klass* sel_klass = constant_type_klass;
       bool fold_type_to_class = true;
-      LinkResolver::check_klass_accessability(accessing_klass, sel_klass,
-                                              fold_type_to_class, CHECK_(empty));
+      LinkResolver::check_klass_accessability(accessing_klass, sel_klass, fold_type_to_class, CHECK_(empty));
     }
 
     return mirror;
@@ -1973,8 +1958,7 @@ Handle SystemDictionary::find_method_handle_type(Symbol* signature, Klass* acces
     oop mirror = NULL;
     if (can_be_cached) {
       // Use neutral class loader to lookup candidate classes to be placed in the cache.
-      mirror = ss.as_java_mirror(Handle(), Handle(),
-                                 SignatureStream::ReturnNull, CHECK_(empty));
+      mirror = ss.as_java_mirror(Handle(), Handle(), SignatureStream::ReturnNull, CHECK_(empty));
       if (mirror == NULL || (ss.is_object() && !is_always_visible_class(mirror))) {
         // Fall back to accessing_klass context.
         can_be_cached = false;
@@ -1982,8 +1966,7 @@ Handle SystemDictionary::find_method_handle_type(Symbol* signature, Klass* acces
     }
     if (!can_be_cached) {
       // Resolve, throwing a real error if it doesn't work.
-      mirror = ss.as_java_mirror(class_loader, protection_domain,
-                                 SignatureStream::NCDFError, CHECK_(empty));
+      mirror = ss.as_java_mirror(class_loader, protection_domain, SignatureStream::NCDFError, CHECK_(empty));
     }
     if (ss.at_return_type())
       rt = Handle(THREAD, mirror);
@@ -1996,8 +1979,7 @@ Handle SystemDictionary::find_method_handle_type(Symbol* signature, Klass* acces
       mirror = NULL;  // safety
       // Emulate ConstantPool::verify_constant_pool_resolve.
       bool fold_type_to_class = true;
-      LinkResolver::check_klass_accessability(accessing_klass, sel_klass,
-                                              fold_type_to_class, CHECK_(empty));
+      LinkResolver::check_klass_accessability(accessing_klass, sel_klass, fold_type_to_class, CHECK_(empty));
     }
   }
 
@@ -2206,18 +2188,7 @@ void SystemDictionary::copy_table(char* top, char* end) {
   ClassLoaderData::the_null_class_loader_data()->dictionary()->copy_table(top, end);
 }
 
-// ----------------------------------------------------------------------------
-void SystemDictionary::print_shared(outputStream *st) {
-  shared_dictionary()->print_on(st);
-}
-
 void SystemDictionary::print_on(outputStream *st) {
-  if (shared_dictionary() != NULL) {
-    st->print_cr("Shared Dictionary");
-    shared_dictionary()->print_on(st);
-    st->cr();
-  }
-
   GCMutexLocker mu(SystemDictionary_lock);
 
   ClassLoaderDataGraph::print_dictionary(st);
@@ -2234,109 +2205,15 @@ void SystemDictionary::print_on(outputStream *st) {
   st->cr();
 }
 
-void SystemDictionary::verify() {
-  guarantee(constraints() != NULL, "Verify of loader constraints failed");
-  guarantee(placeholders()->number_of_entries() >= 0, "Verify of placeholders failed");
-
-  GCMutexLocker mu(SystemDictionary_lock);
-
-  // Verify dictionary
-  ClassLoaderDataGraph::verify_dictionary();
-
-  placeholders()->verify();
-
-  // Verify constraint table
-  guarantee(constraints() != NULL, "Verify of loader constraints failed");
-  constraints()->verify(placeholders());
-
-  _pd_cache_table->verify();
-}
-
 void SystemDictionary::dump(outputStream *st, bool verbose) {
   if (verbose) {
     print_on(st);
   } else {
-    if (shared_dictionary() != NULL) {
-      shared_dictionary()->print_table_statistics(st, "Shared Dictionary");
-    }
     ClassLoaderDataGraph::print_dictionary_statistics(st);
     placeholders()->print_table_statistics(st, "Placeholder Table");
     constraints()->print_table_statistics(st, "LoaderConstraints Table");
     _pd_cache_table->print_table_statistics(st, "ProtectionDomainCache Table");
   }
-}
-
-// Utility for dumping dictionaries.
-SystemDictionaryDCmd::SystemDictionaryDCmd(outputStream* output, bool heap) :
-                                 DCmdWithParser(output, heap),
-  _verbose("-verbose", "Dump the content of each dictionary entry for all class loaders", "BOOLEAN", false, "false") {
-  _dcmdparser.add_dcmd_option(&_verbose);
-}
-
-void SystemDictionaryDCmd::execute(DCmdSource source, TRAPS) {
-  VM_DumpHashtable dumper(output(), VM_DumpHashtable::DumpSysDict,
-                         _verbose.value());
-  VMThread::execute(&dumper);
-}
-
-int SystemDictionaryDCmd::num_arguments() {
-  ResourceMark rm;
-  SystemDictionaryDCmd* dcmd = new SystemDictionaryDCmd(NULL, false);
-  if (dcmd != NULL) {
-    DCmdMark mark(dcmd);
-    return dcmd->_dcmdparser.num_arguments();
-  } else {
-    return 0;
-  }
-}
-
-class CombineDictionariesClosure : public CLDClosure {
-  private:
-    Dictionary* _master_dictionary;
-  public:
-    CombineDictionariesClosure(Dictionary* master_dictionary) :
-      _master_dictionary(master_dictionary) { }
-    void do_cld(ClassLoaderData* cld) {
-      ResourceMark rm;
-      if (cld->is_anonymous()) {
-        return;
-      }
-      if (cld->is_system_class_loader_data() || cld->is_platform_class_loader_data()) {
-        for (int i = 0; i < cld->dictionary()->table_size(); ++i) {
-          Dictionary* curr_dictionary = cld->dictionary();
-          DictionaryEntry* p = curr_dictionary->bucket(i);
-          while (p != NULL) {
-            Symbol* name = p->instance_klass()->name();
-            unsigned int d_hash = _master_dictionary->compute_hash(name);
-            int d_index = _master_dictionary->hash_to_index(d_hash);
-            DictionaryEntry* next = p->next();
-            if (p->literal()->class_loader_data() != cld) {
-              // This is an initiating class loader entry; don't use it
-              curr_dictionary->free_entry(p);
-            } else {
-              curr_dictionary->unlink_entry(p);
-              p->set_pd_set(NULL); // pd_set is runtime only information and will be reconstructed.
-              _master_dictionary->add_entry(d_index, p);
-            }
-            p = next;
-          }
-          *curr_dictionary->bucket_addr(i) = NULL;
-        }
-      }
-    }
-};
-
-// Combining platform and system loader dictionaries into boot loader dictionary.
-// During run time, we only have one shared dictionary.
-void SystemDictionary::combine_shared_dictionaries() {
-  Dictionary* master_dictionary = ClassLoaderData::the_null_class_loader_data()->dictionary();
-  CombineDictionariesClosure cdc(master_dictionary);
-  ClassLoaderDataGraph::cld_do(&cdc);
-
-  // These tables are no longer valid or necessary. Keeping them around will
-  // cause SystemDictionary::verify() to fail. Let's empty them.
-  _placeholders        = new PlaceholderTable(_placeholder_table_size);
-  _loader_constraints  = new LoaderConstraintTable(_loader_constraint_size);
 }
 
 void SystemDictionary::initialize_oop_storage() {

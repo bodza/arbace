@@ -9,7 +9,7 @@ jint StackValueCollection::int_at(int slot) const {
 }
 
 jlong StackValueCollection::long_at(int slot) const {
-  return at(slot+1)->get_int();
+  return at(slot + 1)->get_int();
 }
 
 Handle StackValueCollection::obj_at(int slot) const {
@@ -22,7 +22,7 @@ jfloat StackValueCollection::float_at(int slot) const {
 }
 
 jdouble StackValueCollection::double_at(int slot) const {
-  intptr_t res = at(slot+1)->get_int();
+  intptr_t res = at(slot + 1)->get_int();
   return *((jdouble*) (&res));
 }
 
@@ -33,7 +33,7 @@ void StackValueCollection::set_int_at(int slot, jint value) {
 }
 
 void StackValueCollection::set_long_at(int slot, jlong value) {
-  at(slot+1)->set_int(value);
+  at(slot + 1)->set_int(value);
 }
 
 void StackValueCollection::set_obj_at(int slot, Handle value) {
@@ -52,5 +52,5 @@ void StackValueCollection::set_float_at(int slot, jfloat value) {
 }
 
 void StackValueCollection::set_double_at(int slot, jdouble value) {
-  at(slot+1)->set_int(*(intptr_t*)(&value));
+  at(slot + 1)->set_int(*(intptr_t*)(&value));
 }

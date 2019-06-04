@@ -146,7 +146,7 @@ ExceptionCache* CompiledMethod::exception_cache_entry_for_exception(Handle excep
 }
 
 bool CompiledMethod::is_at_poll_return(address pc) {
-  RelocIterator iter(this, pc, pc+1);
+  RelocIterator iter(this, pc, pc + 1);
   while (iter.next()) {
     if (iter.type() == relocInfo::poll_return_type)
       return true;
@@ -155,7 +155,7 @@ bool CompiledMethod::is_at_poll_return(address pc) {
 }
 
 bool CompiledMethod::is_at_poll_or_poll_return(address pc) {
-  RelocIterator iter(this, pc, pc+1);
+  RelocIterator iter(this, pc, pc + 1);
   while (iter.next()) {
     relocInfo::relocType t = iter.type();
     if (t == relocInfo::poll_return_type || t == relocInfo::poll_type)
@@ -180,17 +180,13 @@ void CompiledMethod::verify_oop_relocations() {
 ScopeDesc* CompiledMethod::scope_desc_at(address pc) {
   PcDesc* pd = pc_desc_at(pc);
   guarantee(pd != NULL, "scope must be present");
-  return new ScopeDesc(this, pd->scope_decode_offset(),
-                       pd->obj_decode_offset(), pd->should_reexecute(), pd->rethrow_exception(),
-                       pd->return_oop());
+  return new ScopeDesc(this, pd->scope_decode_offset(), pd->obj_decode_offset(), pd->should_reexecute(), pd->rethrow_exception(), pd->return_oop());
 }
 
 ScopeDesc* CompiledMethod::scope_desc_near(address pc) {
   PcDesc* pd = pc_desc_near(pc);
   guarantee(pd != NULL, "scope must be present");
-  return new ScopeDesc(this, pd->scope_decode_offset(),
-                       pd->obj_decode_offset(), pd->should_reexecute(), pd->rethrow_exception(),
-                       pd->return_oop());
+  return new ScopeDesc(this, pd->scope_decode_offset(), pd->obj_decode_offset(), pd->should_reexecute(), pd->rethrow_exception(), pd->return_oop());
 }
 
 address CompiledMethod::oops_reloc_begin() const {
@@ -254,7 +250,7 @@ Method* CompiledMethod::attached_method(address call_instr) {
   RelocIterator iter(this, call_instr, call_instr + 1);
   while (iter.next()) {
     if (iter.addr() == call_instr) {
-      switch(iter.type()) {
+      switch (iter.type()) {
         case relocInfo::static_call_type:      return iter.static_call_reloc()->method_value();
         case relocInfo::opt_virtual_call_type: return iter.opt_virtual_call_reloc()->method_value();
         case relocInfo::virtual_call_type:     return iter.virtual_call_reloc()->method_value();

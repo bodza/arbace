@@ -289,7 +289,6 @@ class IR: public CompilationResourceObj {
   // debugging
   static void print(BlockBegin* start, bool cfg_only, bool live_only = false) { };
   void print(bool cfg_only, bool live_only = false)                           { };
-  void verify()                                                               { };
 };
 
 // Globally do instruction substitution and remove substituted

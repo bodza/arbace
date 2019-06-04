@@ -136,9 +136,7 @@ class OopStorage::BasicParState {
   template<typename F> class AlwaysTrueFn;
 
 public:
-  BasicParState(const OopStorage* storage,
-                uint estimated_thread_count,
-                bool concurrent);
+  BasicParState(const OopStorage* storage, uint estimated_thread_count, bool concurrent);
   ~BasicParState();
 
   template<bool is_const, typename F> void iterate(F f);
@@ -150,13 +148,10 @@ template<bool concurrent, bool is_const>
 class OopStorage::ParState {
   BasicParState _basic_state;
 
-  typedef typename Conditional<is_const,
-                               const OopStorage*,
-                               OopStorage*>::type StoragePtr;
+  typedef typename Conditional<is_const, const OopStorage*, OopStorage*>::type StoragePtr;
 
 public:
-  ParState(StoragePtr storage,
-           uint estimated_thread_count = BasicParState::default_estimated_thread_count(concurrent)) :
+  ParState(StoragePtr storage, uint estimated_thread_count = BasicParState::default_estimated_thread_count(concurrent)) :
     _basic_state(storage, estimated_thread_count, concurrent)
   { }
 

@@ -72,7 +72,6 @@ private:
   void phase4_do_compaction();
 
   void restore_marks();
-  void verify_after_marking();
 
   void run_task(AbstractGangTask* task);
 };

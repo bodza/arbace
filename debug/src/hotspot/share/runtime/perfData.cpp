@@ -90,7 +90,7 @@ PerfData::~PerfData() {
 }
 
 void PerfData::create_entry(BasicType dtype, size_t dsize, size_t vlen) {
-  size_t dlen = vlen==0 ? 1 : vlen;
+  size_t dlen = (vlen == 0) ? 1 : vlen;
 
   size_t namelen = strlen(name()) + 1;  // include null terminator
   size_t size = sizeof(PerfDataEntry) + namelen;
@@ -163,18 +163,17 @@ void PerfLongVariant::sample() {
   }
 }
 
-PerfByteArray::PerfByteArray(CounterNS ns, const char* namep, Units u, Variability v, jint length)
-                            : PerfData(ns, namep, u, v), _length(length) {
+PerfByteArray::PerfByteArray(CounterNS ns, const char* namep, Units u, Variability v, jint length) : PerfData(ns, namep, u, v), _length(length) {
   create_entry(T_BYTE, sizeof(jbyte), (size_t)_length);
 }
 
 void PerfString::set_string(const char* s2) {
   // copy n bytes of the string, assuring the null string is
   // copied if s2 == NULL.
-  strncpy((char *)_valuep, s2 == NULL ? "" : s2, _length);
+  strncpy((char *)_valuep, (s2 == NULL) ? "" : s2, _length);
 
   // assure the string is null terminated when strlen(s2) >= _length
-  ((char*)_valuep)[_length-1] = '\0';
+  ((char*)_valuep)[_length - 1] = '\0';
 }
 
 int PerfString::format(char* buffer, int length) {
@@ -182,7 +181,7 @@ int PerfString::format(char* buffer, int length) {
 }
 
 PerfStringConstant::PerfStringConstant(CounterNS ns, const char* namep, const char* initial_value)
-    : PerfString(ns, namep, V_Constant, initial_value == NULL ? 1 : MIN2((jint)(strlen((char*)initial_value)+1), (jint)(PerfMaxStringConstLength+1)), initial_value) {
+    : PerfString(ns, namep, V_Constant, (initial_value == NULL) ? 1 : MIN2((jint)(strlen((char*)initial_value) + 1), (jint)(PerfMaxStringConstLength + 1)), initial_value) {
 }
 
 void PerfDataManager::destroy() {

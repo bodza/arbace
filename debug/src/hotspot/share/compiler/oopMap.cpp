@@ -179,7 +179,7 @@ OopMap* OopMapSet::find_map_at_offset(int pc_offset) const {
 
   // Scan through oopmaps. Stop when current offset is either equal or greater
   // than the one we are looking for.
-  for ( i = 0; i < len; i++) {
+  for (i = 0; i < len; i++) {
     if (at(i)->offset() >= pc_offset )
       break;
   }
@@ -278,7 +278,7 @@ void OopMapSet::update_register_map(const frame *fr, RegisterMap *reg_map) {
 
 static
 void print_register_type(OopMapValue::oop_types x, VMReg optional, outputStream* st) {
-  switch( x ) {
+  switch (x) {
   case OopMapValue::oop_value:
     st->print("Oop");
     break;
@@ -345,7 +345,7 @@ void OopMapSet::print_on(outputStream* st) const {
 
   st->print_cr("OopMapSet contains %d OopMaps\n",len);
 
-  for ( i = 0; i < len; i++) {
+  for (i = 0; i < len; i++) {
     OopMap* m = at(i);
     st->print_cr("#%d ",i);
     m->print_on(st);

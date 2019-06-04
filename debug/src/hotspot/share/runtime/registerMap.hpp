@@ -41,8 +41,8 @@ class RegisterMap : public StackObj {
     typedef julong LocationValidType;
   enum {
     reg_count = ConcreteRegisterImpl::number_of_registers,
-    location_valid_type_size = sizeof(LocationValidType)*8,
-    location_valid_size = (reg_count+location_valid_type_size-1)/location_valid_type_size
+    location_valid_type_size = sizeof(LocationValidType) * 8,
+    location_valid_size = (reg_count + location_valid_type_size - 1) / location_valid_type_size
   };
  private:
   intptr_t*    _location[reg_count];    // Location of registers (intptr_t* looks better than address in the debugger)

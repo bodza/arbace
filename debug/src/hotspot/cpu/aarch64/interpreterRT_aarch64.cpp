@@ -283,7 +283,7 @@ class SlowSignatureHandler
     jint from_obj = *(jint *)(_from+Interpreter::local_offset_in_bytes(0));
     _from -= Interpreter::stackElementSize;
 
-    if (_num_int_args < Argument::n_int_register_parameters_c-1) {
+    if (_num_int_args < Argument::n_int_register_parameters_c - 1) {
       *_int_args++ = from_obj;
       _num_int_args++;
     } else {
@@ -297,7 +297,7 @@ class SlowSignatureHandler
     intptr_t from_obj = *(intptr_t*)(_from+Interpreter::local_offset_in_bytes(1));
     _from -= 2*Interpreter::stackElementSize;
 
-    if (_num_int_args < Argument::n_int_register_parameters_c-1) {
+    if (_num_int_args < Argument::n_int_register_parameters_c - 1) {
       *_int_args++ = from_obj;
       _num_int_args++;
     } else {
@@ -311,7 +311,7 @@ class SlowSignatureHandler
     intptr_t *from_addr = (intptr_t*)(_from + Interpreter::local_offset_in_bytes(0));
     _from -= Interpreter::stackElementSize;
 
-    if (_num_int_args < Argument::n_int_register_parameters_c-1) {
+    if (_num_int_args < Argument::n_int_register_parameters_c - 1) {
       *_int_args++ = (*from_addr == 0) ? NULL : (intptr_t)from_addr;
       _num_int_args++;
     } else {

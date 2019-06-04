@@ -9,7 +9,6 @@
 #include "interpreter/interp_masm.hpp"
 #include "interpreter/templateTable.hpp"
 #include "memory/allocation.inline.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/arrayOop.hpp"
 #include "oops/methodData.hpp"
@@ -215,7 +214,7 @@ address AbstractInterpreter::deopt_continue_after_entry(Method* method, address 
       // since the cache entry might not be initialized:
       // (NOT needed for the old calling convension)
       if (!is_top_frame) {
-        int index = Bytes::get_native_u2(bcp+1);
+        int index = Bytes::get_native_u2(bcp + 1);
         method->constants()->cache()->entry_at(index)->set_parameter_size(callee_parameters);
       }
       break;
@@ -229,7 +228,7 @@ address AbstractInterpreter::deopt_continue_after_entry(Method* method, address 
       // since the cache entry might not be initialized:
       // (NOT needed for the old calling convension)
       if (!is_top_frame) {
-        int index = Bytes::get_native_u4(bcp+1);
+        int index = Bytes::get_native_u4(bcp + 1);
         method->constants()->invokedynamic_cp_cache_entry_at(index)->set_parameter_size(callee_parameters);
       }
       break;

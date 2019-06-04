@@ -123,7 +123,7 @@ void CodeBuffer::initialize_section_size(CodeSection* cs, csize_t size) {
   address start  = _insts._start;
   address limit  = _insts._limit;
   address middle = limit - size;
-  middle -= (intptr_t)middle & (align-1);  // align the division point downward
+  middle -= (intptr_t)middle & (align - 1);  // align the division point downward
   guarantee(middle - slop > start, "need enough space to divide up");
   _insts._limit = middle - slop;  // subtract desired space, plus slop
   cs->initialize(middle, limit - middle);
@@ -132,7 +132,7 @@ void CodeBuffer::initialize_section_size(CodeSection* cs, csize_t size) {
 }
 
 void CodeBuffer::freeze_section(CodeSection* cs) {
-  CodeSection* next_cs = (cs == consts())? NULL: code_section(cs->index()+1);
+  CodeSection* next_cs = (cs == consts()) ? NULL : code_section(cs->index()+1);
   csize_t frozen_size = cs->size();
   if (next_cs != NULL) {
     frozen_size = next_cs->align_at_start(frozen_size);
@@ -148,8 +148,7 @@ void CodeBuffer::freeze_section(CodeSection* cs) {
   if (next_cs != NULL && !next_cs->is_allocated() && !next_cs->is_frozen()) {
     // Give remaining buffer space to the following section.
     next_cs->initialize(new_limit, old_limit - new_limit);
-    next_cs->initialize_shared_locs(new_locs_limit,
-                                    old_locs_limit - new_locs_limit);
+    next_cs->initialize_shared_locs(new_locs_limit, old_locs_limit - new_locs_limit);
   }
 }
 
@@ -160,7 +159,7 @@ void CodeBuffer::set_blob(BufferBlob* blob) {
     address end   = blob->content_end();
     // Round up the starting address.
     int align = _insts.alignment();
-    start += (-(intptr_t)start) & (align-1);
+    start += (-(intptr_t)start) & (align - 1);
     _total_start = start;
     _total_size  = end - start;
   }
@@ -571,9 +570,7 @@ csize_t CodeBuffer::copy_relocations_to(address buf, csize_t buf_limit, bool onl
     if (buf != NULL && lsize != 0) {
       if (buf_offset % HeapWordSize == 0) {
         // Use wordwise copies if possible:
-        Copy::disjoint_words((HeapWord*)lstart,
-                             (HeapWord*)(buf+buf_offset),
-                             (lsize + HeapWordSize-1) / HeapWordSize);
+        Copy::disjoint_words((HeapWord*)lstart, (HeapWord*)(buf+buf_offset), (lsize + HeapWordSize - 1) / HeapWordSize);
       } else {
         Copy::conjoint_jbytes(lstart, buf+buf_offset, lsize);
       }

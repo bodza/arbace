@@ -155,8 +155,6 @@ public:
   //  The elements of the array are initialized to zero.
   G1BlockOffsetTablePart(G1BlockOffsetTable* array, G1ContiguousSpace* gsp);
 
-  void verify() const;
-
   // Returns the address of the start of the block containing "addr", or
   // else "null" if it is covered by no block.  (May have side effects,
   // namely updating of shared array entries that "point" too far

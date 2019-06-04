@@ -674,7 +674,7 @@ void GraphBuilder::sort_top_into_worklist(BlockList* worklist, BlockBegin* top) 
   while (i >= 0) {
     BlockBegin* b = worklist->at(i);
     if (b->depth_first_number() < dfn) {
-      worklist->at_put(i+1, b);
+      worklist->at_put(i + 1, b);
     } else {
       break;
     }
@@ -768,7 +768,7 @@ void GraphBuilder::load_constant() {
         }
         break;
        }
-      default       : ShouldNotReachHere();
+      default: ShouldNotReachHere();
     }
     Value x;
     if (patch_state != NULL) {
@@ -3037,7 +3037,7 @@ void GraphBuilder::build_graph_for_intrinsic(ciMethod* callee, bool ignore_retur
   vmIntrinsics::ID id = callee->intrinsic_id();
 
   // Some intrinsics need special IR nodes.
-  switch(id) {
+  switch (id) {
   case vmIntrinsics::_getObject          : append_unsafe_get_obj(callee, T_OBJECT,  false); return;
   case vmIntrinsics::_getBoolean         : append_unsafe_get_obj(callee, T_BOOLEAN, false); return;
   case vmIntrinsics::_getByte            : append_unsafe_get_obj(callee, T_BYTE,    false); return;

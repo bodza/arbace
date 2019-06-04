@@ -18,7 +18,7 @@ static double log_table[1<<FastLogNumBits];  // Constant
 static bool log_table_initialized;
 
 // Returns the next prng value.
-// pRNG is: aX+b mod c with a = 0x5DEECE66D, b =  0xB, c = 1<<48
+// pRNG is: aX+b mod c with a = 0x5DEECE66D, b = 0xB, c = 1 << 48
 // This is the lrand64 generator.
 static uint64_t next_random(uint64_t rnd) {
   const uint64_t PrngMult = 0x5DEECE66DLL;
@@ -106,7 +106,7 @@ void ThreadHeapSampler::init_log_table() {
   }
 
   for (int i = 0; i < (1 << FastLogNumBits); i++) {
-    log_table[i] = (log(1.0 + static_cast<double>(i+0.5) / (1 << FastLogNumBits)) / log(2.0));
+    log_table[i] = (log(1.0 + static_cast<double>(i + 0.5) / (1 << FastLogNumBits)) / log(2.0));
   }
 
   log_table_initialized = true;

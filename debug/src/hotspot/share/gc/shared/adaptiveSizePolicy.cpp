@@ -63,10 +63,7 @@ AdaptiveSizePolicy::AdaptiveSizePolicy(size_t init_eden_size, size_t init_promo_
 //    Calculate the number of GC threads based on the size of the heap.
 //    Use the larger.
 
-uint AdaptiveSizePolicy::calc_default_active_workers(uintx total_workers,
-                                                     const uintx min_workers,
-                                                     uintx active_workers,
-                                                     uintx application_workers) {
+uint AdaptiveSizePolicy::calc_default_active_workers(uintx total_workers, const uintx min_workers, uintx active_workers, uintx application_workers) {
   // If the user has specifically set the number of
   // GC threads, use them.
 

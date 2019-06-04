@@ -13,11 +13,9 @@
 #include "gc/shared/gcArguments.hpp"
 #include "gc/shared/gcConfig.hpp"
 #include "interpreter/interpreter.hpp"
-#include "memory/filemap.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceClosure.hpp"
 #include "memory/metaspaceCounters.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
@@ -98,7 +96,6 @@ oop Universe::_out_of_memory_error_realloc_objects    = NULL;
 oop Universe::_delayed_stack_overflow_error_message   = NULL;
 objArrayOop Universe::_preallocated_out_of_memory_error_array = NULL;
 volatile jint Universe::_preallocated_out_of_memory_error_avail_count = 0;
-bool Universe::_verify_in_progress                    = false;
 long Universe::verify_flags                           = Universe::Verify_All;
 oop Universe::_null_ptr_exception_instance            = NULL;
 oop Universe::_arithmetic_exception_instance          = NULL;
@@ -110,9 +107,6 @@ Array<int>* Universe::_the_empty_int_array            = NULL;
 Array<u2>* Universe::_the_empty_short_array           = NULL;
 Array<Klass*>* Universe::_the_empty_klass_array     = NULL;
 Array<Method*>* Universe::_the_empty_method_array   = NULL;
-
-// Heap
-int             Universe::_verify_count = 0;
 
 // Oop verification (see MacroAssembler::verify_oop)
 uintptr_t       Universe::_verify_oop_mask = 0;
@@ -537,8 +531,7 @@ jint universe_init() {
     return JNI_EINVAL;
   }
 
-  // Create memory for metadata.  Must be after initializing heap for
-  // false.
+  // Create memory for metadata.
   ClassLoaderData::init_null_class_loader_data();
 
   // We have a heap so create the Method* caches before
@@ -854,12 +847,6 @@ void Universe::print_on(outputStream* st) {
   heap()->print_on(st);
 }
 
-void Universe::print_heap_at_SIGBREAK() { }
-
-void Universe::print_heap_before_gc() { }
-
-void Universe::print_heap_after_gc() { }
-
 void Universe::initialize_verify_flags() {
   verify_flags = 0;
   const char delimiter[] = " ,";
@@ -896,56 +883,6 @@ void Universe::initialize_verify_flags() {
     token = strtok(NULL, delimiter);
   }
   FREE_C_HEAP_ARRAY(char, subset_list);
-}
-
-bool Universe::should_verify_subset(uint subset) {
-  if (verify_flags & subset) {
-    return true;
-  }
-  return false;
-}
-
-void Universe::verify(VerifyOption option, const char* prefix) {
-  // The use of _verify_in_progress is a temporary work around for
-  // 6320749.  Don't bother with a creating a class to set and clear
-  // it since it is only used in this method and the control flow is
-  // straight forward.
-  _verify_in_progress = true;
-
-  ResourceMark rm;
-  HandleMark hm;  // Handles created during verification can be zapped
-  _verify_count++;
-
-  if (should_verify_subset(Verify_Threads)) {
-    Threads::verify();
-  }
-  if (should_verify_subset(Verify_Heap)) {
-    heap()->verify(option);
-  }
-  if (should_verify_subset(Verify_SymbolTable)) {
-    SymbolTable::verify();
-  }
-  if (should_verify_subset(Verify_StringTable)) {
-    StringTable::verify();
-  }
-  if (should_verify_subset(Verify_CodeCache)) {
-    MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-    CodeCache::verify();
-  }
-  if (should_verify_subset(Verify_SystemDictionary)) {
-    SystemDictionary::verify();
-  }
-  if (should_verify_subset(Verify_MetaspaceUtils)) {
-    MetaspaceUtils::verify_free_chunks();
-  }
-  if (should_verify_subset(Verify_JNIHandles)) {
-    JNIHandles::verify();
-  }
-  if (should_verify_subset(Verify_CodeCacheOops)) {
-    CodeCache::verify_oops();
-  }
-
-  _verify_in_progress = false;
 }
 
 void Universe::compute_verify_oop_data() {

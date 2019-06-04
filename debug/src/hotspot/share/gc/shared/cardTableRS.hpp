@@ -105,7 +105,6 @@ public:
     return is_card_aligned(addr);
   }
 
-  void verify();
   void initialize();
 
   void clear_into_younger(Generation* old_gen);

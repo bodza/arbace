@@ -32,8 +32,8 @@ class CompilerCounters : public CHeapObj<mtCompiler> {
     // these methods should be called in a thread safe context
 
     void set_current_method(const char* method) {
-      strncpy(_current_method, method, (size_t)cmname_buffer_length-1);
-      _current_method[cmname_buffer_length-1] = '\0';
+      strncpy(_current_method, method, (size_t)cmname_buffer_length - 1);
+      _current_method[cmname_buffer_length - 1] = '\0';
     }
 
     char* current_method()                  { return _current_method; }
@@ -199,7 +199,6 @@ class CompileBroker: AllStatic {
   static void possibly_add_compiler_threads();
   static bool compilation_is_complete  (const methodHandle& method, int osr_bci, int comp_level);
   static bool compilation_is_prohibited(const methodHandle& method, int osr_bci, int comp_level, bool excluded);
-  static void preload_classes          (const methodHandle& method, TRAPS);
 
   static CompileTask* create_compile_task(CompileQueue*       queue,
                                           int                 compile_id,

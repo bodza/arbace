@@ -1,8 +1,6 @@
 #ifndef SHARE_VM_RUNTIME_SWEEPER_HPP
 #define SHARE_VM_RUNTIME_SWEEPER_HPP
 
-class WhiteBox;
-
 #include "code/codeCache.hpp"
 #include "utilities/ticks.hpp"
 

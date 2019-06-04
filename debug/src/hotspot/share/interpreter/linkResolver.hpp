@@ -76,8 +76,7 @@ class CallInfo : public StackObj {
   }
 
   // debugging
-  void         verify() { };
-  void         print()  { };
+  void         print() { };
 };
 
 // Condensed information from constant pool to use to resolve the method or field.

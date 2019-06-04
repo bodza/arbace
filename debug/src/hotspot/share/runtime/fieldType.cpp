@@ -21,7 +21,7 @@ bool FieldType::is_valid_array_signature(Symbol* sig) {
   while (i < len - 1 && sig->byte_at(i) == '[') i++;
 
   // Check type
-  switch(sig->byte_at(i)) {
+  switch (sig->byte_at(i)) {
     case 'B': // T_BYTE
     case 'C': // T_CHAR
     case 'D': // T_DOUBLE
@@ -52,7 +52,7 @@ BasicType FieldType::get_array_info(Symbol* signature, FieldArrayInfo& fd, TRAPS
   BasicType element_type = char2type(element[0]);
   if (element_type == T_OBJECT) {
     int len = (int)strlen(element);
-    element[len-1] = '\0';        // chop off semicolon
+    element[len - 1] = '\0';        // chop off semicolon
     fd._object_key = SymbolTable::new_symbol(element + 1, CHECK_(T_BYTE));
   }
   // Pass dimension back to caller

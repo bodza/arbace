@@ -30,7 +30,7 @@ const char* CodeBlob::compiler_name() const {
 unsigned int CodeBlob::align_code_offset(int offset) {
   // align the size to CodeEntryAlignment
   return
-    ((offset + (int)CodeHeap::header_size() + (CodeEntryAlignment-1)) & ~(CodeEntryAlignment-1))
+    ((offset + (int)CodeHeap::header_size() + (CodeEntryAlignment - 1)) & ~(CodeEntryAlignment - 1))
     - (int)CodeHeap::header_size();
 }
 
@@ -453,14 +453,6 @@ void CodeBlob::dump_for_addr(address addr, outputStream* st, bool verbose) const
   print_on(st);
 }
 
-void RuntimeBlob::verify() {
-  ShouldNotReachHere();
-}
-
-void BufferBlob::verify() {
-  // unimplemented
-}
-
 void BufferBlob::print_on(outputStream* st) const {
   RuntimeBlob::print_on(st);
   print_value_on(st);
@@ -468,10 +460,6 @@ void BufferBlob::print_on(outputStream* st) const {
 
 void BufferBlob::print_value_on(outputStream* st) const {
   st->print_cr("BufferBlob (" INTPTR_FORMAT  ") used for %s", p2i(this), name());
-}
-
-void RuntimeStub::verify() {
-  // unimplemented
 }
 
 void RuntimeStub::print_on(outputStream* st) const {
@@ -484,10 +472,6 @@ void RuntimeStub::print_on(outputStream* st) const {
 
 void RuntimeStub::print_value_on(outputStream* st) const {
   st->print("RuntimeStub (" INTPTR_FORMAT "): ", p2i(this)); st->print("%s", name());
-}
-
-void SingletonBlob::verify() {
-  // unimplemented
 }
 
 void SingletonBlob::print_on(outputStream* st) const {

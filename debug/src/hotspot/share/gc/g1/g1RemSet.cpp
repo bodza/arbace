@@ -38,10 +38,7 @@ private:
 
     size_t volatile _cur_dirty_regions;
   public:
-    G1ClearCardTableTask(G1CollectedHeap* g1h,
-                         uint* dirty_region_list,
-                         size_t num_dirty_regions,
-                         size_t chunk_length) :
+    G1ClearCardTableTask(G1CollectedHeap* g1h, uint* dirty_region_list, size_t num_dirty_regions, size_t chunk_length) :
       AbstractGangTask("G1 Clear Card Table Task"),
       _g1h(g1h),
       _dirty_region_list(dirty_region_list),

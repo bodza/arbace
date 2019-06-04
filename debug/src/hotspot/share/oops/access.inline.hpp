@@ -321,9 +321,7 @@ namespace AccessInternal {
                                                                          size_t length) {
     func_t function = BarrierResolver<decorators, func_t, BARRIER_ARRAYCOPY>::resolve_barrier();
     _arraycopy_func = function;
-    return function(src_obj, src_offset_in_bytes, src_raw,
-                    dst_obj, dst_offset_in_bytes, dst_raw,
-                    length);
+    return function(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
   }
 
   template <DecoratorSet decorators, typename T>

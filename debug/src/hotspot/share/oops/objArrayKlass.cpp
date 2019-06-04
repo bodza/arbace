@@ -40,7 +40,7 @@ Klass* ObjArrayKlass::allocate_objArray_klass(ClassLoaderData* loader_data, int 
       // Also, see if the element has secondary supertypes.
       // We need an array type for each.
       Array<Klass*>* element_supers = element_klass->secondary_supers();
-      for ( int i = element_supers->length()-1; i >= 0; i-- ) {
+      for (int i = element_supers->length()-1; i >= 0; i--) {
         Klass* elem_super = element_supers->at(i);
         if (elem_super->array_klass_or_null() == NULL) {
           supers_exist = false;
@@ -54,7 +54,7 @@ Klass* ObjArrayKlass::allocate_objArray_klass(ClassLoaderData* loader_data, int 
           MutexUnlocker mu(MultiArray_lock);
           MutexUnlocker mc(Compile_lock);   // for vtables
           super_klass = element_super->array_klass(CHECK_0);
-          for ( int i = element_supers->length()-1; i >= 0; i-- ) {
+          for (int i = element_supers->length()-1; i >= 0; i--) {
             Klass* elem_super = element_supers->at(i);
             elem_super->array_klass(CHECK_0);
           }
@@ -138,8 +138,7 @@ objArrayOop ObjArrayKlass::allocate(int length, TRAPS) {
   if (length >= 0) {
     if (length <= arrayOopDesc::max_array_length(T_OBJECT)) {
       int size = objArrayOopDesc::object_size(length);
-      return (objArrayOop)Universe::heap()->array_allocate(this, size, length,
-                                                           /* do_zero */ true, THREAD);
+      return (objArrayOop)Universe::heap()->array_allocate(this, size, length, /* do_zero */ true, THREAD);
     } else {
       report_java_out_of_memory("Requested array size exceeds VM limit");
       THROW_OOP_0(Universe::out_of_memory_error_array_size());
@@ -163,7 +162,7 @@ oop ObjArrayKlass::multi_allocate(int rank, jint* sizes, TRAPS) {
     if (length != 0) {
       for (int index = 0; index < length; index++) {
         ArrayKlass* ak = ArrayKlass::cast(ld_klass);
-        oop sub_array = ak->multi_allocate(rank-1, &sizes[1], CHECK_NULL);
+        oop sub_array = ak->multi_allocate(rank - 1, &sizes[1], CHECK_NULL);
         h_array->obj_at_put(index, sub_array);
       }
     } else {
@@ -255,7 +254,7 @@ void ObjArrayKlass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos,
   // This allows the following call: copy_array(s, s.length(), d.length(), 0).
   // This is correct, since the position is supposed to be an 'in between point', i.e., s.length(),
   // points to the right of the last element.
-  if (length==0) {
+  if (length == 0) {
     return;
   }
   if (UseCompressedOops) {
@@ -327,7 +326,7 @@ GrowableArray<Klass*>* ObjArrayKlass::compute_secondary_supers(int num_extra_slo
     set_secondary_supers(Universe::the_array_interfaces_array());
     return NULL;
   } else {
-    GrowableArray<Klass*>* secondaries = new GrowableArray<Klass*>(num_elem_supers+2);
+    GrowableArray<Klass*>* secondaries = new GrowableArray<Klass*>(num_elem_supers + 2);
     secondaries->push(SystemDictionary::Cloneable_klass());
     secondaries->push(SystemDictionary::Serializable_klass());
     for (int i = 0; i < num_elem_supers; i++) {

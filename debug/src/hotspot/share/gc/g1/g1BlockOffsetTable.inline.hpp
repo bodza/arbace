@@ -8,7 +8,7 @@
 
 inline HeapWord* G1BlockOffsetTablePart::block_start(const void* addr) {
   if (addr >= _space->bottom() && addr < _space->end()) {
-    HeapWord* q = block_at_or_preceding(addr, true, _next_offset_index-1);
+    HeapWord* q = block_at_or_preceding(addr, true, _next_offset_index - 1);
     return forward_to_block_containing_addr(q, addr);
   } else {
     return NULL;
@@ -17,7 +17,7 @@ inline HeapWord* G1BlockOffsetTablePart::block_start(const void* addr) {
 
 inline HeapWord* G1BlockOffsetTablePart::block_start_const(const void* addr) const {
   if (addr >= _space->bottom() && addr < _space->end()) {
-    HeapWord* q = block_at_or_preceding(addr, true, _next_offset_index-1);
+    HeapWord* q = block_at_or_preceding(addr, true, _next_offset_index - 1);
     HeapWord* n = q + block_size(q);
     return forward_to_block_containing_addr_const(q, n, addr);
   } else {

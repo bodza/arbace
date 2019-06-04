@@ -9,7 +9,6 @@
 #include "classfile/protectionDomainCache.hpp"
 #include "classfile/stringTable.hpp"
 #include "memory/allocation.inline.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oop.inline.hpp"
 #include "oops/weakHandle.inline.hpp"
@@ -130,7 +129,7 @@ template <MEMFLAGS F> void BasicHashtable<F>::free_buckets() {
   if (NULL != _buckets) {
     // Don't delete the buckets in the shared space.  They aren't
     // allocated by os::malloc
-    if (!MetaspaceShared::is_in_shared_metaspace(_buckets)) {
+    if (!false) {
        FREE_C_HEAP_ARRAY(HashtableBucket, _buckets);
     }
     _buckets = NULL;

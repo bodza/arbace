@@ -269,7 +269,6 @@ class Bytecodes: AllStatic {
     // at run time.
     //
     // Rewritten at CDS dump time to | Original bytecode
-    // _invoke_virtual rewritten on sparc, will be disabled if false turned on.
     // ------------------------------+------------------
     _nofast_getfield      ,          //  <- _getfield
     _nofast_putfield      ,          //  <- _putfield
@@ -284,20 +283,20 @@ class Bytecodes: AllStatic {
   // Flag bits derived from format strings, can_trap, can_rewrite, etc.:
   enum Flags {
     // semantic flags:
-    _bc_can_trap      = 1<<0,     // bytecode execution can trap or block
-    _bc_can_rewrite   = 1<<1,     // bytecode execution has an alternate form
+    _bc_can_trap      = 1 << 0,     // bytecode execution can trap or block
+    _bc_can_rewrite   = 1 << 1,     // bytecode execution has an alternate form
 
     // format bits (determined only by the format string):
-    _fmt_has_c        = 1<<2,     // constant, such as sipush "bcc"
-    _fmt_has_j        = 1<<3,     // constant pool cache index, such as getfield "bjj"
-    _fmt_has_k        = 1<<4,     // constant pool index, such as ldc "bk"
-    _fmt_has_i        = 1<<5,     // local index, such as iload
-    _fmt_has_o        = 1<<6,     // offset, such as ifeq
-    _fmt_has_nbo      = 1<<7,     // contains native-order field(s)
-    _fmt_has_u2       = 1<<8,     // contains double-byte field(s)
-    _fmt_has_u4       = 1<<9,     // contains quad-byte field
-    _fmt_not_variable = 1<<10,    // not of variable length (simple or wide)
-    _fmt_not_simple   = 1<<11,    // either wide or variable length
+    _fmt_has_c        = 1 << 2,     // constant, such as sipush "bcc"
+    _fmt_has_j        = 1 << 3,     // constant pool cache index, such as getfield "bjj"
+    _fmt_has_k        = 1 << 4,     // constant pool index, such as ldc "bk"
+    _fmt_has_i        = 1 << 5,     // local index, such as iload
+    _fmt_has_o        = 1 << 6,     // offset, such as ifeq
+    _fmt_has_nbo      = 1 << 7,     // contains native-order field(s)
+    _fmt_has_u2       = 1 << 8,     // contains double-byte field(s)
+    _fmt_has_u4       = 1 << 9,     // contains quad-byte field
+    _fmt_not_variable = 1 << 10,    // not of variable length (simple or wide)
+    _fmt_not_simple   = 1 << 11,    // either wide or variable length
     _all_fmt_bits     = (_fmt_not_simple*2 - _fmt_has_c),
 
     // Example derived format syndromes:

@@ -49,10 +49,6 @@ void ProtectionDomainCacheTable::print_on(outputStream* st) const {
   }
 }
 
-void ProtectionDomainCacheTable::verify() {
-  verify_table<ProtectionDomainCacheEntry>("Protection Domain Table");
-}
-
 oop ProtectionDomainCacheEntry::object() {
   return literal().resolve();
 }
@@ -70,10 +66,6 @@ oop ProtectionDomainCacheEntry::object_no_keepalive() {
 
 oop ProtectionDomainEntry::object_no_keepalive() {
   return _pd_cache->object_no_keepalive();
-}
-
-void ProtectionDomainCacheEntry::verify() {
-  guarantee(object_no_keepalive() == NULL || oopDesc::is_oop(object_no_keepalive()), "must be an oop");
 }
 
 ProtectionDomainCacheEntry* ProtectionDomainCacheTable::get(Handle protection_domain) {

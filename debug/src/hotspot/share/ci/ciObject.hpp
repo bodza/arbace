@@ -74,7 +74,7 @@ public:
   bool should_be_constant();
 
   // Might this object possibly move during a scavenge operation?
-  // If the answer is true and ScavengeRootsInCode==0, the oop cannot be embedded in code.
+  // If the answer is true and ScavengeRootsInCode == 0, the oop cannot be embedded in code.
   bool is_scavengable() { return (_ident & SCAVENGABLE_FLAG) != 0; }
 
   // The address which the compiler should embed into the

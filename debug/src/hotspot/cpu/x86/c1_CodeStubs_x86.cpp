@@ -56,7 +56,6 @@ void CounterOverflowStub::emit_code(LIR_Assembler* ce) {
   ce->store_parameter(_bci, 0);
   __ call(RuntimeAddress(Runtime1::entry_for(Runtime1::counter_overflow_id)));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
   __ jmp(_continuation);
 }
 
@@ -76,7 +75,6 @@ void RangeCheckStub::emit_code(LIR_Assembler* ce) {
     address a = Runtime1::entry_for(Runtime1::predicate_failed_trap_id);
     __ call(RuntimeAddress(a));
     ce->add_call_info_here(_info);
-    ce->verify_oop_map(_info);
     return;
   }
 
@@ -95,7 +93,6 @@ void RangeCheckStub::emit_code(LIR_Assembler* ce) {
   }
   __ call(RuntimeAddress(Runtime1::entry_for(stub_id)));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
 }
 
 PredicateFailedStub::PredicateFailedStub(CodeEmitInfo* info) {
@@ -107,7 +104,6 @@ void PredicateFailedStub::emit_code(LIR_Assembler* ce) {
   address a = Runtime1::entry_for(Runtime1::predicate_failed_trap_id);
   __ call(RuntimeAddress(a));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
 }
 
 void DivByZeroStub::emit_code(LIR_Assembler* ce) {
@@ -134,7 +130,6 @@ void NewInstanceStub::emit_code(LIR_Assembler* ce) {
   __ movptr(rdx, _klass_reg->as_register());
   __ call(RuntimeAddress(Runtime1::entry_for(_stub_id)));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
   __ jmp(_continuation);
 }
 
@@ -151,7 +146,6 @@ void NewTypeArrayStub::emit_code(LIR_Assembler* ce) {
   __ bind(_entry);
   __ call(RuntimeAddress(Runtime1::entry_for(Runtime1::new_type_array_id)));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
   __ jmp(_continuation);
 }
 
@@ -168,7 +162,6 @@ void NewObjectArrayStub::emit_code(LIR_Assembler* ce) {
   __ bind(_entry);
   __ call(RuntimeAddress(Runtime1::entry_for(Runtime1::new_object_array_id)));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
   __ jmp(_continuation);
 }
 
@@ -192,7 +185,6 @@ void MonitorEnterStub::emit_code(LIR_Assembler* ce) {
   }
   __ call(RuntimeAddress(Runtime1::entry_for(enter_id)));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
   __ jmp(_continuation);
 }
 
@@ -324,7 +316,7 @@ void PatchingStub::emit_code(LIR_Assembler* ce) {
   // Add enough nops so deoptimization can overwrite the jmp above with a call
   // and not destroy the world. We cannot use fat nops here, since the concurrent
   // code rewrite may transiently create the illegal instruction sequence.
-  for (int j = __ offset(); j < jmp_off + 5; j++ ) {
+  for (int j = __ offset(); j < jmp_off + 5; j++) {
     __ nop();
   }
   if (_id == load_klass_id || _id == load_mirror_id || _id == load_appendix_id) {
@@ -354,7 +346,6 @@ void ImplicitNullCheckStub::emit_code(LIR_Assembler* ce) {
   __ bind(_entry);
   __ call(RuntimeAddress(a));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
 }
 
 void SimpleExceptionStub::emit_code(LIR_Assembler* ce) {
@@ -388,7 +379,7 @@ void ArrayCopyStub::emit_code(LIR_Assembler* ce) {
   r[4] = length()->as_register();
 
   // next registers will get stored on the stack
-  for (int i = 0; i < 5; i++ ) {
+  for (int i = 0; i < 5; i++) {
     VMReg r_1 = args[i].first();
     if (r_1->is_stack()) {
       int st_off = r_1->reg2stack() * wordSize;

@@ -605,19 +605,14 @@ protected:
   bool                          _marks_oops_alive;
   ReferenceProcessorPhaseTimes* _phase_times;
 
-  ProcessTask(ReferenceProcessor& ref_processor,
-              bool marks_oops_alive,
-              ReferenceProcessorPhaseTimes* phase_times)
+  ProcessTask(ReferenceProcessor& ref_processor, bool marks_oops_alive, ReferenceProcessorPhaseTimes* phase_times)
     : _ref_processor(ref_processor),
       _marks_oops_alive(marks_oops_alive),
       _phase_times(phase_times)
   { }
 
 public:
-  virtual void work(uint worker_id,
-                    BoolObjectClosure& is_alive,
-                    OopClosure& keep_alive,
-                    VoidClosure& complete_gc) = 0;
+  virtual void work(uint worker_id, BoolObjectClosure& is_alive, OopClosure& keep_alive, VoidClosure& complete_gc) = 0;
 
   bool marks_oops_alive() const { return _marks_oops_alive; }
 };
@@ -632,16 +627,12 @@ class RefProcMTDegreeAdjuster : public StackObj {
   uint                _saved_num_queues;
 
   // Calculate based on total of references.
-  uint ergo_proc_thread_count(size_t ref_count,
-                              uint max_threads,
-                              RefProcPhases phase) const;
+  uint ergo_proc_thread_count(size_t ref_count, uint max_threads, RefProcPhases phase) const;
 
   bool use_max_threads(RefProcPhases phase) const;
 
 public:
-  RefProcMTDegreeAdjuster(ReferenceProcessor* rp,
-                          RefProcPhases phase,
-                          size_t ref_count);
+  RefProcMTDegreeAdjuster(ReferenceProcessor* rp, RefProcPhases phase, size_t ref_count);
   ~RefProcMTDegreeAdjuster();
 };
 

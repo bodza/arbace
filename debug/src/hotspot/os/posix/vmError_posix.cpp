@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "memory/metaspaceShared.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/os.hpp"
 #include "runtime/thread.hpp"

@@ -1019,8 +1019,7 @@ void InterpreterMacroAssembler::profile_ret(Register return_bci, Register mdp) {
       increment_mdp_data_at(mdp, in_bytes(RetData::bci_count_offset(row)));
 
       // The method data pointer needs to be updated to reflect the new target.
-      update_mdp_by_offset(mdp,
-                           in_bytes(RetData::bci_displacement_offset(row)));
+      update_mdp_by_offset(mdp, in_bytes(RetData::bci_displacement_offset(row)));
       b(profile_continue);
       bind(next_test);
     }

@@ -30,7 +30,7 @@ bool               CompilationPolicy::_in_vm_startup;
 void compilationPolicy_init() {
   CompilationPolicy::set_in_vm_startup(DelayCompilationDuringStartup);
 
-  switch(CompilationPolicyChoice) {
+  switch (CompilationPolicyChoice) {
   case 0:
     CompilationPolicy::set_policy(new SimpleCompPolicy());
     break;
@@ -313,7 +313,7 @@ bool NonTieredCompPolicy::is_mature(Method* method) {
   if (ProfileMaturityPercentage <= 0)
     target = (uint) -ProfileMaturityPercentage;  // absolute value
   else
-    target = (uint)( (ProfileMaturityPercentage * CompileThreshold) / 100 );
+    target = (uint)((ProfileMaturityPercentage * CompileThreshold) / 100);
   return (current >= initial + target);
 }
 

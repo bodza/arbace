@@ -419,11 +419,3 @@ void ModuleEntry::print(outputStream* st) {
                location() != NULL ? location()->as_C_string() : "NULL",
                BOOL_TO_STR(!can_read_all_unnamed()), p2i(next()));
 }
-
-void ModuleEntryTable::verify() {
-  verify_table<ModuleEntry>("Module Entry Table");
-}
-
-void ModuleEntry::verify() {
-  guarantee(loader_data() != NULL, "A module entry must be associated with a loader.");
-}

@@ -420,9 +420,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   // time that any part of the heap was examined by a garbage collection.
   virtual jlong millis_since_last_gc() = 0;
 
-  // Perform any cleanup actions necessary before allowing a verification.
-  virtual void prepare_for_verify() = 0;
-
   // Generate any dumps preceding or following a full gc
  private:
   void full_gc_dump(GCTimer* timer, bool before);
@@ -464,9 +461,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   // Iterator for all GC threads (other than VM thread)
   virtual void gc_threads_do(ThreadClosure* tc) const = 0;
 
-  void print_heap_before_gc();
-  void print_heap_after_gc();
-
   // An object is scavengable if its location may move during a scavenge.
   // (A scavenge is a GC which is not a full GC.)
   virtual bool is_scavengable(oop obj) = 0;
@@ -478,9 +472,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
 
   void trace_heap_before_gc(const GCTracer* gc_tracer);
   void trace_heap_after_gc(const GCTracer* gc_tracer);
-
-  // Heap verification
-  virtual void verify(VerifyOption option) = 0;
 
   // Return true if concurrent phase control (via
   // request_concurrent_phase_control) is supported by this collector.
@@ -494,7 +485,7 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   virtual const char* const* concurrent_phases() const;
 
   // Request the collector enter the indicated concurrent phase, and
-  // wait until it does so.  Supports WhiteBox testing.  Only one
+  // wait until it does so.  Supports NULL testing.  Only one
   // request may be active at a time.  Phases are designated by name;
   // the set of names and their meaning is GC-specific.  Once the
   // requested phase has been reached, the collector will attempt to

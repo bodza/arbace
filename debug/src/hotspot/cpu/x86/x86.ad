@@ -1458,7 +1458,7 @@ const int Matcher::min_vector_size(const BasicType bt) {
 
 // Vector ideal reg corresponding to specified size in bytes
 const uint Matcher::vector_ideal_reg(int size) {
-  switch(size) {
+  switch (size) {
     case  4: return Op_VecS;
     case  8: return Op_VecD;
     case 16: return Op_VecX;
@@ -1689,7 +1689,7 @@ static int vec_spill_helper(CodeBuffer *cbuf, bool do_size, bool is_load, int st
   }
   int offset_size = 0;
   int size = 5;
-  if (UseAVX > 2 ) {
+  if (UseAVX > 2) {
     if (VM_Version::supports_avx512novl() && (vec_len == 2)) {
       offset_size = (stack_offset == 0) ? 0 : ((is_single_byte) ? 1 : 4);
       size += 2; // Need an additional two bytes for EVEX encoding

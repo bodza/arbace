@@ -16,7 +16,7 @@ const RelocationHolder RelocationHolder::none; // its type is relocInfo::none
 // Implementation of relocInfo
 
 void relocInfo::initialize(CodeSection* dest, Relocation* reloc) {
-  relocInfo* data = this+1;  // here's where the data might go
+  relocInfo* data = this + 1;  // here's where the data might go
   dest->set_locs_end(data);  // sync end: the next call may read dest.locs_end
   reloc->pack_data_to(dest); // maybe write data into locs, advancing locs_end
   relocInfo* data_limit = dest->locs_end();
@@ -25,19 +25,19 @@ void relocInfo::initialize(CodeSection* dest, Relocation* reloc) {
     data_limit = this->finish_prefix((short*) data_limit);
     // Finish up with the suffix.  (Hack note: pack_data_to might edit this.)
     *data_limit = suffix;
-    dest->set_locs_end(data_limit+1);
+    dest->set_locs_end(data_limit + 1);
   }
 }
 
 relocInfo* relocInfo::finish_prefix(short* prefix_limit) {
-  short* p = (short*)(this+1);
+  short* p = (short*)(this + 1);
   int plen = prefix_limit - p;
   if (plen == 0) {
     return this;                         // no data: remove self completely
   }
   if (plen == 1 && fits_into_immediate(p[0])) {
     (*this) = immediate_relocInfo(p[0]); // move data inside self
-    return this+1;
+    return this + 1;
   }
   // cannot compact, so just update the count and return the limit pointer
   (*this) = prefix_relocInfo(plen);   // write new datalen
@@ -342,7 +342,7 @@ void virtual_call_Relocation::unpack_data() {
   jint x0 = 0;
   unpack_2_ints(x0, _method_index);
   address point = addr();
-  _cached_value = x0==0? NULL: address_from_scaled_offset(x0, point);
+  _cached_value = (x0 == 0) ? NULL : address_from_scaled_offset(x0, point);
 }
 
 void runtime_call_w_cp_Relocation::pack_data_to(CodeSection * dest) {
@@ -437,14 +437,14 @@ void internal_word_Relocation::pack_data_to(CodeSection* dest) {
 
 void internal_word_Relocation::unpack_data() {
   jint x0 = unpack_1_int();
-  _target = x0==0? NULL: address_from_scaled_offset(x0, addr());
+  _target = (x0 == 0) ? NULL : address_from_scaled_offset(x0, addr());
   _section = CodeBuffer::SECT_NONE;
 }
 
 void section_word_Relocation::unpack_data() {
   jint    x      = unpack_1_int();
   jint    offset = (x >> section_width);
-  int     sindex = (x & ((1<<section_width)-1));
+  int     sindex = (x & ((1 << section_width)-1));
   address base   = binding()->section_start(sindex);
 
   _section = sindex;

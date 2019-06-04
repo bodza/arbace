@@ -57,7 +57,7 @@ class SignatureIterator: public ResourceObj {
 
     // max parameters is wordsize minus
     //    The sign bit, termination field, the result and static bit fields
-    max_size_of_parameters = (BitsPerLong-1 - result_feature_size - parameter_feature_size - static_feature_size) / parameter_feature_size
+    max_size_of_parameters = (BitsPerLong - 1 - result_feature_size - parameter_feature_size - static_feature_size) / parameter_feature_size
   };
 
   // Constructors

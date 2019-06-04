@@ -79,7 +79,7 @@ class MacroAssembler: public Assembler {
       guarantee(this->is8bit(imm8), "Short forward jump exceeds 8-bit offset");
       *disp = imm8;
     } else {
-      int* disp = (int*) &branch[(op == 0x0F || op == 0xC7)? 2: 1];
+      int* disp = (int*) &branch[(op == 0x0F || op == 0xC7) ? 2 : 1];
       int imm32 = target - (address) &disp[1];
       *disp = imm32;
     }

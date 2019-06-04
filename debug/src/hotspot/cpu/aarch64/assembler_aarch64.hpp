@@ -378,7 +378,7 @@ class Address {
     i->f(0b111, 29, 27);
     i->srf(_base, 5);
 
-    switch(_mode) {
+    switch (_mode) {
     case base_plus_offset:
       {
         unsigned size = i->get(31, 30);
@@ -438,7 +438,7 @@ class Address {
   }
 
   void encode_pair(Instruction_aarch64 *i) const {
-    switch(_mode) {
+    switch (_mode) {
     case base_plus_offset:
       i->f(0b010, 25, 23);
       break;
@@ -455,7 +455,7 @@ class Address {
     unsigned size; // Operand shift in 32-bit words
 
     if (i->get(26, 26)) { // float
-      switch(i->get(31, 30)) {
+      switch (i->get(31, 30)) {
       case 0b10:
         size = 2; break;
       case 0b01:
@@ -931,8 +931,7 @@ public:
     rf(rt, 0);
   }
 
-  enum barrier { OSHLD = 0b0001, OSHST, OSH, NSHLD=0b0101, NSHST, NSH,
-                ISHLD = 0b1001, ISHST, ISH, LD=0b1101, ST, SY };
+  enum barrier { OSHLD = 0b0001, OSHST, OSH, NSHLD=0b0101, NSHST, NSH, ISHLD = 0b1001, ISHST, ISH, LD=0b1101, ST, SY };
 
   void dsb(barrier imm) {
     system(0b00, 0b011, 0b00011, imm, 0b100);
@@ -1107,7 +1106,7 @@ public:
   // 8.1 Compare and swap extensions
   void lse_cas(Register Rs, Register Rt, Register Rn, enum operand_size sz, bool a, bool r, bool not_pair) {
     starti;
-    if (! not_pair) { // Pair
+    if (!not_pair) { // Pair
       /* The size bit is in bit 30, not 31 */
       sz = (operand_size)(sz == word ? 0b00:0b01);
     }
@@ -2191,14 +2190,14 @@ public:
 
   void ins(FloatRegister Vd, SIMD_RegVariant T, FloatRegister Vn, int didx, int sidx) {
     starti;
-    f(0b01101110000, 31, 21), f(((didx<<1)|1)<<(int)T, 20, 16), f(0, 15);
+    f(0b01101110000, 31, 21), f(((didx << 1)|1) << (int)T, 20, 16), f(0, 15);
     f(sidx<<(int)T, 14, 11), f(1, 10), rf(Vn, 5), rf(Vd, 0);
   }
 
   void umov(Register Rd, FloatRegister Vn, SIMD_RegVariant T, int idx) {
     starti;
     f(0, 31), f(T==D ? 1:0, 30), f(0b001110000, 29, 21);
-    f(((idx<<1)|1)<<(int)T, 20, 16), f(0b001111, 15, 10);
+    f(((idx << 1)|1) << (int)T, 20, 16), f(0b001111, 15, 10);
     rf(Vn, 5), rf(Rd, 0);
   }
 
@@ -2238,7 +2237,7 @@ public:
      *   01xx xxx       2D, 2S/4S  shift = xxxxx
      *   1xxx xxx       RESERVED
      */
-    f(0, 31), f(Tb & 1, 30), f(0b1011110, 29, 23), f((1 << ((Tb>>1)+3))|shift, 22, 16);
+    f(0, 31), f(Tb & 1, 30), f(0b1011110, 29, 23), f((1 << ((Tb >> 1)+3))|shift, 22, 16);
     f(0b101001, 15, 10), rf(Vn, 5), rf(Vd, 0);
   }
   void ushll2(FloatRegister Vd, SIMD_Arrangement Ta, FloatRegister Vn, SIMD_Arrangement Tb, int shift) {

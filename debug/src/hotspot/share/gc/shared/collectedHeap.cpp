@@ -54,20 +54,6 @@ MetaspaceSummary CollectedHeap::create_metaspace_summary() {
   return MetaspaceSummary(MetaspaceGC::capacity_until_GC(), meta_space, data_space, class_space, ms_chunk_free_list_summary, class_chunk_free_list_summary);
 }
 
-void CollectedHeap::print_heap_before_gc() {
-  Universe::print_heap_before_gc();
-  if (_gc_heap_log != NULL) {
-    _gc_heap_log->log_heap_before(this);
-  }
-}
-
-void CollectedHeap::print_heap_after_gc() {
-  Universe::print_heap_after_gc();
-  if (_gc_heap_log != NULL) {
-    _gc_heap_log->log_heap_after(this);
-  }
-}
-
 void CollectedHeap::print_on_error(outputStream* st) const {
   st->print_cr("Heap:");
   print_extended_on(st);
@@ -92,7 +78,7 @@ void CollectedHeap::trace_heap_after_gc(const GCTracer* gc_tracer) {
   trace_heap(GCWhen::AfterGC, gc_tracer);
 }
 
-// WhiteBox API support for concurrent collectors.  These are the
+// NULL API support for concurrent collectors.  These are the
 // default implementations, for collectors which don't support this
 // feature.
 bool CollectedHeap::supports_concurrent_phase_control() const {

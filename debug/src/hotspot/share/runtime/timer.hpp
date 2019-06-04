@@ -59,9 +59,7 @@ class TraceCPUTime: public StackObj {
   bool _error;                  // true if an error occurred, turns off output
 
  public:
-  TraceCPUTime(bool doit = true,
-               bool print_cr = true,
-               outputStream *logfile = NULL);
+  TraceCPUTime(bool doit = true, bool print_cr = true, outputStream *logfile = NULL);
   ~TraceCPUTime();
 };
 

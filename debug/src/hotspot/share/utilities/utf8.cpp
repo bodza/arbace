@@ -228,7 +228,7 @@ const char* UTF8::from_quoted_ascii(const char* quoted_ascii_str) {
           case 'u': {
             ptr += 2;
             jchar value=0;
-            for (int i = 0; i<4; i++) {
+            for (int i = 0; i < 4; i++) {
               char c = *ptr++;
               switch (c) {
                 case '0': case '1': case '2': case '3': case '4':
@@ -308,9 +308,9 @@ bool UTF8::is_legal_utf8(const unsigned char* buffer, int length, bool version_l
   int count = length >> 2;
   for (int k = 0; k<count; k++) {
     unsigned char b0 = buffer[i];
-    unsigned char b1 = buffer[i+1];
-    unsigned char b2 = buffer[i+2];
-    unsigned char b3 = buffer[i+3];
+    unsigned char b1 = buffer[i + 1];
+    unsigned char b2 = buffer[i + 2];
+    unsigned char b3 = buffer[i + 3];
     // For an unsigned char v,
     // (v | v - 1) is < 128 (highest bit 0) for 0 < v < 128;
     // (v | v - 1) is >= 128 (highest bit 1) for v == 0 or v >= 128.
@@ -352,8 +352,8 @@ bool UTF8::is_legal_utf8(const unsigned char* buffer, int length, bool version_l
       case 0xE:  // 1110xxxx 10xxxxxx 10xxxxxx
         c = (buffer[i] & 0xF) << 12;
         i += 2;
-        if ((i < length) && ((buffer[i-1] & 0xC0) == 0x80) && ((buffer[i] & 0xC0) == 0x80)) {
-          c += ((buffer[i-1] & 0x3F) << 6) + (buffer[i] & 0x3F);
+        if ((i < length) && ((buffer[i - 1] & 0xC0) == 0x80) && ((buffer[i] & 0xC0) == 0x80)) {
+          c += ((buffer[i - 1] & 0x3F) << 6) + (buffer[i] & 0x3F);
           if (version_leq_47 || c >= 0x800) {
             break;
           }

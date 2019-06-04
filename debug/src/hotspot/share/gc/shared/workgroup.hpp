@@ -176,10 +176,7 @@ class WorkGang: public AbstractWorkGang {
   }
 
 public:
-  WorkGang(const char* name,
-           uint workers,
-           bool are_GC_task_threads,
-           bool are_ConcurrentGC_threads);
+  WorkGang(const char* name, uint workers, bool are_GC_task_threads, bool are_ConcurrentGC_threads);
 
   ~WorkGang();
 

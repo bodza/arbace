@@ -20,7 +20,6 @@ void CounterOverflowStub::emit_code(LIR_Assembler* ce) {
   ce->store_parameter(_bci, 0);
   __ far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::counter_overflow_id)));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
   __ b(_continuation);
 }
 
@@ -40,7 +39,6 @@ void RangeCheckStub::emit_code(LIR_Assembler* ce) {
     address a = Runtime1::entry_for(Runtime1::predicate_failed_trap_id);
     __ far_call(RuntimeAddress(a));
     ce->add_call_info_here(_info);
-    ce->verify_oop_map(_info);
     return;
   }
 
@@ -59,7 +57,6 @@ void RangeCheckStub::emit_code(LIR_Assembler* ce) {
   __ lea(lr, RuntimeAddress(Runtime1::entry_for(stub_id)));
   __ blr(lr);
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
 }
 
 PredicateFailedStub::PredicateFailedStub(CodeEmitInfo* info) {
@@ -71,7 +68,6 @@ void PredicateFailedStub::emit_code(LIR_Assembler* ce) {
   address a = Runtime1::entry_for(Runtime1::predicate_failed_trap_id);
   __ far_call(RuntimeAddress(a));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
 }
 
 void DivByZeroStub::emit_code(LIR_Assembler* ce) {
@@ -81,7 +77,6 @@ void DivByZeroStub::emit_code(LIR_Assembler* ce) {
   __ bind(_entry);
   __ far_call(Address(Runtime1::entry_for(Runtime1::throw_div0_exception_id), relocInfo::runtime_call_type));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
 }
 
 // Implementation of NewInstanceStub
@@ -99,7 +94,6 @@ void NewInstanceStub::emit_code(LIR_Assembler* ce) {
   __ mov(r3, _klass_reg->as_register());
   __ far_call(RuntimeAddress(Runtime1::entry_for(_stub_id)));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
   __ b(_continuation);
 }
 
@@ -118,7 +112,6 @@ void NewTypeArrayStub::emit_code(LIR_Assembler* ce) {
   __ bind(_entry);
   __ far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::new_type_array_id)));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
   __ b(_continuation);
 }
 
@@ -135,7 +128,6 @@ void NewObjectArrayStub::emit_code(LIR_Assembler* ce) {
   __ bind(_entry);
   __ far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::new_object_array_id)));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
   __ b(_continuation);
 }
 // Implementation of MonitorAccessStubs
@@ -158,7 +150,6 @@ void MonitorEnterStub::emit_code(LIR_Assembler* ce) {
   }
   __ far_call(RuntimeAddress(Runtime1::entry_for(enter_id)));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
   __ b(_continuation);
 }
 
@@ -216,7 +207,6 @@ void ImplicitNullCheckStub::emit_code(LIR_Assembler* ce) {
   __ bind(_entry);
   __ far_call(RuntimeAddress(a));
   ce->add_call_info_here(_info);
-  ce->verify_oop_map(_info);
 }
 
 void SimpleExceptionStub::emit_code(LIR_Assembler* ce) {
@@ -251,7 +241,7 @@ void ArrayCopyStub::emit_code(LIR_Assembler* ce) {
   r[4] = length()->as_register();
 
   // next registers will get stored on the stack
-  for (int i = 0; i < 5 ; i++ ) {
+  for (int i = 0; i < 5 ; i++) {
     VMReg r_1 = args[i].first();
     if (r_1->is_stack()) {
       int st_off = r_1->reg2stack() * wordSize;

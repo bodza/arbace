@@ -147,7 +147,7 @@ bool Relocator::handle_code_changes() {
 
     // Shuffle items up
     for (int index = 1; index < _changes->length(); index++) {
-      _changes->at_put(index-1, _changes->at(index));
+      _changes->at_put(index - 1, _changes->at(index));
     }
     _changes->pop();
   }
@@ -283,21 +283,21 @@ void Relocator::change_jumps(int break_bci, int delta) {
       case Bytecodes::_ifnonnull:
       case Bytecodes::_goto:
       case Bytecodes::_jsr:
-        change_jump(bci, bci+1, true, break_bci, delta);
+        change_jump(bci, bci + 1, true, break_bci, delta);
         break;
       case Bytecodes::_goto_w:
       case Bytecodes::_jsr_w:
-        change_jump(bci, bci+1, false, break_bci, delta);
+        change_jump(bci, bci + 1, false, break_bci, delta);
         break;
       case Bytecodes::_tableswitch:
       case Bytecodes::_lookupswitch:
       case Bytecodes::_fast_linearswitch:
       case Bytecodes::_fast_binaryswitch: {
         int recPad = get_orig_switch_pad(bci, (bc != Bytecodes::_tableswitch));
-        int oldPad = (recPad != -1) ? recPad : align(bci+1) - (bci+1);
+        int oldPad = (recPad != -1) ? recPad : align(bci + 1) - (bci + 1);
         if (bci > break_bci) {
           int new_bci = bci + delta;
-          int newPad = align(new_bci+1) - (new_bci+1);
+          int newPad = align(new_bci + 1) - (new_bci + 1);
           // Do we need to check the padding?
           if (newPad != oldPad) {
             if (recPad == -1) {
@@ -315,10 +315,10 @@ void Relocator::change_jumps(int break_bci, int delta) {
             int hi = int_at(bci + 1 + oldPad + 4 * 2);
             int n = hi - lo + 1;
             for (int k = 0; k < n; k++) {
-              change_jump(bci, bci +1 + oldPad + 4*(k+3), false, break_bci, delta);
+              change_jump(bci, bci +1 + oldPad + 4 * (k + 3), false, break_bci, delta);
             }
             // Special next-bci calculation here...
-            bci += 1 + oldPad + (n+3)*4;
+            bci += 1 + oldPad + (n + 3) * 4;
             continue;
           }
           case Bytecodes::_lookupswitch:
@@ -664,17 +664,17 @@ bool Relocator::handle_jump_widen(int bci, int delta) {
 // handle lookup/table switch instructions.  Called be ChangeSwitchPad class
 bool Relocator::handle_switch_pad(int bci, int old_pad, bool is_lookup_switch) {
   int ilen = rc_instr_len(bci);
-  int new_pad = align(bci+1) - (bci+1);
+  int new_pad = align(bci + 1) - (bci + 1);
   int pad_delta = new_pad - old_pad;
   if (pad_delta != 0) {
     int len;
     if (!is_lookup_switch) {
-      int low  = int_at(bci+1+old_pad+4);
-      int high = int_at(bci+1+old_pad+8);
-      len = high-low+1 + 3; // 3 for default, hi, lo.
+      int low  = int_at(bci + 1 + old_pad + 4);
+      int high = int_at(bci + 1 + old_pad + 8);
+      len = high - low + 1 + 3; // 3 for default, hi, lo.
     } else {
-      int npairs = int_at(bci+1+old_pad+4);
-      len = npairs*2 + 2; // 2 for default, npairs.
+      int npairs = int_at(bci + 1 + old_pad + 4);
+      len = npairs * 2 + 2; // 2 for default, npairs.
     }
     // Because "relocateCode" does a "changeJumps" loop,
     // which parses instructions to determine their length,

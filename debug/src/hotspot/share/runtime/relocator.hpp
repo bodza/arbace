@@ -76,7 +76,7 @@ class Relocator : public ResourceObj {
   int  instruction_length_at(int bci)             { return Bytecodes::length_at(NULL, code_array() + bci); }
 
   // Helper methods
-  int  align(int n) const                          { return (n+3) & ~3; }
+  int  align(int n) const                          { return (n + 3) & ~3; }
   int  code_slop_pct() const                       { return 25; }
   bool is_opcode_lookupswitch(Bytecodes::Code bc);
 

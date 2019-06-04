@@ -230,7 +230,7 @@ void DebugInformationRecorder::describe_scope(int pc_offset, const methodHandle&
 
 void DebugInformationRecorder::dump_object_pool(GrowableArray<ScopeValue*>* objects) {
   guarantee( _pcs_length > 0, "safepoint must exist before describing scopes");
-  PcDesc* last_pd = &_pcs[_pcs_length-1];
+  PcDesc* last_pd = &_pcs[_pcs_length - 1];
   if (objects != NULL) {
     for (int i = objects->length() - 1; i >= 0; i--) {
       objects->at(i)->as_ObjectValue()->set_visited(false);
@@ -269,8 +269,4 @@ int DebugInformationRecorder::pcs_size() {
 void DebugInformationRecorder::copy_to(nmethod* nm) {
   nm->copy_scopes_data(stream()->buffer(), stream()->position());
   nm->copy_scopes_pcs(_pcs, _pcs_length);
-}
-
-void DebugInformationRecorder::verify(const nmethod* code) {
-  Unimplemented();
 }

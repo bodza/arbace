@@ -193,8 +193,7 @@ private:
 
 public:
   // Debugging
-  void verify() { };
-  void print()  { };
+  void print() { };
 };
 
 #endif

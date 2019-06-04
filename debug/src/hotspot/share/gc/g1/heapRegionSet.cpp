@@ -6,33 +6,6 @@
 
 uint FreeRegionList::_unrealistically_long_length = 0;
 
-void HeapRegionSetBase::verify() {
-  // It's important that we also observe the MT safety protocol even
-  // for the verification calls. If we do verification without the
-  // appropriate locks and the set changes underneath our feet
-  // verification might fail and send us on a wild goose chase.
-  check_mt_safety();
-
-  guarantee_heap_region_set(( is_empty() && length() == 0) || (!is_empty() && length() > 0), "invariant");
-}
-
-void HeapRegionSetBase::verify_start() {
-  // See comment in verify() about MT safety and verification.
-  check_mt_safety();
-
-  // Do the basic verification first before we do the checks over the regions.
-  HeapRegionSetBase::verify();
-
-  _verify_in_progress = true;
-}
-
-void HeapRegionSetBase::verify_end() {
-  // See comment in verify() about MT safety and verification.
-  check_mt_safety();
-
-  _verify_in_progress = false;
-}
-
 void HeapRegionSetBase::print_on(outputStream* out, bool print_contents) {
   out->cr();
   out->print_cr("Set: %s (" PTR_FORMAT ")", name(), p2i(this));
@@ -44,7 +17,7 @@ void HeapRegionSetBase::print_on(outputStream* out, bool print_contents) {
 }
 
 HeapRegionSetBase::HeapRegionSetBase(const char* name, bool humongous, bool free, HRSMtSafeChecker* mt_safety_checker)
-  : _name(name), _verify_in_progress(false),
+  : _name(name),
     _is_humongous(humongous), _is_free(free), _mt_safety_checker(mt_safety_checker),
     _length(0)
 { }
@@ -56,12 +29,9 @@ void FreeRegionList::set_unrealistically_long_length(uint len) {
 
 void FreeRegionList::remove_all() {
   check_mt_safety();
-  verify_optional();
 
   HeapRegion* curr = _head;
   while (curr != NULL) {
-    verify_region(curr);
-
     HeapRegion* next = curr->next();
     curr->set_next(NULL);
     curr->set_prev(NULL);
@@ -69,16 +39,11 @@ void FreeRegionList::remove_all() {
     curr = next;
   }
   clear();
-
-  verify_optional();
 }
 
 void FreeRegionList::add_ordered(FreeRegionList* from_list) {
   check_mt_safety();
   from_list->check_mt_safety();
-
-  verify_optional();
-  from_list->verify_optional();
 
   if (from_list->is_empty()) {
     return;
@@ -124,20 +89,14 @@ void FreeRegionList::add_ordered(FreeRegionList* from_list) {
 
   _length += from_list->length();
   from_list->clear();
-
-  verify_optional();
-  from_list->verify_optional();
 }
 
 void FreeRegionList::remove_starting_at(HeapRegion* first, uint num_regions) {
   check_mt_safety();
 
-  verify_optional();
-
   HeapRegion* curr = first;
   uint count = 0;
   while (count < num_regions) {
-    verify_region(curr);
     HeapRegion* next = curr->next();
     HeapRegion* prev = curr->prev();
 
@@ -162,21 +121,6 @@ void FreeRegionList::remove_starting_at(HeapRegion* first, uint num_regions) {
     count++;
     curr = next;
   }
-
-  verify_optional();
-}
-
-void FreeRegionList::verify() {
-  // See comment in HeapRegionSetBase::verify() about MT safety and
-  // verification.
-  check_mt_safety();
-
-  // This will also do the basic verification too.
-  verify_start();
-
-  verify_list();
-
-  verify_end();
 }
 
 void FreeRegionList::clear() {
@@ -196,8 +140,6 @@ void FreeRegionList::verify_list() {
 
   guarantee(_head == NULL || _head->prev() == NULL, "_head should not have a prev");
   while (curr != NULL) {
-    verify_region(curr);
-
     count++;
     guarantee(count < _unrealistically_long_length, "[%s] the calculated length: %u seems very long, is there maybe a cycle? curr: " PTR_FORMAT " prev0: " PTR_FORMAT " prev1: " PTR_FORMAT " length: %u", name(), count, p2i(curr), p2i(prev0), p2i(prev1), length());
 

@@ -122,7 +122,6 @@ public:
   virtual address get_resolve_call_stub(bool is_optimized) const = 0;
   virtual void set_destination_mt_safe(address dest) = 0;
   virtual void set_to_interpreted(const methodHandle& method, CompiledICInfo& info) = 0;
-  virtual void verify() const = 0;
 
   virtual bool is_call_to_interpreted(address dest) const = 0;
   virtual bool is_safe_for_patching() const = 0;
@@ -217,7 +216,7 @@ class CompiledIC: public ResourceObj {
 
   bool is_icholder_call() const;
 
-  address end_of_call() { return  _call->return_address(); }
+  address end_of_call() { return _call->return_address(); }
 
   // MT-safe patching of inline caches. Note: Only safe to call is_xxx when holding the CompiledIC_ock
   // so you are guaranteed that no patching takes place. The same goes for verify.
@@ -243,32 +242,12 @@ class CompiledIC: public ResourceObj {
   // Misc
   void print()             { };
   void print_compiled_ic() { };
-  void verify()            { };
 };
 
-inline CompiledIC* CompiledIC_before(CompiledMethod* nm, address return_addr) {
-  CompiledIC* c_ic = new CompiledIC(nm, nativeCall_before(return_addr));
-  c_ic->verify();
-  return c_ic;
-}
-
-inline CompiledIC* CompiledIC_at(CompiledMethod* nm, address call_site) {
-  CompiledIC* c_ic = new CompiledIC(nm, nativeCall_at(call_site));
-  c_ic->verify();
-  return c_ic;
-}
-
-inline CompiledIC* CompiledIC_at(Relocation* call_site) {
-  CompiledIC* c_ic = new CompiledIC(call_site->code(), nativeCall_at(call_site->addr()));
-  c_ic->verify();
-  return c_ic;
-}
-
-inline CompiledIC* CompiledIC_at(RelocIterator* reloc_iter) {
-  CompiledIC* c_ic = new CompiledIC(reloc_iter);
-  c_ic->verify();
-  return c_ic;
-}
+inline CompiledIC* CompiledIC_before(CompiledMethod* nm, address return_addr) { return new CompiledIC(nm, nativeCall_before(return_addr)); }
+inline CompiledIC* CompiledIC_at(CompiledMethod* nm, address call_site)       { return new CompiledIC(nm, nativeCall_at(call_site)); }
+inline CompiledIC* CompiledIC_at(Relocation* call_site)                       { return new CompiledIC(call_site->code(), nativeCall_at(call_site->addr())); }
+inline CompiledIC* CompiledIC_at(RelocIterator* reloc_iter)                   { return new CompiledIC(reloc_iter); }
 
 //-----------------------------------------------------------------------------
 // The CompiledStaticCall represents a call to a static method in the compiled
@@ -359,15 +338,11 @@ private:
 
  public:
   static inline CompiledDirectStaticCall* before(address return_addr) {
-    CompiledDirectStaticCall* st = new CompiledDirectStaticCall(nativeCall_before(return_addr));
-    st->verify();
-    return st;
+    return new CompiledDirectStaticCall(nativeCall_before(return_addr));
   }
 
   static inline CompiledDirectStaticCall* at(address native_call) {
-    CompiledDirectStaticCall* st = new CompiledDirectStaticCall(nativeCall_at(native_call));
-    st->verify();
-    return st;
+    return new CompiledDirectStaticCall(nativeCall_at(native_call));
   }
 
   static inline CompiledDirectStaticCall* at(Relocation* call_site) {
@@ -387,8 +362,7 @@ private:
   static void set_stub_to_clean(static_stub_Relocation* static_stub);
 
   // Misc.
-  void print()  { };
-  void verify() { };
+  void print() { };
 
  protected:
   virtual address resolve_call_stub() const;

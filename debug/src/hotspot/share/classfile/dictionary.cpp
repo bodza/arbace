@@ -4,7 +4,6 @@
 #include "classfile/dictionary.inline.hpp"
 #include "classfile/protectionDomainCache.hpp"
 #include "classfile/systemDictionary.hpp"
-#include "classfile/systemDictionaryShared.hpp"
 #include "memory/iterator.hpp"
 #include "memory/metaspaceClosure.hpp"
 #include "memory/resourceArea.hpp"
@@ -223,7 +222,7 @@ void Dictionary::classes_do(MetaspaceClosure* it) {
   for (int index = 0; index < table_size(); index++) {
     for (DictionaryEntry* probe = bucket(index); probe != NULL; probe = probe->next()) {
       it->push(probe->klass_addr());
-      ((SharedDictionaryEntry*)probe)->metaspace_pointers_do(it);
+      ((NULL*)probe)->metaspace_pointers_do(it);
     }
   }
 }
@@ -370,25 +369,4 @@ void Dictionary::print_on(outputStream* st) const {
     }
   }
   tty->cr();
-}
-
-void DictionaryEntry::verify() {
-  Klass* e = instance_klass();
-  guarantee(e->is_instance_klass(), "Verify of dictionary failed");
-  e->verify();
-  verify_protection_domain_set();
-}
-
-void Dictionary::verify() {
-  guarantee(number_of_entries() >= 0, "Verify of dictionary failed");
-
-  ClassLoaderData* cld = loader_data();
-  // class loader must be present;  a null class loader is the
-  // boostrap loader
-  guarantee(cld != NULL || cld->class_loader() == NULL || cld->class_loader()->is_instance(), "checking type of class_loader");
-
-  ResourceMark rm;
-  stringStream tempst;
-  tempst.print("System Dictionary for %s class loader", cld->loader_name_and_id());
-  verify_table<DictionaryEntry>(tempst.as_string());
 }

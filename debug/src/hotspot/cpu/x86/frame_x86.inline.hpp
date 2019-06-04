@@ -178,7 +178,7 @@ inline int frame::interpreter_frame_monitor_size() {
 
 inline intptr_t* frame::interpreter_frame_expression_stack() const {
   intptr_t* monitor_end = (intptr_t*) interpreter_frame_monitor_end();
-  return monitor_end-1;
+  return monitor_end - 1;
 }
 
 // Entry frames

@@ -10,8 +10,6 @@
 #include "runtime/thread.inline.hpp"
 #include "utilities/copy.hpp"
 
-bool always_do_update_barrier = false;
-
 void oopDesc::print_on(outputStream* st) const {
   if (this == NULL) {
     st->print_cr("NULL");
@@ -61,10 +59,6 @@ void oopDesc::verify_on(outputStream* st) {
   if (this != NULL) {
     klass()->oop_verify_on(this, st);
   }
-}
-
-void oopDesc::verify() {
-  verify_on(tty);
 }
 
 intptr_t oopDesc::slow_identity_hash() {

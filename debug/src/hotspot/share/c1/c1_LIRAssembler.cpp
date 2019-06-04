@@ -250,8 +250,6 @@ void LIR_Assembler::emit_rtcall(LIR_OpRTCall* op) {
 }
 
 void LIR_Assembler::emit_call(LIR_OpJavaCall* op) {
-  verify_oop_map(op->info());
-
   if (os::is_MP()) {
     // must align calls sites, otherwise they can't be updated atomically on MP hardware
     align_call(op->code());
@@ -582,5 +580,3 @@ void LIR_Assembler::move_op(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
     ShouldNotReachHere();
   }
 }
-
-void LIR_Assembler::verify_oop_map(CodeEmitInfo* info) { }

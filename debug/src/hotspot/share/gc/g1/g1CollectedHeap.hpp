@@ -12,7 +12,6 @@
 #include "gc/g1/g1EvacFailure.hpp"
 #include "gc/g1/g1EvacStats.hpp"
 #include "gc/g1/g1HeapTransition.hpp"
-#include "gc/g1/g1HeapVerifier.hpp"
 #include "gc/g1/g1InCSetState.hpp"
 #include "gc/g1/g1MonitoringSupport.hpp"
 #include "gc/g1/g1SurvivorRegions.hpp"
@@ -65,7 +64,6 @@ class WorkGang;
 class G1Allocator;
 class G1ArchiveAllocator;
 class G1FullGCScope;
-class G1HeapVerifier;
 class G1HeapSizingPolicy;
 class G1HeapSummary;
 class G1EvacSummary;
@@ -111,7 +109,6 @@ class G1CollectedHeap : public CollectedHeap {
   friend class MutatorAllocRegion;
   friend class G1FullCollector;
   friend class G1GCAllocRegion;
-  friend class G1HeapVerifier;
 
   // Closures used in implementation.
   friend class G1ParScanThreadState;
@@ -187,9 +184,6 @@ private:
   // Manages all allocations with regions except humongous object allocations.
   G1Allocator* _allocator;
 
-  // Manages all heap verification.
-  G1HeapVerifier* _verifier;
-
   // Outside of GC pauses, the number of bytes used in all regions other
   // than the current allocation region(s).
   size_t _summary_bytes_used;
@@ -250,7 +244,6 @@ private:
   // (b) cause == _g1_humongous_allocation
   // (c) cause == _java_lang_system_gc and +ExplicitGCInvokesConcurrent.
   // (d) cause == _dcmd_gc_run and +ExplicitGCInvokesConcurrent.
-  // (e) cause == _wb_conc_mark
   bool should_do_concurrent_full_gc(GCCause::Cause cause);
 
   // indicates whether we are in young or mixed GC mode
@@ -312,9 +305,7 @@ private:
   // Initialize a contiguous set of free regions of length num_regions
   // and starting at index first so that they appear as a single
   // humongous region.
-  HeapWord* humongous_obj_allocate_initialize_regions(uint first,
-                                                      uint num_regions,
-                                                      size_t word_size);
+  HeapWord* humongous_obj_allocate_initialize_regions(uint first, uint num_regions, size_t word_size);
 
   // Attempt to allocate a humongous object of the given size. Return
   // NULL if unsuccessful.
@@ -402,24 +393,17 @@ private:
   // Callback from VM_G1CollectForAllocation operation.
   // This function does everything necessary/possible to satisfy a
   // failed allocation request (including collection, expansion, etc.)
-  HeapWord* satisfy_failed_allocation(size_t word_size,
-                                      bool* succeeded);
+  HeapWord* satisfy_failed_allocation(size_t word_size, bool* succeeded);
   // Internal helpers used during full GC to split it up to
   // increase readability.
   void abort_concurrent_cycle();
-  void verify_before_full_collection(bool explicit_gc);
   void prepare_heap_for_full_collection();
   void prepare_heap_for_mutators();
   void abort_refinement();
-  void verify_after_full_collection();
   void print_heap_after_full_collection(G1HeapTransition* heap_transition);
 
   // Helper method for satisfy_failed_allocation()
-  HeapWord* satisfy_failed_allocation_helper(size_t word_size,
-                                             bool do_gc,
-                                             bool clear_all_soft_refs,
-                                             bool expect_null_mutator_alloc_region,
-                                             bool* gc_succeeded);
+  HeapWord* satisfy_failed_allocation_helper(size_t word_size, bool do_gc, bool clear_all_soft_refs, bool expect_null_mutator_alloc_region, bool* gc_succeeded);
 
   // Attempting to expand the heap sufficiently
   // to support an allocation of the given "word_size".  If
@@ -445,10 +429,6 @@ public:
 
   G1Allocator* allocator() {
     return _allocator;
-  }
-
-  G1HeapVerifier* verifier() {
-    return _verifier;
   }
 
   G1MonitoringSupport* g1mm() {
@@ -1172,27 +1152,7 @@ public:
   // Deduplicate the string
   virtual void deduplicate_string(oop str);
 
-  // Perform any cleanup actions necessary before allowing a verification.
-  virtual void prepare_for_verify();
-
-  // Perform verification.
-
-  // vo == UsePrevMarking -> use "prev" marking information,
-  // vo == UseNextMarking -> use "next" marking information
-  // vo == UseFullMarking -> use "next" marking bitmap but no TAMS
-  //
-  // NOTE: Only the "prev" marking information is guaranteed to be
-  // consistent most of the time, so most calls to this should use
-  // vo == UsePrevMarking.
-  // Currently, there is only one case where this is called with
-  // vo == UseNextMarking, which is to verify the "next" marking
-  // information at the end of remark.
-  // Currently there is only one place where this is called with
-  // vo == UseFullMarking, which is to verify the marking during a
-  // full GC.
-  void verify(VerifyOption vo);
-
-  // WhiteBox testing support.
+  // NULL testing support.
   virtual bool supports_concurrent_phase_control() const;
   virtual const char* const* concurrent_phases() const;
   virtual bool request_concurrent_phase(const char* phase);
@@ -1204,12 +1164,8 @@ public:
   // parameter. The values for that parameter, and their meanings,
   // are the same as those above.
 
-  bool is_obj_dead_cond(const oop obj,
-                        const HeapRegion* hr,
-                        const VerifyOption vo) const;
-
-  bool is_obj_dead_cond(const oop obj,
-                        const VerifyOption vo) const;
+  bool is_obj_dead_cond(const oop obj, const HeapRegion* hr, const VerifyOption vo) const;
+  bool is_obj_dead_cond(const oop obj, const VerifyOption vo) const;
 
   G1HeapSummary create_g1_heap_summary();
   G1EvacSummary create_g1_evac_summary(G1EvacStats* stats);

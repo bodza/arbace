@@ -2,7 +2,6 @@
 #define SHARE_VM_OOPS_OOP_INLINE_HPP
 
 #include "gc/shared/collectedHeap.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "oops/access.inline.hpp"
 #include "oops/arrayKlass.hpp"
 #include "oops/arrayOop.hpp"
@@ -203,22 +202,6 @@ int oopDesc::size_given_klass(Klass* klass) {
       // in units of bytes and doing it this way we can round up just once,
       // skipping the intermediate round to HeapWordSize.
       s = (int)(align_up(size_in_bytes, MinObjAlignmentInBytes) / HeapWordSize);
-
-      // ParNew (used by CMS), UseParallelGC and UseG1GC can change the length field
-      // of an "old copy" of an object array in the young gen so it indicates
-      // the grey portion of an already copied array. This will cause the first
-      // disjunct below to fail if the two comparands are computed across such
-      // a concurrent change.
-      // ParNew also runs with promotion labs (which look like int
-      // filler arrays) which are subject to changing their declared size
-      // when finally retiring a PLAB; this also can cause the first disjunct
-      // to fail for another worker thread that is concurrently walking the block
-      // offset table. Both these invariant failures are benign for their
-      // current uses; we relax the assertion checking to cover these two cases below:
-      //     is_objArray() && is_forwarded()   // covers first scenario above
-      //  || is_typeArray()                    // covers second scenario above
-      // If and when UseParallelGC uses the same obj array oop stealing/chunking
-      // technique, we will need to suitably modify the assertion.
     } else {
       // Must be zero, so bite the bullet and take the virtual call.
       s = klass->oop_size(this);

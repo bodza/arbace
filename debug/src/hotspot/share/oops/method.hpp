@@ -152,7 +152,7 @@ class Method : public Metadata {
   int code_size() const                  { return constMethod()->code_size(); }
 
   // method size in words
-  int method_size() const                { return sizeof(Method)/wordSize + ( is_native() ? 2 : 0 ); }
+  int method_size() const                { return sizeof(Method)/wordSize + (is_native() ? 2 : 0); }
 
   // constant pool for Klass* holding this method
   ConstantPool* constants() const        { return constMethod()->constants(); }
@@ -478,8 +478,6 @@ class Method : public Metadata {
   }
   static int size(bool is_native);
   int size() const                               { return method_size(); }
-  void log_touched(TRAPS);
-  static void print_touched_methods(outputStream* out);
 
   // interpreter support
   static ByteSize const_offset()                 { return byte_offset_of(Method, _constMethod ); }
@@ -770,12 +768,11 @@ class Method : public Metadata {
   bool is_valid_method() const;
 
   // Verify
-  void verify() { verify_on(tty); }
   void verify_on(outputStream* st);
 
  private:
   // Inlined elements
-  address* native_function_addr() const          { return (address*) (this+1); }
+  address* native_function_addr() const          { return (address*) (this + 1); }
   address* signature_handler_addr() const        { return native_function_addr() + 1; }
 };
 

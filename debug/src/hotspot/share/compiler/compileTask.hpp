@@ -77,7 +77,7 @@ class CompileTask : public CHeapObj<mtCompiler> {
 
  public:
   CompileTask() {
-    _lock = new Monitor(Mutex::nonleaf+2, "CompileTaskLock");
+    _lock = new Monitor(Mutex::nonleaf + 2, "CompileTaskLock");
   }
 
   void initialize(int compile_id, const methodHandle& method, int osr_bci, int comp_level,

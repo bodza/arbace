@@ -135,10 +135,10 @@ address StubRoutines::_dlibm_reduce_pi04l = NULL;
 address StubRoutines::_dlibm_tan_cot_huge = NULL;
 address StubRoutines::_dtan = NULL;
 
-double (* StubRoutines::_intrinsic_log10 )(double) = NULL;
-double (* StubRoutines::_intrinsic_sin   )(double) = NULL;
-double (* StubRoutines::_intrinsic_cos   )(double) = NULL;
-double (* StubRoutines::_intrinsic_tan   )(double) = NULL;
+double (* StubRoutines::_intrinsic_log10)(double) = NULL;
+double (* StubRoutines::_intrinsic_sin  )(double) = NULL;
+double (* StubRoutines::_intrinsic_cos  )(double) = NULL;
+double (* StubRoutines::_intrinsic_tan  )(double) = NULL;
 
 address StubRoutines::_safefetch32_entry                 = NULL;
 address StubRoutines::_safefetch32_fault_pc              = NULL;

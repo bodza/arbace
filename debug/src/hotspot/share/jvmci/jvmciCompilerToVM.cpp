@@ -166,9 +166,9 @@ C2V_VMENTRY(jbyteArray, getBytecode, (JNIEnv *, jobject, jobject jvmci_method))
     int len = s.instruction_size();
 
     // Restore original byte code.
-    reconstituted_code->byte_at_put(bci, (jbyte) (s.is_wide()? Bytecodes::_wide : code));
+    reconstituted_code->byte_at_put(bci, (jbyte) (s.is_wide() ? Bytecodes::_wide : code));
     if (len > 1) {
-      memcpy(reconstituted_code->byte_at_addr(bci + 1), s.bcp()+1, len-1);
+      memcpy(reconstituted_code->byte_at_addr(bci + 1), s.bcp() + 1, len - 1);
     }
 
     if (len > 1) {
@@ -1182,10 +1182,6 @@ C2V_VMENTRY(jobject, getSignaturePolymorphicHolders, (JNIEnv*, jobject))
   return JNIHandles::make_local(THREAD, holders());
 C2V_END
 
-C2V_VMENTRY(jboolean, shouldDebugNonSafepoints, (JNIEnv*, jobject))
-  return false;
-C2V_END
-
 // public native void materializeVirtualObjects(HotSpotStackFrameReference stackFrame, boolean invalidate);
 C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame, bool invalidate))
   ResourceMark rm;
@@ -1493,7 +1489,6 @@ JNINativeMethod CompilerToVM::methods[] = {
   { CC "getSymbol",                                    CC "(J)" STRING,                                                                      FN_PTR(getSymbol)},
   { CC "iterateFrames",                                CC "([" RESOLVED_METHOD "[" RESOLVED_METHOD "I" INSPECTED_FRAME_VISITOR ")" OBJECT,   FN_PTR(iterateFrames)},
   { CC "materializeVirtualObjects",                    CC "(" HS_STACK_FRAME_REF "Z)V",                                                      FN_PTR(materializeVirtualObjects)},
-  { CC "shouldDebugNonSafepoints",                     CC "()Z",                                                                             FN_PTR(shouldDebugNonSafepoints)},
   { CC "writeDebugOutput",                             CC "([BII)V",                                                                         FN_PTR(writeDebugOutput)},
   { CC "flushDebugOutput",                             CC "()V",                                                                             FN_PTR(flushDebugOutput)},
   { CC "methodDataProfileDataSize",                    CC "(JI)I",                                                                           FN_PTR(methodDataProfileDataSize)},

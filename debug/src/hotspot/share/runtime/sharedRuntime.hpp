@@ -485,7 +485,7 @@ class AdapterHandlerEntry : public BasicHashtableEntry<mtCode> {
   void print_adapter_on(outputStream* st) const;
 };
 
-// This class is used only with false==true. It holds extra information
+// This class is used only with false == true. It holds extra information
 // that's used only during CDS dump time.
 // For details, see comments around Method::link_method()
 class CDSAdapterHandlerEntry: public AdapterHandlerEntry {

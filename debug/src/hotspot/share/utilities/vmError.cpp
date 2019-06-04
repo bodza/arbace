@@ -6,7 +6,6 @@
 #include "compiler/disassembler.hpp"
 #include "gc/shared/gcConfig.hpp"
 #include "memory/resourceArea.hpp"
-#include "prims/whitebox.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/frame.inline.hpp"
@@ -326,8 +325,7 @@ jlong VMError::get_step_start_time() {
 
 void VMError::report(outputStream* st, bool _verbose) {
 # define BEGIN if (_current_step == 0) { _current_step = __LINE__;
-# define STEP(s) } if (_current_step < __LINE__) { _current_step = __LINE__; _current_step_info = s; \
-  record_step_start_time(); _step_did_timeout = false;
+# define STEP(s) } if (_current_step < __LINE__) { _current_step = __LINE__; _current_step_info = s; record_step_start_time(); _step_did_timeout = false;
 # define END }
 
   // don't allocate large buffer on stack
@@ -346,7 +344,7 @@ void VMError::report(outputStream* st, bool _verbose) {
 
   STEP("printing type of error")
 
-     switch(static_cast<unsigned int>(_id)) {
+     switch (static_cast<unsigned int>(_id)) {
        case OOM_MALLOC_ERROR:
        case OOM_MMAP_ERROR:
          if (_size) {
@@ -397,7 +395,7 @@ void VMError::report(outputStream* st, bool _verbose) {
          // In product mode chop off pathname?
          char separator = os::file_separator()[0];
          const char *p = strrchr(_filename, separator);
-         const char *file = p ? p+1 : _filename;
+         const char *file = p ? p + 1 : _filename;
          st->print(" (%s:%d)", file, _lineno);
        } else {
          st->print(" (0x%x)", _id);
@@ -790,7 +788,7 @@ void VMError::report(outputStream* st, bool _verbose) {
 
   STEP("printing warning if internal testing API used")
 
-     if (WhiteBox::used()) {
+     if (false) {
        st->print_cr("Unsupported internal testing APIs have been used.");
        st->cr();
      }
@@ -960,7 +958,7 @@ void VMError::print_vm_info(outputStream* st) {
 
   // STEP("printing warning if internal testing API used")
 
-  if (WhiteBox::used()) {
+  if (false) {
     st->print_cr("Unsupported internal testing APIs have been used.");
     st->cr();
   }

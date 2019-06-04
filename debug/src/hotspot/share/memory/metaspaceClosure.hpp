@@ -33,10 +33,6 @@
 // provides an API to walk all the reachable objects starting from a set of
 // root references (such as all Klass'es in the SystemDictionary).
 //
-// Currently it is used for compacting the CDS archive by eliminate temporary
-// objects allocated during archive creation time. See ArchiveCompactor in
-// metaspaceShared.cpp for an example.
-//
 // To support MetaspaceClosure, each subclass of MetaspaceObj must provide
 // a method of the type void metaspace_pointers_do(MetaspaceClosure*). This method
 // should call MetaspaceClosure::push() on every pointer fields of this

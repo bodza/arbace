@@ -9,7 +9,6 @@
 #include "compiler/disassembler.hpp"
 #include "interpreter/interpreter.hpp"
 #include "memory/allocation.inline.hpp"
-#include "memory/filemap.hpp"
 #include "oops/oop.inline.hpp"
 #include "os_linux.inline.hpp"
 #include "os_share_linux.hpp"
@@ -37,7 +36,6 @@
 #include "runtime/threadSMR.hpp"
 #include "runtime/timer.hpp"
 #include "semaphore_posix.hpp"
-#include "services/attachListener.hpp"
 #include "services/memTracker.hpp"
 #include "services/runtimeService.hpp"
 #include "utilities/align.hpp"
@@ -1215,9 +1213,6 @@ void os::shutdown() {
   // allow PerfMemory to attempt cleanup of any persistent resources
   perfMemory_exit();
 
-  // needs to remove object in file system
-  AttachListener::abort();
-
   // flush buffered output, finish log files
   ostream_abort();
 
@@ -1491,7 +1486,7 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
   int diag_msg_max_length=ebuflen-strlen(ebuf);
   char* diag_msg_buf=ebuf+strlen(ebuf);
 
-  if (diag_msg_max_length==0) {
+  if (diag_msg_max_length == 0) {
     // No more space in ebuf for additional diagnostics message
     return NULL;
   }
@@ -1612,20 +1607,20 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen) {
   }
 
   if (lib_arch.endianess != arch_array[running_arch_index].endianess) {
-    ::snprintf(diag_msg_buf, diag_msg_max_length-1," (Possible cause: endianness mismatch)");
+    ::snprintf(diag_msg_buf, diag_msg_max_length - 1, " (Possible cause: endianness mismatch)");
     return NULL;
   }
 
   if (lib_arch.elf_class != arch_array[running_arch_index].elf_class) {
-    ::snprintf(diag_msg_buf, diag_msg_max_length-1," (Possible cause: architecture word width mismatch)");
+    ::snprintf(diag_msg_buf, diag_msg_max_length - 1, " (Possible cause: architecture word width mismatch)");
     return NULL;
   }
 
   if (lib_arch.compat_class != arch_array[running_arch_index].compat_class) {
     if (lib_arch.name!=NULL) {
-      ::snprintf(diag_msg_buf, diag_msg_max_length-1, " (Possible cause: can't load %s-bit .so on a %s-bit platform)", lib_arch.name, arch_array[running_arch_index].name);
+      ::snprintf(diag_msg_buf, diag_msg_max_length - 1, " (Possible cause: can't load %s-bit .so on a %s-bit platform)", lib_arch.name, arch_array[running_arch_index].name);
     } else {
-      ::snprintf(diag_msg_buf, diag_msg_max_length-1, " (Possible cause: can't load this .so (machine code=0x%x) on a %s-bit platform)", lib_arch.code, arch_array[running_arch_index].name);
+      ::snprintf(diag_msg_buf, diag_msg_max_length - 1, " (Possible cause: can't load this .so (machine code=0x%x) on a %s-bit platform)", lib_arch.code, arch_array[running_arch_index].name);
     }
   }
 
@@ -1636,7 +1631,7 @@ void * os::Linux::dlopen_helper(const char *filename, char *ebuf, int ebuflen) {
   void * result = ::dlopen(filename, RTLD_LAZY);
   if (result == NULL) {
     ::strncpy(ebuf, ::dlerror(), ebuflen - 1);
-    ebuf[ebuflen-1] = '\0';
+    ebuf[ebuflen - 1] = '\0';
   }
   return result;
 }
@@ -1899,7 +1894,7 @@ void os::get_summary_os_info(char* buf, size_t buflen) {
   if (file_exists("/etc/debian_version")) {
     strncpy(buf, "Debian ", buflen);
     if (buflen > 7) {
-      parse_os_info(&buf[7], buflen-7, "/etc/debian_version");
+      parse_os_info(&buf[7], buflen - 7, "/etc/debian_version");
     }
   } else {
     strncpy(buf, "Linux", buflen);
@@ -2398,7 +2393,7 @@ void linux_wrap_code(char* base, size_t size) {
   int fd = ::open(buf, O_CREAT | O_RDWR, S_IRWXU);
 
   if (fd != -1) {
-    off_t rv = ::lseek(fd, size-2, SEEK_SET);
+    off_t rv = ::lseek(fd, size - 2, SEEK_SET);
     if (rv != (off_t)-1) {
       if (::write(fd, "", 1) == 1) {
         mmap(base, size,
@@ -2829,8 +2824,7 @@ struct bitmask* os::Linux::_numa_all_nodes_ptr;
 struct bitmask* os::Linux::_numa_nodes_ptr;
 
 bool os::pd_uncommit_memory(char* addr, size_t size) {
-  uintptr_t res = (uintptr_t) ::mmap(addr, size, PROT_NONE,
-                                     MAP_PRIVATE|MAP_FIXED|MAP_NORESERVE|MAP_ANONYMOUS, -1, 0);
+  uintptr_t res = (uintptr_t) ::mmap(addr, size, PROT_NONE, MAP_PRIVATE|MAP_FIXED|MAP_NORESERVE|MAP_ANONYMOUS, -1, 0);
   return res  != (uintptr_t) MAP_FAILED;
 }
 
@@ -4192,7 +4186,7 @@ bool os::Linux::chained_handler(int sig, siginfo_t* siginfo, void* context) {
 }
 
 struct sigaction* os::Linux::get_preinstalled_handler(int sig) {
-  if ((((uint64_t)1 << (sig-1)) & sigs) != 0) {
+  if ((((uint64_t)1 << (sig - 1)) & sigs) != 0) {
     return &sigact[sig];
   }
   return NULL;
@@ -4200,7 +4194,7 @@ struct sigaction* os::Linux::get_preinstalled_handler(int sig) {
 
 void os::Linux::save_preinstalled_handler(int sig, struct sigaction& oldAct) {
   sigact[sig] = oldAct;
-  sigs |= (uint64_t)1 << (sig-1);
+  sigs |= (uint64_t)1 << (sig - 1);
 }
 
 // for diagnostic
@@ -4624,18 +4618,6 @@ jint os::init_2(void) {
       }
     }
 
-    if (UseParallelGC && UseNUMA && UseLargePages && !can_commit_large_page_memory()) {
-      // With SHM and HugeTLBFS large pages we cannot uncommit a page, so there's no way
-      // we can make the adaptive lgrp chunk resizing work. If the user specified both
-      // UseNUMA and UseLargePages (or UseSHM/UseHugeTLBFS) on the command line - warn
-      // and disable adaptive resizing.
-      if (UseAdaptiveSizePolicy || UseAdaptiveNUMAChunkSizing) {
-        warning("UseNUMA is not fully compatible with SHM/HugeTLBFS large pages, disabling adaptive resizing (-XX:-UseAdaptiveSizePolicy -XX:-UseAdaptiveNUMAChunkSizing)");
-        UseAdaptiveSizePolicy = false;
-        UseAdaptiveNUMAChunkSizing = false;
-      }
-    }
-
     if (!UseNUMA && ForceNUMA) {
       UseNUMA = true;
     }
@@ -4864,8 +4846,8 @@ bool os::find(address addr, outputStream* st) {
 
     if (Verbose) {
       // decode some bytes around the PC
-      address begin = clamp_address_in_page(addr-40, addr, os::vm_page_size());
-      address end   = clamp_address_in_page(addr+40, addr, os::vm_page_size());
+      address begin = clamp_address_in_page(addr - 40, addr, os::vm_page_size());
+      address end   = clamp_address_in_page(addr + 40, addr, os::vm_page_size());
       address       lowest = (address) dlinfo.dli_sname;
       if (!lowest)  lowest = (address) dlinfo.dli_fbase;
       if (begin < lowest)  begin = lowest;
@@ -5058,8 +5040,7 @@ char* os::pd_map_memory(int fd, const char* file_name, size_t file_offset,
     flags |= MAP_FIXED;
   }
 
-  char* mapped_address = (char*)mmap(addr, (size_t)bytes, prot, flags,
-                                     fd, file_offset);
+  char* mapped_address = (char*)mmap(addr, (size_t)bytes, prot, flags, fd, file_offset);
   if (mapped_address == MAP_FAILED) {
     return NULL;
   }
@@ -5067,12 +5048,9 @@ char* os::pd_map_memory(int fd, const char* file_name, size_t file_offset,
 }
 
 // Remap a block of memory.
-char* os::pd_remap_memory(int fd, const char* file_name, size_t file_offset,
-                          char *addr, size_t bytes, bool read_only,
-                          bool allow_exec) {
+char* os::pd_remap_memory(int fd, const char* file_name, size_t file_offset, char *addr, size_t bytes, bool read_only, bool allow_exec) {
   // same as map_memory() on this OS
-  return os::map_memory(fd, file_name, file_offset, addr, bytes, read_only,
-                        allow_exec);
+  return os::map_memory(fd, file_name, file_offset, addr, bytes, read_only, allow_exec);
 }
 
 // Unmap a block of memory.

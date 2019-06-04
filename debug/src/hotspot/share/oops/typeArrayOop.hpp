@@ -98,7 +98,7 @@ private:
     julong size_in_bytes = (juint)length;
     size_in_bytes <<= element_shift;
     size_in_bytes += instance_header_size;
-    julong size_in_words = ((size_in_bytes + (HeapWordSize-1)) >> LogHeapWordSize);
+    julong size_in_words = ((size_in_bytes + (HeapWordSize - 1)) >> LogHeapWordSize);
 
     return align_object_size((intptr_t)size_in_words);
   }

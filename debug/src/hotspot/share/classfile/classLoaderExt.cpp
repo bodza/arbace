@@ -8,11 +8,8 @@
 #include "classfile/classLoaderData.inline.hpp"
 #include "classfile/klassFactory.hpp"
 #include "classfile/modules.hpp"
-#include "classfile/sharedPathsMiscInfo.hpp"
-#include "classfile/systemDictionaryShared.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "memory/allocation.inline.hpp"
-#include "memory/filemap.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/instanceKlass.hpp"
 #include "oops/oop.inline.hpp"
@@ -212,9 +209,7 @@ void ClassLoaderExt::finalize_shared_paths_misc_info() {
 InstanceKlass* ClassLoaderExt::load_class(Symbol* name, const char* path, TRAPS) {
   ResourceMark rm(THREAD);
   const char* class_name = name->as_C_string();
-
-  const char* file_name = file_name_for_class_name(class_name,
-                                                   name->utf8_length());
+  const char* file_name = file_name_for_class_name(class_name, name->utf8_length());
 
   // Lookup stream for parsing .class file
   ClassFileStream* stream = NULL;
@@ -223,9 +218,7 @@ InstanceKlass* ClassLoaderExt::load_class(Symbol* name, const char* path, TRAPS)
     return NULL;
   }
   {
-    PerfClassTraceTime vmtimer(perf_sys_class_lookup_time(),
-                               ((JavaThread*) THREAD)->get_thread_stat()->perf_timers_addr(),
-                               PerfClassTraceTime::CLASS_LOAD);
+    PerfClassTraceTime vmtimer(perf_sys_class_lookup_time(), ((JavaThread*) THREAD)->get_thread_stat()->perf_timers_addr(), PerfClassTraceTime::CLASS_LOAD);
     stream = e->open_stream(file_name, CHECK_NULL);
   }
 
@@ -244,7 +237,6 @@ InstanceKlass* ClassLoaderExt::load_class(Symbol* name, const char* path, TRAPS)
     return NULL;
   }
   result->set_shared_classpath_index(UNREGISTERED_INDEX);
-  SystemDictionaryShared::set_shared_class_misc_info(result, stream);
   return result;
 }
 

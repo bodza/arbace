@@ -12,9 +12,7 @@
 
 class VM_G1CollectFull: public VM_GC_Operation {
 public:
-  VM_G1CollectFull(uint gc_count_before,
-                   uint full_gc_count_before,
-                   GCCause::Cause cause)
+  VM_G1CollectFull(uint gc_count_before, uint full_gc_count_before, GCCause::Cause cause)
     : VM_GC_Operation(gc_count_before, cause, full_gc_count_before, true) { }
   virtual VMOp_Type type() const { return VMOp_G1CollectFull; }
   virtual void doit();

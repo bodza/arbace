@@ -28,26 +28,16 @@ uint64_t OopEncodingHeapMax = 0;
 // Something to help porters sleep at night
 
 void basic_types_init() {
-  if (JavaPriority1_To_OSPriority != -1 )
-    os::java_to_os_priority[1] = JavaPriority1_To_OSPriority;
-  if (JavaPriority2_To_OSPriority != -1 )
-    os::java_to_os_priority[2] = JavaPriority2_To_OSPriority;
-  if (JavaPriority3_To_OSPriority != -1 )
-    os::java_to_os_priority[3] = JavaPriority3_To_OSPriority;
-  if (JavaPriority4_To_OSPriority != -1 )
-    os::java_to_os_priority[4] = JavaPriority4_To_OSPriority;
-  if (JavaPriority5_To_OSPriority != -1 )
-    os::java_to_os_priority[5] = JavaPriority5_To_OSPriority;
-  if (JavaPriority6_To_OSPriority != -1 )
-    os::java_to_os_priority[6] = JavaPriority6_To_OSPriority;
-  if (JavaPriority7_To_OSPriority != -1 )
-    os::java_to_os_priority[7] = JavaPriority7_To_OSPriority;
-  if (JavaPriority8_To_OSPriority != -1 )
-    os::java_to_os_priority[8] = JavaPriority8_To_OSPriority;
-  if (JavaPriority9_To_OSPriority != -1 )
-    os::java_to_os_priority[9] = JavaPriority9_To_OSPriority;
-  if (JavaPriority10_To_OSPriority != -1 )
-    os::java_to_os_priority[10] = JavaPriority10_To_OSPriority;
+  if (JavaPriority1_To_OSPriority != -1) os::java_to_os_priority[1] = JavaPriority1_To_OSPriority;
+  if (JavaPriority2_To_OSPriority != -1) os::java_to_os_priority[2] = JavaPriority2_To_OSPriority;
+  if (JavaPriority3_To_OSPriority != -1) os::java_to_os_priority[3] = JavaPriority3_To_OSPriority;
+  if (JavaPriority4_To_OSPriority != -1) os::java_to_os_priority[4] = JavaPriority4_To_OSPriority;
+  if (JavaPriority5_To_OSPriority != -1) os::java_to_os_priority[5] = JavaPriority5_To_OSPriority;
+  if (JavaPriority6_To_OSPriority != -1) os::java_to_os_priority[6] = JavaPriority6_To_OSPriority;
+  if (JavaPriority7_To_OSPriority != -1) os::java_to_os_priority[7] = JavaPriority7_To_OSPriority;
+  if (JavaPriority8_To_OSPriority != -1) os::java_to_os_priority[8] = JavaPriority8_To_OSPriority;
+  if (JavaPriority9_To_OSPriority != -1) os::java_to_os_priority[9] = JavaPriority9_To_OSPriority;
+  if (JavaPriority10_To_OSPriority != -1) os::java_to_os_priority[10] = JavaPriority10_To_OSPriority;
 
   // Set the size of basic types here (after argument parsing but before
   // stub generation).

@@ -595,7 +595,7 @@ template<>
 struct Atomic::AddImpl<short, short> {
   short operator()(short add_value, short volatile* dest, atomic_memory_order order) const {
 #ifdef VM_LITTLE_ENDIAN
-    int new_value = Atomic::add(add_value << 16, (volatile int*)(dest-1), order);
+    int new_value = Atomic::add(add_value << 16, (volatile int*)(dest - 1), order);
 #else
     int new_value = Atomic::add(add_value << 16, (volatile int*)(dest), order);
 #endif
@@ -654,13 +654,9 @@ struct Atomic::CmpxchgImpl<
   T, T, T,
   typename EnableIf<IsIntegral<T>::value || IsRegisteredEnum<T>::value>::type>
 {
-  T operator()(T exchange_value, T volatile* dest, T compare_value,
-               atomic_memory_order order) const {
+  T operator()(T exchange_value, T volatile* dest, T compare_value, atomic_memory_order order) const {
     // Forward to the platform handler for the size of T.
-    return PlatformCmpxchg<sizeof(T)>()(exchange_value,
-                                        dest,
-                                        compare_value,
-                                        order);
+    return PlatformCmpxchg<sizeof(T)>()(exchange_value, dest, compare_value, order);
   }
 };
 

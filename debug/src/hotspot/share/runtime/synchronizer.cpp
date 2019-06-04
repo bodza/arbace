@@ -2,7 +2,6 @@
 
 #include "classfile/vmSymbols.hpp"
 #include "memory/allocation.inline.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/padded.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/markOop.hpp"
@@ -988,7 +987,7 @@ ObjectMonitor* ObjectSynchronizer::omAlloc(Thread * Self) {
     // look like: class Block { Block * next; int N; ObjectMonitor Body [N] ; }
 
     for (int i = 1; i < _BLOCKSIZE; i++) {
-      temp[i].FreeNext = (ObjectMonitor *)&temp[i+1];
+      temp[i].FreeNext = (ObjectMonitor *)&temp[i + 1];
     }
 
     // terminate the last monitor as the end of list

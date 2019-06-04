@@ -376,7 +376,7 @@ inline void ConcurrentHashTable<VALUE, CONFIG, F>::do_bulk_delete_locked_for(Thr
   GlobalCounter::critical_section_begin(thread);
   for (size_t bucket_it = start_idx; bucket_it < stop_idx; bucket_it++) {
     Bucket* bucket = table->get_bucket(bucket_it);
-    Bucket* prefetch_bucket = (bucket_it+1) < stop_idx ? table->get_bucket(bucket_it+1) : NULL;
+    Bucket* prefetch_bucket = (bucket_it + 1) < stop_idx ? table->get_bucket(bucket_it + 1) : NULL;
 
     if (!HaveDeletables<IsPointer<VALUE>::value, EVALUATE_FUNC>::have_deletable(bucket, eval_f, prefetch_bucket)) {
         // Nothing to remove in this bucket.

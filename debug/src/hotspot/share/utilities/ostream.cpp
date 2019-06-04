@@ -47,7 +47,7 @@ void outputStream::update_position(const char* s, size_t len) {
     } else if (ch == '\t') {
       int tw = 8 - (_position & 7);
       _position += tw;
-      _precount -= tw-1;  // invariant:  _precount + _position == total count
+      _precount -= tw - 1;  // invariant:  _precount + _position == total count
     } else {
       _position += 1;
     }
@@ -63,12 +63,12 @@ const char* outputStream::do_vsnprintf(char* buffer, size_t buflen, const char* 
     // constant format string
     result = format;
     result_len = strlen(result);
-    if (add_cr && result_len >= buflen)  result_len = buflen-1;  // truncate
+    if (add_cr && result_len >= buflen)  result_len = buflen - 1;  // truncate
   } else if (format[0] == '%' && format[1] == 's' && format[2] == '\0') {
     // trivial copy-through format string
     result = va_arg(ap, const char*);
     result_len = strlen(result);
-    if (add_cr && result_len >= buflen)  result_len = buflen-1;  // truncate
+    if (add_cr && result_len >= buflen)  result_len = buflen - 1;  // truncate
   } else {
     int written = os::vsnprintf(buffer, buflen, format, ap);
     result = buffer;
@@ -179,7 +179,7 @@ void outputStream::cr_indent() {
 }
 
 void outputStream::stamp() {
-  if (! _stamp.is_updated()) {
+  if (!_stamp.is_updated()) {
     _stamp.update(); // start at 0 on first call to stamp()
   }
 
@@ -445,10 +445,6 @@ static const char* make_log_name_internal(const char* log_name, const char* forc
   return buf;
 }
 
-// log_name comes from -XX:NULL=log_name or
-// -XX:DumpLoadedClassList=<file_name>
-// in log_name, %p => pid1234 and
-//              %t => YYYY-MM-DD_HH-MM-SS
 static const char* make_log_name(const char* log_name, const char* force_directory) {
   char timestr[32];
   get_datetime_string(timestr, sizeof(timestr));
@@ -540,24 +536,6 @@ int defaultStream::_error_fd  = 2;
 FILE* defaultStream::_output_stream = stdout;
 FILE* defaultStream::_error_stream  = stderr;
 
-#define LOG_MAJOR_VERSION 160
-#define LOG_MINOR_VERSION 1
-
-void defaultStream::init() {
-  _inited = true;
-}
-
-bool defaultStream::has_log_file() {
-  // lazily create log file (at startup, false is false even
-  // if +false is used, because the flags haven't been parsed yet)
-  // For safer printing during fatal error handling, do not init logfile
-  // if a VM error has been reported.
-  if (!_inited && !VMError::is_error_reported()) {
-    init();
-  }
-  return _log_file != NULL;
-}
-
 fileStream* defaultStream::open_file(const char* log_name) {
   const char* try_name = make_log_name(log_name, NULL);
   if (try_name == NULL) {
@@ -581,8 +559,6 @@ fileStream* defaultStream::open_file(const char* log_name) {
     return NULL;
   }
 
-  jio_printf("Warning:  Forcing option -XX:NULL=%s\n", try_name);
-
   file = new(ResourceObj::C_HEAP, mtInternal) fileStream(try_name);
   FREE_C_HEAP_ARRAY(char, try_name);
   if (file->is_open()) {
@@ -593,72 +569,17 @@ fileStream* defaultStream::open_file(const char* log_name) {
   return NULL;
 }
 
-// finish_log() is called during normal VM shutdown. finish_log_on_error() is
-// called by ostream_abort() after a fatal error.
-//
-void defaultStream::finish_log() {
-  xmlStream* xs = _outer_xmlStream;
-  xs->done("tty");
-
-  // Other log forks are appended here, at the End of Time:
-  CompileLog::finish_log(xs->out());  // write compile logging, if any, now
-
-  xs->done("hotspot_log");
-  xs->flush();
-
-  fileStream* file = _log_file;
-  _log_file = NULL;
-
-  delete _outer_xmlStream;
-  _outer_xmlStream = NULL;
-
-  file->flush();
-  delete file;
-}
-
-void defaultStream::finish_log_on_error(char *buf, int buflen) {
-  xmlStream* xs = _outer_xmlStream;
-
-  if (xs && xs->out()) {
-    xs->done_raw("tty");
-
-    // Other log forks are appended here, at the End of Time:
-    CompileLog::finish_log_on_error(xs->out(), buf, buflen);  // write compile logging, if any, now
-
-    xs->done_raw("hotspot_log");
-    xs->flush();
-
-    fileStream* file = _log_file;
-    _log_file = NULL;
-    _outer_xmlStream = NULL;
-
-    if (file) {
-      file->flush();
-
-      // Can't delete or close the file because delete and fclose aren't
-      // async-safe. We are about to die, so leave it to the kernel.
-      // delete file;
-    }
-  }
-}
-
 intx defaultStream::hold(intx writer_id) {
-  bool has_log = has_log_file();  // check before locking
   if (// impossible, but who knows?
       writer_id == NO_WRITER ||
-
       // bootstrap problem
       tty_lock == NULL ||
-
       // can't grab a lock if current Thread isn't set
       Thread::current_or_null() == NULL ||
-
       // developer hook
       !SerializeVMOutput ||
-
       // VM already unhealthy
       VMError::is_error_reported() ||
-
       // safepoint == global lock (for VM only)
       (SafepointSynchronize::is_synchronizing() && Thread::current()->is_VM_thread())) {
     // do not attempt to lock unless we know the thread and the VM is healthy
@@ -671,11 +592,6 @@ intx defaultStream::hold(intx writer_id) {
   tty_lock->lock_without_safepoint_check();
   // got the lock
   if (writer_id != _last_writer) {
-    if (has_log) {
-      _log_file->bol();
-      // output a hint where this output is coming from:
-      _log_file->print_cr("<writer thread='" UINTX_FORMAT "'/>", writer_id);
-    }
     _last_writer = writer_id;
   }
   _writer = writer_id;
@@ -703,17 +619,7 @@ void defaultStream::write(const char* s, size_t len) {
     jio_print(s, len);
   }
 
-  // print to log file
-  if (has_log_file()) {
-    int nl0 = _newlines;
-    xmlTextStream::write(s, len);
-    // flush the log file too, if there were any newlines
-    if (nl0 != _newlines) {
-      flush();
-    }
-  } else {
-    update_position(s, len);
-  }
+  update_position(s, len);
 
   release(holder);
 }
@@ -769,7 +675,7 @@ void ostream_init_log() {
   // If we haven't lazily initialized the logfile yet, do it now,
   // to avoid the possibility of lazy initialization during a VM
   // crash, which can affect the stability of the fatal error handler.
-  defaultStream::instance->has_log_file();
+  defaultStream::instance->false;
 }
 
 // ostream_exit() is called during normal VM exit to finish log files, flush
@@ -793,11 +699,6 @@ void ostream_exit() {
 void ostream_abort() {
   // Here we can't delete tty, just flush its output
   if (tty) tty->flush();
-
-  if (defaultStream::instance != NULL) {
-    static char buf[4096];
-    defaultStream::instance->finish_log_on_error(buf, sizeof(buf));
-  }
 }
 
 bufferedStream::bufferedStream(size_t initial_size, size_t bufmax) : outputStream() {
@@ -842,7 +743,7 @@ void bufferedStream::write(const char* s, size_t len) {
 }
 
 char* bufferedStream::as_string() {
-  char* copy = NEW_RESOURCE_ARRAY(char, buffer_pos+1);
+  char* copy = NEW_RESOURCE_ARRAY(char, buffer_pos + 1);
   strncpy(copy, buffer, buffer_pos);
   copy[buffer_pos] = 0;  // terminating null
   return copy;

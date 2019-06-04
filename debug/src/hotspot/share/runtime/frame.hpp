@@ -339,7 +339,6 @@ class frame {
   void metadata_do(void f(Metadata*));
 
   // Verification
-  void verify(const RegisterMap* map);
   static bool verify_return_pc(address x);
 
 #include CPU_HEADER(frame)

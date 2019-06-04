@@ -23,13 +23,11 @@ class CompiledPltStaticCall: public CompiledStaticCall {
  public:
   inline static CompiledPltStaticCall* before(address return_addr) {
     CompiledPltStaticCall* st = new CompiledPltStaticCall(nativePltCall_before(return_addr));
-    st->verify();
     return st;
   }
 
   static inline CompiledPltStaticCall* at(address native_call) {
     CompiledPltStaticCall* st = new CompiledPltStaticCall(nativePltCall_at(native_call));
-    st->verify();
     return st;
   }
 
@@ -47,8 +45,7 @@ class CompiledPltStaticCall: public CompiledStaticCall {
   static void set_stub_to_clean(static_stub_Relocation* static_stub);
 
   // Misc.
-  void print()  { };
-  void verify() { };
+  void print() { };
 
  protected:
   virtual address resolve_call_stub() const { return _call->plt_resolve_call(); }

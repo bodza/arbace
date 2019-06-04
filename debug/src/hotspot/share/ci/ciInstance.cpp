@@ -35,7 +35,7 @@ ciType* ciInstance::java_mirror_type() {
 // ciInstance::field_value_impl
 ciConstant ciInstance::field_value_impl(BasicType field_btype, int offset) {
   oop obj = get_oop();
-  switch(field_btype) {
+  switch (field_btype) {
     case T_BYTE:    return ciConstant(field_btype, obj->byte_field(offset));
     case T_CHAR:    return ciConstant(field_btype, obj->char_field(offset));
     case T_SHORT:   return ciConstant(field_btype, obj->short_field(offset));

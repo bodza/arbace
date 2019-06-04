@@ -9,7 +9,6 @@
 #include "memory/heapInspection.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceClosure.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/compressedOops.inline.hpp"
@@ -95,9 +94,9 @@ Klass *Klass::up_cast_abstract() {
 }
 
 // Find LCA in class hierarchy
-Klass *Klass::LCA( Klass *k2 ) {
+Klass *Klass::LCA(Klass *k2) {
   Klass *k1 = this;
-  while ( 1 ) {
+  while (true) {
     if (k1->is_subtype_of(k2)) return k2;
     if (k2->is_subtype_of(k1)) return k1;
     k1 = k1->super();
@@ -107,14 +106,12 @@ Klass *Klass::LCA( Klass *k2 ) {
 
 void Klass::check_valid_for_instantiation(bool throwError, TRAPS) {
   ResourceMark rm(THREAD);
-  THROW_MSG(throwError ? vmSymbols::java_lang_InstantiationError()
-            : vmSymbols::java_lang_InstantiationException(), external_name());
+  THROW_MSG(throwError ? vmSymbols::java_lang_InstantiationError() : vmSymbols::java_lang_InstantiationException(), external_name());
 }
 
 void Klass::copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos, int length, TRAPS) {
   ResourceMark rm(THREAD);
-  THROW_MSG(vmSymbols::java_lang_ArrayStoreException(),
-            err_msg("arraycopy: source type %s is not an array", s->klass()->external_name()));
+  THROW_MSG(vmSymbols::java_lang_ArrayStoreException(), err_msg("arraycopy: source type %s is not an array", s->klass()->external_name()));
 }
 
 void Klass::initialize(TRAPS) {
@@ -141,7 +138,7 @@ void* Klass::operator new(size_t size, ClassLoaderData* loader_data, size_t word
 
 // "Normal" instantiation is preceeded by a MetaspaceObj allocation
 // which zeros out memory - calloc equivalent.
-// The constructor is also used from CppVtableCloner,
+// The constructor is also used from ...,
 // which doesn't zero out the memory before calling the constructor.
 // Need to set the _java_mirror field explicitly to not hit an assert that the field
 // should be NULL before setting it.
@@ -155,7 +152,7 @@ jint Klass::array_layout_helper(BasicType etype) {
   int  hsize = arrayOopDesc::base_offset_in_bytes(etype);
   int  esize = type2aelembytes(etype);
   bool isobj = (etype == T_OBJECT);
-  int  tag   =  isobj ? _lh_array_tag_obj_value : _lh_array_tag_type_value;
+  int  tag   = isobj ? _lh_array_tag_obj_value : _lh_array_tag_type_value;
   int lh = array_layout_helper(tag, hsize, etype, exact_log2(esize));
 
   return lh;
@@ -231,7 +228,7 @@ void Klass::initialize_supers(Klass* k, Array<Klass*>* transitive_interfaces, TR
       // secondary list already contains some primary overflows, they
       // (with the extra level of array-ness) will collide with the
       // normal primary superclass overflows.
-      for ( i = 0; i < secondaries->length(); i++ ) {
+      for (i = 0; i < secondaries->length(); i++) {
         if (secondaries->at(i) == p )
           break;
       }
@@ -247,7 +244,7 @@ void Klass::initialize_supers(Klass* k, Array<Klass*>* transitive_interfaces, TR
     for (int j = 0; j < fill_p; j++) {
       s2->at_put(j, primaries->pop());  // add primaries in reverse order.
     }
-    for ( int j = 0; j < secondaries->length(); j++ ) {
+    for (int j = 0; j < secondaries->length(); j++) {
       s2->at_put(j+fill_p, secondaries->at(j));  // add secondaries on the end.
     }
 
@@ -400,12 +397,6 @@ void Klass::restore_unshareable_info(ClassLoaderData* loader_data, Handle protec
 
   if (this->has_raw_archived_mirror()) {
     ResourceMark rm;
-    if (MetaspaceShared::open_archive_heap_region_mapped()) {
-      bool present = java_lang_Class::restore_archived_mirror(this, loader, module_handle, protection_domain, CHECK);
-      if (present) {
-        return;
-      }
-    }
 
     // No archived mirror data
     _java_mirror = NULL;
@@ -526,7 +517,7 @@ void Klass::verify_on(outputStream* st) {
     Klass* ko = secondary_super_cache();
     guarantee(ko->is_klass(), "should be klass");
   }
-  for ( uint i = 0; i < primary_super_limit(); i++ ) {
+  for (uint i = 0; i < primary_super_limit(); i++) {
     Klass* ko = _primary_supers[i];
     if (ko != NULL) {
       guarantee(ko->is_klass(), "should be klass");

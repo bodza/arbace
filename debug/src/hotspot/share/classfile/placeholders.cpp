@@ -116,19 +116,7 @@ void PlaceholderTable::find_and_remove(int index, unsigned int hash, Symbol* nam
     }
   }
 
-PlaceholderTable::PlaceholderTable(int table_size)
-    : Hashtable<Symbol*, mtClass>(table_size, sizeof(PlaceholderEntry)) {
-}
-
-void PlaceholderEntry::verify() const {
-  guarantee(loader_data() != NULL, "Must have been setup.");
-  guarantee(loader_data()->class_loader() == NULL || loader_data()->class_loader()->is_instance(), "checking type of _loader");
-  guarantee(instance_klass() == NULL || instance_klass()->is_instance_klass(), "checking type of instance_klass result");
-}
-
-void PlaceholderTable::verify() {
-  verify_table<PlaceholderEntry>("Placeholder Table");
-}
+PlaceholderTable::PlaceholderTable(int table_size) : Hashtable<Symbol*, mtClass>(table_size, sizeof(PlaceholderEntry)) { }
 
 // Note, doesn't append a cr
 // Can't call this print_on because HashtableEntry doesn't initialize its vptr

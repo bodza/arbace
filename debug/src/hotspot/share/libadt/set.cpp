@@ -39,8 +39,8 @@ char *Set::setstr() const
 
   // For all elements of the Set
   uint hi = (uint)-2, lo = (uint)-2;
-  for ( SetI i(&set); i.test(); ++i ) {
-    if (hi+1 == i.elem ) {        // Moving sequentially thru range?
+  for (SetI i(&set); i.test(); ++i) {
+    if (hi + 1 == i.elem) {        // Moving sequentially thru range?
       hi = i.elem;                // Yes, just update hi end of range
     } else {                      // Else range ended
       if (buf+len-s < 25 ) {      // Generous trailing space for upcoming numbers
@@ -94,22 +94,22 @@ int Set::parse(const char *s)
 
   // Sets are filled with values of the form "xx," or "xx-yy," with the comma
   // a "}" at the very end.
-  while ( 1 ) {                  // While have elements in the Set
+  while (true) {                  // While have elements in the Set
     char *u;                    // Pointer to character ending parse
     uint hi, i;                 // Needed for range handling below
     uint elem = (uint)strtoul(s,&u,10);// Get element
     if (u == s ) return 0;      // Bogus crude
     s = u;                      // Skip over the number
     c = *s++;                   // Get the number seperator
-    switch ( c ) {              // Different seperators
+    switch (c) {              // Different seperators
     case '}':                   // Last simple element
     case ',':                   // Simple element
       (*this) <<= elem;         // Insert the simple element into the Set
       break;                    // Go get next element
     case '-':                   // Range
-      hi = (uint)strtoul(s,&u,10); // Get element
-      if (u == s ) return 0;    // Bogus crude
-      for ( i=elem; i<=hi; i++ )
+      hi = (uint)strtoul(s, &u, 10); // Get element
+      if (u == s) return 0;    // Bogus crude
+      for (i = elem; i <= hi; i++)
         (*this) <<= i;          // Insert the entire range into the Set
       s = u;                    // Skip over the number
       c = *s++;                 // Get the number seperator

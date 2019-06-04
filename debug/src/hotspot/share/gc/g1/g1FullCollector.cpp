@@ -104,11 +104,9 @@ G1FullCollector::~G1FullCollector() {
 void G1FullCollector::prepare_collection() {
   _heap->g1_policy()->record_full_collection_start();
 
-  _heap->print_heap_before_gc();
   _heap->print_heap_regions();
 
   _heap->abort_concurrent_cycle();
-  _heap->verify_before_full_collection(scope()->is_explicit_gc());
 
   _heap->gc_prologue(true);
   _heap->prepare_heap_for_full_collection();
@@ -130,15 +128,12 @@ void G1FullCollector::prepare_collection() {
 
 void G1FullCollector::collect() {
   phase1_mark_live_objects();
-  verify_after_marking();
 
   // Don't add any more derived pointers during later phases
   deactivate_derived_pointers();
 
   phase2_prepare_compaction();
-
   phase3_adjust_pointers();
-
   phase4_do_compaction();
 }
 
@@ -157,8 +152,6 @@ void G1FullCollector::complete_collection() {
 
   _heap->g1_policy()->record_full_collection_end();
   _heap->gc_epilogue(true);
-
-  _heap->verify_after_full_collection();
 
   _heap->print_heap_after_full_collection(scope()->heap_transition());
 }
@@ -225,26 +218,4 @@ void G1FullCollector::restore_marks() {
 
 void G1FullCollector::run_task(AbstractGangTask* task) {
   _heap->workers()->run_task(task, _num_workers);
-}
-
-void G1FullCollector::verify_after_marking() {
-  if (!VerifyDuringGC || !_heap->verifier()->should_verify(G1HeapVerifier::G1VerifyFull)) {
-    // Only do verification if VerifyDuringGC and G1VerifyFull is set.
-    return;
-  }
-
-  HandleMark hm;  // handle scope
-  DerivedPointerTableDeactivate dpt_deact;
-  _heap->prepare_for_verify();
-  // Note: we can verify only the heap here. When an object is
-  // marked, the previous value of the mark word (including
-  // identity hash values, ages, etc) is preserved, and the mark
-  // word is set to markOop::marked_value - effectively removing
-  // any hash values from the mark word. These hash values are
-  // used when verifying the dictionaries and so removing them
-  // from the mark word can make verification of the dictionaries
-  // fail. At the end of the GC, the original mark word values
-  // (including hash values) are restored to the appropriate
-  // objects.
-  _heap->verify(VerifyOption_G1UseFullMarking);
 }

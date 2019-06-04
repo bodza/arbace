@@ -205,7 +205,7 @@ address TemplateInterpreterGenerator::generate_result_handler_for(BasicType type
     // and verify it
     __ verify_oop(rax);
     break;
-  default       : ShouldNotReachHere();
+  default: ShouldNotReachHere();
   }
   __ ret(0);                                   // return from result handler
   return entry;

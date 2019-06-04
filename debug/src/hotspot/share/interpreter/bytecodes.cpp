@@ -119,8 +119,8 @@ void Bytecodes::def(Code code, const char* name, const char* format, const char*
   int bc_flags = 0;
   if (can_trap)           bc_flags |= _bc_can_trap;
   if (java_code != code)  bc_flags |= _bc_can_rewrite;
-  _flags[(u1)code+0*(1<<BitsPerByte)] = compute_flags(format,      bc_flags);
-  _flags[(u1)code+1*(1<<BitsPerByte)] = compute_flags(wide_format, bc_flags);
+  _flags[(u1)code + 0 * (1 << BitsPerByte)] = compute_flags(format,      bc_flags);
+  _flags[(u1)code + 1 * (1 << BitsPerByte)] = compute_flags(wide_format, bc_flags);
 }
 
 // Format strings interpretation:

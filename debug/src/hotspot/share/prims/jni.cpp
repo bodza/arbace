@@ -538,8 +538,8 @@ class JNI_ArgumentPusherVaArg : public JNI_ArgumentPusher {
       _return_type = (BasicType)((fingerprint >> static_feature_size) & result_feature_mask);
 
       fingerprint = fingerprint >> (static_feature_size + result_feature_size);
-      while ( 1 ) {
-        switch ( fingerprint & parameter_feature_mask ) {
+      while (true) {
+        switch (fingerprint & parameter_feature_mask) {
           case bool_parm:   get_bool();   break;
           case char_parm:   get_char();   break;
           case short_parm:  get_short();  break;
@@ -603,8 +603,8 @@ class JNI_ArgumentPusherArray : public JNI_ArgumentPusher {
     } else {
       _return_type = (BasicType)((fingerprint >> static_feature_size) & result_feature_mask);
       fingerprint = fingerprint >> (static_feature_size + result_feature_size);
-      while ( 1 ) {
-        switch ( fingerprint & parameter_feature_mask ) {
+      while (true) {
+        switch (fingerprint & parameter_feature_mask) {
           case bool_parm:   get_bool();   break;
           case char_parm:   get_char();   break;
           case short_parm:  get_short();  break;

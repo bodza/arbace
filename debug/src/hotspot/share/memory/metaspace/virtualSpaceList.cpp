@@ -198,7 +198,7 @@ bool VirtualSpaceList::expand_by(size_t min_words, size_t preferred_words) {
   const char* const class_or_not = (is_class() ? "class" : "non-class");
 
   if (!MetaspaceGC::can_expand(min_words, this->is_class())) {
-    return  false;
+    return false;
   }
 
   size_t allowed_expansion_words = MetaspaceGC::allowed_expansion();

@@ -778,7 +778,7 @@ void MachPrologNode::emit(CodeBuffer &cbuf, PhaseRegAlloc *ra_) const {
   int framesize = C->frame_size_in_bytes();
   int bangsize = C->bang_size_in_bytes();
 
-  __ verified_entry(framesize, C->need_stack_bang(bangsize)?bangsize:0, false);
+  __ verified_entry(framesize, C->need_stack_bang(bangsize) ? bangsize : 0, false);
 
   C->set_frame_complete(cbuf.insts_size());
 
@@ -917,8 +917,8 @@ static void vec_stack_to_stack_helper(CodeBuffer *cbuf, int src_offset, int dst_
     case Op_VecX:
       __ pushq(Address(rsp, src_offset));
       __ popq (Address(rsp, dst_offset));
-      __ pushq(Address(rsp, src_offset+8));
-      __ popq (Address(rsp, dst_offset+8));
+      __ pushq(Address(rsp, src_offset + 8));
+      __ popq (Address(rsp, dst_offset + 8));
       break;
     case Op_VecY:
       __ vmovdqu(Address(rsp, -32), xmm0);
@@ -1895,7 +1895,7 @@ encode %{
 
   enc_class conmemref (rRegP t1) %{    // Con32(storeImmI)
     // Output immediate memory reference
-    emit_rm(cbuf, 0x00, $t1$$reg, 0x05 );
+    emit_rm(cbuf, 0x00, $t1$$reg, 0x05);
     emit_d32(cbuf, 0x00);
   %}
 
@@ -2917,7 +2917,7 @@ operand rRegN() %{
 // register class masks, not match rules.  Unless an instruction mentions
 // r15_RegP or any_RegP explicitly as its output, r15 will not be considered
 // by the allocator as an input.
-// The same logic applies to rbp_RegP being a match for rRegP: If PreserveFramePointer==true,
+// The same logic applies to rbp_RegP being a match for rRegP: If PreserveFramePointer == true,
 // the RBP is used as a proper frame pointer and is not included in ptr_reg. As a
 // result, RBP is not included in the output of the instruction either.
 
@@ -3854,7 +3854,7 @@ attributes %{
   instruction_fetch_units = 1;       // of 16 bytes
 
   // List of nop instructions
-  nops( MachNop );
+  nops(MachNop);
 %}
 
 //----------RESOURCES----------------------------------------------------------
@@ -3865,10 +3865,10 @@ attributes %{
 // 3 instructions decoded per cycle.
 // 2 load/store ops per cycle, 1 branch, 1 FPU,
 // 3 ALU op, only ALU0 handles mul instructions.
-resources( D0, D1, D2, DECODE = D0 | D1 | D2,
-           MS0, MS1, MS2, MEM = MS0 | MS1 | MS2,
-           BR, FPU,
-           ALU0, ALU1, ALU2, ALU = ALU0 | ALU1 | ALU2);
+resources(D0, D1, D2, DECODE = D0 | D1 | D2,
+          MS0, MS1, MS2, MEM = MS0 | MS1 | MS2,
+          BR, FPU,
+          ALU0, ALU1, ALU2, ALU = ALU0 | ALU1 | ALU2);
 
 //----------PIPELINE DESCRIPTION-----------------------------------------------
 // Pipeline Description specifies the stages in the machine's pipeline
@@ -5191,7 +5191,7 @@ instruct loadSSD(regD dst, stackSlotD src) %{
 // Must be safe to execute with invalid address (cannot fault).
 
 instruct prefetchAlloc( memory mem ) %{
-  predicate(AllocatePrefetchInstr==3);
+  predicate(AllocatePrefetchInstr == 3);
   match(PrefetchAllocation mem);
   ins_cost(125);
 
@@ -5203,7 +5203,7 @@ instruct prefetchAlloc( memory mem ) %{
 %}
 
 instruct prefetchAllocNTA( memory mem ) %{
-  predicate(AllocatePrefetchInstr==0);
+  predicate(AllocatePrefetchInstr == 0);
   match(PrefetchAllocation mem);
   ins_cost(125);
 
@@ -5215,7 +5215,7 @@ instruct prefetchAllocNTA( memory mem ) %{
 %}
 
 instruct prefetchAllocT0( memory mem ) %{
-  predicate(AllocatePrefetchInstr==1);
+  predicate(AllocatePrefetchInstr == 1);
   match(PrefetchAllocation mem);
   ins_cost(125);
 
@@ -5227,7 +5227,7 @@ instruct prefetchAllocT0( memory mem ) %{
 %}
 
 instruct prefetchAllocT2( memory mem ) %{
-  predicate(AllocatePrefetchInstr==2);
+  predicate(AllocatePrefetchInstr == 2);
   match(PrefetchAllocation mem);
   ins_cost(125);
 
@@ -5300,7 +5300,7 @@ instruct storeImmP0(memory mem, immP0 zero) %{
   match(Set mem (StoreP mem zero));
 
   ins_cost(125); // XXX
-  format %{ "movq    $mem, R12\t# ptr (R12_heapbase==0)" %}
+  format %{ "movq    $mem, R12\t# ptr (R12_heapbase == 0)" %}
   ins_encode %{
     __ movq($mem$$Address, r12);
   %}
@@ -5346,7 +5346,7 @@ instruct storeImmN0(memory mem, immN0 zero) %{
   match(Set mem (StoreN mem zero));
 
   ins_cost(125); // XXX
-  format %{ "movl    $mem, R12\t# compressed ptr (R12_heapbase==0)" %}
+  format %{ "movl    $mem, R12\t# compressed ptr (R12_heapbase == 0)" %}
   ins_encode %{
     __ movl($mem$$Address, r12);
   %}
@@ -5386,7 +5386,7 @@ instruct storeImmI0(memory mem, immI0 zero) %{
   match(Set mem (StoreI mem zero));
 
   ins_cost(125); // XXX
-  format %{ "movl    $mem, R12\t# int (R12_heapbase==0)" %}
+  format %{ "movl    $mem, R12\t# int (R12_heapbase == 0)" %}
   ins_encode %{
     __ movl($mem$$Address, r12);
   %}
@@ -5409,7 +5409,7 @@ instruct storeImmL0(memory mem, immL0 zero) %{
   match(Set mem (StoreL mem zero));
 
   ins_cost(125); // XXX
-  format %{ "movq    $mem, R12\t# long (R12_heapbase==0)" %}
+  format %{ "movq    $mem, R12\t# long (R12_heapbase == 0)" %}
   ins_encode %{
     __ movq($mem$$Address, r12);
   %}
@@ -5432,7 +5432,7 @@ instruct storeImmC0(memory mem, immI0 zero) %{
   match(Set mem (StoreC mem zero));
 
   ins_cost(125); // XXX
-  format %{ "movw    $mem, R12\t# short/char (R12_heapbase==0)" %}
+  format %{ "movw    $mem, R12\t# short/char (R12_heapbase == 0)" %}
   ins_encode %{
     __ movw($mem$$Address, r12);
   %}
@@ -5456,7 +5456,7 @@ instruct storeImmB0(memory mem, immI0 zero) %{
   match(Set mem (StoreB mem zero));
 
   ins_cost(125); // XXX
-  format %{ "movb    $mem, R12\t# short/char (R12_heapbase==0)" %}
+  format %{ "movb    $mem, R12\t# short/char (R12_heapbase == 0)" %}
   ins_encode %{
     __ movb($mem$$Address, r12);
   %}
@@ -5479,7 +5479,7 @@ instruct storeImmCM0_reg(memory mem, immI0 zero) %{
   match(Set mem (StoreCM mem zero));
 
   ins_cost(125); // XXX
-  format %{ "movb    $mem, R12\t# CMS card-mark byte 0 (R12_heapbase==0)" %}
+  format %{ "movb    $mem, R12\t# CMS card-mark byte 0 (R12_heapbase == 0)" %}
   ins_encode %{
     __ movb($mem$$Address, r12);
   %}
@@ -5514,7 +5514,7 @@ instruct storeF0(memory mem, immF0 zero) %{
   match(Set mem (StoreF mem zero));
 
   ins_cost(25); // XXX
-  format %{ "movl    $mem, R12\t# float 0. (R12_heapbase==0)" %}
+  format %{ "movl    $mem, R12\t# float 0. (R12_heapbase == 0)" %}
   ins_encode %{
     __ movl($mem$$Address, r12);
   %}
@@ -5560,7 +5560,7 @@ instruct storeD0(memory mem, immD0 zero) %{
   match(Set mem (StoreD mem zero));
 
   ins_cost(25); // XXX
-  format %{ "movq    $mem, R12\t# double 0. (R12_heapbase==0)" %}
+  format %{ "movq    $mem, R12\t# double 0. (R12_heapbase == 0)" %}
   ins_encode %{
     __ movq($mem$$Address, r12);
   %}
@@ -10534,7 +10534,7 @@ instruct testP_mem_reg0(rFlagsReg cr, memory mem, immP0 zero) %{
   predicate(UseCompressedOops && (Universe::narrow_oop_base() == NULL) && (Universe::narrow_klass_base() == NULL));
   match(Set cr (CmpP (LoadP mem) zero));
 
-  format %{ "cmpq    R12, $mem\t# ptr (R12_heapbase==0)" %}
+  format %{ "cmpq    R12, $mem\t# ptr (R12_heapbase == 0)" %}
   ins_encode %{
     __ cmpq(r12, $mem$$Address);
   %}
@@ -10623,7 +10623,7 @@ instruct testN_mem_reg0(rFlagsReg cr, memory mem, immN0 zero) %{
   predicate(Universe::narrow_oop_base() == NULL && (Universe::narrow_klass_base() == NULL));
   match(Set cr (CmpN (LoadN mem) zero));
 
-  format %{ "cmpl    R12, $mem\t# compressed ptr (R12_heapbase==0)" %}
+  format %{ "cmpl    R12, $mem\t# compressed ptr (R12_heapbase == 0)" %}
   ins_encode %{
     __ cmpl(r12, $mem$$Address);
   %}

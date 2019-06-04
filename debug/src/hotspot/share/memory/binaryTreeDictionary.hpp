@@ -182,13 +182,9 @@ class BinaryTreeDictionary: public CHeapObj<mtGC> {
   // The list is not removed from the tree.
   TreeList<Chunk_t, FreeList_t>* find_list (size_t size) const;
 
-  void       verify_tree() const;
   // verify that the given chunk is in the tree.
   bool       verify_chunk_in_free_list(Chunk_t* tc) const;
  private:
-  void          verify_tree_helper(TreeList<Chunk_t, FreeList_t>* tl) const;
-  static size_t verify_prev_free_ptrs(TreeList<Chunk_t, FreeList_t>* tl);
-
   // Returns the total number of chunks in the list.
   size_t     total_list_length(TreeList<Chunk_t, FreeList_t>* tl) const;
   // Returns the total number of words in the chunks in the tree
@@ -269,8 +265,6 @@ class BinaryTreeDictionary: public CHeapObj<mtGC> {
   size_t     total_count()       { return 0; };
 
   void       report_statistics(outputStream* st) const;
-
-  void       verify() const;
 
   Mutex*     par_lock()                const { return 0; };
   void       set_par_lock(Mutex* lock)       { };

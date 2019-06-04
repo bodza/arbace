@@ -25,7 +25,6 @@
 #include "gc/shared/vmGCOperations.hpp"
 #include "gc/shared/weakProcessor.hpp"
 #include "gc/shared/workgroup.hpp"
-#include "memory/filemap.hpp"
 #include "memory/metaspaceCounters.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oop.inline.hpp"
@@ -197,7 +196,7 @@ unsigned int GenCollectedHeap::update_full_collections_completed(unsigned int co
 //   have) failed and is likely to fail again
 bool GenCollectedHeap::should_try_older_generation_allocation(size_t word_size) const {
   size_t young_capacity = _young_gen->capacity_before_gc();
-  return    (word_size > heap_word_size(young_capacity)) || GCLocker::is_active_and_needs_gc() || incremental_collection_failed();
+  return (word_size > heap_word_size(young_capacity)) || GCLocker::is_active_and_needs_gc() || incremental_collection_failed();
 }
 
 HeapWord* GenCollectedHeap::expand_heap_and_allocate(size_t size, bool is_tlab) {
@@ -336,7 +335,7 @@ HeapWord* GenCollectedHeap::mem_allocate(size_t size, bool* gc_overhead_limit_wa
 }
 
 bool GenCollectedHeap::must_clear_all_soft_refs() {
-  return _gc_cause == GCCause::_metadata_GC_clear_soft_refs || _gc_cause == GCCause::_wb_full_gc;
+  return _gc_cause == GCCause::_metadata_GC_clear_soft_refs;
 }
 
 void GenCollectedHeap::collect_generation(Generation* gen, bool full, size_t size, bool is_tlab, bool run_verification, bool clear_soft_refs, bool restore_marks_for_biased_locking) {
@@ -351,11 +350,6 @@ void GenCollectedHeap::collect_generation(Generation* gen, bool full, size_t siz
   // a previous collection will do mangling and will
   // change top of some spaces.
   record_gen_tops_before_GC();
-
-  if (run_verification && VerifyBeforeGC) {
-    HandleMark hm;  // Discard invalid handles created during verification
-    Universe::verify("Before GC");
-  }
 
   if (restore_marks_for_biased_locking) {
     // We perform this mark word preservation work lazily
@@ -406,11 +400,6 @@ void GenCollectedHeap::collect_generation(Generation* gen, bool full, size_t siz
   gen->stat_record()->accumulated_time.stop();
 
   update_gc_stats(gen, full);
-
-  if (run_verification && VerifyAfterGC) {
-    HandleMark hm;  // Discard invalid handles created during verification
-    Universe::verify("After GC");
-  }
 }
 
 void GenCollectedHeap::do_collection(bool full, bool clear_all_soft_refs, size_t size, bool is_tlab, GenerationType max_generation) {
@@ -429,8 +418,6 @@ void GenCollectedHeap::do_collection(bool full, bool clear_all_soft_refs, size_t
   ClearedAllSoftRefs casr(do_clear_all_soft_refs, soft_ref_policy());
 
   const size_t metadata_prev_used = MetaspaceUtils::used_bytes();
-
-  print_heap_before_gc();
 
   {
     FlagSetting fl(_is_gc_active, true);
@@ -459,7 +446,6 @@ void GenCollectedHeap::do_collection(bool full, bool clear_all_soft_refs, size_t
 
     if (do_young_collection) {
       if (run_verification && VerifyGCLevel <= 0 && VerifyBeforeGC) {
-        prepare_for_verify();
         prepared_for_verification = true;
       }
 
@@ -477,10 +463,6 @@ void GenCollectedHeap::do_collection(bool full, bool clear_all_soft_refs, size_t
       if (!complete) {
         // The full_collections increment was missed above.
         increment_total_full_collections();
-      }
-
-      if (!prepared_for_verification && run_verification && VerifyGCLevel <= 1 && VerifyBeforeGC) {
-        prepare_for_verify();
       }
 
       if (do_young_collection) {
@@ -528,8 +510,6 @@ void GenCollectedHeap::do_collection(bool full, bool clear_all_soft_refs, size_t
       BiasedLocking::restore_marks();
     }
   }
-
-  print_heap_after_gc();
 
 #ifdef TRACESPINNING
   ParallelTaskTerminator::print_termination_counts();
@@ -736,13 +716,8 @@ HeapWord** GenCollectedHeap::end_addr() const {
 // public collection interfaces
 
 void GenCollectedHeap::collect(GCCause::Cause cause) {
-  if (cause == GCCause::_wb_young_gc) {
-    // Young collection for the WhiteBox API.
-    collect(cause, YoungGen);
-  } else {
-    // Stop-the-world full collection.
-    collect(cause, OldGen);
-  }
+  // Stop-the-world full collection.
+  collect(cause, OldGen);
 }
 
 void GenCollectedHeap::collect(GCCause::Cause cause, GenerationType max_generation) {
@@ -765,8 +740,7 @@ void GenCollectedHeap::collect_locked(GCCause::Cause cause, GenerationType max_g
   unsigned int full_gc_count_before = total_full_collections();
   {
     MutexUnlocker mu(Heap_lock);  // give up heap lock, execute gets it back
-    VM_GenCollectFull op(gc_count_before, full_gc_count_before,
-                         cause, max_generation);
+    VM_GenCollectFull op(gc_count_before, full_gc_count_before, cause, max_generation);
     VMThread::execute(&op);
   }
 }
@@ -945,16 +919,8 @@ void GenCollectedHeap::release_scratch() {
 }
 
 class GenPrepareForVerifyClosure: public GenCollectedHeap::GenClosure {
-  void do_generation(Generation* gen) {
-    gen->prepare_for_verify();
-  }
+  void do_generation(Generation* gen) { }
 };
-
-void GenCollectedHeap::prepare_for_verify() {
-  ensure_parsability(false);        // no need to retire TLABs
-  GenPrepareForVerifyClosure blk;
-  generation_iterate(&blk, false);
-}
 
 void GenCollectedHeap::generation_iterate(GenClosure* cl, bool old_to_young) {
   if (old_to_young) {
@@ -978,12 +944,6 @@ void GenCollectedHeap::save_marks() {
 GenCollectedHeap* GenCollectedHeap::heap() {
   CollectedHeap* heap = Universe::heap();
   return (GenCollectedHeap*) heap;
-}
-
-void GenCollectedHeap::verify(VerifyOption option /* ignored */) {
-  _old_gen->verify();
-  _young_gen->verify();
-  rem_set()->verify();
 }
 
 void GenCollectedHeap::print_on(outputStream* st) const {
@@ -1028,7 +988,7 @@ class GenGCEpilogueClosure: public GenCollectedHeap::GenClosure {
 };
 
 void GenCollectedHeap::gc_epilogue(bool full) {
-  size_t actual_gap = pointer_delta((HeapWord*) (max_uintx-3), *(end_addr()));
+  size_t actual_gap = pointer_delta((HeapWord*) (max_uintx - 3), *(end_addr()));
   guarantee(is_client_compilation_mode_vm() || actual_gap > (size_t)FastAllocateSizeLimit, "inline allocation wraps");
 
   resize_all_tlabs();

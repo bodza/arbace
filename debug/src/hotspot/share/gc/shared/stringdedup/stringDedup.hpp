@@ -70,7 +70,6 @@ public:
 
   static void threads_do(ThreadClosure* tc);
   static void print_worker_threads_on(outputStream* st);
-  static void verify();
 
   // GC support
   static void gc_prologue(bool resize_and_rehash_table);

@@ -6,8 +6,6 @@
 #include "runtime/orderAccess.hpp"
 #include "runtime/vmThread.hpp"
 #include "runtime/vm_operations.hpp"
-#include "services/memBaseline.hpp"
-#include "services/memReporter.hpp"
 #include "services/mallocTracker.inline.hpp"
 #include "services/memTracker.hpp"
 #include "utilities/defaultStream.hpp"
@@ -98,7 +96,7 @@ void* MemTracker::malloc_base(void* memblock) {
 
 void Tracker::record(address addr, size_t size) {
   if (MemTracker::tracking_level() < NMT_summary) return;
-  switch(_type) {
+  switch (_type) {
     case uncommit:
       VirtualMemoryTracker::remove_uncommitted_region(addr, size);
       break;

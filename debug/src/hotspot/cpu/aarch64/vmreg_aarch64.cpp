@@ -19,7 +19,7 @@ void VMRegImpl::set_regName() {
     freg = freg->successor();
   }
 
-  for ( ; i < ConcreteRegisterImpl::number_of_registers ; i ++ ) {
+  for ( ; i < ConcreteRegisterImpl::number_of_registers ; i++) {
     regName[i] = "NON-GPR-FPR";
   }
 }

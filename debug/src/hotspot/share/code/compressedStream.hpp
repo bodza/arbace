@@ -14,7 +14,7 @@ class CompressedStream : public ResourceObj {
 
   enum {
     // Constants for UNSIGNED5 coding of Pack200
-    lg_H = 6, H = 1<<lg_H,    // number of high codes (64)
+    lg_H = 6, H = 1 << lg_H,    // number of high codes (64)
     L = (1<<BitsPerByte)-H,   // number of low codes (192)
     MAX_i = 4                 // bytes are numbered in (0..4), max 5 bytes
   };
@@ -68,7 +68,7 @@ class CompressedReadStream : public CompressedStream {
       jint b_i = buf[++i]; // b_i = read(); ++i;
       sum += b_i << lg_H_i;  // sum += b[i]*(64**i)
       if (b_i < L || i == MAX_i) {
-        set_position(pos+i+1);
+        set_position(pos+i + 1);
         return sum;
       }
       lg_H_i += lg_H;

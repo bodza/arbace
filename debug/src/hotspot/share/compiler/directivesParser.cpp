@@ -68,7 +68,7 @@ bool DirectivesParser::parse_from_file_inner(const char* filename, outputStream*
     int file_handle = os::open(filename, 0, 0);
     if (file_handle != -1) {
       // read contents into resource array
-      char* buffer = NEW_RESOURCE_ARRAY(char, st.st_size+1);
+      char* buffer = NEW_RESOURCE_ARRAY(char, st.st_size + 1);
       size_t num_read = os::read(file_handle, (char*) buffer, st.st_size);
       buffer[num_read] = '\0';
       // close file
@@ -271,7 +271,7 @@ bool DirectivesParser::set_option_flag(JSON_TYPE t, JSON_VAL* v, const key* opti
         error(VALUE_ERROR, "Cannot use string value for a %s flag", flag_type_names[option_key->flag_type]);
         return false;
       } else {
-        char* s = NEW_C_HEAP_ARRAY(char, v->str.length+1,  mtCompiler);
+        char* s = NEW_C_HEAP_ARRAY(char, v->str.length + 1,  mtCompiler);
         strncpy(s, v->str.start, v->str.length + 1);
         s[v->str.length] = '\0';
         (set->*test)((void *)&s);

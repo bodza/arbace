@@ -3067,8 +3067,8 @@ static bool _verify_FPU(int stack_depth, char* s, CPU_State* state) {
   counter++;
   // For leaf calls, only verify that the top few elements remain empty.
   // We only need 1 empty at the top for C2 code.
-  if (stack_depth < 0 ) {
-    if (fs->tag_for_st(7) != 3 ) {
+  if (stack_depth < 0) {
+    if (fs->tag_for_st(7) != 3) {
       printf("FPR7 not empty\n");
       state->print();
       ShouldNotReachHere();
@@ -3647,7 +3647,7 @@ void MacroAssembler::generate_fill(BasicType t, bool aligned, Register to, Regis
     orl(value, rtmp);
   }
 
-  cmpl(count, 2<<shift); // Short arrays (< 8 bytes) fill by element
+  cmpl(count, 2 << shift); // Short arrays (< 8 bytes) fill by element
   jcc(Assembler::below, L_fill_4_bytes); // use unsigned cmp
   if (!UseUnalignedLoadStores && !aligned && (t == T_BYTE || t == T_SHORT)) {
     // align source address at 4 bytes address boundary
@@ -3665,7 +3665,7 @@ void MacroAssembler::generate_fill(BasicType t, bool aligned, Register to, Regis
     jccb(Assembler::zero, L_skip_align2);
     movw(Address(to, 0), value);
     addptr(to, 2);
-    subl(count, 1<<(shift-1));
+    subl(count, 1 << (shift - 1));
     BIND(L_skip_align2);
   }
   if (UseSSE < 2) {
@@ -3708,7 +3708,7 @@ void MacroAssembler::generate_fill(BasicType t, bool aligned, Register to, Regis
       jccb(Assembler::zero, L_fill_32_bytes);
       movl(Address(to, 0), value);
       addptr(to, 4);
-      subl(count, 1<<shift);
+      subl(count, 1 << shift);
     }
     BIND(L_fill_32_bytes);
     {
@@ -3807,14 +3807,14 @@ void MacroAssembler::generate_fill(BasicType t, bool aligned, Register to, Regis
   }
   // fill trailing 4 bytes
   BIND(L_fill_4_bytes);
-  testl(count, 1<<shift);
+  testl(count, 1 << shift);
   jccb(Assembler::zero, L_fill_2_bytes);
   movl(Address(to, 0), value);
   if (t == T_BYTE || t == T_SHORT) {
     addptr(to, 4);
     BIND(L_fill_2_bytes);
     // fill trailing 2 bytes
-    testl(count, 1<<(shift-1));
+    testl(count, 1 << (shift - 1));
     jccb(Assembler::zero, L_fill_byte);
     movw(Address(to, 0), value);
     if (t == T_BYTE) {
@@ -4027,7 +4027,7 @@ void MacroAssembler::multiply_add_128_x_128(Register x_xstart, Register y, Regis
 
   add2_with_carry(rdx, product, carry, yz_idx);
 
-  movl(Address(z, idx, Address::times_4,  offset+4), product);
+  movl(Address(z, idx, Address::times_4,  offset + 4), product);
   shrq(product, 32);
   movl(Address(z, idx, Address::times_4,  offset), product);
 }
@@ -4255,16 +4255,16 @@ void MacroAssembler::multiply_to_len(Register x, Register xlen, Register y, Regi
 
   bind(L_second_loop);
   xorl(carry, carry);    // carry = 0;
-  movl(jdx, ylen);       // j = ystart+1
+  movl(jdx, ylen);       // j = ystart + 1
 
-  subl(xstart, 1);       // i = xstart-1;
+  subl(xstart, 1);       // i = xstart - 1;
   jcc(Assembler::negative, L_done);
 
   push (z);
 
   Label L_last_x;
   lea(z, Address(z, xstart, Address::times_4, 4)); // z = z + k - j
-  subl(xstart, 1);       // i = xstart-1;
+  subl(xstart, 1);       // i = xstart - 1;
   jcc(Assembler::negative, L_last_x);
 
   if (UseBMI2Instructions) {
@@ -4547,7 +4547,7 @@ void MacroAssembler::square_rshift(Register x, Register xlen, Register z, Regist
   // Perform square and right shift by 1
   // Handle odd xlen case first, then for even xlen do the following
   // jlong carry = 0;
-  // for (int j = 0, i = 0; j < xlen; j+=2, i+=4) {
+  // for (int j = 0, i = 0; j < xlen; j += 2, i += 4) {
   //     huge_128 product = x[j:j+1] * x[j:j+1];
   //     z[i:i+1] = (carry << 63) | (jlong)(product >>> 65);
   //     z[i+2:i+3] = (jlong)(product >>> 1);
@@ -5422,7 +5422,7 @@ void MacroAssembler::crc32c_ipl_alg2_alt2(Register in_out, Register in1, Registe
 
   if (is_pclmulqdq_supported ) {
     const_or_pre_comp_const_index[1] = *(uint32_t *)StubRoutines::_crc32c_table_addr;
-    const_or_pre_comp_const_index[0] = *((uint32_t *)StubRoutines::_crc32c_table_addr+1);
+    const_or_pre_comp_const_index[0] = *((uint32_t *)StubRoutines::_crc32c_table_addr + 1);
 
     const_or_pre_comp_const_index[3] = *((uint32_t *)StubRoutines::_crc32c_table_addr + 2);
     const_or_pre_comp_const_index[2] = *((uint32_t *)StubRoutines::_crc32c_table_addr + 3);

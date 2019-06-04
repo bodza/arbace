@@ -33,8 +33,6 @@ class GenCollectedHeap : public CollectedHeap {
   friend class GCCauseSetter;
   friend class VMStructs;
 public:
-  friend class VM_PopulateDumpSharedSpace;
-
   enum GenerationType {
     YoungGen,
     OldGen
@@ -103,11 +101,11 @@ protected:
   GCMemoryManager* _old_manager;
 
   // Helper functions for allocation
-  HeapWord* attempt_allocation(size_t size, bool   is_tlab, bool   first_only);
+  HeapWord* attempt_allocation(size_t size, bool is_tlab, bool first_only);
 
   // Helper function for two callbacks below.
   // Considers collection of the first max_level+1 generations.
-  void do_collection(bool           full, bool           clear_all_soft_refs, size_t         size, bool           is_tlab, GenerationType max_generation);
+  void do_collection(bool full, bool clear_all_soft_refs, size_t size, bool is_tlab, GenerationType max_generation);
 
   // Callback from VM_GenCollectForAllocation operation.
   // This function does everything necessary/possible to satisfy an
@@ -296,12 +294,6 @@ public:
   }
 
   bool no_gc_in_progress() { return !is_gc_active(); }
-
-  // Override.
-  void prepare_for_verify();
-
-  // Override.
-  void verify(VerifyOption option);
 
   // Override.
   virtual void print_on(outputStream* st) const;

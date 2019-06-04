@@ -101,10 +101,8 @@ public:
   address plt_c2i_stub() const;
   void set_stub_to_clean();
 
-  void  reset_to_plt_resolve_call();
-  void  set_destination_mt_safe(address dest);
-
-  void verify() const;
+  void reset_to_plt_resolve_call();
+  void set_destination_mt_safe(address dest);
 };
 
 inline NativePltCall* nativePltCall_at(address address) {
@@ -133,11 +131,11 @@ class NativeCall: public NativeInstruction {
 
   enum { cache_line_size = BytesPerWord };  // conservative estimate!
 
-  address instruction_address() const       { return addr_at(instruction_offset); }
-  address next_instruction_address() const  { return addr_at(return_address_offset); }
-  int   displacement() const                { return (jint) int_at(displacement_offset); }
-  address displacement_address() const      { return addr_at(displacement_offset); }
-  address return_address() const            { return addr_at(return_address_offset); }
+  address instruction_address() const      { return addr_at(instruction_offset); }
+  address next_instruction_address() const { return addr_at(return_address_offset); }
+  int displacement() const                 { return (jint) int_at(displacement_offset); }
+  address displacement_address() const     { return addr_at(displacement_offset); }
+  address return_address() const           { return addr_at(return_address_offset); }
   address destination() const;
   void set_destination(address dest) {
 #ifdef AMD64
@@ -146,11 +144,9 @@ class NativeCall: public NativeInstruction {
 #endif
     set_int_at(displacement_offset, dest - return_address());
   }
-  void  set_destination_mt_safe(address dest);
+  void set_destination_mt_safe(address dest);
 
-  void  verify_alignment() { }
-  void  verify();
-  void  print();
+  void print();
 
   // Creation
   inline friend NativeCall* nativeCall_at(address address);
@@ -222,13 +218,12 @@ class NativeMovConstReg: public NativeInstruction {
     register_mask               = 0x07
   };
 
-  address instruction_address() const       { return addr_at(instruction_offset); }
-  address next_instruction_address() const  { return addr_at(next_instruction_offset); }
-  intptr_t data() const                     { return ptr_at(data_offset); }
-  void  set_data(intptr_t x)                { set_ptr_at(data_offset, x); }
+  address instruction_address() const      { return addr_at(instruction_offset); }
+  address next_instruction_address() const { return addr_at(next_instruction_offset); }
+  intptr_t data() const                    { return ptr_at(data_offset); }
+  void set_data(intptr_t x)                { set_ptr_at(data_offset, x); }
 
-  void  verify();
-  void  print();
+  void print();
 
   // unit test stuff
   static void test() { }
@@ -318,14 +313,11 @@ class NativeMovRegMem: public NativeInstruction {
 
   address next_instruction_address() const;
 
-  int   offset() const;
+  int offset() const;
+  void set_offset(int x);
+  void add_offset_in_bytes(int add_offset)     { set_offset ( ( offset() + add_offset )); }
 
-  void  set_offset(int x);
-
-  void  add_offset_in_bytes(int add_offset)     { set_offset ( ( offset() + add_offset )); }
-
-  void verify();
-  void print ();
+  void print();
 
   // unit test stuff
   static void test() { }
@@ -358,8 +350,7 @@ class NativeLoadAddress: public NativeMovRegMem {
     mov64_instruction_code              = 0xB8
   };
 
-  void verify();
-  void print ();
+  void print();
 
   // unit test stuff
   static void test() { }
@@ -391,11 +382,11 @@ public:
     offset_offset = 2 + rex_size
   };
 
-  address instruction_address() const { return addr_at(0); }
-  address rip_offset_address() const { return addr_at(offset_offset); }
-  int rip_offset() const { return int_at(offset_offset); }
-  address return_address() const { return addr_at(instruction_length); }
-  address got_address() const { return return_address() + rip_offset(); }
+  address instruction_address() const      { return addr_at(0); }
+  address rip_offset_address() const       { return addr_at(offset_offset); }
+  int rip_offset() const                   { return int_at(offset_offset); }
+  address return_address() const           { return addr_at(instruction_length); }
+  address got_address() const              { return return_address() + rip_offset(); }
   address next_instruction_address() const { return return_address(); }
   intptr_t data() const;
   void set_data(intptr_t data) {
@@ -403,7 +394,6 @@ public:
     *addr = data;
   }
 
-  void verify() const;
 private:
   void report_and_fail() const;
 };
@@ -450,8 +440,6 @@ class NativeJump: public NativeInstruction {
   // Creation
   inline friend NativeJump* nativeJump_at(address address);
 
-  void verify();
-
   // Unit testing stuff
   static void test() { }
 
@@ -474,8 +462,6 @@ class NativeFarJump: public NativeInstruction {
 
   // Creation
   inline friend NativeFarJump* nativeFarJump_at(address address);
-
-  void verify();
 
   // Unit testing stuff
   static void test() { }
@@ -509,8 +495,6 @@ class NativeGeneralJump: public NativeInstruction {
   // Insertion of native general jump instruction
   static void insert_unconditional(address code_pos, address entry);
   static void replace_mt_safe(address instr_addr, address code_buffer);
-
-  void verify();
 };
 
 inline NativeGeneralJump* nativeGeneralJump_at(address address) {
@@ -527,7 +511,6 @@ public:
     rip_offset = 2
   };
 
-  void verify() const;
   address instruction_address() const { return addr_at(instruction_offset); }
   address destination() const;
   address return_address() const { return addr_at(instruction_size); }

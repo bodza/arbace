@@ -10,17 +10,9 @@
 #include "runtime/safepoint.hpp"
 #include "runtime/signature.hpp"
 
-// Implementation of Bytecode
-
-// Implementation of Bytecode_tableupswitch
-
 int Bytecode_tableswitch::dest_offset_at(int i) const {
   return get_aligned_Java_u4_at(1 + (3 + i)*jintSize);
 }
-
-// Implementation of Bytecode_invoke
-
-void Bytecode_invoke::verify() const { }
 
 int Bytecode_invoke::size_of_parameters() const {
   ArgumentSizeComputer asc(signature());
@@ -77,12 +69,6 @@ ConstantPoolCacheEntry* Bytecode_member_ref::cpcache_entry() const {
   int index = this->index();
   return cpcache()->entry_at(ConstantPool::decode_cpcache_index(index, true));
 }
-
-// Implementation of Bytecode_field
-
-void Bytecode_field::verify() const { }
-
-// Implementation of Bytecode_loadconstant
 
 int Bytecode_loadconstant::raw_index() const {
   Bytecodes::Code rawc = code();

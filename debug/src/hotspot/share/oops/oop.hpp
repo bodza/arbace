@@ -15,9 +15,6 @@
 //
 // no virtual functions allowed
 
-extern bool always_do_update_barrier;
-
-// Forward declarations.
 class OopClosure;
 class ScanClosure;
 class FastScanClosure;
@@ -217,7 +214,6 @@ class oopDesc {
 
   // verification operations
   void verify_on(outputStream* st);
-  void verify();
 
   // locking operations
   inline bool is_locked()   const;

@@ -514,8 +514,7 @@ template <class Chunk_t, class FreeList_t>
 size_t BinaryTreeDictionary<Chunk_t, FreeList_t>::tree_height_helper(TreeList<Chunk_t, FreeList_t>* tl) const {
   if (tl == NULL)
     return 0;
-  return 1 + MAX2(tree_height_helper(tl->left()),
-                  tree_height_helper(tl->right()));
+  return 1 + MAX2(tree_height_helper(tl->left()), tree_height_helper(tl->right()));
 }
 
 template <class Chunk_t, class FreeList_t>
@@ -611,57 +610,6 @@ void BinaryTreeDictionary<Chunk_t, FreeList_t>::print_free_lists(outputStream* s
   FreeList_t::print_labels_on(st, "size");
   PrintFreeListsClosure<Chunk_t, FreeList_t> pflc(st);
   pflc.do_tree(root());
-}
-
-// Verify the following tree invariants:
-// . _root has no parent
-// . parent and child point to each other
-// . each node's key correctly related to that of its child(ren)
-template <class Chunk_t, class FreeList_t>
-void BinaryTreeDictionary<Chunk_t, FreeList_t>::verify_tree() const {
-  guarantee(root() == NULL || total_free_blocks() == 0 || total_size() != 0, "_total_size shouldn't be 0?");
-  guarantee(root() == NULL || root()->parent() == NULL, "_root shouldn't have parent");
-  verify_tree_helper(root());
-}
-
-template <class Chunk_t, class FreeList_t>
-size_t BinaryTreeDictionary<Chunk_t, FreeList_t>::verify_prev_free_ptrs(TreeList<Chunk_t, FreeList_t>* tl) {
-  size_t ct = 0;
-  for (Chunk_t* curFC = tl->head(); curFC != NULL; curFC = curFC->next()) {
-    ct++;
-  }
-  return ct;
-}
-
-// Note: this helper is recursive rather than iterative, so use with
-// caution on very deep trees; and watch out for stack overflow errors;
-// In general, to be used only for debugging.
-template <class Chunk_t, class FreeList_t>
-void BinaryTreeDictionary<Chunk_t, FreeList_t>::verify_tree_helper(TreeList<Chunk_t, FreeList_t>* tl) const {
-  if (tl == NULL)
-    return;
-  guarantee(tl->size() != 0, "A list must has a size");
-  guarantee(tl->left()  == NULL || tl->left()->parent()  == tl, "parent<-/->left");
-  guarantee(tl->right() == NULL || tl->right()->parent() == tl, "parent<-/->right");
-  guarantee(tl->left() == NULL  || tl->left()->size()    <  tl->size(), "parent !> left");
-  guarantee(tl->right() == NULL || tl->right()->size()   >  tl->size(), "parent !< left");
-  guarantee(tl->head() == NULL || tl->head()->is_free(), "!Free");
-  guarantee(tl->head() == NULL || tl->head_as_TreeChunk()->list() == tl, "list inconsistency");
-  guarantee(tl->count() > 0 || (tl->head() == NULL && tl->tail() == NULL), "list count is inconsistent");
-  guarantee(tl->count() > 1 || tl->head() == tl->tail(), "list is incorrectly constructed");
-  size_t count = verify_prev_free_ptrs(tl);
-  guarantee(count == (size_t)tl->count(), "Node count is incorrect");
-  if (tl->head() != NULL) {
-    tl->head_as_TreeChunk()->verify_tree_chunk_list();
-  }
-  verify_tree_helper(tl->left());
-  verify_tree_helper(tl->right());
-}
-
-template <class Chunk_t, class FreeList_t>
-void BinaryTreeDictionary<Chunk_t, FreeList_t>::verify() const {
-  verify_tree();
-  guarantee(total_size() == total_size_in_tree(root()), "Total Size inconsistency");
 }
 
 template <class Chunk_t, class FreeList_t>

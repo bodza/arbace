@@ -51,7 +51,7 @@ void print_human_readable_size(outputStream* st, size_t byte_size, size_t scale,
     st->print("%*" PRIuPTR " words", width, byte_size / BytesPerWord);
   } else {
     const char* display_unit = "";
-    switch(scale) {
+    switch (scale) {
       case 1: display_unit = "bytes"; break;
       case BytesPerWord: display_unit = "words"; break;
       case K: display_unit = "KB"; break;
@@ -98,7 +98,7 @@ void print_percentage(outputStream* st, size_t total, size_t part) {
 size_t get_size_for_nonhumongous_chunktype(ChunkIndex chunktype, bool is_class) {
   size_t size = 0;
   if (is_class) {
-    switch(chunktype) {
+    switch (chunktype) {
       case SpecializedIndex: size = ClassSpecializedChunk; break;
       case SmallIndex: size = ClassSmallChunk; break;
       case MediumIndex: size = ClassMediumChunk; break;
@@ -106,7 +106,7 @@ size_t get_size_for_nonhumongous_chunktype(ChunkIndex chunktype, bool is_class) 
         ShouldNotReachHere();
     }
   } else {
-    switch(chunktype) {
+    switch (chunktype) {
       case SpecializedIndex: size = SpecializedChunk; break;
       case SmallIndex: size = SmallChunk; break;
       case MediumIndex: size = MediumChunk; break;
@@ -145,11 +145,6 @@ ChunkIndex get_chunk_type_by_size(size_t size, bool is_class) {
   return (ChunkIndex)-1;
 }
 
-ChunkIndex next_chunk_index(ChunkIndex i) {
-  return (ChunkIndex) (i+1);
-}
-
-ChunkIndex prev_chunk_index(ChunkIndex i) {
-  return (ChunkIndex) (i-1);
-}
+ChunkIndex next_chunk_index(ChunkIndex i) { return (ChunkIndex) (i + 1); }
+ChunkIndex prev_chunk_index(ChunkIndex i) { return (ChunkIndex) (i - 1); }
 }

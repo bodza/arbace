@@ -190,7 +190,7 @@ JVMFlag::Error InitialBootClassLoaderMetaspaceSizeConstraintFunc(size_t value, b
 
 // To avoid an overflow by 'align_up(value, alignment)'.
 static JVMFlag::Error MaxSizeForAlignment(const char* name, size_t value, size_t alignment, bool verbose) {
-  size_t aligned_max = ((max_uintx - alignment) & ~(alignment-1));
+  size_t aligned_max = ((max_uintx - alignment) & ~(alignment - 1));
   if (value > aligned_max) {
     JVMFlag::printError(verbose, "%s (" SIZE_FORMAT ") must be less than or equal to aligned maximum value (" SIZE_FORMAT ")\n", name, value, aligned_max);
     return JVMFlag::VIOLATES_CONSTRAINT;

@@ -116,23 +116,17 @@ PERF_ENTRY(jobject, Perf_CreateLong(JNIEnv *env, jobject perf, jstring name, int
     THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(), "PerfLong name already exists");
   }
 
-  switch(variability) {
+  switch (variability) {
   case PerfData::V_Constant:
-    pl = PerfDataManager::create_long_constant(NULL_NS, (char *)name_utf,
-                                               (PerfData::Units)units, value,
-                                               CHECK_NULL);
+    pl = PerfDataManager::create_long_constant(NULL_NS, (char *)name_utf, (PerfData::Units)units, value, CHECK_NULL);
     break;
 
   case PerfData::V_Monotonic:
-    pl = PerfDataManager::create_long_counter(NULL_NS, (char *)name_utf,
-                                               (PerfData::Units)units, value,
-                                               CHECK_NULL);
+    pl = PerfDataManager::create_long_counter(NULL_NS, (char *)name_utf, (PerfData::Units)units, value, CHECK_NULL);
     break;
 
   case PerfData::V_Variable:
-    pl = PerfDataManager::create_long_variable(NULL_NS, (char *)name_utf,
-                                              (PerfData::Units)units, value,
-                                              CHECK_NULL);
+    pl = PerfDataManager::create_long_variable(NULL_NS, (char *)name_utf, (PerfData::Units)units, value, CHECK_NULL);
     break;
 
   default: /* Illegal Argument */
@@ -209,7 +203,7 @@ PERF_ENTRY(jobject, Perf_CreateByteArray(JNIEnv *env, jobject perf, jstring name
 
   {
     ThreadToNativeFromVM ttnfv(thread);
-    return env->NewDirectByteBuffer(cp, maxlength+1);
+    return env->NewDirectByteBuffer(cp, maxlength + 1);
   }
 PERF_END
 

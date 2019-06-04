@@ -191,7 +191,7 @@ JVMFlag::Error WriteableFlags::set_size_t_flag(const char* name, size_t value, J
   return err;
 }
 
-// set a string global flag using value from AttachOperation
+// set a string global flag using value from NULL
 JVMFlag::Error WriteableFlags::set_ccstr_flag(const char* name, const char* value, JVMFlag::Flags origin, FormatBuffer<80>& err_msg) {
   JVMFlag::Error err = JVMFlag::ccstrAtPut((char*)name, &value, origin);
   print_flag_error_message_if_needed(err, name, err_msg);

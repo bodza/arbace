@@ -136,8 +136,7 @@ ciKlass::least_common_ancestor(ciKlass* that) {
 //
 // Find a klass using this klass's class loader.
 ciKlass* ciKlass::find_klass(ciSymbol* klass_name) {
-  return CURRENT_ENV->get_klass_by_name(this,
-                                        klass_name, false);
+  return CURRENT_ENV->get_klass_by_name(this, klass_name, false);
 }
 
 // ------------------------------------------------------------------

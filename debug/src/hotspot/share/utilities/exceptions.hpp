@@ -133,9 +133,6 @@ class Exceptions {
   static void debug_check_abort(Handle exception, const char* message = NULL);
   static void debug_check_abort_helper(Handle exception, const char* message = NULL);
   static void debug_check_abort(const char *value_string, const char* message = NULL);
-
-  // for logging exceptions
-  static void log_exception(Handle exception, stringStream tempst);
 };
 
 // The THREAD & TRAPS macros facilitate the declaration of functions that throw exceptions.

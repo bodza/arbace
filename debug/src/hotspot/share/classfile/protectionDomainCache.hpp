@@ -24,8 +24,6 @@ class ProtectionDomainCacheEntry : public HashtableEntry<ClassLoaderWeakHandle, 
   ProtectionDomainCacheEntry** next_addr() {
     return (ProtectionDomainCacheEntry**)HashtableEntry<ClassLoaderWeakHandle, mtClass>::next_addr();
   }
-
-  void verify();
 };
 
 // The ProtectionDomainCacheTable contains all protection domain oops. The
@@ -68,7 +66,6 @@ public:
   void unlink();
 
   void print_on(outputStream* st) const;
-  void verify();
 };
 
 class ProtectionDomainEntry :public CHeapObj<mtClass> {

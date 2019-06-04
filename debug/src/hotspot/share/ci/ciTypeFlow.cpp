@@ -133,10 +133,10 @@ void ciTypeFlow::JsrSet::remove_jsr_record(int return_address) {
     if (record_at(i)->return_address() == return_address) {
       // We have found the proper entry.  Remove it from the
       // JsrSet and exit.
-      for (int j = i+1; j < len ; j++) {
-        _set->at_put(j-1, _set->at(j));
+      for (int j = i + 1; j < len ; j++) {
+        _set->at_put(j - 1, _set->at(j));
       }
-      _set->trunc_to(len-1);
+      _set->trunc_to(len - 1);
       return;
     }
   }
@@ -724,7 +724,7 @@ bool ciTypeFlow::StateVector::apply_one_bytecode(ciBytecodeStream* str) {
   _trap_bci = -1;
   _trap_index = 0;
 
-  switch(str->cur_bc()) {
+  switch (str->cur_bc()) {
   case Bytecodes::_aaload: do_aaload(str);                       break;
 
   case Bytecodes::_aastore:
@@ -1463,7 +1463,7 @@ GrowableArray<ciTypeFlow::Block*>* ciTypeFlow::Block::successors(ciBytecodeStrea
         Bytecode_tableswitch tableswitch(str);
 
         int len = tableswitch.length();
-        _successors = new (arena) GrowableArray<Block*>(arena, len+1, 0, NULL);
+        _successors = new (arena) GrowableArray<Block*>(arena, len + 1, 0, NULL);
         int bci = current_bci + tableswitch.default_offset();
         Block* block = analyzer->block_at(bci, jsrs);
         _successors->append(block);
@@ -1479,7 +1479,7 @@ GrowableArray<ciTypeFlow::Block*>* ciTypeFlow::Block::successors(ciBytecodeStrea
         Bytecode_lookupswitch lookupswitch(str);
 
         int npairs = lookupswitch.number_of_pairs();
-        _successors = new (arena) GrowableArray<Block*>(arena, npairs+1, 0, NULL);
+        _successors = new (arena) GrowableArray<Block*>(arena, npairs + 1, 0, NULL);
         int bci = current_bci + lookupswitch.default_offset();
         Block* block = analyzer->block_at(bci, jsrs);
         _successors->append(block);
@@ -2084,7 +2084,7 @@ void ciTypeFlow::build_loop_tree(Block* blk) {
       lp = new (arena()) Loop(succ, blk);
       if (succ->loop() == NULL)
         succ->set_loop(lp);
-      // succ->loop will be updated to innermost loop on a later call, when blk==succ
+      // succ->loop will be updated to innermost loop on a later call, when blk == succ
     } else {  // Nested loop
       lp = succ->loop();
 

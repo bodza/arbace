@@ -27,7 +27,7 @@
 //      indicating where oops are located in instances of this klass.
 //    [EMBEDDED implementor of the interface] only exist for interface
 //    [EMBEDDED host klass        ] only exist for an anonymous class (JSR 292 enabled)
-//    [EMBEDDED fingerprint       ] only if should_store_fingerprint()==true
+//    [EMBEDDED fingerprint       ] only if should_store_fingerprint() == true
 
 // forward declaration for class -- see below for definition
 class ClassFileParser;
@@ -1136,8 +1136,6 @@ class JNIid: public CHeapObj<mtClass> {
   }
 
   static void deallocate(JNIid* id);
-  // Debugging
-  void verify(Klass* holder);
 };
 
 // An iterator that's used to access the inner classes indices in the

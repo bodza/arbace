@@ -16,7 +16,6 @@
 #include "interpreter/bytecodeStream.hpp"
 #include "interpreter/oopMapCache.hpp"
 #include "memory/allocation.inline.hpp"
-#include "memory/filemap.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"

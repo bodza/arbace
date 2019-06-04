@@ -134,12 +134,12 @@ void ImplicitExceptionTable::append( uint exec_off, uint cont_off ) {
   }
   *(adr(l)  ) = exec_off;
   *(adr(l)+1) = cont_off;
-  _len = l+1;
+  _len = l + 1;
 };
 
 uint ImplicitExceptionTable::at( uint exec_off ) const {
   uint l = len();
-  for ( uint i = 0; i<l; i++ )
+  for (uint i = 0; i < l; i++)
     if (*adr(i) == exec_off )
       return *(adr(i)+1);
   return 0;                     // Failed to find any execption offset
@@ -147,7 +147,7 @@ uint ImplicitExceptionTable::at( uint exec_off ) const {
 
 void ImplicitExceptionTable::print(address base) const {
   tty->print("{");
-  for ( uint i = 0; i<len(); i++ )
+  for (uint i = 0; i<len(); i++)
     tty->print("< " INTPTR_FORMAT ", " INTPTR_FORMAT " > ", p2i(base + *adr(i)), p2i(base + *(adr(i)+1)));
   tty->print_cr("}");
 }
@@ -174,12 +174,5 @@ void ImplicitExceptionTable::copy_to( nmethod* nm ) {
     nmdata++;
     // copy the table after the length
     memmove( nmdata, _data, 2 * len() * sizeof(implicit_null_entry));
-  }
-}
-
-void ImplicitExceptionTable::verify(nmethod *nm) const {
-  for (uint i = 0; i < len(); i++) {
-     if ((*adr(i) > (unsigned int)nm->insts_size()) || (*(adr(i)+1) > (unsigned int)nm->insts_size()))
-       fatal("Invalid offset in ImplicitExceptionTable at " PTR_FORMAT, p2i(_data));
   }
 }

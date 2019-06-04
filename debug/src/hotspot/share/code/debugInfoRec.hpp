@@ -105,9 +105,6 @@ class DebugInformationRecorder: public ResourceObj {
   // copy the generated debugging information to nmethod
   void copy_to(nmethod* nm);
 
-  // verifies the debug information
-  void verify(const nmethod* code);
-
   // Method for setting oopmaps to temporarily preserve old handling of oopmaps
   OopMapSet *_oopmaps;
   void set_oopmaps(OopMapSet *oopmaps) { _oopmaps = oopmaps; }
@@ -146,11 +143,11 @@ class DebugInformationRecorder: public ResourceObj {
 
   PcDesc* last_pc() {
     guarantee(_pcs_length > 0, "a safepoint must be declared already");
-    return &_pcs[_pcs_length-1];
+    return &_pcs[_pcs_length - 1];
   }
   PcDesc* prev_pc() {
     guarantee(_pcs_length > 1, "a safepoint must be declared already");
-    return &_pcs[_pcs_length-2];
+    return &_pcs[_pcs_length - 2];
   }
   void add_new_pc_offset(int pc_offset);
   void end_scopes(int pc_offset, bool is_safepoint);

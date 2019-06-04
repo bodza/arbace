@@ -40,7 +40,7 @@ BasicType JVMCIRuntime::kindToBasicType(Handle kind, TRAPS) {
     THROW_(vmSymbols::java_lang_NullPointerException(), T_ILLEGAL);
   }
   jchar ch = JavaKind::typeChar(kind);
-  switch(ch) {
+  switch (ch) {
     case 'Z': return T_BOOLEAN;
     case 'B': return T_BYTE;
     case 'S': return T_SHORT;

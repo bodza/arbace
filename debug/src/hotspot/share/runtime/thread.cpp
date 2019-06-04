@@ -18,7 +18,6 @@
 #include "interpreter/linkResolver.hpp"
 #include "interpreter/oopMapCache.hpp"
 #include "memory/allocation.inline.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
@@ -70,7 +69,6 @@
 #include "runtime/vmThread.hpp"
 #include "runtime/vm_operations.hpp"
 #include "runtime/vm_version.hpp"
-#include "services/attachListener.hpp"
 #include "services/management.hpp"
 #include "services/memTracker.hpp"
 #include "services/threadService.hpp"
@@ -576,7 +574,7 @@ void Thread::interrupt(Thread* thread) {
 }
 
 bool Thread::is_interrupted(Thread* thread, bool clear_interrupted) {
-  // Note:  If clear_interrupted==false, this simply fetches and
+  // Note:  If clear_interrupted == false, this simply fetches and
   // returns the value of the field osthread()->interrupted().
   return os::is_interrupted(thread, clear_interrupted);
 }
@@ -2233,18 +2231,6 @@ void JavaThread::print_on_error(outputStream* st, char *buf, int buflen) const {
   st->print("]");
 }
 
-// Verification
-
-static void frame_verify(frame* f, const RegisterMap *map) { f->verify(map); }
-
-void JavaThread::verify() {
-  // Verify oops in the thread.
-  oops_do(&VerifyOopClosure::verify_oop, NULL);
-
-  // Verify the stack frames.
-  frames_do(frame_verify);
-}
-
 // CR 6300358 (sub-CR 2137150)
 // Most callers of this method assume that it can't return NULL but a
 // thread may not have a name whilst it is in the process of attaching to
@@ -2884,14 +2870,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   // Signal Dispatcher needs to be started before VMInit event is posted
   os::initialize_jdk_signal_support(CHECK_JNI_ERR);
-
-  // Start Attach Listener if +StartAttachListener or it can't be started lazily
-  if (!DisableAttachMechanism) {
-    AttachListener::vm_start();
-    if (StartAttachListener || AttachListener::init_at_startup()) {
-      AttachListener::init();
-    }
-  }
 
   // Launch -Xrun agents
   // Must be done in the JVMTI live phase so that for backward compatibility the JDWP
@@ -3883,12 +3861,4 @@ void Thread::muxRelease(volatile intptr_t * Lock) {
     List->unpark();
     return;
   }
-}
-
-void Threads::verify() {
-  ALL_JAVA_THREADS(p) {
-    p->verify();
-  }
-  VMThread* thread = VMThread::vm_thread();
-  if (thread != NULL) thread->verify();
 }

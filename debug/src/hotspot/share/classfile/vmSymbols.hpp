@@ -544,8 +544,6 @@
   template(com_sun_management_internal_GarbageCollectorExtImpl,"com/sun/management/internal/GarbageCollectorExtImpl") \
   template(getDiagnosticCommandMBean_name,             "getDiagnosticCommandMBean") \
   template(getDiagnosticCommandMBean_signature,        "()Lcom/sun/management/DiagnosticCommandMBean;") \
-  template(getGcInfoBuilder_name,                      "getGcInfoBuilder") \
-  template(getGcInfoBuilder_signature,                 "()Lcom/sun/management/internal/GcInfoBuilder;") \
   template(com_sun_management_GcInfo,                  "com/sun/management/GcInfo") \
   template(com_sun_management_GcInfo_constructor_signature, "(Lcom/sun/management/internal/GcInfoBuilder;JJJ[Ljava/lang/management/MemoryUsage;[Ljava/lang/management/MemoryUsage;[Ljava/lang/Object;)V") \
   template(createGCNotification_name,                  "createGCNotification") \
@@ -1547,8 +1545,6 @@ public:
     ID id = find_id_impl(holder, name, sig, flags);
     return id;
   }
-
-  static void verify_method(ID actual_id, Method* m) { };
 
   // Find out the symbols behind an intrinsic:
   static vmSymbols::SID     class_for(ID id);

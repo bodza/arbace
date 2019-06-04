@@ -133,7 +133,7 @@ void ciBytecodeStream::force_bci(int bci) {
 // If this bytecodes references a klass, return the index of the
 // referenced klass.
 int ciBytecodeStream::get_klass_index() const {
-  switch(cur_bc()) {
+  switch (cur_bc()) {
   case Bytecodes::_ldc:
     return get_index_u1();
   case Bytecodes::_ldc_w:

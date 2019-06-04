@@ -626,7 +626,7 @@ class IntervalWalker : public CompilationResourceObj {
   // active contains the intervals that are live after the lir_op
   void walk_to(int lir_op_id);
   // active contains the intervals that are live before the lir_op
-  void walk_before(int lir_op_id)  { walk_to(lir_op_id-1); }
+  void walk_before(int lir_op_id)  { walk_to(lir_op_id - 1); }
   // walk through all intervals
   void walk()                      { walk_to(max_jint); }
 

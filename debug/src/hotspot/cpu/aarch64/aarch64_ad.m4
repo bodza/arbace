@@ -139,7 +139,7 @@ define(`BFX_INSN',
   ins_encode %{
     int rshift = $rshift$$constant;
     long mask = $mask$$constant;
-    int width = exact_log2(mask+1);
+    int width = exact_log2(mask + 1);
     __ $3(as_Register($dst$$reg), as_Register($src$$reg), rshift, width);
   %}
   ins_pipe(ialu_reg_shift);
@@ -157,7 +157,7 @@ instruct ubfxIConvI2L(iRegLNoSp dst, iRegIorL2I src, immI rshift, immI_bitmask m
   ins_encode %{
     int rshift = $rshift$$constant;
     long mask = $mask$$constant;
-    int width = exact_log2(mask+1);
+    int width = exact_log2(mask + 1);
     __ ubfx(as_Register($dst$$reg), as_Register($src$$reg), rshift, width);
   %}
   ins_pipe(ialu_reg_shift);
@@ -176,7 +176,7 @@ define(`UBFIZ_INSN',
   ins_encode %{
     int lshift = $lshift$$constant;
     long mask = $mask$$constant;
-    int width = exact_log2(mask+1);
+    int width = exact_log2(mask + 1);
     __ $2(as_Register($dst$$reg), as_Register($src$$reg), lshift, width);
   %}
   ins_pipe(ialu_reg_shift);
@@ -195,7 +195,7 @@ instruct ubfizIConvI2L(iRegLNoSp dst, iRegIorL2I src, immI lshift, immI_bitmask 
   ins_encode %{
     int lshift = $lshift$$constant;
     long mask = $mask$$constant;
-    int width = exact_log2(mask+1);
+    int width = exact_log2(mask + 1);
     __ ubfiz(as_Register($dst$$reg), as_Register($src$$reg), lshift, width);
   %}
   ins_pipe(ialu_reg_shift);

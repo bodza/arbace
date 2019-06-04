@@ -110,7 +110,7 @@ bool Disassembler::load_library() {
     tty->print_cr("Could not load %s; %s; %s", buf,
                   ((_library != NULL)
                    ? "entry point is missing"
-                   : false
+                   : false
                    ? (const char*)ebuf
                    : "library not loadable"),
                   "PrintAssembly is disabled");
@@ -375,10 +375,10 @@ static int printf_to_env(void* env_pv, const char* format, ...) {
   if (flen == 1 && format[0] == '\n') { st->bol(); return 1; }
   if (flen < 2 || strchr(format, '%') == NULL) {
     raw = format;
-  } else if (format[0] == '%' && format[1] == '%' && strchr(format+2, '%') == NULL) {
+  } else if (format[0] == '%' && format[1] == '%' && strchr(format + 2, '%') == NULL) {
     // happens a lot on machines with names like %foo
     flen--;
-    raw = format+1;
+    raw = format + 1;
   }
   if (raw != NULL) {
     st->print_raw(raw, (int) flen);

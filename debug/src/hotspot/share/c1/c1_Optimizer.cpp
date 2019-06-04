@@ -197,8 +197,6 @@ void CE_Eliminator::block_do(BlockBegin* block) {
     tty->print_cr("%d. CEE in B%d (B%d B%d)", cee_count(), block->block_id(), t_block->block_id(), f_block->block_id());
     tty->print_cr("%d. IfOp in B%d", ifop_count(), block->block_id());
   }
-
-  _hir->verify();
 }
 
 Value CE_Eliminator::make_ifop(Value x, Instruction::Condition cond, Value y, Value tval, Value fval) {
@@ -314,8 +312,6 @@ class BlockMerger: public BlockClosure {
           tty->print_cr("%d. merged B%d & B%d (stack size = %d)", _merge_count, block->block_id(), sux->block_id(), sux->state()->stack_size());
         }
 
-        _hir->verify();
-
         If* if_ = block->end()->as_If();
         if (if_) {
           IfOp* ifop    = if_->x()->as_IfOp();
@@ -361,8 +357,6 @@ class BlockMerger: public BlockClosure {
                   if (PrintBlockElimination) {
                     tty->print_cr("%d. replaced If and IfOp at end of B%d with single If", _merge_count, block->block_id());
                   }
-
-                  _hir->verify();
                 }
               }
             }
@@ -376,10 +370,8 @@ class BlockMerger: public BlockClosure {
   }
 
   virtual void block_do(BlockBegin* block) {
-    _hir->verify();
     // repeat since the same block may merge again
     while (try_merge(block)) {
-      _hir->verify();
     }
   }
 };

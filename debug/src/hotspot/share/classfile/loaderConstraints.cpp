@@ -245,40 +245,6 @@ void LoaderConstraintTable::merge_loader_constraints(LoaderConstraintEntry** pp1
   return;
 }
 
-void LoaderConstraintTable::verify(PlaceholderTable* placeholders) {
-  Thread *thread = Thread::current();
-  for (int cindex = 0; cindex < table_size(); cindex++) {
-    for (LoaderConstraintEntry* probe = bucket(cindex); probe != NULL; probe = probe->next()) {
-      if (probe->klass() != NULL) {
-        InstanceKlass* ik = probe->klass();
-        guarantee(ik->name() == probe->name(), "name should match");
-        Symbol* name = ik->name();
-        ClassLoaderData* loader_data = ik->class_loader_data();
-        Dictionary* dictionary = loader_data->dictionary();
-        unsigned int d_hash = dictionary->compute_hash(name);
-        int d_index = dictionary->hash_to_index(d_hash);
-        InstanceKlass* k = dictionary->find_class(d_index, d_hash, name);
-        if (k != NULL) {
-          // We found the class in the dictionary, so we should
-          // make sure that the Klass* matches what we already have.
-          guarantee(k == probe->klass(), "klass should be in dictionary");
-        } else {
-          // If we don't find the class in the dictionary, it
-          // has to be in the placeholders table.
-          unsigned int p_hash = placeholders->compute_hash(name);
-          int p_index = placeholders->hash_to_index(p_hash);
-          PlaceholderEntry* entry = placeholders->get_entry(p_index, p_hash, name, loader_data);
-
-          // The InstanceKlass might not be on the entry, so the only
-          // thing we can check here is whether we were successful in
-          // finding the class in the placeholders table.
-          guarantee(entry != NULL, "klass should be in the placeholders");
-        }
-      }
-    }
-  }
-}
-
 // Called with the system dictionary lock held
 void LoaderConstraintTable::print_on(outputStream* st) const {
   ResourceMark rm;

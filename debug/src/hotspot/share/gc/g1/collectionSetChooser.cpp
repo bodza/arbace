@@ -70,7 +70,6 @@ void CollectionSetChooser::sort_regions() {
     regions_trunc_to(_first_par_unreserved_idx);
   }
   _regions.sort(order_regions);
-  verify();
 }
 
 void CollectionSetChooser::add_region(HeapRegion* hr) {
@@ -95,8 +94,7 @@ void CollectionSetChooser::prepare_for_par_region_addition(uint n_threads, uint 
 }
 
 uint CollectionSetChooser::claim_array_chunk(uint chunk_size) {
-  uint res = (uint) Atomic::add((jint) chunk_size,
-                                (volatile jint*) &_first_par_unreserved_idx);
+  uint res = (uint) Atomic::add((jint) chunk_size, (volatile jint*) &_first_par_unreserved_idx);
   return res - chunk_size;
 }
 

@@ -1935,10 +1935,10 @@ void TemplateTable::fast_binaryswitch() {
     __ cmov32(Assembler::less, j, h);
     // i = h if (key >= array[h].fast_match())
     __ cmov32(Assembler::greaterEqual, i, h);
-    // while (i+1 < j)
+    // while (i + 1 < j)
     __ bind(entry);
-    __ leal(h, Address(i, 1)); // i+1
-    __ cmpl(h, j);             // i+1 < j
+    __ leal(h, Address(i, 1)); // i + 1
+    __ cmpl(h, j);             // i + 1 < j
     __ jcc(Assembler::less, loop);
   }
 

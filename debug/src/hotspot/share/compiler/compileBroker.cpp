@@ -17,7 +17,6 @@
 #include "oops/method.inline.hpp"
 #include "oops/oop.inline.hpp"
 #include "prims/nativeLookup.hpp"
-#include "prims/whitebox.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/compilationPolicy.hpp"
@@ -1101,13 +1100,6 @@ int CompileBroker::assign_compile_id(const methodHandle& method, int osr_bci) {
 uint CompileBroker::assign_compile_id_unlocked(Thread* thread, const methodHandle& method, int osr_bci) {
   MutexLocker locker(MethodCompileQueue_lock, thread);
   return assign_compile_id(method, osr_bci);
-}
-
-// ------------------------------------------------------------------
-// CompileBroker::preload_classes
-void CompileBroker::preload_classes(const methodHandle& method, TRAPS) {
-  // Move this code over from c1_Compiler.cpp
-  ShouldNotReachHere();
 }
 
 // ------------------------------------------------------------------

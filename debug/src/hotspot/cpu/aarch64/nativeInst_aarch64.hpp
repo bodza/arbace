@@ -143,8 +143,6 @@ public:
 
   void  reset_to_plt_resolve_call();
   void  set_destination_mt_safe(address dest);
-
-  void verify() const;
 };
 
 inline NativePltCall* nativePltCall_at(address address) {
@@ -187,9 +185,7 @@ class NativeCall: public NativeInstruction {
     set_int_at(displacement_offset, insn);
   }
 
-  void  verify_alignment()                       { }
-  void  verify();
-  void  print();
+  void print();
 
   // Creation
   inline friend NativeCall* nativeCall_at(address address);
@@ -260,13 +256,12 @@ class NativeMovConstReg: public NativeInstruction {
   void  set_data(intptr_t x);
 
   void flush() {
-    if (! maybe_cpool_ref(instruction_address())) {
+    if (!maybe_cpool_ref(instruction_address())) {
       ICache::invalidate_range(instruction_address(), instruction_size);
     }
   }
 
-  void  verify();
-  void  print();
+  void print();
 
   // unit test stuff
   static void test() { }
@@ -323,17 +318,15 @@ class NativeMovRegMem: public NativeInstruction {
   int instruction_start() const;
 
   address instruction_address() const;
-
   address next_instruction_address() const;
 
-  int   offset() const;
+  int offset() const;
 
-  void  set_offset(int x);
+  void set_offset(int x);
 
-  void  add_offset_in_bytes(int add_offset)     { set_offset ( ( offset() + add_offset )); }
+  void add_offset_in_bytes(int add_offset)     { set_offset ( ( offset() + add_offset )); }
 
-  void verify();
-  void print ();
+  void print();
 
   // unit test stuff
   static void test() { }
@@ -364,8 +357,7 @@ class NativeLoadAddress: public NativeInstruction {
   };
 
  public:
-  void verify();
-  void print ();
+  void print();
 
   // unit test stuff
   static void test() { }
@@ -391,7 +383,6 @@ public:
     *addr = data;
   }
 
-  void verify() const;
 private:
   void report_and_fail() const;
 };
@@ -417,8 +408,6 @@ class NativeJump: public NativeInstruction {
 
   // Creation
   inline friend NativeJump* nativeJump_at(address address);
-
-  void verify();
 
   // Unit testing stuff
   static void test() { }
@@ -449,7 +438,6 @@ public:
 
   static void insert_unconditional(address code_pos, address entry);
   static void replace_mt_safe(address instr_addr, address code_buffer);
-  static void verify();
 };
 
 inline NativeGeneralJump* nativeGeneralJump_at(address address) {
@@ -463,7 +451,6 @@ public:
     instruction_size = 4 * NativeInstruction::instruction_size,
   };
 
-  void verify() const;
   address instruction_address() const { return addr_at(0); }
   address destination() const;
   address return_address() const { return addr_at(instruction_size); }

@@ -386,16 +386,16 @@ void InterpreterMacroAssembler::push_l(Register r) {
 
 void InterpreterMacroAssembler::pop(TosState state) {
   switch (state) {
-  case atos: pop_ptr();                 break;
+  case atos: pop_ptr();          break;
   case btos:
   case ztos:
   case ctos:
   case stos:
-  case itos: pop_i();                   break;
-  case ltos: pop_l();                   break;
-  case ftos: pop_f(xmm0);               break;
-  case dtos: pop_d(xmm0);               break;
-  case vtos: /* nothing to do */        break;
+  case itos: pop_i();            break;
+  case ltos: pop_l();            break;
+  case ftos: pop_f(xmm0);        break;
+  case dtos: pop_d(xmm0);        break;
+  case vtos: /* nothing to do */ break;
   default:   ShouldNotReachHere();
   }
   verify_oop(rax, state);
@@ -404,16 +404,16 @@ void InterpreterMacroAssembler::pop(TosState state) {
 void InterpreterMacroAssembler::push(TosState state) {
   verify_oop(rax, state);
   switch (state) {
-  case atos: push_ptr();                break;
+  case atos: push_ptr();         break;
   case btos:
   case ztos:
   case ctos:
   case stos:
-  case itos: push_i();                  break;
-  case ltos: push_l();                  break;
-  case ftos: push_f(xmm0);              break;
-  case dtos: push_d(xmm0);              break;
-  case vtos: /* nothing to do */        break;
+  case itos: push_i();           break;
+  case ltos: push_l();           break;
+  case ftos: push_f(xmm0);       break;
+  case dtos: push_d(xmm0);       break;
+  case vtos: /* nothing to do */ break;
   default  : ShouldNotReachHere();
   }
 }
@@ -1230,8 +1230,7 @@ void InterpreterMacroAssembler::profile_ret(Register return_bci, Register mdp) {
       increment_mdp_data_at(mdp, in_bytes(RetData::bci_count_offset(row)));
 
       // The method data pointer needs to be updated to reflect the new target.
-      update_mdp_by_offset(mdp,
-                           in_bytes(RetData::bci_displacement_offset(row)));
+      update_mdp_by_offset(mdp, in_bytes(RetData::bci_displacement_offset(row)));
       jmp(profile_continue);
       bind(next_test);
     }

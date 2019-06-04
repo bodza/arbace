@@ -9,7 +9,6 @@
 #include "classfile/javaClasses.hpp"
 #include "classfile/moduleEntry.hpp"
 #include "classfile/systemDictionary.hpp"
-#include "classfile/systemDictionaryShared.hpp"
 #include "classfile/verifier.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "code/dependencyContext.hpp"
@@ -22,7 +21,6 @@
 #include "memory/iterator.inline.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceClosure.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/fieldStreams.hpp"
@@ -42,7 +40,6 @@
 #include "runtime/mutexLocker.hpp"
 #include "runtime/orderAccess.hpp"
 #include "runtime/thread.inline.hpp"
-#include "services/classLoadingService.hpp"
 #include "services/threadService.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/stringUtils.hpp"
@@ -491,9 +488,8 @@ void InstanceKlass::initialize(TRAPS) {
 }
 
 bool InstanceKlass::verify_code(bool throw_verifyerror, TRAPS) {
-  // 1) Verify the bytecodes
   Verifier::Mode mode = throw_verifyerror ? Verifier::ThrowException : Verifier::NoException;
-  return Verifier::verify(this, mode, false, THREAD);
+  return Verifier::verify(this, mode, THREAD);
 }
 
 // Used exclusively by the shared spaces dump mechanism to prevent
@@ -578,14 +574,10 @@ bool InstanceKlass::link_class_impl(bool throw_verifyerror, TRAPS) {
     // on an earlier link attempt
     // don't verify or rewrite if already rewritten
     //
-
     if (!is_linked()) {
       if (!is_rewritten()) {
-        {
-          bool verify_ok = verify_code(throw_verifyerror, THREAD);
-          if (!verify_ok) {
-            return false;
-          }
+        if (!verify_code(throw_verifyerror, THREAD)) {
+          return false;
         }
 
         // Just in case a side-effect of verify linked this class already
@@ -597,8 +589,6 @@ bool InstanceKlass::link_class_impl(bool throw_verifyerror, TRAPS) {
 
         // also sets rewritten
         rewrite_class(CHECK_false);
-      } else if (is_shared()) {
-        SystemDictionaryShared::check_verification_constraints(this, CHECK_false);
       }
 
       // relocate jsrs and link methods after they are all rewritten
@@ -639,7 +629,7 @@ void InstanceKlass::rewrite_class(TRAPS) {
 // executed more than once.
 void InstanceKlass::link_methods(TRAPS) {
   int len = methods()->length();
-  for (int i = len-1; i >= 0; i--) {
+  for (int i = len - 1; i >= 0; i--) {
     methodHandle m(THREAD, methods()->at(i));
 
     // Set up method entry points for compiler and interpreter    .
@@ -1202,7 +1192,7 @@ void InstanceKlass::do_nonstatic_fields(FieldClosure* cl) {
   fieldDescriptor fd;
   int length = java_fields_count();
   // In DebugInfo nonstatic fields are sorted by offset.
-  int* fields_sorted = NEW_C_HEAP_ARRAY(int, 2*(length+1), mtClass);
+  int* fields_sorted = NEW_C_HEAP_ARRAY(int, 2 * (length + 1), mtClass);
   int j = 0;
   for (int i = 0; i < length; i += 1) {
     fd.reinitialize(this, i);
@@ -1547,9 +1537,9 @@ jmethodID InstanceKlass::get_jmethod_id(const methodHandle& method_h) {
     jmethodID* new_jmeths = NULL;
     if (length <= idnum) {
       // allocate a new cache that might be used
-      size_t size = MAX2(idnum+1, (size_t)idnum_allocated_count());
-      new_jmeths = NEW_C_HEAP_ARRAY(jmethodID, size+1, mtClass);
-      memset(new_jmeths, 0, (size+1)*sizeof(jmethodID));
+      size_t size = MAX2(idnum + 1, (size_t)idnum_allocated_count());
+      new_jmeths = NEW_C_HEAP_ARRAY(jmethodID, size + 1, mtClass);
+      memset(new_jmeths, 0, (size + 1) * sizeof(jmethodID));
       // cache size is stored in element[0], other elements offset by one
       new_jmeths[0] = (jmethodID)size;
     }
@@ -1623,14 +1613,14 @@ jmethodID InstanceKlass::get_jmethod_id_fetch_or_update(size_t idnum, jmethodID 
     if (jmeths != NULL) {
       // copy any existing entries from the old cache
       for (size_t index = 0; index < length; index++) {
-        new_jmeths[index+1] = jmeths[index+1];
+        new_jmeths[index + 1] = jmeths[index + 1];
       }
       *to_dealloc_jmeths_p = jmeths;  // save old cache for later delete
     }
     release_set_methods_jmethod_ids(jmeths = new_jmeths);
   } else {
     // fetch jmethodID (if any) from the existing cache
-    id = jmeths[idnum+1];
+    id = jmeths[idnum + 1];
     *to_dealloc_jmeths_p = new_jmeths;  // save new cache for later delete
   }
   if (id == NULL) {
@@ -1643,7 +1633,7 @@ jmethodID InstanceKlass::get_jmethod_id_fetch_or_update(size_t idnum, jmethodID 
     // The jmethodID cache can be read while unlocked so we have to
     // make sure the new jmethodID is complete before installing it
     // in the cache.
-    OrderAccess::release_store(&jmeths[idnum+1], id);
+    OrderAccess::release_store(&jmeths[idnum + 1], id);
   } else {
     *to_dealloc_id_p = new_id; // save new id for later delete
   }
@@ -1659,7 +1649,7 @@ void InstanceKlass::get_jmethod_id_length_value(jmethodID* cache, size_t idnum, 
   if (*length_p <= idnum) {  // cache is too short
     *id_p = NULL;
   } else {
-    *id_p = cache[idnum+1];  // fetch jmethodID (if any)
+    *id_p = cache[idnum + 1];  // fetch jmethodID (if any)
   }
 }
 
@@ -1671,7 +1661,7 @@ jmethodID InstanceKlass::jmethod_id_or_null(Method* method) {
   jmethodID id = NULL;
   if (jmeths != NULL &&                         // If there is a cache
       (length = (size_t)jmeths[0]) > idnum) {   // and if it is long enough,
-    id = jmeths[idnum+1];                       // Look up the id (may be NULL)
+    id = jmeths[idnum + 1];                       // Look up the id (may be NULL)
   }
   return id;
 }
@@ -1921,10 +1911,7 @@ bool InstanceKlass::check_sharing_error_state() {
   return (old_state != is_in_error_state());
 }
 
-void InstanceKlass::notify_unload_class(InstanceKlass* ik) {
-  // notify ClassLoadingService of class unload
-  ClassLoadingService::notify_class_unloaded(ik);
-}
+void InstanceKlass::notify_unload_class(InstanceKlass* ik) { }
 
 void InstanceKlass::release_C_heap_structures(InstanceKlass* ik) {
   // Clean up C heap
@@ -2617,11 +2604,6 @@ void InstanceKlass::verify_on(outputStream* st) {
     }
   }
 
-  // Verify JNI static field identifiers
-  if (jni_ids() != NULL) {
-    jni_ids()->verify(this);
-  }
-
   // Verify other fields
   if (array_klasses() != NULL) {
     guarantee(array_klasses()->is_klass(), "should be klass");
@@ -2665,18 +2647,6 @@ void JNIid::deallocate(JNIid* current) {
     JNIid* next = current->next();
     delete current;
     current = next;
-  }
-}
-
-void JNIid::verify(Klass* holder) {
-  int first_field_offset  = InstanceMirrorKlass::offset_of_static_fields();
-  int end_field_offset;
-  end_field_offset = first_field_offset + (InstanceKlass::cast(holder)->static_field_size() * wordSize);
-
-  JNIid* current = this;
-  while (current != NULL) {
-    guarantee(current->holder() == holder, "Invalid klass in JNIid");
-    current = current->next();
   }
 }
 

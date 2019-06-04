@@ -1482,8 +1482,7 @@ class StubGenerator: public StubCodeGenerator {
   address generate_conjoint_oop_copy(bool aligned, address nooverlap_target, address *entry, const char *name, bool dest_uninitialized) {
     const bool is_oop = true;
     const size_t size = UseCompressedOops ? sizeof (jint) : sizeof (jlong);
-    return generate_conjoint_copy(size, aligned, is_oop, nooverlap_target, entry,
-                                  name, dest_uninitialized);
+    return generate_conjoint_copy(size, aligned, is_oop, nooverlap_target, entry, name, dest_uninitialized);
   }
 
   // Helper for generating a dynamic type check.
@@ -1683,9 +1682,9 @@ class StubGenerator: public StubCodeGenerator {
     __ orr(rscratch1, s, d);
     __ orr(rscratch1, rscratch1, count);
 
-    __ andr(rscratch1, rscratch1, BytesPerLong-1);
+    __ andr(rscratch1, rscratch1, BytesPerLong - 1);
     __ cbz(rscratch1, L_long_aligned);
-    __ andr(rscratch1, rscratch1, BytesPerInt-1);
+    __ andr(rscratch1, rscratch1, BytesPerInt - 1);
     __ cbz(rscratch1, L_int_aligned);
     __ tbz(rscratch1, 0, L_short_aligned);
     __ b(RuntimeAddress(byte_copy_entry));
@@ -1817,7 +1816,7 @@ class StubGenerator: public StubCodeGenerator {
     const Register rscratch1_offset = rscratch1;    // array offset
     const Register r18_elsize = lh; // element size
 
-    __ ubfx(rscratch1_offset, lh, Klass::_lh_header_size_shift, exact_log2(Klass::_lh_header_size_mask+1));   // array_offset
+    __ ubfx(rscratch1_offset, lh, Klass::_lh_header_size_shift, exact_log2(Klass::_lh_header_size_mask + 1));   // array_offset
     __ add(src, src, rscratch1_offset);           // src array offset
     __ add(dst, dst, rscratch1_offset);           // dst array offset
     BLOCK_COMMENT("choose copy loop based on element size");
@@ -3444,7 +3443,7 @@ class StubGenerator: public StubCodeGenerator {
     __ br(Assembler::NE, RET_TRUE);
 
   __ bind(POST_LOOP16_LOAD_TAIL);
-    __ cbz(len, RET_FALSE); // Can't shift left by 64 when len==0
+    __ cbz(len, RET_FALSE); // Can't shift left by 64 when len == 0
     __ ldr(tmp1, Address(ary1));
     __ mov(tmp2, 64);
     __ sub(tmp4, tmp2, len, __ LSL, 3);
@@ -4470,7 +4469,7 @@ class StubGenerator: public StubCodeGenerator {
     __ enter(); // Save FP and LR before call
 
     // lr and fp are already in place
-    __ sub(sp, rfp, ((unsigned)framesize-4) << LogBytesPerInt); // prolog
+    __ sub(sp, rfp, ((unsigned)framesize - 4) << LogBytesPerInt); // prolog
 
     int frame_complete = __ pc() - start;
 
@@ -4932,7 +4931,7 @@ class StubGenerator: public StubCodeGenerator {
         block_comment("} // i");
       }
 
-      block_comment("for (int i = len; i < 2*len; i++) {");
+      block_comment("for (int i = len; i < 2 * len; i++) {");
       mov(Ri, Rlen); {
         Label loop, end;
         cmpw(Ri, Rlen, Assembler::LSL, 1);
@@ -4941,7 +4940,7 @@ class StubGenerator: public StubCodeGenerator {
         bind(loop);
         pre2(Ri, Rlen);
 
-        block_comment("  for (j = len*2-i-1; j; j--) {"); {
+        block_comment("  for (j = len * 2 - i - 1; j; j--) {"); {
           lslw(Rj, Rlen, 1);
           subw(Rj, Rj, Ri);
           subw(Rj, Rj, 1);

@@ -830,9 +830,9 @@ const char* os::Posix::describe_signal_set_short(const sigset_t* set, char* buff
   for (int sig = 1; sig <= NUM_IMPORTANT_SIGS; sig++) {
     const int rc = sigismember(set, sig);
     if (rc == -1 && errno == EINVAL) {
-      buffer[sig-1] = '?';
+      buffer[sig - 1] = '?';
     } else {
-      buffer[sig-1] = rc == 0 ? '0' : '1';
+      buffer[sig - 1] = (rc == 0) ? '0' : '1';
     }
   }
   buffer[NUM_IMPORTANT_SIGS] = 0;

@@ -205,12 +205,7 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
   do_bool_flag(UseCompressedOops) \
   X86_ONLY(do_bool_flag(UseCountLeadingZerosInstruction)) \
   X86_ONLY(do_bool_flag(UseCountTrailingZerosInstruction)) \
-  do_bool_flag(UseConcMarkSweepGC) \
   do_bool_flag(UseG1GC) \
-  do_bool_flag(UseParallelGC) \
-  do_bool_flag(UseParallelOldGC) \
-  do_bool_flag(UseSerialGC) \
-  do_bool_flag(UseZGC) \
   do_bool_flag(UseEpsilonGC) \
   do_bool_flag(UsePopCountInstruction) \
   do_bool_flag(UseSHA1Intrinsics) \

@@ -123,7 +123,7 @@ BitMap::get_next_one_offset(idx_t l_offset, idx_t r_offset) const {
     return l_offset;
   }
   idx_t   index = word_index(l_offset);
-  idx_t r_index = word_index(r_offset-1) + 1;
+  idx_t r_index = word_index(r_offset - 1) + 1;
   idx_t res_offset = l_offset;
 
   // check bits including and to the _left_ of offset's position
@@ -157,7 +157,7 @@ BitMap::get_next_zero_offset(idx_t l_offset, idx_t r_offset) const {
     return l_offset;
   }
   idx_t   index = word_index(l_offset);
-  idx_t r_index = word_index(r_offset-1) + 1;
+  idx_t r_index = word_index(r_offset - 1) + 1;
   idx_t res_offset = l_offset;
 
   // check bits including and to the _left_ of offset's position

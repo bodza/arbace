@@ -29,7 +29,7 @@ ciBlock *ciMethodBlocks::split_block_at(int bci) {
   _blocks->append(new_block);
   new_block->set_limit_bci(bci);
   former_block->set_start_bci(bci);
-  for (int pos=bci-1; pos >= 0; pos--) {
+  for (int pos = bci - 1; pos >= 0; pos--) {
     ciBlock *current_block = block_containing(pos);
     if (current_block == former_block) {
       // Replace it.

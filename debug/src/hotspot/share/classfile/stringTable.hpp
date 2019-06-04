@@ -9,14 +9,11 @@
 #include "oops/weakHandle.hpp"
 #include "utilities/concurrentHashTable.hpp"
 
-template <class T, class N> class CompactHashtable;
-class CompactStringTableWriter;
 class SerializeClosure;
 
 class StringTable;
 class StringTableConfig;
-typedef ConcurrentHashTable<WeakHandle<vm_string_table_data>,
-                            StringTableConfig, mtSymbol> StringTableHash;
+typedef ConcurrentHashTable<WeakHandle<vm_string_table_data>, StringTableConfig, mtSymbol> StringTableHash;
 
 class StringTableCreateEntry;
 
@@ -32,9 +29,6 @@ private:
 
   // The string table
   static StringTable* _the_table;
-  // Shared string table
-  static CompactHashtable<oop, char> _shared_table;
-  static bool _shared_string_mapped;
   static bool _alt_hash;
 private:
    // Set if one bucket is out of balance due to hash algorithm deficiency
@@ -131,23 +125,13 @@ private:
   static bool needs_rehashing()
     { return StringTable::the_table()->_needs_rehashing; }
 
-  // Sharing
- private:
-  oop lookup_shared(jchar* name, int len, unsigned int hash) { return NULL; };
-  static void copy_shared_string_table(CompactStringTableWriter* ch_table) { };
  public:
   static oop create_archived_string(oop s, Thread* THREAD) { return NULL; };
-  static void set_shared_string_mapped() { _shared_string_mapped = true; }
-  static bool shared_string_mapped()     { return _shared_string_mapped; }
   static void shared_oops_do(OopClosure* f) { };
-  static void write_to_archive() { };
   static void serialize(SerializeClosure* soc) { };
 
   // Jcmd
   static void dump(outputStream* st, bool verbose=false);
-  // Debugging
-  static size_t verify_and_compare_entries();
-  static void verify();
 };
 
 #endif

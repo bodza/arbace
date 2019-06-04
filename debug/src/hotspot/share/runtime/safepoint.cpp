@@ -596,7 +596,7 @@ void SafepointSynchronize::do_cleanup_tasks() {
 }
 
 bool SafepointSynchronize::safepoint_safe(JavaThread *thread, JavaThreadState state) {
-  switch(state) {
+  switch (state) {
   case _thread_in_native:
     // native threads are safe if they have no java stack or have walkable stack
     return !thread->has_last_Java_frame() || thread->frame_anchor()->walkable();
@@ -656,7 +656,7 @@ void SafepointSynchronize::block(JavaThread *thread) {
   thread->frame_anchor()->make_walkable(thread);
 
   // Check that we have a valid thread_state at this point
-  switch(state) {
+  switch (state) {
     case _thread_in_vm_trans:
     case _thread_in_Java:        // From compiled code
 
@@ -884,7 +884,7 @@ void ThreadSafepointState::examine_state_of_thread() {
 void ThreadSafepointState::roll_forward(suspend_type type) {
   _type = type;
 
-  switch(_type) {
+  switch (_type) {
     case _at_safepoint:
       SafepointSynchronize::signal_thread_at_safepoint();
       if (_thread->in_critical()) {
@@ -904,7 +904,7 @@ void ThreadSafepointState::roll_forward(suspend_type type) {
 }
 
 void ThreadSafepointState::restart() {
-  switch(type()) {
+  switch (type()) {
     case _at_safepoint:
     case _call_back:
       break;
@@ -922,7 +922,7 @@ void ThreadSafepointState::restart() {
 void ThreadSafepointState::print_on(outputStream *st) const {
   const char *s = NULL;
 
-  switch(_type) {
+  switch (_type) {
     case _running      : s = "_running";      break;
     case _at_safepoint : s = "_at_safepoint"; break;
     case _call_back    : s = "_call_back";    break;

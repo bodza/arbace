@@ -255,8 +255,6 @@ private:
   // This is a pointer to a section of profiling data.
   DataLayout* _data;
 
-  char* print_data_on_helper(const MethodData* md) const;
-
 protected:
   DataLayout* data() { return _data; }
   const DataLayout* data() const { return _data; }
@@ -423,13 +421,6 @@ public:
   // translation here, and the required translators are in the ci subclasses.
   virtual void translate_from(const ProfileData* data) { }
 
-  virtual void print_data_on(outputStream* st, const char* extra = NULL) const {
-    ShouldNotReachHere();
-  }
-
-  void print_data_on(outputStream* st, const MethodData* md) const;
-
-  void print_shared(outputStream* st, const char* name, const char* extra) const;
   void tab(outputStream* st, bool first = false) const;
 };
 
@@ -480,8 +471,6 @@ public:
   static ByteSize bit_data_size() {
     return cell_offset(bit_cell_count);
   }
-
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
 };
 
 // CounterData
@@ -524,8 +513,6 @@ public:
   void set_count(uint count) {
     set_uint_at(count_off, count);
   }
-
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
 };
 
 // JumpData
@@ -594,8 +581,6 @@ public:
 
   // Specific initialization.
   void post_initialize(BytecodeStream* stream, MethodData* mdo);
-
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
 };
 
 // Entries in a ProfileData object to record types: it can either be
@@ -768,8 +753,6 @@ public:
 
   // GC support
   void clean_weak_klass_links(bool always_clean);
-
-  void print_data_on(outputStream* st) const;
 };
 
 // Type entry used for return from a call. A single cell to record the
@@ -810,8 +793,6 @@ public:
 
   // GC support
   void clean_weak_klass_links(bool always_clean);
-
-  void print_data_on(outputStream* st) const;
 };
 
 // Entries to collect type information at a call: contains arguments
@@ -988,8 +969,6 @@ public:
       _ret.clean_weak_klass_links(always_clean);
     }
   }
-
-  virtual void print_data_on(outputStream* st, const char* extra = NULL) const;
 };
 
 // ReceiverTypeData
@@ -1108,9 +1087,6 @@ public:
 
   // GC support
   virtual void clean_weak_klass_links(bool always_clean);
-
-  void print_receiver_data_on(outputStream* st) const;
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
 };
 
 // VirtualCallData
@@ -1183,9 +1159,6 @@ public:
 
   // Redefinition support
   virtual void clean_weak_method_links();
-
-  void print_method_data_on(outputStream* st) const;
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
 };
 
 // VirtualCallTypeData
@@ -1305,8 +1278,6 @@ public:
       _ret.clean_weak_klass_links(always_clean);
     }
   }
-
-  virtual void print_data_on(outputStream* st, const char* extra = NULL) const;
 };
 
 // RetData
@@ -1393,8 +1364,6 @@ public:
 
   // Specific initialization.
   void post_initialize(BytecodeStream* stream, MethodData* mdo);
-
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
 };
 
 // BranchData
@@ -1455,8 +1424,6 @@ public:
 
   // Specific initialization.
   void post_initialize(BytecodeStream* stream, MethodData* mdo);
-
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
 };
 
 // ArrayData
@@ -1602,8 +1569,6 @@ public:
 
   // Specific initialization.
   void post_initialize(BytecodeStream* stream, MethodData* mdo);
-
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
 };
 
 class ArgInfoData : public ArrayData {
@@ -1623,8 +1588,6 @@ public:
   void set_arg_modified(int arg, uint val) {
     array_set_int_at(arg, val);
   }
-
-  void print_data_on(outputStream* st, const char* extra = NULL) const;
 };
 
 // ParametersTypeData
@@ -1679,8 +1642,6 @@ public:
     _parameters.clean_weak_klass_links(always_clean);
   }
 
-  virtual void print_data_on(outputStream* st, const char* extra = NULL) const;
-
   static ByteSize stack_slot_offset(int i) {
     return cell_offset(stack_slot_local_offset(i));
   }
@@ -1734,8 +1695,6 @@ public:
   static ByteSize method_offset() {
     return cell_offset(speculative_trap_method);
   }
-
-  virtual void print_data_on(outputStream* st, const char* extra = NULL) const;
 };
 
 // MethodData*
@@ -2224,9 +2183,6 @@ public:
   // Printing
   void print_on      (outputStream* st) const;
   void print_value_on(outputStream* st) const;
-
-  // printing support for method data
-  void print_data_on(outputStream* st) const;
 
   const char* internal_name() const { return "{method data}"; }
 

@@ -14,7 +14,6 @@ ValueStack::ValueStack(IRScope* scope, ValueStack* caller_state)
 , _stack(scope->method()->max_stack())
 , _locks()
 {
-  verify();
 }
 
 ValueStack::ValueStack(ValueStack* copy_from, Kind kind, int bci)
@@ -44,8 +43,6 @@ ValueStack::ValueStack(ValueStack* copy_from, Kind kind, int bci)
   }
 
   _locks.appendAll(&copy_from->_locks);
-
-  verify();
 }
 
 bool ValueStack::is_same(ValueStack* s) {

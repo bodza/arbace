@@ -188,8 +188,7 @@ void Canonicalizer::do_StoreField(StoreField* x) {
     }
     // limit this optimization to current block
     if (value != NULL && in_current_block(conv)) {
-      set_canonical(new StoreField(x->obj(), x->offset(), x->field(), value, x->is_static(),
-                                   x->state_before(), x->needs_patching()));
+      set_canonical(new StoreField(x->obj(), x->offset(), x->field(), value, x->is_static(), x->state_before(), x->needs_patching()));
       return;
     }
   }
@@ -272,9 +271,7 @@ void Canonicalizer::do_StoreIndexed(StoreIndexed* x) {
     }
     // limit this optimization to current block
     if (value != NULL && in_current_block(conv)) {
-      set_canonical(new StoreIndexed(x->array(), x->index(), x->length(),
-                                     x->elt_type(), value, x->state_before(),
-                                     x->check_boolean()));
+      set_canonical(new StoreIndexed(x->array(), x->index(), x->length(), x->elt_type(), value, x->state_before(), x->check_boolean()));
       return;
     }
   }
@@ -501,7 +498,7 @@ void Canonicalizer::do_Convert(Convert* x) {
     switch (x->op()) {
     case Bytecodes::_i2b:  set_constant((int)((x->value()->type()->as_IntConstant()->value() << 24) >> 24)); break;
     case Bytecodes::_i2s:  set_constant((int)((x->value()->type()->as_IntConstant()->value() << 16) >> 16)); break;
-    case Bytecodes::_i2c:  set_constant((int)(x->value()->type()->as_IntConstant()->value() & ((1<<16)-1))); break;
+    case Bytecodes::_i2c:  set_constant((int)(x->value()->type()->as_IntConstant()->value() & ((1 << 16)-1))); break;
     case Bytecodes::_i2l:  set_constant((jlong)(x->value()->type()->as_IntConstant()->value()));             break;
     case Bytecodes::_i2f:  set_constant((float)(x->value()->type()->as_IntConstant()->value()));             break;
     case Bytecodes::_i2d:  set_constant((double)(x->value()->type()->as_IntConstant()->value()));            break;
@@ -722,7 +719,7 @@ void Canonicalizer::do_If(If* x) {
           if (compilation()->profile_branches() || compilation()->count_backedges()) {
             // TODO: If profiling, leave floating point comparisons unoptimized.
             // We currently do not support profiling of the unordered case.
-            switch(cmp->op()) {
+            switch (cmp->op()) {
               case Bytecodes::_fcmpl: case Bytecodes::_fcmpg:
               case Bytecodes::_dcmpl: case Bytecodes::_dcmpg:
                 set_canonical(x);

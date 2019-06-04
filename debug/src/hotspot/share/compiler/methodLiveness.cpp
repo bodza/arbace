@@ -244,7 +244,7 @@ void MethodLiveness::init_basic_blocks() {
   }
 
   // Compute exception edges.
-  for (int b=_block_count-1; b >= 0; b--) {
+  for (int b = _block_count - 1; b >= 0; b--) {
     BasicBlock *block = _block_list[b];
     int block_start = block->start_bci();
     int block_limit = block->limit_bci();
@@ -278,7 +278,7 @@ void MethodLiveness::init_basic_blocks() {
 }
 
 void MethodLiveness::init_gen_kill() {
-  for (int i=_block_count-1; i >= 0; i--) {
+  for (int i=_block_count - 1; i >= 0; i--) {
     _block_list[i]->compute_gen_kill(method());
   }
 }
@@ -702,7 +702,7 @@ void MethodLiveness::BasicBlock::compute_gen_kill_single(ciBytecodeStream *instr
 
 void MethodLiveness::BasicBlock::load_two(int local) {
   load_one(local);
-  load_one(local+1);
+  load_one(local + 1);
 }
 
 void MethodLiveness::BasicBlock::load_one(int local) {
@@ -713,7 +713,7 @@ void MethodLiveness::BasicBlock::load_one(int local) {
 
 void MethodLiveness::BasicBlock::store_two(int local) {
   store_one(local);
-  store_one(local+1);
+  store_one(local + 1);
 }
 
 void MethodLiveness::BasicBlock::store_one(int local) {
@@ -734,13 +734,13 @@ void MethodLiveness::BasicBlock::propagate(MethodLiveness *ml) {
   _entry.set_union(_exception_exit);
 
   int i;
-  for (i=_normal_predecessors->length()-1; i>=0; i--) {
+  for (i = _normal_predecessors->length() - 1; i >= 0; i--) {
     BasicBlock *block = _normal_predecessors->at(i);
     if (block->merge_normal(_entry)) {
       ml->work_list_add(block);
     }
   }
-  for (i=_exception_predecessors->length()-1; i>=0; i--) {
+  for (i = _exception_predecessors->length() - 1; i >= 0; i--) {
     BasicBlock *block = _exception_predecessors->at(i);
     if (block->merge_exception(_entry)) {
       ml->work_list_add(block);

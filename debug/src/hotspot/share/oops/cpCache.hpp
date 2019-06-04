@@ -343,8 +343,7 @@ class ConstantPoolCacheEntry {
   static ByteSize flags_offset()                 { return byte_offset_of(ConstantPoolCacheEntry, _flags); }
 
   // Debugging & Printing
-  void print (outputStream* st, int index) const;
-  void verify(outputStream* st) const;
+  void print(outputStream* st, int index) const;
 
   static void verify_tos_state_shift() { }
 

@@ -319,7 +319,7 @@ ResourceBitMap ciMethod::live_local_oops_at_bci(int bci) {
   int mask_size = max_locals();
   ResourceBitMap result(mask_size);
   int i;
-  for (i = 0; i < mask_size ; i++ ) {
+  for (i = 0; i < mask_size ; i++) {
     if (mask.is_oop(i)) result.set_bit(i);
   }
   return result;
@@ -422,9 +422,9 @@ void ciCallProfile::add_receiver(ciKlass* receiver, int receiver_count) {
   // is placed to the last array element which is not used).
   // First array's element contains most called receiver.
   int i = _limit;
-  for (; i > 0 && receiver_count > _receiver_count[i-1]; i--) {
-    _receiver[i] = _receiver[i-1];
-    _receiver_count[i] = _receiver_count[i-1];
+  for (; i > 0 && receiver_count > _receiver_count[i - 1]; i--) {
+    _receiver[i] = _receiver[i - 1];
+    _receiver_count[i] = _receiver_count[i - 1];
   }
   _receiver[i] = receiver;
   _receiver_count[i] = receiver_count;

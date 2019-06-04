@@ -328,28 +328,21 @@ public:
 
 public:
   // Sharing support.
-  static void reorder_dictionary_for_sharing() { };
-  static void combine_shared_dictionaries();
   static size_t count_bytes_for_buckets();
   static size_t count_bytes_for_table();
   static void copy_buckets(char* top, char* end);
   static void copy_table(char* top, char* end);
-  static void set_shared_dictionary(HashtableBucket<mtClass>* t, int length, int number_of_entries);
   // Printing
   static void print() { return print_on(tty); }
   static void print_on(outputStream* st);
-  static void print_shared(outputStream* st);
   static void dump(outputStream* st, bool verbose);
 
   // Monotonically increasing counter which grows as classes are
   // loaded or modifications such as hot-swapping or setting/removing
   // of breakpoints are performed
-  static inline int number_of_modifications()     { return _number_of_modifications; }
+  static inline int number_of_modifications() { return _number_of_modifications; }
   // Needed by evolution and breakpoint code
-  static inline void notice_modification()        { ++_number_of_modifications; }
-
-  // Verification
-  static void verify();
+  static inline void notice_modification()    { ++_number_of_modifications; }
 
   // Initialization
   static void initialize(TRAPS);
@@ -465,8 +458,7 @@ public:
                                              SignatureStream::FailureMode failure_mode,
                                              TRAPS) {
     // callee will fill in CL/PD from AK, if they are needed
-    return find_java_mirror_for_type(signature, accessing_klass, Handle(), Handle(),
-                                     failure_mode, THREAD);
+    return find_java_mirror_for_type(signature, accessing_klass, Handle(), Handle(), failure_mode, THREAD);
   }
 
   // fast short-cut for the one-character case:
@@ -527,9 +519,6 @@ public:
   // Hashtable holding placeholders for classes being loaded.
   static PlaceholderTable*       _placeholders;
 
-  // Hashtable holding classes from the shared archive.
-  static Dictionary*             _shared_dictionary;
-
   // Monotonically increasing counter which grows with
   // loading classes as well as hot-swapping and breakpoint setting
   // and removal.
@@ -556,9 +545,7 @@ public:
 protected:
   static void validate_protection_domain(InstanceKlass* klass, Handle class_loader, Handle protection_domain, TRAPS);
 
-  friend class VM_PopulateDumpSharedSpace;
   friend class TraversePlaceholdersClosure;
-  static Dictionary*         shared_dictionary() { return _shared_dictionary; }
   static PlaceholderTable*   placeholders() { return _placeholders; }
   static LoaderConstraintTable* constraints() { return _loader_constraints; }
   static ResolutionErrorTable* resolution_errors() { return _resolution_errors; }

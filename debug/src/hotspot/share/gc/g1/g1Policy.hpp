@@ -190,10 +190,7 @@ private:
   // be, base_min_length is the already existing number of regions in
   // the young list, min_length and max_length are the desired min and
   // max young list length according to the user's inputs.
-  uint calculate_young_list_target_length(size_t rs_lengths,
-                                          uint base_min_length,
-                                          uint desired_min_length,
-                                          uint desired_max_length) const;
+  uint calculate_young_list_target_length(size_t rs_lengths, uint base_min_length, uint desired_min_length, uint desired_max_length) const;
 
   // Result of the bounded_young_list_target_length() method, containing both the
   // bounded as well as the unbounded young list target lengths in this order.
@@ -208,8 +205,7 @@ private:
   // of objects to be copied for the given length will fit into the
   // given free space (expressed by base_free_regions).  It is used by
   // calculate_young_list_target_length().
-  bool predict_will_fit(uint young_length, double base_time_ms,
-                        uint base_free_regions, double target_pause_time_ms) const;
+  bool predict_will_fit(uint young_length, double base_time_ms, uint base_free_regions, double target_pause_time_ms) const;
 
 public:
   size_t pending_cards() const { return _pending_cards; }

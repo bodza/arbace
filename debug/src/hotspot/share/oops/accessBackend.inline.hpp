@@ -97,9 +97,7 @@ template <typename T>
 inline bool RawAccessBarrier<decorators>::oop_arraycopy(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
                                                         arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw,
                                                         size_t length) {
-  return arraycopy(src_obj, src_offset_in_bytes, src_raw,
-                   dst_obj, dst_offset_in_bytes, dst_raw,
-                   length);
+  return arraycopy(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
 }
 
 template <DecoratorSet decorators>
@@ -158,10 +156,7 @@ template <DecoratorSet ds, typename T>
 inline typename EnableIf<
   HasDecorator<ds, MO_RELAXED>::value, T>::type
 RawAccessBarrier<decorators>::atomic_cmpxchg_internal(T new_value, void* addr, T compare_value) {
-  return Atomic::cmpxchg(new_value,
-                         reinterpret_cast<volatile T*>(addr),
-                         compare_value,
-                         memory_order_relaxed);
+  return Atomic::cmpxchg(new_value, reinterpret_cast<volatile T*>(addr), compare_value, memory_order_relaxed);
 }
 
 template <DecoratorSet decorators>
@@ -169,10 +164,7 @@ template <DecoratorSet ds, typename T>
 inline typename EnableIf<
   HasDecorator<ds, MO_SEQ_CST>::value, T>::type
 RawAccessBarrier<decorators>::atomic_cmpxchg_internal(T new_value, void* addr, T compare_value) {
-  return Atomic::cmpxchg(new_value,
-                         reinterpret_cast<volatile T*>(addr),
-                         compare_value,
-                         memory_order_conservative);
+  return Atomic::cmpxchg(new_value, reinterpret_cast<volatile T*>(addr), compare_value, memory_order_conservative);
 }
 
 template <DecoratorSet decorators>
@@ -180,8 +172,7 @@ template <DecoratorSet ds, typename T>
 inline typename EnableIf<
   HasDecorator<ds, MO_SEQ_CST>::value, T>::type
 RawAccessBarrier<decorators>::atomic_xchg_internal(T new_value, void* addr) {
-  return Atomic::xchg(new_value,
-                      reinterpret_cast<volatile T*>(addr));
+  return Atomic::xchg(new_value, reinterpret_cast<volatile T*>(addr));
 }
 
 // For platforms that do not have native support for wide atomics,

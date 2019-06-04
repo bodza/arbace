@@ -5,7 +5,6 @@
 #include "gc/g1/g1CollectorState.hpp"
 #include "gc/g1/g1ConcurrentMark.inline.hpp"
 #include "gc/g1/g1EvacFailure.hpp"
-#include "gc/g1/g1HeapVerifier.hpp"
 #include "gc/g1/g1OopClosures.inline.hpp"
 #include "gc/g1/g1_globals.hpp"
 #include "gc/g1/heapRegion.hpp"
@@ -189,7 +188,6 @@ public:
         bool during_conc_mark = _g1h->collector_state()->mark_or_rebuild_in_progress();
 
         hr->note_self_forwarding_removal_start(during_initial_mark, during_conc_mark);
-        _g1h->verifier()->check_bitmaps("Self-Forwarding Ptr Removal", hr);
 
         hr->reset_bot();
 

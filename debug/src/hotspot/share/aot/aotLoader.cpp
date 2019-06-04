@@ -108,7 +108,7 @@ void AOTLoader::initialize() {
     // Scan the AOTLibrary option.
     if (AOTLibrary != NULL) {
       const int len = (int)strlen(AOTLibrary);
-      char* cp  = NEW_C_HEAP_ARRAY(char, len+1, mtCode);
+      char* cp  = NEW_C_HEAP_ARRAY(char, len + 1, mtCode);
       if (cp != NULL) { // No memory?
         memcpy(cp, AOTLibrary, len);
         cp[len] = '\0';

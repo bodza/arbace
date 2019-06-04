@@ -8,7 +8,6 @@
 #include "interpreter/rewriter.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceClosure.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
 #include "oops/access.inline.hpp"
@@ -428,12 +427,6 @@ void ConstantPoolCacheEntry::print(outputStream* st, int index) const {
   st->print_cr("                 -------------");
 }
 
-void ConstantPoolCacheEntry::verify(outputStream* st) const {
-  // not implemented yet
-}
-
-// Implementation of ConstantPoolCache
-
 ConstantPoolCache* ConstantPoolCache::allocate(ClassLoaderData* loader_data, const intStack& index_map, const intStack& invokedynamic_index_map, const intStack& invokedynamic_map, TRAPS) {
   const int length = index_map.length() + invokedynamic_index_map.length();
   int size = ConstantPoolCache::size(length);
@@ -551,6 +544,4 @@ void ConstantPoolCache::print_value_on(outputStream* st) const {
 
 void ConstantPoolCache::verify_on(outputStream* st) {
   guarantee(is_constantPoolCache(), "obj must be constant pool cache");
-  // print constant pool cache entries
-  for (int i = 0; i < length(); i++) entry_at(i)->verify(st);
 }

@@ -86,8 +86,7 @@ void vmSymbols::metaspace_pointers_do(MetaspaceClosure *it) {
 }
 
 void vmSymbols::serialize(SerializeClosure* soc) {
-  soc->do_region((u_char*)&_symbols[FIRST_SID],
-                 (SID_LIMIT - FIRST_SID) * sizeof(_symbols[0]));
+  soc->do_region((u_char*)&_symbols[FIRST_SID], (SID_LIMIT - FIRST_SID) * sizeof(_symbols[0]));
   soc->do_region((u_char*)_type_signatures, sizeof(_type_signatures));
 }
 
@@ -195,7 +194,7 @@ vmIntrinsics::ID vmIntrinsics::for_raw_conversion(BasicType src, BasicType dest)
 }
 
 bool vmIntrinsics::preserves_state(vmIntrinsics::ID id) {
-  switch(id) {
+  switch (id) {
   case vmIntrinsics::_currentTimeMillis:
   case vmIntrinsics::_nanoTime:
   case vmIntrinsics::_floatToRawIntBits:
@@ -233,7 +232,7 @@ bool vmIntrinsics::preserves_state(vmIntrinsics::ID id) {
 }
 
 bool vmIntrinsics::can_trap(vmIntrinsics::ID id) {
-  switch(id) {
+  switch (id) {
   case vmIntrinsics::_currentTimeMillis:
   case vmIntrinsics::_nanoTime:
   case vmIntrinsics::_floatToRawIntBits:
@@ -264,7 +263,7 @@ bool vmIntrinsics::can_trap(vmIntrinsics::ID id) {
 
 // Some intrinsics produce different results if they are not pinned
 bool vmIntrinsics::should_be_pinned(vmIntrinsics::ID id) {
-  switch(id) {
+  switch (id) {
   case vmIntrinsics::_currentTimeMillis:
   case vmIntrinsics::_nanoTime:
     return true;
@@ -274,7 +273,7 @@ bool vmIntrinsics::should_be_pinned(vmIntrinsics::ID id) {
 }
 
 bool vmIntrinsics::does_virtual_dispatch(vmIntrinsics::ID id) {
-  switch(id) {
+  switch (id) {
   case vmIntrinsics::_hashCode:
   case vmIntrinsics::_clone:
     return true;

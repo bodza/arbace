@@ -1360,9 +1360,9 @@ BCEscapeAnalyzer::BCEscapeAnalyzer(ciMethod* method, BCEscapeAnalyzer* parent)
 }
 
 void BCEscapeAnalyzer::copy_dependencies(Dependencies *deps) {
-  for (int i = 0; i < _dependencies.length(); i+=2) {
+  for (int i = 0; i < _dependencies.length(); i += 2) {
     ciKlass *k = _dependencies.at(i)->as_klass();
-    ciMethod *m = _dependencies.at(i+1)->as_method();
+    ciMethod *m = _dependencies.at(i + 1)->as_method();
     deps->assert_unique_concrete_method(k, m);
   }
 }

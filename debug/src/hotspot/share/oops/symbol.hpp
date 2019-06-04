@@ -57,8 +57,7 @@
 // counting on X can be elided.
 //
 // For cases where the scope of A is not greater than the scope of B,
-// the reference counting is explicitly done.  See ciSymbol,
-// ResolutionErrorEntry and ClassVerifier for examples.
+// the reference counting is explicitly done.
 //
 // 3) When a Symbol K is created for temporary use, generally for substrings of
 // an existing symbol or to create a new symbol, assign it to a

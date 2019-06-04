@@ -75,7 +75,7 @@ void SurvRateGroup::all_surviving_words_recorded(const G1Predictions& predictor,
 
 void SurvRateGroup::fill_in_last_surv_rates() {
   if (_region_num > 0) { // conservative
-    double surv_rate = _surv_rate_pred[_region_num-1]->last();
+    double surv_rate = _surv_rate_pred[_region_num - 1]->last();
     for (size_t i = _region_num; i < _stats_arrays_length; ++i) {
       _surv_rate_pred[i]->add(surv_rate);
     }

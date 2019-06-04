@@ -634,7 +634,7 @@ HeapRegionRemSetIterator::HeapRegionRemSetIterator(HeapRegionRemSet* hrrs) :
   _is(Sparse),
   // Set these values so that we increment to the first region.
   _coarse_cur_region_index(-1),
-  _coarse_cur_region_cur_card(HeapRegion::CardsPerRegion-1),
+  _coarse_cur_region_cur_card(HeapRegion::CardsPerRegion - 1),
   _cur_card_in_prt(HeapRegion::CardsPerRegion),
   _fine_cur_prt(NULL),
   _n_yielded_coarse(0),

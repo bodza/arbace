@@ -341,7 +341,7 @@ void CodeHeapState::prepare_SizeDistArray(outputStream* out, unsigned int nElem,
     //---<  initialize SizeDistArray  >---
     memset((void*)SizeDistributionArray, 0, nElem*sizeof(SizeDistributionElement));
     // Logarithmic range growth. First range starts at _segment_size.
-    SizeDistributionArray[log2_seg_size-1].rangeEnd = 1U;
+    SizeDistributionArray[log2_seg_size - 1].rangeEnd = 1U;
     for (unsigned int i = log2_seg_size; i < nElem; i++) {
       SizeDistributionArray[i].rangeStart = 1U << (i     - log2_seg_size);
       SizeDistributionArray[i].rangeEnd   = 1U << ((i+1) - log2_seg_size);
@@ -352,7 +352,7 @@ void CodeHeapState::prepare_SizeDistArray(outputStream* out, unsigned int nElem,
 //---<  get a new SizeDistributionArray  >---
 void CodeHeapState::update_SizeDistArray(outputStream* out, unsigned int len) {
   if (SizeDistributionArray != NULL) {
-    for (unsigned int i = log2_seg_size-1; i < nSizeDistElements; i++) {
+    for (unsigned int i = log2_seg_size - 1; i < nSizeDistElements; i++) {
       if ((SizeDistributionArray[i].rangeStart <= len) && (len < SizeDistributionArray[i].rangeEnd)) {
         SizeDistributionArray[i].lenSum += len;
         SizeDistributionArray[i].count++;
@@ -506,11 +506,11 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
     granularity = size/max_granules;                                   // at most max_granules granules
   }
   granularity = granularity & (~(seg_size - 1));                       // must be multiple of seg_size
-  if (granularity>>log2_seg_size >= (1L<<sizeof(unsigned short)*8)) {
-    granularity = ((1L<<(sizeof(unsigned short)*8))-1)<<log2_seg_size; // Limit: (64k-1) * seg_size
+  if (granularity >> log2_seg_size >= (1L<<sizeof(unsigned short)*8)) {
+    granularity = ((1L<<(sizeof(unsigned short)*8))-1) << log2_seg_size; // Limit: (64k-1) * seg_size
   }
   segment_granules = granularity == seg_size;
-  size_t granules  = (size + (granularity-1))/granularity;
+  size_t granules  = (size + (granularity - 1)) / granularity;
 
   printBox(ast, '=', "C O D E   H E A P   A N A L Y S I S   (used blocks) for segment ", heapName);
   ast->print_cr("   The aggregate step takes an aggregated snapshot of the CodeHeap.\n"
@@ -583,9 +583,9 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
 
     for (HeapBlock *h = heap->first_block(); h != NULL && !insane; h = heap->next_block(h)) {
       unsigned int hb_len     = (unsigned int)h->length();  // despite being size_t, length can never overflow an unsigned int.
-      size_t       hb_bytelen = ((size_t)hb_len)<<log2_seg_size;
-      unsigned int ix_beg     = (unsigned int)(((char*)h-low_bound)/granule_size);
-      unsigned int ix_end     = (unsigned int)(((char*)h-low_bound+(hb_bytelen-1))/granule_size);
+      size_t       hb_bytelen = ((size_t)hb_len) << log2_seg_size;
+      unsigned int ix_beg     = (unsigned int)(((char*)h - low_bound) / granule_size);
+      unsigned int ix_end     = (unsigned int)(((char*)h - low_bound + (hb_bytelen - 1)) / granule_size);
       unsigned int compile_id = 0;
       CompLevel    comp_lvl   = CompLevel_none;
       compType     cType      = noComp;
@@ -852,10 +852,10 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
               break;
           }
         } else {
-          unsigned int beg_space = (unsigned int)(granule_size - ((char*)h - low_bound - ix_beg*granule_size));
-          unsigned int end_space = (unsigned int)(hb_bytelen - beg_space - (ix_end-ix_beg-1)*granule_size);
-          beg_space = beg_space>>log2_seg_size;  // store in units of _segment_size
-          end_space = end_space>>log2_seg_size;  // store in units of _segment_size
+          unsigned int beg_space = (unsigned int)(granule_size - ((char*)h - low_bound - ix_beg * granule_size));
+          unsigned int end_space = (unsigned int)(hb_bytelen - beg_space - (ix_end - ix_beg - 1) * granule_size);
+          beg_space = beg_space >> log2_seg_size;  // store in units of _segment_size
+          end_space = end_space >> log2_seg_size;  // store in units of _segment_size
           StatArray[ix_beg].type = cbType;
           StatArray[ix_end].type = cbType;
           switch (cbType) {
@@ -919,17 +919,17 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
               StatArray[ix_end].stub_space += (unsigned short)end_space;
               break;
           }
-          for (unsigned int ix = ix_beg+1; ix < ix_end; ix++) {
+          for (unsigned int ix = ix_beg + 1; ix < ix_end; ix++) {
             StatArray[ix].type = cbType;
             switch (cbType) {
               case nMethod_inuse:
                 if (comp_lvl < CompLevel_full_optimization) {
                   StatArray[ix].t1_count++;
-                  StatArray[ix].t1_space += (unsigned short)(granule_size>>log2_seg_size);
+                  StatArray[ix].t1_space += (unsigned short)(granule_size >> log2_seg_size);
                   StatArray[ix].t1_age    = StatArray[ix].t1_age < compile_id ? compile_id : StatArray[ix].t1_age;
                 } else {
                   StatArray[ix].t2_count++;
-                  StatArray[ix].t2_space += (unsigned short)(granule_size>>log2_seg_size);
+                  StatArray[ix].t2_space += (unsigned short)(granule_size >> log2_seg_size);
                   StatArray[ix].t2_age    = StatArray[ix].t2_age < compile_id ? compile_id : StatArray[ix].t2_age;
                 }
                 StatArray[ix].level     = comp_lvl;
@@ -938,7 +938,7 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
               case nMethod_inconstruction: // let's count "in construction" nmethods here.
               case nMethod_alive:
                 StatArray[ix].tx_count++;
-                StatArray[ix].tx_space += (unsigned short)(granule_size>>log2_seg_size);
+                StatArray[ix].tx_space += (unsigned short)(granule_size >> log2_seg_size);
                 StatArray[ix].tx_age    = StatArray[ix].tx_age < compile_id ? compile_id : StatArray[ix].tx_age;
                 StatArray[ix].level     = comp_lvl;
                 StatArray[ix].compiler  = cType;
@@ -946,12 +946,12 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
               case nMethod_dead:
               case nMethod_unloaded:
                 StatArray[ix].dead_count++;
-                StatArray[ix].dead_space += (unsigned short)(granule_size>>log2_seg_size);
+                StatArray[ix].dead_space += (unsigned short)(granule_size >> log2_seg_size);
                 break;
               default:
                 // must be a stub, if it's not a dead or alive nMethod
                 StatArray[ix].stub_count++;
-                StatArray[ix].stub_space += (unsigned short)(granule_size>>log2_seg_size);
+                StatArray[ix].stub_space += (unsigned short)(granule_size >> log2_seg_size);
                 break;
             }
           }
@@ -1005,38 +1005,18 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
 
       // This loop is intentionally printing directly to "out".
       out->print("Verifying collected data...");
-      size_t granule_segs = granule_size>>log2_seg_size;
+      size_t granule_segs = granule_size >> log2_seg_size;
       for (unsigned int ix = 0; ix < granules; ix++) {
-        if (StatArray[ix].t1_count > granule_segs) {
-          out->print_cr("t1_count[%d]   = %d", ix, StatArray[ix].t1_count);
-        }
-        if (StatArray[ix].t2_count > granule_segs) {
-          out->print_cr("t2_count[%d]   = %d", ix, StatArray[ix].t2_count);
-        }
-        if (StatArray[ix].tx_count > granule_segs) {
-          out->print_cr("tx_count[%d]   = %d", ix, StatArray[ix].tx_count);
-        }
-        if (StatArray[ix].stub_count > granule_segs) {
-          out->print_cr("stub_count[%d] = %d", ix, StatArray[ix].stub_count);
-        }
-        if (StatArray[ix].dead_count > granule_segs) {
-          out->print_cr("dead_count[%d] = %d", ix, StatArray[ix].dead_count);
-        }
-        if (StatArray[ix].t1_space > granule_segs) {
-          out->print_cr("t1_space[%d]   = %d", ix, StatArray[ix].t1_space);
-        }
-        if (StatArray[ix].t2_space > granule_segs) {
-          out->print_cr("t2_space[%d]   = %d", ix, StatArray[ix].t2_space);
-        }
-        if (StatArray[ix].tx_space > granule_segs) {
-          out->print_cr("tx_space[%d]   = %d", ix, StatArray[ix].tx_space);
-        }
-        if (StatArray[ix].stub_space > granule_segs) {
-          out->print_cr("stub_space[%d] = %d", ix, StatArray[ix].stub_space);
-        }
-        if (StatArray[ix].dead_space > granule_segs) {
-          out->print_cr("dead_space[%d] = %d", ix, StatArray[ix].dead_space);
-        }
+        if (StatArray[ix].t1_count > granule_segs)   { out->print_cr("t1_count[%d]   = %d", ix, StatArray[ix].t1_count); }
+        if (StatArray[ix].t2_count > granule_segs)   { out->print_cr("t2_count[%d]   = %d", ix, StatArray[ix].t2_count); }
+        if (StatArray[ix].tx_count > granule_segs)   { out->print_cr("tx_count[%d]   = %d", ix, StatArray[ix].tx_count); }
+        if (StatArray[ix].stub_count > granule_segs) { out->print_cr("stub_count[%d] = %d", ix, StatArray[ix].stub_count); }
+        if (StatArray[ix].dead_count > granule_segs) { out->print_cr("dead_count[%d] = %d", ix, StatArray[ix].dead_count); }
+        if (StatArray[ix].t1_space > granule_segs)   { out->print_cr("t1_space[%d]   = %d", ix, StatArray[ix].t1_space); }
+        if (StatArray[ix].t2_space > granule_segs)   { out->print_cr("t2_space[%d]   = %d", ix, StatArray[ix].t2_space); }
+        if (StatArray[ix].tx_space > granule_segs)   { out->print_cr("tx_space[%d]   = %d", ix, StatArray[ix].tx_space); }
+        if (StatArray[ix].stub_space > granule_segs) { out->print_cr("stub_space[%d] = %d", ix, StatArray[ix].stub_space); }
+        if (StatArray[ix].dead_space > granule_segs) { out->print_cr("dead_space[%d] = %d", ix, StatArray[ix].dead_space); }
         //   this cast is awful! I need it because NT/Intel reports a signed/unsigned mismatch.
         if ((size_t)(StatArray[ix].t1_count+StatArray[ix].t2_count+StatArray[ix].tx_count+StatArray[ix].stub_count+StatArray[ix].dead_count) > granule_segs) {
           out->print_cr("t1_count[%d] = %d, t2_count[%d] = %d, tx_count[%d] = %d, stub_count[%d] = %d", ix, StatArray[ix].t1_count, ix, StatArray[ix].t2_count, ix, StatArray[ix].tx_count, ix, StatArray[ix].stub_count);
@@ -1106,7 +1086,7 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
     while (cur != NULL) {
       if (ix < alloc_freeBlocks) { // don't index out of bounds if _freelist has more blocks than anticipated
         FreeArray[ix].start = cur;
-        FreeArray[ix].len   = (unsigned int)(cur->length()<<log2_seg_size);
+        FreeArray[ix].len   = (unsigned int)(cur->length() << log2_seg_size);
         FreeArray[ix].index = ix;
       }
       cur  = cur->link();
@@ -1140,22 +1120,22 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
   //---<  calculate and fill remaining fields  >---
   if (FreeArray != NULL) {
     // This loop is intentionally printing directly to "out".
-    for (unsigned int ix = 0; ix < alloc_freeBlocks-1; ix++) {
+    for (unsigned int ix = 0; ix < alloc_freeBlocks - 1; ix++) {
       size_t lenSum = 0;
-      FreeArray[ix].gap = (unsigned int)((address)FreeArray[ix+1].start - ((address)FreeArray[ix].start + FreeArray[ix].len));
-      for (HeapBlock *h = heap->next_block(FreeArray[ix].start); (h != NULL) && (h != FreeArray[ix+1].start); h = heap->next_block(h)) {
+      FreeArray[ix].gap = (unsigned int)((address)FreeArray[ix + 1].start - ((address)FreeArray[ix].start + FreeArray[ix].len));
+      for (HeapBlock *h = heap->next_block(FreeArray[ix].start); (h != NULL) && (h != FreeArray[ix + 1].start); h = heap->next_block(h)) {
         CodeBlob *cb  = (CodeBlob*)(heap->find_start(h));
         if ((cb != NULL) && !cb->is_nmethod()) {
           FreeArray[ix].stubs_in_gap = true;
         }
         FreeArray[ix].n_gapBlocks++;
-        lenSum += h->length()<<log2_seg_size;
-        if (((address)h < ((address)FreeArray[ix].start+FreeArray[ix].len)) || (h >= FreeArray[ix+1].start)) {
-          out->print_cr("unsorted occupied CodeHeap block found @ %p, gap interval [%p, %p)", h, (address)FreeArray[ix].start+FreeArray[ix].len, FreeArray[ix+1].start);
+        lenSum += h->length() << log2_seg_size;
+        if (((address)h < ((address)FreeArray[ix].start+FreeArray[ix].len)) || (h >= FreeArray[ix + 1].start)) {
+          out->print_cr("unsorted occupied CodeHeap block found @ %p, gap interval [%p, %p)", h, (address)FreeArray[ix].start+FreeArray[ix].len, FreeArray[ix + 1].start);
         }
       }
       if (lenSum != FreeArray[ix].gap) {
-        out->print_cr("Length mismatch for gap between FreeBlk[%d] and FreeBlk[%d]. Calculated: %d, accumulated: %d.", ix, ix+1, FreeArray[ix].gap, (unsigned int)lenSum);
+        out->print_cr("Length mismatch for gap between FreeBlk[%d] and FreeBlk[%d]. Calculated: %d, accumulated: %d.", ix, ix + 1, FreeArray[ix].gap, (unsigned int)lenSum);
       }
     }
   }
@@ -1259,8 +1239,8 @@ void CodeHeapState::print_usedSpace(outputStream* out, CodeHeap* heap) {
           ast->print("%s", blob_name);
         } else {
           //---<  block size in hex  >---
-          ast->print(PTR32_FORMAT, (unsigned int)(TopSizeArray[i].len<<log2_seg_size));
-          ast->print("(" SIZE_FORMAT_W(4) "K)", (TopSizeArray[i].len<<log2_seg_size)/K);
+          ast->print(PTR32_FORMAT, (unsigned int)(TopSizeArray[i].len << log2_seg_size));
+          ast->print("(" SIZE_FORMAT_W(4) "K)", (TopSizeArray[i].len << log2_seg_size)/K);
           //---<  no compiler information  >---
           ast->fill_to(56);
           //---<  name and signature  >---
@@ -1300,30 +1280,30 @@ void CodeHeapState::print_usedSpace(outputStream* out, CodeHeap* heap) {
       ast->print_cr("Note: The histogram indicates how many blocks (as a percentage\n"
                     "      of all blocks) have a size in the given range.\n"
                     "      %ld characters are printed per percentage point.\n", pctFactor/100);
-      ast->print_cr("total size   of all blocks: %7ldM", (total_size<<log2_seg_size)/M);
+      ast->print_cr("total size   of all blocks: %7ldM", (total_size << log2_seg_size)/M);
       ast->print_cr("total number of all blocks: %7ld\n", total_count);
       STRINGSTREAM_FLUSH_LOCKED("")
 
       ast->print_cr("[Size Range)------avg.-size-+----count-+");
       for (unsigned int i = 0; i < nSizeDistElements; i++) {
-        if (SizeDistributionArray[i].rangeStart<<log2_seg_size < K) {
+        if (SizeDistributionArray[i].rangeStart << log2_seg_size < K) {
           ast->print("[" SIZE_FORMAT_W(5) " .." SIZE_FORMAT_W(5) " ): "
-                    , (size_t)(SizeDistributionArray[i].rangeStart<<log2_seg_size)
-                    , (size_t)(SizeDistributionArray[i].rangeEnd<<log2_seg_size)
+                    , (size_t)(SizeDistributionArray[i].rangeStart << log2_seg_size)
+                    , (size_t)(SizeDistributionArray[i].rangeEnd << log2_seg_size)
                     );
-        } else if (SizeDistributionArray[i].rangeStart<<log2_seg_size < M) {
+        } else if (SizeDistributionArray[i].rangeStart << log2_seg_size < M) {
           ast->print("[" SIZE_FORMAT_W(5) "K.." SIZE_FORMAT_W(5) "K): "
-                    , (SizeDistributionArray[i].rangeStart<<log2_seg_size)/K
-                    , (SizeDistributionArray[i].rangeEnd<<log2_seg_size)/K
+                    , (SizeDistributionArray[i].rangeStart << log2_seg_size)/K
+                    , (SizeDistributionArray[i].rangeEnd << log2_seg_size)/K
                     );
         } else {
           ast->print("[" SIZE_FORMAT_W(5) "M.." SIZE_FORMAT_W(5) "M): "
-                    , (SizeDistributionArray[i].rangeStart<<log2_seg_size)/M
-                    , (SizeDistributionArray[i].rangeEnd<<log2_seg_size)/M
+                    , (SizeDistributionArray[i].rangeStart << log2_seg_size)/M
+                    , (SizeDistributionArray[i].rangeEnd << log2_seg_size)/M
                     );
         }
         ast->print(" %8d | %8d |",
-                   SizeDistributionArray[i].count > 0 ? (SizeDistributionArray[i].lenSum<<log2_seg_size)/SizeDistributionArray[i].count : 0,
+                   SizeDistributionArray[i].count > 0 ? (SizeDistributionArray[i].lenSum << log2_seg_size)/SizeDistributionArray[i].count : 0,
                    SizeDistributionArray[i].count);
 
         unsigned int percent = pctFactor*SizeDistributionArray[i].count/total_count;
@@ -1339,30 +1319,30 @@ void CodeHeapState::print_usedSpace(outputStream* out, CodeHeap* heap) {
       ast->print_cr("Note: The histogram indicates how much space (as a percentage of all\n"
                     "      occupied space) is used by the blocks in the given size range.\n"
                     "      %ld characters are printed per percentage point.\n", pctFactor/100);
-      ast->print_cr("total size   of all blocks: %7ldM", (total_size<<log2_seg_size)/M);
+      ast->print_cr("total size   of all blocks: %7ldM", (total_size << log2_seg_size)/M);
       ast->print_cr("total number of all blocks: %7ld\n", total_count);
       STRINGSTREAM_FLUSH_LOCKED("")
 
       ast->print_cr("[Size Range)------avg.-size-+----count-+");
       for (unsigned int i = 0; i < nSizeDistElements; i++) {
-        if (SizeDistributionArray[i].rangeStart<<log2_seg_size < K) {
+        if (SizeDistributionArray[i].rangeStart << log2_seg_size < K) {
           ast->print("[" SIZE_FORMAT_W(5) " .." SIZE_FORMAT_W(5) " ): "
-                    , (size_t)(SizeDistributionArray[i].rangeStart<<log2_seg_size)
-                    , (size_t)(SizeDistributionArray[i].rangeEnd<<log2_seg_size)
+                    , (size_t)(SizeDistributionArray[i].rangeStart << log2_seg_size)
+                    , (size_t)(SizeDistributionArray[i].rangeEnd << log2_seg_size)
                     );
-        } else if (SizeDistributionArray[i].rangeStart<<log2_seg_size < M) {
+        } else if (SizeDistributionArray[i].rangeStart << log2_seg_size < M) {
           ast->print("[" SIZE_FORMAT_W(5) "K.." SIZE_FORMAT_W(5) "K): "
-                    , (SizeDistributionArray[i].rangeStart<<log2_seg_size)/K
-                    , (SizeDistributionArray[i].rangeEnd<<log2_seg_size)/K
+                    , (SizeDistributionArray[i].rangeStart << log2_seg_size)/K
+                    , (SizeDistributionArray[i].rangeEnd << log2_seg_size)/K
                     );
         } else {
           ast->print("[" SIZE_FORMAT_W(5) "M.." SIZE_FORMAT_W(5) "M): "
-                    , (SizeDistributionArray[i].rangeStart<<log2_seg_size)/M
-                    , (SizeDistributionArray[i].rangeEnd<<log2_seg_size)/M
+                    , (SizeDistributionArray[i].rangeStart << log2_seg_size)/M
+                    , (SizeDistributionArray[i].rangeEnd << log2_seg_size)/M
                     );
         }
         ast->print(" %8d | %8d |",
-                   SizeDistributionArray[i].count > 0 ? (SizeDistributionArray[i].lenSum<<log2_seg_size)/SizeDistributionArray[i].count : 0,
+                   SizeDistributionArray[i].count > 0 ? (SizeDistributionArray[i].lenSum << log2_seg_size)/SizeDistributionArray[i].count : 0,
                    SizeDistributionArray[i].count);
 
         unsigned int percent = pctFactor*(unsigned long)SizeDistributionArray[i].lenSum/total_size;
@@ -1405,10 +1385,10 @@ void CodeHeapState::print_freeSpace(outputStream* out, CodeHeap* heap) {
     STRINGSTREAM_FLUSH_LOCKED("")
 
     unsigned int ix = 0;
-    for (ix = 0; ix < alloc_freeBlocks-1; ix++) {
+    for (ix = 0; ix < alloc_freeBlocks - 1; ix++) {
       ast->print(INTPTR_FORMAT ": Len[%4d] = " HEX32_FORMAT ",", p2i(FreeArray[ix].start), ix, FreeArray[ix].len);
       ast->fill_to(38);
-      ast->print("Gap[%4d..%4d]: " HEX32_FORMAT " bytes,", ix, ix+1, FreeArray[ix].gap);
+      ast->print("Gap[%4d..%4d]: " HEX32_FORMAT " bytes,", ix, ix + 1, FreeArray[ix].gap);
       ast->fill_to(71);
       ast->print("block count: %6d", FreeArray[ix].n_gapBlocks);
       if (FreeArray[ix].stubs_in_gap) {
@@ -1437,12 +1417,12 @@ void CodeHeapState::print_freeSpace(outputStream* out, CodeHeap* heap) {
       unsigned int iy;
       for (iy = 0; iy < nTop && FreeTopTen[iy] != NULL; iy++) {
         if (FreeTopTen[iy]->len < currSize) {
-          for (unsigned int iz = nTop-1; iz > iy; iz--) { // make room to insert new free block
-            FreeTopTen[iz] = FreeTopTen[iz-1];
+          for (unsigned int iz = nTop - 1; iz > iy; iz--) { // make room to insert new free block
+            FreeTopTen[iz] = FreeTopTen[iz - 1];
           }
           FreeTopTen[iy] = &FreeArray[ix];        // insert new free block
-          if (FreeTopTen[nTop-1] != NULL) {
-            currMax10 = FreeTopTen[nTop-1]->len;
+          if (FreeTopTen[nTop - 1] != NULL) {
+            currMax10 = FreeTopTen[nTop - 1]->len;
           }
           break; // done with this, check next free block
         }
@@ -1453,7 +1433,7 @@ void CodeHeapState::print_freeSpace(outputStream* out, CodeHeap* heap) {
       }
       if (FreeTopTen[iy] == NULL) {
         FreeTopTen[iy] = &FreeArray[ix];
-        if (iy == (nTop-1)) {
+        if (iy == (nTop - 1)) {
           currMax10 = currSize;
         }
       }
@@ -1466,9 +1446,9 @@ void CodeHeapState::print_freeSpace(outputStream* out, CodeHeap* heap) {
 
     //---<  print Top Ten Free Blocks  >---
     for (unsigned int iy = 0; (iy < nTop) && (FreeTopTen[iy] != NULL); iy++) {
-      ast->print("Pos %3d: Block %4d - size " HEX32_FORMAT ",", iy+1, FreeTopTen[iy]->index, FreeTopTen[iy]->len);
+      ast->print("Pos %3d: Block %4d - size " HEX32_FORMAT ",", iy + 1, FreeTopTen[iy]->index, FreeTopTen[iy]->len);
       ast->fill_to(39);
-      if (FreeTopTen[iy]->index == (alloc_freeBlocks-1)) {
+      if (FreeTopTen[iy]->index == (alloc_freeBlocks - 1)) {
         ast->print("last free block in list.");
       } else {
         ast->print("Gap (to next) " HEX32_FORMAT ",", FreeTopTen[iy]->gap);
@@ -1489,22 +1469,22 @@ void CodeHeapState::print_freeSpace(outputStream* out, CodeHeap* heap) {
   struct FreeBlk  *FreeTopTenTriple[nTop];
   memset(FreeTopTenTriple, 0, sizeof(FreeTopTenTriple));
 
-  for (unsigned int ix = 0; ix < alloc_freeBlocks-1; ix++) {
+  for (unsigned int ix = 0; ix < alloc_freeBlocks - 1; ix++) {
     // If there are stubs in the gap, this gap will never become completely free.
     // The triple will thus never merge to one free block.
-    unsigned int lenTriple  = FreeArray[ix].len + (FreeArray[ix].stubs_in_gap ? 0 : FreeArray[ix].gap + FreeArray[ix+1].len);
+    unsigned int lenTriple  = FreeArray[ix].len + (FreeArray[ix].stubs_in_gap ? 0 : FreeArray[ix].gap + FreeArray[ix + 1].len);
     FreeArray[ix].len = lenTriple;
     if (lenTriple > currMax10) {  // larger than the ten largest found so far
 
       unsigned int iy;
       for (iy = 0; (iy < nTop) && (FreeTopTenTriple[iy] != NULL); iy++) {
         if (FreeTopTenTriple[iy]->len < lenTriple) {
-          for (unsigned int iz = nTop-1; iz > iy; iz--) {
-            FreeTopTenTriple[iz] = FreeTopTenTriple[iz-1];
+          for (unsigned int iz = nTop - 1; iz > iy; iz--) {
+            FreeTopTenTriple[iz] = FreeTopTenTriple[iz - 1];
           }
           FreeTopTenTriple[iy] = &FreeArray[ix];
-          if (FreeTopTenTriple[nTop-1] != NULL) {
-            currMax10 = FreeTopTenTriple[nTop-1]->len;
+          if (FreeTopTenTriple[nTop - 1] != NULL) {
+            currMax10 = FreeTopTenTriple[nTop - 1]->len;
           }
           break;
         }
@@ -1515,7 +1495,7 @@ void CodeHeapState::print_freeSpace(outputStream* out, CodeHeap* heap) {
       }
       if (FreeTopTenTriple[iy] == NULL) {
         FreeTopTenTriple[iy] = &FreeArray[ix];
-        if (iy == (nTop-1)) {
+        if (iy == (nTop - 1)) {
           currMax10 = lenTriple;
         }
       }
@@ -1533,7 +1513,7 @@ void CodeHeapState::print_freeSpace(outputStream* out, CodeHeap* heap) {
 
     //---<  print Top Ten Free-Occupied-Free Triples  >---
     for (unsigned int iy = 0; (iy < nTop) && (FreeTopTenTriple[iy] != NULL); iy++) {
-      ast->print("Pos %3d: Block %4d - size " HEX32_FORMAT ",", iy+1, FreeTopTenTriple[iy]->index, FreeTopTenTriple[iy]->len);
+      ast->print("Pos %3d: Block %4d - size " HEX32_FORMAT ",", iy + 1, FreeTopTenTriple[iy]->index, FreeTopTenTriple[iy]->len);
       ast->fill_to(39);
       ast->print("Gap (to next) " HEX32_FORMAT ",", FreeTopTenTriple[iy]->gap);
       ast->fill_to(63);
@@ -2200,7 +2180,7 @@ void CodeHeapState::printBox(outputStream* ast, const char border, const char* t
   }
 
   ast->print("%c", edge);
-  for (unsigned int i = 0; i < lineLen-2; i++) {
+  for (unsigned int i = 0; i < lineLen - 2; i++) {
     ast->print("%c", border);
   }
   ast->print_cr("%c", edge);
@@ -2215,7 +2195,7 @@ void CodeHeapState::printBox(outputStream* ast, const char border, const char* t
   ast->print_cr("  %c", frame);
 
   ast->print("%c", edge);
-  for (unsigned int i = 0; i < lineLen-2; i++) {
+  for (unsigned int i = 0; i < lineLen - 2; i++) {
     ast->print("%c", border);
   }
   ast->print_cr("%c", edge);
@@ -2238,8 +2218,8 @@ void CodeHeapState::print_space_legend(outputStream* out) {
   out->cr();
   printBox(out, '-', "Space ranges, based on granule occupancy", NULL);
   out->print_cr("    -   0%% == occupancy");
-  for (int i = 0; i<=9; i++) {
-    out->print_cr("  %d - %3d%% < occupancy < %3d%%", i, 10*i, 10*(i+1));
+  for (int i = 0; i <= 9; i++) {
+    out->print_cr("  %d - %3d%% < occupancy < %3d%%", i, 10 * i, 10 * (i + 1));
   }
   out->print_cr("  * - 100%% == occupancy");
   out->print_cr("  ----------------------------------------------");
@@ -2273,8 +2253,8 @@ void CodeHeapState::print_count_single(outputStream* out, unsigned short count) 
 }
 
 void CodeHeapState::print_space_single(outputStream* out, unsigned short space) {
-  size_t  space_in_bytes = ((unsigned int)space)<<log2_seg_size;
-  char    fraction       = (space == 0) ? ' ' : (space_in_bytes >= granule_size-1) ? '*' : char('0'+10*space_in_bytes/granule_size);
+  size_t  space_in_bytes = ((unsigned int)space) << log2_seg_size;
+  char    fraction       = (space == 0) ? ' ' : (space_in_bytes >= granule_size - 1) ? '*' : char('0' + 10 * space_in_bytes / granule_size);
   out->print("%c", fraction);
 }
 

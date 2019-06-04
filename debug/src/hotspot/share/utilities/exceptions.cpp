@@ -297,8 +297,7 @@ Handle Exceptions::new_exception(Thread* thread, Symbol* name, const char* messa
   Handle       h_loader(thread, NULL);
   Handle       h_prot(thread, NULL);
   Handle       h_cause(thread, NULL);
-  return Exceptions::new_exception(thread, name, message, h_cause, h_loader,
-                                   h_prot, to_utf8_safe);
+  return Exceptions::new_exception(thread, name, message, h_cause, h_loader, h_prot, to_utf8_safe);
 }
 
 // invokedynamic uses wrap_dynamic_exception for:
@@ -417,10 +416,4 @@ void Exceptions::debug_check_abort_helper(Handle exception, const char* message)
     }
   }
   debug_check_abort(exception()->klass()->external_name(), message);
-}
-
-// for logging exceptions
-void Exceptions::log_exception(Handle exception, stringStream tempst) {
-  ResourceMark rm;
-  Symbol* message = java_lang_Throwable::detail_message(exception());
 }

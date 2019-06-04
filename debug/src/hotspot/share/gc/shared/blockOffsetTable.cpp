@@ -116,7 +116,7 @@ void BlockOffsetArray::set_remainder_to_point_to_start(HeapWord* start, HeapWord
   //        value of the new entry
   //
   size_t start_card = _array->index_for(start);
-  size_t end_card = _array->index_for(end-1);
+  size_t end_card = _array->index_for(end - 1);
   set_remainder_to_point_to_start_incl(start_card, end_card, reducing); // closed interval
 }
 
@@ -135,7 +135,7 @@ BlockOffsetArray::set_remainder_to_point_to_start_incl(size_t start_card, size_t
     // -1 so that the the card with the actual offset is counted.  Another -1
     // so that the reach ends in this region and not at the start
     // of the next.
-    size_t reach = start_card - 1 + (BOTConstants::power_to_cards_back(i+1) - 1);
+    size_t reach = start_card - 1 + (BOTConstants::power_to_cards_back(i + 1) - 1);
     offset = BOTConstants::N_words + i;
     if (reach >= end_card) {
       _array->set_offset_array(start_card_for_region, end_card, offset, reducing);
@@ -246,41 +246,6 @@ BlockOffsetArray::do_block_internal(HeapWord* blk_start, HeapWord* blk_end, Acti
 void
 BlockOffsetArray::single_block(HeapWord* blk_start, HeapWord* blk_end) {
   do_block_internal(blk_start, blk_end, Action_single);
-}
-
-void BlockOffsetArray::verify() const {
-  // For each entry in the block offset table, verify that
-  // the entry correctly finds the start of an object at the
-  // first address covered by the block or to the left of that
-  // first address.
-
-  size_t next_index = 1;
-  size_t last_index = last_active_index();
-
-  // Use for debugging.  Initialize to NULL to distinguish the
-  // first iteration through the while loop.
-  HeapWord* last_p = NULL;
-  HeapWord* last_start = NULL;
-  oop last_o = NULL;
-
-  while (next_index <= last_index) {
-    // Use an address past the start of the address for
-    // the entry.
-    HeapWord* p = _array->address_for_index(next_index) + 1;
-    if (p >= _end) {
-      // That's all of the allocated block table.
-      return;
-    }
-    // block_start() asserts that start <= p.
-    HeapWord* start = block_start(p);
-    // First check if the start is an allocated block and only
-    // then if it is a valid object.
-    oop o = oop(start);
-    next_index++;
-    last_p = p;
-    last_start = start;
-    last_o = o;
-  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -509,7 +474,7 @@ HeapWord* BlockOffsetArrayContigSpace::block_start_unsafe(const void* addr) cons
   size_t index = _array->index_for(addr);
   // We must make sure that the offset table entry we use is valid.  If
   // "addr" is past the end, start at the last known one and go forward.
-  index = MIN2(index, _next_offset_index-1);
+  index = MIN2(index, _next_offset_index - 1);
   HeapWord* q = _array->address_for_index(index);
 
   uint offset = _array->offset_array(index);    // Extend u_char to uint.

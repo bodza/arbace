@@ -31,8 +31,6 @@ void InterpreterCodelet::initialize(const char* description, Bytecodes::Code byt
   _bytecode          = bytecode;
 }
 
-void InterpreterCodelet::verify() { }
-
 void InterpreterCodelet::print_on(outputStream* st) const {
   ttyLocker ttyl;
 

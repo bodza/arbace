@@ -19,7 +19,6 @@
 #include "gc/g1/g1GCPhaseTimes.hpp"
 #include "gc/g1/g1HeapSizingPolicy.hpp"
 #include "gc/g1/g1HeapTransition.hpp"
-#include "gc/g1/g1HeapVerifier.hpp"
 #include "gc/g1/g1HotCardCache.hpp"
 #include "gc/g1/g1MemoryPool.hpp"
 #include "gc/g1/g1OopClosures.inline.hpp"
@@ -53,7 +52,6 @@
 #include "gc/shared/weakProcessor.hpp"
 #include "memory/allocation.hpp"
 #include "memory/iterator.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/access.inline.hpp"
 #include "oops/compressedOops.inline.hpp"
@@ -246,8 +244,6 @@ G1CollectedHeap::humongous_obj_allocate_initialize_regions(uint first, uint num_
   // and the BOT will not be complete.
   hr->set_top(hr->end() - words_not_fillable);
 
-  _verifier->check_bitmaps("Humongous Region Allocation", first_hr);
-
   increase_used((word_size_sum - words_not_fillable) * HeapWordSize);
 
   for (uint i = first; i <= last; ++i) {
@@ -266,8 +262,6 @@ size_t G1CollectedHeap::humongous_obj_size_in_regions(size_t word_size) {
 // Otherwise, if can expand, do so.
 // Otherwise, if using ex regions might help, try with ex given back.
 HeapWord* G1CollectedHeap::humongous_obj_allocate(size_t word_size) {
-  _verifier->verify_region_sets_optional();
-
   uint first = G1_NO_HRM_INDEX;
   uint obj_regions = (uint) humongous_obj_size_in_regions(word_size);
 
@@ -315,8 +309,6 @@ HeapWord* G1CollectedHeap::humongous_obj_allocate(size_t word_size) {
     // sizes and update the jstat counters here.
     g1mm()->update_sizes();
   }
-
-  _verifier->verify_region_sets_optional();
 
   return result;
 }
@@ -817,12 +809,6 @@ void G1CollectedHeap::prepare_heap_for_full_collection() {
   tear_down_region_sets(false /* free_list_only */);
 }
 
-void G1CollectedHeap::verify_before_full_collection(bool explicit_gc) {
-  _verifier->verify_region_sets_optional();
-  _verifier->verify_before_gc(G1HeapVerifier::G1VerifyFull);
-  _verifier->check_bitmaps("Full GC Start");
-}
-
 void G1CollectedHeap::prepare_heap_for_mutators() {
   // Delete metaspaces for unloaded class loaders and clean up loader_data graph
   ClassLoaderDataGraph::purge();
@@ -854,39 +840,12 @@ void G1CollectedHeap::abort_refinement() {
   G1BarrierSet::dirty_card_queue_set().abandon_logs();
 }
 
-void G1CollectedHeap::verify_after_full_collection() {
-  _hrm.verify_optional();
-  _verifier->verify_region_sets_optional();
-  _verifier->verify_after_gc(G1HeapVerifier::G1VerifyFull);
-  // Clear the previous marking bitmap, if needed for bitmap verification.
-  // Note we cannot do this when we clear the next marking bitmap in
-  // G1ConcurrentMark::abort() above since VerifyDuringGC verifies the
-  // objects marked during a full GC against the previous bitmap.
-  // But we need to clear it before calling check_bitmaps below since
-  // the full GC has compacted objects and updated TAMS but not updated
-  // the prev bitmap.
-  if (G1VerifyBitmaps) {
-    _cm->clear_prev_bitmap(workers());
-  }
-  _verifier->check_bitmaps("Full GC End");
-
-  // Note: since we've just done a full GC, concurrent
-  // marking is no longer active. Therefore we need not
-  // re-enable reference discovery for the CM ref processor.
-  // That will be done at the start of the next marking cycle.
-  // We also know that the STW processor should no longer
-  // discover any new references.
-  _ref_processor_stw->verify_no_references_recorded();
-  _ref_processor_cm->verify_no_references_recorded();
-}
-
 void G1CollectedHeap::print_heap_after_full_collection(G1HeapTransition* heap_transition) {
   // Post collection logging.
   // We should do this after we potentially resize the heap so
   // that all the COMMIT / UNCOMMIT events are generated before
   // the compaction events.
   heap_transition->print();
-  print_heap_after_gc();
   print_heap_regions();
 #ifdef TRACESPINNING
   ParallelTaskTerminator::print_termination_counts();
@@ -1049,13 +1008,9 @@ HeapWord* G1CollectedHeap::satisfy_failed_allocation(size_t word_size, bool* suc
 // allocated block, or else "NULL".
 
 HeapWord* G1CollectedHeap::expand_and_allocate(size_t word_size) {
-  _verifier->verify_region_sets_optional();
-
   size_t expand_bytes = MAX2(word_size * HeapWordSize, MinHeapDeltaBytes);
 
   if (expand(expand_bytes, _workers)) {
-    _hrm.verify_optional();
-    _verifier->verify_region_sets_optional();
     return attempt_allocation_at_safepoint(word_size, false /* expect_null_mutator_alloc_region */);
   }
   return NULL;
@@ -1106,8 +1061,6 @@ void G1CollectedHeap::shrink_helper(size_t shrink_bytes) {
 }
 
 void G1CollectedHeap::shrink(size_t shrink_bytes) {
-  _verifier->verify_region_sets_optional();
-
   // We should only reach here at the end of a Full GC which means we
   // should not not be holding to any GC alloc regions. The method
   // below will make sure of that and do any remaining clean up.
@@ -1119,9 +1072,6 @@ void G1CollectedHeap::shrink(size_t shrink_bytes) {
   tear_down_region_sets(true /* free_list_only */);
   shrink_helper(shrink_bytes);
   rebuild_region_sets(true /* free_list_only */);
-
-  _hrm.verify_optional();
-  _verifier->verify_region_sets_optional();
 }
 
 // Public methods.
@@ -1170,7 +1120,6 @@ G1CollectedHeap::G1CollectedHeap(G1CollectorPolicy* collector_policy) :
                           /* are_GC_task_threads */true,
                           /* are_ConcurrentGC_threads */false);
   _workers->initialize_workers();
-  _verifier = new G1HeapVerifier(this);
 
   _allocator = new G1Allocator(this);
 
@@ -1297,7 +1246,7 @@ jint G1CollectedHeap::initialize() {
 
   // 6843694 - ensure that the maximum region index can fit
   // in the remembered set structures.
-  const uint max_region_idx = (1U << (sizeof(RegionIdx_t)*BitsPerByte-1)) - 1;
+  const uint max_region_idx = (1U << (sizeof(RegionIdx_t) * BitsPerByte - 1)) - 1;
   guarantee((max_regions() - 1) <= max_region_idx, "too many regions");
 
   // The G1FromCardCache reserves card with value 0 as "invalid", so the heap must not
@@ -1307,7 +1256,7 @@ jint G1CollectedHeap::initialize() {
   _g1_rem_set = new G1RemSet(this, _card_table, _hot_card_cache);
   _g1_rem_set->initialize(max_capacity(), max_regions());
 
-  size_t max_cards_per_region = ((size_t)1 << (sizeof(CardIdx_t)*BitsPerByte-1)) - 1;
+  size_t max_cards_per_region = ((size_t)1 << (sizeof(CardIdx_t) * BitsPerByte - 1)) - 1;
   guarantee(HeapRegion::CardsPerRegion > 0, "make sure it's initialized");
   guarantee(HeapRegion::CardsPerRegion < max_cards_per_region, "too many cards per region");
 
@@ -1572,7 +1521,6 @@ bool G1CollectedHeap::is_user_requested_concurrent_full_gc(GCCause::Cause cause)
   switch (cause) {
     case GCCause::_java_lang_system_gc:                 return ExplicitGCInvokesConcurrent;
     case GCCause::_dcmd_gc_run:                         return ExplicitGCInvokesConcurrent;
-    case GCCause::_wb_conc_mark:                        return true;
     default :                                           return false;
   }
 }
@@ -1665,7 +1613,7 @@ void G1CollectedHeap::collect(GCCause::Cause cause) {
         }
       }
     } else {
-      if (cause == GCCause::_gc_locker || cause == GCCause::_wb_young_gc) {
+      if (cause == GCCause::_gc_locker) {
         // Schedule a standard evacuation pause. We're setting word_size
         // to 0 which means that we are not requesting a post-GC allocation.
         VM_G1CollectForAllocation op(0,     /* word_size */
@@ -1793,14 +1741,6 @@ void G1CollectedHeap::deduplicate_string(oop str) {
   }
 }
 
-void G1CollectedHeap::prepare_for_verify() {
-  _verifier->prepare_for_verify();
-}
-
-void G1CollectedHeap::verify(VerifyOption vo) {
-  _verifier->verify(vo);
-}
-
 bool G1CollectedHeap::supports_concurrent_phase_control() const {
   return true;
 }
@@ -1917,8 +1857,7 @@ G1HeapSummary G1CollectedHeap::create_g1_heap_summary() {
   size_t eden_capacity_bytes = (g1_policy()->young_list_target_length() * HeapRegion::GrainBytes) - survivor_used_bytes;
 
   VirtualSpaceSummary heap_summary = create_heap_space_summary();
-  return G1HeapSummary(heap_summary, heap_used, eden_used_bytes,
-                       eden_capacity_bytes, survivor_used_bytes, num_regions());
+  return G1HeapSummary(heap_summary, heap_used, eden_used_bytes, eden_capacity_bytes, survivor_used_bytes, num_regions());
 }
 
 G1EvacSummary G1CollectedHeap::create_g1_evac_summary(G1EvacStats* stats) {
@@ -1961,8 +1900,6 @@ void G1CollectedHeap::gc_epilogue(bool full) {
     // Update the number of full collections that have been completed.
     increment_old_marking_cycles_completed(false /* concurrent */);
   }
-
-  // always_do_update_barrier = true;
 
   double start = os::elapsedTime();
   resize_all_tlabs();
@@ -2218,12 +2155,8 @@ G1CollectedHeap::do_collection_pause_at_safepoint(double target_pause_time_ms) {
 
   wait_for_root_region_scanning();
 
-  print_heap_before_gc();
   print_heap_regions();
   trace_heap_before_gc(_gc_tracer_stw);
-
-  _verifier->verify_region_sets_optional();
-  _verifier->verify_dirty_young_regions();
 
   // We should not be doing initial mark unless the conc mark thread is running
   if (!_cm_thread->should_terminate()) {
@@ -2251,21 +2184,17 @@ G1CollectedHeap::do_collection_pause_at_safepoint(double target_pause_time_ms) {
 
     _gc_tracer_stw->report_yc_type(collector_state()->yc_type());
 
-    G1HeapVerifier::G1VerifyType verify_type;
     FormatBuffer<> gc_string("Pause Young ");
     if (collector_state()->in_initial_mark_gc()) {
       gc_string.append("(Concurrent Start)");
-      verify_type = G1HeapVerifier::G1VerifyConcurrentStart;
     } else if (collector_state()->in_young_only_phase()) {
       if (collector_state()->in_young_gc_before_mixed()) {
         gc_string.append("(Prepare Mixed)");
       } else {
         gc_string.append("(Normal)");
       }
-      verify_type = G1HeapVerifier::G1VerifyYoungNormal;
     } else {
       gc_string.append("(Mixed)");
-      verify_type = G1HeapVerifier::G1VerifyMixed;
     }
 
     uint active_workers = AdaptiveSizePolicy::calc_active_workers(workers()->total_workers(), workers()->active_workers(), Threads::number_of_non_daemon_threads());
@@ -2290,10 +2219,6 @@ G1CollectedHeap::do_collection_pause_at_safepoint(double target_pause_time_ms) {
         VerifyRegionRemSetClosure v_cl;
         heap_region_iterate(&v_cl);
       }
-
-      _verifier->verify_before_gc(verify_type);
-
-      _verifier->check_bitmaps("GC Start");
 
       DerivedPointerTable::clear();
 
@@ -2436,9 +2361,6 @@ G1CollectedHeap::do_collection_pause_at_safepoint(double target_pause_time_ms) {
           heap_region_iterate(&v_cl);
         }
 
-        _verifier->verify_after_gc(verify_type);
-        _verifier->check_bitmaps("GC End");
-
         _ref_processor_stw->verify_no_references_recorded();
 
         // CM reference discovery will be re-enabled if necessary.
@@ -2458,15 +2380,6 @@ G1CollectedHeap::do_collection_pause_at_safepoint(double target_pause_time_ms) {
     g1_policy()->print_phases();
     heap_transition.print();
 
-    // It is not yet to safe to tell the concurrent mark to
-    // start as we have some optional output below. We don't want the
-    // output from the concurrent mark thread interfering with this
-    // logging output either.
-
-    _hrm.verify_optional();
-    _verifier->verify_region_sets_optional();
-
-    print_heap_after_gc();
     print_heap_regions();
     trace_heap_after_gc(_gc_tracer_stw);
 
@@ -3969,7 +3882,6 @@ HeapRegion* G1CollectedHeap::new_mutator_alloc_region(size_t word_size, bool for
     HeapRegion* new_alloc_region = new_region(word_size, false /* is_old */, false /* do_expand */);
     if (new_alloc_region != NULL) {
       set_region_short_lived_locked(new_alloc_region);
-      _verifier->check_bitmaps("Mutator Region Allocation", new_alloc_region);
       _g1_policy->remset_tracker()->update_at_allocate(new_alloc_region);
       return new_alloc_region;
     }
@@ -4008,10 +3920,8 @@ HeapRegion* G1CollectedHeap::new_gc_alloc_region(size_t word_size, InCSetState d
     if (is_survivor) {
       new_alloc_region->set_survivor();
       _survivor.add(new_alloc_region);
-      _verifier->check_bitmaps("Survivor Region Allocation", new_alloc_region);
     } else {
       new_alloc_region->set_old();
-      _verifier->check_bitmaps("Old Region Allocation", new_alloc_region);
     }
     _g1_policy->remset_tracker()->update_at_allocate(new_alloc_region);
     bool during_im = collector_state()->in_initial_mark_gc();

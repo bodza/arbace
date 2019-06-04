@@ -165,7 +165,7 @@ const int LogHeapWordsPerLong = LogBytesPerLong - LogHeapWordSize;
 // The minimum number of native machine words necessary to contain "byte_size"
 // bytes.
 inline size_t heap_word_size(size_t byte_size) {
-  return (byte_size + (HeapWordSize-1)) >> LogHeapWordSize;
+  return (byte_size + (HeapWordSize - 1)) >> LogHeapWordSize;
 }
 
 //-------------------------------------------
@@ -256,7 +256,7 @@ inline size_t byte_size_in_exact_unit(size_t s) {
 typedef intptr_t  intx;
 typedef uintptr_t uintx;
 
-const intx  min_intx  = (intx)1 << (sizeof(intx)*BitsPerByte-1);
+const intx  min_intx  = (intx)1 << (sizeof(intx) * BitsPerByte - 1);
 const intx  max_intx  = (uintx)min_intx - 1;
 const uintx max_uintx = (uintx)-1;
 
@@ -360,7 +360,7 @@ const jbyte max_jbyte = (1 << 7) - 1;    // largest jbyte
 const jshort min_jshort = -(1 << 15);    // smallest jshort
 const jshort max_jshort = (1 << 15) - 1; // largest jshort
 
-const jint min_jint = (jint)1 << (sizeof(jint)*BitsPerByte-1); // 0x80000000 == smallest jint
+const jint min_jint = (jint)1 << (sizeof(jint) * BitsPerByte - 1); // 0x80000000 == smallest jint
 const jint max_jint = (juint)min_jint - 1;                     // 0x7FFFFFFF == largest jint
 
 //----------------------------------------------------------------------------------------------------
@@ -542,7 +542,7 @@ inline bool is_reference_type(BasicType t) {
 
 // Convert a char from a classfile signature to a BasicType
 inline BasicType char2type(char c) {
-  switch( c ) {
+  switch (c) {
   case 'B': return T_BYTE;
   case 'C': return T_CHAR;
   case 'D': return T_DOUBLE;
@@ -876,7 +876,7 @@ const int      badCodeHeapFreeVal = 0xDD;                   // value used to zap
 #define       badHeapWord       (::badHeapWordVal)
 
 // Default TaskQueue size is 16K (32-bit) or 128K (64-bit)
-#define TASKQUEUE_SIZE (1<<17)
+#define TASKQUEUE_SIZE (1 << 17)
 
 //----------------------------------------------------------------------------------------------------
 // Utility functions for bitfield manipulations
@@ -1048,113 +1048,108 @@ inline intx byte_size(void* from, void* to) {
 //
 
 // This routine takes eight bytes:
-inline u8 build_u8_from( u1 c1, u1 c2, u1 c3, u1 c4, u1 c5, u1 c6, u1 c7, u1 c8 ) {
-  return  (( u8(c1) << 56 )  &  ( u8(0xff) << 56 ))
-       |  (( u8(c2) << 48 )  &  ( u8(0xff) << 48 ))
-       |  (( u8(c3) << 40 )  &  ( u8(0xff) << 40 ))
-       |  (( u8(c4) << 32 )  &  ( u8(0xff) << 32 ))
-       |  (( u8(c5) << 24 )  &  ( u8(0xff) << 24 ))
-       |  (( u8(c6) << 16 )  &  ( u8(0xff) << 16 ))
-       |  (( u8(c7) <<  8 )  &  ( u8(0xff) <<  8 ))
-       |  (( u8(c8) <<  0 )  &  ( u8(0xff) <<  0 ));
+inline u8 build_u8_from(u1 c1, u1 c2, u1 c3, u1 c4, u1 c5, u1 c6, u1 c7, u1 c8) {
+  return ((u8(c1) << 56) & (u8(0xff) << 56))
+       | ((u8(c2) << 48) & (u8(0xff) << 48))
+       | ((u8(c3) << 40) & (u8(0xff) << 40))
+       | ((u8(c4) << 32) & (u8(0xff) << 32))
+       | ((u8(c5) << 24) & (u8(0xff) << 24))
+       | ((u8(c6) << 16) & (u8(0xff) << 16))
+       | ((u8(c7) <<  8) & (u8(0xff) <<  8))
+       | ((u8(c8) <<  0) & (u8(0xff) <<  0));
 }
 
 // This routine takes four bytes:
 inline u4 build_u4_from( u1 c1, u1 c2, u1 c3, u1 c4 ) {
-  return  (( u4(c1) << 24 )  &  0xff000000)
-       |  (( u4(c2) << 16 )  &  0x00ff0000)
-       |  (( u4(c3) <<  8 )  &  0x0000ff00)
-       |  (( u4(c4) <<  0 )  &  0x000000ff);
+  return ((u4(c1) << 24) & 0xff000000)
+       | ((u4(c2) << 16) & 0x00ff0000)
+       | ((u4(c3) <<  8) & 0x0000ff00)
+       | ((u4(c4) <<  0) & 0x000000ff);
 }
 
 // And this one works if the four bytes are contiguous in memory:
-inline u4 build_u4_from( u1* p ) {
-  return  build_u4_from( p[0], p[1], p[2], p[3] );
+inline u4 build_u4_from(u1* p) {
+  return  build_u4_from(p[0], p[1], p[2], p[3]);
 }
 
 // Ditto for two-byte ints:
 inline u2 build_u2_from( u1 c1, u1 c2 ) {
-  return  u2((( u2(c1) <<  8 )  &  0xff00)
-          |  (( u2(c2) <<  0 )  &  0x00ff));
+  return  u2(((u2(c1) << 8) & 0xff00)
+          |  ((u2(c2) << 0) & 0x00ff));
 }
 
 // And this one works if the two bytes are contiguous in memory:
-inline u2 build_u2_from( u1* p ) {
-  return  build_u2_from( p[0], p[1] );
+inline u2 build_u2_from(u1* p) {
+  return  build_u2_from(p[0], p[1]);
 }
 
 // Ditto for floats:
-inline jfloat build_float_from( u1 c1, u1 c2, u1 c3, u1 c4 ) {
-  u4 u = build_u4_from( c1, c2, c3, c4 );
-  return  *(jfloat*)&u;
+inline jfloat build_float_from(u1 c1, u1 c2, u1 c3, u1 c4) {
+  u4 u = build_u4_from(c1, c2, c3, c4);
+  return *(jfloat*)&u;
 }
 
-inline jfloat build_float_from( u1* p ) {
-  u4 u = build_u4_from( p );
-  return  *(jfloat*)&u;
+inline jfloat build_float_from(u1* p) {
+  u4 u = build_u4_from(p);
+  return *(jfloat*)&u;
 }
 
 // now (64-bit) longs
 
-inline jlong build_long_from( u1 c1, u1 c2, u1 c3, u1 c4, u1 c5, u1 c6, u1 c7, u1 c8 ) {
-  return  (( jlong(c1) << 56 )  &  ( jlong(0xff) << 56 ))
-       |  (( jlong(c2) << 48 )  &  ( jlong(0xff) << 48 ))
-       |  (( jlong(c3) << 40 )  &  ( jlong(0xff) << 40 ))
-       |  (( jlong(c4) << 32 )  &  ( jlong(0xff) << 32 ))
-       |  (( jlong(c5) << 24 )  &  ( jlong(0xff) << 24 ))
-       |  (( jlong(c6) << 16 )  &  ( jlong(0xff) << 16 ))
-       |  (( jlong(c7) <<  8 )  &  ( jlong(0xff) <<  8 ))
-       |  (( jlong(c8) <<  0 )  &  ( jlong(0xff) <<  0 ));
+inline jlong build_long_from(u1 c1, u1 c2, u1 c3, u1 c4, u1 c5, u1 c6, u1 c7, u1 c8) {
+  return ((jlong(c1) << 56) & (jlong(0xff) << 56))
+       | ((jlong(c2) << 48) & (jlong(0xff) << 48))
+       | ((jlong(c3) << 40) & (jlong(0xff) << 40))
+       | ((jlong(c4) << 32) & (jlong(0xff) << 32))
+       | ((jlong(c5) << 24) & (jlong(0xff) << 24))
+       | ((jlong(c6) << 16) & (jlong(0xff) << 16))
+       | ((jlong(c7) <<  8) & (jlong(0xff) <<  8))
+       | ((jlong(c8) <<  0) & (jlong(0xff) <<  0));
 }
 
-inline jlong build_long_from( u1* p ) {
-  return  build_long_from( p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7] );
+inline jlong build_long_from(u1* p) {
+  return build_long_from(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7]);
 }
 
 // Doubles, too!
-inline jdouble build_double_from( u1 c1, u1 c2, u1 c3, u1 c4, u1 c5, u1 c6, u1 c7, u1 c8 ) {
-  jlong u = build_long_from( c1, c2, c3, c4, c5, c6, c7, c8 );
-  return  *(jdouble*)&u;
+inline jdouble build_double_from(u1 c1, u1 c2, u1 c3, u1 c4, u1 c5, u1 c6, u1 c7, u1 c8) {
+  jlong u = build_long_from(c1, c2, c3, c4, c5, c6, c7, c8);
+  return *(jdouble*)&u;
 }
 
-inline jdouble build_double_from( u1* p ) {
-  jlong u = build_long_from( p );
-  return  *(jdouble*)&u;
+inline jdouble build_double_from(u1* p) {
+  jlong u = build_long_from(p);
+  return *(jdouble*)&u;
 }
 
 // Portable routines to go the other way:
 
-inline void explode_short_to( u2 x, u1& c1, u1& c2 ) {
+inline void explode_short_to(u2 x, u1& c1, u1& c2) {
   c1 = u1(x >> 8);
   c2 = u1(x);
 }
 
-inline void explode_short_to( u2 x, u1* p ) {
-  explode_short_to( x, p[0], p[1]);
+inline void explode_short_to(u2 x, u1* p) {
+  explode_short_to(x, p[0], p[1]);
 }
 
-inline void explode_int_to( u4 x, u1& c1, u1& c2, u1& c3, u1& c4 ) {
+inline void explode_int_to(u4 x, u1& c1, u1& c2, u1& c3, u1& c4) {
   c1 = u1(x >> 24);
   c2 = u1(x >> 16);
   c3 = u1(x >>  8);
   c4 = u1(x);
 }
 
-inline void explode_int_to( u4 x, u1* p ) {
-  explode_int_to( x, p[0], p[1], p[2], p[3]);
+inline void explode_int_to(u4 x, u1* p) {
+  explode_int_to(x, p[0], p[1], p[2], p[3]);
 }
 
 // Pack and extract shorts to/from ints:
 
-inline int extract_low_short_from_int(jint x) {
-  return x & 0xffff;
-}
+inline int extract_low_short_from_int(jint x)  { return  x        & 0xffff; }
+inline int extract_high_short_from_int(jint x) { return (x >> 16) & 0xffff; }
 
-inline int extract_high_short_from_int(jint x) {
-  return (x >> 16) & 0xffff;
-}
-
-inline int build_int_from_shorts( jushort low, jushort high ) {
+inline int build_int_from_shorts(jushort low, jushort high) {
   return ((int)((unsigned int)high << 16) | (unsigned int)low);
 }
 

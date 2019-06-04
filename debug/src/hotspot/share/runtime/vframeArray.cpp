@@ -82,7 +82,7 @@ void vframeArrayElement::fill_in(compiledVFrame* vf, bool realloc_failures) {
   _locals = new StackValueCollection(locs->size());
   for (index = 0; index < locs->size(); index++) {
     StackValue* value = locs->at(index);
-    switch(value->type()) {
+    switch (value->type()) {
       case T_OBJECT:
         // preserve object type
         _locals->add( new StackValue(cast_from_oop<intptr_t>((value->get_obj()())), T_OBJECT ));
@@ -106,7 +106,7 @@ void vframeArrayElement::fill_in(compiledVFrame* vf, bool realloc_failures) {
   _expressions = new StackValueCollection(exprs->size());
   for (index = 0; index < exprs->size(); index++) {
     StackValue* value = exprs->at(index);
-    switch(value->type()) {
+    switch (value->type()) {
       case T_OBJECT:
         // preserve object type
         _expressions->add( new StackValue(cast_from_oop<intptr_t>((value->get_obj()())), T_OBJECT ));
@@ -251,7 +251,7 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters, int calle
   for (i = 0; i < expressions()->size(); i++) {
     StackValue *value = expressions()->at(i);
     intptr_t*   addr  = iframe()->interpreter_frame_expression_stack_at(i);
-    switch(value->type()) {
+    switch (value->type()) {
       case T_INT:
         *addr = value->get_int();
         break;
@@ -271,7 +271,7 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters, int calle
   for (i = 0; i < locals()->size(); i++) {
     StackValue *value = locals()->at(i);
     intptr_t* addr  = iframe()->interpreter_frame_local_at(i);
-    switch(value->type()) {
+    switch (value->type()) {
       case T_INT:
         *addr = value->get_int();
         break;
@@ -381,7 +381,7 @@ void vframeArray::unpack_to_stack(frame &unpack_frame, int exec_mode, int caller
   // Get the youngest frame we will unpack (last to be unpacked)
   frame me = unpack_frame.sender(&map);
   int index;
-  for (index = 0; index < frames(); index++ ) {
+  for (index = 0; index < frames(); index++) {
     *element(index)->iframe() = me;
     // Get the caller frame (possibly skeletal)
     me = me.sender(&map);
@@ -405,13 +405,7 @@ void vframeArray::unpack_to_stack(frame &unpack_frame, int exec_mode, int caller
       callee_parameters = callee->size_of_parameters() + (has_member_arg ? 1 : 0);
       callee_locals     = callee->max_locals();
     }
-    elem->unpack_on_stack(caller_actual_parameters,
-                          callee_parameters,
-                          callee_locals,
-                          caller_frame,
-                          index == 0,
-                          index == frames() - 1,
-                          exec_mode);
+    elem->unpack_on_stack(caller_actual_parameters, callee_parameters, callee_locals, caller_frame, index == 0, index == frames() - 1, exec_mode);
     if (index == frames() - 1) {
       Deoptimization::unwind_callee_save_values(elem->iframe(), this);
     }
@@ -423,7 +417,7 @@ void vframeArray::unpack_to_stack(frame &unpack_frame, int exec_mode, int caller
 
 void vframeArray::deallocate_monitor_chunks() {
   JavaThread* jt = JavaThread::current();
-  for (int index = 0; index < frames(); index++ ) {
+  for (int index = 0; index < frames(); index++) {
      element(index)->free_monitors(jt);
   }
 }

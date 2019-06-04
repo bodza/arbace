@@ -1,9 +1,6 @@
 #include "precompiled.hpp"
 
 #include "memory/allocation.hpp"
-#include "services/mallocTracker.hpp"
-#include "services/memReporter.hpp"
-#include "services/virtualMemoryTracker.hpp"
 #include "utilities/globalDefinitions.hpp"
 
 size_t MemReporterBase::reserved_total(const MallocMemory* malloc, const VirtualMemory* vm) const {
@@ -401,8 +398,7 @@ void MemSummaryDiffReporter::diff_summary_of_type(MEMFLAGS flag, const MallocMem
   if (amount_in_current_scale(current_reserved_amount) > 0 || diff_in_current_scale(current_reserved_amount, early_reserved_amount) != 0) {
     // print summary line
     out->print("-%26s (", NMTUtil::flag_to_name(flag));
-    print_virtual_memory_diff(current_reserved_amount, current_committed_amount,
-      early_reserved_amount, early_committed_amount);
+    print_virtual_memory_diff(current_reserved_amount, current_committed_amount, early_reserved_amount, early_committed_amount);
     out->print_cr(")");
 
     // detail lines

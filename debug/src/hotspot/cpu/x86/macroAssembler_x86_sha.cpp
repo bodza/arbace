@@ -470,7 +470,7 @@ void MacroAssembler::sha256_AVX2_one_round_compute(
   rorxd(reg_y1, reg_e, 11);    // reg_y1 = reg_e >> 11    ; S1B
   xorl(reg_y2, reg_g);         // reg_y2 = reg_f^reg_g                              ; CH
 
-  xorl(reg_y0, reg_y1);        // reg_y0 = (reg_e>>25) ^ (reg_h>>11)  ; S1
+  xorl(reg_y0, reg_y1);        // reg_y0 = (reg_e >> 25) ^ (reg_h >> 11)  ; S1
   rorxd(reg_y1, reg_e, 6);     // reg_y1 = (reg_e >> 6)    ; S1
   andl(reg_y2, reg_e);         // reg_y2 = (reg_f^reg_g)&reg_e                          ; CH
 
@@ -478,18 +478,18 @@ void MacroAssembler::sha256_AVX2_one_round_compute(
     addl(reg_old_h, reg_y3);   // reg_h = t1 + S0 + MAJ                     ; --
   }
 
-  xorl(reg_y0, reg_y1);       // reg_y0 = (reg_e>>25) ^ (reg_e>>11) ^ (reg_e>>6) ; S1
+  xorl(reg_y0, reg_y1);       // reg_y0 = (reg_e >> 25) ^ (reg_e >> 11) ^ (reg_e >> 6) ; S1
   rorxd(reg_T1, reg_a, 13);   // reg_T1 = reg_a >> 13    ; S0B
   xorl(reg_y2, reg_g);        // reg_y2 = CH = ((reg_f^reg_g)&reg_e)^reg_g                 ; CH
   rorxd(reg_y1, reg_a, 22);   // reg_y1 = reg_a >> 22    ; S0A
   movl(reg_y3, reg_a);        // reg_y3 = reg_a                                ; MAJA
 
-  xorl(reg_y1, reg_T1);       // reg_y1 = (reg_a>>22) ^ (reg_a>>13)  ; S0
+  xorl(reg_y1, reg_T1);       // reg_y1 = (reg_a >> 22) ^ (reg_a >> 13)  ; S0
   rorxd(reg_T1, reg_a, 2);    // reg_T1 = (reg_a >> 2)    ; S0
   addl(reg_h, Address(rsp, rdx, Address::times_1, 4*iter)); // reg_h = k + w + reg_h ; --
   orl(reg_y3, reg_c);         // reg_y3 = reg_a|reg_c                              ; MAJA
 
-  xorl(reg_y1, reg_T1);       // reg_y1 = (reg_a>>22) ^ (reg_a>>13) ^ (reg_a>>2) ; S0
+  xorl(reg_y1, reg_T1);       // reg_y1 = (reg_a >> 22) ^ (reg_a >> 13) ^ (reg_a >> 2) ; S0
   movl(reg_T1, reg_a);        // reg_T1 = reg_a                                ; MAJB
   andl(reg_y3, reg_b);        // reg_y3 = (reg_a|reg_c)&reg_b                          ; MAJA
   andl(reg_T1, reg_c);        // reg_T1 = reg_a&reg_c                              ; MAJB
@@ -544,23 +544,23 @@ void MacroAssembler::sha256_AVX2_one_round_and_sched(
 
   movl(r15, reg_f);           // r15 = reg_f               ; CH
   rorxd(r12, reg_a, 13);      // r12 = reg_a >> 13      ; S0B
-  xorl(r13, r14);             // r13 = (reg_e>>25) ^ (reg_e>>11)  ; S1
+  xorl(r13, r14);             // r13 = (reg_e >> 25) ^ (reg_e >> 11)  ; S1
   xorl(r15, reg_g);           // r15 = reg_f^reg_g         ; CH
 
   rorxd(r14, reg_e, 6);       // r14 = (reg_e >> 6)    ; S1
   andl(r15, reg_e);           // r15 = (reg_f^reg_g)&reg_e ; CH
 
-  xorl(r13, r14);             // r13 = (reg_e>>25) ^ (reg_e>>11) ^ (reg_e>>6) ; S1
+  xorl(r13, r14);             // r13 = (reg_e >> 25) ^ (reg_e >> 11) ^ (reg_e >> 6) ; S1
   rorxd(r14, reg_a, 22);      // r14 = reg_a >> 22    ; S0A
   addl(reg_d, reg_h);         // reg_d = k + w + reg_h + reg_d                     ; --
 
   andl(rcx, reg_b);          // rcx = (reg_a|reg_c)&reg_b                          ; MAJA
-  xorl(r14, r12);            // r14 = (reg_a>>22) ^ (reg_a>>13)  ; S0
+  xorl(r14, r12);            // r14 = (reg_a >> 22) ^ (reg_a >> 13)  ; S0
 
   rorxd(r12, reg_a, 2);      // r12 = (reg_a >> 2)    ; S0
   xorl(r15, reg_g);          // r15 = CH = ((reg_f^reg_g)&reg_e)^reg_g                 ; CH
 
-  xorl(r14, r12);            // r14 = (reg_a>>22) ^ (reg_a>>13) ^ (reg_a>>2) ; S0
+  xorl(r14, r12);            // r14 = (reg_a >> 22) ^ (reg_a >> 13) ^ (reg_a >> 2) ; S0
   movl(r12, reg_a);          // r12 = reg_a                                ; MAJB
   andl(r12, reg_c);          // r12 = reg_a&reg_c                              ; MAJB
   addl(r15, r13);            // r15 = S1 + CH                          ; --
@@ -580,7 +580,7 @@ void MacroAssembler::sha256_AVX2_one_round_and_sched(
     vpslld(xmm3, xmm1, 32-7, AVX_256bit);
     vpor(xmm3, xmm3, xmm2, AVX_256bit);            // ymm3 = W[-15] ror 7
     vpsrld(xmm2, xmm1,18, AVX_256bit);
-  } else if (iter%4 == 1 ) {
+  } else if (iter%4 == 1) {
     vpsrld(xmm8, xmm1, 3, AVX_256bit);             // ymm8 = W[-15] >> 3
     vpslld(xmm1, xmm1, 32-18, AVX_256bit);
     vpxor(xmm3, xmm3, xmm1, AVX_256bit);
@@ -961,7 +961,7 @@ void MacroAssembler::sha512_AVX2_one_round_compute(Register  old_h, Register a, 
     rorxq(y1, e, 14); //y1 = (e >> 14); S1
     andq(y2, e); //y2 = (f^g)&e; CH
 
-    if (iteration % 4 > 0 ) {
+    if (iteration % 4 > 0) {
       addq(old_h, y3); //h = t1 + S0 + MAJ
     }
     xorq(y0, y1); //y0 = (e >> 41) ^ (e >> 18) ^ (e >> 14); S1

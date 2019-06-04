@@ -51,8 +51,7 @@ class ICStub: public Stub {
   void* cached_value() const;   // cached_value for stub
 
   // Debugging
-  void    verify()            { };
-  void    print()             { };
+  void    print() { };
 
   // Creation
   friend ICStub* ICStub_from_destination_address(address destination_address);

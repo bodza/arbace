@@ -138,7 +138,7 @@ Address LIR_Assembler::as_Address(LIR_Address* addr, Register tmp) {
       index = opr->as_register();
     else
       index = opr->as_register_lo();
-    switch(opr->type()) {
+    switch (opr->type()) {
       case T_INT:
         return Address(base, index, Address::sxtw(addr->scale()));
       case T_LONG:
@@ -241,7 +241,7 @@ int LIR_Assembler::check_icache() {
   // We align the verified entry point unless the method body
   // (including its inline cache check) will fit in a single 64-byte
   // icache line.
-  if (! method()->is_accessor() || __ offset() - start_offset > 4 * 4) {
+  if (!method()->is_accessor() || __ offset() - start_offset > 4 * 4) {
     // force alignment after the cache check.
     __ align(CodeEntryAlignment);
   }
@@ -511,7 +511,7 @@ void LIR_Assembler::const2stack(LIR_Opr src, LIR_Opr dest) {
   switch (c->type()) {
   case T_OBJECT:
     {
-      if (! c->as_jobject())
+      if (!c->as_jobject())
         __ str(zr, frame_map()->address_for_slot(dest->single_stack_ix()));
       else {
         const2reg(src, FrameMap::rscratch1_opr, lir_patch_none, NULL);
@@ -945,7 +945,7 @@ void LIR_Assembler::emit_opBranch(LIR_OpBranch* op) {
       // ordered branches.
       if (is_unordered && op->cond() == lir_cond_equal || !is_unordered && op->cond() == lir_cond_notEqual)
         __ br(Assembler::VS, *(op->ublock()->label()));
-      switch(op->cond()) {
+      switch (op->cond()) {
       case lir_cond_equal:        acond = Assembler::EQ; break;
       case lir_cond_notEqual:     acond = Assembler::NE; break;
       case lir_cond_less:         acond = (is_unordered ? Assembler::LT : Assembler::LO); break;
@@ -1493,7 +1493,7 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
       jlong c;
 
       // FIXME.  This is fugly: we really need to factor all this logic.
-      switch(right->type()) {
+      switch (right->type()) {
       case T_LONG:
         c = right->as_constant_ptr()->as_jlong();
         break;
@@ -1511,7 +1511,7 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
         COMMENT("effective nop elided");
         return;
       }
-      switch(left->type()) {
+      switch (left->type()) {
       case T_INT:
         switch (code) {
         case lir_add: __ addw(dreg, lreg, c); break;
@@ -1599,7 +1599,7 @@ void LIR_Assembler::arith_op(LIR_Code code, LIR_Opr left, LIR_Opr right, LIR_Opr
 void LIR_Assembler::arith_fpu_implementation(LIR_Code code, int left_index, int right_index, int dest_index, bool pop_fpu_stack) { Unimplemented(); }
 
 void LIR_Assembler::intrinsic_op(LIR_Code code, LIR_Opr value, LIR_Opr unused, LIR_Opr dest, LIR_Op* op) {
-  switch(code) {
+  switch (code) {
   case lir_abs : __ fabsd(dest->as_double_reg(), value->as_double_reg()); break;
   case lir_sqrt: __ fsqrtd(dest->as_double_reg(), value->as_double_reg()); break;
   default      : ShouldNotReachHere();
@@ -1681,7 +1681,7 @@ void LIR_Assembler::comp_op(LIR_Condition condition, LIR_Opr opr1, LIR_Opr opr2,
       bool is_32bit = false; // width of register operand
       jlong imm;
 
-      switch(opr2->type()) {
+      switch (opr2->type()) {
       case T_INT:
         imm = opr2->as_constant_ptr()->as_jint();
         is_32bit = true;
@@ -2405,7 +2405,7 @@ void LIR_Assembler::rt_call(LIR_Opr result, address dest, const LIR_OprList* arg
     __ mov(rscratch1, RuntimeAddress(dest));
     int len = args->length();
     int type = 0;
-    if (! result->is_illegal()) {
+    if (!result->is_illegal()) {
       switch (result->type()) {
       case T_VOID:
         type = 0;
@@ -2499,7 +2499,7 @@ void LIR_Assembler::atomic_op(LIR_Code code, LIR_Opr src, LIR_Opr data, LIR_Opr 
   void (MacroAssembler::* add)(Register prev, RegisterOrConstant incr, Register addr);
   void (MacroAssembler::* xchg)(Register prev, Register newv, Register addr);
 
-  switch(type) {
+  switch (type) {
   case T_INT:
     xchg = &MacroAssembler::atomic_xchgalw;
     add = &MacroAssembler::atomic_addalw;

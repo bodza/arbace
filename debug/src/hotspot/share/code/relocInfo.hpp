@@ -285,18 +285,18 @@ class relocInfo {
  public:
   enum {
     value_width             = sizeof(unsigned short) * BitsPerByte,
-    type_width              = 4,   // == log2(type_mask+1)
+    type_width              = 4,   // == log2(type_mask + 1)
     nontype_width           = value_width - type_width,
-    datalen_width           = nontype_width-1,
+    datalen_width           = nontype_width - 1,
     datalen_tag             = 1 << datalen_width,  // or-ed into _value
     datalen_limit           = 1 << datalen_width,
-    datalen_mask            = (1 << datalen_width)-1
+    datalen_mask            = (1 << datalen_width) - 1
   };
 
   // accessors
  public:
   relocType  type()       const { return (relocType)((unsigned)_value >> nontype_width); }
-  int  format()           const { return format_mask==0? 0: format_mask & ((unsigned)_value >> offset_width); }
+  int  format()           const { return format_mask == 0 ? 0 : format_mask & ((unsigned)_value >> offset_width); }
   int  addr_offset()      const { return (_value & offset_mask)*offset_unit; }
 
  protected:
@@ -371,11 +371,11 @@ class relocInfo {
   }
 
   static jint short_data_at(int n, short* data, int datalen) {
-    return datalen > n ? data[n] : 0;
+    return (datalen > n) ? data[n] : 0;
   }
 
   static jint jint_data_at(int n, short* data, int datalen) {
-    return datalen > n+1 ? jint_from_data(&data[n]) : short_data_at(n, data, datalen);
+    return (datalen > n + 1) ? jint_from_data(&data[n]) : short_data_at(n, data, datalen);
   }
 
   // Update methods for relocation information
@@ -391,8 +391,8 @@ class relocInfo {
   // Derived constant, based on format_width which is PD:
   enum {
     offset_width       = nontype_width - format_width,
-    offset_mask        = (1<<offset_width) - 1,
-    format_mask        = (1<<format_width) - 1
+    offset_mask        = (1 << offset_width) - 1,
+    format_mask        = (1 << format_width) - 1
   };
  public:
   enum {
@@ -663,7 +663,7 @@ class Relocation {
       // no halfwords needed to store zeroes
     } else if (is_short(x0) && is_short(x1)) {
       // 1-2 halfwords needed to store shorts
-      p = add_short(p, x0); if (x1!=0) p = add_short(p, x1);
+      p = add_short(p, x0); if (x1 != 0) p = add_short(p, x1);
     } else {
       // 3-4 halfwords needed to store jints
       p = add_jint(p, x0);             p = add_var_int(p, x1);

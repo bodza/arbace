@@ -158,34 +158,6 @@ void StubQueue::remove_all() {
   remove_first(number_of_stubs());
 }
 
-void StubQueue::verify() {
-  // verify only if initialized
-  if (_stub_buffer == NULL) return;
-  MutexLockerEx lock(_mutex);
-  // verify index boundaries
-  guarantee(0 <= _buffer_size, "buffer size must be positive");
-  guarantee(0 <= _buffer_limit && _buffer_limit <= _buffer_size , "_buffer_limit out of bounds");
-  guarantee(0 <= _queue_begin  && _queue_begin  <  _buffer_limit, "_queue_begin out of bounds");
-  guarantee(0 <= _queue_end    && _queue_end    <= _buffer_limit, "_queue_end   out of bounds");
-  // verify alignment
-  guarantee(_buffer_size  % CodeEntryAlignment == 0, "_buffer_size  not aligned");
-  guarantee(_buffer_limit % CodeEntryAlignment == 0, "_buffer_limit not aligned");
-  guarantee(_queue_begin  % CodeEntryAlignment == 0, "_queue_begin  not aligned");
-  guarantee(_queue_end    % CodeEntryAlignment == 0, "_queue_end    not aligned");
-  // verify buffer limit/size relationship
-  if (is_contiguous()) {
-    guarantee(_buffer_limit == _buffer_size, "_buffer_limit must equal _buffer_size");
-  }
-  // verify contents
-  int n = 0;
-  for (Stub* s = first(); s != NULL; s = next(s)) {
-    stub_verify(s);
-    n++;
-  }
-  guarantee(n == number_of_stubs(), "number of stubs inconsistent");
-  guarantee(_queue_begin != _queue_end || n == 0, "buffer indices must be the same");
-}
-
 void StubQueue::print() {
   MutexLockerEx lock(_mutex);
   for (Stub* s = first(); s != NULL; s = next(s)) {

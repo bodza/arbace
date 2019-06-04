@@ -157,37 +157,6 @@ size_t ChunkManager::size_by_index(ChunkIndex index) const {
   return get_size_for_nonhumongous_chunktype(index, is_class());
 }
 
-void ChunkManager::locked_verify_free_chunks_total() { }
-void ChunkManager::locked_verify_free_chunks_count() { }
-
-void ChunkManager::verify() {
-  MutexLockerEx cl(MetaspaceExpand_lock,
-                     Mutex::_no_safepoint_check_flag);
-  locked_verify();
-}
-
-void ChunkManager::locked_verify() {
-  locked_verify_free_chunks_count();
-  locked_verify_free_chunks_total();
-  for (ChunkIndex i = ZeroIndex; i < NumberOfFreeLists; i = next_chunk_index(i)) {
-    ChunkList* list = free_chunks(i);
-    if (list != NULL) {
-      Metachunk* chunk = list->head();
-      while (chunk) {
-        chunk = chunk->next();
-      }
-    }
-  }
-}
-
-void ChunkManager::locked_print_free_chunks(outputStream* st) {
-  st->print_cr("Free chunk total " SIZE_FORMAT "  count " SIZE_FORMAT, _free_chunks_total, _free_chunks_count);
-}
-
-void ChunkManager::locked_print_sum_free_chunks(outputStream* st) {
-  st->print_cr("Sum free chunk total " SIZE_FORMAT "  count " SIZE_FORMAT, sum_free_chunks(), sum_free_chunks_count());
-}
-
 ChunkList* ChunkManager::free_chunks(ChunkIndex index) {
   return &_free_chunks[index];
 }
@@ -294,8 +263,6 @@ Metachunk* ChunkManager::split_chunk(size_t target_chunk_word_size, Metachunk* l
 }
 
 Metachunk* ChunkManager::free_chunks_get(size_t word_size) {
-  slow_locked_verify();
-
   Metachunk* chunk = NULL;
   bool we_did_split_a_chunk = false;
 
@@ -366,8 +333,6 @@ Metachunk* ChunkManager::free_chunks_get(size_t word_size) {
 }
 
 Metachunk* ChunkManager::chunk_freelist_allocate(size_t word_size) {
-  slow_locked_verify();
-
   // Take from the beginning of the list
   Metachunk* chunk = free_chunks_get(word_size);
   if (chunk == NULL) {

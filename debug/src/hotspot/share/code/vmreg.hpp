@@ -133,12 +133,12 @@ public:
 
   // Return true if single stack based "register" where the slot alignment matches input alignment
   bool is_adjacent_on_stack(int alignment) const {
-    return (_first->is_stack() && (_first->value() + 1 == _second->value()) && ((_first->value() & (alignment-1)) == 0));
+    return (_first->is_stack() && (_first->value() + 1 == _second->value()) && ((_first->value() & (alignment - 1)) == 0));
   }
 
   // Return true if single stack based "register" where the slot alignment matches input alignment
   bool is_adjacent_aligned_on_stack(int alignment) const {
-    return (_first->is_stack() && (_first->value() + 1 == _second->value()) && ((_first->value() & (alignment-1)) == 0));
+    return (_first->is_stack() && (_first->value() + 1 == _second->value()) && ((_first->value() & (alignment - 1)) == 0));
   }
 
   // Return true if single register but adjacent stack slots do not count

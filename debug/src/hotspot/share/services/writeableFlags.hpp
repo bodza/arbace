@@ -26,7 +26,7 @@ private:
   static JVMFlag::Error set_uintx_flag(const char* name, const char* value, JVMFlag::Flags origin, FormatBuffer<80>& err_msg);
   // set a uint64_t global flag
   static JVMFlag::Error set_uint64_t_flag(const char* name, const char* value, JVMFlag::Flags origin, FormatBuffer<80>& err_msg);
-  // set a size_t global flag using value from AttachOperation
+  // set a size_t global flag using value from NULL
   static JVMFlag::Error set_size_t_flag(const char* name, const char* value, JVMFlag::Flags origin, FormatBuffer<80>& err_msg);
   // set a boolean global flag
   static JVMFlag::Error set_bool_flag(const char* name, bool value, JVMFlag::Flags origin, FormatBuffer<80>& err_msg);
@@ -40,7 +40,7 @@ private:
   static JVMFlag::Error set_uintx_flag(const char* name, uintx value, JVMFlag::Flags origin, FormatBuffer<80>& err_msg);
   // set a uint64_t global flag
   static JVMFlag::Error set_uint64_t_flag(const char* name, uint64_t value, JVMFlag::Flags origin, FormatBuffer<80>& err_msg);
-  // set a size_t global flag using value from AttachOperation
+  // set a size_t global flag using value from NULL
   static JVMFlag::Error set_size_t_flag(const char* name, size_t value, JVMFlag::Flags origin, FormatBuffer<80>& err_msg);
   // set a string global flag
   static JVMFlag::Error set_ccstr_flag(const char* name, const char* value, JVMFlag::Flags origin, FormatBuffer<80>& err_msg);

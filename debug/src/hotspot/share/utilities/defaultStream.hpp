@@ -8,31 +8,20 @@ class defaultStream : public xmlTextStream {
  public:
   enum { NO_WRITER = -1 };
  private:
-  bool         _inited;
-  fileStream*  _log_file;  // XML-formatted file shared by all threads
   static int   _output_fd;
   static int   _error_fd;
   static FILE* _output_stream;
   static FILE* _error_stream;
 
-  void init();
   fileStream* open_file(const char* log_name);
-  void finish_log();
-  void finish_log_on_error(char *buf, int buflen);
  public:
   // must defer time stamp due to the fact that os::init() hasn't
   // yet been called and os::elapsed_counter() may not be valid
   defaultStream() {
-    _log_file = NULL;
-    _inited = false;
     _writer = -1;
     _last_writer = -1;
   }
-
-  ~defaultStream() {
-    if (has_log_file())
-        finish_log();
-  }
+  ~defaultStream() { }
 
   static inline FILE* output_stream() { return DisplayVMOutputToStderr ? _error_stream : _output_stream; }
   static inline FILE* error_stream()  { return DisplayVMOutputToStdout ? _output_stream : _error_stream; }
@@ -44,7 +33,6 @@ class defaultStream : public xmlTextStream {
   void flush() {
     xmlTextStream::flush();
     fflush(output_stream());
-    if (has_log_file()) _log_file->flush();
   }
 
   // advisory lock/unlock of _writer field:
@@ -55,7 +43,6 @@ class defaultStream : public xmlTextStream {
   intx hold(intx writer_id);
   void release(intx holder);
   intx writer() { return _writer; }
-  bool has_log_file();
 
   static defaultStream* instance;  // sole instance
 };

@@ -35,7 +35,6 @@
 #include "classfile/systemDictionary.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/metadataFactory.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
 #include "oops/access.inline.hpp"
@@ -108,8 +107,7 @@ ClassLoaderData::ClassLoaderData(Handle h_class_loader, bool is_anonymous) :
   _jmethod_ids(NULL), _handles(), _deallocate_list(NULL),
   _next(NULL),
   _class_loader_klass(NULL), _name(NULL), _name_and_id(NULL),
-  _metaspace_lock(new Mutex(Monitor::leaf+1, "Metaspace allocation lock", true,
-                            Monitor::_safepoint_check_never)) {
+  _metaspace_lock(new Mutex(Monitor::leaf + 1, "Metaspace allocation lock", true, Monitor::_safepoint_check_never)) {
   if (!h_class_loader.is_null()) {
     _class_loader = _handles.add(h_class_loader());
     _class_loader_klass = h_class_loader->klass();
@@ -838,23 +836,6 @@ void ClassLoaderData::print_value_on(outputStream* out) const {
   }
 }
 
-void ClassLoaderData::verify() {
-  oop cl = class_loader();
-
-  guarantee(this == class_loader_data(cl) || is_anonymous(), "Must be the same");
-  guarantee(cl != NULL || this == ClassLoaderData::the_null_class_loader_data() || is_anonymous(), "must be");
-
-  // Verify the integrity of the allocated space.
-  if (metaspace_or_null() != NULL) {
-    metaspace_or_null()->verify();
-  }
-
-  for (Klass* k = _klasses; k != NULL; k = k->next_link()) {
-    guarantee(k->class_loader_data() == this, "Must be the same");
-    k->verify();
-  }
-}
-
 bool ClassLoaderData::contains_klass(Klass* klass) {
   // Lock-free access requires load_acquire
   for (Klass* k = OrderAccess::load_acquire(&_klasses); k != NULL; k = k->next_link()) {
@@ -1073,12 +1054,6 @@ void ClassLoaderDataGraph::dictionary_all_entries_do(void f(InstanceKlass*, Clas
   FOR_ALL_DICTIONARY(cld) {
     Handle holder(thread, cld->holder_phantom());
     cld->dictionary()->all_entries_do(f);
-  }
-}
-
-void ClassLoaderDataGraph::verify_dictionary() {
-  FOR_ALL_DICTIONARY(cld) {
-    cld->dictionary()->verify();
   }
 }
 

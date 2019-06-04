@@ -5,7 +5,6 @@
 #include "ci/ciMethodData.hpp"
 #include "ci/ciObjArrayKlass.hpp"
 #include "ci/ciSymbol.hpp"
-#include "classfile/compactHashtable.hpp"
 #include "classfile/dictionary.hpp"
 #include "classfile/javaClasses.hpp"
 #include "classfile/stringTable.hpp"
@@ -32,7 +31,6 @@
 #include "memory/referenceType.hpp"
 #include "memory/universe.hpp"
 #include "memory/virtualspace.hpp"
-#include "memory/filemap.hpp"
 #include "oops/array.hpp"
 #include "oops/arrayKlass.hpp"
 #include "oops/arrayOop.hpp"
@@ -100,7 +98,6 @@ typedef Hashtable<Symbol*, mtSymbol>          SymbolHashtable;
 typedef HashtableEntry<Symbol*, mtClass>      SymbolHashtableEntry;
 typedef Hashtable<InstanceKlass*, mtClass>       KlassHashtable;
 typedef HashtableEntry<InstanceKlass*, mtClass>  KlassHashtableEntry;
-typedef CompactHashtable<Symbol*, char>       SymbolCompactHashTable;
 typedef RehashableHashtable<Symbol*, mtSymbol>   RehashableSymbolHashtable;
 
 typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
@@ -323,7 +320,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
      static_field(Universe,                    _base_vtable_size,                             int) \
      static_field(Universe,                    _bootstrapping,                                bool) \
      static_field(Universe,                    _fully_initialized,                            bool) \
-     static_field(Universe,                    _verify_count,                                 int) \
      static_field(Universe,                    _verify_oop_mask,                              uintptr_t) \
      static_field(Universe,                    _verify_oop_bits,                              uintptr_t) \
      static_field(Universe,                    _non_oop_bits,                                 intptr_t) \
@@ -400,24 +396,12 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   /***************/ \
  \
      static_field(SymbolTable,                 _the_table,                                    SymbolTable*) \
-     static_field(SymbolTable,                 _shared_table,                                 SymbolCompactHashTable) \
      static_field(RehashableSymbolHashtable,   _seed,                                         juint) \
- \
-  /********************/ \
-  /* CompactHashTable */ \
-  /********************/ \
- \
-  nonstatic_field(SymbolCompactHashTable,      _base_address,                                 address) \
-  nonstatic_field(SymbolCompactHashTable,      _entry_count,                                  u4) \
-  nonstatic_field(SymbolCompactHashTable,      _bucket_count,                                 u4) \
-  nonstatic_field(SymbolCompactHashTable,      _buckets,                                      u4*) \
-  nonstatic_field(SymbolCompactHashTable,      _entries,                                      u4*) \
  \
   /********************/ \
   /* SystemDictionary */ \
   /********************/ \
  \
-     static_field(SystemDictionary,            _shared_dictionary,                            Dictionary*) \
      static_field(SystemDictionary,            _system_loader_lock_obj,                       oop) \
      static_field(SystemDictionary,            WK_KLASS(Object_klass),                        InstanceKlass*) \
      static_field(SystemDictionary,            WK_KLASS(String_klass),                        InstanceKlass*) \
@@ -1285,8 +1269,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   declare_toplevel_type(Arena) \
     declare_type(ResourceArea, Arena) \
  \
-  declare_toplevel_type(SymbolCompactHashTable) \
- \
   /***********************************************************/ \
   /* Thread hierarchy (needed for run-time type information) */ \
   /***********************************************************/ \
@@ -1906,10 +1888,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   declare_toplevel_type(vframeArrayElement) \
   declare_toplevel_type(Annotations*) \
   declare_type(OopMapValue, StackObj) \
-  declare_type(FileMapInfo, CHeapObj<mtInternal>) \
-  declare_type(FileMapInfo::FileMapHeaderBase, CHeapObj<mtClass>) \
-  declare_type(FileMapInfo::FileMapHeader, FileMapInfo::FileMapHeaderBase) \
-  declare_toplevel_type(FileMapInfo::FileMapHeader::space_info) \
  \
   /************/ \
   /* GC types */ \

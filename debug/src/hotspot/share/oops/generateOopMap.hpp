@@ -402,7 +402,7 @@ class GenerateOopMap {
   void compute_ret_adr_at_TOS               ();
   void update_ret_adr_at_TOS                (int bci, int delta);
 
-  int  binsToHold                           (int no)                      { return  ((no+(BitsPerWord-1))/BitsPerWord); }
+  int  binsToHold                           (int no)                      { return ((no + (BitsPerWord - 1)) / BitsPerWord); }
   char *state_vec_to_string                 (CellTypeState* vec, int len);
 
   // Helper method. Can be used in subclasses to fx. calculate gc_points. If the current instuction

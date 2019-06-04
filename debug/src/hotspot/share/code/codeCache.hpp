@@ -50,7 +50,6 @@ class CodeCache : AllStatic {
   friend class VMStructs;
   friend class JVMCIVMStructs;
   template <class T, class Filter> friend class CodeBlobIterator;
-  friend class WhiteBox;
   friend class CodeCacheLoader;
  private:
   // CodeHeaps of the cache
@@ -166,7 +165,6 @@ class CodeCache : AllStatic {
   static void print();                           // prints summary
   static void print_internals();
   static void print_memory_overhead();
-  static void verify();                          // verifies the code cache
   static void print_trace(const char* event, CodeBlob* cb, int size = 0) { };
   static void print_summary(outputStream* st, bool detailed = true); // Prints a summary of the code cache usage
   static void log_state(outputStream* st);

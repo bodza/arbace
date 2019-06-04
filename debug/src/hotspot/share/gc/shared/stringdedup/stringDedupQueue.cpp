@@ -19,8 +19,6 @@ void StringDedupQueue::unlink_or_oops_do(StringDedupUnlinkOrOopsDoClosure* cl) {
   }
 }
 
-void StringDedupQueue::verify() { }
-
 StringDedupQueue* const StringDedupQueue::queue() {
   return _queue;
 }

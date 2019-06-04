@@ -94,8 +94,6 @@ void Compilation::build_hir() {
     return;
   }
 
-  _hir->verify();
-
   if (UseC1Optimizations) {
     NEEDS_CLEANUP
     // optimization
@@ -104,11 +102,7 @@ void Compilation::build_hir() {
     _hir->optimize_blocks();
   }
 
-  _hir->verify();
-
   _hir->split_critical_edges();
-
-  _hir->verify();
 
   // compute block ordering for code generation
   // the control flow must not be changed from here on
@@ -120,8 +114,6 @@ void Compilation::build_hir() {
     int instructions = Instruction::number_of_instructions();
     GlobalValueNumbering gvn(_hir);
   }
-
-  _hir->verify();
 
   if (RangeCheckElimination) {
     if (_hir->osr_entry() == NULL) {
@@ -141,12 +133,8 @@ void Compilation::build_hir() {
     _hir->eliminate_null_checks();
   }
 
-  _hir->verify();
-
   // compute use counts after global value numbering
   _hir->compute_use_counts();
-
-  _hir->verify();
 }
 
 void Compilation::emit_lir() {

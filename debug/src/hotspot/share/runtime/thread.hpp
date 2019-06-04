@@ -737,7 +737,6 @@ typedef void (*ThreadFunction)(JavaThread*, TRAPS);
 class JavaThread: public Thread {
   friend class VMStructs;
   friend class JVMCIVMStructs;
-  friend class WhiteBox;
  private:
   JavaThread*    _next;                          // The next thread in the Threads list
   bool           _on_thread_list;                // Is set when this JavaThread is added to the Threads list
@@ -1545,7 +1544,6 @@ class JavaThread: public Thread {
   void print_thread_state() const                      { };
   void print_on_error(outputStream* st, char* buf, int buflen) const;
   void print_name_on_error(outputStream* st, char* buf, int buflen) const;
-  void verify();
   const char* get_thread_name() const;
  private:
   // factor out low-level mechanics for use in both normal and error cases
@@ -1896,7 +1894,6 @@ class Threads: AllStatic {
   static void metadata_handles_do(void f(Metadata*));
 
   // Verification
-  static void verify();
   static void print_on(outputStream* st, bool print_stacks, bool internal_format, bool print_concurrent_locks, bool print_extended_info);
   static void print(bool print_stacks, bool internal_format) {
     // this function is only used by debug.cpp

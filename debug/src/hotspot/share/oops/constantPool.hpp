@@ -244,7 +244,7 @@ class ConstantPool : public Metadata {
 
   void method_handle_index_at_put(int which, int ref_kind, int ref_index) {
     tag_at_put(which, JVM_CONSTANT_MethodHandle);
-    *int_at_addr(which) = ((jint) ref_index<<16) | ref_kind;
+    *int_at_addr(which) = ((jint) ref_index << 16) | ref_kind;
   }
 
   void method_type_index_at_put(int which, int ref_index) {
@@ -254,12 +254,12 @@ class ConstantPool : public Metadata {
 
   void dynamic_constant_at_put(int which, int bootstrap_specifier_index, int name_and_type_index) {
     tag_at_put(which, JVM_CONSTANT_Dynamic);
-    *int_at_addr(which) = ((jint) name_and_type_index<<16) | bootstrap_specifier_index;
+    *int_at_addr(which) = ((jint) name_and_type_index << 16) | bootstrap_specifier_index;
   }
 
   void invoke_dynamic_at_put(int which, int bootstrap_specifier_index, int name_and_type_index) {
     tag_at_put(which, JVM_CONSTANT_InvokeDynamic);
-    *int_at_addr(which) = ((jint) name_and_type_index<<16) | bootstrap_specifier_index;
+    *int_at_addr(which) = ((jint) name_and_type_index << 16) | bootstrap_specifier_index;
   }
 
   void unresolved_string_at_put(int which, Symbol* s) {
@@ -309,22 +309,22 @@ class ConstantPool : public Metadata {
 
   void field_at_put(int which, int class_index, int name_and_type_index) {
     tag_at_put(which, JVM_CONSTANT_Fieldref);
-    *int_at_addr(which) = ((jint) name_and_type_index<<16) | class_index;
+    *int_at_addr(which) = ((jint) name_and_type_index << 16) | class_index;
   }
 
   void method_at_put(int which, int class_index, int name_and_type_index) {
     tag_at_put(which, JVM_CONSTANT_Methodref);
-    *int_at_addr(which) = ((jint) name_and_type_index<<16) | class_index;
+    *int_at_addr(which) = ((jint) name_and_type_index << 16) | class_index;
   }
 
   void interface_method_at_put(int which, int class_index, int name_and_type_index) {
     tag_at_put(which, JVM_CONSTANT_InterfaceMethodref);
-    *int_at_addr(which) = ((jint) name_and_type_index<<16) | class_index;  // Not so nice
+    *int_at_addr(which) = ((jint) name_and_type_index << 16) | class_index;  // Not so nice
   }
 
   void name_and_type_at_put(int which, int name_index, int signature_index) {
     tag_at_put(which, JVM_CONSTANT_NameAndType);
-    *int_at_addr(which) = ((jint) signature_index<<16) | name_index;  // Not so nice
+    *int_at_addr(which) = ((jint) signature_index << 16) | name_index;  // Not so nice
   }
 
   // Tag query
@@ -489,14 +489,14 @@ class ConstantPool : public Metadata {
     int n = (bootstrap_specifier_index * 2);
     // The first 32-bit index points to the beginning of the second part
     // of the operands array.  Make sure this index is in the first part.
-    int offset = build_int_from_shorts(operands->at(n+0), operands->at(n+1));
+    int offset = build_int_from_shorts(operands->at(n + 0), operands->at(n + 1));
     // The offset itself must point into the second part of the array.
     return offset;
   }
   static void operand_offset_at_put(Array<u2>* operands, int bootstrap_specifier_index, int offset) {
     int n = bootstrap_specifier_index * 2;
-    operands->at_put(n+0, extract_low_short_from_int(offset));
-    operands->at_put(n+1, extract_high_short_from_int(offset));
+    operands->at_put(n + 0, extract_low_short_from_int(offset));
+    operands->at_put(n + 1, extract_high_short_from_int(offset));
   }
   static int operand_array_length(Array<u2>* operands) {
     if (operands == NULL || operands->length() == 0)  return 0;
@@ -606,11 +606,6 @@ class ConstantPool : public Metadata {
   void resolve_class_constants(TRAPS) { };
   void remove_unshareable_info();
   void restore_unshareable_info(TRAPS);
-  // The ConstantPool vtable is restored by this call when the ConstantPool is
-  // in the shared archive.  See patch_klass_vtables() in metaspaceShared.cpp for
-  // all the gory details.  SA, dtrace and pstack helpers distinguish metadata
-  // by their vtable.
-  void restore_vtable() { guarantee(is_constantPool(), "vtable restored by this call"); }
 
  private:
   enum { _no_index_sentinel = -1, _possible_index_sentinel = -2 };
@@ -675,11 +670,6 @@ class ConstantPool : public Metadata {
 
   friend class ClassFileParser;
   friend class SystemDictionary;
-
-  // Used by CDS. These classes need to access the private ConstantPool() constructor.
-  template <class T> friend class CppVtableTesterA;
-  template <class T> friend class CppVtableTesterB;
-  template <class T> friend class CppVtableCloner;
 
   // Used by compiler to prevent classloading.
   static Method*          method_at_if_loaded      (const constantPoolHandle& this_cp, int which);

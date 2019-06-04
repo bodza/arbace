@@ -196,8 +196,8 @@ extern Set &SparseSet_Construct(Arena *arena);
 // in random order.  Inserted or deleted elements during this operation may
 // or may not be iterated over; untouched elements will be affected once.
 
-// Usage:  for ( SetI  i(s); i.test(); i++ ) { body = i.elem; }   ...OR...
-//         for ( i.reset(s); i.test(); i++ ) { body = i.elem; }
+// Usage:  for (SetI  i(s); i.test(); i++) { body = i.elem; }   ...OR...
+//         for (i.reset(s); i.test(); i++) { body = i.elem; }
 
 class SetI_ : public ResourceObj {
 protected:

@@ -13,10 +13,6 @@
 #include "utilities/vmError.hpp"
 #include "utilities/xmlstream.hpp"
 
-// Do not assert this condition if there's already another error reported.
-#define assert_if_no_error(cond, msg) \
-  vmassert((cond) || VMError::is_error_reported(), msg)
-
 void xmlStream::initialize(outputStream* out) {
   _out = out;
   _last_flush = 0;
@@ -92,7 +88,6 @@ void xmlStream::text(const char* format, ...) {
 
 // ------------------------------------------------------------------
 void xmlStream::va_tag(bool push, const char* format, va_list ap) {
-  assert_if_no_error(!inside_attrs(), "cannot print tag inside attrs");
   char buffer[BUFLEN];
   size_t len;
   const char* kind = do_vsnprintf(buffer, BUFLEN, format, ap, false, len);
@@ -259,7 +254,6 @@ PRAGMA_DIAG_POP
 
 // Output a timestamp attribute.
 void xmlStream::stamp() {
-  assert_if_no_error(inside_attrs(), "stamp must be an attribute");
   print_raw(" stamp='");
   out()->stamp();
   print_raw("'");
@@ -269,7 +263,6 @@ void xmlStream::stamp() {
 // Output a method attribute, in the form " method='pkg/cls name sig'".
 // This is used only when there is no ciMethod available.
 void xmlStream::method(const methodHandle& method) {
-  assert_if_no_error(inside_attrs(), "printing attributes");
   if (method.is_null())  return;
   print_raw(" method='");
   method_text(method);
@@ -298,7 +291,6 @@ void xmlStream::method(const methodHandle& method) {
 
 void xmlStream::method_text(const methodHandle& method) {
   ResourceMark rm;
-  assert_if_no_error(inside_attrs(), "printing attributes");
   if (method.is_null())  return;
   text()->print("%s", method->method_holder()->external_name());
   print_raw(" ");  // " " is easier for tools to parse than "::"
@@ -311,7 +303,6 @@ void xmlStream::method_text(const methodHandle& method) {
 // Output a klass attribute, in the form " klass='pkg/cls'".
 // This is used only when there is no ciKlass available.
 void xmlStream::klass(Klass* klass) {
-  assert_if_no_error(inside_attrs(), "printing attributes");
   if (klass == NULL) return;
   print_raw(" klass='");
   klass_text(klass);
@@ -319,14 +310,12 @@ void xmlStream::klass(Klass* klass) {
 }
 
 void xmlStream::klass_text(Klass* klass) {
-  assert_if_no_error(inside_attrs(), "printing attributes");
   if (klass == NULL) return;
   //klass->print_short_name(log->out());
   klass->name()->print_symbol_on(out());
 }
 
 void xmlStream::name(const Symbol* name) {
-  assert_if_no_error(inside_attrs(), "printing attributes");
   if (name == NULL)  return;
   print_raw(" name='");
   name_text(name);
@@ -334,14 +323,12 @@ void xmlStream::name(const Symbol* name) {
 }
 
 void xmlStream::name_text(const Symbol* name) {
-  assert_if_no_error(inside_attrs(), "printing attributes");
   if (name == NULL)  return;
   //name->print_short_name(text());
   name->print_symbol_on(text());
 }
 
 void xmlStream::object(const char* attr, Handle x) {
-  assert_if_no_error(inside_attrs(), "printing attributes");
   if (x == NULL)  return;
   print_raw(" ");
   print_raw(attr);
@@ -351,13 +338,11 @@ void xmlStream::object(const char* attr, Handle x) {
 }
 
 void xmlStream::object_text(Handle x) {
-  assert_if_no_error(inside_attrs(), "printing attributes");
   if (x == NULL)  return;
   x->print_value_on(text());
 }
 
 void xmlStream::object(const char* attr, Metadata* x) {
-  assert_if_no_error(inside_attrs(), "printing attributes");
   if (x == NULL)  return;
   print_raw(" ");
   print_raw(attr);
@@ -367,7 +352,6 @@ void xmlStream::object(const char* attr, Metadata* x) {
 }
 
 void xmlStream::object_text(Metadata* x) {
-  assert_if_no_error(inside_attrs(), "printing attributes");
   if (x == NULL)  return;
   //x->print_value_on(text());
   if (x->is_method())
@@ -384,12 +368,13 @@ void xmlStream::flush() {
 }
 
 void xmlTextStream::flush() {
-  if (_outer_xmlStream == NULL)  return;
-  _outer_xmlStream->flush();
+  if (_outer_xmlStream != NULL)
+    _outer_xmlStream->flush();
 }
 
 void xmlTextStream::write(const char* str, size_t len) {
-  if (_outer_xmlStream == NULL)  return;
-  _outer_xmlStream->write_text(str, len);
-  update_position(str, len);
+  if (_outer_xmlStream != NULL) {
+    _outer_xmlStream->write_text(str, len);
+    update_position(str, len);
+  }
 }

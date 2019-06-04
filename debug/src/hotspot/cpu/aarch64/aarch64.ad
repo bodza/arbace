@@ -1294,7 +1294,7 @@ source %{
     ProjNode *mem = n->proj_out_or_null(TypeFunc::Memory);
 
     // MemBar needs to have both a Ctl and Mem projection
-    if (! ctl || ! mem)
+    if (!ctl || !mem)
       return NULL;
 
     MemBarNode *child = NULL;
@@ -1361,15 +1361,12 @@ source %{
   // sequence if and only if all the following hold
   //
   // i) it is a MemBarVolatile
-  //
-  // ii) either UseG1GC or (UseConcMarkSweepGC && UseCondCardMark) is
-  // true
-  //
+  // ii) UseG1GC is true
   // iii) the node's Mem projection feeds a StoreCM node.
 
   bool is_card_mark_membar(const MemBarNode *barrier)
   {
-    if (!UseG1GC && !(UseConcMarkSweepGC && UseCondCardMark)) {
+    if (!UseG1GC) {
       return false;
     }
 
@@ -1846,7 +1843,7 @@ source %{
 
   bool is_CAS(int opcode)
   {
-    switch(opcode) {
+    switch (opcode) {
       // We handle these
     case Op_CompareAndSwapI:
     case Op_CompareAndSwapL:
@@ -1882,8 +1879,6 @@ source %{
   {
     if (UseG1GC) {
       return 4;
-    } else if (UseConcMarkSweepGC && UseCondCardMark) {
-      return 1;
     } else {
       return 0;
     }
@@ -2288,11 +2283,9 @@ source %{
   //    MemBarCPUOrder
   //    MemBarAcquire {trailing}
   //
-  // configuration 1 is only valid if UseConcMarkSweepGC &&
-  // UseCondCardMark
+  // configuration 1 is only valid if ... && UseCondCardMark
   //
-  // configuration 2, is only valid if UseConcMarkSweepGC &&
-  // UseCondCardMark or if UseG1GC
+  // configuration 2, is only valid if ... && UseCondCardMark or if UseG1GC
   //
   // configurations 3 and 4 are only valid if UseG1GC.
   //
@@ -2689,7 +2682,7 @@ bool needs_releasing_store(const Node *n) {
 
   Node *x = st->lookup(StoreNode::Memory);
 
-  if (! x || !x->is_Proj()) {
+  if (!x || !x->is_Proj()) {
     return false;
   }
 
@@ -2749,16 +2742,6 @@ bool needs_acquiring_load_exclusive(const Node *n) {
 // false
 
 bool unnecessary_storestore(const Node *storecm) {
-  // we need to generate a dmb ishst between an object put and the
-  // associated card mark when we are using CMS without conditional
-  // card marking
-
-  if (UseConcMarkSweepGC && !UseCondCardMark) {
-    return false;
-  }
-
-  // a storestore is unnecesary in all other cases
-
   return true;
 }
 
@@ -3267,7 +3250,7 @@ const int Matcher::min_vector_size(const BasicType bt) {
 
 // Vector ideal reg.
 const uint Matcher::vector_ideal_reg(int len) {
-  switch(len) {
+  switch (len) {
     case  8: return Op_VecD;
     case 16: return Op_VecX;
   }
@@ -3437,7 +3420,7 @@ bool size_fits_all_mem_uses(AddPNode* addp, int shift) {
     Node* u = addp->fast_out(i);
     if (u->is_Mem()) {
       int opsize = u->as_Mem()->memory_size();
-      if (u->as_Mem()->memory_size() != (1<<shift)) {
+      if (u->as_Mem()->memory_size() != (1 << shift)) {
         return false;
       }
     }
@@ -3504,7 +3487,7 @@ static void getCallInfo(const TypeFunc *tf, int &gpcnt, int &fpcnt, int &rtype) 
   int max = domain->cnt();
   for (int i = TypeFunc::Parms; i < max; i++) {
     const Type *t = domain->field_at(i);
-    switch(t->basic_type()) {
+    switch (t->basic_type()) {
     case T_FLOAT:
     case T_DOUBLE:
       fps++;
@@ -6444,13 +6427,13 @@ attributes %{
 //----------RESOURCES----------------------------------------------------------
 // Resources are the functional units available to the machine
 
-resources( INS0, INS1, INS01 = INS0 | INS1,
-           ALU0, ALU1, ALU = ALU0 | ALU1,
-           MAC,
-           DIV,
-           BRANCH,
-           LDST,
-           NEON_FP);
+resources(INS0, INS1, INS01 = INS0 | INS1,
+          ALU0, ALU1, ALU = ALU0 | ALU1,
+          MAC,
+          DIV,
+          BRANCH,
+          LDST,
+          NEON_FP);
 
 //----------PIPELINE DESCRIPTION-----------------------------------------------
 // Pipeline Description specifies the stages in the machine's pipeline
@@ -7902,12 +7885,10 @@ instruct storeN(iRegN src, memory mem) %{
 
 instruct storeImmN0(iRegIHeapbase heapbase, immN0 zero, memory mem) %{
   match(Set mem (StoreN mem zero));
-  predicate(Universe::narrow_oop_base() == NULL &&
-            Universe::narrow_klass_base() == NULL &&
-            (!needs_releasing_store(n)));
+  predicate(Universe::narrow_oop_base() == NULL && Universe::narrow_klass_base() == NULL && (!needs_releasing_store(n)));
 
   ins_cost(INSN_COST);
-  format %{ "strw  rheapbase, $mem\t# compressed ptr (rheapbase==0)" %}
+  format %{ "strw  rheapbase, $mem\t# compressed ptr (rheapbase == 0)" %}
 
   ins_encode(aarch64_enc_strw(heapbase, mem));
 
@@ -11306,7 +11287,7 @@ instruct ubfxwI(iRegINoSp dst, iRegIorL2I src, immI rshift, immI_bitmask mask) %
   ins_encode %{
     int rshift = $rshift$$constant;
     long mask = $mask$$constant;
-    int width = exact_log2(mask+1);
+    int width = exact_log2(mask + 1);
     __ ubfxw(as_Register($dst$$reg), as_Register($src$$reg), rshift, width);
   %}
   ins_pipe(ialu_reg_shift);
@@ -11319,7 +11300,7 @@ instruct ubfxL(iRegLNoSp dst, iRegL src, immI rshift, immL_bitmask mask) %{
   ins_encode %{
     int rshift = $rshift$$constant;
     long mask = $mask$$constant;
-    int width = exact_log2(mask+1);
+    int width = exact_log2(mask + 1);
     __ ubfx(as_Register($dst$$reg), as_Register($src$$reg), rshift, width);
   %}
   ins_pipe(ialu_reg_shift);
@@ -11335,7 +11316,7 @@ instruct ubfxIConvI2L(iRegLNoSp dst, iRegIorL2I src, immI rshift, immI_bitmask m
   ins_encode %{
     int rshift = $rshift$$constant;
     long mask = $mask$$constant;
-    int width = exact_log2(mask+1);
+    int width = exact_log2(mask + 1);
     __ ubfx(as_Register($dst$$reg), as_Register($src$$reg), rshift, width);
   %}
   ins_pipe(ialu_reg_shift);
@@ -11353,7 +11334,7 @@ instruct ubfizwI(iRegINoSp dst, iRegIorL2I src, immI lshift, immI_bitmask mask) 
   ins_encode %{
     int lshift = $lshift$$constant;
     long mask = $mask$$constant;
-    int width = exact_log2(mask+1);
+    int width = exact_log2(mask + 1);
     __ ubfizw(as_Register($dst$$reg), as_Register($src$$reg), lshift, width);
   %}
   ins_pipe(ialu_reg_shift);
@@ -11370,7 +11351,7 @@ instruct ubfizL(iRegLNoSp dst, iRegL src, immI lshift, immL_bitmask mask) %{
   ins_encode %{
     int lshift = $lshift$$constant;
     long mask = $mask$$constant;
-    int width = exact_log2(mask+1);
+    int width = exact_log2(mask + 1);
     __ ubfiz(as_Register($dst$$reg), as_Register($src$$reg), lshift, width);
   %}
   ins_pipe(ialu_reg_shift);
@@ -11387,7 +11368,7 @@ instruct ubfizIConvI2L(iRegLNoSp dst, iRegIorL2I src, immI lshift, immI_bitmask 
   ins_encode %{
     int lshift = $lshift$$constant;
     long mask = $mask$$constant;
-    int width = exact_log2(mask+1);
+    int width = exact_log2(mask + 1);
     __ ubfiz(as_Register($dst$$reg), as_Register($src$$reg), lshift, width);
   %}
   ins_pipe(ialu_reg_shift);

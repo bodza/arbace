@@ -60,7 +60,7 @@ enum { LOCATION_CODE = 0, CONSTANT_INT_CODE = 1,  CONSTANT_OOP_CODE = 2,
 
 ScopeValue* ScopeValue::read_from(DebugInfoReadStream* stream) {
   ScopeValue* result = NULL;
-  switch(stream->read_int()) {
+  switch (stream->read_int()) {
    case LOCATION_CODE:        result = new LocationValue(stream);        break;
    case CONSTANT_INT_CODE:    result = new ConstantIntValue(stream);     break;
    case CONSTANT_OOP_CODE:    result = new ConstantOopReadValue(stream); break;

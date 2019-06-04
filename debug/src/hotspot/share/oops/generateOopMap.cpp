@@ -580,10 +580,10 @@ BasicBlock *GenerateOopMap::get_basic_block_containing(int bci) const {
     int mbci = bbs[m]._bci;
     int nbci;
 
-    if (m == _bb_count-1) {
+    if (m == _bb_count - 1) {
       return bbs+m;
     } else {
-      nbci = bbs[m+1]._bci;
+      nbci = bbs[m + 1]._bci;
     }
 
     if (mbci <= bci && bci < nbci) {
@@ -794,7 +794,7 @@ CellTypeState GenerateOopMap::pop() {
     verify_error("stack underflow");
     return valCTS; // just to pick something
   }
-  return  stack()[--_stack_top];
+  return stack()[--_stack_top];
 }
 
 void GenerateOopMap::push(CellTypeState cts) {
@@ -813,7 +813,7 @@ CellTypeState GenerateOopMap::monitor_pop() {
 
     return CellTypeState::ref; // just to keep the analysis going.
   }
-  return  monitors()[--_monitor_top];
+  return monitors()[--_monitor_top];
 }
 
 void GenerateOopMap::monitor_push(CellTypeState cts) {
@@ -894,7 +894,7 @@ void GenerateOopMap::init_basic_blocks() {
     prev_bci = bci;
   }
   // Set
-  _basic_blocks[bbNo-1]._end_bci = prev_bci;
+  _basic_blocks[bbNo - 1]._end_bci = prev_bci;
 
   // Check that the correct number of basicblocks was found
   if (bbNo !=_bb_count) {
@@ -1173,7 +1173,7 @@ void GenerateOopMap::print_current_state(outputStream *os, BytecodeStream *curre
     }
   }
 
-  switch(currentBC->code()) {
+  switch (currentBC->code()) {
     case Bytecodes::_invokevirtual:
     case Bytecodes::_invokespecial:
     case Bytecodes::_invokestatic:
@@ -1213,7 +1213,7 @@ void GenerateOopMap::interp1(BytecodeStream *itr) {
   // However, not for calls. For calls we do not want to include the arguments, so we postpone the reporting until
   // they have been popped (in method ppl).
   if (_report_result == true) {
-    switch(itr->code()) {
+    switch (itr->code()) {
       case Bytecodes::_invokevirtual:
       case Bytecodes::_invokespecial:
       case Bytecodes::_invokestatic:
@@ -1229,7 +1229,7 @@ void GenerateOopMap::interp1(BytecodeStream *itr) {
   }
 
   // abstract interpretation of current opcode
-  switch(itr->code()) {
+  switch (itr->code()) {
     case Bytecodes::_nop:                                           break;
     case Bytecodes::_goto:                                          break;
     case Bytecodes::_goto_w:                                        break;
@@ -2041,7 +2041,7 @@ void GenerateOopMap::rewrite_refval_conflicts() {
 
   int nof_conflicts = 0;              // Used for debugging only
 
-  if (_nof_refval_conflicts == 0 )
+  if (_nof_refval_conflicts == 0)
      return;
 
   // Check if rewrites are allowed in this parse.
@@ -2183,7 +2183,7 @@ bool GenerateOopMap::rewrite_load_or_store(BytecodeStream *bcs, Bytecodes::Code 
   } else {
     *(bcp + 0) = Bytecodes::_wide;
     *(bcp + 1) = bcN;
-    Bytes::put_Java_u2(bcp+2, varNo);
+    Bytes::put_Java_u2(bcp + 2, varNo);
   }
 
   if (newIlen != ilen) {
@@ -2226,7 +2226,7 @@ void GenerateOopMap::expand_current_instr(int bci, int ilen, int newIlen, u_char
 
 bool GenerateOopMap::is_astore(BytecodeStream *itr, int *index) {
   Bytecodes::Code bc = itr->code();
-  switch(bc) {
+  switch (bc) {
     case Bytecodes::_astore_0:
     case Bytecodes::_astore_1:
     case Bytecodes::_astore_2:
@@ -2243,7 +2243,7 @@ bool GenerateOopMap::is_astore(BytecodeStream *itr, int *index) {
 
 bool GenerateOopMap::is_aload(BytecodeStream *itr, int *index) {
   Bytecodes::Code bc = itr->code();
-  switch(bc) {
+  switch (bc) {
     case Bytecodes::_aload_0:
     case Bytecodes::_aload_1:
     case Bytecodes::_aload_2:
@@ -2287,7 +2287,7 @@ void GenerateOopMap::compute_ret_adr_at_TOS() {
 
       while (bcs.next()>=0 && !_got_error) {
         // TDT: should this be is_good_address() ?
-        if (_stack_top > 0 && stack()[_stack_top-1].is_address()) {
+        if (_stack_top > 0 && stack()[_stack_top - 1].is_address()) {
           _ret_adr_tos->append(bcs.bci());
         }
         interp1(&bcs);

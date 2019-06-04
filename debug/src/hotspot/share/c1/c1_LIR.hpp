@@ -456,35 +456,35 @@ class LIR_Address: public LIR_OprPtr {
      , _index(index)
      , _scale(times_1)
      , _type(type)
-     , _disp(0) { verify(); }
+     , _disp(0) { }
 
   LIR_Address(LIR_Opr base, intx disp, BasicType type) :
        _base(base)
      , _index(LIR_OprDesc::illegalOpr())
      , _scale(times_1)
      , _type(type)
-     , _disp(disp) { verify(); }
+     , _disp(disp) { }
 
   LIR_Address(LIR_Opr base, BasicType type) :
        _base(base)
      , _index(LIR_OprDesc::illegalOpr())
      , _scale(times_1)
      , _type(type)
-     , _disp(0) { verify(); }
+     , _disp(0) { }
 
   LIR_Address(LIR_Opr base, LIR_Opr index, intx disp, BasicType type) :
        _base(base)
      , _index(index)
      , _scale(times_1)
      , _type(type)
-     , _disp(disp) { verify(); }
+     , _disp(disp) { }
 
   LIR_Address(LIR_Opr base, LIR_Opr index, Scale scale, intx disp, BasicType type) :
        _base(base)
      , _index(index)
      , _scale(scale)
      , _type(type)
-     , _disp(disp) { verify(); }
+     , _disp(disp) { }
 
   LIR_Opr base()  const                          { return _base; }
   LIR_Opr index() const                          { return _index; }
@@ -496,8 +496,6 @@ class LIR_Address: public LIR_OprPtr {
   virtual LIR_Address* as_address()              { return this; }
   virtual BasicType type() const                 { return _type; }
   virtual void print_value_on(outputStream* out) const { };
-
-  void verify() const { };
 
   static Scale scale(BasicType type);
 };
@@ -1010,8 +1008,6 @@ class LIR_Op: public CompilationResourceObj {
   virtual LIR_OpCompareAndSwap* as_OpCompareAndSwap() { return NULL; }
   virtual LIR_OpProfileCall* as_OpProfileCall() { return NULL; }
   virtual LIR_OpProfileType* as_OpProfileType() { return NULL; }
-
-  virtual void verify() const { }
 };
 
 // for calls
@@ -1251,7 +1247,6 @@ class LIR_Op1: public LIR_Op {
   void set_in_opr(LIR_Opr opr) { _opr = opr; }
 
   virtual void print_instr(outputStream* out) const { };
-  virtual void verify() const;
 };
 
 // for runtime calls
@@ -1270,9 +1265,7 @@ class LIR_OpRTCall: public LIR_OpCall {
   virtual void emit_code(LIR_Assembler* masm);
   virtual LIR_OpRTCall* as_OpRTCall() { return this; }
 
-  LIR_Opr tmp() const                            { return _tmp; }
-
-  virtual void verify() const;
+  LIR_Opr tmp() const { return _tmp; }
 };
 
 class LIR_OpBranch: public LIR_Op {
@@ -1469,8 +1462,6 @@ class LIR_Op2: public LIR_Op {
   LIR_Opr   _tmp5;
   LIR_Condition _condition;
 
-  void verify() const;
-
  public:
   LIR_Op2(LIR_Code code, LIR_Condition condition, LIR_Opr opr1, LIR_Opr opr2, CodeEmitInfo* info = NULL)
     : LIR_Op(code, LIR_OprFact::illegalOpr, info)
@@ -1500,8 +1491,7 @@ class LIR_Op2: public LIR_Op {
     , _tmp5(LIR_OprFact::illegalOpr) {
   }
 
-  LIR_Op2(LIR_Code code, LIR_Opr opr1, LIR_Opr opr2, LIR_Opr result = LIR_OprFact::illegalOpr,
-          CodeEmitInfo* info = NULL, BasicType type = T_ILLEGAL)
+  LIR_Op2(LIR_Code code, LIR_Opr opr1, LIR_Opr opr2, LIR_Opr result = LIR_OprFact::illegalOpr, CodeEmitInfo* info = NULL, BasicType type = T_ILLEGAL)
     : LIR_Op(code, result, info)
     , _opr1(opr1)
     , _opr2(opr2)

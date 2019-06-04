@@ -845,7 +845,7 @@ static void create_defaults_and_exceptions(GrowableArray<EmptyVtableSlot*>* slot
 static void create_default_methods( InstanceKlass* klass, GrowableArray<Method*>* new_methods, TRAPS) {
   int new_size = new_methods->length();
   Array<Method*>* total_default_methods = MetadataFactory::new_array<Method*>(klass->class_loader_data(), new_size, NULL, CHECK);
-  for (int index = 0; index < new_size; index++ ) {
+  for (int index = 0; index < new_size; index++) {
     total_default_methods->at_put(index, new_methods->at(index));
   }
   Method::sort_methods(total_default_methods, false, false);

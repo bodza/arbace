@@ -80,7 +80,7 @@ void G1BlockOffsetTablePart::set_remainder_to_point_to_start(HeapWord* start, He
   //        value of the new entry
   //
   size_t start_card = _bot->index_for(start);
-  size_t end_card = _bot->index_for(end-1);
+  size_t end_card = _bot->index_for(end - 1);
   set_remainder_to_point_to_start_incl(start_card, end_card); // closed interval
 }
 
@@ -97,7 +97,7 @@ void G1BlockOffsetTablePart::set_remainder_to_point_to_start_incl(size_t start_c
     // -1 so that the the card with the actual offset is counted.  Another -1
     // so that the reach ends in this region and not at the start
     // of the next.
-    size_t reach = start_card - 1 + (BOTConstants::power_to_cards_back(i+1) - 1);
+    size_t reach = start_card - 1 + (BOTConstants::power_to_cards_back(i + 1) - 1);
     offset = BOTConstants::N_words + i;
     if (reach >= end_card) {
       _bot->set_offset_array(start_card_for_region, end_card, offset);
@@ -206,40 +206,6 @@ void G1BlockOffsetTablePart::alloc_block_work(HeapWord** threshold_, size_t* ind
   // index_ and threshold_ updated here.
   *threshold_ = threshold;
   *index_ = index;
-}
-
-void G1BlockOffsetTablePart::verify() const {
-  size_t start_card = _bot->index_for(_space->bottom());
-  size_t end_card = _bot->index_for(_space->top() - 1);
-
-  for (size_t current_card = start_card; current_card < end_card; current_card++) {
-    u_char entry = _bot->offset_array(current_card);
-    if (entry < BOTConstants::N_words) {
-      // The entry should point to an object before the current card. Verify that
-      // it is possible to walk from that object in to the current card by just
-      // iterating over the objects following it.
-      HeapWord* card_address = _bot->address_for_index(current_card);
-      HeapWord* obj_end = card_address - entry;
-      while (obj_end < card_address) {
-        HeapWord* obj = obj_end;
-        size_t obj_size = block_size(obj);
-        obj_end = obj + obj_size;
-        guarantee(obj_end > obj && obj_end <= _space->top(), "Invalid object end. obj: " PTR_FORMAT " obj_size: " SIZE_FORMAT " obj_end: " PTR_FORMAT " top: " PTR_FORMAT, p2i(obj), obj_size, p2i(obj_end), p2i(_space->top()));
-      }
-    } else {
-      // Because we refine the BOT based on which cards are dirty there is not much we can verify here.
-      // We need to make sure that we are going backwards and that we don't pass the start of the
-      // corresponding heap region. But that is about all we can verify.
-      size_t backskip = BOTConstants::entry_to_cards_back(entry);
-      guarantee(backskip >= 1, "Must be going back at least one card.");
-
-      size_t max_backskip = current_card - start_card;
-      guarantee(backskip <= max_backskip, "Going backwards beyond the start_card. start_card: " SIZE_FORMAT " current_card: " SIZE_FORMAT " backskip: " SIZE_FORMAT, start_card, current_card, backskip);
-
-      HeapWord* backskip_address = _bot->address_for_index(current_card - backskip);
-      guarantee(backskip_address >= _space->bottom(), "Going backwards beyond bottom of the region: bottom: " PTR_FORMAT ", backskip_address: " PTR_FORMAT, p2i(_space->bottom()), p2i(backskip_address));
-    }
-  }
 }
 
 HeapWord* G1BlockOffsetTablePart::initialize_threshold_raw() {

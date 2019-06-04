@@ -33,14 +33,14 @@ public:
       return _accum_surv_rate_pred[age];
     else {
       double diff = (double) (age - _stats_arrays_length + 1);
-      return _accum_surv_rate_pred[_stats_arrays_length-1] + diff * _last_pred;
+      return _accum_surv_rate_pred[_stats_arrays_length - 1] + diff * _last_pred;
     }
   }
 
   TruncatedSeq* get_seq(size_t age) const {
     if (age >= _setup_seq_num) {
       guarantee( _setup_seq_num > 0, "invariant" );
-      age = _setup_seq_num-1;
+      age = _setup_seq_num - 1;
     }
     TruncatedSeq* seq = _surv_rate_pred[age];
     guarantee( seq != NULL, "invariant" );

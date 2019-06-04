@@ -67,8 +67,6 @@ public:
 
   // Cleanup cleared entries
   static void unlink();
-
-  void verify();
 };
 
 #endif

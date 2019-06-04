@@ -226,7 +226,7 @@ void KlassInfoHisto::print_elements(outputStream* st) const {
   int64_t total = 0;
   uint64_t totalw = 0;
   for (int i = 0; i < elements()->length(); i++) {
-    st->print("%4d: ", i+1);
+    st->print("%4d: ", i + 1);
     elements()->at(i)->print_on(st);
     total += elements()->at(i)->count();
     totalw += elements()->at(i)->words();
@@ -497,12 +497,12 @@ void KlassInfoHisto::print_class_stats(outputStream* st, bool csv_format, const 
   }
 
   for (i = 0; i < elements()->length(); i++) {
-    elements()->at(i)->set_index(i+1);
+    elements()->at(i)->set_index(i + 1);
   }
 
   // First iteration is for accumulating stats totals in colsum_table[].
   // Second iteration is for printing stats for each class.
-  for (int pass=1; pass<=2; pass++) {
+  for (int pass = 1; pass <= 2; pass++) {
     if (pass == 2) {
       print_title(st, csv_format, selected, width_table, name_table);
     }

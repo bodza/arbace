@@ -12,7 +12,7 @@ void Relocation::pd_set_data_value(address x, intptr_t o, bool verify_only) {
 
   int bytes;
 
-  switch(type()) {
+  switch (type()) {
   case relocInfo::oop_type:
     {
       oop_Relocation *reloc = (oop_Relocation *)this;

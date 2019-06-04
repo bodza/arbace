@@ -417,7 +417,7 @@ class StubGenerator: public StubCodeGenerator {
       { BLOCK_COMMENT("SharedRuntime::d2i"); }
     else if (t == T_LONG)
       { BLOCK_COMMENT("SharedRuntime::d2l"); }
-    __ call_VM_leaf( fcn, 2 );
+    __ call_VM_leaf(fcn, 2);
 
     // Restore CPU & FPU state
     __ pop_FPU_state();
@@ -664,7 +664,7 @@ class StubGenerator: public StubCodeGenerator {
     bs->arraycopy_prologue(_masm, decorators, t, from, to, count);
 
     __ subptr(to, from); // to --> to_from
-    __ cmpl(count, 2<<shift); // Short arrays (< 8 bytes) copy by element
+    __ cmpl(count, 2 << shift); // Short arrays (< 8 bytes) copy by element
     __ jcc(Assembler::below, L_copy_4_bytes); // use unsigned cmp
     if (!UseUnalignedLoadStores && !aligned && (t == T_BYTE || t == T_SHORT)) {
       // align source address at 4 bytes address boundary
@@ -684,7 +684,7 @@ class StubGenerator: public StubCodeGenerator {
       __ movw(rax, Address(from, 0));
       __ movw(Address(from, to_from, Address::times_1, 0), rax);
       __ addptr(from, 2);
-      __ subl(count, 1<<(shift-1));
+      __ subl(count, 1 << (shift - 1));
     __ BIND(L_skip_align2);
     }
     if (!VM_Version::supports_mmx()) {
@@ -703,11 +703,11 @@ class StubGenerator: public StubCodeGenerator {
         __ movl(rax, Address(from, 0));
         __ movl(Address(from, to_from, Address::times_1, 0), rax);
         __ addptr(from, 4);
-        __ subl(count, 1<<shift);
+        __ subl(count, 1 << shift);
       }
     __ BIND(L_copy_64_bytes);
       __ mov(rax, count);
-      __ shrl(rax, shift+1);  // 8 bytes chunk count
+      __ shrl(rax, shift + 1);  // 8 bytes chunk count
       //
       // Copy 8-byte chunks through MMX registers, 8 per iteration of the loop
       //
@@ -719,7 +719,7 @@ class StubGenerator: public StubCodeGenerator {
     }
     // copy tailing dword
   __ BIND(L_copy_4_bytes);
-    __ testl(count, 1<<shift);
+    __ testl(count, 1 << shift);
     __ jccb(Assembler::zero, L_copy_2_bytes);
     __ movl(rax, Address(from, 0));
     __ movl(Address(from, to_from, Address::times_1, 0), rax);
@@ -727,7 +727,7 @@ class StubGenerator: public StubCodeGenerator {
       __ addptr(from, 4);
     __ BIND(L_copy_2_bytes);
       // copy tailing word
-      __ testl(count, 1<<(shift-1));
+      __ testl(count, 1 << (shift - 1));
       __ jccb(Assembler::zero, L_copy_byte);
       __ movw(rax, Address(from, 0));
       __ movw(Address(from, to_from, Address::times_1, 0), rax);
@@ -852,7 +852,7 @@ class StubGenerator: public StubCodeGenerator {
     bs->arraycopy_prologue(_masm, decorators, t, from, to, count);
 
     // copy from high to low
-    __ cmpl(count, 2<<shift); // Short arrays (< 8 bytes) copy by element
+    __ cmpl(count, 2 << shift); // Short arrays (< 8 bytes) copy by element
     __ jcc(Assembler::below, L_copy_4_bytes); // use unsigned cmp
     if (t == T_BYTE || t == T_SHORT) {
       // Align the end of destination array at 4 bytes address boundary
@@ -869,11 +869,11 @@ class StubGenerator: public StubCodeGenerator {
       // Two bytes misalignment happens only for byte and short (char) arrays
       __ testl(end, 2);
       __ jccb(Assembler::zero, L_skip_align2);
-      __ subptr(count, 1<<(shift-1));
+      __ subptr(count, 1 << (shift - 1));
       __ movw(rdx, Address(from, count, sf, 0));
       __ movw(Address(to, count, sf, 0), rdx);
     __ BIND(L_skip_align2);
-      __ cmpl(count, 2<<shift); // Short arrays (< 8 bytes) copy by element
+      __ cmpl(count, 2 << shift); // Short arrays (< 8 bytes) copy by element
       __ jcc(Assembler::below, L_copy_4_bytes);
     }
 
@@ -887,7 +887,7 @@ class StubGenerator: public StubCodeGenerator {
       __ rep_mov();
       __ cld();
       __ mov(count, rax); // restore 'count'
-      __ andl(count, (1<<shift)-1);      // mask the number of rest elements
+      __ andl(count, (1 << shift)-1);      // mask the number of rest elements
       __ movptr(from, Address(rsp, 12+4)); // reread 'from'
       __ mov(to, rdx);   // restore 'to'
       __ jmpb(L_copy_2_bytes); // all dword were copied
@@ -895,7 +895,7 @@ class StubGenerator: public StubCodeGenerator {
       // Align to 8 bytes the end of array. It is aligned to 4 bytes already.
       __ testptr(end, 4);
       __ jccb(Assembler::zero, L_copy_8_bytes);
-      __ subl(count, 1<<shift);
+      __ subl(count, 1 << shift);
       __ movl(rdx, Address(from, count, sf, 0));
       __ movl(Address(to, count, sf, 0), rdx);
       __ jmpb(L_copy_8_bytes);
@@ -911,30 +911,30 @@ class StubGenerator: public StubCodeGenerator {
         __ movq(Address(to, count, sf, 0), mmx0);
       }
     __ BIND(L_copy_8_bytes);
-      __ subl(count, 2<<shift);
+      __ subl(count, 2 << shift);
       __ jcc(Assembler::greaterEqual, L_copy_8_bytes_loop);
-      __ addl(count, 2<<shift);
+      __ addl(count, 2 << shift);
       if (!UseXMMForArrayCopy) {
         __ emms();
       }
     }
   __ BIND(L_copy_4_bytes);
     // copy prefix qword
-    __ testl(count, 1<<shift);
+    __ testl(count, 1 << shift);
     __ jccb(Assembler::zero, L_copy_2_bytes);
     __ movl(rdx, Address(from, count, sf, -4));
     __ movl(Address(to, count, sf, -4), rdx);
 
     if (t == T_BYTE || t == T_SHORT) {
-        __ subl(count, (1<<shift));
+        __ subl(count, (1 << shift));
       __ BIND(L_copy_2_bytes);
         // copy prefix dword
-        __ testl(count, 1<<(shift-1));
+        __ testl(count, 1 << (shift - 1));
         __ jccb(Assembler::zero, L_copy_byte);
         __ movw(rdx, Address(from, count, sf, -2));
         __ movw(Address(to, count, sf, -2), rdx);
         if (t == T_BYTE) {
-          __ subl(count, 1<<(shift-1));
+          __ subl(count, 1 << (shift - 1));
         __ BIND(L_copy_byte);
           // copy prefix byte
           __ testl(count, 1);
@@ -1317,13 +1317,13 @@ class StubGenerator: public StubCodeGenerator {
     __ orptr(bits, to);
     __ orptr(bits, count);
 
-    __ testl(bits, BytesPerLong-1);
+    __ testl(bits, BytesPerLong - 1);
     __ jccb(Assembler::zero, L_long_aligned);
 
-    __ testl(bits, BytesPerInt-1);
+    __ testl(bits, BytesPerInt - 1);
     __ jccb(Assembler::zero, L_int_aligned);
 
-    __ testl(bits, BytesPerShort-1);
+    __ testl(bits, BytesPerShort - 1);
     __ jump_cc(Assembler::notZero, RuntimeAddress(byte_copy_entry));
 
     __ BIND(L_short_aligned);
@@ -1722,10 +1722,10 @@ class StubGenerator: public StubCodeGenerator {
     __ align(16);
     StubCodeMark mark(this, "StubRoutines", "key_shuffle_mask");
     address start = __ pc();
-    __ emit_data(0x00010203, relocInfo::none, 0 );
-    __ emit_data(0x04050607, relocInfo::none, 0 );
-    __ emit_data(0x08090a0b, relocInfo::none, 0 );
-    __ emit_data(0x0c0d0e0f, relocInfo::none, 0 );
+    __ emit_data(0x00010203, relocInfo::none, 0);
+    __ emit_data(0x04050607, relocInfo::none, 0);
+    __ emit_data(0x08090a0b, relocInfo::none, 0);
+    __ emit_data(0x0c0d0e0f, relocInfo::none, 0);
     return start;
   }
 
@@ -3333,7 +3333,7 @@ class StubGenerator: public StubCodeGenerator {
     __ enter(); // required for proper stackwalking of RuntimeStub frame
 
     // pc and rbp, already pushed
-    __ subptr(rsp, (framesize-2) * wordSize); // prolog
+    __ subptr(rsp, (framesize - 2) * wordSize); // prolog
 
     // Frame is now completed as far as size and linkage.
 

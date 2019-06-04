@@ -290,14 +290,11 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
   //
   int callee_parameters = 0;
   int callee_locals = 0;
-  for (int index = 0; index < array->frames(); index++ ) {
+  for (int index = 0; index < array->frames(); index++) {
     // frame[number_of_frames - 1 ] = on_stack_size(youngest)
     // frame[number_of_frames - 2 ] = on_stack_size(sender(youngest))
     // frame[number_of_frames - 3 ] = on_stack_size(sender(sender(youngest)))
-    frame_sizes[number_of_frames - 1 - index] = BytesPerWord * array->element(index)->on_stack_size(callee_parameters,
-                                                                                                    callee_locals,
-                                                                                                    index == 0,
-                                                                                                    popframe_extra_args);
+    frame_sizes[number_of_frames - 1 - index] = BytesPerWord * array->element(index)->on_stack_size(callee_parameters, callee_locals, index == 0, popframe_extra_args);
     // This pc doesn't have to be perfect just good enough to identify the frame
     // as interpreted so the skeleton frame will be walkable
     // The correct pc will be set when the skeleton frame is completely filled out
@@ -526,7 +523,7 @@ void Deoptimization::reassign_type_array_elements(frame* fr, RegisterMap* reg_ma
 
   for (int i = 0; i < sv->field_size(); i++) {
     StackValue* value = StackValue::create_stack_value(fr, reg_map, sv->field_at(i));
-    switch(type) {
+    switch (type) {
     case T_LONG: case T_DOUBLE: {
       StackValue* low = StackValue::create_stack_value(fr, reg_map, sv->field_at(++i));
       jlong res = (jlong)low->get_int();
@@ -644,7 +641,7 @@ static int reassign_fields_by_klass(InstanceKlass* klass, frame* fr, RegisterMap
       // Have to cast to INT (32 bits) pointer to avoid little/big-endian problem.
       case T_INT: case T_FLOAT: { // 4 bytes.
         bool big_value = false;
-        if (i+1 < fields->length() && fields->at(i+1)._type == T_INT) {
+        if (i + 1 < fields->length() && fields->at(i + 1)._type == T_INT) {
           if (scope_field->is_location()) {
             Location::Type type = ((LocationValue*) scope_field)->location().type();
             if (type == Location::dbl || type == Location::lng) {

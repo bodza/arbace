@@ -21,8 +21,7 @@ G1ConcurrentRefineThread::G1ConcurrentRefineThread(G1ConcurrentRefine* cr, uint 
   // thread. Monitors are also used to wake up the threads during termination.
   // The 0th (primary) worker is notified by mutator threads and has a special monitor.
   if (!is_primary()) {
-    _monitor = new Monitor(Mutex::nonleaf, "Refinement monitor", true,
-                           Monitor::_safepoint_check_never);
+    _monitor = new Monitor(Mutex::nonleaf, "Refinement monitor", true, Monitor::_safepoint_check_never);
   } else {
     _monitor = DirtyCardQ_CBL_mon;
   }

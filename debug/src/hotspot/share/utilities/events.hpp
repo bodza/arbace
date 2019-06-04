@@ -155,9 +155,6 @@ class Events : AllStatic {
   // Logs a generic message with timestamp and format as printf.
   static void log(Thread* thread, const char* format, ...) ATTRIBUTE_PRINTF(2, 3);
 
-  // Log exception related message
-  static void log_exception(Thread* thread, const char* format, ...) ATTRIBUTE_PRINTF(2, 3);
-
   static void log_redefinition(Thread* thread, const char* format, ...) ATTRIBUTE_PRINTF(2, 3);
   static void log_deopt_message(Thread* thread, const char* format, ...) ATTRIBUTE_PRINTF(2, 3);
 
@@ -166,7 +163,6 @@ class Events : AllStatic {
 };
 
 inline void Events::log(Thread* thread, const char* format, ...) { }
-inline void Events::log_exception(Thread* thread, const char* format, ...) { }
 inline void Events::log_redefinition(Thread* thread, const char* format, ...) { }
 inline void Events::log_deopt_message(Thread* thread, const char* format, ...) { }
 

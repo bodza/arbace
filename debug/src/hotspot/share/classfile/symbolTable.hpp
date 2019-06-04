@@ -72,8 +72,6 @@ class TempNewSymbol : public StackObj {
   operator Symbol*()                             { return _temp; }
 };
 
-template <class T, class N> class CompactHashtable;
-
 class SymbolTable : public RehashableHashtable<Symbol*, mtSymbol> {
   friend class VMStructs;
   friend class ClassFileParser;
@@ -84,14 +82,10 @@ private:
 
   // Set if one bucket is out of balance due to hash algorithm deficiency
   static bool _needs_rehashing;
-  static bool _lookup_shared_first;
 
   // For statistics
   static int _symbols_removed;
   static int _symbols_counted;
-
-  // shared symbol table.
-  static CompactHashtable<Symbol*, char> _shared_table;
 
   Symbol* allocate_symbol(const u1* name, int len, bool c_heap, TRAPS); // Assumes no characters larger than 0x7F
 
@@ -111,7 +105,6 @@ private:
     add(loader_data, cp, names_count, name, lengths, cp_indices, hashValues, THREAD);
   }
 
-  static Symbol* lookup_shared(const char* name, int len, unsigned int hash);
   Symbol* lookup_dynamic(int index, const char* name, int len, unsigned int hash);
   Symbol* lookup(int index, const char* name, int len, unsigned int hash);
 
@@ -119,8 +112,7 @@ private:
     : RehashableHashtable<Symbol*, mtSymbol>(SymbolTableSize, sizeof (HashtableEntry<Symbol*, mtSymbol>)) { }
 
   SymbolTable(HashtableBucket<mtSymbol>* t, int number_of_entries)
-    : RehashableHashtable<Symbol*, mtSymbol>(SymbolTableSize, sizeof (HashtableEntry<Symbol*, mtSymbol>), t,
-                number_of_entries) { }
+    : RehashableHashtable<Symbol*, mtSymbol>(SymbolTableSize, sizeof (HashtableEntry<Symbol*, mtSymbol>), t, number_of_entries) { }
 
   // Arena for permanent symbols (null class loader) that are never unloaded
   static Arena*  _arena;
@@ -154,7 +146,6 @@ public:
   }
 
   static unsigned int hash_symbol(const char* s, int len);
-  static unsigned int hash_shared_symbol(const char* s, int len);
 
   static Symbol* lookup(const char* name, int len, TRAPS);
   // lookup only, won't add. Also calculate hash.
@@ -221,15 +212,11 @@ public:
   static void print()     { };
 
   // Debugging
-  static void verify();
   static void dump(outputStream* st, bool verbose=false);
   static void read(const char* filename, TRAPS);
 
   // Sharing
-  static void write_to_archive();
   static void serialize(SerializeClosure* soc);
-  static u4 encode_shared(Symbol* sym);
-  static Symbol* decode_shared(u4 offset);
 
   // Rehash the symbol table if it gets out of balance
   static void rehash_table();

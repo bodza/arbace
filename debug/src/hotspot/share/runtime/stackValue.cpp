@@ -31,7 +31,7 @@ StackValue* StackValue::create_stack_value(const frame* fr, const RegisterMap* r
     // a stack slot (jlong/jdouble) that we capture the proper part
     // of the value for the stack slot in question.
     //
-    switch( loc.type()) {
+    switch (loc.type()) {
     case Location::float_in_dbl: { // Holds a float in a double register?
       // The callee has no clue whether the register holds a float,
       // double or is unused.  He always saves a double.  Here we know

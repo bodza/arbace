@@ -78,7 +78,7 @@ ciSymbol* ciObjArrayKlass::construct_array_name(ciSymbol* element_name, int dime
 
   if (base_name_sym->byte_at(0) == '[' ||
       (base_name_sym->byte_at(0) == 'L' &&  // watch package name 'Lxx'
-       base_name_sym->byte_at(element_len-1) == ';')) {
+       base_name_sym->byte_at(element_len - 1) == ';')) {
     int new_len = element_len + dimension + 1; // for the ['s and '\0'
     name = CURRENT_THREAD_ENV->name_buffer(new_len);
 
@@ -86,8 +86,8 @@ ciSymbol* ciObjArrayKlass::construct_array_name(ciSymbol* element_name, int dime
     for ( ; pos < dimension; pos++) {
       name[pos] = '[';
     }
-    strncpy(name+pos, (char*)element_name->base(), element_len);
-    name[new_len-1] = '\0';
+    strncpy(name + pos, (char*)element_name->base(), element_len);
+    name[new_len - 1] = '\0';
   } else {
     int new_len =   3                       // for L, ;, and '\0'
                   + dimension               // for ['s
@@ -99,9 +99,9 @@ ciSymbol* ciObjArrayKlass::construct_array_name(ciSymbol* element_name, int dime
       name[pos] = '[';
     }
     name[pos++] = 'L';
-    strncpy(name+pos, (char*)element_name->base(), element_len);
-    name[new_len-2] = ';';
-    name[new_len-1] = '\0';
+    strncpy(name + pos, (char*)element_name->base(), element_len);
+    name[new_len - 2] = ';';
+    name[new_len - 1] = '\0';
   }
   return ciSymbol::make(name);
 }

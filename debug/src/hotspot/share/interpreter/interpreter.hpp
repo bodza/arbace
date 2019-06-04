@@ -38,7 +38,6 @@ class InterpreterCodelet: public Stub {
   address code_end() const                       { return (address)this + size(); }
 
   // Debugging
-  void    verify();
   void    print_on(outputStream* st) const;
   void    print() const { print_on(tty); }
 

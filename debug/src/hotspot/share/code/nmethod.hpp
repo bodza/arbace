@@ -239,15 +239,15 @@ class nmethod : public CompiledMethod {
   address stub_begin            () const          { return           header_begin() + _stub_offset          ; }
   address stub_end              () const          { return           header_begin() + _oops_offset          ; }
   address exception_begin       () const          { return           header_begin() + _exception_offset     ; }
-  address unwind_handler_begin  () const          { return _unwind_handler_offset != -1 ? (header_begin() + _unwind_handler_offset) : NULL; }
+  address unwind_handler_begin  () const          { return (_unwind_handler_offset != -1) ? (header_begin() + _unwind_handler_offset) : NULL; }
   oop*    oops_begin            () const          { return (oop*)   (header_begin() + _oops_offset)         ; }
   oop*    oops_end              () const          { return (oop*)   (header_begin() + _metadata_offset)     ; }
 
-  Metadata** metadata_begin   () const            { return (Metadata**)  (header_begin() + _metadata_offset)     ; }
-  Metadata** metadata_end     () const            { return (Metadata**)  _scopes_data_begin; }
+  Metadata** metadata_begin   () const            { return (Metadata**) (header_begin() + _metadata_offset) ; }
+  Metadata** metadata_end     () const            { return (Metadata**) _scopes_data_begin; }
 
   address scopes_data_end       () const          { return           header_begin() + _scopes_pcs_offset    ; }
-  PcDesc* scopes_pcs_begin      () const          { return (PcDesc*)(header_begin() + _scopes_pcs_offset   ); }
+  PcDesc* scopes_pcs_begin      () const          { return (PcDesc*)(header_begin() + _scopes_pcs_offset)   ; }
   PcDesc* scopes_pcs_end        () const          { return (PcDesc*)(header_begin() + _dependencies_offset) ; }
   address dependencies_begin    () const          { return           header_begin() + _dependencies_offset  ; }
   address dependencies_end      () const          { return           header_begin() + _handler_table_offset ; }
@@ -257,9 +257,9 @@ class nmethod : public CompiledMethod {
   address nul_chk_table_end     () const          { return           header_begin() + _nmethod_end_offset   ; }
 
   // Sizes
-  int oops_size         () const                  { return (address)  oops_end         () - (address)  oops_begin         (); }
-  int metadata_size     () const                  { return (address)  metadata_end     () - (address)  metadata_begin     (); }
-  int dependencies_size () const                  { return            dependencies_end () -            dependencies_begin (); }
+  int oops_size         () const                  { return (address) oops_end        () - (address) oops_begin        (); }
+  int metadata_size     () const                  { return (address) metadata_end    () - (address) metadata_begin    (); }
+  int dependencies_size () const                  { return           dependencies_end() -           dependencies_begin(); }
 
   int     oops_count() const { return (oops_size() / oopSize) + 1; }
   int metadata_count() const { return (metadata_size() / wordSize) + 1; }
@@ -472,7 +472,6 @@ public:
   jmethodID get_and_cache_jmethod_id();
 
   // verify operations
-  void verify();
   void verify_scopes();
   void verify_interrupt_point(address interrupt_point);
 
@@ -588,7 +587,7 @@ class nmethodLocker : public StackObj {
 
   CompiledMethod* code() { return _nm; }
   void set_code(CompiledMethod* new_nm) {
-    unlock(_nm);   // note:  This works even if _nm==new_nm.
+    unlock(_nm);   // note:  This works even if _nm == new_nm.
     _nm = new_nm;
     lock(_nm);
   }

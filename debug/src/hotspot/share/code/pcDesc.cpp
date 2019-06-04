@@ -18,8 +18,3 @@ address PcDesc::real_pc(const CompiledMethod* code) const {
 }
 
 void PcDesc::print(CompiledMethod* code) { }
-
-bool PcDesc::verify(CompiledMethod* code) {
-  //Unimplemented();
-  return true;
-}

@@ -76,7 +76,7 @@ class FieldInfo {
   u2 access_flags() const                        { return _shorts[access_flags_offset]; }
   u4 offset() const {
     u2 lo = _shorts[low_packed_offset];
-    switch(lo & FIELDINFO_TAG_MASK) {
+    switch (lo & FIELDINFO_TAG_MASK) {
       case FIELDINFO_TAG_OFFSET:
         return build_int_from_shorts(_shorts[low_packed_offset], _shorts[high_packed_offset]) >> FIELDINFO_TAG_SIZE;
     }
@@ -86,7 +86,7 @@ class FieldInfo {
 
   bool is_contended() const {
     u2 lo = _shorts[low_packed_offset];
-    switch(lo & FIELDINFO_TAG_MASK) {
+    switch (lo & FIELDINFO_TAG_MASK) {
       case FIELDINFO_TAG_TYPE_PLAIN:
         return false;
       case FIELDINFO_TAG_TYPE_CONTENDED:
@@ -98,7 +98,7 @@ class FieldInfo {
 
   u2 contended_group() const {
     u2 lo = _shorts[low_packed_offset];
-    switch(lo & FIELDINFO_TAG_MASK) {
+    switch (lo & FIELDINFO_TAG_MASK) {
       case FIELDINFO_TAG_TYPE_PLAIN:
         return 0;
       case FIELDINFO_TAG_TYPE_CONTENDED:
@@ -110,7 +110,7 @@ class FieldInfo {
 
   u2 allocation_type() const {
     u2 lo = _shorts[low_packed_offset];
-    switch(lo & FIELDINFO_TAG_MASK) {
+    switch (lo & FIELDINFO_TAG_MASK) {
       case FIELDINFO_TAG_TYPE_PLAIN:
       case FIELDINFO_TAG_TYPE_CONTENDED:
         return (lo >> FIELDINFO_TAG_SIZE);
@@ -148,7 +148,7 @@ class FieldInfo {
 
   void set_allocation_type(int type) {
     u2 lo = _shorts[low_packed_offset];
-    switch(lo & FIELDINFO_TAG_MASK) {
+    switch (lo & FIELDINFO_TAG_MASK) {
       case FIELDINFO_TAG_BLANK:
         _shorts[low_packed_offset] = ((type << FIELDINFO_TAG_SIZE)) & 0xFFFF;
         _shorts[low_packed_offset] &= ~FIELDINFO_TAG_MASK;
@@ -160,7 +160,7 @@ class FieldInfo {
 
   void set_contended_group(u2 val) {
     u2 lo = _shorts[low_packed_offset];
-    switch(lo & FIELDINFO_TAG_MASK) {
+    switch (lo & FIELDINFO_TAG_MASK) {
       case FIELDINFO_TAG_TYPE_PLAIN:
         _shorts[low_packed_offset] |= FIELDINFO_TAG_TYPE_CONTENDED;
         _shorts[high_packed_offset] = val;

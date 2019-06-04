@@ -139,7 +139,6 @@ uint HeapRegionManager::expand_at(uint start, uint num_regions, WorkGang* pretou
     cur = idx_last_found + num_last_found + 1;
   }
 
-  verify_optional();
   return expanded;
 }
 
@@ -322,8 +321,6 @@ uint HeapRegionManager::shrink_by(uint num_regions_to_remove) {
     removed += to_remove;
   }
 
-  verify_optional();
-
   return removed;
 }
 
@@ -353,40 +350,6 @@ uint HeapRegionManager::find_empty_from_idx_reverse(uint start_idx, uint* res_id
   num_regions_found = old_cur - cur;
 
   return num_regions_found;
-}
-
-void HeapRegionManager::verify() {
-  guarantee(length() <= _allocated_heapregions_length, "invariant: _length: %u _allocated_length: %u", length(), _allocated_heapregions_length);
-  guarantee(_allocated_heapregions_length <= max_length(), "invariant: _allocated_length: %u _max_length: %u", _allocated_heapregions_length, max_length());
-
-  bool prev_committed = true;
-  uint num_committed = 0;
-  HeapWord* prev_end = heap_bottom();
-  for (uint i = 0; i < _allocated_heapregions_length; i++) {
-    if (!is_available(i)) {
-      prev_committed = false;
-      continue;
-    }
-    num_committed++;
-    HeapRegion* hr = _regions.get_by_index(i);
-    guarantee(hr != NULL, "invariant: i: %u", i);
-    guarantee(!prev_committed || hr->bottom() == prev_end, "invariant i: %u " HR_FORMAT " prev_end: " PTR_FORMAT, i, HR_FORMAT_PARAMS(hr), p2i(prev_end));
-    guarantee(hr->hrm_index() == i, "invariant: i: %u hrm_index(): %u", i, hr->hrm_index());
-    // Asserts will fire if i is >= _length
-    HeapWord* addr = hr->bottom();
-    guarantee(addr_to_region(addr) == hr, "sanity");
-    // We cannot check whether the region is part of a particular set: at the time
-    // this method may be called, we have only completed allocation of the regions,
-    // but not put into a region set.
-    prev_committed = true;
-    prev_end = hr->end();
-  }
-  for (uint i = _allocated_heapregions_length; i < max_length(); i++) {
-    guarantee(_regions.get_by_index(i) == NULL, "invariant i: %u", i);
-  }
-
-  guarantee(num_committed == _num_committed, "Found %u committed regions, but should be %u", num_committed, _num_committed);
-  _free_list.verify();
 }
 
 HeapRegionClaimer::HeapRegionClaimer(uint n_workers) :

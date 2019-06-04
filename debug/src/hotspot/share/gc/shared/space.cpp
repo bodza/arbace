@@ -315,24 +315,7 @@ void ContiguousSpace::print_on(outputStream* st) const {
 
 void OffsetTableContigSpace::print_on(outputStream* st) const {
   print_short_on(st);
-  st->print_cr(" [" INTPTR_FORMAT ", " INTPTR_FORMAT ", "
-                INTPTR_FORMAT ", " INTPTR_FORMAT ")",
-              p2i(bottom()), p2i(top()), p2i(_offsets.threshold()), p2i(end()));
-}
-
-void ContiguousSpace::verify() const {
-  HeapWord* p = bottom();
-  HeapWord* t = top();
-  HeapWord* prev_p = NULL;
-  while (p < t) {
-    oop(p)->verify();
-    prev_p = p;
-    p += oop(p)->size();
-  }
-  guarantee(p == top(), "end of last object must match end of space");
-  if (top() != end()) {
-    guarantee(top() == block_start_const(end()-1) && top() == block_start_const(top()), "top should be start of unallocated block, if it exists");
-  }
+  st->print_cr(" [" INTPTR_FORMAT ", " INTPTR_FORMAT ", " INTPTR_FORMAT ", " INTPTR_FORMAT ")", p2i(bottom()), p2i(top()), p2i(_offsets.threshold()), p2i(end()));
 }
 
 void Space::oop_iterate(OopIterateClosure* blk) {
@@ -511,42 +494,6 @@ OffsetTableContigSpace::OffsetTableContigSpace(BlockOffsetSharedArray* sharedOff
   _par_alloc_lock(Mutex::leaf, "OffsetTableContigSpace par alloc lock", true) {
   _offsets.set_contig_space(this);
   initialize(mr, SpaceDecorator::Clear, SpaceDecorator::Mangle);
-}
-
-#define OBJ_SAMPLE_INTERVAL 0
-#define BLOCK_SAMPLE_INTERVAL 100
-
-void OffsetTableContigSpace::verify() const {
-  HeapWord* p = bottom();
-  HeapWord* prev_p = NULL;
-  int objs = 0;
-  int blocks = 0;
-
-  if (VerifyObjectStartArray) {
-    _offsets.verify();
-  }
-
-  while (p < top()) {
-    size_t size = oop(p)->size();
-    // For a sampling of objects in the space, find it using the
-    // block offset table.
-    if (blocks == BLOCK_SAMPLE_INTERVAL) {
-      guarantee(p == block_start_const(p + (size/2)), "check offset computation");
-      blocks = 0;
-    } else {
-      blocks++;
-    }
-
-    if (objs == OBJ_SAMPLE_INTERVAL) {
-      oop(p)->verify();
-      objs = 0;
-    } else {
-      objs++;
-    }
-    prev_p = p;
-    p += size;
-  }
-  guarantee(p == top(), "end of last object must match end of space");
 }
 
 size_t TenuredSpace::allowed_dead_ratio() const {

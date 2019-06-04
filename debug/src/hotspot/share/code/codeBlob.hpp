@@ -188,7 +188,6 @@ public:
   void set_name(const char* name)                { _name = name; }
 
   // Debugging
-  virtual void verify() = 0;
   virtual void print() const                     { print_on(tty); };
   virtual void print_on(outputStream* st) const;
   virtual void print_value_on(outputStream* st) const;
@@ -324,9 +323,7 @@ class RuntimeBlob : public CodeBlob {
   );
 
   // GC support
-  virtual bool is_alive() const                  = 0;
-
-  void verify();
+  virtual bool is_alive() const = 0;
 
   // OopMap for frame
   virtual void preserve_callee_argument_oops(frame fr, const RegisterMap* reg_map, OopClosure* f)  { ShouldNotReachHere(); }
@@ -340,7 +337,6 @@ class RuntimeBlob : public CodeBlob {
   static void trace_new_stub(RuntimeBlob* blob, const char* name1, const char* name2 = "");
 };
 
-class WhiteBox;
 //----------------------------------------------------------------------------------------------------
 // BufferBlob: used to hold non-relocatable machine code such as the interpreter, stubroutines, etc.
 
@@ -349,7 +345,6 @@ class BufferBlob: public RuntimeBlob {
   friend class AdapterBlob;
   friend class VtableBlob;
   friend class MethodHandlesAdapterBlob;
-  friend class WhiteBox;
 
  private:
   // Creation support
@@ -372,7 +367,6 @@ class BufferBlob: public RuntimeBlob {
   void preserve_callee_argument_oops(frame fr, const RegisterMap* reg_map, OopClosure* f)  { /* nothing to do */ }
   bool is_alive() const                          { return true; }
 
-  void verify();
   void print_on(outputStream* st) const;
   void print_value_on(outputStream* st) const;
 };
@@ -459,7 +453,6 @@ class RuntimeStub: public RuntimeBlob {
   void preserve_callee_argument_oops(frame fr, const RegisterMap *reg_map, OopClosure* f)  { /* nothing to do */ }
   bool is_alive() const                          { return true; }
 
-  void verify();
   void print_on(outputStream* st) const;
   void print_value_on(outputStream* st) const;
 };
@@ -491,7 +484,6 @@ class SingletonBlob: public RuntimeBlob {
 
   // GC/Verification support
   void preserve_callee_argument_oops(frame fr, const RegisterMap *reg_map, OopClosure* f)  { /* nothing to do */ }
-  void verify(); // does nothing
   void print_on(outputStream* st) const;
   void print_value_on(outputStream* st) const;
 };

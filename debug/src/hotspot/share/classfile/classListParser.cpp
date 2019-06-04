@@ -5,8 +5,6 @@
 #include "classfile/classLoaderExt.hpp"
 #include "classfile/symbolTable.hpp"
 #include "classfile/systemDictionary.hpp"
-#include "classfile/systemDictionaryShared.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/fieldType.hpp"
 #include "runtime/handles.inline.hpp"
@@ -43,7 +41,7 @@ bool ClassListParser::parse_one_line() {
     if (fgets(_line, sizeof(_line), _file) == NULL) {
       return false;
     }
-    ++ _line_no;
+    ++_line_no;
     _line_len = (int)strlen(_line);
     if (_line_len > _max_allowed_line_len) {
       error("input line too long (must be no longer than %d chars)", _max_allowed_line_len);
@@ -72,8 +70,8 @@ bool ClassListParser::parse_one_line() {
 
     // Remove trailing newline/space
     while (len > 0) {
-      if (_line[len-1] == ' ') {
-        _line[len-1] = '\0';
+      if (_line[len - 1] == ' ') {
+        _line[len - 1] = '\0';
         len --;
       } else {
         break;
@@ -113,7 +111,7 @@ bool ClassListParser::parse_one_line() {
         break; // end of input line
       } else {
         *s = '\0'; // mark the end of _source
-        _token = s+1;
+        _token = s + 1;
       }
     } else {
       error("Unknown input");
@@ -272,10 +270,6 @@ InstanceKlass* ClassListParser::load_class_from_source(Symbol* class_name, TRAPS
       error("The number of interfaces (%d) specified in class list does not match the class file (%d)", _interfaces->length(), k->local_interfaces()->length());
     }
 
-    if (!SystemDictionaryShared::add_non_builtin_klass(class_name, ClassLoaderData::the_null_class_loader_data(), k, THREAD)) {
-      error("Duplicated class %s", _class_name);
-    }
-
     // This tells JVM_FindLoadedClass to not find this class.
     k->set_shared_classpath_index(UNREGISTERED_INDEX);
     k->clear_class_loader_type();
@@ -354,7 +348,6 @@ Klass* ClassListParser::load_current_class(TRAPS) {
   if (klass != NULL && klass->is_instance_klass() && is_id_specified()) {
     InstanceKlass* ik = InstanceKlass::cast(klass);
     int id = this->id();
-    SystemDictionaryShared::update_shared_entry(ik, id);
     InstanceKlass* old = table()->lookup(id);
     if (old != NULL && old != ik) {
       error("Duplicated ID %d for class %s", id, _class_name);

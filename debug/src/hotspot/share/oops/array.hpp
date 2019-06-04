@@ -10,11 +10,9 @@
 template <typename T>
 class Array: public MetaspaceObj {
   friend class MetadataFactory;
-  friend class MetaspaceShared;
   friend class VMStructs;
   friend class JVMCIVMStructs;
   friend class MethodHandleCompiler;           // special case
-  friend class WhiteBox;
 protected:
   int _length;                                 // the number of array elements
   T   _data[1];                                // the array memory
@@ -37,20 +35,6 @@ protected:
     return sizeof(Array<T>) + MAX2(length - 1, 0) * elm_byte_size;
   }
   static size_t byte_sizeof(int length) { return byte_sizeof(length, sizeof(T)); }
-
-  // WhiteBox API helper.
-  // Can't distinguish between array of length 0 and length 1,
-  // will always return 0 in those cases.
-  static int bytes_to_length(size_t bytes) {
-    if (sizeof(Array<T>) >= bytes) {
-      return 0;
-    }
-
-    size_t left = bytes - sizeof(Array<T>);
-    size_t elements = left / sizeof(T);
-    int length = (int)elements;
-    return length;
-  }
 
   explicit Array(int length) : _length(length) { }
 

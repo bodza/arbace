@@ -286,11 +286,11 @@ protected:
   enum {
     _lh_neutral_value           = 0,  // neutral non-array non-instance value
     _lh_instance_slow_path_bit  = 0x01,
-    _lh_log2_element_size_shift = BitsPerByte*0,
-    _lh_log2_element_size_mask  = BitsPerLong-1,
-    _lh_element_type_shift      = BitsPerByte*1,
+    _lh_log2_element_size_shift = BitsPerByte * 0,
+    _lh_log2_element_size_mask  = BitsPerLong - 1,
+    _lh_element_type_shift      = BitsPerByte * 1,
     _lh_element_type_mask       = right_n_bits(BitsPerByte),  // shifted mask
-    _lh_header_size_shift       = BitsPerByte*2,
+    _lh_header_size_shift       = BitsPerByte * 2,
     _lh_header_size_mask        = right_n_bits(BitsPerByte),  // shifted mask
     _lh_array_tag_bits          = 2,
     _lh_array_tag_shift         = BitsPerInt - _lh_array_tag_bits,
@@ -582,7 +582,6 @@ protected:
 
   // Verification
   virtual void verify_on(outputStream* st);
-  void verify() { verify_on(tty); }
 
   virtual void oop_verify_on(oop obj, outputStream* st);
 

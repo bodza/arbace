@@ -193,30 +193,11 @@ static inline int64_t simm(u_int64_t val, int hi = 63, int lo = 0) {
   return n;
 }
 
-static inline Shift shift(u_int32_t val, int lo)
-{
-  return (Shift)pickbits32(val, lo+1, lo);
-}
-
-static inline Extension extension(u_int32_t val, int lo)
-{
-  return (Extension)pickbits32(val, lo+2, lo);
-}
-
-static inline Scaling scaling(u_int32_t val, int lo)
-{
-  return (Scaling)pickbits32(val, lo, lo);
-}
-
-static inline WriteBack writeback(u_int32_t val, int lo)
-{
-  return (WriteBack)pickbits32(val, lo, lo);
-}
-
-static inline CondCode condcode(u_int32_t val, int lo)
-{
-  return (CondCode)pickbits32(val, lo+3, lo);
-}
+static inline Shift shift(u_int32_t val, int lo)         { return (Shift)pickbits32(val, lo + 1, lo); }
+static inline Extension extension(u_int32_t val, int lo) { return (Extension)pickbits32(val, lo + 2, lo); }
+static inline Scaling scaling(u_int32_t val, int lo)     { return (Scaling)pickbits32(val, lo, lo); }
+static inline WriteBack writeback(u_int32_t val, int lo) { return (WriteBack)pickbits32(val, lo, lo); }
+static inline CondCode condcode(u_int32_t val, int lo)   { return (CondCode)pickbits32(val, lo + 3, lo); }
 
 /*
  * operation decode

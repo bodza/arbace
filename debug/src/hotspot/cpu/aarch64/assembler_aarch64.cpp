@@ -75,7 +75,7 @@ void Address::lea(MacroAssembler *as, Register r) const {
   Relocation* reloc = _rspec.reloc();
   relocInfo::relocType rtype = (relocInfo::relocType) reloc->type();
 
-  switch(_mode) {
+  switch (_mode) {
   case base_plus_offset: {
     if (_offset == 0 && _base == r) // it's a nop
       break;

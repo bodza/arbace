@@ -134,7 +134,7 @@ ClearNoncleanCardWrapper::ClearNoncleanCardWrapper(DirtyCardToOopClosure* dirty_
 }
 
 bool ClearNoncleanCardWrapper::is_word_aligned(jbyte* entry) {
-  return (((intptr_t)entry) & (BytesPerWord-1)) == 0;
+  return (((intptr_t)entry) & (BytesPerWord - 1)) == 0;
 }
 
 // The regions are visited in *decreasing* address order.
@@ -310,7 +310,7 @@ void CardTableRS::verify_space(Space* s, HeapWord* gen_boundary) {
   jbyte* limit = byte_after(used.last());
   while (cur_entry < limit) {
     if (*cur_entry == clean_card_val()) {
-      jbyte* first_dirty = cur_entry+1;
+      jbyte* first_dirty = cur_entry + 1;
       while (first_dirty < limit && *first_dirty == clean_card_val()) {
         first_dirty++;
       }
@@ -500,14 +500,6 @@ void CardTableRS::verify_space(Space* s, HeapWord* gen_boundary) {
       cur_entry++;
     }
   }
-}
-
-void CardTableRS::verify() {
-  // At present, we only know how to verify the card table RS for
-  // generational heaps.
-  VerifyCTGenClosure blk(this);
-  GenCollectedHeap::heap()->generation_iterate(&blk, false);
-  CardTable::verify();
 }
 
 CardTableRS::CardTableRS(MemRegion whole_heap, bool scanned_concurrently) :

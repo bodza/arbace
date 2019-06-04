@@ -1664,7 +1664,7 @@ void VM_HeapDumper::do_threads() {
   for (int i = 0; i < _num_threads; i++) {
     JavaThread* thread = _stack_traces[i]->thread();
     oop threadObj = thread->threadObj();
-    u4 thread_serial_num = i+1;
+    u4 thread_serial_num = i + 1;
     u4 stack_serial_num = thread_serial_num + STACK_TRACE_ID;
     writer()->write_u1(HPROF_GC_ROOT_THREAD_OBJ);
     writer()->write_objectID(threadObj);

@@ -5,7 +5,6 @@
 #include "runtime/os.hpp"
 #include "runtime/threadCritical.hpp"
 #include "services/memTracker.hpp"
-#include "services/virtualMemoryTracker.hpp"
 
 size_t VirtualMemorySummary::_snapshot[CALC_OBJ_SIZE_IN_TYPE(VirtualMemorySnapshot, size_t)];
 

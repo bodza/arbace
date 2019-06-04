@@ -50,10 +50,7 @@ class DirtyCardQueueSet: public PtrQueueSet {
   // function.  If "consume" is true, the node's index is updated to
   // exclude the processed elements, e.g. up to the element for which
   // the closure returned false.
-  bool apply_closure_to_buffer(CardTableEntryClosure* cl,
-                               BufferNode* node,
-                               bool consume,
-                               uint worker_i = 0);
+  bool apply_closure_to_buffer(CardTableEntryClosure* cl, BufferNode* node, bool consume, uint worker_i = 0);
 
   // If there are more than stop_at completed buffers, pop one, apply
   // the specified closure to its active elements, and return true.
@@ -67,10 +64,7 @@ class DirtyCardQueueSet: public PtrQueueSet {
   //
   // If during_pause is true, stop_at must be zero, and the closure
   // must never return false.
-  bool apply_closure_to_completed_buffer(CardTableEntryClosure* cl,
-                                         uint worker_i,
-                                         size_t stop_at,
-                                         bool during_pause);
+  bool apply_closure_to_completed_buffer(CardTableEntryClosure* cl, uint worker_i, size_t stop_at, bool during_pause);
 
   bool mut_process_buffer(BufferNode* node);
 

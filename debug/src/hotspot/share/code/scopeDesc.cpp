@@ -125,17 +125,3 @@ ScopeDesc* ScopeDesc::sender() const {
   if (is_top()) return NULL;
   return new ScopeDesc(this);
 }
-
-void ScopeDesc::verify() {
-  ResourceMark rm;
-  guarantee(method()->is_method(), "type check");
-
-  // check if we have any illegal elements on the expression stack
-  { GrowableArray<ScopeValue*>* l = expressions();
-    if (l != NULL) {
-      for (int index = 0; index < l->length(); index++) {
-       //guarantee(!l->at(index)->is_illegal(), "expression element cannot be illegal");
-      }
-    }
-  }
-}

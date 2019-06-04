@@ -39,11 +39,6 @@ void StringDedup::print_worker_threads_on(outputStream* st) {
   st->cr();
 }
 
-void StringDedup::verify() {
-  StringDedupQueue::verify();
-  StringDedupTable::verify();
-}
-
 StringDedupUnlinkOrOopsDoClosure::StringDedupUnlinkOrOopsDoClosure(BoolObjectClosure* is_alive, OopClosure* keep_alive) :
   _is_alive(is_alive), _keep_alive(keep_alive) {
 }

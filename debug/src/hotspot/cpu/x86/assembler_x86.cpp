@@ -1856,7 +1856,7 @@ void Assembler::jmpb(Label& L) {
 }
 
 void Assembler::ldmxcsr( Address src) {
-  if (UseAVX > 0 ) {
+  if (UseAVX > 0) {
     InstructionMark im(this);
     InstructionAttr attributes(AVX_128bit, /* vex_w */ false, /* legacy_mode */ true, /* no_mask_reg */ true, /* uses_vl */ false);
     vex_prefix(src, 0, 0, VEX_SIMD_NONE, VEX_OPCODE_0F, &attributes);
@@ -4001,7 +4001,7 @@ void Assembler::sha256msg2(XMMRegister dst, XMMRegister src) {
 
 void Assembler::shll(Register dst, int imm8) {
   int encode = prefix_and_encode(dst->encoding());
-  if (imm8 == 1 ) {
+  if (imm8 == 1) {
     emit_int8((unsigned char)0xD1);
     emit_int8((unsigned char)(0xE0 | encode));
   } else {
@@ -4074,7 +4074,7 @@ void Assembler::sqrtss(XMMRegister dst, Address src) {
 }
 
 void Assembler::stmxcsr( Address dst) {
-  if (UseAVX > 0 ) {
+  if (UseAVX > 0) {
     InstructionMark im(this);
     InstructionAttr attributes(AVX_128bit, /* vex_w */ false, /* legacy_mode */ true, /* no_mask_reg */ true, /* uses_vl */ false);
     vex_prefix(dst, 0, 0, VEX_SIMD_NONE, VEX_OPCODE_0F, &attributes);
@@ -6677,7 +6677,7 @@ void Assembler::vex_prefix(bool vex_r, bool vex_b, bool vex_x, int nds_enc, VexS
     int byte1 = vex_r ? VEX_R : 0;
     byte1 = (~byte1) & 0x80;
     byte1 |= ((~nds_enc) & 0xf) << 3;
-    byte1 |= ((vector_len > 0 ) ? 4 : 0) | pre;
+    byte1 |= ((vector_len > 0) ? 4 : 0) | pre;
     emit_int8(byte1);
   }
 }
@@ -6845,7 +6845,7 @@ void Assembler::blendvpd(XMMRegister dst, XMMRegister nds, XMMRegister src1, XMM
   emit_int8((unsigned char)0x4B);
   emit_int8((unsigned char)(0xC0 | encode));
   int src2_enc = src2->encoding();
-  emit_int8((unsigned char)(0xF0 & src2_enc<<4));
+  emit_int8((unsigned char)(0xF0 & src2_enc << 4));
 }
 
 void Assembler::cmpps(XMMRegister dst, XMMRegister nds, XMMRegister src, int cop, int vector_len) {
@@ -6862,7 +6862,7 @@ void Assembler::blendvps(XMMRegister dst, XMMRegister nds, XMMRegister src1, XMM
   emit_int8((unsigned char)0x4A);
   emit_int8((unsigned char)(0xC0 | encode));
   int src2_enc = src2->encoding();
-  emit_int8((unsigned char)(0xF0 & src2_enc<<4));
+  emit_int8((unsigned char)(0xF0 & src2_enc << 4));
 }
 
 void Assembler::vpblendd(XMMRegister dst, XMMRegister nds, XMMRegister src, int imm8, int vector_len) {
@@ -7127,7 +7127,7 @@ void Assembler::prefix(Address adr, Register reg, bool byteinst) {
     } else {
       if (adr.index_needs_rex()) {
         prefix(REX_X);
-      } else if (byteinst && reg->encoding() >= 4 ) {
+      } else if (byteinst && reg->encoding() >= 4) {
         prefix(REX);
       }
     }

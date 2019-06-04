@@ -81,7 +81,7 @@ void PhiResolver::move_to_temp(LIR_Opr src) {
 void PhiResolver::move(ResolveNode* src, ResolveNode* dest) {
   if (!dest->visited()) {
     dest->set_visited();
-    for (int i = dest->no_of_destinations()-1; i >= 0; i --) {
+    for (int i = dest->no_of_destinations()-1; i >= 0; i--) {
       move(dest, dest->destination_at(i));
     }
   } else if (!dest->start_node()) {
@@ -105,7 +105,7 @@ void PhiResolver::move(ResolveNode* src, ResolveNode* dest) {
 PhiResolver::~PhiResolver() {
   int i;
   // resolve any cycles in moves from and to virtual registers
-  for (i = virtual_operands().length() - 1; i >= 0; i --) {
+  for (i = virtual_operands().length() - 1; i >= 0; i--) {
     ResolveNode* node = virtual_operands().at(i);
     if (!node->visited()) {
       _loop = NULL;
@@ -115,9 +115,9 @@ PhiResolver::~PhiResolver() {
   }
 
   // generate move for move from non virtual register to abitrary destination
-  for (i = other_operands().length() - 1; i >= 0; i --) {
+  for (i = other_operands().length() - 1; i >= 0; i--) {
     ResolveNode* node = other_operands().at(i);
-    for (int j = node->no_of_destinations() - 1; j >= 0; j --) {
+    for (int j = node->no_of_destinations() - 1; j >= 0; j--) {
       emit_move(node->operand(), node->destination_at(j)->operand());
     }
   }
@@ -393,7 +393,7 @@ void LIRGenerator::arithmetic_op(Bytecodes::Code code, LIR_Opr result, LIR_Opr l
     left_op = result_op;
   }
 
-  switch(code) {
+  switch (code) {
     case Bytecodes::_dadd:
     case Bytecodes::_fadd:
     case Bytecodes::_ladd:
@@ -475,7 +475,7 @@ void LIRGenerator::shift_op(Bytecodes::Code code, LIR_Opr result_op, LIR_Opr val
     value = result_op;
   }
 
-  switch(code) {
+  switch (code) {
   case Bytecodes::_ishl:
   case Bytecodes::_lshl: __ shift_left(value, count, result_op, tmp); break;
   case Bytecodes::_ishr:
@@ -492,7 +492,7 @@ void LIRGenerator::logic_op(Bytecodes::Code code, LIR_Opr result_op, LIR_Opr lef
     left_op = result_op;
   }
 
-  switch(code) {
+  switch (code) {
     case Bytecodes::_iand:
     case Bytecodes::_land:  __ logical_and(left_op, right_op, result_op); break;
 
@@ -1915,7 +1915,7 @@ SwitchRangeArray* LIRGenerator::create_lookup_ranges(LookupSwitch* x) {
     for (int i = 1; i < len; i++) {
       int new_key = x->key_at(i);
       BlockBegin* new_sux = x->sux_at(i);
-      if (key+1 == new_key && sux == new_sux) {
+      if (key + 1 == new_key && sux == new_sux) {
         // still in same range
         range->set_high_key(new_key);
       } else {
@@ -2875,7 +2875,7 @@ void LIRGenerator::do_RangeCheckPredicate(RangeCheckPredicate *x) {
 
     bool ok = false;
 
-    switch(x->cond()) {
+    switch (x->cond()) {
       case Instruction::eql: ok = (a_int == b_int); break;
       case Instruction::neq: ok = (a_int != b_int); break;
       case Instruction::lss: ok = (a_int < b_int); break;
@@ -3018,7 +3018,7 @@ LIR_Opr LIRGenerator::call_runtime(BasicTypeArray* signature, LIRItemList* args,
 void LIRGenerator::do_MemBar(MemBar* x) {
   if (os::is_MP()) {
     LIR_Code code = x->code();
-    switch(code) {
+    switch (code) {
       case lir_membar_acquire   : __ membar_acquire(); break;
       case lir_membar_release   : __ membar_release(); break;
       case lir_membar           : __ membar(); break;

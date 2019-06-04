@@ -1029,17 +1029,13 @@ const char* ReferenceProcessor::list_name(uint i) {
    return NULL;
 }
 
-uint RefProcMTDegreeAdjuster::ergo_proc_thread_count(size_t ref_count,
-                                                     uint max_threads,
-                                                     RefProcPhases phase) const {
+uint RefProcMTDegreeAdjuster::ergo_proc_thread_count(size_t ref_count, uint max_threads, RefProcPhases phase) const {
   if (use_max_threads(phase) || (ReferencesPerThread == 0)) {
     return max_threads;
   }
 
   size_t thread_count = 1 + (ref_count / ReferencesPerThread);
-  return (uint)MIN3(thread_count,
-                    static_cast<size_t>(max_threads),
-                    (size_t)os::active_processor_count());
+  return (uint)MIN3(thread_count, static_cast<size_t>(max_threads), (size_t)os::active_processor_count());
 }
 
 bool RefProcMTDegreeAdjuster::use_max_threads(RefProcPhases phase) const {

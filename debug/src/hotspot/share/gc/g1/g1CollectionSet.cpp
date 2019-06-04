@@ -284,7 +284,6 @@ void G1CollectionSet::finalize_old_part(double time_remaining_ms) {
   double predicted_old_time_ms = 0.0;
 
   if (collector_state()->in_mixed_phase()) {
-    cset_chooser()->verify();
     const uint min_old_cset_length = _policy->calc_min_old_cset_length();
     const uint max_old_cset_length = _policy->calc_max_old_cset_length();
 
@@ -343,8 +342,6 @@ void G1CollectionSet::finalize_old_part(double time_remaining_ms) {
 
       hr = cset_chooser()->peek();
     }
-
-    cset_chooser()->verify();
   }
 
   stop_incremental_building();

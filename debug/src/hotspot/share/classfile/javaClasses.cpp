@@ -12,7 +12,6 @@
 #include "interpreter/interpreter.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "memory/oopFactory.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
 #include "oops/fieldStreams.hpp"
@@ -667,13 +666,8 @@ void java_lang_Class::fixup_mirror(Klass* k, TRAPS) {
   }
 
   if (k->is_shared() && k->has_raw_archived_mirror()) {
-    if (MetaspaceShared::open_archive_heap_region_mapped()) {
-      bool present = restore_archived_mirror(k, Handle(), Handle(), Handle(), CHECK);
-      return;
-    } else {
-      k->set_java_mirror_handle(NULL);
-      k->clear_has_raw_archived_mirror();
-    }
+    k->set_java_mirror_handle(NULL);
+    k->clear_has_raw_archived_mirror();
   }
   create_mirror(k, Handle(), Handle(), Handle(), CHECK);
 }
@@ -2504,9 +2498,7 @@ int java_lang_Module::name_offset;
 int java_lang_Module::_module_entry_offset = -1;
 
 Handle java_lang_Module::create(Handle loader, Handle module_name, TRAPS) {
-  return JavaCalls::construct_new_instance(SystemDictionary::Module_klass(),
-                          vmSymbols::java_lang_module_init_signature(),
-                          loader, module_name, CHECK_NH);
+  return JavaCalls::construct_new_instance(SystemDictionary::Module_klass(), vmSymbols::java_lang_module_init_signature(), loader, module_name, CHECK_NH);
 }
 
 #define MODULE_FIELDS_DO(macro) \

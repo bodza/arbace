@@ -217,11 +217,6 @@ class HeapRegionManager: public CHeapObj<mtGC> {
   // Uncommit a number of regions starting at the specified index, which must be available,
   // empty, and free.
   void shrink_at(uint index, size_t num_regions);
-
-  void verify();
-
-  // Do some sanity checking.
-  void verify_optional() { };
 };
 
 // The HeapRegionClaimer is used during parallel iteration over heap regions,

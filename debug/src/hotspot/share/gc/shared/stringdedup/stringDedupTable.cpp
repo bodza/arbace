@@ -455,10 +455,7 @@ void StringDedupTable::unlink_or_oops_do(StringDedupUnlinkOrOopsDoClosure* cl, u
   }
 }
 
-uintx StringDedupTable::unlink_or_oops_do(StringDedupUnlinkOrOopsDoClosure* cl,
-                                          size_t partition_begin,
-                                          size_t partition_end,
-                                          uint worker_id) {
+uintx StringDedupTable::unlink_or_oops_do(StringDedupUnlinkOrOopsDoClosure* cl, size_t partition_begin, size_t partition_end, uint worker_id) {
   uintx removed = 0;
   for (size_t bucket = partition_begin; bucket < partition_end; bucket++) {
     StringDedupEntry** entry = _table->bucket(bucket);
@@ -554,43 +551,6 @@ void StringDedupTable::finish_rehash(StringDedupTable* rehashed_table) {
 
 size_t StringDedupTable::claim_table_partition(size_t partition_size) {
   return Atomic::add(partition_size, &_claimed_index) - partition_size;
-}
-
-void StringDedupTable::verify() {
-  for (size_t bucket = 0; bucket < _table->_size; bucket++) {
-    // Verify entries
-    StringDedupEntry** entry = _table->bucket(bucket);
-    while (*entry != NULL) {
-      typeArrayOop value = (*entry)->obj();
-      guarantee(value != NULL, "Object must not be NULL");
-      guarantee(Universe::heap()->is_in_reserved(value), "Object must be on the heap");
-      guarantee(!value->is_forwarded(), "Object must not be forwarded");
-      guarantee(value->is_typeArray(), "Object must be a typeArrayOop");
-      bool latin1 = (*entry)->latin1();
-      unsigned int hash = hash_code(value, latin1);
-      guarantee((*entry)->hash() == hash, "Table entry has inorrect hash");
-      guarantee(_table->hash_to_index(hash) == bucket, "Table entry has incorrect index");
-      entry = (*entry)->next_addr();
-    }
-
-    // Verify that we do not have entries with identical oops or identical arrays.
-    // We only need to compare entries in the same bucket. If the same oop or an
-    // identical array has been inserted more than once into different/incorrect
-    // buckets the verification step above will catch that.
-    StringDedupEntry** entry1 = _table->bucket(bucket);
-    while (*entry1 != NULL) {
-      typeArrayOop value1 = (*entry1)->obj();
-      bool latin1_1 = (*entry1)->latin1();
-      StringDedupEntry** entry2 = (*entry1)->next_addr();
-      while (*entry2 != NULL) {
-        typeArrayOop value2 = (*entry2)->obj();
-        bool latin1_2 = (*entry2)->latin1();
-        guarantee(latin1_1 != latin1_2 || !equals(value1, value2), "Table entries must not have identical arrays");
-        entry2 = (*entry2)->next_addr();
-      }
-      entry1 = (*entry1)->next_addr();
-    }
-  }
 }
 
 void StringDedupTable::clean_entry_cache() {

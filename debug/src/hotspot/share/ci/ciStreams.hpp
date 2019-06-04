@@ -157,7 +157,7 @@ public:
   }
 
   // Get dimensions byte (multinewarray)
-  int get_dimensions() const { return *(unsigned char*)(_pc-1); }
+  int get_dimensions() const { return *(unsigned char*)(_pc - 1); }
 
   // Sign-extended index byte/short, no widening
   int get_constant_u1()                     const { return bytecode().get_constant_u1(instruction_size()-1, cur_bc_raw()); }
@@ -361,7 +361,7 @@ public:
         if (handler->is_in_range(_bci)) {
           if (handler->is_catch_all()) {
             // Found final active catch block.
-            _end = _pos+1;
+            _end = _pos + 1;
             return;
           } else if (_exception_klass == NULL || !handler->catch_klass()->is_loaded()) {
             // We cannot do any type analysis here.  Must conservatively assume
@@ -370,7 +370,7 @@ public:
           } else if (_exception_klass->is_subtype_of(handler->catch_klass())) {
             // This catch clause will definitely catch the exception.
             // Final candidate.
-            _end = _pos+1;
+            _end = _pos + 1;
             return;
           } else if (!_is_exact && handler->catch_klass()->is_subtype_of(_exception_klass)) {
             // This catch block may be reachable.
@@ -394,7 +394,7 @@ public:
 
 // Implementation for declarations in bytecode.hpp
 Bytecode::Bytecode(const ciBytecodeStream* stream, address bcp): _bcp(bcp != NULL ? bcp : stream->cur_bcp()), _code(Bytecodes::code_at(NULL, addr_at(0))) { }
-Bytecode_lookupswitch::Bytecode_lookupswitch(const ciBytecodeStream* stream): Bytecode(stream) { verify(); }
-Bytecode_tableswitch::Bytecode_tableswitch(const ciBytecodeStream* stream): Bytecode(stream) { verify(); }
+Bytecode_lookupswitch::Bytecode_lookupswitch(const ciBytecodeStream* stream): Bytecode(stream) { }
+Bytecode_tableswitch::Bytecode_tableswitch(const ciBytecodeStream* stream): Bytecode(stream) { }
 
 #endif

@@ -1955,7 +1955,7 @@ int LinearScan::append_scope_value_for_operand(LIR_Opr opr, GrowableArray<ScopeV
     VMReg rname = frame_map()->fpu_regname(opr->fpu_regnr());
 #ifndef __SOFTFP__
 #ifndef VM_LITTLE_ENDIAN
-    if (! float_saved_as_double) {
+    if (!float_saved_as_double) {
       // On big endian system, we may have an issue if float registers use only
       // the low half of the (same) double registers.
       // Both the float and the double could have the same regnr but would correspond
@@ -2296,8 +2296,6 @@ void LinearScan::do_linear_scan() {
 
     EdgeMoveOptimizer::optimize(ir()->code());
     ControlFlowOptimizer::optimize(ir()->code());
-    // check that cfg is still correct after optimizations
-    ir()->verify();
   }
 }
 
@@ -3538,7 +3536,7 @@ int LinearScanWalker::find_free_double_reg(int reg_needed_until, int interval_to
   int min_full_reg = any_reg;
   int max_partial_reg = any_reg;
 
-  for (int i = _first_reg; i < _last_reg; i+=2) {
+  for (int i = _first_reg; i < _last_reg; i += 2) {
     if (_use_pos[i] >= interval_to && _use_pos[i + 1] >= interval_to) {
       // this register is free for the full interval
       if (min_full_reg == any_reg || i == hint_reg || (_use_pos[i] < _use_pos[min_full_reg] && min_full_reg != hint_reg)) {
@@ -3672,7 +3670,7 @@ int LinearScanWalker::find_locked_reg(int reg_needed_until, int interval_to, int
 int LinearScanWalker::find_locked_double_reg(int reg_needed_until, int interval_to, int hint_reg, bool* need_split) {
   int max_reg = any_reg;
 
-  for (int i = _first_reg; i < _last_reg; i+=2) {
+  for (int i = _first_reg; i < _last_reg; i += 2) {
     if (_use_pos[i] > reg_needed_until && _use_pos[i + 1] > reg_needed_until) {
       if (max_reg == any_reg || _use_pos[i] > _use_pos[max_reg]) {
         max_reg = i;

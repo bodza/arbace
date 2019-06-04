@@ -372,8 +372,6 @@ class Arguments : AllStatic {
   static jint expand_vm_options_as_needed(const JavaVMInitArgs* args_in, ScopedVMInitArgs* mod_args, JavaVMInitArgs** args_out);
   static jint match_special_option_and_act(const JavaVMInitArgs* args, ScopedVMInitArgs* args_out);
 
-  static void handle_extra_cms_flags(const char* msg);
-
   static jint parse_vm_init_args(const JavaVMInitArgs *java_tool_options_args, const JavaVMInitArgs *java_options_args, const JavaVMInitArgs *cmd_line_args);
   static jint parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_mod_javabase, JVMFlag::Flags origin);
   static jint finalize_vm_init_args(bool patch_mod_javabase);
@@ -527,8 +525,6 @@ class Arguments : AllStatic {
   static int  PropertyList_readable_count(SystemProperty* pl);
   static const char* PropertyList_get_key_at(SystemProperty* pl,int index);
   static char* PropertyList_get_value_at(SystemProperty* pl,int index);
-
-  static bool is_internal_module_property(const char* option);
 
   // Miscellaneous System property value getter and setters.
   static void set_dll_dir(const char *value) { _sun_boot_library_path->set_value(value); }

@@ -15,22 +15,22 @@
 
 const TypeFunc *G1BarrierSetC2::write_ref_field_pre_entry_Type() {
   const Type **fields = TypeTuple::fields(2);
-  fields[TypeFunc::Parms+0] = TypeInstPtr::NOTNULL; // original field value
-  fields[TypeFunc::Parms+1] = TypeRawPtr::NOTNULL; // thread
-  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+2, fields);
+  fields[TypeFunc::Parms + 0] = TypeInstPtr::NOTNULL; // original field value
+  fields[TypeFunc::Parms + 1] = TypeRawPtr::NOTNULL; // thread
+  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms + 2, fields);
 
   // create result type (range)
   fields = TypeTuple::fields(0);
-  const TypeTuple *range = TypeTuple::make(TypeFunc::Parms+0, fields);
+  const TypeTuple *range = TypeTuple::make(TypeFunc::Parms + 0, fields);
 
   return TypeFunc::make(domain, range);
 }
 
 const TypeFunc *G1BarrierSetC2::write_ref_field_post_entry_Type() {
   const Type **fields = TypeTuple::fields(2);
-  fields[TypeFunc::Parms+0] = TypeRawPtr::NOTNULL;  // Card addr
-  fields[TypeFunc::Parms+1] = TypeRawPtr::NOTNULL;  // thread
-  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms+2, fields);
+  fields[TypeFunc::Parms + 0] = TypeRawPtr::NOTNULL;  // Card addr
+  fields[TypeFunc::Parms + 1] = TypeRawPtr::NOTNULL;  // thread
+  const TypeTuple *domain = TypeTuple::make(TypeFunc::Parms + 2, fields);
 
   // create result type (range)
   fields = TypeTuple::fields(0);

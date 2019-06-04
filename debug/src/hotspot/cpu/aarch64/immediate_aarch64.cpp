@@ -231,7 +231,7 @@ u_int64_t fp_immediate_for_encoding(u_int32_t imm8, int is_dp)
   };
 
   u_int32_t s, e, f;
-  s = (imm8 >> 7 ) & 0x1;
+  s = (imm8 >> 7) & 0x1;
   e = (imm8 >> 4) & 0x7;
   f = imm8 & 0xf;
   // the fp value is s * n/16 * 2r where n is 16+e

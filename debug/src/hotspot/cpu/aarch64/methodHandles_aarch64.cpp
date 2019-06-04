@@ -17,8 +17,7 @@
 
 void MethodHandles::load_klass_from_Class(MacroAssembler* _masm, Register klass_reg) {
   if (VerifyMethodHandles)
-    verify_klass(_masm, klass_reg, SystemDictionary::WK_KLASS_ENUM_NAME(java_lang_Class),
-                 "MH argument is a Class");
+    verify_klass(_masm, klass_reg, SystemDictionary::WK_KLASS_ENUM_NAME(java_lang_Class), "MH argument is a Class");
   __ ldr(klass_reg, Address(klass_reg, java_lang_Class::klass_offset_in_bytes()));
 }
 
@@ -153,8 +152,7 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm, vmInt
     // The method is a member invoker used by direct method handles.
     if (VerifyMethodHandles) {
       // make sure the trailing argument really is a MemberName (caller responsibility)
-      verify_klass(_masm, member_reg, SystemDictionary::WK_KLASS_ENUM_NAME(java_lang_invoke_MemberName),
-                   "MemberName required for invokeVirtual etc.");
+      verify_klass(_masm, member_reg, SystemDictionary::WK_KLASS_ENUM_NAME(java_lang_invoke_MemberName), "MemberName required for invokeVirtual etc.");
     }
 
     Address member_clazz(    member_reg, NONZERO(java_lang_invoke_MemberName::clazz_offset_in_bytes()));

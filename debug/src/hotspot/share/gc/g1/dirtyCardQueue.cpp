@@ -63,9 +63,9 @@ FreeIdSet::FreeIdSet(uint size, Monitor* mon) :
   guarantee(size != 0, "must be");
   _ids = NEW_C_HEAP_ARRAY(uint, size, mtGC);
   for (uint i = 0; i < size - 1; i++) {
-    _ids[i] = i+1;
+    _ids[i] = i + 1;
   }
-  _ids[size-1] = end_of_list; // end of list.
+  _ids[size - 1] = end_of_list; // end of list.
 }
 
 FreeIdSet::~FreeIdSet() {

@@ -135,7 +135,6 @@ public:
   void delete_unnamed_module();
 
   void print(outputStream* st = tty);
-  void verify();
 };
 
 // Iterator interface
@@ -212,7 +211,6 @@ public:
   static void patch_javabase_entries(Handle module_handle);
 
   void print(outputStream* st = tty);
-  void verify();
 };
 
 #endif

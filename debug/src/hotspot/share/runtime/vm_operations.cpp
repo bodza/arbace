@@ -34,7 +34,7 @@ void VM_Operation::evaluate() {
 }
 
 const char* VM_Operation::mode_to_string(Mode mode) {
-  switch(mode) {
+  switch (mode) {
     case _safepoint      : return "safepoint";
     case _no_safepoint   : return "no safepoint";
     case _concurrent     : return "concurrent";
@@ -105,10 +105,7 @@ void VM_UnlinkSymbols::doit() {
   SymbolTable::unlink();
 }
 
-void VM_Verify::doit() {
-  Universe::heap()->prepare_for_verify();
-  Universe::verify();
-}
+void VM_Verify::doit() { }
 
 bool VM_PrintThreads::doit_prologue() {
   // Get Heap_lock if concurrent locks will be dumped
@@ -297,7 +294,7 @@ int VM_Exit::set_vm_exited() {
   _shutdown_thread = thr_cur;
   _vm_exited = true;                                // global flag
   for (JavaThreadIteratorWithHandle jtiwh; JavaThread *thr = jtiwh.next(); ) {
-    if (thr!=thr_cur && thr->thread_state() == _thread_in_native) {
+    if (thr != thr_cur && thr->thread_state() == _thread_in_native) {
       ++num_active;
       thr->set_terminated(JavaThread::_vm_exited);  // per-thread flag
     }
@@ -334,7 +331,7 @@ int VM_Exit::wait_for_threads_in_native_to_block() {
 
     jtiwh.rewind();
     for (; JavaThread *thr = jtiwh.next(); ) {
-      if (thr!=thr_cur && thr->thread_state() == _thread_in_native) {
+      if (thr != thr_cur && thr->thread_state() == _thread_in_native) {
         num_active++;
         if (thr->is_Compiler_thread()) {
           num_active_compiler_thread++;

@@ -172,7 +172,6 @@ public:
   void delete_qualified_exports();
 
   void print(outputStream* st = tty);
-  void verify();
 };
 
 // The PackageEntryTable is a Hashtable containing a list of all packages defined
@@ -223,7 +222,6 @@ public:
   void purge_all_package_exports();
 
   void print(outputStream* st = tty);
-  void verify();
 };
 
 #endif

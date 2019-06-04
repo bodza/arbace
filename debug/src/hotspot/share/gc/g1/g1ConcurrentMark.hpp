@@ -3,7 +3,6 @@
 
 #include "gc/g1/g1ConcurrentMarkBitMap.hpp"
 #include "gc/g1/g1ConcurrentMarkObjArrayProcessor.hpp"
-#include "gc/g1/g1HeapVerifier.hpp"
 #include "gc/g1/g1RegionMarkStatsCache.hpp"
 #include "gc/g1/heapRegionSet.hpp"
 #include "gc/shared/taskqueue.hpp"
@@ -328,8 +327,6 @@ class G1ConcurrentMark : public CHeapObj<mtGC> {
   WorkGang* _concurrent_workers;
   uint      _num_concurrent_workers; // The number of marking worker threads we're using
   uint      _max_concurrent_workers; // Maximum number of marking worker threads
-
-  void verify_during_pause(G1HeapVerifier::G1VerifyType type, VerifyOption vo, const char* caller);
 
   void finalize_marking();
 

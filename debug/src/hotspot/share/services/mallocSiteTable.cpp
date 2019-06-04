@@ -2,7 +2,6 @@
 
 #include "memory/allocation.inline.hpp"
 #include "runtime/atomic.hpp"
-#include "services/mallocSiteTable.hpp"
 
 /*
  * Early os::malloc() calls come from initializations of static variables, long before entering any

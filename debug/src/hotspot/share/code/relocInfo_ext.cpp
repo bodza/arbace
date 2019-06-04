@@ -17,7 +17,7 @@ address symbolic_Relocation::symbolic_value(symbolic_Relocation::symbolic_refere
     // (and most of them lead to errors if asked too early)
     return NULL;
   }
-  switch(t) {
+  switch (t) {
   case symbolic_Relocation::polling_page_reference: {
     return os::get_polling_page();
   }

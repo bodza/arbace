@@ -67,8 +67,6 @@ namespace metaspace {
 // Namespace for important central static functions
 // (auxiliary stuff goes into MetaspaceUtils)
 class Metaspace : public AllStatic {
-  friend class MetaspaceShared;
-
  public:
   enum MetadataType {
     ClassType,
@@ -240,8 +238,6 @@ class ClassLoaderMetaspace : public CHeapObj<mtClass> {
   void deallocate(MetaWord* ptr, size_t byte_size, bool is_class);
 
   void print_on(outputStream* st) const;
-  // Debugging support
-  void verify();
 
   // Adds to the given statistic object. Will lock with CLD metaspace lock.
   void add_to_statistics(metaspace::ClassLoaderMetaspaceStatistics* out) const;

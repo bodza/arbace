@@ -32,7 +32,7 @@ bool MethodComparator::methods_EMCP(Method* old_method, Method* new_method) {
     if ((c_new = s_new.next()) < 0 || c_old != c_new)
       return false;
 
-    if (! args_same(c_old, c_new))
+    if (!args_same(c_old, c_new))
       return false;
   }
   return true;
@@ -194,7 +194,7 @@ bool MethodComparator::args_same(Bytecodes::Code c_old, Bytecodes::Code c_new) {
   case Bytecodes::_iinc :
     if (_s_old->is_wide() != _s_new->is_wide())
       return false;
-    if (! _s_old->is_wide()) {
+    if (!_s_old->is_wide()) {
       // We could use get_index_u1 and get_constant_u1, but it's simpler to grab both bytes at once:
       if (Bytes::get_Java_u2(_s_old->bcp() + 1) != Bytes::get_Java_u2(_s_new->bcp() + 1))
         return false;
@@ -255,7 +255,7 @@ bool MethodComparator::pool_constants_same(int cpi_old, int cpi_new) {
       return (_old_cp->is_pseudo_string_at(cpi_old) == _new_cp->is_pseudo_string_at(cpi_new));
   } else if (tag_old.is_klass() || tag_old.is_unresolved_klass()) {
     // tag_old should be klass - 4881222
-    if (! (tag_new.is_unresolved_klass() || tag_new.is_klass()))
+    if (!(tag_new.is_unresolved_klass() || tag_new.is_klass()))
       return false;
     if (_old_cp->klass_at_noresolve(cpi_old) !=
         _new_cp->klass_at_noresolve(cpi_new))

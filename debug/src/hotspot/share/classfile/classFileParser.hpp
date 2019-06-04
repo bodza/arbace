@@ -150,7 +150,7 @@ class ClassFileParser {
   void set_klass(InstanceKlass* instance);
 
   void set_class_bad_constant_seen(short bad_constant);
-  short class_bad_constant_seen() { return  _bad_constant_seen; }
+  short class_bad_constant_seen() { return _bad_constant_seen; }
   void set_class_synthetic_flag(bool x)        { _synthetic_flag = x; }
   void set_class_sourcefile_index(u2 x)        { _sourcefile_index = x; }
   void set_class_generic_signature_index(u2 x) { _generic_signature_index = x; }

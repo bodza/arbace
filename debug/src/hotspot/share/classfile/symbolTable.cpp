@@ -1,20 +1,17 @@
 #include "precompiled.hpp"
 
 #include "classfile/altHashing.hpp"
-#include "classfile/compactHashtable.inline.hpp"
 #include "classfile/javaClasses.hpp"
 #include "classfile/symbolTable.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "memory/allocation.inline.hpp"
-#include "memory/filemap.hpp"
 #include "memory/metaspaceClosure.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/mutexLocker.hpp"
 #include "runtime/safepointVerifiers.hpp"
-#include "services/diagnosticCommand.hpp"
 #include "utilities/hashtable.inline.hpp"
 
 // --------------------------------------------------------------------------
@@ -25,9 +22,6 @@ SymbolTable* SymbolTable::_the_table = NULL;
 // Static arena for symbols that are not deallocated
 Arena* SymbolTable::_arena = NULL;
 bool SymbolTable::_needs_rehashing = false;
-bool SymbolTable::_lookup_shared_first = false;
-
-CompactHashtable<Symbol*, char> SymbolTable::_shared_table;
 
 Symbol* SymbolTable::allocate_symbol(const u1* name, int len, bool c_heap, TRAPS) {
   Symbol* sym;
@@ -53,9 +47,6 @@ void SymbolTable::initialize_symbols(int arena_alloc_size) {
 
 // Call function for all symbols in the symbol table.
 void SymbolTable::symbols_do(SymbolClosure *cl) {
-  // all symbols from shared table
-  _shared_table.symbols_do(cl);
-
   // all symbols from the dynamic table
   const int n = the_table()->table_size();
   for (int i = 0; i < n; i++) {
@@ -181,59 +172,13 @@ Symbol* SymbolTable::lookup_dynamic(int index, const char* name, int len, unsign
   return NULL;
 }
 
-Symbol* SymbolTable::lookup_shared(const char* name, int len, unsigned int hash) {
-  if (use_alternate_hashcode()) {
-    // hash_code parameter may use alternate hashing algorithm but the shared table
-    // always uses the same original hash code.
-    hash = hash_shared_symbol(name, len);
-  }
-  return _shared_table.lookup(name, hash, len);
-}
-
 Symbol* SymbolTable::lookup(int index, const char* name, int len, unsigned int hash) {
-  Symbol* sym;
-  if (_lookup_shared_first) {
-    sym = lookup_shared(name, len, hash);
-    if (sym != NULL) {
-      return sym;
-    }
-    _lookup_shared_first = false;
-    return lookup_dynamic(index, name, len, hash);
-  } else {
-    sym = lookup_dynamic(index, name, len, hash);
-    if (sym != NULL) {
-      return sym;
-    }
-    sym = lookup_shared(name, len, hash);
-    if (sym != NULL) {
-      _lookup_shared_first = true;
-    }
-    return sym;
-  }
-}
-
-u4 SymbolTable::encode_shared(Symbol* sym) {
-  uintx base_address = uintx(MetaspaceShared::shared_rs()->base());
-  uintx offset = uintx(sym) - base_address;
-  return u4(offset);
-}
-
-Symbol* SymbolTable::decode_shared(u4 offset) {
-  uintx base_address = _shared_table.base_address();
-  Symbol* sym = (Symbol*)(base_address + offset);
-
-  return sym;
+  return lookup_dynamic(index, name, len, hash);
 }
 
 // Pick hashing algorithm.
 unsigned int SymbolTable::hash_symbol(const char* s, int len) {
-  return use_alternate_hashcode() ?
-           AltHashing::murmur3_32(seed(), (const jbyte*)s, len) :
-           java_lang_String::hash_code((const jbyte*)s, len);
-}
-
-unsigned int SymbolTable::hash_shared_symbol(const char* s, int len) {
-  return java_lang_String::hash_code((const jbyte*)s, len);
+  return use_alternate_hashcode() ? AltHashing::murmur3_32(seed(), (const jbyte*)s, len) : java_lang_String::hash_code((const jbyte*)s, len);
 }
 
 // We take care not to be blocking while holding the
@@ -467,19 +412,6 @@ bool SymbolTable::basic_add(ClassLoaderData* loader_data, const constantPoolHand
   return true;
 }
 
-void SymbolTable::verify() {
-  for (int i = 0; i < the_table()->table_size(); ++i) {
-    HashtableEntry<Symbol*, mtSymbol>* p = the_table()->bucket(i);
-    for ( ; p != NULL; p = p->next()) {
-      Symbol* s = (Symbol*)(p->literal());
-      guarantee(s != NULL, "symbol is NULL");
-      unsigned int h = hash_symbol((char*)s->bytes(), s->utf8_length());
-      guarantee(p->hash() == h, "broken hash in symbol table entry");
-      guarantee(the_table()->hash_to_index(h) == i, "wrong index in symbol table");
-    }
-  }
-}
-
 void SymbolTable::dump(outputStream* st, bool verbose) {
   if (!verbose) {
     the_table()->print_table_statistics(st, "SymbolTable");
@@ -492,37 +424,10 @@ void SymbolTable::dump(outputStream* st, bool verbose) {
         const char* utf8_string = (const char*)s->bytes();
         int utf8_length = s->utf8_length();
         st->print("%d %d: ", utf8_length, s->refcount());
-        HashtableTextDump::put_utf8(st, utf8_string, utf8_length);
         st->cr();
       }
     }
   }
 }
 
-void SymbolTable::write_to_archive() { }
-
 void SymbolTable::serialize(SerializeClosure* soc) { }
-
-// Utility for dumping symbols
-SymboltableDCmd::SymboltableDCmd(outputStream* output, bool heap) :
-                                 DCmdWithParser(output, heap),
-  _verbose("-verbose", "Dump the content of each symbol in the table", "BOOLEAN", false, "false") {
-  _dcmdparser.add_dcmd_option(&_verbose);
-}
-
-void SymboltableDCmd::execute(DCmdSource source, TRAPS) {
-  VM_DumpHashtable dumper(output(), VM_DumpHashtable::DumpSymbols,
-                         _verbose.value());
-  VMThread::execute(&dumper);
-}
-
-int SymboltableDCmd::num_arguments() {
-  ResourceMark rm;
-  SymboltableDCmd* dcmd = new SymboltableDCmd(NULL, false);
-  if (dcmd != NULL) {
-    DCmdMark mark(dcmd);
-    return dcmd->_dcmdparser.num_arguments();
-  } else {
-    return 0;
-  }
-}

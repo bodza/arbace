@@ -54,26 +54,11 @@
  \
   /* gc */ \
  \
-  product(bool, UseConcMarkSweepGC, false, \
-          "Use Concurrent Mark-Sweep GC in the old generation") \
- \
-  product(bool, UseSerialGC, false, \
-          "Use the Serial garbage collector") \
- \
   product(bool, UseG1GC, false, \
           "Use the Garbage-First garbage collector") \
  \
-  product(bool, UseParallelGC, false, \
-          "Use the Parallel Scavenge garbage collector") \
- \
-  product(bool, UseParallelOldGC, false, \
-          "Use the Parallel Old garbage collector") \
- \
   experimental(bool, UseEpsilonGC, false, \
           "Use the Epsilon (no-op) garbage collector") \
- \
-  experimental(bool, UseZGC, false, \
-          "Use the Z garbage collector") \
  \
   product(uint, ParallelGCThreads, 0, \
           "Number of parallel threads parallel gc will use") \

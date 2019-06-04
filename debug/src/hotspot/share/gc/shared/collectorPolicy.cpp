@@ -251,8 +251,6 @@ void GenCollectorPolicy::initialize_flags() {
       }
     }
   }
-
-  always_do_update_barrier = UseConcMarkSweepGC;
 }
 
 // Values set on the command line win over any ergonomically

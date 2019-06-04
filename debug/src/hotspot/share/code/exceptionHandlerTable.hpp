@@ -132,7 +132,6 @@ public:
 
   void copy_to(nmethod* nm);
   void print(address base) const;
-  void verify(nmethod *nm) const;
 };
 
 #endif

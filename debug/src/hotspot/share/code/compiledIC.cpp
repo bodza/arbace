@@ -122,7 +122,7 @@ CompiledIC::CompiledIC(CompiledMethod* cm, NativeCall* call)
   address ic_call = _call->instruction_address();
 
   // Search for the ic_call at the given address.
-  RelocIterator iter(cm, ic_call, ic_call+1);
+  RelocIterator iter(cm, ic_call, ic_call + 1);
   bool ret = iter.next();
 
   initialize_from_iter(&iter);
@@ -445,7 +445,7 @@ address CompiledDirectStaticCall::find_stub_for(address instruction, bool is_aot
   RelocIterator iter((nmethod*)NULL, instruction);
   while (iter.next()) {
     if (iter.addr() == instruction) {
-      switch(iter.type()) {
+      switch (iter.type()) {
         case relocInfo::static_call_type:
           return iter.static_call_reloc()->static_stub(is_aot);
         // We check here for opt_virtual_call_type, since we reuse the code

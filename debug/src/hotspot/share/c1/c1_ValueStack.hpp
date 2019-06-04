@@ -164,15 +164,14 @@ class ValueStack: public CompilationResourceObj {
   // locks access
   int lock  (Value obj);
   int unlock();
-  Value lock_at(int i) const                     { return _locks.at(i); }
+  Value lock_at(int i) const { return _locks.at(i); }
 
   // SSA form IR support
   void setup_phi_for_stack(BlockBegin* b, int index);
   void setup_phi_for_local(BlockBegin* b, int index);
 
   // debugging
-  void print()  { };
-  void verify() { };
+  void print() { };
 };
 
 // Macro definitions for simple iteration of stack and local values of a ValueStack

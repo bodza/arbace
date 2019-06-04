@@ -64,7 +64,6 @@ public:
   void find_and_remove(int index, unsigned int hash, Symbol* name, ClassLoaderData* loader_data, classloadAction action, Thread* thread);
 
   void print_on(outputStream* st) const;
-  void verify();
 };
 
 // SeenThread objects represent list of threads that are
@@ -280,7 +279,6 @@ class PlaceholderEntry : public HashtableEntry<Symbol*, mtClass> {
 
   // Print method doesn't append a cr
   void print_entry(outputStream* st) const;
-  void verify() const;
 };
 
 #endif

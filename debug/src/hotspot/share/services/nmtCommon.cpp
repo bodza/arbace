@@ -26,7 +26,7 @@ const char* NMTUtil::_memory_type_names[] = {
 };
 
 const char* NMTUtil::scale_name(size_t scale) {
-  switch(scale) {
+  switch (scale) {
     case K: return "KB";
     case M: return "MB";
     case G: return "GB";

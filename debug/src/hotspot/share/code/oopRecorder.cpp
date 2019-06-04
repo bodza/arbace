@@ -85,7 +85,7 @@ template <class T> int ValueRecorder<T>::add_handle(T h, bool make_findable) {
 template <class T> int ValueRecorder<T>::maybe_find_index(T h) {
   maybe_initialize();
   if (h == NULL)  return null_index;
-  int* cloc = (_indexes == NULL)? NULL: _indexes->cache_location(h);
+  int* cloc = (_indexes == NULL) ? NULL : _indexes->cache_location(h);
   if (cloc != NULL) {
     int cindex = _indexes->cache_location_index(cloc);
     if (cindex == 0) {

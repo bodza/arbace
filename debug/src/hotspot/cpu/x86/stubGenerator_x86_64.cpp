@@ -2096,13 +2096,13 @@ class StubGenerator: public StubCodeGenerator {
     __ orptr(bits, to);
     __ orptr(bits, size);
 
-    __ testb(bits, BytesPerLong-1);
+    __ testb(bits, BytesPerLong - 1);
     __ jccb(Assembler::zero, L_long_aligned);
 
-    __ testb(bits, BytesPerInt-1);
+    __ testb(bits, BytesPerInt - 1);
     __ jccb(Assembler::zero, L_int_aligned);
 
-    __ testb(bits, BytesPerShort-1);
+    __ testb(bits, BytesPerShort - 1);
     __ jump_cc(Assembler::notZero, RuntimeAddress(byte_copy_entry));
 
     __ BIND(L_short_aligned);
@@ -3427,7 +3427,7 @@ class StubGenerator: public StubCodeGenerator {
       //load two ROUND_KEYs at a time
       for (int i = 1; i < rounds[k]; ) {
         load_key(xmm_key_tmp1, key, (0x10 * i), xmm_key_shuf_mask);
-        load_key(xmm_key_tmp0, key, (0x10 * (i+1)), xmm_key_shuf_mask);
+        load_key(xmm_key_tmp0, key, (0x10 * (i + 1)), xmm_key_shuf_mask);
         CTR_DoSix(aesenc, xmm_key_tmp1);
         i++;
         if (i != rounds[k]) {
@@ -4906,7 +4906,7 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
     __ enter(); // required for proper stackwalking of RuntimeStub frame
 
     // return address and rbp are already in place
-    __ subptr(rsp, (framesize-4) << LogBytesPerInt); // prolog
+    __ subptr(rsp, (framesize - 4) << LogBytesPerInt); // prolog
 
     int frame_complete = __ pc() - start;
 

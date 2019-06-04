@@ -176,9 +176,9 @@ void Dependencies::assert_common_2(DepType dept, ciBaseObject* x0, ciBaseObject*
       // look in this bucket for redundant assertions
       const int stride = 2;
       for (int i = deps->length(); (i -= stride) >= 0; ) {
-        ciBaseObject* y1 = deps->at(i+1);
+        ciBaseObject* y1 = deps->at(i + 1);
         if (x1 == y1) {  // same subject; check the context
-          if (maybe_merge_ctxk(deps, i+0, x0->as_metadata()->as_klass())) {
+          if (maybe_merge_ctxk(deps, i + 0, x0->as_metadata()->as_klass())) {
             return;
           }
         }
@@ -189,8 +189,8 @@ void Dependencies::assert_common_2(DepType dept, ciBaseObject* x0, ciBaseObject*
       // look in this bucket for redundant assertions
       const int stride = 2;
       for (int i = deps->length(); (i -= stride) >= 0; ) {
-        ciBaseObject* y0 = deps->at(i+0);
-        ciBaseObject* y1 = deps->at(i+1);
+        ciBaseObject* y0 = deps->at(i + 0);
+        ciBaseObject* y1 = deps->at(i + 1);
         if (x0 == y0 && x1 == y1) {
           return;
         }
@@ -225,10 +225,10 @@ void Dependencies::assert_common_3(DepType dept, ciKlass* ctxk, ciBaseObject* x,
     // look in this bucket for redundant assertions
     const int stride = 3;
     for (int i = deps->length(); (i -= stride) >= 0; ) {
-      ciBaseObject* y  = deps->at(i+1);
-      ciBaseObject* y2 = deps->at(i+2);
+      ciBaseObject* y  = deps->at(i + 1);
+      ciBaseObject* y2 = deps->at(i + 2);
       if (x == y && x2 == y2) {  // same subjects; check the context
-        if (maybe_merge_ctxk(deps, i+0, ctxk)) {
+        if (maybe_merge_ctxk(deps, i + 0, ctxk)) {
           return;
         }
       }
@@ -274,9 +274,9 @@ void Dependencies::assert_common_2(DepType dept, DepValue x0, DepValue x1) {
       // look in this bucket for redundant assertions
       const int stride = 2;
       for (int i = deps->length(); (i -= stride) >= 0; ) {
-        DepValue y1 = deps->at(i+1);
+        DepValue y1 = deps->at(i + 1);
         if (x1 == y1) {  // same subject; check the context
-          if (maybe_merge_ctxk(deps, i+0, x0)) {
+          if (maybe_merge_ctxk(deps, i + 0, x0)) {
             return;
           }
         }
@@ -287,8 +287,8 @@ void Dependencies::assert_common_2(DepType dept, DepValue x0, DepValue x1) {
       // look in this bucket for redundant assertions
       const int stride = 2;
       for (int i = deps->length(); (i -= stride) >= 0; ) {
-        DepValue y0 = deps->at(i+0);
-        DepValue y1 = deps->at(i+1);
+        DepValue y0 = deps->at(i + 0);
+        DepValue y1 = deps->at(i + 1);
         if (x0 == y0 && x1 == y1) {
           return;
         }
@@ -427,9 +427,9 @@ void Dependencies::encode_content_bytes() {
       for (int i = 0; i < deps->length(); i += stride) {
         jbyte code_byte = (jbyte)dept;
         int skipj = -1;
-        if (ctxkj >= 0 && ctxkj+1 < stride) {
-          Klass*  ctxk = deps->at(i+ctxkj+0).as_klass(_oop_recorder);
-          DepValue x = deps->at(i+ctxkj+1);  // following argument
+        if (ctxkj >= 0 && ctxkj + 1 < stride) {
+          Klass*  ctxk = deps->at(i + ctxkj + 0).as_klass(_oop_recorder);
+          DepValue x = deps->at(i + ctxkj + 1);  // following argument
           if (ctxk == ctxk_encoded_as_null(dept, x.as_metadata(_oop_recorder))) {
             skipj = ctxkj;  // we win:  maybe one less oop to keep track of
             code_byte |= default_context_type_bit;
@@ -454,9 +454,9 @@ void Dependencies::encode_content_bytes() {
     for (int i = 0; i < deps->length(); i += stride) {
       jbyte code_byte = (jbyte)dept;
       int skipj = -1;
-      if (ctxkj >= 0 && ctxkj+1 < stride) {
-        ciKlass*  ctxk = deps->at(i+ctxkj+0)->as_metadata()->as_klass();
-        ciBaseObject* x     = deps->at(i+ctxkj+1);  // following argument
+      if (ctxkj >= 0 && ctxkj + 1 < stride) {
+        ciKlass*  ctxk = deps->at(i + ctxkj + 0)->as_metadata()->as_klass();
+        ciBaseObject* x     = deps->at(i + ctxkj + 1);  // following argument
         if (ctxk == ctxk_encoded_as_null(dept, x)) {
           skipj = ctxkj;  // we win:  maybe one less oop to keep track of
           code_byte |= default_context_type_bit;
@@ -612,7 +612,7 @@ bool Dependencies::DepStream::next() {
       skipj = 0;  // currently the only context argument is at zero
     }
     for (int j = 0; j < stride; j++) {
-      _xi[j] = (j == skipj)? 0: _bytes.read_int();
+      _xi[j] = (j == skipj) ? 0 : _bytes.read_int();
     }
     return true;
   }
@@ -639,8 +639,8 @@ Metadata* Dependencies::DepStream::argument(int i) {
 
   if (result == NULL) { // Explicit context argument can be compressed
     int ctxkj = dep_context_arg(type());  // -1 if no explicit context arg
-    if (ctxkj >= 0 && i == ctxkj && ctxkj+1 < argument_count()) {
-      result = ctxk_encoded_as_null(type(), argument(ctxkj+1));
+    if (ctxkj >= 0 && i == ctxkj && ctxkj + 1 < argument_count()) {
+      result = ctxk_encoded_as_null(type(), argument(ctxkj + 1));
     }
   }
 
@@ -782,7 +782,7 @@ class ClassHierarchyWalker {
     return _participants[n];
   }
 
-  // Note:  If n==num_participants, returns NULL.
+  // Note:  If n == num_participants, returns NULL.
   Method* found_method(int n) {
     Method* fm = _found_methods[n];
     if (fm != NULL && fm->method_holder() != _participants[n]) {
@@ -797,8 +797,8 @@ class ClassHierarchyWalker {
   void add_participant(Klass* participant) {
     int np = _num_participants++;
     _participants[np] = participant;
-    _participants[np+1] = NULL;
-    _found_methods[np+1] = NULL;
+    _participants[np + 1] = NULL;
+    _found_methods[np + 1] = NULL;
   }
 
   void record_witnesses(int add) {

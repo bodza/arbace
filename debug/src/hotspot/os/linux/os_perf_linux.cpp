@@ -221,7 +221,7 @@ static int SCANF_ARGS(2, 0) vread_statdata(const char* procfile, _SCANFMT_ const
   if ((n = fread(buf, 1, sizeof(buf), f)) != -1) {
     char *tmp;
 
-    buf[n-1] = '\0';
+    buf[n - 1] = '\0';
     /** skip through pid and exec name. */
     if ((tmp = strrchr(buf, ')')) != NULL) {
       // skip the ')' and the following space
@@ -343,8 +343,7 @@ static int get_systemtype(void) {
 
 /** read user and system ticks from a named procfile, assumed to be in 'stat' format then. */
 static int read_ticks(const char* procfile, uint64_t* userTicks, uint64_t* systemTicks) {
-  return read_statdata(procfile, "%*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u " UINT64_FORMAT " " UINT64_FORMAT,
-    userTicks, systemTicks);
+  return read_statdata(procfile, "%*c %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u " UINT64_FORMAT " " UINT64_FORMAT, userTicks, systemTicks);
 }
 
 /**
@@ -816,7 +815,7 @@ char* SystemProcessInterface::SystemProcesses::ProcessIterator::get_exe_path() {
 char* SystemProcessInterface::SystemProcesses::ProcessIterator::allocate_string(const char* str) const {
   if (str != NULL) {
     size_t len = strlen(str);
-    char* tmp = NEW_C_HEAP_ARRAY(char, len+1, mtInternal);
+    char* tmp = NEW_C_HEAP_ARRAY(char, len + 1, mtInternal);
     strncpy(tmp, str, len);
     tmp[len] = '\0';
     return tmp;

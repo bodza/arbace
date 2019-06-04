@@ -50,7 +50,6 @@ public:
 
   void purge_loader_constraints();
 
-  void verify(PlaceholderTable* placeholders);
   void print_on(outputStream* st) const;
 };
 

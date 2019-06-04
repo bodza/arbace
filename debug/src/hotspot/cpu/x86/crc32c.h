@@ -16,7 +16,7 @@ enum {
   CRC32C_MIDDLE = 8 * 86,
 
   // V. Gopal et al. / Fast CRC Computation for iSCSI Polynomial Using CRC32 Instruction April 2011 9
-  // shows that 240 and 1024 are equally good choices as the 216==8*27
+  // shows that 240 and 1024 are equally good choices as the 216 == 8 * 27
   //
   // Selecting the smallest value which resulted in a significant performance improvement over
   // sequential version

@@ -74,7 +74,7 @@ void OptoRuntime::generate_exception_blob() {
   __ call(RuntimeAddress(CAST_FROM_FN_PTR(address, OptoRuntime::handle_exception_C)));
 
   // No registers to map, rbp is known implicitly
-  oop_maps->add_gc_map( __ pc() - start,  new OopMap( framesize, 0 ));
+  oop_maps->add_gc_map( __ pc() - start, new OopMap(framesize, 0));
   __ get_thread(rcx);
   __ reset_last_Java_frame(rcx, false);
 

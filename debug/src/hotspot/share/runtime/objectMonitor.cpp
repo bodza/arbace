@@ -391,7 +391,7 @@ void ObjectMonitor::EnterI(TRAPS) {
 
   if ((SyncFlags & 16) == 0 && nxt == NULL && _EntryList == NULL) {
     // Try to assume the role of responsible thread for the monitor.
-    // CONSIDER:  ST vs CAS vs { if (Responsible==null) Responsible=Self }
+    // CONSIDER:  ST vs CAS vs { if (Responsible == null) Responsible=Self }
     Atomic::replace_if_null(Self, &_Responsible);
   }
 
@@ -1704,7 +1704,7 @@ int ObjectMonitor::TrySpin(Thread * Self) {
     if ((hits & 0xF) == 0) {
       // The 0xF, above, corresponds to the exponent.
       // Consider: (msk+1)|msk
-      msk = ((msk << 2)|3) & BackOffMask;
+      msk = ((msk << 2) | 3) & BackOffMask;
     }
 
     // Probe _owner with TATAS
@@ -2019,7 +2019,7 @@ void ObjectMonitor::DeferredInitialize() {
     guarantee(0, "invariant");
   }
   strcpy(knobs, SyncKnobs);
-  knobs[sz+1] = 0;
+  knobs[sz + 1] = 0;
   for (char * p = knobs; *p; p++) {
     if (*p == ':') *p = 0;
   }

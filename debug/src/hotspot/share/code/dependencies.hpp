@@ -221,7 +221,7 @@ class Dependencies: public ResourceObj {
 
  private:
   // State for writing a new set of dependencies:
-  GrowableArray<int>*       _dep_seen;  // (seen[h->ident] & (1<<dept))
+  GrowableArray<int>*       _dep_seen;  // (seen[h->ident] & (1 << dept))
   GrowableArray<ciBaseObject*>*  _deps[TYPE_LIMIT];
   bool _using_dep_values;
   GrowableArray<DepValue>*  _dep_values[TYPE_LIMIT];
@@ -230,30 +230,28 @@ class Dependencies: public ResourceObj {
   static int         _dep_args[TYPE_LIMIT];
 
   static bool dept_in_mask(DepType dept, int mask) {
-    return (int)dept >= 0 && dept < TYPE_LIMIT && ((1<<dept) & mask) != 0;
+    return (int)dept >= 0 && dept < TYPE_LIMIT && ((1 << dept) & mask) != 0;
   }
 
   bool note_dep_seen(int dept, ciBaseObject* x) {
     int x_id = x->ident();
     int seen = _dep_seen->at_grow(x_id, 0);
-    _dep_seen->at_put(x_id, seen | (1<<dept));
+    _dep_seen->at_put(x_id, seen | (1 << dept));
     // return true if we've already seen dept/x
-    return (seen & (1<<dept)) != 0;
+    return (seen & (1 << dept)) != 0;
   }
 
   bool note_dep_seen(int dept, DepValue x) {
     // place metadata deps at even indexes, object deps at odd indexes
     int x_id = x.is_metadata() ? x.index() * 2 : (x.index() * 2) + 1;
     int seen = _dep_seen->at_grow(x_id, 0);
-    _dep_seen->at_put(x_id, seen | (1<<dept));
+    _dep_seen->at_put(x_id, seen | (1 << dept));
     // return true if we've already seen dept/x
     return (seen & (1<<dept)) != 0;
   }
 
-  bool maybe_merge_ctxk(GrowableArray<ciBaseObject*>* deps,
-                        int ctxk_i, ciKlass* ctxk);
-  bool maybe_merge_ctxk(GrowableArray<DepValue>* deps,
-                        int ctxk_i, DepValue ctxk);
+  bool maybe_merge_ctxk(GrowableArray<ciBaseObject*>* deps, int ctxk_i, ciKlass* ctxk);
+  bool maybe_merge_ctxk(GrowableArray<DepValue>* deps, int ctxk_i, DepValue ctxk);
 
   void sort_all_deps();
   size_t estimate_size_in_bytes();
@@ -441,7 +439,7 @@ class Dependencies: public ResourceObj {
 
     // iteration variables:
     DepType               _type;
-    int                   _xi[max_arg_count+1];
+    int                   _xi[max_arg_count + 1];
 
     void initial_asserts(size_t byte_limit) { };
 

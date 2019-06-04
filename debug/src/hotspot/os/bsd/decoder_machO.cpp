@@ -111,7 +111,7 @@ char* MachODecoder::mach_find_in_stringtable(char *strtab, uint32_t tablesize, i
       if ((uint32_t) *strtab != 0) {
           return NULL;
       }
-      strtab+=4;
+      strtab += 4;
   }
   // read the real strings starting at index 1
   int cur_strx = 1;

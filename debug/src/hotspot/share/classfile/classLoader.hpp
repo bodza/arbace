@@ -103,8 +103,6 @@ public:
   void add_to_list(ClassPathEntry* new_entry);
 };
 
-class SharedPathsMiscInfo;
-
 class ClassLoader: AllStatic {
  public:
   enum ClassLoaderType {
@@ -341,11 +339,6 @@ class ClassLoader: AllStatic {
   static const char* package_from_name(const char* const class_name, bool* bad_class_name = NULL);
 
   static bool is_modules_image(const char* name) { return string_ends_with(name, MODULES_IMAGE_NAME); }
-
-  // Debugging
-  static void verify()              { };
-
-  // Force compilation of all methods in all classes in bootstrap class path (stress test)
 };
 
 // PerfClassTraceTime is used to measure time for class loading related events.

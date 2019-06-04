@@ -314,13 +314,13 @@ void AOTCodeHeap::register_stubs() {
     jlong* state_adr = &_method_state[code_id];
     int len = build_u2_from((address)stub_name);
     stub_name += 2;
-    char* full_name = NEW_C_HEAP_ARRAY(char, len+5, mtCode);
+    char* full_name = NEW_C_HEAP_ARRAY(char, len + 5, mtCode);
     if (full_name == NULL) { // No memory?
       break;
     }
     memcpy(full_name, "AOT ", 4);
-    memcpy(full_name+4, stub_name, len);
-    full_name[len+4] = 0;
+    memcpy(full_name + 4, stub_name, len);
+    full_name[len + 4] = 0;
     guarantee(_code_to_aot[code_id]._state != invalid, "stub %s can't be invalidated", full_name);
     AOTCompiledMethod* aot = new AOTCompiledMethod(entry, NULL, meta, metadata_table, metadata_size, state_adr, this, full_name, code_id, i);
     _code_to_aot[code_id]._aot  = aot;

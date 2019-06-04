@@ -608,24 +608,6 @@ class HeapRegion: public G1ContiguousSpace {
   void print() const;
   void print_on(outputStream* st) const;
 
-  // vo == UsePrevMarking -> use "prev" marking information,
-  // vo == UseNextMarking -> use "next" marking information
-  // vo == UseFullMarking -> use "next" marking bitmap but no TAMS
-  //
-  // NOTE: Only the "prev" marking information is guaranteed to be
-  // consistent most of the time, so most calls to this should use
-  // vo == UsePrevMarking.
-  // Currently, there is only one case where this is called with
-  // vo == UseNextMarking, which is to verify the "next" marking
-  // information at the end of remark.
-  // Currently there is only one place where this is called with
-  // vo == UseFullMarking, which is to verify the marking during a
-  // full GC.
-  void verify(VerifyOption vo, bool *failures) const;
-
-  // Override; it uses the "prev" marking information
-  virtual void verify() const;
-
   void verify_rem_set(VerifyOption vo, bool *failures) const;
   void verify_rem_set() const;
 };

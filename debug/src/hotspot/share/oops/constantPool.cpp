@@ -12,7 +12,6 @@
 #include "memory/heapInspection.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceClosure.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/array.inline.hpp"
@@ -193,9 +192,6 @@ void ConstantPool::restore_unshareable_info(TRAPS) {
   // Only create the new resolved references array if it hasn't been attempted before
   if (resolved_references() != NULL) return;
 
-  // restore the C++ vtable from the shared archive
-  restore_vtable();
-
   if (SystemDictionary::Object_klass_loaded()) {
     ClassLoaderData* loader_data = pool_holder()->class_loader_data();
     {
@@ -222,9 +218,7 @@ void ConstantPool::remove_unshareable_info() {
   // If archiving heap objects is not allowed, clear the resolved references.
   // Otherwise, it is cleared after the resolved references array is cached
   // (see archive_resolved_references()).
-  if (!MetaspaceShared::is_heap_object_archiving_allowed()) {
-    set_resolved_references(NULL);
-  }
+  set_resolved_references(NULL);
 
   // Shared ConstantPools are in the RO region, so the _flags cannot be modified.
   // The _on_stack flag is used to prevent ConstantPools from deallocation during
@@ -1566,7 +1560,7 @@ int ConstantPool::find_matching_operand(int pattern_i, const constantPoolHandle&
 
 // Returns size of constant pool entry.
 jint ConstantPool::cpool_entry_size(jint idx) {
-  switch(tag_at(idx).value()) {
+  switch (tag_at(idx).value()) {
     case JVM_CONSTANT_Invalid:
     case JVM_CONSTANT_Unicode:
       return 1;
@@ -1620,7 +1614,7 @@ jint ConstantPool::hash_entries_to(SymbolHashMap *symmap, SymbolHashMap *classma
     u2 tag = tag_at(idx).value();
     size += cpool_entry_size(idx);
 
-    switch(tag) {
+    switch (tag) {
       case JVM_CONSTANT_Utf8: {
         Symbol* sym = symbol_at(idx);
         symmap->add_entry(sym, idx);
@@ -1659,7 +1653,7 @@ int ConstantPool::copy_cpool_bytes(int cpool_size, SymbolHashMap* tbl, unsigned 
     jint ent_size = cpool_entry_size(idx);
 
     *bytes = tag;
-    switch(tag) {
+    switch (tag) {
       case JVM_CONSTANT_Invalid: {
         break;
       }
@@ -1672,7 +1666,7 @@ int ConstantPool::copy_cpool_bytes(int cpool_size, SymbolHashMap* tbl, unsigned 
         char*     str = sym->as_utf8();
         // Warning! It's crashing on x86 with len = sym->utf8_length()
         int       len = (int) strlen(str);
-        Bytes::put_Java_u2((address) (bytes+1), (u2) len);
+        Bytes::put_Java_u2((address) (bytes + 1), (u2) len);
         for (int i = 0; i < len; i++) {
             bytes[3+i] = (u1) str[i];
         }
@@ -1680,23 +1674,23 @@ int ConstantPool::copy_cpool_bytes(int cpool_size, SymbolHashMap* tbl, unsigned 
       }
       case JVM_CONSTANT_Integer: {
         jint val = int_at(idx);
-        Bytes::put_Java_u4((address) (bytes+1), *(u4*)&val);
+        Bytes::put_Java_u4((address) (bytes + 1), *(u4*)&val);
         break;
       }
       case JVM_CONSTANT_Float: {
         jfloat val = float_at(idx);
-        Bytes::put_Java_u4((address) (bytes+1), *(u4*)&val);
+        Bytes::put_Java_u4((address) (bytes + 1), *(u4*)&val);
         break;
       }
       case JVM_CONSTANT_Long: {
         jlong val = long_at(idx);
-        Bytes::put_Java_u8((address) (bytes+1), *(u8*)&val);
+        Bytes::put_Java_u8((address) (bytes + 1), *(u8*)&val);
         idx++;             // Long takes two cpool slots
         break;
       }
       case JVM_CONSTANT_Double: {
         jdouble val = double_at(idx);
-        Bytes::put_Java_u8((address) (bytes+1), *(u8*)&val);
+        Bytes::put_Java_u8((address) (bytes + 1), *(u8*)&val);
         idx++;             // Double takes two cpool slots
         break;
       }
@@ -1706,14 +1700,14 @@ int ConstantPool::copy_cpool_bytes(int cpool_size, SymbolHashMap* tbl, unsigned 
         *bytes = JVM_CONSTANT_Class;
         Symbol* sym = klass_name_at(idx);
         idx1 = tbl->symbol_to_value(sym);
-        Bytes::put_Java_u2((address) (bytes+1), idx1);
+        Bytes::put_Java_u2((address) (bytes + 1), idx1);
         break;
       }
       case JVM_CONSTANT_String: {
         *bytes = JVM_CONSTANT_String;
         Symbol* sym = unresolved_string_at(idx);
         idx1 = tbl->symbol_to_value(sym);
-        Bytes::put_Java_u2((address) (bytes+1), idx1);
+        Bytes::put_Java_u2((address) (bytes + 1), idx1);
         break;
       }
       case JVM_CONSTANT_Fieldref:
@@ -1721,27 +1715,27 @@ int ConstantPool::copy_cpool_bytes(int cpool_size, SymbolHashMap* tbl, unsigned 
       case JVM_CONSTANT_InterfaceMethodref: {
         idx1 = uncached_klass_ref_index_at(idx);
         idx2 = uncached_name_and_type_ref_index_at(idx);
-        Bytes::put_Java_u2((address) (bytes+1), idx1);
-        Bytes::put_Java_u2((address) (bytes+3), idx2);
+        Bytes::put_Java_u2((address) (bytes + 1), idx1);
+        Bytes::put_Java_u2((address) (bytes + 3), idx2);
         break;
       }
       case JVM_CONSTANT_NameAndType: {
         idx1 = name_ref_index_at(idx);
         idx2 = signature_ref_index_at(idx);
-        Bytes::put_Java_u2((address) (bytes+1), idx1);
-        Bytes::put_Java_u2((address) (bytes+3), idx2);
+        Bytes::put_Java_u2((address) (bytes + 1), idx1);
+        Bytes::put_Java_u2((address) (bytes + 3), idx2);
         break;
       }
       case JVM_CONSTANT_ClassIndex: {
         *bytes = JVM_CONSTANT_Class;
         idx1 = klass_index_at(idx);
-        Bytes::put_Java_u2((address) (bytes+1), idx1);
+        Bytes::put_Java_u2((address) (bytes + 1), idx1);
         break;
       }
       case JVM_CONSTANT_StringIndex: {
         *bytes = JVM_CONSTANT_String;
         idx1 = string_index_at(idx);
-        Bytes::put_Java_u2((address) (bytes+1), idx1);
+        Bytes::put_Java_u2((address) (bytes + 1), idx1);
         break;
       }
       case JVM_CONSTANT_MethodHandle:
@@ -1749,15 +1743,15 @@ int ConstantPool::copy_cpool_bytes(int cpool_size, SymbolHashMap* tbl, unsigned 
         *bytes = JVM_CONSTANT_MethodHandle;
         int kind = method_handle_ref_kind_at(idx);
         idx1 = method_handle_index_at(idx);
-        *(bytes+1) = (unsigned char) kind;
-        Bytes::put_Java_u2((address) (bytes+2), idx1);
+        *(bytes + 1) = (unsigned char) kind;
+        Bytes::put_Java_u2((address) (bytes + 2), idx1);
         break;
       }
       case JVM_CONSTANT_MethodType:
       case JVM_CONSTANT_MethodTypeInError: {
         *bytes = JVM_CONSTANT_MethodType;
         idx1 = method_type_index_at(idx);
-        Bytes::put_Java_u2((address) (bytes+1), idx1);
+        Bytes::put_Java_u2((address) (bytes + 1), idx1);
         break;
       }
       case JVM_CONSTANT_Dynamic:
@@ -1765,16 +1759,16 @@ int ConstantPool::copy_cpool_bytes(int cpool_size, SymbolHashMap* tbl, unsigned 
         *bytes = tag;
         idx1 = extract_low_short_from_int(*int_at_addr(idx));
         idx2 = extract_high_short_from_int(*int_at_addr(idx));
-        Bytes::put_Java_u2((address) (bytes+1), idx1);
-        Bytes::put_Java_u2((address) (bytes+3), idx2);
+        Bytes::put_Java_u2((address) (bytes + 1), idx1);
+        Bytes::put_Java_u2((address) (bytes + 3), idx2);
         break;
       }
       case JVM_CONSTANT_InvokeDynamic: {
         *bytes = tag;
         idx1 = extract_low_short_from_int(*int_at_addr(idx));
         idx2 = extract_high_short_from_int(*int_at_addr(idx));
-        Bytes::put_Java_u2((address) (bytes+1), idx1);
-        Bytes::put_Java_u2((address) (bytes+3), idx2);
+        Bytes::put_Java_u2((address) (bytes + 1), idx1);
+        Bytes::put_Java_u2((address) (bytes + 3), idx2);
         break;
       }
     }

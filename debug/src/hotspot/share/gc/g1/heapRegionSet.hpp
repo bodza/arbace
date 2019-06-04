@@ -36,12 +36,6 @@ protected:
 
   const char* _name;
 
-  bool _verify_in_progress;
-
-  // verify_region() is used to ensure that the contents of a region
-  // added to / removed from a set are consistent.
-  void verify_region(HeapRegion* hr) { };
-
   // Indicates whether all regions in the set should be humongous or
   // not. Only used during verification.
   bool regions_humongous() { return _is_humongous; }
@@ -72,13 +66,6 @@ public:
   // It updates the fields of the set to reflect hr being removed
   // from the set and tags the region appropriately.
   inline void remove(HeapRegion* hr);
-
-  virtual void verify();
-  void verify_start();
-  void verify_next_region(HeapRegion* hr);
-  void verify_end();
-
-  void verify_optional() { }
 
   virtual void print_on(outputStream* out, bool print_contents = false);
 };
@@ -154,8 +141,6 @@ public:
   // this list.
   // Num_regions must be > 1.
   void remove_starting_at(HeapRegion* first, uint num_regions);
-
-  virtual void verify();
 };
 
 // Iterator class that provides a convenient way to iterate over the
@@ -176,7 +161,6 @@ public:
     // do the "cycle" check.
 
     HeapRegion* hr = _curr;
-    _list->verify_region(hr);
     _curr = hr->next();
     return hr;
   }

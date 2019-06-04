@@ -13,7 +13,6 @@
 #include "memory/heapInspection.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceClosure.hpp"
-#include "memory/metaspaceShared.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/constMethod.hpp"
@@ -250,7 +249,7 @@ void Method::remove_unshareable_info() {
 }
 
 void Method::set_vtable_index(int index) {
-  if (is_shared() && !MetaspaceShared::remapped_readwrite()) {
+  if (is_shared()) {
     // At runtime initialize_vtable is rerun as part of link_class_impl()
     // for a shared class loaded by the non-boot loader to obtain the loader
     // constraints based on the runtime classloaders' context.
@@ -261,7 +260,7 @@ void Method::set_vtable_index(int index) {
 }
 
 void Method::set_itable_index(int index) {
-  if (is_shared() && !MetaspaceShared::remapped_readwrite()) {
+  if (is_shared()) {
     // At runtime initialize_itable is rerun as part of link_class_impl()
     // for a shared class loaded by the non-boot loader to obtain the loader
     // constraints based on the runtime classloaders' context. The dumptime
@@ -374,7 +373,7 @@ BasicType Method::result_type() const {
 }
 
 bool Method::is_empty_method() const {
-  return  code_size() == 1 && *code_base() == Bytecodes::_return;
+  return code_size() == 1 && *code_base() == Bytecodes::_return;
 }
 
 bool Method::is_vanilla_constructor() const {
@@ -411,8 +410,8 @@ bool Method::is_vanilla_constructor() const {
   // Check optional sequence
   for (int i = 4; i < last; i += 5) {
     if (cb[i] != Bytecodes::_aload_0) return false;
-    if (!Bytecodes::is_zero_const(Bytecodes::cast(cb[i+1]))) return false;
-    if (cb[i+2] != Bytecodes::_putfield) return false;
+    if (!Bytecodes::is_zero_const(Bytecodes::cast(cb[i + 1]))) return false;
+    if (cb[i + 2] != Bytecodes::_putfield) return false;
   }
   return true;
 }
@@ -422,7 +421,7 @@ bool Method::compute_has_loops_flag() {
   Bytecodes::Code bc;
 
   while ((bc = bcs.next()) >= 0) {
-    switch( bc ) {
+    switch (bc) {
       case Bytecodes::_ifeq:
       case Bytecodes::_ifnull:
       case Bytecodes::_iflt:
@@ -1671,11 +1670,11 @@ bool Method::has_method_vptr(const void* ptr) {
 bool Method::is_valid_method() const {
   if (this == NULL) {
     return false;
-  } else if ((intptr_t(this) & (wordSize-1)) != 0) {
+  } else if ((intptr_t(this) & (wordSize - 1)) != 0) {
     // Quick sanity check on pointer.
     return false;
   } else if (is_shared()) {
-    return MetaspaceShared::is_valid_shared_method(this);
+    return false;
   } else if (Metaspace::contains_non_shared(this)) {
     return has_method_vptr((const void*)this);
   } else {
@@ -1694,79 +1693,6 @@ void Method::print_value_on(outputStream* st) const {
   signature()->print_value_on(st);
   st->print(" in ");
   method_holder()->print_value_on(st);
-}
-
-// false and PrintTouchedMethods
-
-// TouchedMethodRecord -- we can't use a HashtableEntry<Method*> because
-// the Method may be garbage collected. Let's roll our own hash table.
-class TouchedMethodRecord : CHeapObj<mtTracing> {
-public:
-  // It's OK to store Symbols here because they will NOT be GC'ed if false is enabled.
-  TouchedMethodRecord* _next;
-  Symbol* _class_name;
-  Symbol* _method_name;
-  Symbol* _method_signature;
-};
-
-static const int TOUCHED_METHOD_TABLE_SIZE = 20011;
-static TouchedMethodRecord** _touched_method_table = NULL;
-
-void Method::log_touched(TRAPS) {
-  const int table_size = TOUCHED_METHOD_TABLE_SIZE;
-  Symbol* my_class = klass_name();
-  Symbol* my_name  = name();
-  Symbol* my_sig   = signature();
-
-  unsigned int hash = my_class->identity_hash() + my_name->identity_hash() + my_sig->identity_hash();
-  juint index = juint(hash) % table_size;
-
-  MutexLocker ml(TouchedMethodLog_lock, THREAD);
-  if (_touched_method_table == NULL) {
-    _touched_method_table = NEW_C_HEAP_ARRAY2(TouchedMethodRecord*, table_size,
-                                              mtTracing, CURRENT_PC);
-    memset(_touched_method_table, 0, sizeof(TouchedMethodRecord*)*table_size);
-  }
-
-  TouchedMethodRecord* ptr = _touched_method_table[index];
-  while (ptr) {
-    if (ptr->_class_name == my_class && ptr->_method_name == my_name && ptr->_method_signature == my_sig) {
-      return;
-    }
-    if (ptr->_next == NULL) break;
-    ptr = ptr->_next;
-  }
-  TouchedMethodRecord* nptr = NEW_C_HEAP_OBJ(TouchedMethodRecord, mtTracing);
-  my_class->increment_refcount();
-  my_name->increment_refcount();
-  my_sig->increment_refcount();
-  nptr->_class_name         = my_class;
-  nptr->_method_name        = my_name;
-  nptr->_method_signature   = my_sig;
-  nptr->_next               = NULL;
-
-  if (ptr == NULL) {
-    // first
-    _touched_method_table[index] = nptr;
-  } else {
-    ptr->_next = nptr;
-  }
-}
-
-void Method::print_touched_methods(outputStream* out) {
-  MutexLockerEx ml(Thread::current()->is_VM_thread() ? NULL : TouchedMethodLog_lock);
-  out->print_cr("# Method::print_touched_methods version 1");
-  if (_touched_method_table) {
-    for (int i = 0; i < TOUCHED_METHOD_TABLE_SIZE; i++) {
-      TouchedMethodRecord* ptr = _touched_method_table[i];
-      while (ptr) {
-        ptr->_class_name->print_symbol_on(out);       out->print(".");
-        ptr->_method_name->print_symbol_on(out);      out->print(":");
-        ptr->_method_signature->print_symbol_on(out); out->cr();
-        ptr = ptr->_next;
-      }
-    }
-  }
 }
 
 // Verification

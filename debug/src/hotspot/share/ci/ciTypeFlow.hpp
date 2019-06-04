@@ -30,7 +30,7 @@ public:
   ciEnv*    env()              { return _env; }
   Arena*    arena()            { return _env->arena(); }
   bool      is_osr_flow() const{ return _osr_bci != InvocationEntryBci; }
-  int       start_bci() const  { return is_osr_flow()? _osr_bci: 0; }
+  int       start_bci() const  { return is_osr_flow() ? _osr_bci : 0; }
   int       max_locals() const { return _max_locals; }
   int       max_stack() const  { return _max_stack; }
   int       max_cells() const  { return _max_locals + _max_stack; }
@@ -108,7 +108,7 @@ public:
     LocalSet() : _bits(0) { }
     void add(uint32_t i)        { if (i < (uint32_t)max) _bits |=  (1LL << i); }
     void add(LocalSet* ls)      { _bits |= ls->_bits; }
-    bool test(uint32_t i) const { return i < (uint32_t)max ? (_bits>>i)&1U : true; }
+    bool test(uint32_t i) const { return i < (uint32_t)max ? (_bits >> i)&1U : true; }
     void clear()                { _bits = 0; }
     void print_on(outputStream* st, int limit) const  { };
   };
@@ -316,7 +316,7 @@ public:
 
     void load_local_double(int index) {
       ciType* type = type_at(local(index));
-      ciType* type2 = type_at(local(index+1));
+      ciType* type2 = type_at(local(index + 1));
       push(type);
       push(double2_type());
     }
@@ -325,9 +325,9 @@ public:
       ciType* type = pop_value();
       overwrite_local_double_long(index);
       set_type_at(local(index), type);
-      set_type_at(local(index+1), type2);
+      set_type_at(local(index + 1), type2);
       store_to_local(index);
-      store_to_local(index+1);
+      store_to_local(index + 1);
     }
 
     void load_local_float(int index) {
@@ -354,7 +354,7 @@ public:
 
     void load_local_long(int index) {
       ciType* type = type_at(local(index));
-      ciType* type2 = type_at(local(index+1));
+      ciType* type2 = type_at(local(index + 1));
       push(type);
       push(long2_type());
     }
@@ -363,9 +363,9 @@ public:
       ciType* type = pop_value();
       overwrite_local_double_long(index);
       set_type_at(local(index), type);
-      set_type_at(local(index+1), type2);
+      set_type_at(local(index + 1), type2);
       store_to_local(index);
-      store_to_local(index+1);
+      store_to_local(index + 1);
     }
 
     // Stop interpretation of this path with a trap.

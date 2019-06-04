@@ -255,9 +255,7 @@ bool ciEnv::check_klass_accessibility(ciKlass* accessing_klass, Klass* resolved_
     resolved_klass = ObjArrayKlass::cast(resolved_klass)->bottom_klass();
   }
   if (resolved_klass->is_instance_klass()) {
-    return (Reflection::verify_class_access(accessing_klass->get_Klass(),
-                                            InstanceKlass::cast(resolved_klass),
-                                            true) == Reflection::ACCESS_OK);
+    return (Reflection::verify_class_access(accessing_klass->get_Klass(), InstanceKlass::cast(resolved_klass), true) == Reflection::ACCESS_OK);
   }
   return true;
 }

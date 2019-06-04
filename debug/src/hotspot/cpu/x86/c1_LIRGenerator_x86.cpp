@@ -676,7 +676,7 @@ void LIRGenerator::do_MathIntrinsic(Intrinsic* x) {
     __ move(LIR_OprFact::doubleConst(-0.0), tmp);
   }
 
-  switch(x->id()) {
+  switch (x->id()) {
     case vmIntrinsics::_dabs:   __ abs  (calc_input, calc_result, tmp); break;
     case vmIntrinsics::_dsqrt:  __ sqrt (calc_input, calc_result, LIR_OprFact::illegalOpr); break;
     default:                    ShouldNotReachHere();

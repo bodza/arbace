@@ -104,7 +104,7 @@ bool JVMFlag::get_bool() const {
 }
 
 JVMFlag::Error JVMFlag::set_bool(bool value) {
-  JVMFlag::Error error = check_writable(value!=get_bool());
+  JVMFlag::Error error = check_writable(value != get_bool());
   if (error == JVMFlag::SUCCESS) {
     *((bool*) _addr) = value;
   }
@@ -120,7 +120,7 @@ int JVMFlag::get_int() const {
 }
 
 JVMFlag::Error JVMFlag::set_int(int value) {
-  JVMFlag::Error error = check_writable(value!=get_int());
+  JVMFlag::Error error = check_writable(value != get_int());
   if (error == JVMFlag::SUCCESS) {
     *((int*) _addr) = value;
   }
@@ -136,7 +136,7 @@ uint JVMFlag::get_uint() const {
 }
 
 JVMFlag::Error JVMFlag::set_uint(uint value) {
-  JVMFlag::Error error = check_writable(value!=get_uint());
+  JVMFlag::Error error = check_writable(value != get_uint());
   if (error == JVMFlag::SUCCESS) {
     *((uint*) _addr) = value;
   }
@@ -152,7 +152,7 @@ intx JVMFlag::get_intx() const {
 }
 
 JVMFlag::Error JVMFlag::set_intx(intx value) {
-  JVMFlag::Error error = check_writable(value!=get_intx());
+  JVMFlag::Error error = check_writable(value != get_intx());
   if (error == JVMFlag::SUCCESS) {
     *((intx*) _addr) = value;
   }
@@ -168,7 +168,7 @@ uintx JVMFlag::get_uintx() const {
 }
 
 JVMFlag::Error JVMFlag::set_uintx(uintx value) {
-  JVMFlag::Error error = check_writable(value!=get_uintx());
+  JVMFlag::Error error = check_writable(value != get_uintx());
   if (error == JVMFlag::SUCCESS) {
     *((uintx*) _addr) = value;
   }
@@ -184,7 +184,7 @@ uint64_t JVMFlag::get_uint64_t() const {
 }
 
 JVMFlag::Error JVMFlag::set_uint64_t(uint64_t value) {
-  JVMFlag::Error error = check_writable(value!=get_uint64_t());
+  JVMFlag::Error error = check_writable(value != get_uint64_t());
   if (error == JVMFlag::SUCCESS) {
     *((uint64_t*) _addr) = value;
   }
@@ -200,7 +200,7 @@ size_t JVMFlag::get_size_t() const {
 }
 
 JVMFlag::Error JVMFlag::set_size_t(size_t value) {
-  JVMFlag::Error error = check_writable(value!=get_size_t());
+  JVMFlag::Error error = check_writable(value != get_size_t());
   if (error == JVMFlag::SUCCESS) {
     *((size_t*) _addr) = value;
   }
@@ -216,7 +216,7 @@ double JVMFlag::get_double() const {
 }
 
 JVMFlag::Error JVMFlag::set_double(double value) {
-  JVMFlag::Error error = check_writable(value!=get_double());
+  JVMFlag::Error error = check_writable(value != get_double());
   if (error == JVMFlag::SUCCESS) {
     *((double*) _addr) = value;
   }
@@ -236,7 +236,7 @@ ccstr JVMFlag::get_ccstr() const {
 }
 
 JVMFlag::Error JVMFlag::set_ccstr(ccstr value) {
-  JVMFlag::Error error = check_writable(value!=get_ccstr());
+  JVMFlag::Error error = check_writable(value != get_ccstr());
   if (error == JVMFlag::SUCCESS) {
     *((ccstr*) _addr) = value;
   }
@@ -464,7 +464,7 @@ void JVMFlag::print_on(outputStream* st, bool withComments, bool printRanges) {
           size_t llen = pointer_delta(eol, cp, sizeof(char));
           st->print("%.*s", (int)llen, cp);
           st->cr();
-          cp = eol+1;
+          cp = eol + 1;
           fill_to_pos(st, col2_pos);
           st->print("%s", _name);
           fill_to_pos(st, col3_pos);
@@ -623,7 +623,7 @@ void JVMFlag::print_kind(outputStream* st, unsigned int width) {
 void JVMFlag::print_origin(outputStream* st, unsigned int width) {
   int origin = _flags & VALUE_ORIGIN_MASK;
   st->print("{");
-  switch(origin) {
+  switch (origin) {
     case DEFAULT:
       st->print("default"); break;
     case COMMAND_LINE:

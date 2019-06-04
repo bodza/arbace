@@ -37,32 +37,23 @@ int SignatureIterator::parse_type() {
   //       work (stack underflow for some tests) - this seems to be a VC++ 6.0
   //       compiler bug (was problem - gri 4/27/2000).
   int size = -1;
-  switch(_signature->byte_at(_index)) {
-    case 'B': do_byte  (); if (_parameter_index < 0 ) _return_type = T_BYTE;
-              _index++; size = T_BYTE_size   ; break;
-    case 'C': do_char  (); if (_parameter_index < 0 ) _return_type = T_CHAR;
-              _index++; size = T_CHAR_size   ; break;
-    case 'D': do_double(); if (_parameter_index < 0 ) _return_type = T_DOUBLE;
-              _index++; size = T_DOUBLE_size ; break;
-    case 'F': do_float (); if (_parameter_index < 0 ) _return_type = T_FLOAT;
-              _index++; size = T_FLOAT_size  ; break;
-    case 'I': do_int   (); if (_parameter_index < 0 ) _return_type = T_INT;
-              _index++; size = T_INT_size    ; break;
-    case 'J': do_long  (); if (_parameter_index < 0 ) _return_type = T_LONG;
-              _index++; size = T_LONG_size   ; break;
-    case 'S': do_short (); if (_parameter_index < 0 ) _return_type = T_SHORT;
-              _index++; size = T_SHORT_size  ; break;
-    case 'Z': do_bool  (); if (_parameter_index < 0 ) _return_type = T_BOOLEAN;
-              _index++; size = T_BOOLEAN_size; break;
-    case 'V': do_void  (); if (_parameter_index < 0 ) _return_type = T_VOID;
-              _index++; size = T_VOID_size;  ; break;
+  switch (_signature->byte_at(_index)) {
+    case 'B': do_byte  (); if (_parameter_index < 0) _return_type = T_BYTE;    _index++; size = T_BYTE_size   ; break;
+    case 'C': do_char  (); if (_parameter_index < 0) _return_type = T_CHAR;    _index++; size = T_CHAR_size   ; break;
+    case 'D': do_double(); if (_parameter_index < 0) _return_type = T_DOUBLE;  _index++; size = T_DOUBLE_size ; break;
+    case 'F': do_float (); if (_parameter_index < 0) _return_type = T_FLOAT;   _index++; size = T_FLOAT_size  ; break;
+    case 'I': do_int   (); if (_parameter_index < 0) _return_type = T_INT;     _index++; size = T_INT_size    ; break;
+    case 'J': do_long  (); if (_parameter_index < 0) _return_type = T_LONG;    _index++; size = T_LONG_size   ; break;
+    case 'S': do_short (); if (_parameter_index < 0) _return_type = T_SHORT;   _index++; size = T_SHORT_size  ; break;
+    case 'Z': do_bool  (); if (_parameter_index < 0) _return_type = T_BOOLEAN; _index++; size = T_BOOLEAN_size; break;
+    case 'V': do_void  (); if (_parameter_index < 0) _return_type = T_VOID;    _index++; size = T_VOID_size;  ; break;
     case 'L':
       { int begin = ++_index;
         Symbol* sig = _signature;
         while (sig->byte_at(_index++) != ';');
         do_object(begin, _index);
       }
-      if (_parameter_index < 0 ) _return_type = T_OBJECT;
+      if (_parameter_index < 0) _return_type = T_OBJECT;
       size = T_OBJECT_size;
       break;
     case '[':
@@ -77,7 +68,7 @@ int SignatureIterator::parse_type() {
           _index++;
         }
         do_array(begin, _index);
-       if (_parameter_index < 0 ) _return_type = T_ARRAY;
+       if (_parameter_index < 0) _return_type = T_ARRAY;
       }
       size = T_ARRAY_size;
       break;
@@ -126,8 +117,8 @@ void SignatureIterator::iterate_parameters( uint64_t fingerprint ) {
 
   _parameter_index = 0;
   fingerprint = fingerprint >> (static_feature_size + result_feature_size);
-  while ( 1 ) {
-    switch ( fingerprint & parameter_feature_mask ) {
+  while (true) {
+    switch (fingerprint & parameter_feature_mask) {
       case bool_parm:
         do_bool();
         _parameter_index += T_BOOLEAN_size;
@@ -187,7 +178,7 @@ void SignatureIterator::iterate_returntype() {
   // closing ')' is found., then get the return type.  We cannot just scan
   // for the first ')' because ')' is a legal character in a type name.
   while (sig->byte_at(_index) != ')') {
-    switch(sig->byte_at(_index)) {
+    switch (sig->byte_at(_index)) {
       case 'B':
       case 'C':
       case 'D':
@@ -283,7 +274,7 @@ void SignatureStream::next_non_primitive(int t) {
         c = sig->byte_at(_end);
         while ('0' <= c && c <= '9') c = sig->byte_at(_end++);
       }
-      switch(sig->byte_at(_end)) {
+      switch (sig->byte_at(_end)) {
         case 'B':
         case 'C':
         case 'D':
@@ -317,7 +308,7 @@ Symbol* SignatureStream::as_symbol(TRAPS) {
   int begin = _begin;
   int end   = _end;
 
-  if (_signature->byte_at(_begin) == 'L' && _signature->byte_at(_end-1) == ';') {
+  if (_signature->byte_at(_begin) == 'L' && _signature->byte_at(_end - 1) == ';') {
     begin++;
     end--;
   }
@@ -355,7 +346,7 @@ Symbol* SignatureStream::as_symbol_or_null() {
   int begin = _begin;
   int end   = _end;
 
-  if (_signature->byte_at(_begin) == 'L' && _signature->byte_at(_end-1) == ';') {
+  if (_signature->byte_at(_begin) == 'L' && _signature->byte_at(_end - 1) == ';') {
     begin++;
     end--;
   }

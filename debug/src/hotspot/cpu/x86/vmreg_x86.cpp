@@ -37,7 +37,7 @@ void VMRegImpl::set_regName() {
     kreg = kreg->successor();
   }
 
-  for ( ; i < ConcreteRegisterImpl::number_of_registers; i ++ ) {
+  for ( ; i < ConcreteRegisterImpl::number_of_registers; i++) {
     regName[i] = "NON-GPR-FPR-XMM-KREG";
   }
 }

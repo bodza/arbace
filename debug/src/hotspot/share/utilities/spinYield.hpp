@@ -23,8 +23,7 @@ public:
   static const uint default_yield_limit = 64;
 
   // spin_limit is ignored (treated as zero) when !os::is_MP().
-  explicit SpinYield(uint spin_limit = default_spin_limit,
-                     uint yield_limit = default_yield_limit);
+  explicit SpinYield(uint spin_limit = default_spin_limit, uint yield_limit = default_yield_limit);
 
   // Perform next round of delay.
   void wait() {

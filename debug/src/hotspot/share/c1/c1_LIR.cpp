@@ -111,8 +111,6 @@ bool LIR_OprDesc::is_oop() const {
   }
 }
 
-void LIR_Op2::verify() const { }
-
 LIR_OpBranch::LIR_OpBranch(LIR_Condition cond, BasicType type, BlockBegin* block)
   : LIR_Op(lir_branch, LIR_OprFact::illegalOpr, (CodeEmitInfo*)NULL)
   , _cond(cond)
@@ -232,23 +230,6 @@ LIR_OpUpdateCRC32::LIR_OpUpdateCRC32(LIR_Opr crc, LIR_Opr val, LIR_Opr res)
   , _crc(crc)
   , _val(val) {
 }
-
-//-------------------verify--------------------------
-
-void LIR_Op1::verify() const {
-  switch(code()) {
-  case lir_move:
-    break;
-  case lir_null_check:
-    break;
-  case lir_return:
-    break;
-  default:
-    break;
-  }
-}
-
-void LIR_OpRTCall::verify() const { }
 
 //-------------------visits--------------------------
 
@@ -824,15 +805,15 @@ void LIR_List::append(LIR_InsertionBuffer* buffer) {
     int ip_index = buffer->number_of_insertion_points() - 1;
     int from_index = n - 1;
     int to_index = _operations.length() - 1;
-    for (; ip_index >= 0; ip_index --) {
+    for (; ip_index >= 0; ip_index--) {
       int index = buffer->index_at(ip_index);
       // make room after insertion point
       while (index < from_index) {
-        _operations.at_put(to_index --, _operations.at(from_index --));
+        _operations.at_put(to_index --, _operations.at(from_index--));
       }
       // insert ops from buffer
-      for (int i = buffer->count_at(ip_index); i > 0; i --) {
-        _operations.at_put(to_index --, buffer->op_at(op_index --));
+      for (int i = buffer->count_at(ip_index); i > 0; i--) {
+        _operations.at_put(to_index --, buffer->op_at(op_index--));
       }
     }
   }

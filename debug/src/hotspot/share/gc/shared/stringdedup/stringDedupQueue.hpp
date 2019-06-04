@@ -50,8 +50,6 @@ public:
 
   static void unlink_or_oops_do(StringDedupUnlinkOrOopsDoClosure* cl);
 
-  static void verify();
-
   // GC support
   static void gc_prologue();
   static void gc_epilogue();

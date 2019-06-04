@@ -109,10 +109,6 @@ public:
   virtual void print_gc_threads_on(outputStream* st) const { }
   virtual void gc_threads_do(ThreadClosure* tc) const { }
 
-  // No heap verification
-  virtual void prepare_for_verify() { }
-  virtual void verify(VerifyOption option) { }
-
   virtual jlong millis_since_last_gc() {
     // Report time since the VM start
     return os::elapsed_counter() / NANOSECS_PER_MILLISEC;

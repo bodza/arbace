@@ -69,8 +69,7 @@ class klassVtable {
                                                    TRAPS);
 
   // Debugging code
-  void print()                                              { };
-  void verify(outputStream* st, bool force = false);
+  void print() { };
 
  protected:
   friend class vtableEntry;
@@ -114,19 +113,6 @@ class klassVtable {
       bool is_interface);
   void verify_against(outputStream* st, klassVtable* vt, int index);
   inline InstanceKlass* ik() const;
-  // When loading a class from CDS archive at run time, and no class redefintion
-  // has happened, it is expected that the class's itable/vtables are
-  // laid out exactly the same way as they had been during dump time.
-  // Therefore, in klassVtable::initialize_[iv]table, we do not layout the
-  // tables again. Instead, we only rerun the process to create/check
-  // the class loader constraints. In non-product builds, we add asserts to
-  // guarantee that the table's layout would be the same as at dump time.
-  //
-  // If JVMTI redefines any class, the read-only shared memory are remapped
-  // as read-write. A shared class' vtable/itable are re-initialized and
-  // might have different layout due to class redefinition of the shared class
-  // or its super types.
-  bool is_preinitialized_vtable();
 };
 
 // private helper class for klassVtable
@@ -147,15 +133,14 @@ class vtableEntry {
   static int size_in_bytes() { return sizeof(vtableEntry); }
 
   static int method_offset_in_bytes() { return offset_of(vtableEntry, _method); }
-  Method* method() const    { return _method; }
-  Method** method_addr()    { return &_method; }
+  Method* method() const     { return _method; }
+  Method** method_addr()     { return &_method; }
 
  private:
   Method* _method;
-  void set(Method* method)  { _method = method; }
-  void clear()                { _method = NULL; }
-  void print()                                        { };
-  void verify(klassVtable* vt, outputStream* st);
+  void set(Method* method)   { _method = method; }
+  void clear()               { _method = NULL; }
+  void print()               { };
 
   friend class klassVtable;
 };
