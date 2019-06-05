@@ -36,13 +36,11 @@ inline void BlockOffsetSharedArray::check_reducing_assertion(bool reducing) { }
 //////////////////////////////////////////////////////////////////////////
 // BlockOffsetArrayNonContigSpace inlines
 //////////////////////////////////////////////////////////////////////////
-inline void BlockOffsetArrayNonContigSpace::freed(HeapWord* blk,
-                                                  size_t size) {
+inline void BlockOffsetArrayNonContigSpace::freed(HeapWord* blk, size_t size) {
   freed(blk, blk + size);
 }
 
-inline void BlockOffsetArrayNonContigSpace::freed(HeapWord* blk_start,
-                                                  HeapWord* blk_end) {
+inline void BlockOffsetArrayNonContigSpace::freed(HeapWord* blk_start, HeapWord* blk_end) {
   // Verify that the BOT shows [blk_start, blk_end) to be one block.
   verify_single_block(blk_start, blk_end);
   // adjust _unallocated_block upward or downward

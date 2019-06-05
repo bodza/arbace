@@ -11,6 +11,7 @@
 
 #include "utilities/json.hpp"
 #include "utilities/ostream.hpp"
+
 #include <math.h>
 
 const char* strchrnul_(const char *s, int c) {

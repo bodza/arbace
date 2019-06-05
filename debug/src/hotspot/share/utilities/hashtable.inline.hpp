@@ -14,22 +14,19 @@
 template <MEMFLAGS F> inline BasicHashtable<F>::BasicHashtable(int table_size, int entry_size) {
   // Called on startup, no locking needed
   initialize(table_size, entry_size, 0);
-  _buckets = NEW_C_HEAP_ARRAY2(HashtableBucket<F>, table_size, F, CURRENT_PC);
+  _buckets = NEW_C_HEAP_ARRAY(HashtableBucket<F>, table_size, F);
   for (int index = 0; index < _table_size; index++) {
     _buckets[index].clear();
   }
 }
 
-template <MEMFLAGS F> inline BasicHashtable<F>::BasicHashtable(int table_size, int entry_size,
-                                      HashtableBucket<F>* buckets,
-                                      int number_of_entries) {
+template <MEMFLAGS F> inline BasicHashtable<F>::BasicHashtable(int table_size, int entry_size, HashtableBucket<F>* buckets, int number_of_entries) {
   // Called on startup, no locking needed
   initialize(table_size, entry_size, number_of_entries);
   _buckets = buckets;
 }
 
-template <MEMFLAGS F> inline void BasicHashtable<F>::initialize(int table_size, int entry_size,
-                                       int number_of_entries) {
+template <MEMFLAGS F> inline void BasicHashtable<F>::initialize(int table_size, int entry_size, int number_of_entries) {
   // Called on startup, no locking needed
   _table_size = table_size;
   _entry_size = entry_size;

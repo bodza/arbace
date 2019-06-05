@@ -10,7 +10,6 @@
 #include "gc/shared/referenceProcessor.hpp"
 #include "utilities/ticks.hpp"
 
-class G1FullGCTracer;
 class STWGCTimer;
 
 class G1FullGCReferenceProcessingExecutor: public AbstractRefProcTaskExecutor {
@@ -21,9 +20,6 @@ class G1FullGCReferenceProcessingExecutor: public AbstractRefProcTaskExecutor {
 public:
   G1FullGCReferenceProcessingExecutor(G1FullCollector* collector);
   ~G1FullGCReferenceProcessingExecutor();
-
-  // Do reference processing.
-  void execute(STWGCTimer* timer, G1FullGCTracer* tracer);
 
   // Executes the given task using concurrent marking worker threads.
   virtual void execute(ProcessTask& task, uint ergo_workers);
@@ -39,8 +35,7 @@ private:
     ParallelTaskTerminator   _terminator;
 
   public:
-    G1RefProcTaskProxy(ProcessTask& proc_task,
-                       G1FullCollector* scope);
+    G1RefProcTaskProxy(ProcessTask& proc_task, G1FullCollector* scope);
 
     virtual void work(uint worker_id);
   };

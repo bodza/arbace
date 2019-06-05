@@ -10,7 +10,6 @@
 #include "runtime/globals.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/javaCalls.hpp"
-#include "services/lowMemoryDetector.hpp"
 #include "services/management.hpp"
 #include "services/memoryManager.hpp"
 #include "services/memoryPool.hpp"
@@ -121,19 +120,11 @@ void MemoryService::track_memory_usage() {
     MemoryPool* pool = _pools_list->at(i);
     pool->record_peak_memory_usage();
   }
-
-  // Detect low memory
-  LowMemoryDetector::detect_low_memory();
 }
 
 void MemoryService::track_memory_pool_usage(MemoryPool* pool) {
   // Track the peak memory usage
   pool->record_peak_memory_usage();
-
-  // Detect low memory
-  if (LowMemoryDetector::is_enabled(pool)) {
-    LowMemoryDetector::detect_low_memory(pool);
-  }
 }
 
 void MemoryService::gc_begin(GCMemoryManager* manager, bool recordGCBeginTime, bool recordAccumulatedGCTime, bool recordPreGCUsage, bool recordPeakUsage) {
@@ -217,11 +208,9 @@ void TraceMemoryManagerStats::initialize(GCMemoryManager* gc_memory_manager,
   _countCollection = countCollection;
   _cause = cause;
 
-  MemoryService::gc_begin(_gc_memory_manager, _recordGCBeginTime, _recordAccumulatedGCTime,
-                          _recordPreGCUsage, _recordPeakUsage);
+  MemoryService::gc_begin(_gc_memory_manager, _recordGCBeginTime, _recordAccumulatedGCTime, _recordPreGCUsage, _recordPeakUsage);
 }
 
 TraceMemoryManagerStats::~TraceMemoryManagerStats() {
-  MemoryService::gc_end(_gc_memory_manager, _recordPostGCUsage, _recordAccumulatedGCTime,
-                        _recordGCEndTime, _countCollection, _cause, _allMemoryPoolsAffected);
+  MemoryService::gc_end(_gc_memory_manager, _recordPostGCUsage, _recordAccumulatedGCTime, _recordGCEndTime, _countCollection, _cause, _allMemoryPoolsAffected);
 }

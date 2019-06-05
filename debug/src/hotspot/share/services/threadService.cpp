@@ -30,10 +30,6 @@ bool ThreadService::_thread_monitoring_contention_enabled = false;
 bool ThreadService::_thread_cpu_time_enabled = false;
 bool ThreadService::_thread_allocated_memory_enabled = false;
 
-PerfCounter*  ThreadService::_total_threads_count = NULL;
-PerfVariable* ThreadService::_live_threads_count = NULL;
-PerfVariable* ThreadService::_peak_threads_count = NULL;
-PerfVariable* ThreadService::_daemon_threads_count = NULL;
 volatile int ThreadService::_atomic_threads_count = 0;
 volatile int ThreadService::_atomic_daemon_threads_count = 0;
 
@@ -44,15 +40,6 @@ static const int INITIAL_ARRAY_SIZE = 10;
 void ThreadService::init() {
   EXCEPTION_MARK;
 
-  // These counters are for java.lang.management API support.
-  // They are created even if -XX:-UsePerfData is set and in
-  // that case, they will be allocated on C heap.
-
-  _total_threads_count = PerfDataManager::create_counter(JAVA_THREADS, "started", PerfData::U_Events, CHECK);
-  _live_threads_count = PerfDataManager::create_variable(JAVA_THREADS, "live", PerfData::U_None, CHECK);
-  _peak_threads_count = PerfDataManager::create_variable(JAVA_THREADS, "livePeak", PerfData::U_None, CHECK);
-  _daemon_threads_count = PerfDataManager::create_variable(JAVA_THREADS, "daemon", PerfData::U_None, CHECK);
-
   if (os::is_thread_cpu_time_supported()) {
     _thread_cpu_time_enabled = true;
   }
@@ -60,12 +47,7 @@ void ThreadService::init() {
   _thread_allocated_memory_enabled = true; // Always on, so enable it
 }
 
-void ThreadService::reset_peak_thread_count() {
-  // Acquire the lock to update the peak thread count
-  // to synchronize with thread addition and removal.
-  MutexLockerEx mu(Threads_lock);
-  _peak_threads_count->set_value(get_live_thread_count());
-}
+void ThreadService::reset_peak_thread_count() { }
 
 static bool is_hidden_thread(JavaThread *thread) {
   // hide VM internal or JVMTI agent threads
@@ -78,17 +60,10 @@ void ThreadService::add_thread(JavaThread* thread, bool daemon) {
     return;
   }
 
-  _total_threads_count->inc();
-  _live_threads_count->inc();
   Atomic::inc(&_atomic_threads_count);
   int count = _atomic_threads_count;
 
-  if (count > _peak_threads_count->get_value()) {
-    _peak_threads_count->set_value(count);
-  }
-
   if (daemon) {
-    _daemon_threads_count->inc();
     Atomic::inc(&_atomic_daemon_threads_count);
   }
 }
@@ -110,14 +85,6 @@ void ThreadService::remove_thread(JavaThread* thread, bool daemon) {
   if (!thread->is_exiting()) {
     // JavaThread::exit() skipped calling current_thread_exiting()
     decrement_thread_counts(thread, daemon);
-  }
-
-  int daemon_count = _atomic_daemon_threads_count;
-  int count = _atomic_threads_count;
-
-  _live_threads_count->dec(1);
-  if (daemon) {
-    _daemon_threads_count->dec(1);
   }
 }
 
@@ -724,7 +691,6 @@ ThreadStatistics::ThreadStatistics() {
   _sleep_count = 0;
   _count_pending_reset = false;
   _timer_pending_reset = false;
-  memset((void*) _perf_recursion_counts, 0, sizeof(_perf_recursion_counts));
 }
 
 ThreadSnapshot::ThreadSnapshot(ThreadsList * t_list, JavaThread* thread) {

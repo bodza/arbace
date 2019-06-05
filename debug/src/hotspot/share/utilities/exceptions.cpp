@@ -13,7 +13,6 @@
 #include "runtime/thread.inline.hpp"
 #include "runtime/threadCritical.hpp"
 #include "runtime/atomic.hpp"
-#include "utilities/events.hpp"
 #include "utilities/exceptions.hpp"
 
 // Implementation of ThreadShadow

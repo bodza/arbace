@@ -1698,12 +1698,7 @@ void java_lang_Throwable::print_stack_trace(Handle throwable, outputStream* st) 
  */
 void java_lang_Throwable::java_printStackTrace(Handle throwable, TRAPS) {
   JavaValue result(T_VOID);
-  JavaCalls::call_virtual(&result,
-                          throwable,
-                          SystemDictionary::Throwable_klass(),
-                          vmSymbols::printStackTrace_name(),
-                          vmSymbols::void_method_signature(),
-                          THREAD);
+  JavaCalls::call_virtual(&result, throwable, SystemDictionary::Throwable_klass(), vmSymbols::printStackTrace_name(), vmSymbols::void_method_signature(), THREAD);
 }
 
 void java_lang_Throwable::fill_in_stack_trace(Handle throwable, const methodHandle& method, TRAPS) {

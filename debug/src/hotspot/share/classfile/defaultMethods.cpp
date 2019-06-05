@@ -751,9 +751,7 @@ static Method* new_method(BytecodeConstantPool* cp, BytecodeBuffer* bytecodes, S
     code_length = bytecodes->length();
   }
 
-  Method* m = Method::allocate(cp->pool_holder()->class_loader_data(),
-                               code_length, flags, &sizes,
-                               mt, CHECK_NULL);
+  Method* m = Method::allocate(cp->pool_holder()->class_loader_data(), code_length, flags, &sizes, mt, CHECK_NULL);
 
   m->set_constants(NULL); // This will get filled in later
   m->set_name_index(cp->utf8(name));

@@ -5,7 +5,6 @@
 #include "oops/markOop.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/os.inline.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/align.hpp"
 
 // ReservedSpace
@@ -494,10 +493,6 @@ ReservedHeapSpace::ReservedHeapSpace(size_t size, size_t alignment, bool large, 
     initialize(size, alignment, large, NULL, false);
   }
 
-  if (base() != NULL) {
-    MemTracker::record_virtual_memory_type((address)base(), mtJavaHeap);
-  }
-
   if (_fd_for_heap != -1) {
     os::close(_fd_for_heap);
   }
@@ -507,7 +502,6 @@ ReservedHeapSpace::ReservedHeapSpace(size_t size, size_t alignment, bool large, 
 // executable.
 ReservedCodeSpace::ReservedCodeSpace(size_t r_size, size_t rs_align, bool large) :
   ReservedSpace(r_size, rs_align, large, /*executable*/ true) {
-  MemTracker::record_virtual_memory_type((address)base(), mtCode);
 }
 
 // VirtualSpace

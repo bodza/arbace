@@ -35,9 +35,7 @@ void ClassLoaderExt::setup_app_search_path() {
     // This doesn't make any sense, even for AppCDS, so let's skip it. We
     // don't want to throw an error here because -cp "." is usually assigned
     // by the launcher when classpath is not specified.
-    trace_class_path("app loader class path (skipped)=", app_class_path);
   } else {
-    trace_class_path("app loader class path=", app_class_path);
     shared_paths_misc_info()->add_app_classpath(app_class_path);
     ClassLoader::setup_app_search_path(app_class_path);
   }
@@ -136,8 +134,6 @@ void ClassLoaderExt::process_jar_manifest(ClassPathEntry* entry, bool check_for_
   char* cp_attr = get_class_path_attr(entry->name(), manifest, manifest_size);
 
   if (cp_attr != NULL && strlen(cp_attr) > 0) {
-    trace_class_path("found Class-Path: ", cp_attr);
-
     char sep = os::file_separator()[0];
     const char* dir_name = entry->name();
     const char* dir_tail = strrchr(dir_name, sep);
@@ -168,7 +164,6 @@ void ClassLoaderExt::process_jar_manifest(ClassPathEntry* entry, bool check_for_
         *libname = 0;
         strncat(libname, dir_name, dir_len);
         strncat(libname, file_start, name_len);
-        trace_class_path("library = ", libname);
         ClassLoader::update_class_path_entry_list(libname, true, false);
       }
 
@@ -212,17 +207,13 @@ InstanceKlass* ClassLoaderExt::load_class(Symbol* name, const char* path, TRAPS)
   const char* file_name = file_name_for_class_name(class_name, name->utf8_length());
 
   // Lookup stream for parsing .class file
-  ClassFileStream* stream = NULL;
   ClassPathEntry* e = find_classpath_entry_from_cache(path, CHECK_NULL);
   if (e == NULL) {
     return NULL;
   }
-  {
-    PerfClassTraceTime vmtimer(perf_sys_class_lookup_time(), ((JavaThread*) THREAD)->get_thread_stat()->perf_timers_addr(), PerfClassTraceTime::CLASS_LOAD);
-    stream = e->open_stream(file_name, CHECK_NULL);
-  }
 
-  if (NULL == stream) {
+  ClassFileStream* stream = e->open_stream(file_name, CHECK_NULL);
+  if (stream == NULL) {
     tty->print_cr("Preload Warning: Cannot find %s", class_name);
     return NULL;
   }

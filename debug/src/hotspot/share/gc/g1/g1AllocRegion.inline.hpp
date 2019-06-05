@@ -34,9 +34,7 @@ inline HeapWord* G1AllocRegion::attempt_allocation(size_t word_size) {
   return attempt_allocation(word_size, word_size, &temp);
 }
 
-inline HeapWord* G1AllocRegion::attempt_allocation(size_t min_word_size,
-                                                   size_t desired_word_size,
-                                                   size_t* actual_word_size) {
+inline HeapWord* G1AllocRegion::attempt_allocation(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size) {
   HeapRegion* alloc_region = _alloc_region;
 
   HeapWord* result = par_allocate(alloc_region, min_word_size, desired_word_size, actual_word_size);
@@ -53,9 +51,7 @@ inline HeapWord* G1AllocRegion::attempt_allocation_locked(size_t word_size) {
   return attempt_allocation_locked(word_size, word_size, &temp);
 }
 
-inline HeapWord* G1AllocRegion::attempt_allocation_locked(size_t min_word_size,
-                                                          size_t desired_word_size,
-                                                          size_t* actual_word_size) {
+inline HeapWord* G1AllocRegion::attempt_allocation_locked(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size) {
   // First we have to redo the allocation, assuming we're holding the
   // appropriate lock, in case another thread changed the region while
   // we were waiting to get the lock.
@@ -86,9 +82,7 @@ inline HeapWord* G1AllocRegion::attempt_allocation_force(size_t word_size) {
   return NULL;
 }
 
-inline HeapWord* MutatorAllocRegion::attempt_retained_allocation(size_t min_word_size,
-                                                                 size_t desired_word_size,
-                                                                 size_t* actual_word_size) {
+inline HeapWord* MutatorAllocRegion::attempt_retained_allocation(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size) {
   if (_retained_alloc_region != NULL) {
     HeapWord* result = par_allocate(_retained_alloc_region, min_word_size, desired_word_size, actual_word_size);
     if (result != NULL) {

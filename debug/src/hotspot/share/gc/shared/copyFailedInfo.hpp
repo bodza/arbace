@@ -5,10 +5,10 @@
 #include "utilities/globalDefinitions.hpp"
 
 class CopyFailedInfo : public CHeapObj<mtGC> {
-  size_t    _first_size;
-  size_t    _smallest_size;
-  size_t    _total_size;
-  uint      _count;
+  size_t _first_size;
+  size_t _smallest_size;
+  size_t _total_size;
+  uint   _count;
 
  public:
   CopyFailedInfo() : _first_size(0), _smallest_size(0), _total_size(0), _count(0) { }
@@ -39,24 +39,16 @@ class CopyFailedInfo : public CHeapObj<mtGC> {
 };
 
 class PromotionFailedInfo : public CopyFailedInfo {
-  traceid _thread_trace_id;
-
  public:
-  PromotionFailedInfo() : CopyFailedInfo(), _thread_trace_id(0) { }
+  PromotionFailedInfo() : CopyFailedInfo() { }
 
   void register_copy_failure(size_t size) {
     CopyFailedInfo::register_copy_failure(size);
-    if (_thread_trace_id == 0) {
-      _thread_trace_id = JFR_THREAD_ID(Thread::current());
-    }
   }
 
   void reset() {
     CopyFailedInfo::reset();
-    _thread_trace_id = 0;
   }
-
-  traceid thread_trace_id() const { return _thread_trace_id; }
 };
 
 class EvacuationFailedInfo : public CopyFailedInfo { };

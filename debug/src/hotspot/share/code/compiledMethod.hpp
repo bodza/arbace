@@ -322,7 +322,6 @@ public:
   void clear_ic_stubs();
 
   // Verify and count cached icholder relocations.
-  int  verify_icholder_relocations();
   void verify_oop_relocations();
 
   virtual bool is_evol_dependent_on(Klass* dependee) = 0;

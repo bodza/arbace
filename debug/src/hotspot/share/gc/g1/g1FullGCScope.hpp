@@ -3,9 +3,7 @@
 
 #include "gc/g1/g1CollectedHeap.hpp"
 #include "gc/g1/g1HeapTransition.hpp"
-#include "gc/shared/collectorCounters.hpp"
 #include "gc/shared/gcId.hpp"
-#include "gc/shared/gcTrace.hpp"
 #include "gc/shared/gcTimer.hpp"
 #include "gc/shared/isGCActiveMark.hpp"
 #include "gc/shared/vmGCOperations.hpp"
@@ -22,10 +20,8 @@ class G1FullGCScope : public StackObj {
   GCIdMark                _gc_id;
   SvcGCMarker             _svc_marker;
   STWGCTimer              _timer;
-  G1FullGCTracer          _tracer;
   IsGCActiveMark          _active;
   ClearedAllSoftRefs      _soft_refs;
-  TraceCollectorStats     _collector_stats;
   TraceMemoryManagerStats _memory_stats;
   G1HeapTransition        _heap_transition;
 
@@ -37,7 +33,6 @@ public:
   bool should_clear_soft_refs();
 
   STWGCTimer* timer();
-  G1FullGCTracer* tracer();
   G1HeapTransition* heap_transition();
 };
 

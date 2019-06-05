@@ -34,10 +34,7 @@ void G1FullGCReferenceProcessingExecutor::G1RefProcTaskProxy::work(uint worker_i
   G1FullGCMarker* marker = _collector->marker(worker_id);
   G1IsAliveClosure is_alive(_collector->mark_bitmap());
   G1FullKeepAliveClosure keep_alive(marker);
-  _proc_task.work(worker_id,
-                  is_alive,
-                  keep_alive,
-                  *marker->stack_closure());
+  _proc_task.work(worker_id, is_alive, keep_alive, *marker->stack_closure());
 }
 
 void G1FullGCReferenceProcessingExecutor::run_task(AbstractGangTask* task) {
@@ -51,20 +48,4 @@ void G1FullGCReferenceProcessingExecutor::run_task(AbstractGangTask* task, uint 
 void G1FullGCReferenceProcessingExecutor::execute(ProcessTask& proc_task, uint ergo_workers) {
   G1RefProcTaskProxy proc_task_proxy(proc_task, _collector);
   run_task(&proc_task_proxy, ergo_workers);
-}
-
-void G1FullGCReferenceProcessingExecutor::execute(STWGCTimer* timer, G1FullGCTracer* tracer) {
-  // Process reference objects found during marking.
-  G1FullGCMarker* marker = _collector->marker(0);
-  G1IsAliveClosure is_alive(_collector->mark_bitmap());
-  G1FullKeepAliveClosure keep_alive(marker);
-  ReferenceProcessorPhaseTimes pt(timer, _reference_processor->max_num_queues());
-  AbstractRefProcTaskExecutor* executor = _reference_processor->processing_is_mt() ? this : NULL;
-
-  // Process discovered references, use this executor if multi-threaded
-  // processing is enabled.
-  const ReferenceProcessorStats& stats = _reference_processor->process_discovered_references(&is_alive, &keep_alive, marker->stack_closure(), executor, &pt);
-
-  tracer->report_gc_reference_stats(stats);
-  pt.print_all_references();
 }

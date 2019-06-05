@@ -24,7 +24,6 @@ class G1IHOPControl;
 class G1Analytics;
 class G1SurvivorRegions;
 class G1YoungGenSizer;
-class GCPolicyCounters;
 class STWGCTimer;
 
 class G1Policy: public CHeapObj<mtGC> {
@@ -39,8 +38,6 @@ class G1Policy: public CHeapObj<mtGC> {
   G1RemSetTrackingPolicy _remset_tracker;
   G1MMUTracker* _mmu_tracker;
   G1IHOPControl* _ihop_control;
-
-  GCPolicyCounters* _policy_counters;
 
   double _full_collection_start_sec;
 

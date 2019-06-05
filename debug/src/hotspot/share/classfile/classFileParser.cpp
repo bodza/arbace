@@ -34,7 +34,6 @@
 #include "runtime/arguments.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/javaCalls.hpp"
-#include "runtime/perfData.hpp"
 #include "runtime/reflection.hpp"
 #include "runtime/safepointVerifiers.hpp"
 #include "runtime/signature.hpp"
@@ -280,14 +279,7 @@ void ClassFileParser::parse_constant_pool_entries(const ClassFileStream* const s
 
   // Allocate the remaining symbols
   if (names_count > 0) {
-    SymbolTable::new_symbols(_loader_data,
-                             cp,
-                             names_count,
-                             names,
-                             lengths,
-                             indices,
-                             hashValues,
-                             CHECK);
+    SymbolTable::new_symbols(_loader_data, cp, names_count, names, lengths, indices, hashValues, CHECK);
   }
 
   // Copy _current pointer of local copy back to stream.
@@ -509,45 +501,6 @@ class NameSigHash: public ResourceObj {
 };
 
 static const int HASH_ROW_SIZE = 256;
-
-static unsigned int hash(const Symbol* name, const Symbol* sig) {
-  unsigned int raw_hash = 0;
-  raw_hash += ((unsigned int)(uintptr_t)name) >> (LogHeapWordSize + 2);
-  raw_hash += ((unsigned int)(uintptr_t)sig) >> LogHeapWordSize;
-
-  return (raw_hash + (unsigned int)(uintptr_t)name) % HASH_ROW_SIZE;
-}
-
-static void initialize_hashtable(NameSigHash** table) {
-  memset((void*)table, 0, sizeof(NameSigHash*) * HASH_ROW_SIZE);
-}
-// Return false if the name/sig combination is found in table.
-// Return true if no duplicate is found. And name/sig is added as a new entry in table.
-// The old format checker uses heap sort to find duplicates.
-// NOTE: caller should guarantee that GC doesn't happen during the life cycle
-// of table since we don't expect Symbol*'s to move.
-static bool put_after_lookup(const Symbol* name, const Symbol* sig, NameSigHash** table) {
-  // First lookup for duplicates
-  int index = hash(name, sig);
-  NameSigHash* entry = table[index];
-  while (entry != NULL) {
-    if (entry->_name == name && entry->_sig == sig) {
-      return false;
-    }
-    entry = entry->_next;
-  }
-
-  // No duplicate is found, allocate a new entry and fill it.
-  entry = new NameSigHash();
-  entry->_name = name;
-  entry->_sig = sig;
-
-  // Insert into hash table
-  entry->_next = table[index];
-  table[index] = entry;
-
-  return true;
-}
 
 // Side-effects: populates the _local_interfaces field
 void ClassFileParser::parse_interfaces(const ClassFileStream* const stream, const int itfs_len, ConstantPool* const cp, bool* const has_nonstatic_concrete_methods, TRAPS) {
@@ -863,12 +816,7 @@ void ClassFileParser::parse_field_attributes(const ClassFileStream* const cfs, u
         runtime_visible_annotations_length = attribute_length;
         runtime_visible_annotations = cfs->current();
         cfs->guarantee_more(runtime_visible_annotations_length, CHECK);
-        parse_annotations(cp,
-                          runtime_visible_annotations,
-                          runtime_visible_annotations_length,
-                          parsed_annotations,
-                          _loader_data,
-                          CHECK);
+        parse_annotations(cp, runtime_visible_annotations, runtime_visible_annotations_length, parsed_annotations, _loader_data, CHECK);
         cfs->skip_u1_fast(runtime_visible_annotations_length);
       } else if (attribute_name == vmSymbols::tag_runtime_invisible_annotations()) {
         if (runtime_invisible_annotations_exists) {
@@ -1060,15 +1008,7 @@ void ClassFileParser::parse_fields(const ClassFileStream* const cfs, bool is_int
 
     const u2 attributes_count = cfs->get_u2_fast();
     if (attributes_count > 0) {
-      parse_field_attributes(cfs,
-                             attributes_count,
-                             is_static,
-                             signature_index,
-                             &constantvalue_index,
-                             &is_synthetic,
-                             &generic_signature_index,
-                             &parsed_annotations,
-                             CHECK);
+      parse_field_attributes(cfs, attributes_count, is_static, signature_index, &constantvalue_index, &is_synthetic, &generic_signature_index, &parsed_annotations, CHECK);
 
       if (parsed_annotations.field_annotations() != NULL) {
         if (_fields_annotations == NULL) {
@@ -1500,11 +1440,7 @@ void ClassFileParser::copy_method_annotations(ConstMethod* cm,
   }
 
   if (annotation_default_length > 0) {
-    a = assemble_annotations(annotation_default,
-                             annotation_default_length,
-                             NULL,
-                             0,
-                             CHECK);
+    a = assemble_annotations(annotation_default, annotation_default_length, NULL, 0, CHECK);
     cm->set_default_annotations(a);
   }
 
@@ -1790,12 +1726,7 @@ Method* ClassFileParser::parse_method(const ClassFileStream* const cfs, bool is_
         runtime_visible_annotations_length = method_attribute_length;
         runtime_visible_annotations = cfs->current();
         cfs->guarantee_more(runtime_visible_annotations_length, CHECK_NULL);
-        parse_annotations(cp,
-                          runtime_visible_annotations,
-                          runtime_visible_annotations_length,
-                          &parsed_annotations,
-                          _loader_data,
-                          CHECK_NULL);
+        parse_annotations(cp, runtime_visible_annotations, runtime_visible_annotations_length, &parsed_annotations, _loader_data, CHECK_NULL);
         cfs->skip_u1_fast(runtime_visible_annotations_length);
       } else if (method_attribute_name == vmSymbols::tag_runtime_invisible_annotations()) {
         if (runtime_invisible_annotations_exists) {
@@ -1973,17 +1904,10 @@ void ClassFileParser::parse_methods(const ClassFileStream* const cfs, bool is_in
   if (length == 0) {
     _methods = Universe::the_empty_method_array();
   } else {
-    _methods = MetadataFactory::new_array<Method*>(_loader_data,
-                                                   length,
-                                                   NULL,
-                                                   CHECK);
+    _methods = MetadataFactory::new_array<Method*>(_loader_data, length, NULL, CHECK);
 
     for (int index = 0; index < length; index++) {
-      Method* method = parse_method(cfs,
-                                    is_interface,
-                                    _cp,
-                                    promoted_flags,
-                                    CHECK);
+      Method* method = parse_method(cfs, is_interface, _cp, promoted_flags, CHECK);
 
       if (method->is_final()) {
         *has_final_method = true;
@@ -2280,12 +2204,7 @@ void ClassFileParser::parse_classfile_attributes(const ClassFileStream* const cf
         runtime_visible_annotations_length = attribute_length;
         runtime_visible_annotations = cfs->current();
         cfs->guarantee_more(runtime_visible_annotations_length, CHECK);
-        parse_annotations(cp,
-                          runtime_visible_annotations,
-                          runtime_visible_annotations_length,
-                          parsed_annotations,
-                          _loader_data,
-                          CHECK);
+        parse_annotations(cp, runtime_visible_annotations, runtime_visible_annotations_length, parsed_annotations, _loader_data, CHECK);
         cfs->skip_u1_fast(runtime_visible_annotations_length);
       } else if (tag == vmSymbols::tag_runtime_invisible_annotations()) {
         if (runtime_invisible_annotations_exists) {
@@ -3265,14 +3184,6 @@ void ClassFileParser::verify_legal_class_modifiers(jint flags, TRAPS) const {
   }
 }
 
-static bool has_illegal_visibility(jint flags) {
-  const bool is_public    = (flags & JVM_ACC_PUBLIC)    != 0;
-  const bool is_protected = (flags & JVM_ACC_PROTECTED) != 0;
-  const bool is_private   = (flags & JVM_ACC_PRIVATE)   != 0;
-
-  return ((is_public && is_protected) || (is_public && is_private) || (is_protected && is_private));
-}
-
 // A legal major_version.minor_version must be one of the following:
 //
 //   Major_version = 45, any minor_version.
@@ -3412,12 +3323,7 @@ static const char* skip_over_field_name(const char* name, bool slash_ok, unsigne
       args.push_int(unicode_ch);
 
       // public static boolean isJavaIdentifierStart(char ch);
-      JavaCalls::call_static(&result,
-        SystemDictionary::Character_klass(),
-        vmSymbols::isJavaIdentifierStart_name(),
-        vmSymbols::int_bool_signature(),
-        &args,
-        THREAD);
+      JavaCalls::call_static(&result, SystemDictionary::Character_klass(), vmSymbols::isJavaIdentifierStart_name(), vmSymbols::int_bool_signature(), &args, THREAD);
 
       if (HAS_PENDING_EXCEPTION) {
         CLEAR_PENDING_EXCEPTION;
@@ -3429,12 +3335,7 @@ static const char* skip_over_field_name(const char* name, bool slash_ok, unsigne
 
       if (not_first_ch) {
         // public static boolean isJavaIdentifierPart(char ch);
-        JavaCalls::call_static(&result,
-          SystemDictionary::Character_klass(),
-          vmSymbols::isJavaIdentifierPart_name(),
-          vmSymbols::int_bool_signature(),
-          &args,
-          THREAD);
+        JavaCalls::call_static(&result, SystemDictionary::Character_klass(), vmSymbols::isJavaIdentifierPart_name(), vmSymbols::int_bool_signature(), &args, THREAD);
 
         if (HAS_PENDING_EXCEPTION) {
           CLEAR_PENDING_EXCEPTION;
@@ -3743,9 +3644,7 @@ void ClassFileParser::prepend_host_package_name(const InstanceKlass* host_klass,
     strncpy(new_anon_name + host_pkg_len + 1, (char *)_class_name->base(), class_name_len);
 
     // Create a symbol and update the anonymous class name.
-    _class_name = SymbolTable::new_symbol(new_anon_name,
-                                          (int)host_pkg_len + 1 + class_name_len,
-                                          CHECK);
+    _class_name = SymbolTable::new_symbol(new_anon_name, (int)host_pkg_len + 1 + class_name_len, CHECK);
   }
 }
 

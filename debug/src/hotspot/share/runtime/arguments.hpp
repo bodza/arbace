@@ -5,7 +5,6 @@
 #include "runtime/flags/jvmFlag.hpp"
 #include "runtime/java.hpp"
 #include "runtime/os.hpp"
-#include "runtime/perfData.hpp"
 #include "utilities/debug.hpp"
 
 // Arguments parses the command line and recognizes options
@@ -248,7 +247,6 @@ class Arguments : AllStatic {
   static SystemProperty *_java_home;
   static SystemProperty *_java_class_path;
   static SystemProperty *_jdk_boot_class_path_append;
-  static SystemProperty *_vm_info;
 
   // --patch-module=module=<file>(<pathsep><file>)*
   // Each element contains the associated module name, path
@@ -435,19 +433,19 @@ class Arguments : AllStatic {
   static size_t max_heap_for_compressed_oops();
 
   // return a char* array containing all options
-  static char** jvm_flags_array()          { return _jvm_flags_array; }
-  static char** jvm_args_array()           { return _jvm_args_array; }
-  static int num_jvm_flags()               { return _num_jvm_flags; }
-  static int num_jvm_args()                { return _num_jvm_args; }
+  static char** jvm_flags_array()                 { return _jvm_flags_array; }
+  static char** jvm_args_array()                  { return _jvm_args_array; }
+  static int num_jvm_flags()                      { return _num_jvm_flags; }
+  static int num_jvm_args()                       { return _num_jvm_args; }
   // return the arguments passed to the Java application
-  static const char* java_command()        { return _java_command; }
+  static const char* java_command()               { return _java_command; }
 
   // print jvm_flags, jvm_args and java_command
   static void print_on(outputStream* st);
   static void print_summary_on(outputStream* st);
 
   // convenient methods to get and set jvm_flags_file
-  static const char* get_jvm_flags_file()  { return _jvm_flags_file; }
+  static const char* get_jvm_flags_file()         { return _jvm_flags_file; }
   static void set_jvm_flags_file(const char *value) {
     if (_jvm_flags_file != NULL) {
       os::free(_jvm_flags_file);
@@ -455,47 +453,47 @@ class Arguments : AllStatic {
     _jvm_flags_file = os::strdup_check_oom(value);
   }
   // convenient methods to obtain / print jvm_flags and jvm_args
-  static const char* jvm_flags()           { return build_resource_string(_jvm_flags_array, _num_jvm_flags); }
-  static const char* jvm_args()            { return build_resource_string(_jvm_args_array, _num_jvm_args); }
+  static const char* jvm_flags()                  { return build_resource_string(_jvm_flags_array, _num_jvm_flags); }
+  static const char* jvm_args()                   { return build_resource_string(_jvm_args_array, _num_jvm_args); }
   static void print_jvm_flags_on(outputStream* st);
   static void print_jvm_args_on(outputStream* st);
 
   // -Dkey=value flags
-  static SystemProperty*  system_properties()   { return _system_properties; }
-  static const char*    get_property(const char* key);
+  static SystemProperty* system_properties()      { return _system_properties; }
+  static const char* get_property(const char* key);
 
   // -Djava.vendor.url.bug
-  static const char* java_vendor_url_bug()  { return _java_vendor_url_bug; }
+  static const char* java_vendor_url_bug()        { return _java_vendor_url_bug; }
 
   // -Dsun.java.launcher
-  static const char* sun_java_launcher()    { return _sun_java_launcher; }
+  static const char* sun_java_launcher()          { return _sun_java_launcher; }
   // Was VM created by a Java launcher?
   static bool created_by_java_launcher();
   // -Dsun.java.launcher.is_altjvm
   static bool sun_java_launcher_is_altjvm();
   // -Dsun.java.launcher.pid
-  static int sun_java_launcher_pid()        { return _sun_java_launcher_pid; }
+  static int sun_java_launcher_pid()              { return _sun_java_launcher_pid; }
 
   // -Xms
-  static size_t min_heap_size()             { return _min_heap_size; }
-  static void  set_min_heap_size(size_t v)  { _min_heap_size = v; }
+  static size_t min_heap_size()                   { return _min_heap_size; }
+  static void  set_min_heap_size(size_t v)        { _min_heap_size = v; }
 
   // -Xrun
-  static AgentLibrary* libraries()          { return _libraryList.first(); }
-  static bool init_libraries_at_startup()   { return !_libraryList.is_empty(); }
+  static AgentLibrary* libraries()                { return _libraryList.first(); }
+  static bool init_libraries_at_startup()         { return !_libraryList.is_empty(); }
   static void convert_library_to_agent(AgentLibrary* lib) {
     _libraryList.remove(lib);
     _agentList.add(lib);
   }
 
   // -agentlib -agentpath
-  static AgentLibrary* agents()             { return _agentList.first(); }
-  static bool init_agents_at_startup()      { return !_agentList.is_empty(); }
+  static AgentLibrary* agents()                   { return _agentList.first(); }
+  static bool init_agents_at_startup()            { return !_agentList.is_empty(); }
 
   // abort, exit, vfprintf hooks
-  static abort_hook_t    abort_hook()       { return _abort_hook; }
-  static exit_hook_t     exit_hook()        { return _exit_hook; }
-  static vfprintf_hook_t vfprintf_hook()    { return _vfprintf_hook; }
+  static abort_hook_t    abort_hook()             { return _abort_hook; }
+  static exit_hook_t     exit_hook()              { return _exit_hook; }
+  static vfprintf_hook_t vfprintf_hook()          { return _vfprintf_hook; }
 
   // Java launcher properties
   static void process_sun_java_launcher_properties(JavaVMInitArgs* args);
@@ -505,11 +503,6 @@ class Arguments : AllStatic {
 
   // Update/Initialize System properties after JDK version number is known
   static void init_version_specific_system_properties();
-
-  // Update VM info property - called after argument parsing
-  static void update_vm_info_property(const char* vm_info) {
-    _vm_info->set_value(vm_info);
-  }
 
   // Property List manipulation
   static void PropertyList_add(SystemProperty *element);

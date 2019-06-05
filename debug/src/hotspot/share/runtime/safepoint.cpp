@@ -36,62 +36,9 @@
 #include "runtime/thread.inline.hpp"
 #include "runtime/threadSMR.hpp"
 #include "runtime/timerTrace.hpp"
-#include "services/runtimeService.hpp"
-#include "utilities/events.hpp"
 #include "utilities/macros.hpp"
 #include "c1/c1_globals.hpp"
 
-template <typename E>
-static void set_current_safepoint_id(E* event, int adjustment = 0) {
-  event->set_safepointId(SafepointSynchronize::safepoint_counter() + adjustment);
-}
-
-static void post_safepoint_begin_event(EventSafepointBegin* event, int thread_count, int critical_thread_count) {
-  set_current_safepoint_id(event);
-  event->set_totalThreadCount(thread_count);
-  event->set_jniCriticalThreadCount(critical_thread_count);
-  event->commit();
-}
-
-static void post_safepoint_cleanup_event(EventSafepointCleanup* event) {
-  set_current_safepoint_id(event);
-  event->commit();
-}
-
-static void post_safepoint_synchronize_event(EventSafepointStateSynchronization* event, int initial_number_of_threads, int threads_waiting_to_block, unsigned int iterations) {
-  if (event->should_commit()) {
-    // Group this event together with the ones committed after the counter is increased
-    set_current_safepoint_id(event, 1);
-    event->set_initialThreadCount(initial_number_of_threads);
-    event->set_runningThreadCount(threads_waiting_to_block);
-    event->set_iterations(iterations);
-    event->commit();
-  }
-}
-
-static void post_safepoint_wait_blocked_event(EventSafepointWaitBlocked* event, int initial_threads_waiting_to_block) {
-  set_current_safepoint_id(event);
-  event->set_runningThreadCount(initial_threads_waiting_to_block);
-  event->commit();
-}
-
-static void post_safepoint_cleanup_task_event(EventSafepointCleanupTask* event, const char* name) {
-  if (event->should_commit()) {
-    set_current_safepoint_id(event);
-    event->set_name(name);
-    event->commit();
-  }
-}
-
-static void post_safepoint_end_event(EventSafepointEnd* event) {
-  if (event->should_commit()) {
-    // Group this event together with the ones committed before the counter increased
-    set_current_safepoint_id(event, -1);
-    event->commit();
-  }
-}
-
-// --------------------------------------------------------------------------------------------------
 // Implementation of Safepoint begin/end
 
 SafepointSynchronize::SynchronizeState volatile SafepointSynchronize::_state = SafepointSynchronize::_not_synchronized;
@@ -107,7 +54,6 @@ static bool timeout_error_printed = false;
 
 // Roll all threads forward to a safepoint and suspend them all
 void SafepointSynchronize::begin() {
-  EventSafepointBegin begin_event;
   Thread* myThread = Thread::current();
 
   Universe::heap()->safepoint_synchronize_begin();
@@ -117,8 +63,6 @@ void SafepointSynchronize::begin() {
   Threads_lock->lock();
 
   int nof_threads = Threads::number_of_threads();
-
-  RuntimeService::record_safepoint_begin();
 
   MutexLocker mu(Safepoint_lock);
 
@@ -172,10 +116,9 @@ void SafepointSynchronize::begin() {
   //     block itself when it attempts transitions to a new state.
   //
   {
-    EventSafepointStateSynchronization sync_event;
     int initial_running = 0;
 
-    _state            = _synchronizing;
+    _state = _synchronizing;
 
     if (SafepointMechanism::uses_thread_local_poll()) {
       // Arming the per thread poll while having _state != _not_synchronized means safepointing
@@ -197,7 +140,7 @@ void SafepointSynchronize::begin() {
       Interpreter::notice_safepoints();
 
       // Make polling safepoint aware
-      guarantee (PageArmed == 0, "invariant");
+      guarantee(PageArmed == 0, "invariant");
       PageArmed = 1;
       os::make_polling_page_unreadable();
     }
@@ -300,7 +243,7 @@ void SafepointSynchronize::begin() {
             // polling pages. We keep this guarantee in its original
             // form so that searches of the bug database for this
             // failure mode find the right bugs.
-            guarantee (PageArmed == 0, "invariant");
+            guarantee(PageArmed == 0, "invariant");
           }
 
           // Instead of (ncpus > 1) consider either (still_running < (ncpus + EPSILON)) or
@@ -319,15 +262,10 @@ void SafepointSynchronize::begin() {
         }
       }
     }
-
-    if (sync_event.should_commit()) {
-      post_safepoint_synchronize_event(&sync_event, initial_running, _waiting_to_block, iterations);
-    }
   }
 
   // wait until all threads are stopped
   {
-    EventSafepointWaitBlocked wait_blocked_event;
     int initial_waiting_to_block = _waiting_to_block;
 
     while (_waiting_to_block > 0) {
@@ -350,35 +288,21 @@ void SafepointSynchronize::begin() {
     _state = _synchronized;
 
     OrderAccess::fence();
-    if (wait_blocked_event.should_commit()) {
-      post_safepoint_wait_blocked_event(&wait_blocked_event, initial_waiting_to_block);
-    }
   }
 
   // Update the count of active JNI critical regions
   GCLocker::set_jni_lock_count(_current_jni_active_count);
 
-  RuntimeService::record_safepoint_synchronized();
-
   // Call stuff that needs to be run when a safepoint is just about to be completed
   {
-    EventSafepointCleanup cleanup_event;
     do_cleanup_tasks();
-    if (cleanup_event.should_commit()) {
-      post_safepoint_cleanup_event(&cleanup_event);
-    }
-  }
-
-  if (begin_event.should_commit()) {
-    post_safepoint_begin_event(&begin_event, nof_threads, _current_jni_active_count);
   }
 }
 
 // Wake up all threads, so they are ready to resume execution after the safepoint
 // operation has been carried out
 void SafepointSynchronize::end() {
-  EventSafepointEnd event;
-  _safepoint_counter ++;
+  _safepoint_counter++;
   // memory fence isn't required here since an odd _safepoint_counter
   // value can do no harm and a fence is issued below anyway.
 
@@ -436,8 +360,6 @@ void SafepointSynchronize::end() {
         }
       }
 
-      RuntimeService::record_safepoint_end();
-
       // Release threads lock, so threads can be created/destroyed again.
       // It will also release all threads blocked in signal_thread_blocked.
       Threads_lock->unlock();
@@ -448,9 +370,6 @@ void SafepointSynchronize::end() {
   // record this time so VMThread can keep track how much time has elapsed
   // since last safepoint.
   _end_of_last_safepoint = os::javaTimeMillis();
-  if (event.should_commit()) {
-    post_safepoint_end_event(&event);
-  }
 }
 
 bool SafepointSynchronize::is_cleanup_needed() {
@@ -500,50 +419,30 @@ public:
 
     if (!_subtasks.is_task_claimed(SafepointSynchronize::SAFEPOINT_CLEANUP_DEFLATE_MONITORS)) {
       const char* name = "deflating idle monitors";
-      EventSafepointCleanupTask event;
       ObjectSynchronizer::deflate_idle_monitors(_counters);
-      if (event.should_commit()) {
-        post_safepoint_cleanup_task_event(&event, name);
-      }
     }
 
     if (!_subtasks.is_task_claimed(SafepointSynchronize::SAFEPOINT_CLEANUP_UPDATE_INLINE_CACHES)) {
       const char* name = "updating inline caches";
-      EventSafepointCleanupTask event;
       InlineCacheBuffer::update_inline_caches();
-      if (event.should_commit()) {
-        post_safepoint_cleanup_task_event(&event, name);
-      }
     }
 
     if (!_subtasks.is_task_claimed(SafepointSynchronize::SAFEPOINT_CLEANUP_COMPILATION_POLICY)) {
       const char* name = "compilation policy safepoint handler";
-      EventSafepointCleanupTask event;
       CompilationPolicy::policy()->do_safepoint_work();
-      if (event.should_commit()) {
-        post_safepoint_cleanup_task_event(&event, name);
-      }
     }
 
     if (!_subtasks.is_task_claimed(SafepointSynchronize::SAFEPOINT_CLEANUP_SYMBOL_TABLE_REHASH)) {
       if (SymbolTable::needs_rehashing()) {
         const char* name = "rehashing symbol table";
-        EventSafepointCleanupTask event;
         SymbolTable::rehash_table();
-        if (event.should_commit()) {
-          post_safepoint_cleanup_task_event(&event, name);
-        }
       }
     }
 
     if (!_subtasks.is_task_claimed(SafepointSynchronize::SAFEPOINT_CLEANUP_STRING_TABLE_REHASH)) {
       if (StringTable::needs_rehashing()) {
         const char* name = "rehashing string table";
-        EventSafepointCleanupTask event;
         StringTable::rehash_table();
-        if (event.should_commit()) {
-          post_safepoint_cleanup_task_event(&event, name);
-        }
       }
     }
 
@@ -551,20 +450,12 @@ public:
       // CMS delays purging the CLDG until the beginning of the next safepoint and to
       // make sure concurrent sweep is done
       const char* name = "purging class loader data graph";
-      EventSafepointCleanupTask event;
       ClassLoaderDataGraph::purge_if_needed();
-      if (event.should_commit()) {
-        post_safepoint_cleanup_task_event(&event, name);
-      }
     }
 
     if (!_subtasks.is_task_claimed(SafepointSynchronize::SAFEPOINT_CLEANUP_SYSTEM_DICTIONARY_RESIZE)) {
       const char* name = "resizing system dictionaries";
-      EventSafepointCleanupTask event;
       ClassLoaderDataGraph::resize_if_needed();
-      if (event.should_commit()) {
-        post_safepoint_cleanup_task_event(&event, name);
-      }
     }
     _subtasks.all_tasks_completed(_num_workers);
   }
@@ -797,8 +688,7 @@ void SafepointSynchronize::print_safepoint_timeout(SafepointTimeoutReason reason
     tty->print_cr("# SafepointSynchronize::begin: (End of list)");
   }
 
-  // To debug the long safepoint, specify both AbortVMOnSafepointTimeout &
-  // false.
+  // To debug the long safepoint, specify AbortVMOnSafepointTimeout
   if (AbortVMOnSafepointTimeout) {
     fatal("Safepoint sync time longer than " INTX_FORMAT "ms detected when executing %s.", SafepointTimeoutDelay, VMThread::vm_safepoint_description());
   }

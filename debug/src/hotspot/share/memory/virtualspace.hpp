@@ -30,8 +30,7 @@ class ReservedSpace {
   // if the given size is not aligned to that value, as the reservation will be
   // aligned up to the final alignment in this case.
   ReservedSpace(size_t size, size_t preferred_page_size = 0);
-  ReservedSpace(size_t size, size_t alignment, bool large,
-                char* requested_address = NULL);
+  ReservedSpace(size_t size, size_t alignment, bool large, char* requested_address = NULL);
   ReservedSpace(size_t size, size_t alignment, bool large, bool executable);
 
   // Accessors
@@ -46,13 +45,11 @@ class ReservedSpace {
   void release();
 
   // Splitting
-  ReservedSpace first_part(size_t partition_size, size_t alignment,
-                           bool split = false, bool realloc = true);
+  ReservedSpace first_part(size_t partition_size, size_t alignment, bool split = false, bool realloc = true);
   ReservedSpace last_part (size_t partition_size, size_t alignment);
 
   // These simply call the above using the default alignment.
-  inline ReservedSpace first_part(size_t partition_size,
-                                  bool split = false, bool realloc = true);
+  inline ReservedSpace first_part(size_t partition_size, bool split = false, bool realloc = true);
   inline ReservedSpace last_part (size_t partition_size);
 
   // Alignment

@@ -49,9 +49,6 @@ class SharedRuntime: AllStatic {
  public:
   static void generate_stubs(void);
 
-  // max bytes for each dtrace string parameter
-  enum { max_dtrace_string_size = 256 };
-
   // The following arithmetic routines are used on platforms that do
   // not have machine instructions to implement their functionality.
   // Do not remove these.
@@ -483,19 +480,6 @@ class AdapterHandlerEntry : public BasicHashtableEntry<mtCode> {
 
   //virtual void print_on(outputStream* st) const;  DO NOT USE
   void print_adapter_on(outputStream* st) const;
-};
-
-// This class is used only with false == true. It holds extra information
-// that's used only during CDS dump time.
-// For details, see comments around Method::link_method()
-class CDSAdapterHandlerEntry: public AdapterHandlerEntry {
-  address               _c2i_entry_trampoline;   // allocated from shared spaces "MC" region
-  AdapterHandlerEntry** _adapter_trampoline;     // allocated from shared spaces "MD" region
-
-public:
-  address get_c2i_entry_trampoline()             const { return _c2i_entry_trampoline; }
-  AdapterHandlerEntry** get_adapter_trampoline() const { return _adapter_trampoline; }
-  void init() { };
 };
 
 class AdapterHandlerLibrary: public AllStatic {

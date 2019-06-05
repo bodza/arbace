@@ -4,7 +4,6 @@
 #include "gc/shared/cardTableRS.hpp"
 #include "gc/shared/collectorPolicy.hpp"
 #include "gc/shared/gcLocker.hpp"
-#include "gc/shared/gcPolicyCounters.hpp"
 #include "gc/shared/generationSpec.hpp"
 #include "gc/shared/space.hpp"
 #include "gc/shared/vmGCOperations.hpp"

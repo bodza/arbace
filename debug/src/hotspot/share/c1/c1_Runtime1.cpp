@@ -39,7 +39,6 @@
 #include "runtime/vframeArray.hpp"
 #include "runtime/vm_version.hpp"
 #include "utilities/copy.hpp"
-#include "utilities/events.hpp"
 
 // Implementation of StubAssembler
 
@@ -307,6 +306,9 @@ static nmethod* counter_overflow_helper(JavaThread* THREAD, int branch_bci, Meth
         break;
       case Bytecodes::_goto_w:
         offset = Bytes::get_Java_u4(pc + 1);
+        break;
+
+      default:
         break;
     }
     bci = branch_bci + offset;

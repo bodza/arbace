@@ -6,7 +6,6 @@
 #include "gc/shared/space.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/java.hpp"
-#include "services/memTracker.hpp"
 
 //////////////////////////////////////////////////////////////////////
 // G1BlockOffsetTable

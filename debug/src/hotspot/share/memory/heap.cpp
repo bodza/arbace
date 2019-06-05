@@ -3,7 +3,6 @@
 #include "memory/heap.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/os.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/align.hpp"
 
 size_t CodeHeap::header_size() {
@@ -91,8 +90,6 @@ bool CodeHeap::reserve(ReservedSpace rs, size_t committed_size, size_t segment_s
   if (!_segmap.initialize(reserved_segments_size, committed_segments_size)) {
     return false;
   }
-
-  MemTracker::record_virtual_memory_type((address)_segmap.low_boundary(), mtCode);
 
   // initialize remaining instance variables
   clear();

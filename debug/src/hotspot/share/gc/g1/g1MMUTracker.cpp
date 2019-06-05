@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "gc/g1/g1MMUTracker.hpp"
-#include "gc/shared/gcTrace.hpp"
 #include "runtime/mutexLocker.hpp"
 #include "utilities/ostream.hpp"
 
@@ -77,10 +76,6 @@ void G1MMUTrackerQueue::add_pause(double start, double end) {
     ++_no_entries;
   }
   _array[_head_index] = G1MMUTrackerQueueElem(start, end);
-
-  // Current entry needs to be added before calculating the value
-  double slice_time = calculate_gc_time(end);
-  G1MMUTracer::report_mmu(_time_slice, slice_time, _max_gc_time);
 }
 
 double G1MMUTrackerQueue::when_sec(double current_time, double pause_time) {

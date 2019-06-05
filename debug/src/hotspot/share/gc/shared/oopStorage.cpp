@@ -80,7 +80,7 @@ OopStorage::ActiveArray::~ActiveArray() { }
 
 OopStorage::ActiveArray* OopStorage::ActiveArray::create(size_t size, AllocFailType alloc_fail) {
   size_t size_in_bytes = blocks_offset() + sizeof(Block*) * size;
-  void* mem = NEW_C_HEAP_ARRAY3(char, size_in_bytes, mtGC, CURRENT_PC, alloc_fail);
+  void* mem = NEW_C_HEAP_ARRAY3(char, size_in_bytes, mtGC, alloc_fail);
   if (mem == NULL) return NULL;
   return new (mem) ActiveArray(size);
 }

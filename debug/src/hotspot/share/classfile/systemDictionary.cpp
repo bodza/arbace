@@ -92,19 +92,11 @@ oop SystemDictionary::java_platform_loader() {
 void SystemDictionary::compute_java_loaders(TRAPS) {
   JavaValue result(T_OBJECT);
   InstanceKlass* class_loader_klass = SystemDictionary::ClassLoader_klass();
-  JavaCalls::call_static(&result,
-                         class_loader_klass,
-                         vmSymbols::getSystemClassLoader_name(),
-                         vmSymbols::void_classloader_signature(),
-                         CHECK);
+  JavaCalls::call_static(&result, class_loader_klass, vmSymbols::getSystemClassLoader_name(), vmSymbols::void_classloader_signature(), CHECK);
 
   _java_system_loader = (oop)result.get_jobject();
 
-  JavaCalls::call_static(&result,
-                         class_loader_klass,
-                         vmSymbols::getPlatformClassLoader_name(),
-                         vmSymbols::void_classloader_signature(),
-                         CHECK);
+  JavaCalls::call_static(&result, class_loader_klass, vmSymbols::getPlatformClassLoader_name(), vmSymbols::void_classloader_signature(), CHECK);
 
   _java_platform_loader = (oop)result.get_jobject();
 }
@@ -203,8 +195,7 @@ Klass* SystemDictionary::resolve_or_null(Symbol* class_name, Handle class_loader
   } else if (FieldType::is_obj(class_name)) {
     ResourceMark rm(THREAD);
     // Ignore wrapping L and ;.
-    TempNewSymbol name = SymbolTable::new_symbol(class_name->as_C_string() + 1,
-                                   class_name->utf8_length() - 2, CHECK_NULL);
+    TempNewSymbol name = SymbolTable::new_symbol(class_name->as_C_string() + 1, class_name->utf8_length() - 2, CHECK_NULL);
     return resolve_instance_class_or_null(name, class_loader, protection_domain, THREAD);
   } else {
     return resolve_instance_class_or_null(class_name, class_loader, protection_domain, THREAD);
@@ -225,10 +216,7 @@ Klass* SystemDictionary::resolve_array_class_or_null(Symbol* class_name, Handle 
   BasicType t = FieldType::get_array_info(class_name, fd, CHECK_NULL);
   if (t == T_OBJECT) {
     // naked oop "k" is OK here -- we assign back into it
-    k = SystemDictionary::resolve_instance_class_or_null(fd.object_key(),
-                                                         class_loader,
-                                                         protection_domain,
-                                                         CHECK_NULL);
+    k = SystemDictionary::resolve_instance_class_or_null(fd.object_key(), class_loader, protection_domain, CHECK_NULL);
     if (k != NULL) {
       k = k->array_klass(fd.dimension(), CHECK_NULL);
     }
@@ -445,12 +433,7 @@ InstanceKlass* SystemDictionary::handle_parallel_super_load(Symbol* name, Symbol
   // and has not yet finished.
   // In both cases the original caller will clean up the placeholder
   // entry on error.
-  Klass* superk = SystemDictionary::resolve_super_or_fail(name,
-                                                          superclassname,
-                                                          class_loader,
-                                                          protection_domain,
-                                                          true,
-                                                          CHECK_NULL);
+  Klass* superk = SystemDictionary::resolve_super_or_fail(name, superclassname, class_loader, protection_domain, true, CHECK_NULL);
 
   // parallelCapable class loaders do NOT wait for parallel superclass loads to complete
   // Serial class loaders and bootstrap classloader do wait for superclass loads
@@ -501,20 +484,11 @@ InstanceKlass* SystemDictionary::handle_parallel_super_load(Symbol* name, Symbol
   return NULL;
 }
 
-static void post_class_load_event(EventClassLoad* event, const InstanceKlass* k, const ClassLoaderData* init_cld) {
-  event->set_loadedClass(k);
-  event->set_definingClassLoader(k->class_loader_data());
-  event->set_initiatingClassLoader(init_cld);
-  event->commit();
-}
-
 // Be careful when modifying this code: once you have run
 // placeholders()->find_and_add(PlaceholderTable::LOAD_INSTANCE),
 // you need to find_and_remove it before returning.
 // So be careful to not exit with a CHECK_ macro betweeen these calls.
 Klass* SystemDictionary::resolve_instance_class_or_null(Symbol* name, Handle class_loader, Handle protection_domain, TRAPS) {
-  EventClassLoad class_load_start_event;
-
   HandleMark hm(THREAD);
 
   // Fix for 4474172; see evaluation for more details
@@ -554,7 +528,6 @@ Klass* SystemDictionary::resolve_instance_class_or_null(Symbol* name, Handle cla
   // Class is not in SystemDictionary so we have to do loading.
   // Make sure we are synchronized on the class loader before we proceed
   Handle lockObject = compute_loader_lock_object(class_loader, THREAD);
-  check_loader_lock_contention(lockObject, THREAD);
   ObjectLocker ol(lockObject, THREAD, DoObjectLock);
 
   // Check again (after locking) if class already exist in SystemDictionary
@@ -724,9 +697,6 @@ Klass* SystemDictionary::resolve_instance_class_or_null(Symbol* name, Handle cla
   if (HAS_PENDING_EXCEPTION || k == NULL) {
     return NULL;
   }
-  if (class_load_start_event.should_commit()) {
-    post_class_load_event(&class_load_start_event, k, loader_data);
-  }
 
   // return if the protection domain in NULL
   if (protection_domain() == NULL) return k;
@@ -801,8 +771,6 @@ Klass* SystemDictionary::find_instance_or_array_klass(Symbol* class_name, Handle
 // Handles unsafe_DefineAnonymousClass and redefineclasses
 // RedefinedClasses do not add to the class hierarchy
 InstanceKlass* SystemDictionary::parse_stream(Symbol* class_name, Handle class_loader, Handle protection_domain, ClassFileStream* st, const InstanceKlass* host_klass, GrowableArray<Handle>* cp_patches, TRAPS) {
-  EventClassLoad class_load_start_event;
-
   ClassLoaderData* loader_data;
   if (host_klass != NULL) {
     // Create a new CLD for anonymous class, that uses the same class loader
@@ -846,10 +814,6 @@ InstanceKlass* SystemDictionary::parse_stream(Symbol* class_name, Handle class_l
 
     // If it's anonymous, initialize it now, since nobody else will.
     k->eager_initialize(CHECK_NULL);
-
-    if (class_load_start_event.should_commit()) {
-      post_class_load_event(&class_load_start_event, k, loader_data);
-    }
   }
 
   return k;
@@ -874,7 +838,6 @@ InstanceKlass* SystemDictionary::resolve_from_stream(Symbol* class_name, Handle 
 
   // Make sure we are synchronized on the class loader before we proceed
   Handle lockObject = compute_loader_lock_object(class_loader, THREAD);
-  check_loader_lock_contention(lockObject, THREAD);
   ObjectLocker ol(lockObject, THREAD, DoObjectLock);
 
   // Parse the stream and create a klass.
@@ -974,7 +937,6 @@ InstanceKlass* SystemDictionary::load_instance_class(Symbol* class_name, Handle 
 
     if (k == NULL) {
       // Use VM class loader
-      PerfTraceTime vmtimer(ClassLoader::perf_sys_classload_time());
       k = ClassLoader::load_class(class_name, search_only_bootloader_append, CHECK_NULL);
     }
 
@@ -997,13 +959,6 @@ InstanceKlass* SystemDictionary::load_instance_class(Symbol* class_name, Handle 
 
     JavaThread* jt = (JavaThread*) THREAD;
 
-    PerfClassTraceTime vmtimer(ClassLoader::perf_app_classload_time(),
-                               ClassLoader::perf_app_classload_selftime(),
-                               ClassLoader::perf_app_classload_count(),
-                               jt->get_thread_stat()->perf_recursion_counts_addr(),
-                               jt->get_thread_stat()->perf_timers_addr(),
-                               PerfClassTraceTime::CLASS_LOAD);
-
     Handle s = java_lang_String::create_from_symbol(class_name, CHECK_NULL);
     // Translate to external class name format, i.e., convert '/' chars to '.'
     Handle string = java_lang_String::externalize_classname(s, CHECK_NULL);
@@ -1016,13 +971,7 @@ InstanceKlass* SystemDictionary::load_instance_class(Symbol* class_name, Handle 
     // For parallelCapable class loaders, JDK >=7, loadClass(String, boolean) will
     // acquire a class-name based lock rather than the class loader object lock.
     // JDK < 7 already acquire the class loader lock in loadClass(String, boolean).
-    JavaCalls::call_virtual(&result,
-                            class_loader,
-                            spec_klass,
-                            vmSymbols::loadClass_name(),
-                            vmSymbols::string_class_signature(),
-                            string,
-                            CHECK_NULL);
+    JavaCalls::call_virtual(&result, class_loader, spec_klass, vmSymbols::loadClass_name(), vmSymbols::string_class_signature(), string, CHECK_NULL);
 
     oop obj = (oop) result.get_jobject();
 
@@ -1039,15 +988,6 @@ InstanceKlass* SystemDictionary::load_instance_class(Symbol* class_name, Handle 
     }
     // Class is not found or has the wrong name, return NULL
     return NULL;
-  }
-}
-
-static void post_class_define_event(InstanceKlass* k, const ClassLoaderData* def_cld) {
-  EventClassDefine event;
-  if (event.should_commit()) {
-    event.set_definedClass(k);
-    event.set_definingClassLoader(def_cld);
-    event.commit();
   }
 }
 
@@ -1107,8 +1047,6 @@ void SystemDictionary::define_instance_class(InstanceKlass* k, TRAPS) {
     update_dictionary(d_hash, p_index, p_hash, k, class_loader_h, THREAD);
   }
   k->eager_initialize(THREAD);
-
-  post_class_define_event(k, loader_data);
 }
 
 // Support parallel classloading
@@ -1213,26 +1151,6 @@ Handle SystemDictionary::compute_loader_lock_object(Handle class_loader, TRAPS) 
   }
 }
 
-// This method is added to check how often we have to wait to grab loader
-// lock. The results are being recorded in the performance counters defined in
-// ClassLoader::_sync_systemLoaderLockContentionRate and
-// ClassLoader::_sync_nonSystemLoaderLockConteionRate.
-void SystemDictionary::check_loader_lock_contention(Handle loader_lock, TRAPS) {
-  if (!UsePerfData) {
-    return;
-  }
-
-  if (ObjectSynchronizer::query_lock_ownership((JavaThread*)THREAD, loader_lock) == ObjectSynchronizer::owner_other) {
-    // contention will likely happen, so increment the corresponding
-    // contention counter.
-    if (oopDesc::equals(loader_lock(), _system_loader_lock_obj)) {
-      ClassLoader::sync_systemLoaderLockContentionRate()->inc();
-    } else {
-      ClassLoader::sync_nonSystemLoaderLockContentionRate()->inc();
-    }
-  }
-}
-
 // ----------------------------------------------------------------------------
 // Lookup
 
@@ -1252,11 +1170,7 @@ Symbol* SystemDictionary::find_placeholder(Symbol* class_name, ClassLoaderData* 
 // Precalculating the hash and index is an optimization because there are many lookups
 // before adding the class.
 InstanceKlass* SystemDictionary::find_class(Symbol* class_name, ClassLoaderData* loader_data) {
-  guarantee(VerifyBeforeGC      ||
-            VerifyDuringGC      ||
-            VerifyBeforeExit    ||
-            VerifyDuringStartup ||
-            VerifyAfterGC, "too expensive");
+  guarantee(VerifyBeforeGC || VerifyDuringGC || VerifyBeforeExit || VerifyDuringStartup || VerifyAfterGC, "too expensive");
 
   Dictionary* dictionary = loader_data->dictionary();
   unsigned int d_hash = dictionary->compute_hash(class_name);
@@ -1595,8 +1509,7 @@ Klass* SystemDictionary::find_constrained_instance_or_array_klass(Symbol* class_
   // First see if it has been loaded directly.
   // Force the protection domain to be null.  (This removes protection checks.)
   Handle no_protection_domain;
-  Klass* klass = find_instance_or_array_klass(class_name, class_loader,
-                                              no_protection_domain, CHECK_NULL);
+  Klass* klass = find_instance_or_array_klass(class_name, class_loader, no_protection_domain, CHECK_NULL);
   if (klass != NULL)
     return klass;
 
@@ -1841,11 +1754,7 @@ methodHandle SystemDictionary::find_method_handle_invoker(Klass* klass, Symbol* 
   args.push_oop(method_type);
   args.push_oop(appendix_box);
   JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result,
-                         SystemDictionary::MethodHandleNatives_klass(),
-                         vmSymbols::linkMethod_name(),
-                         vmSymbols::linkMethod_signature(),
-                         &args, CHECK_(empty));
+  JavaCalls::call_static(&result, SystemDictionary::MethodHandleNatives_klass(), vmSymbols::linkMethod_name(), vmSymbols::linkMethod_signature(), &args, CHECK_(empty));
   Handle mname(THREAD, (oop) result.get_jobject());
   (*method_type_result) = method_type;
   return unpack_method_and_appendix(mname, accessing_klass, appendix_box, appendix_result, THREAD);
@@ -1987,11 +1896,7 @@ Handle SystemDictionary::find_method_handle_type(Symbol* signature, Klass* acces
   JavaCallArguments args(Handle(THREAD, rt()));
   args.push_oop(pts);
   JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result,
-                         SystemDictionary::MethodHandleNatives_klass(),
-                         vmSymbols::findMethodHandleType_name(),
-                         vmSymbols::findMethodHandleType_signature(),
-                         &args, CHECK_(empty));
+  JavaCalls::call_static(&result, SystemDictionary::MethodHandleNatives_klass(), vmSymbols::findMethodHandleType_name(), vmSymbols::findMethodHandleType_signature(), &args, CHECK_(empty));
   Handle method_type(THREAD, (oop) result.get_jobject());
 
   if (can_be_cached) {
@@ -2065,11 +1970,7 @@ Handle SystemDictionary::link_method_handle_constant(Klass* caller, int ref_kind
   args.push_oop(name_str);
   args.push_oop(type);
   JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result,
-                         SystemDictionary::MethodHandleNatives_klass(),
-                         vmSymbols::linkMethodHandleConstant_name(),
-                         vmSymbols::linkMethodHandleConstant_signature(),
-                         &args, CHECK_(empty));
+  JavaCalls::call_static(&result, SystemDictionary::MethodHandleNatives_klass(), vmSymbols::linkMethodHandleConstant_name(), vmSymbols::linkMethodHandleConstant_signature(), &args, CHECK_(empty));
   return Handle(THREAD, (oop) result.get_jobject());
 }
 
@@ -2094,8 +1995,7 @@ Handle SystemDictionary::link_dynamic_constant(Klass* caller, int condy_index, H
   Handle constant_name = java_lang_String::create_from_symbol(name, CHECK_(empty));
 
   // Resolve the constant type in the context of the caller class
-  Handle type_mirror = find_java_mirror_for_type(type, caller, SignatureStream::NCDFError,
-                                                 CHECK_(empty));
+  Handle type_mirror = find_java_mirror_for_type(type, caller, SignatureStream::NCDFError, CHECK_(empty));
 
   // call java.lang.invoke.MethodHandleNatives::linkConstantDyanmic(caller, condy_index, bsm, type, info)
   JavaCallArguments args;
@@ -2106,11 +2006,7 @@ Handle SystemDictionary::link_dynamic_constant(Klass* caller, int condy_index, H
   args.push_oop(type_mirror);
   args.push_oop(info);
   JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result,
-                         SystemDictionary::MethodHandleNatives_klass(),
-                         vmSymbols::linkDynamicConstant_name(),
-                         vmSymbols::linkDynamicConstant_signature(),
-                         &args, CHECK_(empty));
+  JavaCalls::call_static(&result, SystemDictionary::MethodHandleNatives_klass(), vmSymbols::linkDynamicConstant_name(), vmSymbols::linkDynamicConstant_signature(), &args, CHECK_(empty));
 
   return Handle(THREAD, (oop) result.get_jobject());
 }
@@ -2156,11 +2052,7 @@ methodHandle SystemDictionary::find_dynamic_call_site_invoker(Klass* caller,
   args.push_oop(info);
   args.push_oop(appendix_box);
   JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result,
-                         SystemDictionary::MethodHandleNatives_klass(),
-                         vmSymbols::linkCallSite_name(),
-                         vmSymbols::linkCallSite_signature(),
-                         &args, CHECK_(empty));
+  JavaCalls::call_static(&result, SystemDictionary::MethodHandleNatives_klass(), vmSymbols::linkCallSite_name(), vmSymbols::linkCallSite_signature(), &args, CHECK_(empty));
   Handle mname(THREAD, (oop) result.get_jobject());
   (*method_type_result) = method_type;
   return unpack_method_and_appendix(mname, caller, appendix_box, appendix_result, THREAD);

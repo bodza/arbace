@@ -5,9 +5,7 @@
 #include "oops/oop.inline.hpp"
 #include "utilities/align.hpp"
 
-inline HeapWord* CollectedHeap::align_allocation_or_fail(HeapWord* addr,
-                                                         HeapWord* end,
-                                                         unsigned short alignment_in_bytes) {
+inline HeapWord* CollectedHeap::align_allocation_or_fail(HeapWord* addr, HeapWord* end, unsigned short alignment_in_bytes) {
   if (alignment_in_bytes <= ObjectAlignmentInBytes) {
     return addr;
   }

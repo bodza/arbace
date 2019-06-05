@@ -304,9 +304,7 @@ inline address_word castable_address(void* x) { return address_word(x) ; }
 // and then additions like
 //       ... top() + size ...
 // are safe because we know that top() is at least size below end().
-inline size_t pointer_delta(const volatile void* left,
-                            const volatile void* right,
-                            size_t element_size) {
+inline size_t pointer_delta(const volatile void* left, const volatile void* right, size_t element_size) {
   return (((uintptr_t) left) - ((uintptr_t) right)) / element_size;
 }
 

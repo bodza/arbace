@@ -18,8 +18,6 @@ JVMFlag::Error BiasedLockingStartupDelayFunc(intx value, bool verbose);
 JVMFlag::Error BiasedLockingBulkRevokeThresholdFunc(intx value, bool verbose);
 JVMFlag::Error BiasedLockingDecayTimeFunc(intx value, bool verbose);
 
-JVMFlag::Error PerfDataSamplingIntervalFunc(intx value, bool verbose);
-
 JVMFlag::Error ThreadLocalHandshakesConstraintFunc(bool value, bool verbose);
 
 #endif

@@ -13,10 +13,9 @@
 #include "runtime/os.hpp"
 #include "runtime/stubCodeGenerator.hpp"
 #include "runtime/stubRoutines.hpp"
-#include CPU_HEADER(depChecker)
 
-void*       Disassembler::_library               = NULL;
-bool        Disassembler::_tried_to_load_library = false;
+void* Disassembler::_library               = NULL;
+bool  Disassembler::_tried_to_load_library = false;
 
 // This routine is in the shared library:
 Disassembler::decode_func_virtual Disassembler::_decode_instructions_virtual = NULL;

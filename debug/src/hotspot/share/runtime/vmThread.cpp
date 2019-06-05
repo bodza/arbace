@@ -13,8 +13,6 @@
 #include "runtime/thread.inline.hpp"
 #include "runtime/vmThread.hpp"
 #include "runtime/vm_operations.hpp"
-#include "services/runtimeService.hpp"
-#include "utilities/events.hpp"
 #include "utilities/vmError.hpp"
 #include "utilities/xmlstream.hpp"
 
@@ -143,14 +141,13 @@ void VMOperationQueue::oops_do(OopClosure* f) {
 //------------------------------------------------------------------------------------------------------------------
 // Implementation of VMThread stuff
 
-bool                VMThread::_should_terminate   = false;
-bool              VMThread::_terminated         = false;
-Monitor*          VMThread::_terminate_lock     = NULL;
-VMThread*         VMThread::_vm_thread          = NULL;
-VM_Operation*     VMThread::_cur_vm_operation   = NULL;
-VMOperationQueue* VMThread::_vm_queue           = NULL;
-PerfCounter*      VMThread::_perf_accumulated_vm_operation_time = NULL;
-const char*       VMThread::_no_op_reason       = NULL;
+bool              VMThread::_should_terminate = false;
+bool              VMThread::_terminated       = false;
+Monitor*          VMThread::_terminate_lock   = NULL;
+VMThread*         VMThread::_vm_thread        = NULL;
+VM_Operation*     VMThread::_cur_vm_operation = NULL;
+VMOperationQueue* VMThread::_vm_queue         = NULL;
+const char*       VMThread::_no_op_reason     = NULL;
 
 void VMThread::create() {
   _vm_thread = new VMThread();
@@ -159,14 +156,7 @@ void VMThread::create() {
   _vm_queue = new VMOperationQueue();
   guarantee(_vm_queue != NULL, "just checking");
 
-  _terminate_lock = new Monitor(Mutex::safepoint, "VMThread::_terminate_lock", true,
-                                Monitor::_safepoint_check_never);
-
-  if (UsePerfData) {
-    // jvmstat performance counters
-    Thread* THREAD = Thread::current();
-    _perf_accumulated_vm_operation_time = PerfDataManager::create_counter(SUN_THREADS, "vmOperationTime", PerfData::U_Ticks, CHECK);
-  }
+  _terminate_lock = new Monitor(Mutex::safepoint, "VMThread::_terminate_lock", true, Monitor::_safepoint_check_never);
 }
 
 VMThread::VMThread() : NamedThread() {
@@ -268,32 +258,10 @@ void VMThread::wait_for_vm_thread_exit() {
   }
 }
 
-static void post_vm_operation_event(EventExecuteVMOperation* event, VM_Operation* op) {
-  const bool is_concurrent = op->evaluate_concurrently();
-  const bool evaluate_at_safepoint = op->evaluate_at_safepoint();
-  event->set_operation(op->type());
-  event->set_safepoint(evaluate_at_safepoint);
-  event->set_blocking(!is_concurrent);
-  // Only write caller thread information for non-concurrent vm operations.
-  // For concurrent vm operations, the thread id is set to 0 indicating thread is unknown.
-  // This is because the caller thread could have exited already.
-  event->set_caller(is_concurrent ? 0 : JFR_THREAD_ID(op->calling_thread()));
-  event->set_safepointId(evaluate_at_safepoint ? SafepointSynchronize::safepoint_counter() : 0);
-  event->commit();
-}
-
 void VMThread::evaluate_operation(VM_Operation* op) {
   ResourceMark rm;
 
-  {
-    PerfTraceTime vm_op_timer(perf_accumulated_vm_operation_time());
-
-    EventExecuteVMOperation event;
-    op->evaluate();
-    if (event.should_commit()) {
-      post_vm_operation_event(&event, op);
-    }
-  }
+  op->evaluate();
 
   // Last access of info in _cur_vm_operation!
   bool c_heap_allocated = op->is_cheap_allocated();
@@ -376,8 +344,6 @@ void VMThread::loop() {
     // Execute VM operation
     //
     { HandleMark hm(VMThread::vm_thread());
-
-      EventMark em("Executing VM operation: %s", vm_operation()->name());
 
       // Give the VM thread an extra quantum.  Jobs tend to be bursty and this
       // helps the VM thread to finish up the job.
@@ -538,8 +504,6 @@ void VMThread::execute(VM_Operation* op) {
       }
       op->set_calling_thread(prev_vm_operation->calling_thread(), prev_vm_operation->priority());
     }
-
-    EventMark em("Executing %s VM operation: %s", prev_vm_operation ? "nested" : "", op->name());
 
     // Release all internal handles after operation is evaluated
     HandleMark hm(t);

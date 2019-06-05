@@ -70,9 +70,7 @@ inline size_t G1BlockOffsetTablePart::block_size(const HeapWord* p) const {
   return _space->block_size(p);
 }
 
-inline HeapWord* G1BlockOffsetTablePart::block_at_or_preceding(const void* addr,
-                                                               bool has_max_index,
-                                                               size_t max_index) const {
+inline HeapWord* G1BlockOffsetTablePart::block_at_or_preceding(const void* addr, bool has_max_index, size_t max_index) const {
   size_t index = _bot->index_for(addr);
   // We must make sure that the offset table entry we use is valid.  If
   // "addr" is past the end, start at the last known one and go forward.
@@ -94,8 +92,7 @@ inline HeapWord* G1BlockOffsetTablePart::block_at_or_preceding(const void* addr,
   return q;
 }
 
-inline HeapWord* G1BlockOffsetTablePart::forward_to_block_containing_addr_const(HeapWord* q, HeapWord* n,
-                                                                                const void* addr) const {
+inline HeapWord* G1BlockOffsetTablePart::forward_to_block_containing_addr_const(HeapWord* q, HeapWord* n, const void* addr) const {
   if (addr >= _space->top()) return _space->top();
   while (n <= addr) {
     q = n;
@@ -108,8 +105,7 @@ inline HeapWord* G1BlockOffsetTablePart::forward_to_block_containing_addr_const(
   return q;
 }
 
-inline HeapWord* G1BlockOffsetTablePart::forward_to_block_containing_addr(HeapWord* q,
-                                                                          const void* addr) {
+inline HeapWord* G1BlockOffsetTablePart::forward_to_block_containing_addr(HeapWord* q, const void* addr) {
   if (oop(q)->klass_or_null_acquire() == NULL) {
     return q;
   }

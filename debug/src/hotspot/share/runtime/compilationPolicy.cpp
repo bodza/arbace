@@ -19,7 +19,6 @@
 #include "runtime/timer.hpp"
 #include "runtime/vframe.hpp"
 #include "runtime/vm_operations.hpp"
-#include "utilities/events.hpp"
 #include "utilities/globalDefinitions.hpp"
 
 CompilationPolicy* CompilationPolicy::_policy;
@@ -83,9 +82,7 @@ void CompilationPolicy::compile_if_required(const methodHandle& selected_method,
       // even before classes are initialized.
       return;
     }
-    CompileBroker::compile_method(selected_method, InvocationEntryBci,
-        CompilationPolicy::policy()->initial_compile_level(),
-        methodHandle(), 0, CompileTask::Reason_MustBeCompiled, CHECK);
+    CompileBroker::compile_method(selected_method, InvocationEntryBci, CompilationPolicy::policy()->initial_compile_level(), methodHandle(), 0, CompileTask::Reason_MustBeCompiled, CHECK);
   }
 }
 

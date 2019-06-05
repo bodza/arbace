@@ -178,14 +178,12 @@ const DecoratorSet IS_NOT_NULL           = UCONST64(1) << 23;
 // * ARRAYCOPY_ARRAYOF: The copy is in the arrayof form.
 // * ARRAYCOPY_ATOMIC: The accesses have to be atomic over the size of its elements.
 // * ARRAYCOPY_ALIGNED: The accesses have to be aligned on a HeapWord.
-const DecoratorSet ARRAYCOPY_CHECKCAST            = UCONST64(1) << 24;
-const DecoratorSet ARRAYCOPY_DISJOINT             = UCONST64(1) << 25;
-const DecoratorSet ARRAYCOPY_ARRAYOF              = UCONST64(1) << 26;
-const DecoratorSet ARRAYCOPY_ATOMIC               = UCONST64(1) << 27;
-const DecoratorSet ARRAYCOPY_ALIGNED              = UCONST64(1) << 28;
-const DecoratorSet ARRAYCOPY_DECORATOR_MASK       = ARRAYCOPY_CHECKCAST | ARRAYCOPY_DISJOINT |
-                                                    ARRAYCOPY_DISJOINT | ARRAYCOPY_ARRAYOF |
-                                                    ARRAYCOPY_ATOMIC | ARRAYCOPY_ALIGNED;
+const DecoratorSet ARRAYCOPY_CHECKCAST      = UCONST64(1) << 24;
+const DecoratorSet ARRAYCOPY_DISJOINT       = UCONST64(1) << 25;
+const DecoratorSet ARRAYCOPY_ARRAYOF        = UCONST64(1) << 26;
+const DecoratorSet ARRAYCOPY_ATOMIC         = UCONST64(1) << 27;
+const DecoratorSet ARRAYCOPY_ALIGNED        = UCONST64(1) << 28;
+const DecoratorSet ARRAYCOPY_DECORATOR_MASK = ARRAYCOPY_CHECKCAST | ARRAYCOPY_DISJOINT | ARRAYCOPY_DISJOINT | ARRAYCOPY_ARRAYOF | ARRAYCOPY_ATOMIC | ARRAYCOPY_ALIGNED;
 
 // Keep track of the last decorator.
 const DecoratorSet DECORATOR_LAST = UCONST64(1) << 28;
@@ -197,15 +195,11 @@ namespace AccessInternal {
   template <DecoratorSet input_decorators>
   struct DecoratorFixup: AllStatic {
     // If no reference strength has been picked, then strong will be picked
-    static const DecoratorSet ref_strength_default = input_decorators |
-      (((ON_DECORATOR_MASK & input_decorators) == 0 && (INTERNAL_VALUE_IS_OOP & input_decorators) != 0) ?
-       ON_STRONG_OOP_REF : INTERNAL_EMPTY);
+    static const DecoratorSet ref_strength_default = input_decorators | (((ON_DECORATOR_MASK & input_decorators) == 0 && (INTERNAL_VALUE_IS_OOP & input_decorators) != 0) ? ON_STRONG_OOP_REF : INTERNAL_EMPTY);
     // If no memory ordering has been picked, unordered will be picked
-    static const DecoratorSet memory_ordering_default = ref_strength_default |
-      ((MO_DECORATOR_MASK & ref_strength_default) == 0 ? MO_UNORDERED : INTERNAL_EMPTY);
+    static const DecoratorSet memory_ordering_default = ref_strength_default | ((MO_DECORATOR_MASK & ref_strength_default) == 0 ? MO_UNORDERED : INTERNAL_EMPTY);
     // If no barrier strength has been picked, normal will be used
-    static const DecoratorSet barrier_strength_default = memory_ordering_default |
-      ((AS_DECORATOR_MASK & memory_ordering_default) == 0 ? AS_NORMAL : INTERNAL_EMPTY);
+    static const DecoratorSet barrier_strength_default = memory_ordering_default | ((AS_DECORATOR_MASK & memory_ordering_default) == 0 ? AS_NORMAL : INTERNAL_EMPTY);
     static const DecoratorSet value = barrier_strength_default | BT_BUILDTIME_DECORATORS;
   };
 
@@ -213,15 +207,11 @@ namespace AccessInternal {
   // programming for code generation that does not use templates.
   inline DecoratorSet decorator_fixup(DecoratorSet input_decorators) {
     // If no reference strength has been picked, then strong will be picked
-    DecoratorSet ref_strength_default = input_decorators |
-      (((ON_DECORATOR_MASK & input_decorators) == 0 && (INTERNAL_VALUE_IS_OOP & input_decorators) != 0) ?
-       ON_STRONG_OOP_REF : INTERNAL_EMPTY);
+    DecoratorSet ref_strength_default = input_decorators | (((ON_DECORATOR_MASK & input_decorators) == 0 && (INTERNAL_VALUE_IS_OOP & input_decorators) != 0) ? ON_STRONG_OOP_REF : INTERNAL_EMPTY);
     // If no memory ordering has been picked, unordered will be picked
-    DecoratorSet memory_ordering_default = ref_strength_default |
-      ((MO_DECORATOR_MASK & ref_strength_default) == 0 ? MO_UNORDERED : INTERNAL_EMPTY);
+    DecoratorSet memory_ordering_default = ref_strength_default | ((MO_DECORATOR_MASK & ref_strength_default) == 0 ? MO_UNORDERED : INTERNAL_EMPTY);
     // If no barrier strength has been picked, normal will be used
-    DecoratorSet barrier_strength_default = memory_ordering_default |
-      ((AS_DECORATOR_MASK & memory_ordering_default) == 0 ? AS_NORMAL : INTERNAL_EMPTY);
+    DecoratorSet barrier_strength_default = memory_ordering_default | ((AS_DECORATOR_MASK & memory_ordering_default) == 0 ? AS_NORMAL : INTERNAL_EMPTY);
     DecoratorSet value = barrier_strength_default | BT_BUILDTIME_DECORATORS;
     return value;
   }

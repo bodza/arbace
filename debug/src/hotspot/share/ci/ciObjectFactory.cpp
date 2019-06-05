@@ -393,8 +393,7 @@ ciKlass* ciObjectFactory::get_unloaded_klass(ciKlass* accessing_klass, ciSymbol*
   if (name->byte_at(0) == '[') {
     // Decompose the name.'
     FieldArrayInfo fd;
-    BasicType element_type = FieldType::get_array_info(name->get_symbol(),
-                                                       fd, THREAD);
+    BasicType element_type = FieldType::get_array_info(name->get_symbol(), fd, THREAD);
     if (HAS_PENDING_EXCEPTION) {
       CLEAR_PENDING_EXCEPTION;
       CURRENT_THREAD_ENV->record_out_of_memory_failure();

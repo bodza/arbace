@@ -40,13 +40,12 @@
 #include "runtime/vm_version.hpp"
 #include "services/management.hpp"
 #include "services/threadService.hpp"
-#include "utilities/events.hpp"
 #include "utilities/hashtable.inline.hpp"
 #include "utilities/macros.hpp"
 
 // Entry points in zip.dll for loading zip/jar file entries
 
-typedef void * * (*ZipOpen_t)(const char *name, char **pmsg);
+typedef void ** (*ZipOpen_t)(const char *name, char **pmsg);
 typedef void (*ZipClose_t)(jzfile *zip);
 typedef jzentry* (*FindEntry_t)(jzfile *zip, const char *name, jint *sizeP, jint *nameLen);
 typedef jboolean (*ReadEntry_t)(jzfile *zip, jzentry *entry, unsigned char *buf, char *namebuf);
@@ -54,47 +53,16 @@ typedef jzentry* (*GetNextEntry_t)(jzfile *zip, jint n);
 typedef jboolean (*ZipInflateFully_t)(void *inBuf, jlong inLen, void *outBuf, jlong outLen, char **pmsg);
 typedef jint     (*Crc32_t)(jint crc, const jbyte *buf, jint len);
 
-static ZipOpen_t         ZipOpen            = NULL;
-static ZipClose_t        ZipClose           = NULL;
-static FindEntry_t       FindEntry          = NULL;
-static ReadEntry_t       ReadEntry          = NULL;
-static GetNextEntry_t    GetNextEntry       = NULL;
-static canonicalize_fn_t CanonicalizeEntry  = NULL;
-static ZipInflateFully_t ZipInflateFully    = NULL;
-static Crc32_t           Crc32              = NULL;
+static ZipOpen_t         ZipOpen           = NULL;
+static ZipClose_t        ZipClose          = NULL;
+static FindEntry_t       FindEntry         = NULL;
+static ReadEntry_t       ReadEntry         = NULL;
+static GetNextEntry_t    GetNextEntry      = NULL;
+static canonicalize_fn_t CanonicalizeEntry = NULL;
+static ZipInflateFully_t ZipInflateFully   = NULL;
+static Crc32_t           Crc32             = NULL;
 
 // Globals
-
-PerfCounter*    ClassLoader::_perf_accumulated_time = NULL;
-PerfCounter*    ClassLoader::_perf_classes_inited = NULL;
-PerfCounter*    ClassLoader::_perf_class_init_time = NULL;
-PerfCounter*    ClassLoader::_perf_class_init_selftime = NULL;
-PerfCounter*    ClassLoader::_perf_classes_verified = NULL;
-PerfCounter*    ClassLoader::_perf_class_verify_time = NULL;
-PerfCounter*    ClassLoader::_perf_class_verify_selftime = NULL;
-PerfCounter*    ClassLoader::_perf_classes_linked = NULL;
-PerfCounter*    ClassLoader::_perf_class_link_time = NULL;
-PerfCounter*    ClassLoader::_perf_class_link_selftime = NULL;
-PerfCounter*    ClassLoader::_perf_class_parse_time = NULL;
-PerfCounter*    ClassLoader::_perf_class_parse_selftime = NULL;
-PerfCounter*    ClassLoader::_perf_sys_class_lookup_time = NULL;
-PerfCounter*    ClassLoader::_perf_shared_classload_time = NULL;
-PerfCounter*    ClassLoader::_perf_sys_classload_time = NULL;
-PerfCounter*    ClassLoader::_perf_app_classload_time = NULL;
-PerfCounter*    ClassLoader::_perf_app_classload_selftime = NULL;
-PerfCounter*    ClassLoader::_perf_app_classload_count = NULL;
-PerfCounter*    ClassLoader::_perf_define_appclasses = NULL;
-PerfCounter*    ClassLoader::_perf_define_appclass_time = NULL;
-PerfCounter*    ClassLoader::_perf_define_appclass_selftime = NULL;
-PerfCounter*    ClassLoader::_perf_app_classfile_bytes_read = NULL;
-PerfCounter*    ClassLoader::_perf_sys_classfile_bytes_read = NULL;
-PerfCounter*    ClassLoader::_sync_systemLoaderLockContentionRate = NULL;
-PerfCounter*    ClassLoader::_sync_nonSystemLoaderLockContentionRate = NULL;
-PerfCounter*    ClassLoader::_sync_JVMFindLoadedClassLockFreeCounter = NULL;
-PerfCounter*    ClassLoader::_sync_JVMDefineClassLockFreeCounter = NULL;
-PerfCounter*    ClassLoader::_sync_JNIDefineClassLockFreeCounter = NULL;
-PerfCounter*    ClassLoader::_unsafe_defineClassCallCounter = NULL;
-PerfCounter*    ClassLoader::_load_instance_class_failCounter = NULL;
 
 GrowableArray<ModuleClassPathList*>* ClassLoader::_patch_mod_entries = NULL;
 GrowableArray<ModuleClassPathList*>* ClassLoader::_exploded_entries = NULL;
@@ -110,14 +78,6 @@ bool string_starts_with(const char* str, const char* str_to_find) {
     return false;
   }
   return (strncmp(str, str_to_find, str_to_find_len) == 0);
-}
-
-static const char* get_jimage_version_string() {
-  static char version_string[10] = "";
-  if (version_string[0] == '\0') {
-    jio_snprintf(version_string, sizeof(version_string), "%d.%d", Abstract_VM_Version::vm_major_version(), Abstract_VM_Version::vm_minor_version());
-  }
-  return (const char*)version_string;
 }
 
 bool ClassLoader::string_ends_with(const char* str, const char* str_to_find) {
@@ -225,9 +185,6 @@ ClassFileStream* ClassPathDirEntry::open_stream(const char* name, TRAPS) {
       os::close(file_handle);
       // construct ClassFileStream
       if (num_read == (size_t)st.st_size) {
-        if (UsePerfData) {
-          ClassLoader::perf_sys_classfile_bytes_read()->inc(num_read);
-        }
         FREE_RESOURCE_ARRAY(char, path, path_len);
         // Resource allocated
         return new ClassFileStream(buffer, st.st_size, _dir);
@@ -292,9 +249,6 @@ ClassFileStream* ClassPathZipEntry::open_stream(const char* name, TRAPS) {
       return NULL;
     }
   }
-  if (UsePerfData) {
-    ClassLoader::perf_sys_classfile_bytes_read()->inc(filesize);
-  }
   // Resource allocated
   return new ClassFileStream(buffer, filesize, _zip_name);
 }
@@ -338,15 +292,7 @@ void ModuleClassPathList::add_to_list(ClassPathEntry* new_entry) {
   }
 }
 
-void ClassLoader::trace_class_path(const char* msg, const char* name) { }
-
-void ClassLoader::setup_bootstrap_search_path() {
-  const char* sys_class_path = Arguments::get_sysclasspath();
-  {
-    trace_class_path("bootstrap loader class path=", sys_class_path);
-  }
-  setup_boot_search_path(sys_class_path);
-}
+void ClassLoader::setup_bootstrap_search_path() { setup_boot_search_path(Arguments::get_sysclasspath()); }
 
 // Construct the array of module/path pairs as specified to --patch-module
 // for the boot loader to search ahead of the jimage, if the class being
@@ -796,8 +742,7 @@ objArrayOop ClassLoader::get_system_packages(TRAPS) {
   }
 
   // Allocate objArray and fill with java.lang.String
-  objArrayOop r = oopFactory::new_objArray(SystemDictionary::String_klass(),
-                                           loaded_class_pkgs->length(), CHECK_NULL);
+  objArrayOop r = oopFactory::new_objArray(SystemDictionary::String_klass(), loaded_class_pkgs->length(), CHECK_NULL);
   objArrayHandle result(THREAD, r);
   for (int x = 0; x < loaded_class_pkgs->length(); x++) {
     PackageEntry* package_entry = loaded_class_pkgs->at(x);
@@ -890,10 +835,7 @@ InstanceKlass* ClassLoader::load_class(Symbol* name, bool search_append_only, TR
 
   const char* const class_name = name->as_C_string();
 
-  EventMark m("loading class %s", class_name);
-
-  const char* const file_name = file_name_for_class_name(class_name,
-                                                         name->utf8_length());
+  const char* const file_name = file_name_for_class_name(class_name, name->utf8_length());
 
   // Lookup stream for parsing .class file
   ClassFileStream* stream = NULL;
@@ -982,80 +924,9 @@ InstanceKlass* ClassLoader::load_class(Symbol* name, bool search_append_only, TR
 void ClassLoader::initialize() {
   EXCEPTION_MARK;
 
-  if (UsePerfData) {
-    // jvmstat performance counters
-    NEWPERFTICKCOUNTER(_perf_accumulated_time, SUN_CLS, "time");
-    NEWPERFTICKCOUNTER(_perf_class_init_time, SUN_CLS, "classInitTime");
-    NEWPERFTICKCOUNTER(_perf_class_init_selftime, SUN_CLS, "classInitTime.self");
-    NEWPERFTICKCOUNTER(_perf_class_verify_time, SUN_CLS, "classVerifyTime");
-    NEWPERFTICKCOUNTER(_perf_class_verify_selftime, SUN_CLS, "classVerifyTime.self");
-    NEWPERFTICKCOUNTER(_perf_class_link_time, SUN_CLS, "classLinkedTime");
-    NEWPERFTICKCOUNTER(_perf_class_link_selftime, SUN_CLS, "classLinkedTime.self");
-    NEWPERFEVENTCOUNTER(_perf_classes_inited, SUN_CLS, "initializedClasses");
-    NEWPERFEVENTCOUNTER(_perf_classes_linked, SUN_CLS, "linkedClasses");
-    NEWPERFEVENTCOUNTER(_perf_classes_verified, SUN_CLS, "verifiedClasses");
-
-    NEWPERFTICKCOUNTER(_perf_class_parse_time, SUN_CLS, "parseClassTime");
-    NEWPERFTICKCOUNTER(_perf_class_parse_selftime, SUN_CLS, "parseClassTime.self");
-    NEWPERFTICKCOUNTER(_perf_sys_class_lookup_time, SUN_CLS, "lookupSysClassTime");
-    NEWPERFTICKCOUNTER(_perf_shared_classload_time, SUN_CLS, "sharedClassLoadTime");
-    NEWPERFTICKCOUNTER(_perf_sys_classload_time, SUN_CLS, "sysClassLoadTime");
-    NEWPERFTICKCOUNTER(_perf_app_classload_time, SUN_CLS, "appClassLoadTime");
-    NEWPERFTICKCOUNTER(_perf_app_classload_selftime, SUN_CLS, "appClassLoadTime.self");
-    NEWPERFEVENTCOUNTER(_perf_app_classload_count, SUN_CLS, "appClassLoadCount");
-    NEWPERFTICKCOUNTER(_perf_define_appclasses, SUN_CLS, "defineAppClasses");
-    NEWPERFTICKCOUNTER(_perf_define_appclass_time, SUN_CLS, "defineAppClassTime");
-    NEWPERFTICKCOUNTER(_perf_define_appclass_selftime, SUN_CLS, "defineAppClassTime.self");
-    NEWPERFBYTECOUNTER(_perf_app_classfile_bytes_read, SUN_CLS, "appClassBytes");
-    NEWPERFBYTECOUNTER(_perf_sys_classfile_bytes_read, SUN_CLS, "sysClassBytes");
-
-    // The following performance counters are added for measuring the impact
-    // of the bug fix of 6365597. They are mainly focused on finding out
-    // the behavior of system & user-defined classloader lock, whether
-    // ClassLoader.loadClass/findClass is being called synchronized or not.
-    NEWPERFEVENTCOUNTER(_sync_systemLoaderLockContentionRate, SUN_CLS, "systemLoaderLockContentionRate");
-    NEWPERFEVENTCOUNTER(_sync_nonSystemLoaderLockContentionRate, SUN_CLS, "nonSystemLoaderLockContentionRate");
-    NEWPERFEVENTCOUNTER(_sync_JVMFindLoadedClassLockFreeCounter, SUN_CLS, "jvmFindLoadedClassNoLockCalls");
-    NEWPERFEVENTCOUNTER(_sync_JVMDefineClassLockFreeCounter, SUN_CLS, "jvmDefineClassNoLockCalls");
-
-    NEWPERFEVENTCOUNTER(_sync_JNIDefineClassLockFreeCounter, SUN_CLS, "jniDefineClassNoLockCalls");
-
-    NEWPERFEVENTCOUNTER(_unsafe_defineClassCallCounter, SUN_CLS, "unsafeDefineClassCalls");
-
-    NEWPERFEVENTCOUNTER(_load_instance_class_failCounter, SUN_CLS, "loadInstanceClassFailRate");
-  }
-
   // lookup zip library entry points
   load_zip_library();
   setup_bootstrap_search_path();
-}
-
-jlong ClassLoader::classloader_time_ms() {
-  return UsePerfData ?
-    Management::ticks_to_ms(_perf_accumulated_time->get_value()) : -1;
-}
-
-jlong ClassLoader::class_init_count() {
-  return UsePerfData ? _perf_classes_inited->get_value() : -1;
-}
-
-jlong ClassLoader::class_init_time_ms() {
-  return UsePerfData ?
-    Management::ticks_to_ms(_perf_class_init_time->get_value()) : -1;
-}
-
-jlong ClassLoader::class_verify_time_ms() {
-  return UsePerfData ?
-    Management::ticks_to_ms(_perf_class_verify_time->get_value()) : -1;
-}
-
-jlong ClassLoader::class_link_count() {
-  return UsePerfData ? _perf_classes_linked->get_value() : -1;
-}
-
-jlong ClassLoader::class_link_time_ms() {
-  return UsePerfData ?
-    Management::ticks_to_ms(_perf_class_link_time->get_value()) : -1;
 }
 
 int ClassLoader::compute_Object_vtable() {
@@ -1130,68 +1001,10 @@ void ClassLoader::create_javabase() {
 
   {
     MutexLocker ml(Module_lock, THREAD);
-    ModuleEntry* jb_module = null_cld_modules->locked_create_entry_or_null(Handle(),
-                               false, vmSymbols::java_base(), NULL, NULL, null_cld);
+    ModuleEntry* jb_module = null_cld_modules->locked_create_entry_or_null(Handle(), false, vmSymbols::java_base(), NULL, NULL, null_cld);
     if (jb_module == NULL) {
       vm_exit_during_initialization("Unable to create ModuleEntry for " JAVA_BASE_NAME);
     }
     ModuleEntryTable::set_javabase_moduleEntry(jb_module);
   }
-}
-
-// Please keep following two functions at end of this file. With them placed at top or in middle of the file,
-// they could get inlined by agressive compiler, an unknown trick, see bug 6966589.
-void PerfClassTraceTime::initialize() {
-  if (!UsePerfData) return;
-
-  if (_eventp != NULL) {
-    // increment the event counter
-    _eventp->inc();
-  }
-
-  // stop the current active thread-local timer to measure inclusive time
-  _prev_active_event = -1;
-  for (int i = 0; i < EVENT_TYPE_COUNT; i++) {
-     if (_timers[i].is_active()) {
-       _prev_active_event = i;
-       _timers[i].stop();
-     }
-  }
-
-  if (_recursion_counters == NULL || (_recursion_counters[_event_type])++ == 0) {
-    // start the inclusive timer if not recursively called
-    _t.start();
-  }
-
-  // start thread-local timer of the given event type
-   if (!_timers[_event_type].is_active()) {
-    _timers[_event_type].start();
-  }
-}
-
-PerfClassTraceTime::~PerfClassTraceTime() {
-  if (!UsePerfData) return;
-
-  // stop the thread-local timer as the event completes
-  // and resume the thread-local timer of the event next on the stack
-  _timers[_event_type].stop();
-  jlong selftime = _timers[_event_type].ticks();
-
-  if (_prev_active_event >= 0) {
-    _timers[_prev_active_event].start();
-  }
-
-  if (_recursion_counters != NULL && --(_recursion_counters[_event_type]) > 0) return;
-
-  // increment the counters only on the leaf call
-  _t.stop();
-  _timep->inc(_t.ticks());
-  if (_selftimep != NULL) {
-    _selftimep->inc(selftime);
-  }
-  // add all class loading related event selftime to the accumulated time counter
-  ClassLoader::perf_accumulated_time()->inc(selftime);
-
-  // reset the timer
-  _timers[_event_type].reset();
 }

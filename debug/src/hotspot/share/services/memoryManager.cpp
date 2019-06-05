@@ -7,7 +7,6 @@
 #include "runtime/handles.inline.hpp"
 #include "runtime/javaCalls.hpp"
 #include "runtime/orderAccess.hpp"
-#include "services/lowMemoryDetector.hpp"
 #include "services/management.hpp"
 #include "services/memoryManager.hpp"
 #include "services/memoryPool.hpp"
@@ -71,12 +70,7 @@ instanceOop MemoryManager::get_memory_manager_instance(TRAPS) {
 
     InstanceKlass* ik = InstanceKlass::cast(k);
 
-    JavaCalls::call_static(&result,
-                           ik,
-                           method_name,
-                           signature,
-                           &args,
-                           CHECK_0);
+    JavaCalls::call_static(&result, ik, method_name, signature, &args, CHECK_0);
 
     instanceOop m = (instanceOop) result.get_jobject();
     instanceHandle mgr(THREAD, m);
@@ -151,11 +145,9 @@ GCMemoryManager::GCMemoryManager(const char* name, const char* gc_end_message) :
   MemoryManager(name), _gc_end_message(gc_end_message) {
   _num_collections = 0;
   _last_gc_stat = NULL;
-  _last_gc_lock = new Mutex(Mutex::leaf, "_last_gc_lock", true,
-                            Monitor::_safepoint_check_never);
+  _last_gc_lock = new Mutex(Mutex::leaf, "_last_gc_lock", true, Monitor::_safepoint_check_never);
   _current_gc_stat = NULL;
   _num_gc_threads = 1;
-  _notification_enabled = false;
 }
 
 GCMemoryManager::~GCMemoryManager() {
@@ -229,7 +221,6 @@ void GCMemoryManager::gc_end(bool recordPostGCUsage, bool recordAccumulatedGCTim
       if (allMemoryPoolsAffected || pool_always_affected_by_gc(i)) {
         // Compare with GC usage threshold
         pool->set_last_collection_usage(usage);
-        LowMemoryDetector::detect_after_gc_memory(pool);
       }
     }
   }
@@ -244,10 +235,6 @@ void GCMemoryManager::gc_end(bool recordPostGCUsage, bool recordAccumulatedGCTim
       _current_gc_stat = tmp;
       // reset the current stat for diagnosability purposes
       _current_gc_stat->clear();
-    }
-
-    if (is_notification_enabled()) {
-      NULL::pushNotification(this, _gc_end_message, GCCause::to_string(cause));
     }
   }
 }

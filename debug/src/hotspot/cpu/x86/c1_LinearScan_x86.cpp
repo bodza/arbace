@@ -486,6 +486,9 @@ void FpuStackAllocator::handle_op1(LIR_Op1* op1) {
       pop_if_last_use(op1, in);
       break;
     }
+
+    default:
+      break;
   }
 
   op1->set_in_opr(new_in);

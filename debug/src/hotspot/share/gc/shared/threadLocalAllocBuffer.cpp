@@ -234,47 +234,6 @@ GlobalTLABStats::GlobalTLABStats() :
   initialize();
 
   _allocating_threads_avg.sample(1); // One allocating thread at startup
-
-  if (UsePerfData) {
-    EXCEPTION_MARK;
-    ResourceMark rm;
-
-    char* cname = PerfDataManager::counter_name("tlab", "allocThreads");
-    _perf_allocating_threads = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
-
-    cname = PerfDataManager::counter_name("tlab", "fills");
-    _perf_total_refills = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
-
-    cname = PerfDataManager::counter_name("tlab", "maxFills");
-    _perf_max_refills = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
-
-    cname = PerfDataManager::counter_name("tlab", "alloc");
-    _perf_allocation = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
-
-    cname = PerfDataManager::counter_name("tlab", "gcWaste");
-    _perf_gc_waste = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
-
-    cname = PerfDataManager::counter_name("tlab", "maxGcWaste");
-    _perf_max_gc_waste = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
-
-    cname = PerfDataManager::counter_name("tlab", "slowWaste");
-    _perf_slow_refill_waste = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
-
-    cname = PerfDataManager::counter_name("tlab", "maxSlowWaste");
-    _perf_max_slow_refill_waste = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
-
-    cname = PerfDataManager::counter_name("tlab", "fastWaste");
-    _perf_fast_refill_waste = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
-
-    cname = PerfDataManager::counter_name("tlab", "maxFastWaste");
-    _perf_max_fast_refill_waste = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_Bytes, CHECK);
-
-    cname = PerfDataManager::counter_name("tlab", "slowAlloc");
-    _perf_slow_allocations = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
-
-    cname = PerfDataManager::counter_name("tlab", "maxSlowAlloc");
-    _perf_max_slow_allocations = PerfDataManager::create_variable(SUN_GC, cname, PerfData::U_None, CHECK);
-  }
 }
 
 void GlobalTLABStats::initialize() {
@@ -295,20 +254,6 @@ void GlobalTLABStats::initialize() {
 
 void GlobalTLABStats::publish() {
   _allocating_threads_avg.sample(_allocating_threads);
-  if (UsePerfData) {
-    _perf_allocating_threads   ->set_value(_allocating_threads);
-    _perf_total_refills        ->set_value(_total_refills);
-    _perf_max_refills          ->set_value(_max_refills);
-    _perf_allocation           ->set_value(_total_allocation);
-    _perf_gc_waste             ->set_value(_total_gc_waste);
-    _perf_max_gc_waste         ->set_value(_max_gc_waste);
-    _perf_slow_refill_waste    ->set_value(_total_slow_refill_waste);
-    _perf_max_slow_refill_waste->set_value(_max_slow_refill_waste);
-    _perf_fast_refill_waste    ->set_value(_total_fast_refill_waste);
-    _perf_max_fast_refill_waste->set_value(_max_fast_refill_waste);
-    _perf_slow_allocations     ->set_value(_total_slow_allocations);
-    _perf_max_slow_allocations ->set_value(_max_slow_allocations);
-  }
 }
 
 void GlobalTLABStats::print() { }

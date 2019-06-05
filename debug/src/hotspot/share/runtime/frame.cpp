@@ -244,9 +244,7 @@ void frame::deoptimize(JavaThread* thread) {
   // If the call site is a MethodHandle call site use the MH deopt
   // handler.
   CompiledMethod* cm = (CompiledMethod*) _cb;
-  address deopt = cm->is_method_handle_return(pc()) ?
-                        cm->deopt_mh_handler_begin() :
-                        cm->deopt_handler_begin();
+  address deopt = cm->is_method_handle_return(pc()) ? cm->deopt_mh_handler_begin() : cm->deopt_handler_begin();
 
   // Save the original pc before we patch in the new one
   cm->set_original_pc(this, pc());

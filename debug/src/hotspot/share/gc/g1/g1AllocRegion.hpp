@@ -125,9 +125,7 @@ public:
   // successful.
   // Should be called without holding a lock. It will try to allocate lock-free
   // out of the active region, or return NULL if it was unable to.
-  inline HeapWord* attempt_allocation(size_t min_word_size,
-                                      size_t desired_word_size,
-                                      size_t* actual_word_size);
+  inline HeapWord* attempt_allocation(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size);
 
   // Second-level allocation: Should be called while holding a
   // lock. It will try to first allocate lock-free out of the active
@@ -140,9 +138,7 @@ public:
   // of minimum word size of the block in min_word_size, and the maximum word
   // size of the allocation in desired_word_size. The actual size of the block is
   // returned in actual_word_size.
-  inline HeapWord* attempt_allocation_locked(size_t min_word_size,
-                                             size_t desired_word_size,
-                                             size_t* actual_word_size);
+  inline HeapWord* attempt_allocation_locked(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size);
 
   // Should be called to allocate a new region even if the max of this
   // type of regions has been reached. Should only be called if other
@@ -200,9 +196,7 @@ public:
   // successful.
   // Should be called without holding a lock. It will try to allocate lock-free
   // out of the retained region, or return NULL if it was unable to.
-  inline HeapWord* attempt_retained_allocation(size_t min_word_size,
-                                               size_t desired_word_size,
-                                               size_t* actual_word_size);
+  inline HeapWord* attempt_retained_allocation(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size);
 
   // This specialization of release() makes sure that the retained alloc
   // region is retired and set to NULL.

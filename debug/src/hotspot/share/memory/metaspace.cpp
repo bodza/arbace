@@ -9,11 +9,9 @@
 #include "memory/metaspace/printCLDMetaspaceInfoClosure.hpp"
 #include "memory/metaspace/spaceManager.hpp"
 #include "memory/metaspace/virtualSpaceList.hpp"
-#include "memory/metaspaceTracer.hpp"
 #include "memory/universe.hpp"
 #include "runtime/init.hpp"
 #include "runtime/orderAccess.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/copy.hpp"
 #include "utilities/debug.hpp"
 #include "utilities/formatBuffer.hpp"
@@ -24,7 +22,6 @@ using namespace metaspace;
 MetaWord* last_allocated = 0;
 
 size_t Metaspace::_compressed_class_space_size;
-const MetaspaceTracer* Metaspace::_tracer = NULL;
 
 static const char* space_type_name(Metaspace::MetaspaceType t) {
   const char* s = NULL;
@@ -217,8 +214,6 @@ void MetaspaceGC::compute_new_size() {
     if (expand_bytes >= MinMetaspaceExpansion) {
       size_t new_capacity_until_GC = 0;
       bool succeeded = MetaspaceGC::inc_capacity_until_GC(expand_bytes, &new_capacity_until_GC);
-
-      Metaspace::tracer()->report_gc_threshold(capacity_until_GC, new_capacity_until_GC, MetaspaceGCThresholdUpdater::ComputeNewSize);
     }
     return;
   }
@@ -257,7 +252,6 @@ void MetaspaceGC::compute_new_size() {
   // Don't shrink unless it's significant
   if (shrink_bytes >= MinMetaspaceExpansion && ((capacity_until_GC - shrink_bytes) >= MetaspaceSize)) {
     size_t new_capacity_until_GC = MetaspaceGC::dec_capacity_until_GC(shrink_bytes);
-    Metaspace::tracer()->report_gc_threshold(capacity_until_GC, new_capacity_until_GC, MetaspaceGCThresholdUpdater::ComputeNewSize);
   }
 }
 
@@ -819,9 +813,6 @@ void Metaspace::allocate_metaspace_compressed_klass_ptrs(char* requested_addr, a
     }
   }
 
-  // If we got here then the metaspace got allocated.
-  MemTracker::record_virtual_memory_type((address)metaspace_rs.base(), mtClass);
-
   set_narrow_klass_base_and_shift((address)metaspace_rs.base(), 0);
 
   initialize_class_space(metaspace_rs);
@@ -930,8 +921,6 @@ void Metaspace::global_initialize() {
   if (!_space_list->initialization_succeeded()) {
     vm_exit_during_initialization("Unable to setup metadata virtual space list.", NULL);
   }
-
-  _tracer = new MetaspaceTracer();
 }
 
 void Metaspace::post_initialize() {
@@ -960,8 +949,6 @@ MetaWord* Metaspace::allocate(ClassLoaderData* loader_data, size_t word_size, Me
   MetaWord* result = loader_data->metaspace_non_null()->allocate(word_size, mdtype);
 
   if (result == NULL) {
-    tracer()->report_metaspace_allocation_failure(loader_data, word_size, type, mdtype);
-
     // Allocation failed.
     if (is_init_completed()) {
       // Only start a GC if the bootstrapping has completed.
@@ -985,8 +972,6 @@ MetaWord* Metaspace::allocate(ClassLoaderData* loader_data, size_t word_size, Me
 }
 
 void Metaspace::report_metadata_oome(ClassLoaderData* loader_data, size_t word_size, MetaspaceObj::Type type, MetadataType mdtype, TRAPS) {
-  tracer()->report_metadata_oom(loader_data, word_size, type, mdtype);
-
   bool out_of_compressed_class_space = false;
   if (is_class_space_allocation(mdtype)) {
     ClassLoaderMetaspace* metaspace = loader_data->metaspace_non_null();
@@ -1133,10 +1118,6 @@ MetaWord* ClassLoaderMetaspace::expand_and_allocate(size_t word_size, Metaspace:
     incremented = MetaspaceGC::inc_capacity_until_GC(delta_bytes, &after, &before, &can_retry);
     res = allocate(word_size, mdtype);
   } while (!incremented && res == NULL && can_retry);
-
-  if (incremented) {
-    Metaspace::tracer()->report_gc_threshold(before, after, MetaspaceGCThresholdUpdater::ExpandAndAllocate);
-  }
 
   return res;
 }

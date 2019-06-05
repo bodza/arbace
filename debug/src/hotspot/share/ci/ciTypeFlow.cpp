@@ -1368,9 +1368,7 @@ void ciTypeFlow::SuccIter::set_succ(Block* succ) {
 
 // ------------------------------------------------------------------
 // ciTypeFlow::Block::Block
-ciTypeFlow::Block::Block(ciTypeFlow* outer,
-                         ciBlock *ciblk,
-                         ciTypeFlow::JsrSet* jsrs) {
+ciTypeFlow::Block::Block(ciTypeFlow* outer, ciBlock *ciblk, ciTypeFlow::JsrSet* jsrs) {
   _ciblock = ciblk;
   _exceptions = NULL;
   _exc_klasses = NULL;

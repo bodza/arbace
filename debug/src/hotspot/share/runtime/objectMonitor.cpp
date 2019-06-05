@@ -228,12 +228,6 @@ void ObjectMonitor::enter(TRAPS) {
   // Ensure the object-monitor relationship remains stable while there's contention.
   Atomic::inc(&_count);
 
-  EventJavaMonitorEnter event;
-  if (event.should_commit()) {
-    event.set_monitorClass(((oop)this->object())->klass());
-    event.set_address((uintptr_t)(this->object_addr()));
-  }
-
   { // Change java thread status to indicate blocked on monitor enter.
     JavaThreadBlockedOnMonitorEnterState jtbmes(jt, this);
 
@@ -289,12 +283,6 @@ void ObjectMonitor::enter(TRAPS) {
   // time -- such as next time some thread encounters contention but has
   // yet to acquire the lock.  While spinning that thread could
   // spinning we could increment JVMStat counters, etc.
-
-  if (event.should_commit()) {
-    event.set_previousOwner((uintptr_t)_previous_owner_tid);
-    event.commit();
-  }
-  OM_PERFDATA_OP(ContendedLockAttempts, inc());
 }
 
 // Caveat: TryLock() is not necessarily serializing if it returns failure.
@@ -439,9 +427,6 @@ void ObjectMonitor::EnterI(TRAPS) {
     // That is by design - we trade "lossy" counters which are exposed to
     // races during updates for a lower probe effect.
     TEVENT(Inflated enter - Futile wakeup);
-    // This PerfData object can be used in parallel with a safepoint.
-    // See the work around in PerfDataManager::destroy().
-    OM_PERFDATA_OP(FutileWakeups, inc());
     ++nWakeups;
 
     // Assuming this is not a spurious wakeup we'll normally find _succ == Self.
@@ -477,7 +462,7 @@ void ObjectMonitor::EnterI(TRAPS) {
   // In addition, Self.TState is stable.
 
   // I'd like to write:
-  //   guarantee (((oop)(object()))->mark() == markOopDesc::encode(this), "invariant");
+  //   guarantee(((oop)(object()))->mark() == markOopDesc::encode(this), "invariant");
   // but as we're at a safepoint that's not safe.
 
   UnlinkAfterAcquire(Self, &node);
@@ -602,10 +587,6 @@ void ObjectMonitor::ReenterI(Thread * Self, ObjectWaiter * SelfNode) {
     // Invariant: after clearing _succ a contending thread
     // *must* retry  _owner before parking.
     OrderAccess::fence();
-
-    // This PerfData object can be used in parallel with a safepoint.
-    // See the work around in PerfDataManager::destroy().
-    OM_PERFDATA_OP(FutileWakeups, inc());
   }
 
   // Self has acquired the lock -- Unlink Self from the cxq or EntryList .
@@ -944,7 +925,7 @@ void ObjectMonitor::exit(bool not_suspended, TRAPS) {
 
     w = _EntryList;
     if (w != NULL) {
-      // I'd like to write: guarantee (w->_thread != Self).
+      // I'd like to write: guarantee(w->_thread != Self).
       // But in practice an exiting thread may find itself on the EntryList.
       // Let's say thread T1 calls O.wait().  Wait() enqueues T1 on O's waitset and
       // then calls exit().  Exit release the lock by setting O._owner to NULL.
@@ -1100,9 +1081,6 @@ void ObjectMonitor::ExitEpilog(Thread * Self, ObjectWaiter * Wakee) {
   }
 
   Trigger->unpark();
-
-  // Maintain stats and report events to JVMTI
-  OM_PERFDATA_OP(Parks, inc());
 }
 
 // -----------------------------------------------------------------------------
@@ -1181,15 +1159,6 @@ static int Adjust(volatile int * adr, int dx) {
   return v;
 }
 
-static void post_monitor_wait_event(EventJavaMonitorWait* event, ObjectMonitor* monitor, jlong notifier_tid, jlong timeout, bool timedout) {
-  event->set_monitorClass(((oop)monitor->object())->klass());
-  event->set_timeout(timeout);
-  event->set_address((uintptr_t)monitor->object_addr());
-  event->set_notifier(notifier_tid);
-  event->set_timedOut(timedout);
-  event->commit();
-}
-
 // -----------------------------------------------------------------------------
 // Wait/Notify/NotifyAll
 //
@@ -1204,13 +1173,8 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
   // Throw IMSX or IEX.
   CHECK_OWNER();
 
-  EventJavaMonitorWait event;
-
   // check for a pending interrupt
   if (interruptible && Thread::is_interrupted(Self, true) && !HAS_PENDING_EXCEPTION) {
-    if (event.should_commit()) {
-      post_monitor_wait_event(&event, this, 0, millis, false);
-    }
     TEVENT(Wait - Throw IEX);
     THROW(vmSymbols::java_lang_InterruptedException());
     return;
@@ -1322,10 +1286,6 @@ void ObjectMonitor::wait(jlong millis, bool interruptible, TRAPS) {
     // Thread state is thread_in_vm and oop access is again safe,
     // although the raw address of the object may have changed.
     // (Don't cache naked oops over safepoints, of course).
-
-    if (event.should_commit()) {
-      post_monitor_wait_event(&event, this, node._notifier_tid, millis, ret == OS_TIMEOUT);
-    }
 
     OrderAccess::fence();
 
@@ -1494,7 +1454,6 @@ void ObjectMonitor::notify(TRAPS) {
     return;
   }
   INotify(THREAD);
-  OM_PERFDATA_OP(Notifications, inc(1));
 }
 
 // The current implementation of notifyAll() transfers the waiters one-at-a-time
@@ -1516,8 +1475,6 @@ void ObjectMonitor::notifyAll(TRAPS) {
     tally++;
     INotify(THREAD);
   }
-
-  OM_PERFDATA_OP(Notifications, inc(tally));
 }
 
 // -----------------------------------------------------------------------------
@@ -1935,14 +1892,6 @@ inline void ObjectMonitor::DequeueSpecificWaiter(ObjectWaiter* node) {
 }
 
 // -----------------------------------------------------------------------------
-// PerfData support
-PerfCounter * ObjectMonitor::_sync_ContendedLockAttempts       = NULL;
-PerfCounter * ObjectMonitor::_sync_FutileWakeups               = NULL;
-PerfCounter * ObjectMonitor::_sync_Parks                       = NULL;
-PerfCounter * ObjectMonitor::_sync_Notifications               = NULL;
-PerfCounter * ObjectMonitor::_sync_Inflations                  = NULL;
-PerfCounter * ObjectMonitor::_sync_Deflations                  = NULL;
-PerfLongVariable * ObjectMonitor::_sync_MonExtant              = NULL;
 
 // One-shot global initialization for the sync subsystem.
 // We could also defer initialization and initialize on-demand
@@ -1952,26 +1901,6 @@ PerfLongVariable * ObjectMonitor::_sync_MonExtant              = NULL;
 void ObjectMonitor::Initialize() {
   static int InitializationCompleted = 0;
   InitializationCompleted = 1;
-  if (UsePerfData) {
-    EXCEPTION_MARK;
-#define NEWPERFCOUNTER(n) \
-  { \
-    n = PerfDataManager::create_counter(SUN_RT, #n, PerfData::U_Events, CHECK); \
-  }
-#define NEWPERFVARIABLE(n) \
-  { \
-    n = PerfDataManager::create_variable(SUN_RT, #n, PerfData::U_Events, CHECK); \
-  }
-    NEWPERFCOUNTER(_sync_Inflations);
-    NEWPERFCOUNTER(_sync_Deflations);
-    NEWPERFCOUNTER(_sync_ContendedLockAttempts);
-    NEWPERFCOUNTER(_sync_FutileWakeups);
-    NEWPERFCOUNTER(_sync_Parks);
-    NEWPERFCOUNTER(_sync_Notifications);
-    NEWPERFVARIABLE(_sync_MonExtant);
-#undef NEWPERFCOUNTER
-#undef NEWPERFVARIABLE
-  }
 }
 
 static char * kvGet(char * kvList, const char * Key) {

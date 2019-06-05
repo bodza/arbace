@@ -21,8 +21,7 @@ inline bool G1CMBitMap::iterate(G1CMBitMapClosure* cl, MemRegion mr) {
   return true;
 }
 
-inline HeapWord* G1CMBitMap::get_next_marked_addr(const HeapWord* addr,
-                                                  const HeapWord* limit) const {
+inline HeapWord* G1CMBitMap::get_next_marked_addr(const HeapWord* addr, const HeapWord* limit) const {
   // Round addr up to a possible object boundary to be safe.
   size_t const addr_offset = addr_to_offset(align_up(addr, HeapWordSize << _shifter));
   size_t const limit_offset = addr_to_offset(limit);

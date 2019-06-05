@@ -3,7 +3,6 @@
 
 #include "gc/shared/gcUtil.hpp"
 #include "oops/typeArrayOop.hpp"
-#include "runtime/perfData.hpp"
 #include "runtime/vm_version.hpp"
 
 class GlobalTLABStats;
@@ -179,9 +178,6 @@ public:
 
 class GlobalTLABStats: public CHeapObj<mtThread> {
 private:
-  // Accumulate perfdata in private variables because
-  // PerfData should be write-only for security reasons
-  // (see perfData.hpp)
   unsigned _allocating_threads;
   unsigned _total_refills;
   unsigned _max_refills;
@@ -194,19 +190,6 @@ private:
   size_t   _max_fast_refill_waste;
   unsigned _total_slow_allocations;
   unsigned _max_slow_allocations;
-
-  PerfVariable* _perf_allocating_threads;
-  PerfVariable* _perf_total_refills;
-  PerfVariable* _perf_max_refills;
-  PerfVariable* _perf_allocation;
-  PerfVariable* _perf_gc_waste;
-  PerfVariable* _perf_max_gc_waste;
-  PerfVariable* _perf_slow_refill_waste;
-  PerfVariable* _perf_max_slow_refill_waste;
-  PerfVariable* _perf_fast_refill_waste;
-  PerfVariable* _perf_max_fast_refill_waste;
-  PerfVariable* _perf_slow_allocations;
-  PerfVariable* _perf_max_slow_allocations;
 
   AdaptiveWeightedAverage _allocating_threads_avg;
 

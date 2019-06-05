@@ -29,12 +29,9 @@
 #include "runtime/thread.inline.hpp"
 #include "runtime/threadSMR.hpp"
 #include "runtime/vm_version.hpp"
-#include "services/memTracker.hpp"
-#include "services/nmtCommon.hpp"
 #include "services/threadService.hpp"
 #include "utilities/align.hpp"
 #include "utilities/defaultStream.hpp"
-#include "utilities/events.hpp"
 
 # include <signal.h>
 # include <errno.h>
@@ -383,13 +380,7 @@ void os::initialize_jdk_signal_support(TRAPS) {
 
     Klass* group = SystemDictionary::ThreadGroup_klass();
     JavaValue result(T_VOID);
-    JavaCalls::call_special(&result,
-                            thread_group,
-                            group,
-                            vmSymbols::add_method_name(),
-                            vmSymbols::thread_void_signature(),
-                            thread_oop,
-                            CHECK);
+    JavaCalls::call_special(&result, thread_group, group, vmSymbols::add_method_name(), vmSymbols::thread_void_signature(), thread_oop, CHECK);
 
     { MutexLocker mu(Threads_lock);
       JavaThread* signal_thread = new JavaThread(&signal_thread_entry);
@@ -470,8 +461,7 @@ void* os::native_java_library() {
  * executable if agent_lib->is_static_lib() == true or in the shared library
  * referenced by 'handle'.
  */
-void* os::find_agent_function(AgentLibrary *agent_lib, bool check_lib,
-                              const char *syms[], size_t syms_len) {
+void* os::find_agent_function(AgentLibrary *agent_lib, bool check_lib, const char *syms[], size_t syms_len) {
   const char *lib_name;
   void *handle = agent_lib->os_lib();
   void *entryName = NULL;
@@ -538,8 +528,6 @@ char* os::strdup_check_oom(const char* str, MEMFLAGS flags) {
   return p;
 }
 
-#define paranoid                 0  /* only set to 1 if you suspect checking code has bug */
-
 //
 // This function supports testing of the malloc out of memory
 // condition without really running the system out of memory.
@@ -556,22 +544,12 @@ static bool has_reached_max_malloc_test_peak(size_t alloc_size) {
   return false;
 }
 
-void* os::malloc(size_t size, MEMFLAGS flags) {
-  return os::malloc(size, flags, CALLER_PC);
-}
-
-void* os::malloc(size_t size, MEMFLAGS memflags, const NativeCallStack& stack) {
+void* os::malloc(size_t size, MEMFLAGS memflags) {
   if (size == 0) {
     // return a valid pointer if size is zero
     // if NULL is returned the calling functions assume out of memory.
     size = 1;
   }
-
-  // NMT support
-  NMT_TrackingLevel level = MemTracker::tracking_level();
-  size_t            nmt_header_size = MemTracker::malloc_header_size(level);
-
-  const size_t alloc_size = size + nmt_header_size;
 
   // For the test flag -XX:MallocMaxTestWords
   if (has_reached_max_malloc_test_peak(size)) {
@@ -579,21 +557,16 @@ void* os::malloc(size_t size, MEMFLAGS memflags, const NativeCallStack& stack) {
   }
 
   u_char* ptr;
-  ptr = (u_char*)::malloc(alloc_size);
+  ptr = (u_char*)::malloc(size);
 
   if ((intptr_t)ptr == (intptr_t)MallocCatchPtr) {
     breakpoint();
   }
 
-  // we do not track guard memory
-  return MemTracker::record_malloc((address)ptr, size, memflags, stack, level);
+  return ptr;
 }
 
-void* os::realloc(void *memblock, size_t size, MEMFLAGS flags) {
-  return os::realloc(memblock, size, flags, CALLER_PC);
-}
-
-void* os::realloc(void *memblock, size_t size, MEMFLAGS memflags, const NativeCallStack& stack) {
+void* os::realloc(void *memblock, size_t size, MEMFLAGS memflags) {
   // For the test flag -XX:MallocMaxTestWords
   if (has_reached_max_malloc_test_peak(size)) {
     return NULL;
@@ -605,17 +578,11 @@ void* os::realloc(void *memblock, size_t size, MEMFLAGS memflags, const NativeCa
     size = 1;
   }
 
-   // NMT support
-  void* membase = MemTracker::record_free(memblock);
-  NMT_TrackingLevel level = MemTracker::tracking_level();
-  size_t  nmt_header_size = MemTracker::malloc_header_size(level);
-  void* ptr = ::realloc(membase, size + nmt_header_size);
-  return MemTracker::record_malloc(ptr, size, memflags, stack, level);
+  return ::realloc(memblock, size);
 }
 
 void os::free(void *memblock) {
-  void* membase = MemTracker::record_free(memblock);
-  ::free(membase);
+  ::free(memblock);
 }
 
 void os::init_random(unsigned int initval) {
@@ -1141,7 +1108,7 @@ char** os::split_path(const char* path, int* n) {
 
   // do the actual splitting
   p = inpath;
-  for (int i = 0 ; i < count ; i++) {
+  for (int i = 0; i < count; i++) {
     size_t len = strcspn(p, os::path_separator());
     if (len > JVM_MAXPATHLEN) {
       return NULL;
@@ -1193,10 +1160,8 @@ void os::serialize_thread_states() {
   // time and expensive page trap spinning, 'SerializePageLock' is used to block
   // the mutator thread if such case is encountered. See bug 6546278 for details.
   Thread::muxAcquire(&SerializePageLock, "serialize_thread_states");
-  os::protect_memory((char *)os::get_memory_serialize_page(),
-                     os::vm_page_size(), MEM_PROT_READ);
-  os::protect_memory((char *)os::get_memory_serialize_page(),
-                     os::vm_page_size(), MEM_PROT_RW);
+  os::protect_memory((char *)os::get_memory_serialize_page(), os::vm_page_size(), MEM_PROT_READ);
+  os::protect_memory((char *)os::get_memory_serialize_page(), os::vm_page_size(), MEM_PROT_RW);
   Thread::muxRelease(&SerializePageLock);
 }
 
@@ -1422,42 +1387,23 @@ char* os::reserve_memory(size_t bytes, char* addr, size_t alignment_hint, int fi
     // Could have called pd_reserve_memory() followed by replace_existing_mapping_with_file_mapping(),
     // but AIX may use SHM in which case its more trouble to detach the segment and remap memory to the file.
     result = os::map_memory_to_file(addr, bytes, file_desc);
-    if (result != NULL) {
-      MemTracker::record_virtual_memory_reserve_and_commit((address)result, bytes, CALLER_PC);
-    }
   } else {
     result = pd_reserve_memory(bytes, addr, alignment_hint);
-    if (result != NULL) {
-      MemTracker::record_virtual_memory_reserve((address)result, bytes, CALLER_PC);
-    }
   }
 
   return result;
 }
 
-char* os::reserve_memory(size_t bytes, char* addr, size_t alignment_hint,
-   MEMFLAGS flags) {
-  char* result = pd_reserve_memory(bytes, addr, alignment_hint);
-  if (result != NULL) {
-    MemTracker::record_virtual_memory_reserve((address)result, bytes, CALLER_PC);
-    MemTracker::record_virtual_memory_type((address)result, flags);
-  }
-
-  return result;
+char* os::reserve_memory(size_t bytes, char* addr, size_t alignment_hint, MEMFLAGS flags) {
+  return pd_reserve_memory(bytes, addr, alignment_hint);
 }
 
 char* os::attempt_reserve_memory_at(size_t bytes, char* addr, int file_desc) {
   char* result = NULL;
   if (file_desc != -1) {
     result = pd_attempt_reserve_memory_at(bytes, addr, file_desc);
-    if (result != NULL) {
-      MemTracker::record_virtual_memory_reserve_and_commit((address)result, bytes, CALLER_PC);
-    }
   } else {
     result = pd_attempt_reserve_memory_at(bytes, addr);
-    if (result != NULL) {
-      MemTracker::record_virtual_memory_reserve((address)result, bytes, CALLER_PC);
-    }
   }
   return result;
 }
@@ -1467,57 +1413,27 @@ void os::split_reserved_memory(char *base, size_t size, size_t split, bool reall
 }
 
 bool os::commit_memory(char* addr, size_t bytes, bool executable) {
-  bool res = pd_commit_memory(addr, bytes, executable);
-  if (res) {
-    MemTracker::record_virtual_memory_commit((address)addr, bytes, CALLER_PC);
-  }
-  return res;
+  return pd_commit_memory(addr, bytes, executable);
 }
 
 bool os::commit_memory(char* addr, size_t size, size_t alignment_hint, bool executable) {
-  bool res = os::pd_commit_memory(addr, size, alignment_hint, executable);
-  if (res) {
-    MemTracker::record_virtual_memory_commit((address)addr, size, CALLER_PC);
-  }
-  return res;
+  return os::pd_commit_memory(addr, size, alignment_hint, executable);
 }
 
 void os::commit_memory_or_exit(char* addr, size_t bytes, bool executable, const char* mesg) {
   pd_commit_memory_or_exit(addr, bytes, executable, mesg);
-  MemTracker::record_virtual_memory_commit((address)addr, bytes, CALLER_PC);
 }
 
 void os::commit_memory_or_exit(char* addr, size_t size, size_t alignment_hint, bool executable, const char* mesg) {
   os::pd_commit_memory_or_exit(addr, size, alignment_hint, executable, mesg);
-  MemTracker::record_virtual_memory_commit((address)addr, size, CALLER_PC);
 }
 
 bool os::uncommit_memory(char* addr, size_t bytes) {
-  bool res;
-  if (MemTracker::tracking_level() > NMT_minimal) {
-    Tracker tkr(Tracker::uncommit);
-    res = pd_uncommit_memory(addr, bytes);
-    if (res) {
-      tkr.record((address)addr, bytes);
-    }
-  } else {
-    res = pd_uncommit_memory(addr, bytes);
-  }
-  return res;
+  return pd_uncommit_memory(addr, bytes);
 }
 
 bool os::release_memory(char* addr, size_t bytes) {
-  bool res;
-  if (MemTracker::tracking_level() > NMT_minimal) {
-    Tracker tkr(Tracker::release);
-    res = pd_release_memory(addr, bytes);
-    if (res) {
-      tkr.record((address)addr, bytes);
-    }
-  } else {
-    res = pd_release_memory(addr, bytes);
-  }
-  return res;
+  return pd_release_memory(addr, bytes);
 }
 
 void os::pretouch_memory(void* start, void* end, size_t page_size) {
@@ -1526,14 +1442,8 @@ void os::pretouch_memory(void* start, void* end, size_t page_size) {
   }
 }
 
-char* os::map_memory(int fd, const char* file_name, size_t file_offset,
-                           char *addr, size_t bytes, bool read_only,
-                           bool allow_exec) {
-  char* result = pd_map_memory(fd, file_name, file_offset, addr, bytes, read_only, allow_exec);
-  if (result != NULL) {
-    MemTracker::record_virtual_memory_reserve_and_commit((address)result, bytes, CALLER_PC);
-  }
-  return result;
+char* os::map_memory(int fd, const char* file_name, size_t file_offset, char *addr, size_t bytes, bool read_only, bool allow_exec) {
+  return pd_map_memory(fd, file_name, file_offset, addr, bytes, read_only, allow_exec);
 }
 
 char* os::remap_memory(int fd, const char* file_name, size_t file_offset, char *addr, size_t bytes, bool read_only, bool allow_exec) {
@@ -1541,17 +1451,7 @@ char* os::remap_memory(int fd, const char* file_name, size_t file_offset, char *
 }
 
 bool os::unmap_memory(char *addr, size_t bytes) {
-  bool result;
-  if (MemTracker::tracking_level() > NMT_minimal) {
-    Tracker tkr(Tracker::release);
-    result = pd_unmap_memory(addr, bytes);
-    if (result) {
-      tkr.record((address)addr, bytes);
-    }
-  } else {
-    result = pd_unmap_memory(addr, bytes);
-  }
-  return result;
+  return pd_unmap_memory(addr, bytes);
 }
 
 void os::free_memory(char *addr, size_t bytes, size_t alignment_hint) {

@@ -166,20 +166,14 @@ oop LiveFrameStream::create_primitive_slot_instance(StackValueCollection* values
 
     default: ShouldNotReachHere();
   }
-  JavaCalls::call_static(&result,
-                         ik,
-                         vmSymbols::asPrimitive_name(),
-                         signature,
-                         &args,
-                         CHECK_NULL);
+  JavaCalls::call_static(&result, ik, vmSymbols::asPrimitive_name(), signature, &args, CHECK_NULL);
   return (instanceOop) result.get_jobject();
 }
 
 objArrayHandle LiveFrameStream::values_to_object_array(StackValueCollection* values, TRAPS) {
   objArrayHandle empty;
   int length = values->size();
-  objArrayOop array_oop = oopFactory::new_objArray(SystemDictionary::Object_klass(),
-                                                   length, CHECK_(empty));
+  objArrayOop array_oop = oopFactory::new_objArray(SystemDictionary::Object_klass(), length, CHECK_(empty));
   objArrayHandle array_h(THREAD, array_oop);
   for (int i = 0; i < values->size(); i++) {
     StackValue* st = values->at(i);
@@ -200,8 +194,7 @@ objArrayHandle LiveFrameStream::values_to_object_array(StackValueCollection* val
 
 objArrayHandle LiveFrameStream::monitors_to_object_array(GrowableArray<MonitorInfo*>* monitors, TRAPS) {
   int length = monitors->length();
-  objArrayOop array_oop = oopFactory::new_objArray(SystemDictionary::Object_klass(),
-                                                   length, CHECK_(objArrayHandle()));
+  objArrayOop array_oop = oopFactory::new_objArray(SystemDictionary::Object_klass(), length, CHECK_(objArrayHandle()));
   objArrayHandle array_h(THREAD, array_oop);
   for (int i = 0; i < length; i++) {
     MonitorInfo* monitor = monitors->at(i);

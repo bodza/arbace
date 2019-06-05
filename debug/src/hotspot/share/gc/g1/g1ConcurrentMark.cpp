@@ -19,7 +19,6 @@
 #include "gc/shared/adaptiveSizePolicy.hpp"
 #include "gc/shared/gcId.hpp"
 #include "gc/shared/gcTimer.hpp"
-#include "gc/shared/gcTrace.hpp"
 #include "gc/shared/genOopClosures.inline.hpp"
 #include "gc/shared/referencePolicy.hpp"
 #include "gc/shared/strongRootsScope.hpp"
@@ -36,7 +35,6 @@
 #include "runtime/handles.inline.hpp"
 #include "runtime/java.hpp"
 #include "runtime/prefetch.inline.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/align.hpp"
 #include "utilities/growableArray.hpp"
 
@@ -316,7 +314,6 @@ G1ConcurrentMark::G1ConcurrentMark(G1CollectedHeap* g1h, G1RegionToSpaceMapper* 
   _has_aborted(false),
   _restart_for_overflow(false),
   _gc_timer_cm(new (ResourceObj::C_HEAP, mtGC) ConcurrentGCTimer()),
-  _gc_tracer_cm(new (ResourceObj::C_HEAP, mtGC) G1OldTracer()),
 
   // _verbose_level set below
 
@@ -823,24 +820,12 @@ void G1ConcurrentMark::scan_root_regions() {
 
 void G1ConcurrentMark::concurrent_cycle_start() {
   _gc_timer_cm->register_gc_start();
-
-  _gc_tracer_cm->report_gc_start(GCCause::_no_gc /* first parameter is not used */, _gc_timer_cm->gc_start());
-
-  _g1h->trace_heap_before_gc(_gc_tracer_cm);
 }
 
 void G1ConcurrentMark::concurrent_cycle_end() {
   _g1h->collector_state()->set_clearing_next_bitmap(false);
 
-  _g1h->trace_heap_after_gc(_gc_tracer_cm);
-
-  if (has_aborted()) {
-    _gc_tracer_cm->report_concurrent_mode_failure();
-  }
-
   _gc_timer_cm->register_gc_end();
-
-  _gc_tracer_cm->report_gc_end(_gc_timer_cm->gc_end(), _gc_timer_cm->time_partitions());
 }
 
 void G1ConcurrentMark::mark_from_roots() {
@@ -867,13 +852,9 @@ class G1UpdateRemSetTrackingBeforeRebuildTask : public AbstractGangTask {
   HeapRegionClaimer _hrclaimer;
   uint volatile _total_selected_for_rebuild;
 
-  G1PrintRegionLivenessInfoClosure _cl;
-
   class G1UpdateRemSetTrackingBeforeRebuild : public HeapRegionClosure {
     G1CollectedHeap* _g1h;
     G1ConcurrentMark* _cm;
-
-    G1PrintRegionLivenessInfoClosure* _cl;
 
     uint _num_regions_selected_for_rebuild;  // The number of regions actually selected for rebuild.
 
@@ -929,13 +910,12 @@ class G1UpdateRemSetTrackingBeforeRebuildTask : public AbstractGangTask {
 
     void add_marked_bytes_and_note_end(HeapRegion* hr, size_t marked_bytes) {
       hr->add_to_marked_bytes(marked_bytes);
-      _cl->do_heap_region(hr);
       hr->note_end_of_marking();
     }
 
   public:
-    G1UpdateRemSetTrackingBeforeRebuild(G1CollectedHeap* g1h, G1ConcurrentMark* cm, G1PrintRegionLivenessInfoClosure* cl) :
-      _g1h(g1h), _cm(cm), _num_regions_selected_for_rebuild(0), _cl(cl) { }
+    G1UpdateRemSetTrackingBeforeRebuild(G1CollectedHeap* g1h, G1ConcurrentMark* cm) :
+      _g1h(g1h), _cm(cm), _num_regions_selected_for_rebuild(0) { }
 
     virtual bool do_heap_region(HeapRegion* r) {
       update_remset_before_rebuild(r);
@@ -950,10 +930,10 @@ class G1UpdateRemSetTrackingBeforeRebuildTask : public AbstractGangTask {
 public:
   G1UpdateRemSetTrackingBeforeRebuildTask(G1CollectedHeap* g1h, G1ConcurrentMark* cm, uint num_workers) :
     AbstractGangTask("G1 Update RemSet Tracking Before Rebuild"),
-    _g1h(g1h), _cm(cm), _hrclaimer(num_workers), _total_selected_for_rebuild(0), _cl("Post-Marking") { }
+    _g1h(g1h), _cm(cm), _hrclaimer(num_workers), _total_selected_for_rebuild(0) { }
 
   virtual void work(uint worker_id) {
-    G1UpdateRemSetTrackingBeforeRebuild update_cl(_g1h, _cm, &_cl);
+    G1UpdateRemSetTrackingBeforeRebuild update_cl(_g1h, _cm);
     _g1h->heap_region_par_iterate_from_worker_offset(&update_cl, &_hrclaimer, worker_id);
     Atomic::add(update_cl.num_selected_for_rebuild(), &_total_selected_for_rebuild);
   }
@@ -1402,7 +1382,6 @@ void G1ConcurrentMark::weak_refs_work(bool clear_all_soft_refs) {
 
     // Process the weak references.
     const ReferenceProcessorStats& stats = rp->process_discovered_references(&g1_is_alive, &g1_keep_alive, &g1_drain_mark_stack, executor, &pt);
-    _gc_tracer_cm->report_gc_reference_stats(stats);
     pt.print_all_references();
 
     // The do_oop work routines of the keep_alive and drain_marking_stack
@@ -1486,10 +1465,8 @@ void G1ConcurrentMark::report_object_count(bool mark_completed) {
   // using either the next or prev bitmap.
   if (mark_completed) {
     G1ObjectCountIsAliveClosure is_alive(_g1h);
-    _gc_tracer_cm->report_object_count_after_gc(&is_alive);
   } else {
     G1CMIsAliveClosure is_alive(_g1h);
-    _gc_tracer_cm->report_object_count_after_gc(&is_alive);
   }
 }
 
@@ -1706,8 +1683,6 @@ void G1ConcurrentMark::concurrent_cycle_abort() {
   satb_mq_set.set_active_all_threads(false, /* new active value */ satb_mq_set.is_active() /* expected_active */);
 }
 
-static void print_ms_time_info(const char* prefix, const char* name, NumberSeq& ns) { }
-
 void G1ConcurrentMark::print_worker_threads_on(outputStream* st) const {
   _concurrent_workers->print_worker_threads_on(st);
 }
@@ -1717,8 +1692,7 @@ void G1ConcurrentMark::threads_do(ThreadClosure* tc) const {
 }
 
 void G1ConcurrentMark::print_on_error(outputStream* st) const {
-  st->print_cr("Marking Bits (Prev, Next): (CMBitMap*) " PTR_FORMAT ", (CMBitMap*) " PTR_FORMAT,
-               p2i(_prev_mark_bitmap), p2i(_next_mark_bitmap));
+  st->print_cr("Marking Bits (Prev, Next): (CMBitMap*) " PTR_FORMAT ", (CMBitMap*) " PTR_FORMAT, p2i(_prev_mark_bitmap), p2i(_next_mark_bitmap));
   _prev_mark_bitmap->print_on_error(st, " Prev Bits: ");
   _next_mark_bitmap->print_on_error(st, " Next Bits: ");
 }

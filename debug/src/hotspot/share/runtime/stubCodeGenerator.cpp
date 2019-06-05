@@ -39,35 +39,14 @@ void StubCodeDesc::print_on(outputStream* st) const {
 
 // Implementation of StubCodeGenerator
 
-StubCodeGenerator::StubCodeGenerator(CodeBuffer* code, bool print_code) {
-  _masm = new MacroAssembler(code );
-  _print_code = print_code;
+StubCodeGenerator::StubCodeGenerator(CodeBuffer* code) {
+  _masm = new MacroAssembler(code);
 }
 
-StubCodeGenerator::~StubCodeGenerator() {
-  if (_print_code) {
-    CodeBuffer* cbuf = _masm->code();
-    CodeBlob*   blob = CodeCache::find_blob_unsafe(cbuf->insts()->start());
-    if (blob != NULL) {
-      blob->set_strings(cbuf->strings());
-    }
-  }
-}
+StubCodeGenerator::~StubCodeGenerator() { }
 
-void StubCodeGenerator::stub_prolog(StubCodeDesc* cdesc) {
-  // default implementation - do nothing
-}
-
-void StubCodeGenerator::stub_epilog(StubCodeDesc* cdesc) {
-  if (_print_code) {
-    CodeStrings cs;
-    ptrdiff_t offset = 0;
-    cdesc->print();
-    tty->cr();
-    Disassembler::decode(cdesc->begin(), cdesc->end(), NULL, cs, offset);
-    tty->cr();
-  }
-}
+void StubCodeGenerator::stub_prolog(StubCodeDesc* cdesc) { }
+void StubCodeGenerator::stub_epilog(StubCodeDesc* cdesc) { }
 
 // Implementation of CodeMark
 

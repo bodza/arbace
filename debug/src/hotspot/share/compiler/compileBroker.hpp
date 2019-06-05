@@ -5,7 +5,6 @@
 #include "compiler/abstractCompiler.hpp"
 #include "compiler/compileTask.hpp"
 #include "compiler/compilerDirectives.hpp"
-#include "runtime/perfData.hpp"
 #include "utilities/stack.hpp"
 #include "jvmci/jvmciCompiler.hpp"
 
@@ -143,32 +142,6 @@ class CompileBroker: AllStatic {
 
   static CompileQueue* _c2_compile_queue;
   static CompileQueue* _c1_compile_queue;
-
-  // performance counters
-  static PerfCounter* _perf_total_compilation;
-  static PerfCounter* _perf_native_compilation;
-  static PerfCounter* _perf_osr_compilation;
-  static PerfCounter* _perf_standard_compilation;
-
-  static PerfCounter* _perf_total_bailout_count;
-  static PerfCounter* _perf_total_invalidated_count;
-  static PerfCounter* _perf_total_compile_count;
-  static PerfCounter* _perf_total_native_compile_count;
-  static PerfCounter* _perf_total_osr_compile_count;
-  static PerfCounter* _perf_total_standard_compile_count;
-
-  static PerfCounter* _perf_sum_osr_bytes_compiled;
-  static PerfCounter* _perf_sum_standard_bytes_compiled;
-  static PerfCounter* _perf_sum_nmethod_size;
-  static PerfCounter* _perf_sum_nmethod_code_size;
-
-  static PerfStringVariable* _perf_last_method;
-  static PerfStringVariable* _perf_last_failed_method;
-  static PerfStringVariable* _perf_last_invalidated_method;
-  static PerfVariable*       _perf_last_compile_type;
-  static PerfVariable*       _perf_last_compile_size;
-  static PerfVariable*       _perf_last_failed_type;
-  static PerfVariable*       _perf_last_invalidated_type;
 
   // Timers and counters for generating statistics
   static elapsedTimer _t_total_compilation;
@@ -318,15 +291,13 @@ public:
   static bool is_compilation_disabled_forever() {
     return _should_compile_new_jobs == shutdown_compilation;
   }
+
   static void handle_full_code_cache(int code_blob_type);
+
   // Ensures that warning is only printed once.
   static bool should_print_compiler_warning() {
     jint old = Atomic::cmpxchg(1, &_print_compilation_warning, 0);
     return old == 0;
-  }
-  // Return total compilation ticks
-  static jlong total_compilation_ticks() {
-    return _perf_total_compilation != NULL ? _perf_total_compilation->get_value() : 0;
   }
 
   // Redefine Classes support
@@ -345,31 +316,23 @@ public:
   static const char* compiler_name(int comp_level);
 
   // Provide access to compiler thread Java objects
-  static jobject compiler1_object(int idx) {
-    return _compiler1_objects[idx];
-  }
+  static jobject compiler1_object(int idx)        { return _compiler1_objects[idx]; }
+  static jobject compiler2_object(int idx)        { return _compiler2_objects[idx]; }
 
-  static jobject compiler2_object(int idx) {
-    return _compiler2_objects[idx];
-  }
-
-  static int get_total_compile_count() {            return _total_compile_count; }
-  static int get_total_bailout_count() {            return _total_bailout_count; }
-  static int get_total_invalidated_count() {        return _total_invalidated_count; }
-  static int get_total_native_compile_count() {     return _total_native_compile_count; }
-  static int get_total_osr_compile_count() {        return _total_osr_compile_count; }
-  static int get_total_standard_compile_count() {   return _total_standard_compile_count; }
-  static int get_total_compiler_stopped_count() {   return _total_compiler_stopped_count; }
+  static int get_total_compile_count()            { return _total_compile_count; }
+  static int get_total_bailout_count()            { return _total_bailout_count; }
+  static int get_total_invalidated_count()        { return _total_invalidated_count; }
+  static int get_total_native_compile_count()     { return _total_native_compile_count; }
+  static int get_total_osr_compile_count()        { return _total_osr_compile_count; }
+  static int get_total_standard_compile_count()   { return _total_standard_compile_count; }
+  static int get_total_compiler_stopped_count()   { return _total_compiler_stopped_count; }
   static int get_total_compiler_restarted_count() { return _total_compiler_restarted_count; }
-  static int get_sum_osr_bytes_compiled() {         return _sum_osr_bytes_compiled; }
-  static int get_sum_standard_bytes_compiled() {    return _sum_standard_bytes_compiled; }
-  static int get_sum_nmethod_size() {               return _sum_nmethod_size; }
-  static int get_sum_nmethod_code_size() {          return _sum_nmethod_code_size; }
-  static long get_peak_compilation_time() {         return _peak_compilation_time; }
-  static long get_total_compilation_time() {        return _t_total_compilation.milliseconds(); }
-
-  // Log that compilation profiling is skipped because metaspace is full.
-  static void log_metaspace_failure();
+  static int get_sum_osr_bytes_compiled()         { return _sum_osr_bytes_compiled; }
+  static int get_sum_standard_bytes_compiled()    { return _sum_standard_bytes_compiled; }
+  static int get_sum_nmethod_size()               { return _sum_nmethod_size; }
+  static int get_sum_nmethod_code_size()          { return _sum_nmethod_code_size; }
+  static long get_peak_compilation_time()         { return _peak_compilation_time; }
+  static long get_total_compilation_time()        { return _t_total_compilation.milliseconds(); }
 
   // CodeHeap State Analytics.
   static void print_info(outputStream *out);

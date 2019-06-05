@@ -67,11 +67,11 @@ class Abstract_VM_Version: AllStatic {
   static const char* vm_platform_string();
   static const char* vm_build_user();
 
-  static int vm_major_version()               { return _vm_major_version; }
-  static int vm_minor_version()               { return _vm_minor_version; }
-  static int vm_security_version()            { return _vm_security_version; }
-  static int vm_patch_version()               { return _vm_patch_version; }
-  static int vm_build_number()                { return _vm_build_number; }
+  static int vm_major_version()    { return _vm_major_version; }
+  static int vm_minor_version()    { return _vm_minor_version; }
+  static int vm_security_version() { return _vm_security_version; }
+  static int vm_patch_version()    { return _vm_patch_version; }
+  static int vm_build_number()     { return _vm_build_number; }
 
   // Gets the jvm_version_info.jvm_version defined in jvm.h
   static unsigned int jvm_version();
@@ -82,13 +82,8 @@ class Abstract_VM_Version: AllStatic {
   static const char* jdk_debug_level();
   static const char* printable_jdk_debug_level();
 
-  static uint64_t features() {
-    return _features;
-  }
-
-  static const char* features_string() {
-    return _features_string;
-  }
+  static uint64_t features()           { return _features; }
+  static const char* features_string() { return _features_string; }
 
   // does HW support an 8-byte compare-exchange operation?
   static bool supports_cx8() {
@@ -100,10 +95,10 @@ class Abstract_VM_Version: AllStatic {
   }
   // does HW support atomic get-and-set or atomic get-and-add?  Used
   // to guide intrinsification decisions for Unsafe atomic ops
-  static bool supports_atomic_getset4()  { return _supports_atomic_getset4; }
-  static bool supports_atomic_getset8()  { return _supports_atomic_getset8; }
-  static bool supports_atomic_getadd4()  { return _supports_atomic_getadd4; }
-  static bool supports_atomic_getadd8()  { return _supports_atomic_getadd8; }
+  static bool supports_atomic_getset4() { return _supports_atomic_getset4; }
+  static bool supports_atomic_getset8() { return _supports_atomic_getset8; }
+  static bool supports_atomic_getadd4() { return _supports_atomic_getadd4; }
+  static bool supports_atomic_getadd8() { return _supports_atomic_getadd8; }
 
   static unsigned int logical_processors_per_package() {
     return _logical_processors_per_package;
@@ -114,7 +109,7 @@ class Abstract_VM_Version: AllStatic {
   }
 
   // ARCH specific policy for the BiasedLocking
-  static bool use_biased_locking()  { return true; }
+  static bool use_biased_locking() { return true; }
 
   // Number of page sizes efficiently supported by the hardware.  Most chips now
   // support two sizes, thus this default implementation.  Processor-specific

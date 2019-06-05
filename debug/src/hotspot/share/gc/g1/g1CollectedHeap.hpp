@@ -55,9 +55,7 @@ class HeapRegionRemSetIterator;
 class G1ConcurrentMark;
 class G1ConcurrentMarkThread;
 class G1ConcurrentRefine;
-class GenerationCounters;
 class STWGCTimer;
-class G1NewTracer;
 class EvacuationFailedInfo;
 class nmethod;
 class WorkGang;
@@ -269,8 +267,6 @@ private:
   // translation factor.
   static G1RegionToSpaceMapper* create_aux_memory_mapper(const char* description, size_t size, size_t translation_factor);
 
-  void trace_heap(GCWhen::Type when, const GCTracer* tracer);
-
   // These are macros so that, if the assert fires, we get the correct
   // line number, file, etc.
 
@@ -286,8 +282,6 @@ private:
   G1SurvivorRegions _survivor;
 
   STWGCTimer* _gc_timer_stw;
-
-  G1NewTracer* _gc_tracer_stw;
 
   // The current policy object for the collector.
   G1Policy* _g1_policy;
@@ -831,8 +825,6 @@ public:
   // The STW reference processor....
   ReferenceProcessor* ref_processor_stw() const { return _ref_processor_stw; }
 
-  G1NewTracer* gc_tracer_stw() const { return _gc_tracer_stw; }
-
   // The Concurrent Marking reference processor...
   ReferenceProcessor* ref_processor_cm() const { return _ref_processor_cm; }
 
@@ -1151,11 +1143,6 @@ public:
 
   // Deduplicate the string
   virtual void deduplicate_string(oop str);
-
-  // NULL testing support.
-  virtual bool supports_concurrent_phase_control() const;
-  virtual const char* const* concurrent_phases() const;
-  virtual bool request_concurrent_phase(const char* phase);
 
   virtual WorkGang* get_safepoint_workers() { return _workers; }
 

@@ -19,24 +19,16 @@
 #include "runtime/javaCalls.hpp"
 #include "runtime/jniHandles.inline.hpp"
 #include "runtime/os.hpp"
-#include "runtime/serviceThread.hpp"
 #include "runtime/thread.inline.hpp"
 #include "runtime/threadSMR.hpp"
-#include "services/writeableFlags.hpp"
-#include "services/lowMemoryDetector.hpp"
 #include "services/management.hpp"
 #include "services/memoryManager.hpp"
 #include "services/memoryPool.hpp"
 #include "services/memoryService.hpp"
-#include "services/runtimeService.hpp"
 #include "services/threadService.hpp"
 #include "utilities/debug.hpp"
 #include "utilities/formatBuffer.hpp"
 #include "utilities/macros.hpp"
-
-PerfVariable* Management::_begin_vm_creation_time = NULL;
-PerfVariable* Management::_end_vm_creation_time = NULL;
-PerfVariable* Management::_vm_init_done_time = NULL;
 
 InstanceKlass* Management::_diagnosticCommandImpl_klass = NULL;
 InstanceKlass* Management::_garbageCollectorExtImpl_klass = NULL;
@@ -49,7 +41,6 @@ InstanceKlass* Management::_memoryUsage_klass = NULL;
 InstanceKlass* Management::_sensor_klass = NULL;
 InstanceKlass* Management::_threadInfo_klass = NULL;
 
-jmmOptionalSupport Management::_optional_support = { 0 };
 TimeStamp Management::_stamp;
 
 void management_init() {

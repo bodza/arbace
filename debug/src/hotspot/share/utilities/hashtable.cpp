@@ -37,7 +37,7 @@ template <MEMFLAGS F> BasicHashtableEntry<F>* BasicHashtable<F>::new_entry(unsig
       int block_size = MIN2(512, MAX2((int)_table_size / 2, (int)_number_of_entries));
       int len = _entry_size * block_size;
       len = 1 << log2_int(len); // round down to power of 2
-      _first_free_entry = NEW_C_HEAP_ARRAY2(char, len, F, CURRENT_PC);
+      _first_free_entry = NEW_C_HEAP_ARRAY(char, len, F);
       _end_block = _first_free_entry + len;
     }
     entry = (BasicHashtableEntry<F>*)_first_free_entry;
@@ -226,7 +226,7 @@ static int literal_size(ClassLoaderWeakHandle v) {
 
 template <MEMFLAGS F> bool BasicHashtable<F>::resize(int new_size) {
   // Allocate new buckets
-  HashtableBucket<F>* buckets_new = NEW_C_HEAP_ARRAY2_RETURN_NULL(HashtableBucket<F>, new_size, F, CURRENT_PC);
+  HashtableBucket<F>* buckets_new = NEW_C_HEAP_ARRAY_RETURN_NULL(HashtableBucket<F>, new_size, F);
   if (buckets_new == NULL) {
     return false;
   }

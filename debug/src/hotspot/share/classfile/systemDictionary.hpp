@@ -315,7 +315,7 @@ public:
   // loaders.  Returns "true" iff something was unloaded.
   static bool do_unloading(GCTimer* gc_timer, bool do_cleaning = true);
 
-  // Used by false only to remove classes that failed verification
+  // Used by ... only to remove classes that failed verification
   static void remove_classes_in_error_state();
 
   static int calculate_systemdictionary_size(int loadedclasses);
@@ -566,7 +566,6 @@ protected:
   static InstanceKlass* load_shared_class(InstanceKlass* ik, Handle class_loader, Handle protection_domain, TRAPS);
   static InstanceKlass* load_instance_class(Symbol* class_name, Handle class_loader, TRAPS);
   static Handle compute_loader_lock_object(Handle class_loader, TRAPS);
-  static void check_loader_lock_contention(Handle loader_lock, TRAPS);
   static bool is_parallelCapable(Handle class_loader);
   static bool is_parallelDefine(Handle class_loader);
 

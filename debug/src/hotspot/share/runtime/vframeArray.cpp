@@ -17,7 +17,6 @@
 #include "runtime/vframeArray.hpp"
 #include "runtime/vframe_hp.hpp"
 #include "utilities/copy.hpp"
-#include "utilities/events.hpp"
 
 int vframeArrayElement::bci(void) const { return (_bci == SynchronizationEntryBCI ? 0 : _bci); }
 
@@ -390,7 +389,7 @@ void vframeArray::unpack_to_stack(frame &unpack_frame, int exec_mode, int caller
   // Do the unpacking of interpreter frames; the frame at index 0 represents the top activation, so it has no callee
   // Unpack the frames from the oldest (frames() -1) to the youngest (0)
   frame* caller_frame = &me;
-  for (index = frames() - 1; index >= 0 ; index--) {
+  for (index = frames() - 1; index >= 0; index--) {
     vframeArrayElement* elem = element(index);  // caller
     int callee_parameters, callee_locals;
     if (index == 0) {

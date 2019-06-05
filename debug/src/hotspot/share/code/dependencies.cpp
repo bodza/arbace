@@ -563,21 +563,10 @@ Dependencies::DepType Dependencies::validate_dependencies(CompileTask* task, boo
     if (witness != NULL) {
       if (klass_violations == 0) {
         result = deps.type();
-        if (failure_detail != NULL && klass_violations == 0) {
-          // Use a fixed size buffer to prevent the string stream from
-          // resizing in the context of an inner resource mark.
-          char* buffer = NEW_RESOURCE_ARRAY(char, O_BUFLEN);
-          stringStream st(buffer, O_BUFLEN);
-          deps.print_dependency(witness, true, &st);
-          *failure_detail = st.as_string();
-        }
       }
       klass_violations++;
       if (!counter_changed) {
-        // Dependence failed but counter didn't change.  Log a message
-        // describing what failed and allow the assert at the end to
-        // trigger.
-        deps.print_dependency(witness);
+        // Dependence failed but counter didn't change.
       } else if (xtty == NULL) {
         // If we're not logging then a single violation is sufficient,
         // otherwise we want to log all the dependences which were
@@ -1348,6 +1337,9 @@ void DepChange::print() {
       break;
     case Change_new_impl:
       ++nint;
+      break;
+
+    default:
       break;
     }
   }

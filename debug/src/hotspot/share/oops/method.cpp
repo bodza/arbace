@@ -323,7 +323,6 @@ void Method::build_interpreter_method_data(const methodHandle& method, TRAPS) {
     ClassLoaderData* loader_data = method->method_holder()->class_loader_data();
     MethodData* method_data = MethodData::allocate(loader_data, method, THREAD);
     if (HAS_PENDING_EXCEPTION) {
-      CompileBroker::log_metaspace_failure();
       ClassLoaderDataGraph::set_metaspace_oom(true);
       return;   // return the exception (which is cleared)
     }
@@ -341,7 +340,6 @@ MethodCounters* Method::build_method_counters(Method* m, TRAPS) {
   methodHandle mh(m);
   MethodCounters* counters = MethodCounters::allocate(mh, THREAD);
   if (HAS_PENDING_EXCEPTION) {
-    CompileBroker::log_metaspace_failure();
     ClassLoaderDataGraph::set_metaspace_oom(true);
     return NULL;   // return the exception (which is cleared)
   }
@@ -1105,12 +1103,7 @@ methodHandle Method::clone_with_new_data(const methodHandle& m, u_char* new_code
       0);
 
   ClassLoaderData* loader_data = m->method_holder()->class_loader_data();
-  Method* newm_oop = Method::allocate(loader_data,
-                                      new_code_length,
-                                      flags,
-                                      &sizes,
-                                      m->method_type(),
-                                      CHECK_(methodHandle()));
+  Method* newm_oop = Method::allocate(loader_data, new_code_length, flags, &sizes, m->method_type(), CHECK_(methodHandle()));
   methodHandle newm (THREAD, newm_oop);
 
   // Create a shallow copy of Method part, but be careful to preserve the new ConstMethod*
@@ -1271,8 +1264,7 @@ bool Method::load_signature_classes(const methodHandle& m, TRAPS) {
     if (ss.is_object()) {
       Symbol* sym = ss.as_symbol(CHECK_(false));
       Symbol*  name  = sym;
-      Klass* klass = SystemDictionary::resolve_or_null(name, class_loader,
-                                             protection_domain, THREAD);
+      Klass* klass = SystemDictionary::resolve_or_null(name, class_loader, protection_domain, THREAD);
       // We are loading classes eagerly. If a ClassNotFoundException or
       // a LinkageError was generated, be sure to ignore it.
       if (HAS_PENDING_EXCEPTION) {

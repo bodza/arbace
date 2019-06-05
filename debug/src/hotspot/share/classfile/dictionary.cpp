@@ -222,7 +222,6 @@ void Dictionary::classes_do(MetaspaceClosure* it) {
   for (int index = 0; index < table_size(); index++) {
     for (DictionaryEntry* probe = bucket(index); probe != NULL; probe = probe->next()) {
       it->push(probe->klass_addr());
-      ((NULL*)probe)->metaspace_pointers_do(it);
     }
   }
 }

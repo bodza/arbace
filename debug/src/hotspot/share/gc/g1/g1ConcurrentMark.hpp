@@ -14,7 +14,6 @@ class G1CollectedHeap;
 class G1CMOopClosure;
 class G1CMTask;
 class G1ConcurrentMark;
-class G1OldTracer;
 class G1RegionToSpaceMapper;
 class G1SurvivorRegions;
 
@@ -312,8 +311,6 @@ class G1ConcurrentMark : public CHeapObj<mtGC> {
 
   ConcurrentGCTimer*      _gc_timer_cm;
 
-  G1OldTracer*            _gc_tracer_cm;
-
   // Timing statistics. All of them are in ms
   NumberSeq _init_times;
   NumberSeq _remark_times;
@@ -563,7 +560,6 @@ public:
   }
 
   ConcurrentGCTimer* gc_timer_cm() const { return _gc_timer_cm; }
-  G1OldTracer* gc_tracer_cm() const { return _gc_tracer_cm; }
 
 private:
   // Rebuilds the remembered sets for chosen regions in parallel and concurrently to the application.

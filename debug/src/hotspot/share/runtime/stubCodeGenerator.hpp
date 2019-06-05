@@ -65,14 +65,11 @@ class StubCodeDesc: public CHeapObj<mtCode> {
 // Provides utility functions.
 
 class StubCodeGenerator: public StackObj {
- private:
-  bool _print_code;
-
  protected:
   MacroAssembler*  _masm;
 
  public:
-  StubCodeGenerator(CodeBuffer* code, bool print_code = false);
+  StubCodeGenerator(CodeBuffer* code);
   ~StubCodeGenerator();
 
   MacroAssembler* assembler() const              { return _masm; }

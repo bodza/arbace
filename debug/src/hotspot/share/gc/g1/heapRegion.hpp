@@ -2,8 +2,6 @@
 #define SHARE_VM_GC_G1_HEAPREGION_HPP
 
 #include "gc/g1/g1BlockOffsetTable.hpp"
-#include "gc/g1/g1HeapRegionTraceType.hpp"
-#include "gc/g1/heapRegionTracer.hpp"
 #include "gc/g1/heapRegionType.hpp"
 #include "gc/g1/survRateGroup.hpp"
 #include "gc/shared/ageTable.hpp"
@@ -188,8 +186,6 @@ class HeapRegion: public G1ContiguousSpace {
     return HeapRegion::block_size(addr); // Avoid virtual call
   }
 
-  void report_region_type_change(G1HeapRegionTraceType::Type to);
-
   // Returns whether the given object address refers to a dead object, and either the
   // size of the object (if live) or the size of the block (if dead) in size.
   // May
@@ -257,9 +253,7 @@ class HeapRegion: public G1ContiguousSpace {
   // Humongous objects are allocated directly in the old-gen. So we need special
   // handling for concurrent processing encountering an in-progress allocation.
   template <class Closure, bool is_gc_active>
-  inline bool do_oops_on_card_in_humongous(MemRegion mr,
-                                           Closure* cl,
-                                           G1CollectedHeap* g1h);
+  inline bool do_oops_on_card_in_humongous(MemRegion mr, Closure* cl, G1CollectedHeap* g1h);
 
   // Returns the block size of the given (dead, potentially having its class unloaded) object
   // starting at p extending to at most the prev TAMS using the given mark bitmap.
@@ -373,7 +367,6 @@ class HeapRegion: public G1ContiguousSpace {
 
   const char* get_type_str() const { return _type.get_str(); }
   const char* get_short_type_str() const { return _type.get_short_str(); }
-  G1HeapRegionTraceType::Type get_trace_type() { return _type.get_trace_type(); }
 
   bool is_free() const { return _type.is_free(); }
 

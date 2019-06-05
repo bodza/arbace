@@ -17,12 +17,10 @@
 #include "runtime/vm_operations.hpp"
 #include "runtime/vm_version.hpp"
 #include "runtime/flags/jvmFlag.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/debug.hpp"
 #include "utilities/decoder.hpp"
 #include "utilities/defaultStream.hpp"
 #include "utilities/errorReporter.hpp"
-#include "utilities/events.hpp"
 #include "utilities/vmError.hpp"
 #include "utilities/macros.hpp"
 
@@ -238,15 +236,11 @@ static void report_vm_version(outputStream* st, char* buf, int buflen) {
    // VM version
    st->print_cr("#");
    JDK_Version::current().to_string(buf, buflen);
-   const char* runtime_name = JDK_Version::runtime_name() != NULL ?
-                                JDK_Version::runtime_name() : "";
-   const char* runtime_version = JDK_Version::runtime_version() != NULL ?
-                                   JDK_Version::runtime_version() : "";
-   const char* jdk_debug_level = Abstract_VM_Version::printable_jdk_debug_level() != NULL ?
-                                   Abstract_VM_Version::printable_jdk_debug_level() : "";
+   const char* runtime_name = JDK_Version::runtime_name() != NULL ? JDK_Version::runtime_name() : "";
+   const char* runtime_version = JDK_Version::runtime_version() != NULL ? JDK_Version::runtime_version() : "";
+   const char* jdk_debug_level = Abstract_VM_Version::printable_jdk_debug_level() != NULL ? Abstract_VM_Version::printable_jdk_debug_level() : "";
 
-   st->print_cr("# JRE version: %s (%s) (%sbuild %s)", runtime_name, buf,
-                 jdk_debug_level, runtime_version);
+   st->print_cr("# JRE version: %s (%s) (%sbuild %s)", runtime_name, buf, jdk_debug_level, runtime_version);
 
    // This is the long version with some default settings added
    st->print_cr("# Java VM: %s (%s%s, %s%s%s%s%s, %s, %s)",
@@ -745,13 +739,6 @@ void VMError::report(outputStream* st, bool _verbose) {
        st->cr();
      }
 
-  STEP("printing ring buffers")
-
-     if (_verbose) {
-       Events::print_all(st);
-       st->cr();
-     }
-
   STEP("printing dynamic libraries")
 
      if (_verbose) {
@@ -786,13 +773,6 @@ void VMError::report(outputStream* st, bool _verbose) {
       st->cr();
     }
 
-  STEP("printing warning if internal testing API used")
-
-     if (false) {
-       st->print_cr("Unsupported internal testing APIs have been used.");
-       st->cr();
-     }
-
   STEP("printing all environment variables")
 
      if (_verbose) {
@@ -805,11 +785,6 @@ void VMError::report(outputStream* st, bool _verbose) {
      if (_verbose) {
        os::print_signal_handlers(st, buf, sizeof(buf));
        st->cr();
-     }
-
-  STEP("Native Memory Tracking")
-     if (_verbose) {
-       MemTracker::error_report(st);
      }
 
   STEP("printing system")
@@ -939,11 +914,6 @@ void VMError::print_vm_info(outputStream* st) {
     st->cr();
   }
 
-  // STEP("printing ring buffers")
-
-  Events::print_all(st);
-  st->cr();
-
   // STEP("printing dynamic libraries")
 
   // dynamic libraries, or memory map
@@ -956,13 +926,6 @@ void VMError::print_vm_info(outputStream* st) {
   Arguments::print_on(st);
   st->cr();
 
-  // STEP("printing warning if internal testing API used")
-
-  if (false) {
-    st->print_cr("Unsupported internal testing APIs have been used.");
-    st->cr();
-  }
-
   // STEP("printing all environment variables")
 
   os::print_environment_variables(st, env_list);
@@ -972,10 +935,6 @@ void VMError::print_vm_info(outputStream* st) {
 
   os::print_signal_handlers(st, buf, sizeof(buf));
   st->cr();
-
-  // STEP("Native Memory Tracking")
-
-  MemTracker::error_report(st);
 
   // STEP("printing system")
 
@@ -1163,12 +1122,6 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
     // reset signal handlers or exception filter; make sure recursive crashes
     // are handled properly.
     reset_signal_handlers();
-
-    EventShutdown e;
-    if (e.should_commit()) {
-      e.set_reason("VM Error");
-      e.commit();
-    }
   } else {
     // If UseOsErrorReporting we call this for each level of the call stack
     // while searching for the exception handler.  Only the first level needs
@@ -1246,7 +1199,7 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
     // see if log file is already open
     if (!log.is_open()) {
       // open log file
-      int fd = prepare_log_file(NULL, "hs_err_pid%p.log", buffer, sizeof(buffer));
+      int fd = prepare_log_file(NULL, "hs_err_pid%p.log", buffer, sizeof(buffer));
       if (fd != -1) {
         out.print_raw("# An error report file with more information is saved as:\n# ");
         out.print_raw_cr(buffer);

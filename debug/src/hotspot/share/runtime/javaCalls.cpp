@@ -243,9 +243,7 @@ Handle JavaCalls::construct_new_instance(InstanceKlass* klass, Symbol* construct
   Handle obj = klass->allocate_instance_handle(CHECK_NH);
   JavaValue void_result(T_VOID);
   args->set_receiver(obj); // inserts <obj> as the first argument.
-  JavaCalls::call_special(&void_result, klass,
-                          vmSymbols::object_initializer_name(),
-                          constructor_signature, args, CHECK_NH);
+  JavaCalls::call_special(&void_result, klass, vmSymbols::object_initializer_name(), constructor_signature, args, CHECK_NH);
   return obj;
 }
 

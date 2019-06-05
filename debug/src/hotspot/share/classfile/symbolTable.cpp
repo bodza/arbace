@@ -305,8 +305,7 @@ void SymbolTable::add(ClassLoaderData* loader_data, const constantPoolHandle& cp
   MutexLocker ml(SymbolTable_lock, THREAD);
 
   SymbolTable* table = the_table();
-  bool added = table->basic_add(loader_data, cp, names_count, names, lengths,
-                                cp_indices, hashValues, CHECK);
+  bool added = table->basic_add(loader_data, cp, names_count, names, lengths, cp_indices, hashValues, CHECK);
   if (!added) {
     // do it the hard way
     for (int i = 0; i<names_count; i++) {

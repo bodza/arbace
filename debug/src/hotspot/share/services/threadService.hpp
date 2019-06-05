@@ -6,7 +6,6 @@
 #include "runtime/init.hpp"
 #include "runtime/jniHandles.hpp"
 #include "runtime/objectMonitor.hpp"
-#include "runtime/perfData.hpp"
 #include "runtime/thread.hpp"
 #include "runtime/threadSMR.hpp"
 #include "services/management.hpp"
@@ -28,22 +27,16 @@ class DeadlockCycle;
 //
 class ThreadService : public AllStatic {
 private:
-  // These counters could be moved to Threads class
-  static PerfCounter*  _total_threads_count;
-  static PerfVariable* _live_threads_count;
-  static PerfVariable* _peak_threads_count;
-  static PerfVariable* _daemon_threads_count;
-
   // These 2 counters are like the above thread counts, but are
   // atomically decremented in ThreadService::current_thread_exiting instead of
   // ThreadService::remove_thread, so that the thread count is updated before
   // Thread.join() returns.
-  static volatile int  _atomic_threads_count;
-  static volatile int  _atomic_daemon_threads_count;
+  static volatile int _atomic_threads_count;
+  static volatile int _atomic_daemon_threads_count;
 
-  static bool          _thread_monitoring_contention_enabled;
-  static bool          _thread_cpu_time_enabled;
-  static bool          _thread_allocated_memory_enabled;
+  static bool _thread_monitoring_contention_enabled;
+  static bool _thread_cpu_time_enabled;
+  static bool _thread_allocated_memory_enabled;
 
   // Need to keep the list of thread dump result that
   // keep references to Method* since thread dump can be
@@ -59,37 +52,35 @@ public:
   static void current_thread_exiting(JavaThread* jt, bool daemon);
 
   static bool set_thread_monitoring_contention(bool flag);
-  static bool is_thread_monitoring_contention() { return _thread_monitoring_contention_enabled; }
+  static bool is_thread_monitoring_contention()    { return _thread_monitoring_contention_enabled; }
 
   static bool set_thread_cpu_time_enabled(bool flag);
-  static bool is_thread_cpu_time_enabled()    { return _thread_cpu_time_enabled; }
+  static bool is_thread_cpu_time_enabled()         { return _thread_cpu_time_enabled; }
 
   static bool set_thread_allocated_memory_enabled(bool flag);
   static bool is_thread_allocated_memory_enabled() { return _thread_cpu_time_enabled; }
 
-  static jlong get_total_thread_count()       { return _total_threads_count->get_value(); }
-  static jlong get_peak_thread_count()        { return _peak_threads_count->get_value(); }
-  static jlong get_live_thread_count()        { return _atomic_threads_count; }
-  static jlong get_daemon_thread_count()      { return _atomic_daemon_threads_count; }
+  static jlong get_live_thread_count()             { return _atomic_threads_count; }
+  static jlong get_daemon_thread_count()           { return _atomic_daemon_threads_count; }
 
   // Support for thread dump
-  static void   add_thread_dump(ThreadDumpResult* dump);
-  static void   remove_thread_dump(ThreadDumpResult* dump);
+  static void add_thread_dump(ThreadDumpResult* dump);
+  static void remove_thread_dump(ThreadDumpResult* dump);
 
   static Handle get_current_contended_monitor(JavaThread* thread);
 
   // This function is called by JVM_DumpThreads.
   static Handle dump_stack_traces(GrowableArray<instanceHandle>* threads, int num_threads, TRAPS);
 
-  static void   reset_peak_thread_count();
-  static void   reset_contention_count_stat(JavaThread* thread);
-  static void   reset_contention_time_stat(JavaThread* thread);
+  static void reset_peak_thread_count();
+  static void reset_contention_count_stat(JavaThread* thread);
+  static void reset_contention_time_stat(JavaThread* thread);
 
-  static DeadlockCycle*       find_deadlocks_at_safepoint(ThreadsList * t_list, bool object_monitors_only);
+  static DeadlockCycle* find_deadlocks_at_safepoint(ThreadsList * t_list, bool object_monitors_only);
 
   // GC support
-  static void   oops_do(OopClosure* f);
-  static void   metadata_do(void f(Metadata*));
+  static void oops_do(OopClosure* f);
+  static void metadata_do(void f(Metadata*));
 };
 
 // Per-thread Statistics for synchronization
@@ -111,10 +102,6 @@ private:
   // to update the statistics.
   bool         _count_pending_reset;
   bool         _timer_pending_reset;
-
-  // Keep accurate times for potentially recursive class operations
-  int           _perf_recursion_counts[6];
-  elapsedTimer  _perf_timers[6];
 
   // utility functions
   void  check_and_reset_count()     {
@@ -156,9 +143,6 @@ public:
 
   void reset_count_stat()           { _count_pending_reset = true; }
   void reset_time_stat()            { _timer_pending_reset = true; }
-
-  int* perf_recursion_counts_addr() { return _perf_recursion_counts; }
-  elapsedTimer* perf_timers_addr()  { return _perf_timers; }
 };
 
 // Thread snapshot to represent the thread state and statistics

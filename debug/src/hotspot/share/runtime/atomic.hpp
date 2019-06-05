@@ -61,12 +61,10 @@ public:
   // <fence> add-value-to-dest <membar StoreLoad|StoreStore>
 
   template<typename I, typename D>
-  inline static D add(I add_value, D volatile* dest,
-                      atomic_memory_order order = memory_order_conservative);
+  inline static D add(I add_value, D volatile* dest, atomic_memory_order order = memory_order_conservative);
 
   template<typename I, typename D>
-  inline static D sub(I sub_value, D volatile* dest,
-                      atomic_memory_order order = memory_order_conservative);
+  inline static D sub(I sub_value, D volatile* dest, atomic_memory_order order = memory_order_conservative);
 
   // Atomically increment location. inc() provide:
   // <fence> increment-dest <membar StoreLoad|StoreStore>
@@ -74,8 +72,7 @@ public:
   // type. If it is a pointer type, then the increment is
   // scaled to the size of the type pointed to by the pointer.
   template<typename D>
-  inline static void inc(D volatile* dest,
-                         atomic_memory_order order = memory_order_conservative);
+  inline static void inc(D volatile* dest, atomic_memory_order order = memory_order_conservative);
 
   // Atomically decrement a location. dec() provide:
   // <fence> decrement-dest <membar StoreLoad|StoreStore>
@@ -83,8 +80,7 @@ public:
   // type. If it is a pointer type, then the decrement is
   // scaled to the size of the type pointed to by the pointer.
   template<typename D>
-  inline static void dec(D volatile* dest,
-                         atomic_memory_order order = memory_order_conservative);
+  inline static void dec(D volatile* dest, atomic_memory_order order = memory_order_conservative);
 
   // Performs atomic exchange of *dest with exchange_value. Returns old
   // prior value of *dest. xchg*() provide:
@@ -93,8 +89,7 @@ public:
   // to D, an integral/enum type equal to D, or a type equal to D that
   // is primitive convertible using PrimitiveConversions.
   template<typename T, typename D>
-  inline static D xchg(T exchange_value, volatile D* dest,
-                       atomic_memory_order order = memory_order_conservative);
+  inline static D xchg(T exchange_value, volatile D* dest, atomic_memory_order order = memory_order_conservative);
 
   // Performs atomic compare of *dest and compare_value, and exchanges
   // *dest with exchange_value if the comparison succeeded. Returns prior
@@ -102,10 +97,7 @@ public:
   // <fence> compare-and-exchange <membar StoreLoad|StoreStore>
 
   template<typename T, typename D, typename U>
-  inline static D cmpxchg(T exchange_value,
-                          D volatile* dest,
-                          U compare_value,
-                          atomic_memory_order order = memory_order_conservative);
+  inline static D cmpxchg(T exchange_value, D volatile* dest, U compare_value, atomic_memory_order order = memory_order_conservative);
 
   // Performs atomic compare of *dest and NULL, and replaces *dest
   // with exchange_value if the comparison succeeded.  Returns true if
@@ -113,8 +105,7 @@ public:
   // often used as part of lazy initialization, as a lock-free
   // alternative to the Double-Checked Locking Pattern.
   template<typename T, typename D>
-  inline static bool replace_if_null(T* value, D* volatile* dest,
-                                     atomic_memory_order order = memory_order_conservative);
+  inline static bool replace_if_null(T* value, D* volatile* dest, atomic_memory_order order = memory_order_conservative);
 
 private:
   // VS2017 warns (C2027) use of undefined type if IsPointerConvertible is declared private
@@ -505,10 +496,7 @@ inline D Atomic::sub(I sub_value, D volatile* dest, atomic_memory_order order) {
 template<size_t byte_size>
 struct Atomic::PlatformCmpxchg {
   template<typename T>
-  T operator()(T exchange_value,
-               T volatile* dest,
-               T compare_value,
-               atomic_memory_order order) const;
+  T operator()(T exchange_value, T volatile* dest, T compare_value, atomic_memory_order order) const;
 };
 
 // Define the class before including platform file, which may use this
@@ -516,10 +504,7 @@ struct Atomic::PlatformCmpxchg {
 // in this file, near the other definitions related to cmpxchg.
 struct Atomic::CmpxchgByteUsingInt {
   template<typename T>
-  T operator()(T exchange_value,
-               T volatile* dest,
-               T compare_value,
-               atomic_memory_order order) const;
+  T operator()(T exchange_value, T volatile* dest, T compare_value, atomic_memory_order order) const;
 };
 
 // Define the class before including platform file, which may specialize
@@ -530,9 +515,7 @@ struct Atomic::CmpxchgByteUsingInt {
 template<size_t byte_size>
 struct Atomic::PlatformXchg {
   template<typename T>
-  T operator()(T exchange_value,
-               T volatile* dest,
-               atomic_memory_order order) const;
+  T operator()(T exchange_value, T volatile* dest, atomic_memory_order order) const;
 };
 
 // platform specific in-line definitions - must come before shared definitions
@@ -605,8 +588,7 @@ struct Atomic::AddImpl<short, short> {
 
 template<typename Derived>
 template<typename I, typename D>
-inline D Atomic::FetchAndAdd<Derived>::operator()(I add_value, D volatile* dest,
-                                                  atomic_memory_order order) const {
+inline D Atomic::FetchAndAdd<Derived>::operator()(I add_value, D volatile* dest, atomic_memory_order order) const {
   I addend = add_value;
   // If D is a pointer type P*, scale by sizeof(P).
   if (IsPointer<D>::value) {
@@ -618,8 +600,7 @@ inline D Atomic::FetchAndAdd<Derived>::operator()(I add_value, D volatile* dest,
 
 template<typename Derived>
 template<typename I, typename D>
-inline D Atomic::AddAndFetch<Derived>::operator()(I add_value, D volatile* dest,
-                                                  atomic_memory_order order) const {
+inline D Atomic::AddAndFetch<Derived>::operator()(I add_value, D volatile* dest, atomic_memory_order order) const {
   // If D is a pointer type P*, scale by sizeof(P).
   if (IsPointer<D>::value) {
     add_value *= sizeof(typename RemovePointer<D>::type);

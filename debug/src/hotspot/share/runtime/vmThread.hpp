@@ -1,7 +1,6 @@
 #ifndef SHARE_VM_RUNTIME_VMTHREAD_HPP
 #define SHARE_VM_RUNTIME_VMTHREAD_HPP
 
-#include "runtime/perfData.hpp"
 #include "runtime/thread.hpp"
 #include "runtime/vm_operations.hpp"
 
@@ -72,7 +71,6 @@ class VMThread: public NamedThread {
   static bool _should_terminate;
   static bool _terminated;
   static Monitor * _terminate_lock;
-  static PerfCounter* _perf_accumulated_vm_operation_time;
 
   static const char* _no_op_reason;
 
@@ -115,9 +113,6 @@ class VMThread: public NamedThread {
 
   // GC support
   void oops_do(OopClosure* f, CodeBlobClosure* cf);
-
-  // Performance measurement
-  static PerfCounter* perf_accumulated_vm_operation_time()               { return _perf_accumulated_vm_operation_time; }
 
   // Entry for starting vm thread
   virtual void run();

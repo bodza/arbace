@@ -162,7 +162,6 @@ void VM_G1CollectForAllocation::doit_epilogue() {
 void VM_CGC_Operation::doit() {
   GCIdMark gc_id_mark(_gc_id);
   G1CollectedHeap* g1h = G1CollectedHeap::heap();
-  TraceCollectorStats tcs(g1h->g1mm()->conc_collection_counters());
   SvcGCMarker sgcm(SvcGCMarker::CONCURRENT);
   IsGCActiveMark x;
   _cl->do_void();

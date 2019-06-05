@@ -1,4 +1,5 @@
 #include "runtime/threadLocalStorage.hpp"
+
 #include <pthread.h>
 
 static pthread_key_t _thread_key;
@@ -18,7 +19,6 @@ void ThreadLocalStorage::init() {
   int rslt = pthread_key_create(&_thread_key, restore_thread_pointer);
   // If this assert fails we will get a recursive assertion failure
   // and not see the actual error message or get a hs_err file
-  assert_status(rslt == 0, rslt, "pthread_key_create");
   _initialized = true;
 }
 
@@ -32,5 +32,4 @@ Thread* ThreadLocalStorage::thread() {
 
 void ThreadLocalStorage::set_thread(Thread* current) {
   int rslt = pthread_setspecific(_thread_key, current);
-  assert_status(rslt == 0, rslt, "pthread_setspecific");
 }

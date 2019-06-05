@@ -733,8 +733,7 @@ CompLevel JVMCIRuntime::adjust_comp_level_inner(const methodHandle& method, bool
   args.push_oop(sig);
   args.push_int(is_osr);
   args.push_int(level);
-  JavaCalls::call_special(&result, receiver->klass(), vmSymbols::adjustCompilationLevel_name(),
-                          vmSymbols::adjustCompilationLevel_signature(), &args, CHECK_RETURN);
+  JavaCalls::call_special(&result, receiver->klass(), vmSymbols::adjustCompilationLevel_name(), vmSymbols::adjustCompilationLevel_signature(), &args, CHECK_RETURN);
 
   int comp_level = result.get_jint();
   if (comp_level < CompLevel_none || comp_level > CompLevel_full_optimization) {

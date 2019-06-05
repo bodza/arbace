@@ -7,7 +7,6 @@
 #include "runtime/handles.inline.hpp"
 #include "runtime/javaCalls.hpp"
 #include "runtime/orderAccess.hpp"
-#include "services/lowMemoryDetector.hpp"
 #include "services/management.hpp"
 #include "services/memoryManager.hpp"
 #include "services/memoryPool.hpp"
@@ -25,13 +24,6 @@ MemoryPool::MemoryPool(const char* name, PoolType type, size_t init_size, size_t
 
   // initialize the max and init size of collection usage
   _after_gc_usage = MemoryUsage(_initial_size, 0, 0, _max_size);
-
-  _usage_sensor = NULL;
-  _gc_usage_sensor = NULL;
-  // usage threshold supports both high and low threshold
-  _usage_threshold = new ThresholdSupport(support_usage_threshold, support_usage_threshold);
-  // gc usage threshold supports only high threshold
-  _gc_usage_threshold = new ThresholdSupport(support_gc_threshold, support_gc_threshold);
 }
 
 void MemoryPool::add_manager(MemoryManager* mgr) {
@@ -54,8 +46,6 @@ instanceOop MemoryPool::get_memory_pool_instance(TRAPS) {
     InstanceKlass* ik = Management::sun_management_ManagementFactoryHelper_klass(CHECK_NULL);
 
     Handle pool_name = java_lang_String::create_from_str(_name, CHECK_NULL);
-    jlong usage_threshold_value = (_usage_threshold->is_high_threshold_supported() ? 0 : -1L);
-    jlong gc_usage_threshold_value = (_gc_usage_threshold->is_high_threshold_supported() ? 0 : -1L);
 
     JavaValue result(T_OBJECT);
     JavaCallArguments args;
@@ -65,15 +55,10 @@ instanceOop MemoryPool::get_memory_pool_instance(TRAPS) {
     Symbol* method_name = vmSymbols::createMemoryPool_name();
     Symbol* signature = vmSymbols::createMemoryPool_signature();
 
-    args.push_long(usage_threshold_value);    // Argument 3
-    args.push_long(gc_usage_threshold_value); // Argument 4
+    args.push_long(-1L);    // Argument 3
+    args.push_long(-1L); // Argument 4
 
-    JavaCalls::call_static(&result,
-                           ik,
-                           method_name,
-                           signature,
-                           &args,
-                           CHECK_NULL);
+    JavaCalls::call_static(&result, ik, method_name, signature, &args, CHECK_NULL);
 
     instanceOop p = (instanceOop) result.get_jobject();
     instanceHandle pool(THREAD, p);
@@ -108,7 +93,7 @@ instanceOop MemoryPool::get_memory_pool_instance(TRAPS) {
 }
 
 inline static size_t get_max_value(size_t val1, size_t val2) {
-    return (val1 > val2 ? val1 : val2);
+    return (val1 > val2) ? val1 : val2;
 }
 
 void MemoryPool::record_peak_memory_usage() {
@@ -122,33 +107,12 @@ void MemoryPool::record_peak_memory_usage() {
   _peak_usage = MemoryUsage(initial_size(), peak_used, peak_committed, peak_max_size);
 }
 
-static void set_sensor_obj_at(SensorInfo** sensor_ptr, instanceHandle sh) {
-  SensorInfo* sensor = new SensorInfo();
-  sensor->set_sensor(sh());
-  *sensor_ptr = sensor;
-}
-
-void MemoryPool::set_usage_sensor_obj(instanceHandle sh) {
-  set_sensor_obj_at(&_usage_sensor, sh);
-}
-
-void MemoryPool::set_gc_usage_sensor_obj(instanceHandle sh) {
-  set_sensor_obj_at(&_gc_usage_sensor, sh);
-}
-
 void MemoryPool::oops_do(OopClosure* f) {
   f->do_oop((oop*) &_memory_pool_obj);
-  if (_usage_sensor != NULL) {
-    _usage_sensor->oops_do(f);
-  }
-  if (_gc_usage_sensor != NULL) {
-    _gc_usage_sensor->oops_do(f);
-  }
 }
 
 CodeHeapPool::CodeHeapPool(CodeHeap* codeHeap, const char* name, bool support_usage_threshold) :
-  MemoryPool(name, NonHeap, codeHeap->capacity(), codeHeap->max_capacity(),
-             support_usage_threshold, false), _codeHeap(codeHeap) {
+  MemoryPool(name, NonHeap, codeHeap->capacity(), codeHeap->max_capacity(), support_usage_threshold, false), _codeHeap(codeHeap) {
 }
 
 MemoryUsage CodeHeapPool::get_memory_usage() {
@@ -172,8 +136,7 @@ size_t MetaspacePool::used_in_bytes() {
 }
 
 size_t MetaspacePool::calculate_max_size() const {
-  return FLAG_IS_CMDLINE(MaxMetaspaceSize) ? MaxMetaspaceSize :
-                                             MemoryUsage::undefined_size();
+  return FLAG_IS_CMDLINE(MaxMetaspaceSize) ? MaxMetaspaceSize : MemoryUsage::undefined_size();
 }
 
 CompressedKlassSpacePool::CompressedKlassSpacePool() :

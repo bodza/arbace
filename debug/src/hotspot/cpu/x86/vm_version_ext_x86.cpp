@@ -453,7 +453,7 @@ size_t VM_Version_Ext::cpu_write_support_string(char* const buf, size_t buf_len)
     } \
   }
 
-  for (flag = 1, fi = 0; flag <= 0x20000000 ; flag <<= 1, fi++) {
+  for (flag = 1, fi = 0; flag <= 0x20000000; flag <<= 1, fi++) {
     if (flag == HTT_FLAG && (((_cpuid_info.std_cpuid1_ebx.value >> 16) & 0xff) <= 1)) {
       continue; /* no hyperthreading */
     } else if (flag == SEP_FLAG && (cpu_family() == CPU_FAMILY_PENTIUMPRO && ((_cpuid_info.std_cpuid1_eax.value & 0xff) < 0x33))) {
@@ -470,7 +470,7 @@ size_t VM_Version_Ext::cpu_write_support_string(char* const buf, size_t buf_len)
     }
   }
 
-  for (flag = 1, fi = 0; flag <= 0x20000000 ; flag <<= 1, fi++) {
+  for (flag = 1, fi = 0; flag <= 0x20000000; flag <<= 1, fi++) {
     if ((_cpuid_info.ext_cpuid1_ecx.value & flag) && strlen(_feature_extended_ecx_id[fi]) > 0) {
       WRITE_TO_BUF(_feature_extended_ecx_id[fi]);
     }

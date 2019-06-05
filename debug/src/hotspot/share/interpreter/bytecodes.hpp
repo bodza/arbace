@@ -316,7 +316,7 @@ class Bytecodes: AllStatic {
   static s_char      _depth         [number_of_codes];
   static u_char      _lengths       [number_of_codes];
   static Code        _java_code     [number_of_codes];
-  static jchar       _flags         [(1<<BitsPerByte)*2]; // all second page for wide formats
+  static jchar       _flags         [(1 << BitsPerByte) * 2]; // all second page for wide formats
 
   static void        def(Code code, const char* name, const char* format, const char* wide_format, BasicType result_type, int depth, bool can_trap);
   static void        def(Code code, const char* name, const char* format, const char* wide_format, BasicType result_type, int depth, bool can_trap, Code java_code);
@@ -345,7 +345,7 @@ class Bytecodes: AllStatic {
   }
 
   // Fetch a bytecode or a breakpoint:
-  static Code       code_or_bp_at(address bcp)    { return (Code)cast(*bcp); }
+  static Code       code_or_bp_at(address bcp)     { return (Code)cast(*bcp); }
 
   static Code       code_at(Method* method, int bci);
   static bool       is_active_breakpoint_at(address bcp) { return (Code)*bcp == _breakpoint; }

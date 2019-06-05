@@ -10,9 +10,9 @@
 // See threadCritical.hpp for details of this class.
 //
 
-static pthread_t             tc_owner = 0;
-static pthread_mutex_t       tc_mutex = PTHREAD_MUTEX_INITIALIZER;
-static int                   tc_count = 0;
+static pthread_t       tc_owner = 0;
+static pthread_mutex_t tc_mutex = PTHREAD_MUTEX_INITIALIZER;
+static int             tc_count = 0;
 
 ThreadCritical::ThreadCritical() {
   pthread_t self = pthread_self();

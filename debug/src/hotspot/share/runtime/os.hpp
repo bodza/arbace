@@ -8,6 +8,7 @@
 #include "utilities/exceptions.hpp"
 #include "utilities/ostream.hpp"
 #include "utilities/macros.hpp"
+
 # include <setjmp.h>
 #ifdef __APPLE__
 # include <mach/mach_time.h>
@@ -27,7 +28,6 @@ class JavaThread;
 class Event;
 class DLL;
 class FileHandle;
-class NativeCallStack;
 class methodHandle;
 
 template<class E> class GrowableArray;
@@ -61,12 +61,9 @@ const bool ExecMem = true;
 // Typedef for structured exception handling support
 typedef void (*java_call_t)(JavaValue* value, const methodHandle& method, JavaCallArguments* args, Thread* thread);
 
-class MallocTracker;
-
 class os: AllStatic {
   friend class VMStructs;
   friend class JVMCIVMStructs;
-  friend class MallocTracker;
  public:
   enum { page_sizes_max = 9 }; // Size of _page_sizes array (8 plus a sentinel)
 
@@ -671,9 +668,7 @@ class os: AllStatic {
   static int get_native_stack(address* stack, int size, int toSkip = 0);
 
   // General allocation (must be MT-safe)
-  static void* malloc(size_t size, MEMFLAGS flags, const NativeCallStack& stack);
   static void* malloc(size_t size, MEMFLAGS flags);
-  static void* realloc(void *memblock, size_t size, MEMFLAGS flag, const NativeCallStack& stack);
   static void* realloc(void *memblock, size_t size, MEMFLAGS flag);
 
   static void  free(void *memblock);

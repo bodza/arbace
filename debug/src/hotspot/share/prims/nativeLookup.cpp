@@ -80,11 +80,8 @@ char* NativeLookup::long_jni_name(const methodHandle& method) {
 }
 
 extern "C" {
-  void JNICALL JVM_RegisterMethodHandleMethods(JNIEnv *env, jclass unsafecls);
-  void JNICALL JVM_RegisterPerfMethods(JNIEnv *env, jclass perfclass);
-  void JNICALL JVM_RegisterWhiteBoxMethods(JNIEnv *env, jclass wbclass);
-  jobject  JNICALL JVM_GetJVMCIRuntime(JNIEnv *env, jclass c);
-  void     JNICALL JVM_RegisterJVMCINatives(JNIEnv *env, jclass compilerToVMClass);
+  jobject JNICALL JVM_GetJVMCIRuntime(JNIEnv *env, jclass c);
+  void    JNICALL JVM_RegisterJVMCINatives(JNIEnv *env, jclass compilerToVMClass);
 }
 
 #define CC (char*)  /* cast a literal from (const char*) */
@@ -92,9 +89,6 @@ extern "C" {
 
 static JNINativeMethod lookup_special_native_methods[] = {
   { CC"Java_jdk_internal_misc_Unsafe_registerNatives",             NULL, FN_PTR(JVM_RegisterJDKInternalMiscUnsafeMethods) },
-  { CC"Java_java_lang_invoke_MethodHandleNatives_registerNatives", NULL, FN_PTR(JVM_RegisterMethodHandleMethods) },
-  { CC"Java_jdk_internal_perf_Perf_registerNatives",               NULL, FN_PTR(JVM_RegisterPerfMethods) },
-  { CC"Java_sun_hotspot_WhiteBox_registerNatives",                 NULL, FN_PTR(JVM_RegisterWhiteBoxMethods) },
   { CC"Java_jdk_vm_ci_runtime_JVMCI_initializeRuntime",            NULL, FN_PTR(JVM_GetJVMCIRuntime) },
   { CC"Java_jdk_vm_ci_hotspot_CompilerToVM_registerNatives",       NULL, FN_PTR(JVM_RegisterJVMCINatives) },
 };
@@ -142,14 +136,7 @@ address NativeLookup::lookup_style(const methodHandle& method, char* pure_name, 
   Handle name_arg = java_lang_String::create_from_str(jni_name, CHECK_NULL);
 
   JavaValue result(T_LONG);
-  JavaCalls::call_static(&result,
-                         klass,
-                         vmSymbols::findNative_name(),
-                         vmSymbols::classloader_string_long_signature(),
-                         // Arguments
-                         loader,
-                         name_arg,
-                         CHECK_NULL);
+  JavaCalls::call_static(&result, klass, vmSymbols::findNative_name(), vmSymbols::classloader_string_long_signature(), loader, name_arg, CHECK_NULL);
   entry = (address) (intptr_t) result.get_jlong();
 
   if (entry == NULL) {

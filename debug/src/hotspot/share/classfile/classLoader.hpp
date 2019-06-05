@@ -2,7 +2,6 @@
 #define SHARE_VM_CLASSFILE_CLASSLOADER_HPP
 
 #include "runtime/handles.hpp"
-#include "runtime/perfData.hpp"
 #include "utilities/exceptions.hpp"
 #include "utilities/macros.hpp"
 
@@ -95,6 +94,7 @@ private:
   // First and last entries of class path entries for a specific module
   ClassPathEntry* _module_first_entry;
   ClassPathEntry* _module_last_entry;
+
 public:
   Symbol* module_name() const { return _module_name; }
   ClassPathEntry* module_first_entry() const { return _module_first_entry; }
@@ -110,41 +110,8 @@ class ClassLoader: AllStatic {
     PLATFORM_LOADER  = 2, /* PlatformClassLoader */
     APP_LOADER  = 3       /* AppClassLoader */
   };
+
  protected:
-  // Performance counters
-  static PerfCounter* _perf_accumulated_time;
-  static PerfCounter* _perf_classes_inited;
-  static PerfCounter* _perf_class_init_time;
-  static PerfCounter* _perf_class_init_selftime;
-  static PerfCounter* _perf_classes_verified;
-  static PerfCounter* _perf_class_verify_time;
-  static PerfCounter* _perf_class_verify_selftime;
-  static PerfCounter* _perf_classes_linked;
-  static PerfCounter* _perf_class_link_time;
-  static PerfCounter* _perf_class_link_selftime;
-  static PerfCounter* _perf_class_parse_time;
-  static PerfCounter* _perf_class_parse_selftime;
-  static PerfCounter* _perf_sys_class_lookup_time;
-  static PerfCounter* _perf_shared_classload_time;
-  static PerfCounter* _perf_sys_classload_time;
-  static PerfCounter* _perf_app_classload_time;
-  static PerfCounter* _perf_app_classload_selftime;
-  static PerfCounter* _perf_app_classload_count;
-  static PerfCounter* _perf_define_appclasses;
-  static PerfCounter* _perf_define_appclass_time;
-  static PerfCounter* _perf_define_appclass_selftime;
-  static PerfCounter* _perf_app_classfile_bytes_read;
-  static PerfCounter* _perf_sys_classfile_bytes_read;
-
-  static PerfCounter* _sync_systemLoaderLockContentionRate;
-  static PerfCounter* _sync_nonSystemLoaderLockContentionRate;
-  static PerfCounter* _sync_JVMFindLoadedClassLockFreeCounter;
-  static PerfCounter* _sync_JVMDefineClassLockFreeCounter;
-  static PerfCounter* _sync_JNIDefineClassLockFreeCounter;
-
-  static PerfCounter* _unsafe_defineClassCallCounter;
-  static PerfCounter* _load_instance_class_failCounter;
-
   // The boot class path consists of 3 ordered pieces:
   //  1. the module/path pairs specified to --patch-module
   //    --patch-module=<module>=<file>(<pathsep><file>)*
@@ -213,67 +180,6 @@ class ClassLoader: AllStatic {
   static bool update_class_path_entry_list(const char *path, bool check_for_duplicates, bool is_boot_append, bool throw_exception=true);
   static void print_bootclasspath();
 
-  // Timing
-  static PerfCounter* perf_accumulated_time()         { return _perf_accumulated_time; }
-  static PerfCounter* perf_classes_inited()           { return _perf_classes_inited; }
-  static PerfCounter* perf_class_init_time()          { return _perf_class_init_time; }
-  static PerfCounter* perf_class_init_selftime()      { return _perf_class_init_selftime; }
-  static PerfCounter* perf_classes_verified()         { return _perf_classes_verified; }
-  static PerfCounter* perf_class_verify_time()        { return _perf_class_verify_time; }
-  static PerfCounter* perf_class_verify_selftime()    { return _perf_class_verify_selftime; }
-  static PerfCounter* perf_classes_linked()           { return _perf_classes_linked; }
-  static PerfCounter* perf_class_link_time()          { return _perf_class_link_time; }
-  static PerfCounter* perf_class_link_selftime()      { return _perf_class_link_selftime; }
-  static PerfCounter* perf_class_parse_time()         { return _perf_class_parse_time; }
-  static PerfCounter* perf_class_parse_selftime()     { return _perf_class_parse_selftime; }
-  static PerfCounter* perf_sys_class_lookup_time()    { return _perf_sys_class_lookup_time; }
-  static PerfCounter* perf_shared_classload_time()    { return _perf_shared_classload_time; }
-  static PerfCounter* perf_sys_classload_time()       { return _perf_sys_classload_time; }
-  static PerfCounter* perf_app_classload_time()       { return _perf_app_classload_time; }
-  static PerfCounter* perf_app_classload_selftime()   { return _perf_app_classload_selftime; }
-  static PerfCounter* perf_app_classload_count()      { return _perf_app_classload_count; }
-  static PerfCounter* perf_define_appclasses()        { return _perf_define_appclasses; }
-  static PerfCounter* perf_define_appclass_time()     { return _perf_define_appclass_time; }
-  static PerfCounter* perf_define_appclass_selftime() { return _perf_define_appclass_selftime; }
-  static PerfCounter* perf_app_classfile_bytes_read() { return _perf_app_classfile_bytes_read; }
-  static PerfCounter* perf_sys_classfile_bytes_read() { return _perf_sys_classfile_bytes_read; }
-
-  // Record how often system loader lock object is contended
-  static PerfCounter* sync_systemLoaderLockContentionRate() {
-    return _sync_systemLoaderLockContentionRate;
-  }
-
-  // Record how often non system loader lock object is contended
-  static PerfCounter* sync_nonSystemLoaderLockContentionRate() {
-    return _sync_nonSystemLoaderLockContentionRate;
-  }
-
-  // Record how many calls to JVM_FindLoadedClass w/o holding a lock
-  static PerfCounter* sync_JVMFindLoadedClassLockFreeCounter() {
-    return _sync_JVMFindLoadedClassLockFreeCounter;
-  }
-
-  // Record how many calls to JVM_DefineClass w/o holding a lock
-  static PerfCounter* sync_JVMDefineClassLockFreeCounter() {
-    return _sync_JVMDefineClassLockFreeCounter;
-  }
-
-  // Record how many calls to jni_DefineClass w/o holding a lock
-  static PerfCounter* sync_JNIDefineClassLockFreeCounter() {
-    return _sync_JNIDefineClassLockFreeCounter;
-  }
-
-  // Record how many calls to Unsafe_DefineClass
-  static PerfCounter* unsafe_defineClassCallCounter() {
-    return _unsafe_defineClassCallCounter;
-  }
-
-  // Record how many times SystemDictionary::load_instance_class call
-  // fails with linkageError when Unsyncloadclass flag is set.
-  static PerfCounter* load_instance_class_failCounter() {
-    return _load_instance_class_failCounter;
-  }
-
   // Modular java runtime image is present vs. a build with exploded modules
   static bool has_jrt_entry() { return (_jrt_entry != NULL); }
   static ClassPathEntry* get_jrt_entry() { return _jrt_entry; }
@@ -311,17 +217,6 @@ class ClassLoader: AllStatic {
 
   static bool is_in_patch_mod_entries(Symbol* module_name);
 
-  static void  trace_class_path(const char* msg, const char* name = NULL);
-
-  // VM monitoring and management support
-  static jlong classloader_time_ms();
-  static jlong class_method_total_size();
-  static jlong class_init_count();
-  static jlong class_init_time_ms();
-  static jlong class_verify_time_ms();
-  static jlong class_link_count();
-  static jlong class_link_time_ms();
-
   // indicates if class path already contains a entry (exact match by name)
   static bool contains_append_entry(const char* name);
 
@@ -339,66 +234,6 @@ class ClassLoader: AllStatic {
   static const char* package_from_name(const char* const class_name, bool* bad_class_name = NULL);
 
   static bool is_modules_image(const char* name) { return string_ends_with(name, MODULES_IMAGE_NAME); }
-};
-
-// PerfClassTraceTime is used to measure time for class loading related events.
-// This class tracks cumulative time and exclusive time for specific event types.
-// During the execution of one event, other event types (e.g. class loading and
-// resolution) as well as recursive calls of the same event type could happen.
-// Only one elapsed timer (cumulative) and one thread-local self timer (exclusive)
-// (i.e. only one event type) are active at a time even multiple PerfClassTraceTime
-// instances have been created as multiple events are happening.
-class PerfClassTraceTime {
- public:
-  enum {
-    CLASS_LOAD   = 0,
-    PARSE_CLASS  = 1,
-    CLASS_LINK   = 2,
-    CLASS_VERIFY = 3,
-    CLASS_CLINIT = 4,
-    DEFINE_CLASS = 5,
-    EVENT_TYPE_COUNT = 6
-  };
- protected:
-  // _t tracks time from initialization to destruction of this timer instance
-  // including time for all other event types, and recursive calls of this type.
-  // When a timer is called recursively, the elapsedTimer _t would not be used.
-  elapsedTimer     _t;
-  PerfLongCounter* _timep;
-  PerfLongCounter* _selftimep;
-  PerfLongCounter* _eventp;
-  // pointer to thread-local recursion counter and timer array
-  // The thread_local timers track cumulative time for specific event types
-  // exclusive of time for other event types, but including recursive calls
-  // of the same type.
-  int*             _recursion_counters;
-  elapsedTimer*    _timers;
-  int              _event_type;
-  int              _prev_active_event;
-
- public:
-  inline PerfClassTraceTime(PerfLongCounter* timep,     /* counter incremented with inclusive time */
-                            PerfLongCounter* selftimep, /* counter incremented with exclusive time */
-                            PerfLongCounter* eventp,    /* event counter */
-                            int* recursion_counters,    /* thread-local recursion counter array */
-                            elapsedTimer* timers,       /* thread-local timer array */
-                            int type                    /* event type */ ) :
-      _timep(timep), _selftimep(selftimep), _eventp(eventp), _recursion_counters(recursion_counters), _timers(timers), _event_type(type) {
-    initialize();
-  }
-
-  inline PerfClassTraceTime(PerfLongCounter* timep,     /* counter incremented with inclusive time */
-                            elapsedTimer* timers,       /* thread-local timer array */
-                            int type                    /* event type */ ) :
-      _timep(timep), _selftimep(NULL), _eventp(NULL), _recursion_counters(NULL), _timers(timers), _event_type(type) {
-    initialize();
-  }
-
-  inline void suspend() { _t.stop(); _timers[_event_type].stop(); }
-  inline void resume()  { _t.start(); _timers[_event_type].start(); }
-
-  ~PerfClassTraceTime();
-  void initialize();
 };
 
 #endif

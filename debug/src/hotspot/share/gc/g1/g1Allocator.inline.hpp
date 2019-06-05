@@ -17,9 +17,7 @@ inline OldGCAllocRegion* G1Allocator::old_gc_alloc_region() {
   return &_old_gc_alloc_region;
 }
 
-inline HeapWord* G1Allocator::attempt_allocation(size_t min_word_size,
-                                                 size_t desired_word_size,
-                                                 size_t* actual_word_size) {
+inline HeapWord* G1Allocator::attempt_allocation(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size) {
   HeapWord* result = mutator_alloc_region()->attempt_retained_allocation(min_word_size, desired_word_size, actual_word_size);
   if (result != NULL) {
     return result;
@@ -40,8 +38,7 @@ inline PLAB* G1PLABAllocator::alloc_buffer(InCSetState dest) {
   return _alloc_buffers[dest.value()];
 }
 
-inline HeapWord* G1PLABAllocator::plab_allocate(InCSetState dest,
-                                                size_t word_sz) {
+inline HeapWord* G1PLABAllocator::plab_allocate(InCSetState dest, size_t word_sz) {
   PLAB* buffer = alloc_buffer(dest);
   if (_survivor_alignment_bytes == 0 || !dest.is_young()) {
     return buffer->allocate(word_sz);
@@ -50,9 +47,7 @@ inline HeapWord* G1PLABAllocator::plab_allocate(InCSetState dest,
   }
 }
 
-inline HeapWord* G1PLABAllocator::allocate(InCSetState dest,
-                                           size_t word_sz,
-                                           bool* refill_failed) {
+inline HeapWord* G1PLABAllocator::allocate(InCSetState dest, size_t word_sz, bool* refill_failed) {
   HeapWord* const obj = plab_allocate(dest, word_sz);
   if (obj != NULL) {
     return obj;

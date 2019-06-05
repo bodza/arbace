@@ -205,23 +205,6 @@ address CompiledMethod::oops_reloc_begin() const {
   return low_boundary;
 }
 
-int CompiledMethod::verify_icholder_relocations() {
-  ResourceMark rm;
-  int count = 0;
-
-  RelocIterator iter(this);
-  while (iter.next()) {
-    if (iter.type() == relocInfo::virtual_call_type) {
-      if (CompiledIC::is_icholder_call_site(iter.virtual_call_reloc(), this)) {
-        CompiledIC *ic = CompiledIC_at(&iter);
-        count++;
-      }
-    }
-  }
-
-  return count;
-}
-
 // Method that knows how to preserve outgoing arguments at call. This method must be
 // called with a frame corresponding to a Java invoke
 void CompiledMethod::preserve_callee_argument_oops(frame fr, const RegisterMap *reg_map, OopClosure* f) {

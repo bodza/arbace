@@ -96,14 +96,6 @@ static void crash_handler(int sig, siginfo_t* info, void* ucVoid) {
     return;
   }
 
-  // Needed because asserts may happen in error handling too.
-#ifdef CAN_SHOW_REGISTERS_ON_ASSERT
-  if ((sig == SIGSEGV || sig == SIGBUS) && info != NULL && info->si_addr == g_assert_poison) {
-    handle_assert_poison_fault(ucVoid, info->si_addr);
-    return;
-  }
-#endif
-
   VMError::report_and_die(NULL, sig, pc, info, ucVoid);
 }
 

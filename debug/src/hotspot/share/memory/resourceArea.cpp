@@ -4,12 +4,9 @@
 #include "memory/resourceArea.inline.hpp"
 #include "runtime/mutexLocker.hpp"
 #include "runtime/thread.inline.hpp"
-#include "services/memTracker.hpp"
 
 void ResourceArea::bias_to(MEMFLAGS new_flags) {
   if (new_flags != _flags) {
-    MemTracker::record_arena_free(_flags);
-    MemTracker::record_new_arena(new_flags);
     _flags = new_flags;
   }
 }

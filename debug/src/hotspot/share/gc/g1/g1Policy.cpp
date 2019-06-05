@@ -14,7 +14,6 @@
 #include "gc/g1/g1YoungGenSizer.hpp"
 #include "gc/g1/heapRegion.inline.hpp"
 #include "gc/g1/heapRegionRemSet.hpp"
-#include "gc/shared/gcPolicyCounters.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/java.hpp"
 #include "runtime/mutexLocker.hpp"
@@ -28,7 +27,6 @@ G1Policy::G1Policy(STWGCTimer* gc_timer) :
   _remset_tracker(),
   _mmu_tracker(new G1MMUTrackerQueue(GCPauseIntervalMillis / 1000.0, MaxGCPauseMillis / 1000.0)),
   _ihop_control(create_ihop_control(&_predictor)),
-  _policy_counters(new GCPolicyCounters("GarbageFirst", 1, 2)),
   _young_list_fixed_length(0),
   _short_lived_surv_rate_group(new SurvRateGroup()),
   _survivor_surv_rate_group(new SurvRateGroup()),
@@ -629,13 +627,8 @@ void G1Policy::record_collection_pause_end(double pause_time_ms, size_t cards_sc
   size_t last_unrestrained_young_length = update_young_list_max_and_target_length();
   update_rs_lengths_prediction();
 
-  update_ihop_prediction(app_time_ms / 1000.0,
-                         _bytes_allocated_in_old_since_last_gc,
-                         last_unrestrained_young_length * HeapRegion::GrainBytes,
-                         this_pause_was_young_only);
+  update_ihop_prediction(app_time_ms / 1000.0, _bytes_allocated_in_old_since_last_gc, last_unrestrained_young_length * HeapRegion::GrainBytes, this_pause_was_young_only);
   _bytes_allocated_in_old_since_last_gc = 0;
-
-  _ihop_control->send_trace_event(_g1h->gc_tracer_stw());
 
   // Note that _mmu_tracker->max_gc_time() returns the time in seconds.
   double update_rs_time_goal_ms = _mmu_tracker->max_gc_time() * MILLIUNITS * G1RSetUpdatingPauseTimePercent / 100.0;
@@ -800,10 +793,6 @@ void G1Policy::update_survivors_policy() {
   _max_survivor_regions = (uint) ceil(max_survivor_regions_d);
 
   _tenuring_threshold = _survivors_age_table.compute_tenuring_threshold(desired_survivor_size());
-  if (UsePerfData) {
-    _policy_counters->tenuring_threshold()->set_value(_tenuring_threshold);
-    _policy_counters->desired_survivor_size()->set_value(desired_survivor_size() * oopSize);
-  }
 }
 
 bool G1Policy::force_initial_mark_if_outside_cycle(GCCause::Cause gc_cause) {

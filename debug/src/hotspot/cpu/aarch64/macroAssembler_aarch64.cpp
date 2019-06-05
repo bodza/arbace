@@ -4047,9 +4047,7 @@ void MacroAssembler::string_indexof_char(Register str1, Register cnt1, Register 
 
 // Compare strings.
 void MacroAssembler::string_compare(Register str1, Register str2, Register cnt1, Register cnt2, Register result, Register tmp1, Register tmp2, FloatRegister vtmp1, FloatRegister vtmp2, FloatRegister vtmp3, int ae) {
-  Label DONE, SHORT_LOOP, SHORT_STRING, SHORT_LAST, TAIL, STUB,
-      DIFFERENCE, NEXT_WORD, SHORT_LOOP_TAIL, SHORT_LAST2, SHORT_LAST_INIT,
-      SHORT_LOOP_START, TAIL_CHECK;
+  Label DONE, SHORT_LOOP, SHORT_STRING, SHORT_LAST, TAIL, STUB, DIFFERENCE, NEXT_WORD, SHORT_LOOP_TAIL, SHORT_LAST2, SHORT_LAST_INIT, SHORT_LOOP_START, TAIL_CHECK;
 
   const int STUB_THRESHOLD = 64 + 8;
   bool isLL = ae == StrIntrinsicNode::LL;
@@ -4415,8 +4413,7 @@ void MacroAssembler::arrays_equals(Register a1, Register a2, Register tmp3, Regi
       }
     }
   } else {
-    Label NEXT_DWORD, SHORT, TAIL, TAIL2, STUB, EARLY_OUT,
-        CSET_EQ, LAST_CHECK;
+    Label NEXT_DWORD, SHORT, TAIL, TAIL2, STUB, EARLY_OUT, CSET_EQ, LAST_CHECK;
     mov(result, false);
     cbz(a1, DONE);
     ldrw(cnt1, Address(a1, length_offset));

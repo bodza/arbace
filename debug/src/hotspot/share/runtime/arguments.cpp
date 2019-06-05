@@ -25,7 +25,6 @@
 #include "runtime/safepointMechanism.hpp"
 #include "runtime/vm_version.hpp"
 #include "services/management.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/align.hpp"
 #include "utilities/defaultStream.hpp"
 #include "utilities/macros.hpp"
@@ -78,7 +77,6 @@ SystemProperty *Arguments::_java_library_path = NULL;
 SystemProperty *Arguments::_java_home = NULL;
 SystemProperty *Arguments::_java_class_path = NULL;
 SystemProperty *Arguments::_jdk_boot_class_path_append = NULL;
-SystemProperty *Arguments::_vm_info = NULL;
 
 GrowableArray<ModulePatchPath*> *Arguments::_patch_mod_prefix = NULL;
 PathString *Arguments::_system_boot_class_path = NULL;
@@ -90,7 +88,7 @@ bool PathString::set_value(const char *value) {
   if (_value != NULL) {
     FreeHeap(_value);
   }
-  _value = AllocateHeap(strlen(value)+1, mtArguments);
+  _value = AllocateHeap(strlen(value) + 1, mtArguments);
   if (_value != NULL) {
     strcpy(_value, value);
   } else {
@@ -127,7 +125,7 @@ PathString::PathString(const char* value) {
   if (value == NULL) {
     _value = NULL;
   } else {
-    _value = AllocateHeap(strlen(value)+1, mtArguments);
+    _value = AllocateHeap(strlen(value) + 1, mtArguments);
     strcpy(_value, value);
   }
 }
@@ -161,7 +159,7 @@ SystemProperty::SystemProperty(const char* key, const char* value, bool writeabl
   if (key == NULL) {
     _key = NULL;
   } else {
-    _key = AllocateHeap(strlen(key)+1, mtArguments);
+    _key = AllocateHeap(strlen(key) + 1, mtArguments);
     strcpy(_key, key);
   }
   _next = NULL;
@@ -170,12 +168,12 @@ SystemProperty::SystemProperty(const char* key, const char* value, bool writeabl
 }
 
 AgentLibrary::AgentLibrary(const char* name, const char* options, bool is_absolute_path, void* os_lib, bool instrument_lib) {
-  _name = AllocateHeap(strlen(name)+1, mtArguments);
+  _name = AllocateHeap(strlen(name) + 1, mtArguments);
   strcpy(_name, name);
   if (options == NULL) {
     _options = NULL;
   } else {
-    _options = AllocateHeap(strlen(options)+1, mtArguments);
+    _options = AllocateHeap(strlen(options) + 1, mtArguments);
     strcpy(_options, options);
   }
   _is_absolute_path = is_absolute_path;
@@ -250,11 +248,6 @@ void Arguments::add_loaded_agent(const char* name, char* options, bool absolute_
   _agentList.add(new AgentLibrary(name, options, absolute_path, os_lib));
 }
 
-// Return TRUE if option matches 'property', or 'property=', or 'property.'.
-static bool matches_property_suffix(const char* option, const char* property, size_t len) {
-  return ((strncmp(option, property, len) == 0) && (option[len] == '=' || option[len] == '.' || option[len] == '\0'));
-}
-
 // Process java launcher properties.
 void Arguments::process_sun_java_launcher_properties(JavaVMInitArgs* args) {
   // See if sun.java.launcher, sun.java.launcher.is_altjvm or
@@ -294,9 +287,6 @@ void Arguments::init_system_properties() {
   PropertyList_add(&_system_properties, new SystemProperty("java.vm.name", VM_Version::vm_name(),  false));
   PropertyList_add(&_system_properties, new SystemProperty("jdk.debug", VM_Version::jdk_debug_level(),  false));
 
-  // Initialize the vm.info now, but it will need updating after argument parsing.
-  _vm_info = new SystemProperty("java.vm.info", VM_Version::vm_info_string(), true);
-
   // Following are JVMTI agent writable properties.
   // Properties values are set to NULL and they are
   // os specific they are initialized in os::init_system_properties_values().
@@ -316,7 +306,6 @@ void Arguments::init_system_properties() {
   PropertyList_add(&_system_properties, _java_home);
   PropertyList_add(&_system_properties, _java_class_path);
   PropertyList_add(&_system_properties, _jdk_boot_class_path_append);
-  PropertyList_add(&_system_properties, _vm_info);
 
   // Set OS specific system properties values
   os::init_system_properties_values();
@@ -1812,11 +1801,7 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
     if (!match_option(option, "-Djava.class.path", &tail) &&
         !match_option(option, "-Dsun.java.command", &tail) &&
         !match_option(option, "-Dsun.java.launcher", &tail)) {
-        // add all jvm options to the jvm_args string. This string
-        // is used later to set the java.vm.args PerfData string constant.
-        // the -Djava.class.path and the -Dsun.java.command options are
-        // omitted from jvm_args string as each have their own PerfData
-        // string constant object.
+        // add all jvm options to the jvm_args string.
         build_jvm_args(option->optionString);
     }
 
@@ -2292,10 +2277,6 @@ jint Arguments::finalize_vm_init_args(bool patch_mod_javabase) {
   if (!check_vm_args_consistency()) {
     return JNI_ERR;
   }
-
-#ifndef CAN_SHOW_REGISTERS_ON_ASSERT
-  UNSUPPORTED_OPTION(ShowRegistersOnAssert);
-#endif
 
   return JNI_OK;
 }

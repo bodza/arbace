@@ -6,7 +6,6 @@
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "gc/shared/gcLocker.inline.hpp"
 #include "gc/shared/gcHeapSummary.hpp"
-#include "gc/shared/gcTrace.hpp"
 #include "gc/shared/gcWhen.hpp"
 #include "gc/shared/memAllocator.hpp"
 #include "gc/shared/vmGCOperations.hpp"
@@ -25,12 +24,6 @@
 class ClassLoaderData;
 
 size_t CollectedHeap::_filler_array_max_size = 0;
-
-template <>
-void EventLogBase<GCMessage>::print(outputStream* st, GCMessage& m) {
-  st->print_cr("GC heap %s", m.is_before ? "before" : "after");
-  st->print_raw(m);
-}
 
 VirtualSpaceSummary CollectedHeap::create_heap_space_summary() {
   size_t capacity_in_words = capacity() / HeapWordSize;
@@ -62,51 +55,10 @@ void CollectedHeap::print_on_error(outputStream* st) const {
   BarrierSet::barrier_set()->print_on(st);
 }
 
-void CollectedHeap::trace_heap(GCWhen::Type when, const GCTracer* gc_tracer) {
-  const GCHeapSummary& heap_summary = create_heap_summary();
-  gc_tracer->report_gc_heap_summary(when, heap_summary);
-
-  const MetaspaceSummary& metaspace_summary = create_metaspace_summary();
-  gc_tracer->report_metaspace_summary(when, metaspace_summary);
-}
-
-void CollectedHeap::trace_heap_before_gc(const GCTracer* gc_tracer) {
-  trace_heap(GCWhen::BeforeGC, gc_tracer);
-}
-
-void CollectedHeap::trace_heap_after_gc(const GCTracer* gc_tracer) {
-  trace_heap(GCWhen::AfterGC, gc_tracer);
-}
-
-// NULL API support for concurrent collectors.  These are the
-// default implementations, for collectors which don't support this
-// feature.
-bool CollectedHeap::supports_concurrent_phase_control() const {
-  return false;
-}
-
-const char* const* CollectedHeap::concurrent_phases() const {
-  static const char* const result[] = { NULL };
-  return result;
-}
-
-bool CollectedHeap::request_concurrent_phase(const char* phase) {
-  return false;
-}
-
 bool CollectedHeap::is_oop(oop object) const {
-  if (!check_obj_alignment(object)) {
-    return false;
-  }
-
-  if (!is_in_reserved(object)) {
-    return false;
-  }
-
-  if (is_in_reserved(object->klass_or_null())) {
-    return false;
-  }
-
+  if (!check_obj_alignment(object))            { return false; }
+  if (!is_in_reserved(object))                 { return false; }
+  if (is_in_reserved(object->klass_or_null())) { return false; }
   return true;
 }
 
@@ -122,16 +74,6 @@ CollectedHeap::CollectedHeap() :
   const size_t max_len = size_t(arrayOopDesc::max_array_length(T_INT));
   const size_t elements_per_word = HeapWordSize / sizeof(jint);
   _filler_array_max_size = align_object_size(filler_array_hdr_size() + max_len / elements_per_word);
-
-  if (UsePerfData) {
-    EXCEPTION_MARK;
-
-    // create the gc cause jvmstat counters
-    _perf_gc_cause = PerfDataManager::create_string_variable(SUN_GC, "cause", 80, GCCause::to_string(_gc_cause), CHECK);
-    _perf_gc_lastcause = PerfDataManager::create_string_variable(SUN_GC, "lastCause", 80, GCCause::to_string(_gc_lastcause), CHECK);
-  }
-
-  _gc_heap_log = NULL;
 }
 
 // This interface assumes that it's being called by the

@@ -24,10 +24,8 @@
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.inline.hpp"
 #include "runtime/timer.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/align.hpp"
 #include "utilities/debug.hpp"
-#include "utilities/events.hpp"
 #include "utilities/vmError.hpp"
 
 // put OS-includes here
@@ -259,13 +257,6 @@ JVM_handle_linux_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unr
       return true;
     }
   }
-
-#ifdef CAN_SHOW_REGISTERS_ON_ASSERT
-  if ((sig == SIGSEGV || sig == SIGBUS) && info != NULL && info->si_addr == g_assert_poison) {
-    handle_assert_poison_fault(ucVoid, info->si_addr);
-    return 1;
-  }
-#endif
 
   JavaThread* thread = NULL;
   VMThread* vmthread = NULL;
@@ -786,8 +777,6 @@ void os::workaround_expand_exec_shield_cs_limit() {
   if ((codebuf == NULL) || (!os::commit_memory(codebuf, page_size, true))) {
     return; // No matter, we tried, best effort.
   }
-
-  MemTracker::record_virtual_memory_type((address)codebuf, mtInternal);
 
   // Some code to exec: the 'ret' instruction
   codebuf[0] = 0xC3;

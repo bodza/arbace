@@ -165,7 +165,7 @@ void G1FullCollector::phase1_mark_live_objects() {
 
   // Process references discovered during marking.
   G1FullGCReferenceProcessingExecutor reference_processing(this);
-  reference_processing.execute(scope()->timer(), scope()->tracer());
+  reference_processing.execute(scope()->timer());
 
   // Weak oops cleanup.
   WeakProcessor::weak_oops_do(&_is_alive, &do_nothing_cl);
@@ -179,8 +179,6 @@ void G1FullCollector::phase1_mark_live_objects() {
     // If no class unloading just clean out strings and symbols.
     _heap->partial_cleaning(&_is_alive, true, true, G1StringDedup::is_enabled());
   }
-
-  scope()->tracer()->report_object_count_after_gc(&_is_alive);
 }
 
 void G1FullCollector::phase2_prepare_compaction() {

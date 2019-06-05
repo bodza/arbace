@@ -342,8 +342,7 @@ StackValueCollection* interpretedVFrame::stack_data(bool expressions) const {
 
   // If the method is native, method()->max_locals() is not telling the truth.
   // For our purposes, max locals instead equals the size of parameters.
-  const int max_locals = method()->is_native() ?
-    method()->size_of_parameters() : method()->max_locals();
+  const int max_locals = method()->is_native() ? method()->size_of_parameters() : method()->max_locals();
 
   const int length = expressions ? mask_len - max_locals : max_locals;
 
@@ -367,8 +366,7 @@ void interpretedVFrame::set_locals(StackValueCollection* values) const {
 
   // If the method is native, max_locals is not telling the truth.
   // maxlocals then equals the size of parameters
-  const int max_locals = method()->is_native() ?
-    method()->size_of_parameters() : method()->max_locals();
+  const int max_locals = method()->is_native() ? method()->size_of_parameters() : method()->max_locals();
 
   // handle locals
   for (int i = 0; i < max_locals; i++) {

@@ -113,7 +113,6 @@ private:
   Mutex*       _last_gc_lock;
   GCStatInfo*  _current_gc_stat;
   int          _num_gc_threads;
-  volatile bool _notification_enabled;
   const char*  _gc_end_message;
   bool         _pool_always_affected_by_gc[MemoryManager::max_num_pools];
 
@@ -130,23 +129,20 @@ public:
 
   void   initialize_gc_stat_info();
 
-  bool   is_gc_memory_manager()         { return true; }
-  jlong  gc_time_ms()                   { return _accumulated_timer.milliseconds(); }
-  size_t gc_count()                     { return _num_collections; }
-  int    num_gc_threads()               { return _num_gc_threads; }
-  void   set_num_gc_threads(int count)  { _num_gc_threads = count; }
+  bool   is_gc_memory_manager()        { return true; }
+  jlong  gc_time_ms()                  { return _accumulated_timer.milliseconds(); }
+  size_t gc_count()                    { return _num_collections; }
+  int    num_gc_threads()              { return _num_gc_threads; }
+  void   set_num_gc_threads(int count) { _num_gc_threads = count; }
 
   void   gc_begin(bool recordGCBeginTime, bool recordPreGCUsage, bool recordAccumulatedGCTime);
   void   gc_end(bool recordPostGCUsage, bool recordAccumulatedGCTime, bool recordGCEndTime, bool countCollection, GCCause::Cause cause, bool allMemoryPoolsAffected);
 
-  void        reset_gc_stat()   { _num_collections = 0; _accumulated_timer.reset(); }
+  void   reset_gc_stat()               { _num_collections = 0; _accumulated_timer.reset(); }
 
   // Copy out _last_gc_stat to the given destination, returning
   // the collection count. Zero signifies no gc has taken place.
   size_t get_last_gc_stat(GCStatInfo* dest);
-
-  void set_notification_enabled(bool enabled) { _notification_enabled = enabled; }
-  bool is_notification_enabled() { return _notification_enabled; }
 };
 
 #endif

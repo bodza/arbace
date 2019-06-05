@@ -11,7 +11,6 @@
 #include "gc/g1/vm_operations_g1.hpp"
 #include "gc/shared/concurrentGCPhaseManager.hpp"
 #include "gc/shared/gcId.hpp"
-#include "gc/shared/gcTrace.hpp"
 #include "gc/shared/suspendibleThreadSet.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/handles.inline.hpp"
@@ -32,8 +31,7 @@
   expander(BEFORE_REMARK,, NULL) \
   expander(REMARK,, NULL) \
   expander(REBUILD_REMEMBERED_SETS,, "Concurrent Rebuild Remembered Sets") \
-  expander(CLEANUP_FOR_NEXT_MARK,, "Concurrent Cleanup for Next Mark") \
-  /* */
+  expander(CLEANUP_FOR_NEXT_MARK,, "Concurrent Cleanup for Next Mark")
 
 class G1ConcurrentPhase : public AllStatic {
 public:
@@ -91,8 +89,7 @@ double G1ConcurrentMarkThread::mmu_sleep_time(G1Policy* g1_policy, bool remark) 
 
   const G1Analytics* analytics = g1_policy->analytics();
   double now = os::elapsedTime();
-  double prediction_ms = remark ? analytics->predict_remark_time_ms()
-                                : analytics->predict_cleanup_time_ms();
+  double prediction_ms = remark ? analytics->predict_remark_time_ms() : analytics->predict_cleanup_time_ms();
   G1MMUTracker *mmu_tracker = g1_policy->mmu_tracker();
   return mmu_tracker->when_ms(now, prediction_ms);
 }
@@ -168,23 +165,6 @@ public:
     _manager(phase, thread)
   { }
 };
-
-const char* const* G1ConcurrentMarkThread::concurrent_phases() const {
-  return concurrent_phase_names;
-}
-
-bool G1ConcurrentMarkThread::request_concurrent_phase(const char* phase_name) {
-  int phase = lookup_concurrent_phase(phase_name);
-  if (phase < 0) return false;
-
-  while (!ConcurrentGCPhaseManager::wait_for_phase(phase, phase_manager_stack())) {
-    if ((phase != G1ConcurrentPhase::IDLE) && !during_cycle()) {
-      // If idle and the goal is !idle, start a collection.
-      G1CollectedHeap::heap()->collect(GCCause::NULL);
-    }
-  }
-  return true;
-}
 
 void G1ConcurrentMarkThread::run_service() {
   _vtime_start = os::elapsedVTime();

@@ -950,7 +950,7 @@ static void restore_args(MacroAssembler *masm, int arg_count, int first_arg, VMR
     }
   }
   __ pop(x, sp);
-  for (int i = arg_count - 1 ; i >= first_arg ; i--) {
+  for (int i = arg_count - 1; i >= first_arg; i--) {
     if (args[i].first()->is_Register()) {
     } else if (args[i].first()->is_FloatRegister()) {
       __ ldrd(args[i].first()->as_FloatRegister(), Address(__ post(sp, 2 * wordSize)));

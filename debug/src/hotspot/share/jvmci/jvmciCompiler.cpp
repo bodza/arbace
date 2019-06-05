@@ -115,8 +115,7 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
   JavaValue method_result(T_OBJECT);
   JavaCallArguments args;
   args.push_long((jlong) (address) method());
-  JavaCalls::call_static(&method_result, SystemDictionary::HotSpotResolvedJavaMethodImpl_klass(),
-                         vmSymbols::fromMetaspace_name(), vmSymbols::method_fromMetaspace_signature(), &args, THREAD);
+  JavaCalls::call_static(&method_result, SystemDictionary::HotSpotResolvedJavaMethodImpl_klass(), vmSymbols::fromMetaspace_name(), vmSymbols::method_fromMetaspace_signature(), &args, THREAD);
 
   JavaValue result(T_OBJECT);
   if (!HAS_PENDING_EXCEPTION) {
@@ -126,8 +125,7 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
     args.push_int(entry_bci);
     args.push_long((jlong) (address) env);
     args.push_int(env->task()->compile_id());
-    JavaCalls::call_special(&result, receiver->klass(),
-                            vmSymbols::compileMethod_name(), vmSymbols::compileMethod_signature(), &args, THREAD);
+    JavaCalls::call_special(&result, receiver->klass(), vmSymbols::compileMethod_name(), vmSymbols::compileMethod_signature(), &args, THREAD);
   }
 
   // An uncaught exception was thrown during compilation.  Generally these

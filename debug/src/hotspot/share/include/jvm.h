@@ -1125,7 +1125,7 @@ typedef struct {
      * When a new bit is added in a minor or update release, make sure
      * the new bit is also added in the main/baseline.
      */
-    unsigned int is_attach_supported : 1;
+    unsigned int is_attach_supported : 1;
     unsigned int : 31;
     unsigned int : 32;
     unsigned int : 32;

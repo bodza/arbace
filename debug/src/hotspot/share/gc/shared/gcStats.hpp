@@ -7,7 +7,7 @@ class GCStats : public CHeapObj<mtGC> {
  protected:
   // Avg amount promoted; used for avoiding promotion undo
   // This class does not update deviations if the sample is zero.
-  AdaptivePaddedNoZeroDevAverage*   _avg_promoted;
+  AdaptivePaddedNoZeroDevAverage* _avg_promoted;
 
  public:
   GCStats();
@@ -21,7 +21,7 @@ class GCStats : public CHeapObj<mtGC> {
     return GCStatsKind;
   }
 
-  AdaptivePaddedNoZeroDevAverage*  avg_promoted() const { return _avg_promoted; }
+  AdaptivePaddedNoZeroDevAverage* avg_promoted() const { return _avg_promoted; }
 
   // Average in bytes
   size_t average_promoted_in_bytes() const {

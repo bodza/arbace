@@ -7,7 +7,6 @@
 #include "gc/g1/g1ParScanThreadState.inline.hpp"
 #include "gc/g1/g1RootClosures.hpp"
 #include "gc/g1/g1StringDedup.hpp"
-#include "gc/shared/gcTrace.hpp"
 #include "gc/shared/taskqueue.inline.hpp"
 #include "memory/allocation.inline.hpp"
 #include "oops/access.inline.hpp"
@@ -91,9 +90,7 @@ HeapWord* G1ParScanThreadState::allocate_in_next_plab(InCSetState const state, I
   // let's keep the logic here simple. We can generalize it when necessary.
   if (dest->is_young()) {
     bool plab_refill_in_old_failed = false;
-    HeapWord* const obj_ptr = _plab_allocator->allocate(InCSetState::Old,
-                                                        word_sz,
-                                                        &plab_refill_in_old_failed);
+    HeapWord* const obj_ptr = _plab_allocator->allocate(InCSetState::Old, word_sz, &plab_refill_in_old_failed);
     // Make sure that we won't attempt to copy any other objects out
     // of a survivor region (given that apparently we cannot allocate
     // any new ones) to avoid coming into this slow path again and again.
@@ -120,8 +117,7 @@ HeapWord* G1ParScanThreadState::allocate_in_next_plab(InCSetState const state, I
 
 InCSetState G1ParScanThreadState::next_state(InCSetState const state, markOop const m, uint& age) {
   if (state.is_young()) {
-    age = !m->has_displaced_mark_helper() ? m->age()
-                                          : m->displaced_mark_helper()->age();
+    age = !m->has_displaced_mark_helper() ? m->age() : m->displaced_mark_helper()->age();
     if (age < _tenuring_threshold) {
       return state;
     }
@@ -129,21 +125,7 @@ InCSetState G1ParScanThreadState::next_state(InCSetState const state, markOop co
   return dest(state);
 }
 
-void G1ParScanThreadState::report_promotion_event(InCSetState const dest_state, oop const old, size_t word_sz, uint age, HeapWord * const obj_ptr) const {
-  PLAB* alloc_buf = _plab_allocator->alloc_buffer(dest_state);
-  if (alloc_buf->contains(obj_ptr)) {
-    _g1h->_gc_tracer_stw->report_promotion_in_new_plab_event(old->klass(), word_sz, age,
-                                                             dest_state.value() == InCSetState::Old,
-                                                             alloc_buf->word_sz());
-  } else {
-    _g1h->_gc_tracer_stw->report_promotion_outside_plab_event(old->klass(), word_sz, age,
-                                                              dest_state.value() == InCSetState::Old);
-  }
-}
-
-oop G1ParScanThreadState::copy_to_survivor_space(InCSetState const state,
-                                                 oop const old,
-                                                 markOop const old_mark) {
+oop G1ParScanThreadState::copy_to_survivor_space(InCSetState const state, oop const old, markOop const old_mark) {
   const size_t word_sz = old->size();
   HeapRegion* const from_region = _g1h->heap_region_containing(old);
   // +1 to make the -1 indexes valid...
@@ -170,10 +152,6 @@ oop G1ParScanThreadState::copy_to_survivor_space(InCSetState const state,
         // installed a forwarding pointer.
         return handle_evacuation_failure_par(old, old_mark);
       }
-    }
-    if (_g1h->_gc_tracer_stw->should_report_promotion_events()) {
-      // The events are checked individually as part of the actual commit
-      report_promotion_event(dest_state, old, word_sz, age, obj_ptr);
     }
   }
 

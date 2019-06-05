@@ -188,9 +188,7 @@ void JVMCIEnv::get_field_by_index_impl(InstanceKlass* klass, fieldDescriptor& fi
   // Get the field's declared holder.
   int holder_index = cpool->klass_ref_index_at(index);
   bool holder_is_accessible;
-  Klass* declared_holder = get_klass_by_index(cpool, holder_index,
-                                              holder_is_accessible,
-                                              klass);
+  Klass* declared_holder = get_klass_by_index(cpool, holder_index, holder_is_accessible, klass);
 
   // The declared holder of this field may not have been loaded.
   // Bail out with partial field information.
@@ -281,7 +279,8 @@ methodHandle JVMCIEnv::get_method_by_index_impl(const constantPoolHandle& cpool,
     }
   }
 
-  if (holder_is_accessible) { // Our declared holder is loaded.
+  if (holder_is_accessible) {
+    // Our declared holder is loaded.
     constantTag tag = cpool->tag_ref_at(index);
     methodHandle m = lookup_method(accessor, holder, name_sym, sig_sym, bc, tag);
     if (!m.is_null()) {
@@ -312,9 +311,7 @@ InstanceKlass* JVMCIEnv::get_instance_klass_for_declared_method_holder(Klass* me
 }
 
 // ------------------------------------------------------------------
-methodHandle JVMCIEnv::get_method_by_index(const constantPoolHandle& cpool,
-                                     int index, Bytecodes::Code bc,
-                                     InstanceKlass* accessor) {
+methodHandle JVMCIEnv::get_method_by_index(const constantPoolHandle& cpool, int index, Bytecodes::Code bc, InstanceKlass* accessor) {
   ResourceMark rm;
   return get_method_by_index_impl(cpool, index, bc, accessor);
 }

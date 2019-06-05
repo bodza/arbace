@@ -9,14 +9,14 @@
 #include "runtime/vframe.inline.hpp"
 
 void PrivilegedElement::initialize(vframeStream* vfst, oop context, PrivilegedElement* next, TRAPS) {
-  Method* method        = vfst->method();
-  _klass                = method->method_holder();
-  _privileged_context   = context;
+  Method* method      = vfst->method();
+  _klass              = method->method_holder();
+  _privileged_context = context;
 #ifdef CHECK_UNHANDLED_OOPS
   THREAD->allow_unhandled_oop(&_privileged_context);
 #endif
-  _frame_id             = vfst->frame_id();
-  _next                 = next;
+  _frame_id           = vfst->frame_id();
+  _next               = next;
 }
 
 void PrivilegedElement::oops_do(OopClosure* f) {

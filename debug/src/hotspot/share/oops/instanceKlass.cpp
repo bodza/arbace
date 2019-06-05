@@ -556,15 +556,6 @@ bool InstanceKlass::link_class_impl(bool throw_verifyerror, TRAPS) {
     return true;
   }
 
-  // trace only the link time for this klass that includes
-  // the verification time
-  PerfClassTraceTime vmtimer(ClassLoader::perf_class_link_time(),
-                             ClassLoader::perf_class_link_selftime(),
-                             ClassLoader::perf_classes_linked(),
-                             jt->get_thread_stat()->perf_recursion_counts_addr(),
-                             jt->get_thread_stat()->perf_timers_addr(),
-                             PerfClassTraceTime::CLASS_LINK);
-
   // verification & rewriting
   {
     HandleMark hm(THREAD);
@@ -749,15 +740,6 @@ void InstanceKlass::initialize_impl(TRAPS) {
 
   // Step 8
   {
-    JavaThread* jt = (JavaThread*)THREAD;
-    // Timer includes any side effects of class initialization (resolution,
-    // etc), but not recursive entry into call_class_initializer().
-    PerfClassTraceTime timer(ClassLoader::perf_class_init_time(),
-                             ClassLoader::perf_class_init_selftime(),
-                             ClassLoader::perf_classes_inited(),
-                             jt->get_thread_stat()->perf_recursion_counts_addr(),
-                             jt->get_thread_stat()->perf_timers_addr(),
-                             PerfClassTraceTime::CLASS_CLINIT);
     call_class_initializer(THREAD);
   }
 
@@ -944,8 +926,7 @@ objArrayOop InstanceKlass::allocate_objArray(int n, int length, TRAPS) {
   }
   int size = objArrayOopDesc::object_size(length);
   Klass* ak = array_klass(n, CHECK_NULL);
-  objArrayOop o = (objArrayOop)Universe::heap()->array_allocate(ak, size, length,
-                                                                /* do_zero */ true, CHECK_NULL);
+  objArrayOop o = (objArrayOop)Universe::heap()->array_allocate(ak, size, length, /* do_zero */ true, CHECK_NULL);
   return o;
 }
 
@@ -2189,8 +2170,7 @@ bool InstanceKlass::is_same_package_member(const Klass* class2, TRAPS) const {
     // Eventually, the walks will terminate as outer_this stops
     // at the top-level class around the original class.
     bool ignore_inner_is_member;
-    const Klass* next = outer_this->compute_enclosing_class(&ignore_inner_is_member,
-                                                            CHECK_false);
+    const Klass* next = outer_this->compute_enclosing_class(&ignore_inner_is_member, CHECK_false);
     if (next == NULL)  break;
     if (next == class2)  return true;
     outer_this = InstanceKlass::cast(next);
@@ -2200,8 +2180,7 @@ bool InstanceKlass::is_same_package_member(const Klass* class2, TRAPS) const {
   const InstanceKlass* outer2 = InstanceKlass::cast(class2);
   for (;;) {
     bool ignore_inner_is_member;
-    Klass* next = outer2->compute_enclosing_class(&ignore_inner_is_member,
-                                                    CHECK_false);
+    Klass* next = outer2->compute_enclosing_class(&ignore_inner_is_member, CHECK_false);
     if (next == NULL)  break;
     // Might as well check the new outer against all available values.
     if (next == this)  return true;
@@ -2297,7 +2276,7 @@ Method* InstanceKlass::method_at_itable(Klass* holder, int index, TRAPS) {
   int nof_interfaces = (method_table_offset_in_words - itable_offset_in_words())
                        / itableOffsetEntry::size();
 
-  for (int cnt = 0 ; ; cnt ++, ioe ++) {
+  for (int cnt = 0; ; cnt ++, ioe ++) {
     // If the interface isn't implemented by the receiver class,
     // the VM should throw IncompatibleClassChangeError.
     if (cnt >= nof_interfaces) {

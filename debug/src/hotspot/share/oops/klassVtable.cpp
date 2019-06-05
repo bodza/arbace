@@ -843,8 +843,7 @@ void klassItable::initialize_itable_for_interface(int method_table_offset, Klass
       // of an interface method.
       // Invokespecial does not perform selection based on the receiver, so it does not use
       // the cached itable.
-      target = LinkResolver::lookup_instance_method_in_klasses(_klass, m->name(), m->signature(),
-                                                               Klass::skip_private, CHECK);
+      target = LinkResolver::lookup_instance_method_in_klasses(_klass, m->name(), m->signature(), Klass::skip_private, CHECK);
     }
     if (target == NULL || !target->is_public() || target->is_abstract() || target->is_overpass()) {
       // Entry does not resolve. Leave it empty for AbstractMethodError or other error.

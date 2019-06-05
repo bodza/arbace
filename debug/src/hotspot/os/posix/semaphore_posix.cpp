@@ -4,6 +4,7 @@
 #include "runtime/os.hpp"
 // POSIX unamed semaphores are not supported on OS X.
 #include "semaphore_posix.hpp"
+
 #include <semaphore.h>
 
 #define check_with_errno(check_type, cond, msg) \

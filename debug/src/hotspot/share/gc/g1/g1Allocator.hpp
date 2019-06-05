@@ -64,9 +64,7 @@ public:
 
   // Allocate blocks of memory during mutator time.
 
-  inline HeapWord* attempt_allocation(size_t min_word_size,
-                                      size_t desired_word_size,
-                                      size_t* actual_word_size);
+  inline HeapWord* attempt_allocation(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size);
   inline HeapWord* attempt_allocation_locked(size_t word_size);
   inline HeapWord* attempt_allocation_force(size_t word_size);
 
@@ -126,18 +124,13 @@ public:
   // allocating a new PLAB. Returns the address of the allocated memory, NULL if
   // not successful. Plab_refill_failed indicates whether an attempt to refill the
   // PLAB failed or not.
-  HeapWord* allocate_direct_or_new_plab(InCSetState dest,
-                                        size_t word_sz,
-                                        bool* plab_refill_failed);
+  HeapWord* allocate_direct_or_new_plab(InCSetState dest, size_t word_sz, bool* plab_refill_failed);
 
   // Allocate word_sz words in the PLAB of dest.  Returns the address of the
   // allocated memory, NULL if not successful.
-  inline HeapWord* plab_allocate(InCSetState dest,
-                                 size_t word_sz);
+  inline HeapWord* plab_allocate(InCSetState dest, size_t word_sz);
 
-  inline HeapWord* allocate(InCSetState dest,
-                            size_t word_sz,
-                            bool* refill_failed);
+  inline HeapWord* allocate(InCSetState dest, size_t word_sz, bool* refill_failed);
 
   void undo_allocation(InCSetState dest, HeapWord* obj, size_t word_sz);
 };

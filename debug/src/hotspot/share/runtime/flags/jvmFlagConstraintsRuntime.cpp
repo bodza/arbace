@@ -80,17 +80,6 @@ JVMFlag::Error BiasedLockingDecayTimeFunc(intx value, bool verbose) {
   }
 }
 
-JVMFlag::Error PerfDataSamplingIntervalFunc(intx value, bool verbose) {
-  if ((value % PeriodicTask::interval_gran != 0)) {
-    JVMFlag::printError(verbose,
-                        "PerfDataSamplingInterval (" INTX_FORMAT ") must be evenly divisible by PeriodicTask::interval_gran (" INTX_FORMAT ")\n",
-                        value, PeriodicTask::interval_gran);
-    return JVMFlag::VIOLATES_CONSTRAINT;
-  } else {
-    return JVMFlag::SUCCESS;
-  }
-}
-
 JVMFlag::Error ThreadLocalHandshakesConstraintFunc(bool value, bool verbose) {
   if (value) {
     if (!SafepointMechanism::supports_thread_local_poll()) {

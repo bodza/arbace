@@ -50,10 +50,7 @@
 #include "runtime/signature.hpp"
 #include "runtime/thread.inline.hpp"
 #include "runtime/vm_operations.hpp"
-#include "services/memTracker.hpp"
-#include "services/runtimeService.hpp"
 #include "utilities/defaultStream.hpp"
-#include "utilities/events.hpp"
 #include "utilities/histogram.hpp"
 #include "utilities/internalVMTests.hpp"
 #include "utilities/macros.hpp"
@@ -144,13 +141,6 @@ JNI_ENTRY(jclass, jni_DefineClass(JNIEnv *env, const char *name, jobject loaderR
   ClassFileStream st((u1*)buf, bufLen, NULL, ClassFileStream::verify);
   Handle class_loader (THREAD, JNIHandles::resolve(loaderRef));
 
-  if (UsePerfData && !class_loader.is_null()) {
-    // check whether the current caller thread holds the lock or not.
-    // If not, increment the corresponding counter
-    if (ObjectSynchronizer::query_lock_ownership((JavaThread*)THREAD, class_loader) != ObjectSynchronizer::owner_self) {
-      ClassLoader::sync_JNIDefineClassLockFreeCounter()->inc();
-    }
-  }
   Klass* k = SystemDictionary::resolve_from_stream(class_name, class_loader, Handle(), &st, CHECK_NULL);
 
   cls = (jclass)JNIHandles::make_local(env, k->java_mirror());
@@ -1348,7 +1338,7 @@ JNI_ENTRY(const char*, jni_GetStringUTFChars(JNIEnv *env, jstring string, jboole
   if (java_lang_String::value(java_string) != NULL) {
     size_t length = java_lang_String::utf8_length(java_string);
     /* JNI Specification states return NULL on OOM */
-    result = AllocateHeap(length + 1, mtInternal, 0, AllocFailStrategy::RETURN_NULL);
+    result = AllocateHeap(length + 1, mtInternal, AllocFailStrategy::RETURN_NULL);
     if (result != NULL) {
       java_lang_String::as_utf8_string(java_string, result, (int) length + 1);
       if (isCopy != NULL) {
@@ -1452,7 +1442,6 @@ static char* get_bad_address() {
     bad_address = os::reserve_memory(size);
     if (bad_address != NULL) {
       os::protect_memory(bad_address, size, os::MEM_PROT_READ, /*is_committed*/false);
-      MemTracker::record_virtual_memory_type((void*)bad_address, mtInternal);
     }
   }
   return bad_address;
@@ -2323,14 +2312,6 @@ struct JNINativeInterface_* jni_functions_nocheck() {
   return &jni_NativeInterface;
 }
 
-static void post_thread_start_event(const JavaThread* jt) {
-  EventThreadStart event;
-  if (event.should_commit()) {
-    event.set_thread(JFR_THREAD_ID(jt));
-    event.commit();
-  }
-}
-
 // Invocation API
 
 // Forward declaration
@@ -2419,11 +2400,6 @@ static jint JNI_CreateJavaVM_inner(JavaVM **vm, void **penv, void *args) {
         }
       }
     }
-
-    // Tracks the time application was running before GC
-    RuntimeService::record_application_start();
-
-    post_thread_start_event(thread);
 
     // Since this is not a JVM_ENTRY we have to set the thread state manually before leaving.
     ThreadStateTransition::transition_and_fence(thread, _thread_in_vm, _thread_in_native);
@@ -2602,8 +2578,6 @@ static jint attach_current_thread(JavaVM *vm, void **penv, void *_args, bool dae
 
   // Set java thread status.
   java_lang_Thread::set_thread_status(thread->threadObj(), java_lang_Thread::RUNNABLE);
-
-  post_thread_start_event(thread);
 
   *(JNIEnv**)penv = thread->jni_environment();
 

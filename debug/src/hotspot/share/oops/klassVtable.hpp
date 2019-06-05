@@ -88,8 +88,7 @@ class klassVtable {
   static bool needs_new_vtable_entry(const methodHandle& m, const Klass* super, Handle classloader, Symbol* classname, AccessFlags access_flags, u2 major_version, TRAPS);
 
   bool update_inherited_vtable(InstanceKlass* klass, const methodHandle& target_method, int super_vtable_len, int default_index, bool checkconstraints, TRAPS);
- InstanceKlass* find_transitive_override(InstanceKlass* initialsuper, const methodHandle& target_method, int vtable_index,
-                                         Handle target_loader, Symbol* target_classname, Thread* THREAD);
+ InstanceKlass* find_transitive_override(InstanceKlass* initialsuper, const methodHandle& target_method, int vtable_index, Handle target_loader, Symbol* target_classname, Thread* THREAD);
 
   // support for miranda methods
   bool is_miranda_entry_at(int i);

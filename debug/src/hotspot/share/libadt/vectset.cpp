@@ -47,7 +47,6 @@ Set &VectorSet_Construct(Arena *arena)
 Set &VectorSet::operator = (const Set &set)
 {
   if (&set == this ) return *this;
-  FREE_FAST(data);
   // The cast is a virtual function that checks that "set" is a VectorSet.
   slamin(*(set.asVectorSet()));
   return *this;

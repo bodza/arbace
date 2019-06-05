@@ -3,11 +3,10 @@
 
 #include "metaprogramming/integralConstant.hpp"
 #include "metaprogramming/removeCV.hpp"
+
 #include <limits>
 
 template<typename T>
-struct IsSigned
-  : public IntegralConstant<bool, std::numeric_limits<typename RemoveCV<T>::type>::is_signed>
-{ };
+struct IsSigned : public IntegralConstant<bool, std::numeric_limits<typename RemoveCV<T>::type>::is_signed> { };
 
 #endif

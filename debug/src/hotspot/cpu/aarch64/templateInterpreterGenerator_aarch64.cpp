@@ -22,6 +22,7 @@
 #include "runtime/timer.hpp"
 #include "runtime/vframeArray.hpp"
 #include "utilities/debug.hpp"
+
 #include <sys/types.h>
 
 #ifdef BUILTIN_SIM
@@ -29,7 +30,7 @@
 #endif
 
 // Size of interpreter code.  Increase if too small.  Interpreter will
-// fail with a guarantee ("not enough space for interpreter generation");
+// fail with a guarantee("not enough space for interpreter generation");
 // if too small.
 // Run with +PrintInterpreter to get the VM to print out the size.
 // Max size with JVMTI

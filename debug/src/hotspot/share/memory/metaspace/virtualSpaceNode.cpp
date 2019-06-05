@@ -8,7 +8,6 @@
 #include "memory/metaspace/virtualSpaceNode.hpp"
 #include "memory/virtualspace.hpp"
 #include "runtime/os.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/copy.hpp"
 #include "utilities/debug.hpp"
 #include "utilities/globalDefinitions.hpp"
@@ -32,10 +31,6 @@ VirtualSpaceNode::VirtualSpaceNode(bool is_class, size_t bytes) :
     _is_class(is_class), _top(NULL), _next(NULL), _rs(), _container_count(0), _occupancy_map(NULL) {
   bool large_pages = should_commit_large_pages_when_reserving(bytes);
   _rs = ReservedSpace(bytes, Metaspace::reserve_alignment(), large_pages);
-
-  if (_rs.is_reserved()) {
-    MemTracker::record_virtual_memory_type((address)_rs.base(), mtClass);
-  }
 }
 
 void VirtualSpaceNode::purge(ChunkManager* chunk_manager) {
@@ -224,8 +219,7 @@ Metachunk* VirtualSpaceNode::take_from_committed(size_t chunk_word_size) {
 
   // Chunk alignment (in bytes) == chunk size unless humongous.
   // Humongous chunks are aligned to the smallest chunk size (spec).
-  const size_t required_chunk_alignment = (chunk_word_size > med_word_size ?
-      spec_word_size : chunk_word_size) * sizeof(MetaWord);
+  const size_t required_chunk_alignment = (chunk_word_size > med_word_size ? spec_word_size : chunk_word_size) * sizeof(MetaWord);
 
   // Do we have enough space to create the requested chunk plus
   // any padding chunks needed?

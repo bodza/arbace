@@ -4,7 +4,6 @@
 #include "memory/allocation.hpp"
 #include "oops/oop.hpp"
 #include "runtime/handles.hpp"
-#include "runtime/perfData.hpp"
 #include "runtime/safepoint.hpp"
 
 class nmethod;
@@ -82,11 +81,6 @@ class DependencyContext : public StackObj {
     intptr_t value = *_dependency_context_addr;
     return (value & _has_stale_entries_mask) != 0;
   }
-
-  static PerfCounter* _perf_total_buckets_allocated_count;
-  static PerfCounter* _perf_total_buckets_deallocated_count;
-  static PerfCounter* _perf_total_buckets_stale_count;
-  static PerfCounter* _perf_total_buckets_stale_acc_count;
 
  public:
   DependencyContext(intptr_t* addr) : _dependency_context_addr(addr) { }

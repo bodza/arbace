@@ -16,7 +16,7 @@ class MethodHandles: AllStatic {
   // See also  javaClasses for layouts java_lang_invoke_Method{Handle,Type,Type::Form}.
  public:
  public:
-  static bool enabled()                         { return _enabled; }
+  static bool enabled() { return _enabled; }
   static void set_enabled(bool z);
 
  private:
@@ -149,10 +149,6 @@ public:
   static int ref_kind_to_flags(int ref_kind);
 
 #include CPU_HEADER(methodHandles)
-
-  // Tracing
-  static void trace_method_handle(MacroAssembler* _masm, const char* adaptername) { };
-  static void trace_method_handle_interpreter_entry(MacroAssembler* _masm, vmIntrinsics::ID iid);
 };
 
 //------------------------------------------------------------------------------
@@ -160,7 +156,7 @@ public:
 //
 class MethodHandlesAdapterGenerator : public StubCodeGenerator {
 public:
-  MethodHandlesAdapterGenerator(CodeBuffer* code) : StubCodeGenerator(code, false) { }
+  MethodHandlesAdapterGenerator(CodeBuffer* code) : StubCodeGenerator(code) { }
 
   void generate();
 };

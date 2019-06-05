@@ -3,7 +3,6 @@
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/g1/g1IHOPControl.hpp"
 #include "gc/g1/g1Predictions.hpp"
-#include "gc/shared/gcTrace.hpp"
 
 G1IHOPControl::G1IHOPControl(double initial_ihop_percent) :
   _initial_ihop_percent(initial_ihop_percent),
@@ -23,10 +22,6 @@ void G1IHOPControl::update_allocation_info(double allocation_time_s, size_t allo
 }
 
 void G1IHOPControl::print() { }
-
-void G1IHOPControl::send_trace_event(G1NewTracer* tracer) {
-  tracer->report_basic_ihop_statistics(get_conc_mark_start_threshold(), _target_occupancy, G1CollectedHeap::heap()->used(), _last_allocated_bytes, _last_allocation_time_s, last_marking_length_s());
-}
 
 G1StaticIHOPControl::G1StaticIHOPControl(double ihop_percent) :
   G1IHOPControl(ihop_percent),
@@ -98,15 +93,4 @@ void G1AdaptiveIHOPControl::update_marking_length(double marking_length_s) {
 
 void G1AdaptiveIHOPControl::print() {
   G1IHOPControl::print();
-}
-
-void G1AdaptiveIHOPControl::send_trace_event(G1NewTracer* tracer) {
-  G1IHOPControl::send_trace_event(tracer);
-  tracer->report_adaptive_ihop_statistics(get_conc_mark_start_threshold(),
-                                          actual_target_threshold(),
-                                          G1CollectedHeap::heap()->used(),
-                                          _last_unrestrained_young_size,
-                                          _predictor->get_new_prediction(&_allocation_rate_s),
-                                          _predictor->get_new_prediction(&_marking_times_s),
-                                          have_enough_data_for_prediction());
 }

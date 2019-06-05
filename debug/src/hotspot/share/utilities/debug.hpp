@@ -7,27 +7,11 @@
 
 #include <stddef.h>
 
-// ShowRegistersOnAssert support (for now Linux only)
-#if defined(LINUX)
-#define CAN_SHOW_REGISTERS_ON_ASSERT
-extern char* g_assert_poison;
-#define TOUCH_ASSERT_POISON (*g_assert_poison) = 'X';
-void initialize_assert_poison();
-bool handle_assert_poison_fault(const void* ucVoid, const void* faulting_address);
-#else
-#define TOUCH_ASSERT_POISON
-#endif
-
 // assertions
 #define vmassert(p, ...)
 
 // For backward compatibility.
 #define assert(p, ...) vmassert(p, __VA_ARGS__)
-
-#define vmassert_status(p, status, msg)
-
-// For backward compatibility.
-#define assert_status(p, status, msg) vmassert_status(p, status, msg)
 
 // guarantee is like vmassert except it's always executed -- use it for
 // cheap tests that catch errors that would otherwise be hard to find.
@@ -35,7 +19,6 @@ bool handle_assert_poison_fault(const void* ucVoid, const void* faulting_address
 #define guarantee(p, ...) \
 do { \
   if (!(p)) { \
-    TOUCH_ASSERT_POISON; \
     report_vm_error(__FILE__, __LINE__, "guarantee(" #p ") failed", __VA_ARGS__); \
     BREAKPOINT; \
   } \
@@ -43,7 +26,6 @@ do { \
 
 #define fatal(...) \
 do { \
-  TOUCH_ASSERT_POISON; \
   report_fatal(__FILE__, __LINE__, __VA_ARGS__); \
   BREAKPOINT; \
 } while (false)
@@ -57,21 +39,18 @@ do { \
 
 #define ShouldNotCallThis() \
 do { \
-  TOUCH_ASSERT_POISON; \
   report_should_not_call(__FILE__, __LINE__); \
   BREAKPOINT; \
 } while (false)
 
 #define ShouldNotReachHere() \
 do { \
-  TOUCH_ASSERT_POISON; \
   report_should_not_reach_here(__FILE__, __LINE__); \
   BREAKPOINT; \
 } while (false)
 
 #define Unimplemented() \
 do { \
-  TOUCH_ASSERT_POISON; \
   report_unimplemented(__FILE__, __LINE__); \
   BREAKPOINT; \
 } while (false)

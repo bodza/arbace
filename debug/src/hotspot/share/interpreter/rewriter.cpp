@@ -73,9 +73,7 @@ void Rewriter::make_constant_pool_cache(TRAPS) {
 
   // _resolved_references is stored in pool->cache(), so need to be done after
   // the above lines.
-  _pool->initialize_resolved_references(loader_data, _resolved_references_map,
-                                        _resolved_reference_limit,
-                                        THREAD);
+  _pool->initialize_resolved_references(loader_data, _resolved_references_map, _resolved_reference_limit, THREAD);
 
   // Clean up constant pool cache if initialize_resolved_references() failed.
   if (HAS_PENDING_EXCEPTION) {

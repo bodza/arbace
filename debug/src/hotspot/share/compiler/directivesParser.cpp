@@ -5,6 +5,7 @@
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/os.inline.hpp"
+
 #include <string.h>
 
 void DirectivesParser::push_tmp(CompilerDirectives* dir) {

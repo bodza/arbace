@@ -64,8 +64,7 @@ ConstantPool* BytecodeConstantPool::create_constant_pool(TRAPS) const {
     }
   }
 
-  cp->initialize_unresolved_klasses(_orig->pool_holder()->class_loader_data(),
-                                    CHECK_NULL);
+  cp->initialize_unresolved_klasses(_orig->pool_holder()->class_loader_data(), CHECK_NULL);
   return cp;
 }
 

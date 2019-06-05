@@ -32,13 +32,11 @@
 #include "runtime/java.hpp"
 #include "runtime/memprofiler.hpp"
 #include "runtime/sharedRuntime.hpp"
-#include "runtime/statSampler.hpp"
 #include "runtime/sweeper.hpp"
 #include "runtime/task.hpp"
 #include "runtime/thread.inline.hpp"
 #include "runtime/timer.hpp"
 #include "runtime/vm_operations.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/globalDefinitions.hpp"
 #include "utilities/histogram.hpp"
 #include "utilities/macros.hpp"
@@ -88,21 +86,11 @@ void before_exit(JavaThread* thread) {
     java_lang_Throwable::java_printStackTrace(exception, THREAD);
   }
 
-  EventThreadEnd event;
-  if (event.should_commit()) {
-    event.set_thread(JFR_THREAD_ID(thread));
-    event.commit();
-  }
-
   // Stop the WatcherThread. We do this before disenrolling various
   // PeriodicTasks to reduce the likelihood of races.
   if (PeriodicTask::num_tasks() > 0) {
     WatcherThread::stop();
   }
-
-  // shut down the StatSampler task
-  StatSampler::disengage();
-  StatSampler::destroy();
 
   // Stop concurrent GC threads
   Universe::heap()->stop();

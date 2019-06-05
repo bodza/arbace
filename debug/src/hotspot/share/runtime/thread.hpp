@@ -37,7 +37,6 @@ class Parker;
 
 class ciEnv;
 class CompileThread;
-class CompileLog;
 class CompileTask;
 class CompileQueue;
 class CompilerCounters;
@@ -64,7 +63,7 @@ class WorkerThread;
 //       - GangWorker
 //       - GCTaskThread
 //   - JavaThread
-//     - various subclasses eg CompilerThread, ServiceThread
+//     - various subclasses e.g. CompilerThread
 //   - WatcherThread
 
 class Thread: public ThreadShadow {

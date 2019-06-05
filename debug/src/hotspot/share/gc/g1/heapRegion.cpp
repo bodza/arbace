@@ -3,13 +3,11 @@
 #include "code/nmethod.hpp"
 #include "gc/g1/g1BlockOffsetTable.inline.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
-#include "gc/g1/g1HeapRegionTraceType.hpp"
 #include "gc/g1/g1OopClosures.inline.hpp"
 #include "gc/g1/heapRegion.inline.hpp"
 #include "gc/g1/heapRegionBounds.inline.hpp"
 #include "gc/g1/heapRegionManager.inline.hpp"
 #include "gc/g1/heapRegionRemSet.hpp"
-#include "gc/g1/heapRegionTracer.hpp"
 #include "gc/shared/genOopClosures.inline.hpp"
 #include "gc/shared/space.inline.hpp"
 #include "memory/iterator.inline.hpp"
@@ -121,49 +119,21 @@ void HeapRegion::calc_gc_efficiency() {
   _gc_efficiency = (double) reclaimable_bytes() / region_elapsed_time_ms;
 }
 
-void HeapRegion::set_free() {
-  report_region_type_change(G1HeapRegionTraceType::Free);
-  _type.set_free();
-}
-
-void HeapRegion::set_eden() {
-  report_region_type_change(G1HeapRegionTraceType::Eden);
-  _type.set_eden();
-}
-
-void HeapRegion::set_eden_pre_gc() {
-  report_region_type_change(G1HeapRegionTraceType::Eden);
-  _type.set_eden_pre_gc();
-}
-
-void HeapRegion::set_survivor() {
-  report_region_type_change(G1HeapRegionTraceType::Survivor);
-  _type.set_survivor();
-}
+void HeapRegion::set_free()        { _type.set_free(); }
+void HeapRegion::set_eden()        { _type.set_eden(); }
+void HeapRegion::set_eden_pre_gc() { _type.set_eden_pre_gc(); }
+void HeapRegion::set_survivor()    { _type.set_survivor(); }
 
 void HeapRegion::move_to_old() {
   if (_type.relabel_as_old()) {
-    report_region_type_change(G1HeapRegionTraceType::Old);
   }
 }
 
-void HeapRegion::set_old() {
-  report_region_type_change(G1HeapRegionTraceType::Old);
-  _type.set_old();
-}
-
-void HeapRegion::set_open_archive() {
-  report_region_type_change(G1HeapRegionTraceType::OpenArchive);
-  _type.set_open_archive();
-}
-
-void HeapRegion::set_closed_archive() {
-  report_region_type_change(G1HeapRegionTraceType::ClosedArchive);
-  _type.set_closed_archive();
-}
+void HeapRegion::set_old()            { _type.set_old(); }
+void HeapRegion::set_open_archive()   { _type.set_open_archive(); }
+void HeapRegion::set_closed_archive() { _type.set_closed_archive(); }
 
 void HeapRegion::set_starts_humongous(HeapWord* obj_top, size_t fill_size) {
-  report_region_type_change(G1HeapRegionTraceType::StartsHumongous);
   _type.set_starts_humongous();
   _humongous_start_region = this;
 
@@ -171,7 +141,6 @@ void HeapRegion::set_starts_humongous(HeapWord* obj_top, size_t fill_size) {
 }
 
 void HeapRegion::set_continues_humongous(HeapRegion* first_hr) {
-  report_region_type_change(G1HeapRegionTraceType::ContinuesHumongous);
   _type.set_continues_humongous();
   _humongous_start_region = first_hr;
 
@@ -204,10 +173,6 @@ void HeapRegion::initialize(MemRegion mr, bool clear_space, bool mangle_space) {
 
   hr_clear(false /*par*/, false /*clear_space*/);
   set_top(bottom());
-}
-
-void HeapRegion::report_region_type_change(G1HeapRegionTraceType::Type to) {
-  HeapRegionTracer::send_region_type_change(_hrm_index, get_trace_type(), to, (uintptr_t)bottom(), used());
 }
 
 void HeapRegion::note_self_forwarding_removal_start(bool during_initial_mark, bool during_conc_mark) {

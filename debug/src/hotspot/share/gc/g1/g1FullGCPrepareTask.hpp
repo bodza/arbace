@@ -38,8 +38,7 @@ protected:
     void reset_region_metadata(HeapRegion* hr);
 
   public:
-    G1CalculatePointersClosure(G1CMBitMap* bitmap,
-                               G1FullGCCompactionPoint* cp);
+    G1CalculatePointersClosure(G1CMBitMap* bitmap, G1FullGCCompactionPoint* cp);
 
     void update_sets();
     bool do_heap_region(HeapRegion* hr);
@@ -59,8 +58,7 @@ protected:
     HeapRegion* _current;
 
   public:
-    G1RePrepareClosure(G1FullGCCompactionPoint* hrcp,
-                       HeapRegion* hr) :
+    G1RePrepareClosure(G1FullGCCompactionPoint* hrcp, HeapRegion* hr) :
         _cp(hrcp),
         _current(hr) { }
 

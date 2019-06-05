@@ -559,10 +559,6 @@ static jclass Unsafe_DefineClass_impl(JNIEnv *env, jstring name, jbyteArray data
   jclass result = 0;
   char buf[128];
 
-  if (UsePerfData) {
-    ClassLoader::unsafe_defineClassCallCounter()->inc();
-  }
-
   body = NEW_C_HEAP_ARRAY(jbyte, length, mtInternal);
   if (body == NULL) {
     throw_new(env, "java/lang/OutOfMemoryError");
@@ -667,10 +663,6 @@ UNSAFE_ENTRY(jclass, Unsafe_DefineClass0(JNIEnv *env, jobject unsafe, jstring na
 
 static InstanceKlass*
 Unsafe_DefineAnonymousClass_impl(JNIEnv *env, jclass host_class, jbyteArray data, jobjectArray cp_patches_jh, u1** temp_alloc, TRAPS) {
-  if (UsePerfData) {
-    ClassLoader::unsafe_defineClassCallCounter()->inc();
-  }
-
   jint length = typeArrayOop(JNIHandles::resolve_non_null(data))->length();
 
   int class_bytes_length = (int) length;
@@ -835,31 +827,9 @@ UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSetLong(JNIEnv *env, jobject unsafe, job
   }
 } UNSAFE_END
 
-static void post_thread_park_event(EventThreadPark* event, const oop obj, jlong timeout_nanos, jlong until_epoch_millis) {
-  event->set_parkedClass((obj != NULL) ? obj->klass() : NULL);
-  event->set_timeout(timeout_nanos);
-  event->set_until(until_epoch_millis);
-  event->set_address((obj != NULL) ? (u8)cast_from_oop<uintptr_t>(obj) : 0);
-  event->commit();
-}
-
 UNSAFE_ENTRY(void, Unsafe_Park(JNIEnv *env, jobject unsafe, jboolean isAbsolute, jlong time)) {
-  EventThreadPark event;
-
   JavaThreadParkedState jtps(thread, time != 0);
   thread->parker()->park(isAbsolute != 0, time);
-  if (event.should_commit()) {
-    const oop obj = thread->current_park_blocker();
-    if (time == 0) {
-      post_thread_park_event(&event, obj, min_jlong, min_jlong);
-    } else {
-      if (isAbsolute != 0) {
-        post_thread_park_event(&event, obj, min_jlong, time);
-      } else {
-        post_thread_park_event(&event, obj, time, min_jlong);
-      }
-    }
-  }
 } UNSAFE_END
 
 UNSAFE_ENTRY(void, Unsafe_Unpark(JNIEnv *env, jobject unsafe, jobject jthread)) {

@@ -179,20 +179,17 @@ class BytecodeStream: public BaseBytecodeStream {
     return _code;
   }
 
-  bool            is_active_breakpoint() const   { return Bytecodes::is_active_breakpoint_at(bcp()); }
-  Bytecodes::Code code() const                   { return _code; }
+  bool is_active_breakpoint() const { return Bytecodes::is_active_breakpoint_at(bcp()); }
+  Bytecodes::Code code() const      { return _code; }
 
   // Unsigned indices, widening
-  int             get_index() const              { return is_wide() ? bytecode().get_index_u2(raw_code(), true) : get_index_u1(); }
+  int  get_index() const            { return is_wide() ? bytecode().get_index_u2(raw_code(), true) : get_index_u1(); }
   // Get an unsigned 2-byte index, swapping the bytes if necessary.
-  int             get_index_u2() const           { assert_raw_stream(false);
-                                                   return bytecode().get_index_u2(raw_code(), false); }
+  int  get_index_u2() const         { assert_raw_stream(false); return bytecode().get_index_u2(raw_code(), false); }
   // Get an unsigned 2-byte index in native order.
-  int             get_index_u2_cpcache() const   { assert_raw_stream(false);
-                                                   return bytecode().get_index_u2_cpcache(raw_code()); }
-  int             get_index_u4() const           { assert_raw_stream(false);
-                                                   return bytecode().get_index_u4(raw_code()); }
-  bool            has_index_u4() const           { return bytecode().has_index_u4(raw_code()); }
+  int  get_index_u2_cpcache() const { assert_raw_stream(false); return bytecode().get_index_u2_cpcache(raw_code()); }
+  int  get_index_u4() const         { assert_raw_stream(false); return bytecode().get_index_u4(raw_code()); }
+  bool has_index_u4() const         { return bytecode().has_index_u4(raw_code()); }
 };
 
 #endif

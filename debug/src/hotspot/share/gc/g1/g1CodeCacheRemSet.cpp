@@ -22,7 +22,7 @@ G1CodeRootSetTable::Entry* G1CodeRootSetTable::new_entry(nmethod* nm) {
   unsigned int hash = compute_hash(nm);
   Entry* entry = (Entry*) new_entry_free_list();
   if (entry == NULL) {
-    entry = (Entry*) NEW_C_HEAP_ARRAY2(char, entry_size(), mtGC, CURRENT_PC);
+    entry = (Entry*) NEW_C_HEAP_ARRAY(char, entry_size(), mtGC);
   }
   entry->set_next(NULL);
   entry->set_hash(hash);

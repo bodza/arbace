@@ -140,7 +140,7 @@ KlassInfoTable::KlassInfoTable(bool add_all_classes) {
   _size_of_instances_in_words = 0;
   _size = 0;
   _ref = (HeapWord*) Universe::boolArrayKlassObj();
-  _buckets = (KlassInfoBucket*)  AllocateHeap(sizeof(KlassInfoBucket) * _num_buckets, mtInternal, CURRENT_PC, AllocFailStrategy::RETURN_NULL);
+  _buckets = (KlassInfoBucket*) AllocateHeap(sizeof(KlassInfoBucket) * _num_buckets, mtInternal, AllocFailStrategy::RETURN_NULL);
   if (_buckets != NULL) {
     _size = _num_buckets;
     for (int index = 0; index < _size; index++) {

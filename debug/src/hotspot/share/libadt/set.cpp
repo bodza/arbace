@@ -61,7 +61,7 @@ char *Set::setstr() const
     if (buf+len-s < 25 ) {      // Generous trailing space for upcoming numbers
       int offset = (int)(s-buf);// Not enuf space; compute offset into buffer
       len <<= 1;                // Double string size
-      buf = (char*)ReallocateHeap(buf,len, mtCompiler); // Reallocate doubled size
+      buf = (char*)ReallocateHeap(buf, len, mtCompiler); // Reallocate doubled size
       s = buf+offset;           // Get working pointer into new bigger buffer
     }
     if (lo != hi ) sprintf(s,"%d-%d}",lo,hi);

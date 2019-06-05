@@ -10,7 +10,6 @@
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/thread.inline.hpp"
-#include "services/lowMemoryDetector.hpp"
 #include "utilities/align.hpp"
 #include "utilities/copy.hpp"
 
@@ -112,10 +111,7 @@ void MemAllocator::Allocation::verify_after() { }
 
 void MemAllocator::Allocation::check_for_bad_heap_word_value() const { }
 
-void MemAllocator::Allocation::notify_allocation_low_memory_detector() {
-  // support low memory notifications (no-op if not enabled)
-  LowMemoryDetector::detect_low_memory_for_collected_pools();
-}
+void MemAllocator::Allocation::notify_allocation_low_memory_detector() { }
 
 void MemAllocator::Allocation::notify_allocation() {
   notify_allocation_low_memory_detector();

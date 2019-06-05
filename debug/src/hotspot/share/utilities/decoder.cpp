@@ -12,10 +12,10 @@
   #include "decoder_elf.hpp"
 #endif
 
-AbstractDecoder*  Decoder::_shared_decoder = NULL;
-AbstractDecoder*  Decoder::_error_handler_decoder = NULL;
-NullDecoder       Decoder::_do_nothing_decoder;
-Mutex*            Decoder::_shared_decoder_lock = new Mutex(Mutex::native, "SharedDecoderLock", false, Monitor::_safepoint_check_never);
+AbstractDecoder* Decoder::_shared_decoder = NULL;
+AbstractDecoder* Decoder::_error_handler_decoder = NULL;
+NullDecoder      Decoder::_do_nothing_decoder;
+Mutex*           Decoder::_shared_decoder_lock = new Mutex(Mutex::native, "SharedDecoderLock", false, Monitor::_safepoint_check_never);
 
 AbstractDecoder* Decoder::get_shared_instance() {
   if (_shared_decoder == NULL) {
@@ -53,10 +53,8 @@ inline bool DecoderLocker::is_first_error_thread() {
 }
 
 DecoderLocker::DecoderLocker() :
-  MutexLockerEx(DecoderLocker::is_first_error_thread() ?
-                NULL : Decoder::shared_decoder_lock(), true) {
-  _decoder = is_first_error_thread() ?
-    Decoder::get_error_handler_instance() : Decoder::get_shared_instance();
+  MutexLockerEx(DecoderLocker::is_first_error_thread() ? NULL : Decoder::shared_decoder_lock(), true) {
+  _decoder = is_first_error_thread() ? Decoder::get_error_handler_instance() : Decoder::get_shared_instance();
 }
 
 Mutex* Decoder::shared_decoder_lock() {
@@ -66,8 +64,7 @@ Mutex* Decoder::shared_decoder_lock() {
 bool Decoder::decode(address addr, char* buf, int buflen, int* offset, const char* modulepath, bool demangle) {
   bool error_handling_thread = os::current_thread_id() == VMError::first_error_tid;
   MutexLockerEx locker(error_handling_thread ? NULL : _shared_decoder_lock, true);
-  AbstractDecoder* decoder = error_handling_thread ?
-    get_error_handler_instance(): get_shared_instance();
+  AbstractDecoder* decoder = error_handling_thread ? get_error_handler_instance(): get_shared_instance();
 
   return decoder->decode(addr, buf, buflen, offset, modulepath, demangle);
 }
@@ -75,8 +72,7 @@ bool Decoder::decode(address addr, char* buf, int buflen, int* offset, const cha
 bool Decoder::decode(address addr, char* buf, int buflen, int* offset, const void* base) {
   bool error_handling_thread = os::current_thread_id() == VMError::first_error_tid;
   MutexLockerEx locker(error_handling_thread ? NULL : _shared_decoder_lock, true);
-  AbstractDecoder* decoder = error_handling_thread ?
-    get_error_handler_instance(): get_shared_instance();
+  AbstractDecoder* decoder = error_handling_thread ? get_error_handler_instance(): get_shared_instance();
 
   return decoder->decode(addr, buf, buflen, offset, base);
 }
@@ -84,8 +80,7 @@ bool Decoder::decode(address addr, char* buf, int buflen, int* offset, const voi
 bool Decoder::demangle(const char* symbol, char* buf, int buflen) {
   bool error_handling_thread = os::current_thread_id() == VMError::first_error_tid;
   MutexLockerEx locker(error_handling_thread ? NULL : _shared_decoder_lock, true);
-  AbstractDecoder* decoder = error_handling_thread ?
-    get_error_handler_instance(): get_shared_instance();
+  AbstractDecoder* decoder = error_handling_thread ? get_error_handler_instance(): get_shared_instance();
   return decoder->demangle(symbol, buf, buflen);
 }
 

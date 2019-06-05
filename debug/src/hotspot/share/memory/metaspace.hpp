@@ -33,7 +33,6 @@
 //
 
 class ClassLoaderData;
-class MetaspaceTracer;
 class MetaWord;
 class Mutex;
 class outputStream;
@@ -110,8 +109,6 @@ class Metaspace : public AllStatic {
   static metaspace::ChunkManager* _chunk_manager_metadata;
   static metaspace::ChunkManager* _chunk_manager_class;
 
-  static const MetaspaceTracer* _tracer;
-
  public:
   static metaspace::VirtualSpaceList* space_list()       { return _space_list; }
   static metaspace::VirtualSpaceList* class_space_list() { return _class_space_list; }
@@ -130,7 +127,6 @@ class Metaspace : public AllStatic {
     return is_class ? chunk_manager_class() : chunk_manager_metadata();
   }
 
-  static const MetaspaceTracer* tracer() { return _tracer; }
   static void freeze() { }
   static void assert_not_frozen() { }
   static void allocate_metaspace_compressed_klass_ptrs(char* requested_addr, address cds_base);

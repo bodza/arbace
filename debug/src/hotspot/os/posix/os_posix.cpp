@@ -4,7 +4,6 @@
 #include "runtime/frame.inline.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
 #include "runtime/os.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/align.hpp"
 #include "utilities/formatBuffer.hpp"
 #include "utilities/macros.hpp"
@@ -129,11 +128,9 @@ static char* reserve_mmapped_memory(size_t bytes, char* requested_addr) {
   // Map reserved/uncommitted pages PROT_NONE so we fail early if we
   // touch an uncommitted page. Otherwise, the read/write might
   // succeed if we have enough swap space to back the physical page.
-  addr = (char*)::mmap(requested_addr, bytes, PROT_NONE,
-                       flags, -1, 0);
+  addr = (char*)::mmap(requested_addr, bytes, PROT_NONE, flags, -1, 0);
 
   if (addr != MAP_FAILED) {
-    MemTracker::record_virtual_memory_reserve((address)addr, bytes, CALLER_PC);
     return addr;
   }
   return NULL;
@@ -205,9 +202,6 @@ char* os::reserve_memory_aligned(size_t size, size_t alignment, int file_desc) {
     // So here to call a helper function while reserve memory for us. After we have a aligned base,
     // we will replace anonymous mapping with file mapping.
     extra_base = reserve_mmapped_memory(extra_size, NULL);
-    if (extra_base != NULL) {
-      MemTracker::record_virtual_memory_reserve((address)extra_base, extra_size, CALLER_PC);
-    }
   } else {
     extra_base = os::reserve_memory(extra_size, NULL, alignment);
   }
@@ -242,7 +236,6 @@ char* os::reserve_memory_aligned(size_t size, size_t alignment, int file_desc) {
     if (replace_existing_mapping_with_file_mapping(aligned_base, size, file_desc) == NULL) {
       vm_exit_during_initialization(err_msg("Error in mapping Java heap at the given filesystem directory"));
     }
-    MemTracker::record_virtual_memory_commit((address)aligned_base, size, CALLER_PC);
   }
   return aligned_base;
 }
@@ -1112,8 +1105,7 @@ char* os::Posix::describe_pthread_attr(char* buf, size_t buflen, const pthread_a
   LINUX_ONLY(stack_size -= guard_size);
   pthread_attr_getdetachstate(attr, &detachstate);
   jio_snprintf(buf, buflen, "stacksize: " SIZE_FORMAT "k, guardsize: " SIZE_FORMAT "k, %s",
-    stack_size / 1024, guard_size / 1024,
-    (detachstate == PTHREAD_CREATE_DETACHED ? "detached" : "joinable"));
+    stack_size / 1024, guard_size / 1024, (detachstate == PTHREAD_CREATE_DETACHED ? "detached" : "joinable"));
   return buf;
 }
 
@@ -1475,9 +1467,7 @@ void os::Posix::init_2(void) { }
 
 os::PlatformEvent::PlatformEvent() {
   int status = pthread_cond_init(_cond, _condAttr);
-  assert_status(status == 0, status, "cond_init");
   status = pthread_mutex_init(_mutex, _mutexAttr);
-  assert_status(status == 0, status, "mutex_init");
   _event   = 0;
   _nParked = 0;
 }
@@ -1556,7 +1546,6 @@ static void to_abstime(timespec* abstime, jlong timeout, bool isAbsolute) {
   if (_use_clock_monotonic_condattr && !isAbsolute) {
     struct timespec now;
     int status = _clock_gettime(CLOCK_MONOTONIC, &now);
-    assert_status(status == 0, status, "clock_gettime");
     calc_rel_time(abstime, timeout, now.tv_sec, now.tv_nsec, NANOUNITS);
   } else {
 #else
@@ -1568,7 +1557,6 @@ static void to_abstime(timespec* abstime, jlong timeout, bool isAbsolute) {
     // Time-of-day clock is all we can reliably use.
     struct timeval now;
     int status = gettimeofday(&now, NULL);
-    assert_status(status == 0, errno, "gettimeofday");
     if (isAbsolute) {
       unpack_abs_time(abstime, timeout, now.tv_sec);
     } else {
@@ -1609,19 +1597,16 @@ void os::PlatformEvent::park() {       // AKA "down()"
 
   if (v == 0) { // Do this the hard way by blocking ...
     int status = pthread_mutex_lock(_mutex);
-    assert_status(status == 0, status, "mutex_lock");
     guarantee(_nParked == 0, "invariant");
     ++_nParked;
     while (_event < 0) {
       // OS-level "spurious wakeups" are ignored
       status = pthread_cond_wait(_cond, _mutex);
-      assert_status(status == 0, status, "cond_wait");
     }
     --_nParked;
 
     _event = 0;
     status = pthread_mutex_unlock(_mutex);
-    assert_status(status == 0, status, "mutex_unlock");
     // Paranoia to ensure our locked and lock-free paths interact
     // correctly with each other.
     OrderAccess::fence();
@@ -1655,14 +1640,11 @@ int os::PlatformEvent::park(jlong millis) {
 
     int ret = OS_TIMEOUT;
     int status = pthread_mutex_lock(_mutex);
-    assert_status(status == 0, status, "mutex_lock");
     guarantee(_nParked == 0, "invariant");
     ++_nParked;
 
     while (_event < 0) {
       status = pthread_cond_timedwait(_cond, _mutex, &abst);
-      assert_status(status == 0 || status == ETIMEDOUT,
-                    status, "cond_timedwait");
       // OS-level "spurious wakeups" are ignored unless the archaic
       // FilterSpuriousWakeups is set false. That flag should be obsoleted.
       if (!FilterSpuriousWakeups) break;
@@ -1676,7 +1658,6 @@ int os::PlatformEvent::park(jlong millis) {
 
     _event = 0;
     status = pthread_mutex_unlock(_mutex);
-    assert_status(status == 0, status, "mutex_unlock");
     // Paranoia to ensure our locked and lock-free paths interact
     // correctly with each other.
     OrderAccess::fence();
@@ -1706,10 +1687,8 @@ void os::PlatformEvent::unpark() {
   if (Atomic::xchg(1, &_event) >= 0) return;
 
   int status = pthread_mutex_lock(_mutex);
-  assert_status(status == 0, status, "mutex_lock");
   int anyWaiters = _nParked;
   status = pthread_mutex_unlock(_mutex);
-  assert_status(status == 0, status, "mutex_unlock");
 
   // Note that we signal() *after* dropping the lock for "immortal" Events.
   // This is safe and avoids a common class of futile wakeups.  In rare
@@ -1721,7 +1700,6 @@ void os::PlatformEvent::unpark() {
 
   if (anyWaiters != 0) {
     status = pthread_cond_signal(_cond);
-    assert_status(status == 0, status, "cond_signal");
   }
 }
 
@@ -1730,11 +1708,8 @@ void os::PlatformEvent::unpark() {
  os::PlatformParker::PlatformParker() {
   int status;
   status = pthread_cond_init(&_cond[REL_INDEX], _condAttr);
-  assert_status(status == 0, status, "cond_init rel");
   status = pthread_cond_init(&_cond[ABS_INDEX], NULL);
-  assert_status(status == 0, status, "cond_init abs");
   status = pthread_mutex_init(_mutex, _mutexAttr);
-  assert_status(status == 0, status, "mutex_init");
   _cur_index = -1; // mark as unused
 }
 
@@ -1787,7 +1762,6 @@ void Parker::park(bool isAbsolute, jlong time) {
   if (_counter > 0)  { // no wait needed
     _counter = 0;
     status = pthread_mutex_unlock(_mutex);
-    assert_status(status == 0, status, "invariant");
     // Paranoia to ensure our locked and lock-free paths interact
     // correctly with each other and Java-level accesses.
     OrderAccess::fence();
@@ -1801,17 +1775,14 @@ void Parker::park(bool isAbsolute, jlong time) {
   if (time == 0) {
     _cur_index = REL_INDEX; // arbitrary choice when not timed
     status = pthread_cond_wait(&_cond[_cur_index], _mutex);
-    assert_status(status == 0, status, "cond_timedwait");
   } else {
     _cur_index = isAbsolute ? ABS_INDEX : REL_INDEX;
     status = pthread_cond_timedwait(&_cond[_cur_index], _mutex, &absTime);
-    assert_status(status == 0 || status == ETIMEDOUT, status, "cond_timedwait");
   }
   _cur_index = -1;
 
   _counter = 0;
   status = pthread_mutex_unlock(_mutex);
-  assert_status(status == 0, status, "invariant");
   // Paranoia to ensure our locked and lock-free paths interact
   // correctly with each other and Java-level accesses.
   OrderAccess::fence();
@@ -1824,13 +1795,11 @@ void Parker::park(bool isAbsolute, jlong time) {
 
 void Parker::unpark() {
   int status = pthread_mutex_lock(_mutex);
-  assert_status(status == 0, status, "invariant");
   const int s = _counter;
   _counter = 1;
   // must capture correct index before unlocking
   int index = _cur_index;
   status = pthread_mutex_unlock(_mutex);
-  assert_status(status == 0, status, "invariant");
 
   // Note that we signal() *after* dropping the lock for "immortal" Events.
   // This is safe and avoids a common class of futile wakeups.  In rare
@@ -1843,6 +1812,5 @@ void Parker::unpark() {
   if (s < 1 && index != -1) {
     // thread is definitely parked
     status = pthread_cond_signal(&_cond[index]);
-    assert_status(status == 0, status, "invariant");
   }
 }

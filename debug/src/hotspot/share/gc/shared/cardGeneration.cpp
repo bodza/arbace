@@ -64,9 +64,6 @@ bool CardGeneration::grow_by(size_t bytes) {
     // Expand space -- also expands space's BOT
     // (which uses (part of) shared array above)
     space()->set_end((HeapWord*)_virtual_space.high());
-
-    // update the space and generation capacity counters
-    update_counters();
   }
   return result;
 }

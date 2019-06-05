@@ -10,27 +10,6 @@
 
 AgeTable::AgeTable(bool global) {
   clear();
-
-  if (UsePerfData && global) {
-    ResourceMark rm;
-    EXCEPTION_MARK;
-
-    const char* agetable_ns = "generation.0.agetable";
-    const char* bytes_ns = PerfDataManager::name_space(agetable_ns, "bytes");
-
-    for (int age = 0; age < table_size; age ++) {
-      char age_name[10];
-      jio_snprintf(age_name, sizeof(age_name), "%2.2d", age);
-      const char* cname = PerfDataManager::counter_name(bytes_ns, age_name);
-      _perf_sizes[age] = PerfDataManager::create_variable(SUN_GC, cname,
-                                                          PerfData::U_Bytes,
-                                                          CHECK);
-    }
-
-    const char* cname = PerfDataManager::counter_name(agetable_ns, "size");
-    PerfDataManager::create_constant(SUN_GC, cname, PerfData::U_None,
-                                     table_size, CHECK);
-  }
 }
 
 void AgeTable::clear() {

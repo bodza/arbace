@@ -27,21 +27,16 @@
 #include "runtime/objectMonitor.hpp"
 #include "runtime/orderAccess.hpp"
 #include "runtime/osThread.hpp"
-#include "runtime/perfMemory.hpp"
 #include "runtime/sharedRuntime.hpp"
-#include "runtime/statSampler.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.inline.hpp"
 #include "runtime/threadCritical.hpp"
 #include "runtime/threadSMR.hpp"
 #include "runtime/timer.hpp"
 #include "semaphore_posix.hpp"
-#include "services/memTracker.hpp"
-#include "services/runtimeService.hpp"
 #include "utilities/align.hpp"
 #include "utilities/decoder.hpp"
 #include "utilities/defaultStream.hpp"
-#include "utilities/events.hpp"
 #include "utilities/elfFile.hpp"
 #include "utilities/growableArray.hpp"
 #include "utilities/macros.hpp"
@@ -678,7 +673,6 @@ bool os::create_thread(Thread* thread, ThreadType thr_type, size_t req_stack_siz
   }
 
   int status = pthread_attr_setstacksize(&attr, stack_size);
-  assert_status(status == 0, status, "pthread_attr_setstacksize");
 
   // Configure glibc guard page.
   pthread_attr_setguardsize(&attr, os::Linux::default_guard_size(thr_type));
@@ -1210,9 +1204,6 @@ struct tm* os::localtime_pd(const time_t* clock, struct tm* res) {
 // called from signal handler. Before adding something to os::shutdown(), make
 // sure it is async-safe and can handle partially initialized VM.
 void os::shutdown() {
-  // allow PerfMemory to attempt cleanup of any persistent resources
-  perfMemory_exit();
-
   // flush buffered output, finish log files
   ostream_abort();
 
@@ -3571,9 +3562,6 @@ char* os::reserve_memory_special(size_t bytes, size_t alignment,
     if (UseNUMAInterleaving) {
       numa_make_global(addr, bytes);
     }
-
-    // The memory is committed
-    MemTracker::record_virtual_memory_reserve_and_commit((address)addr, bytes, CALLER_PC);
   }
 
   return addr;
@@ -3589,17 +3577,7 @@ bool os::Linux::release_memory_special_huge_tlbfs(char* base, size_t bytes) {
 }
 
 bool os::release_memory_special(char* base, size_t bytes) {
-  bool res;
-  if (MemTracker::tracking_level() > NMT_minimal) {
-    Tracker tkr(Tracker::release);
-    res = os::Linux::release_memory_special_impl(base, bytes);
-    if (res) {
-      tkr.record((address)base, bytes);
-    }
-  } else {
-    res = os::Linux::release_memory_special_impl(base, bytes);
-  }
-  return res;
+  return os::Linux::release_memory_special_impl(base, bytes);
 }
 
 bool os::Linux::release_memory_special_impl(char* base, size_t bytes) {
@@ -3990,7 +3968,6 @@ static int SR_initialize() {
 
 static int sr_notify(OSThread* osthread) {
   int status = pthread_kill(osthread->pthread_id(), SR_signum);
-  assert_status(status == 0, status, "pthread_kill");
   return status;
 }
 
@@ -4560,13 +4537,6 @@ void os::init(void) {
   os::Posix::init();
 }
 
-// To install functions for atexit system call
-extern "C" {
-  static void perfMemory_exit_helper() {
-    perfMemory_exit();
-  }
-}
-
 void os::pd_init_container_support() {
   OSContainer::init();
 }
@@ -4641,20 +4611,6 @@ jint os::init_2(void) {
   // atexit functions are called on return from main or as a result of a
   // call to exit(3C). There can be only 32 of these functions registered
   // and atexit() does not set errno.
-
-  if (PerfAllowAtExitRegistration) {
-    // only register atexit functions if PerfAllowAtExitRegistration is set.
-    // atexit functions can be delayed until process exit time, which
-    // can be problematic for embedded VM situations. Embedded VMs should
-    // call DestroyJavaVM() to assure that VM resources are released.
-
-    // note: perfMemory_exit_helper atexit function may be removed in
-    // the future if the appropriate cleanup code can be added to the
-    // VM_Exit VMOperation's doit method.
-    if (atexit(perfMemory_exit_helper) != 0) {
-      warning("os::init_2 atexit(perfMemory_exit_helper) failed");
-    }
-  }
 
   // initialize thread priority policy
   prio_init();
@@ -5069,7 +5025,6 @@ static jlong fast_cpu_time(Thread *thread) {
     } else {
       // It's possible to encounter a terminated native thread that failed
       // to detach itself from the VM - which should result in ESRCH.
-      assert_status(rc == ESRCH, rc, "pthread_getcpuclockid failed");
       return -1;
     }
 }

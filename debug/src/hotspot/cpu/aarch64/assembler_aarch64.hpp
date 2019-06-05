@@ -174,7 +174,7 @@ public:
   static void spatch(address a, int msb, int lsb, long val) {
     int nbits = msb - lsb + 1;
     long chk = val >> (nbits - 1);
-    guarantee (chk == -1 || chk == 0, "Field too big for insn");
+    guarantee(chk == -1 || chk == 0, "Field too big for insn");
     unsigned uval = val;
     unsigned mask = (1U << nbits) - 1;
     uval &= mask;
@@ -202,7 +202,7 @@ public:
   void sf(long val, int msb, int lsb) {
     int nbits = msb - lsb + 1;
     long chk = val >> (nbits - 1);
-    guarantee (chk == -1 || chk == 0, "Field too big for insn");
+    guarantee(chk == -1 || chk == 0, "Field too big for insn");
     unsigned uval = val;
     unsigned mask = (1U << nbits) - 1;
     uval &= mask;

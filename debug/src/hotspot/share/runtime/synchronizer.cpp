@@ -22,7 +22,6 @@
 #include "runtime/vframe.hpp"
 #include "runtime/vmThread.hpp"
 #include "utilities/align.hpp"
-#include "utilities/events.hpp"
 #include "utilities/preserveException.hpp"
 
 // The "core" versions of monitor enter and exit reside in this file.
@@ -96,7 +95,6 @@ bool ObjectSynchronizer::quick_notify(oopDesc * obj, Thread * self, bool all) {
         mon->INotify(self);
         ++tally;
       } while (mon->first_waiter() != NULL && all);
-      OM_PERFDATA_OP(Notifications, inc(tally));
     }
     return true;
   }
@@ -229,9 +227,7 @@ void ObjectSynchronizer::slow_enter(Handle obj, BasicLock* lock, TRAPS) {
   // must be non-zero to avoid looking like a re-entrant lock,
   // and must not look locked either.
   lock->set_displaced_header(markOopDesc::unused_mark());
-  ObjectSynchronizer::inflate(THREAD,
-                              obj(),
-                              inflate_cause_monitor_enter)->enter(THREAD);
+  ObjectSynchronizer::inflate(THREAD, obj(), inflate_cause_monitor_enter)->enter(THREAD);
 }
 
 // This routine is used to handle interpreter/compiler slow case
@@ -385,9 +381,7 @@ void ObjectSynchronizer::notifyall(Handle obj, TRAPS) {
   if (mark->has_locker() && THREAD->is_lock_owned((address)mark->locker())) {
     return;
   }
-  ObjectSynchronizer::inflate(THREAD,
-                              obj(),
-                              inflate_cause_notify)->notifyAll(THREAD);
+  ObjectSynchronizer::inflate(THREAD, obj(), inflate_cause_notify)->notifyAll(THREAD);
 }
 
 // -----------------------------------------------------------------------------
@@ -679,8 +673,7 @@ ObjectSynchronizer::LockOwnership ObjectSynchronizer::query_lock_ownership
 
   // CASE: stack-locked.  Mark points to a BasicLock on the owner's stack.
   if (mark->has_locker()) {
-    return self->is_lock_owned((address)mark->locker()) ?
-      owner_self : owner_other;
+    return self->is_lock_owned((address)mark->locker()) ? owner_self : owner_other;
   }
 
   // CASE: inflated. Mark (tagged pointer) points to an objectMonitor.
@@ -1142,13 +1135,6 @@ void ObjectSynchronizer::omFlush(Thread * Self) {
   TEVENT(omFlush);
 }
 
-static void post_monitor_inflate_event(EventJavaMonitorInflate* event, const oop obj, ObjectSynchronizer::InflateCause cause) {
-  event->set_monitorClass(obj->klass());
-  event->set_address((uintptr_t)(void*)obj);
-  event->set_cause((u1)cause);
-  event->commit();
-}
-
 // Fast path code shared by multiple functions
 ObjectMonitor* ObjectSynchronizer::inflate_helper(oop obj) {
   markOop mark = obj->mark();
@@ -1159,8 +1145,6 @@ ObjectMonitor* ObjectSynchronizer::inflate_helper(oop obj) {
 }
 
 ObjectMonitor* ObjectSynchronizer::inflate(Thread * Self, oop object, const InflateCause cause) {
-  EventJavaMonitorInflate event;
-
   for (;;) {
     const markOop mark = object->mark();
 
@@ -1272,13 +1256,7 @@ ObjectMonitor* ObjectSynchronizer::inflate(Thread * Self, oop object, const Infl
       guarantee(object->mark() == markOopDesc::INFLATING(), "invariant");
       object->release_set_mark(markOopDesc::encode(m));
 
-      // Hopefully the performance counters are allocated on distinct cache lines
-      // to avoid false sharing on MP systems ...
-      OM_PERFDATA_OP(Inflations, inc());
       TEVENT(Inflate: overwrite stacklock);
-      if (event.should_commit()) {
-        post_monitor_inflate_event(&event, object, cause);
-      }
       return m;
     }
 
@@ -1314,13 +1292,7 @@ ObjectMonitor* ObjectSynchronizer::inflate(Thread * Self, oop object, const Infl
       // live-lock -- "Inflated" is an absorbing state.
     }
 
-    // Hopefully the performance counters are allocated on distinct
-    // cache lines to avoid false sharing on MP systems ...
-    OM_PERFDATA_OP(Inflations, inc());
     TEVENT(Inflate: overwrite neutral);
-    if (event.should_commit()) {
-      post_monitor_inflate_event(&event, object, cause);
-    }
     return m;
   }
 }
@@ -1514,9 +1486,6 @@ void ObjectSynchronizer::finish_deflate_idle_monitors(DeflateMonitorCounters* co
 
   ForceMonitorScavenge = 0;    // Reset
 
-  OM_PERFDATA_OP(Deflations, inc(counters->nScavenged));
-  OM_PERFDATA_OP(MonExtant, set_value(counters->nInCirculation));
-
   // TODO: Add objectMonitor leak detection.
   // Audit/inventory the objectMonitors -- make sure they're all accounted for.
   GVars.stwRandom = os::random();
@@ -1571,9 +1540,7 @@ class ReleaseJavaMonitorsClosure: public MonitorClosure {
         Handle obj(THREAD, (oop) mid->object());
         tty->print("INFO: unexpected locked object:");
         javaVFrame::print_locked_object_class_name(tty, obj, "locked");
-        fatal("exiting JavaThread=" INTPTR_FORMAT
-              " unexpectedly owns ObjectMonitor=" INTPTR_FORMAT,
-              p2i(THREAD), p2i(mid));
+        fatal("exiting JavaThread=" INTPTR_FORMAT " unexpectedly owns ObjectMonitor=" INTPTR_FORMAT, p2i(THREAD), p2i(mid));
       }
       (void)mid->complete_exit(CHECK);
     }
@@ -1591,7 +1558,7 @@ class ReleaseJavaMonitorsClosure: public MonitorClosure {
 // use an idiom of the form:
 //   auto int tmp = SafepointSynchronize::_safepoint_counter;
 //   <code that must not run at safepoint>
-//   guarantee (((tmp ^ _safepoint_counter) | (tmp & 1)) == 0);
+//   guarantee(((tmp ^ _safepoint_counter) | (tmp & 1)) == 0);
 // Since the tests are extremely cheap we could leave them enabled
 // for normal product builds.
 

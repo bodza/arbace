@@ -40,7 +40,6 @@
 #include "runtime/jniHandles.inline.hpp"
 #include "runtime/orderAccess.hpp"
 #include "runtime/os.inline.hpp"
-#include "runtime/perfData.hpp"
 #include "runtime/reflection.hpp"
 #include "runtime/thread.inline.hpp"
 #include "runtime/threadSMR.hpp"
@@ -51,7 +50,6 @@
 #include "services/threadService.hpp"
 #include "utilities/copy.hpp"
 #include "utilities/defaultStream.hpp"
-#include "utilities/events.hpp"
 #include "utilities/histogram.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/utf8.hpp"
@@ -226,14 +224,7 @@ static void set_property(Handle props, const char* key, const char* value, TRAPS
   HandleMark hm(THREAD);
   Handle key_str    = java_lang_String::create_from_platform_dependent_str(key, CHECK);
   Handle value_str  = java_lang_String::create_from_platform_dependent_str((value != NULL ? value : ""), CHECK);
-  JavaCalls::call_virtual(&r,
-                          props,
-                          SystemDictionary::Properties_klass(),
-                          vmSymbols::put_name(),
-                          vmSymbols::object_object_object_signature(),
-                          key_str,
-                          value_str,
-                          THREAD);
+  JavaCalls::call_virtual(&r, props, SystemDictionary::Properties_klass(), vmSymbols::put_name(), vmSymbols::object_object_object_signature(), key_str, value_str, THREAD);
 }
 
 #define PUTPROP(props, name, value) set_property((props), (name), (value), CHECK_(properties));
@@ -299,11 +290,6 @@ JVM_END
 extern volatile jint vm_created;
 
 JVM_ENTRY_NO_ENV(void, JVM_BeforeHalt())
-  EventShutdown event;
-  if (event.should_commit()) {
-    event.set_reason("Shutdown requested from Java");
-    event.commit();
-  }
 JVM_END
 
 JVM_ENTRY_NO_ENV(void, JVM_Halt(jint code))
@@ -456,8 +442,7 @@ JVM_ENTRY(jobject, JVM_Clone(JNIEnv* env, jobject handle))
   oop new_obj_oop = NULL;
   if (obj->is_array()) {
     const int length = ((arrayOop)obj())->length();
-    new_obj_oop = Universe::heap()->array_allocate(klass, size, length,
-                                                   /* do_zero */ true, CHECK_NULL);
+    new_obj_oop = Universe::heap()->array_allocate(klass, size, length, /* do_zero */ true, CHECK_NULL);
   } else {
     new_obj_oop = Universe::heap()->obj_allocate(klass, size, CHECK_NULL);
   }
@@ -614,35 +599,9 @@ JVM_ENTRY(jclass, JVM_FindClassFromClass(JNIEnv *env, const char *name, jboolean
   return result;
 JVM_END
 
-static void is_lock_held_by_thread(Handle loader, PerfCounter* counter, TRAPS) {
-  if (loader.is_null()) {
-    return;
-  }
-
-  // check whether the current caller thread holds the lock or not.
-  // If not, increment the corresponding counter
-  if (ObjectSynchronizer::query_lock_ownership((JavaThread*)THREAD, loader) !=
-      ObjectSynchronizer::owner_self) {
-    counter->inc();
-  }
-}
-
 // common code for JVM_DefineClass() and JVM_DefineClassWithSource()
 static jclass jvm_define_class_common(JNIEnv *env, const char *name, jobject loader, const jbyte *buf, jsize len, jobject pd, const char *source, TRAPS) {
   if (source == NULL)  source = "__JVM_DefineClass__";
-
-  JavaThread* jt = (JavaThread*) THREAD;
-
-  PerfClassTraceTime vmtimer(ClassLoader::perf_define_appclass_time(),
-                             ClassLoader::perf_define_appclass_selftime(),
-                             ClassLoader::perf_define_appclasses(),
-                             jt->get_thread_stat()->perf_recursion_counts_addr(),
-                             jt->get_thread_stat()->perf_timers_addr(),
-                             PerfClassTraceTime::DEFINE_CLASS);
-
-  if (UsePerfData) {
-    ClassLoader::perf_app_classfile_bytes_read()->inc(len);
-  }
 
   // Since exceptions can be thrown, class initialization can take place
   // if name is NULL no check for class name in .class stream has to be made.
@@ -661,9 +620,6 @@ static jclass jvm_define_class_common(JNIEnv *env, const char *name, jobject loa
   ResourceMark rm(THREAD);
   ClassFileStream st((u1*)buf, len, source, ClassFileStream::verify);
   Handle class_loader (THREAD, JNIHandles::resolve(loader));
-  if (UsePerfData) {
-    is_lock_held_by_thread(class_loader, ClassLoader::sync_JVMDefineClassLockFreeCounter(), THREAD);
-  }
   Handle protection_domain (THREAD, JNIHandles::resolve(pd));
   Klass* k = SystemDictionary::resolve_from_stream(class_name, class_loader, protection_domain, &st, CHECK_NULL);
 
@@ -700,9 +656,6 @@ JVM_ENTRY(jclass, JVM_FindLoadedClass(JNIEnv *env, jobject loader, jstring name)
   //   The Java level wrapper will perform the necessary security check allowing
   //   us to pass the NULL as the initiating class loader.
   Handle h_loader(THREAD, JNIHandles::resolve(loader));
-  if (UsePerfData) {
-    is_lock_held_by_thread(h_loader, ClassLoader::sync_JVMFindLoadedClassLockFreeCounter(), THREAD);
-  }
 
   Klass* k = SystemDictionary::find_instance_or_array_klass(klass_name, h_loader, Handle(), CHECK_NULL);
   return (k == NULL) ? NULL : (jclass) JNIHandles::make_local(env, k->java_mirror());
@@ -879,9 +832,7 @@ static bool is_authorized(Handle context, InstanceKlass* klass, TRAPS) {
 oop create_dummy_access_control_context(TRAPS) {
   InstanceKlass* pd_klass = SystemDictionary::ProtectionDomain_klass();
   // Call constructor ProtectionDomain(null, null);
-  Handle obj = JavaCalls::construct_new_instance(pd_klass,
-                          vmSymbols::codesource_permissioncollection_signature(),
-                          Handle(), Handle(), CHECK_NULL);
+  Handle obj = JavaCalls::construct_new_instance(pd_klass, vmSymbols::codesource_permissioncollection_signature(), Handle(), Handle(), CHECK_NULL);
 
   // new ProtectionDomain[] {pd};
   objArrayOop context = oopFactory::new_objArray(pd_klass, 1, CHECK_NULL);
@@ -1046,8 +997,7 @@ JVM_ENTRY(jobject, JVM_GetStackAccessControlContext(JNIEnv *env, jclass cls))
 
   // the resource area must be registered in case of a gc
   RegisterArrayForGC ragc(thread, local_array);
-  objArrayOop context = oopFactory::new_objArray(SystemDictionary::ProtectionDomain_klass(),
-                                                 local_array->length(), CHECK_NULL);
+  objArrayOop context = oopFactory::new_objArray(SystemDictionary::ProtectionDomain_klass(), local_array->length(), CHECK_NULL);
   objArrayHandle h_context(thread, context);
   for (int index = 0; index < local_array->length(); index++) {
     h_context->obj_at_put(index, local_array->at(index));
@@ -1337,11 +1287,9 @@ JVM_ENTRY(jobjectArray, JVM_GetMethodParameters(JNIEnv *env, jobject method)) {
     for (int i = 0; i < num_params; i++) {
       MethodParametersElement* params = mh->method_parameters_start();
       // For a 0 index, give a NULL symbol
-      Symbol* sym = 0 != params[i].name_cp_index ?
-        mh->constants()->symbol_at(params[i].name_cp_index) : NULL;
+      Symbol* sym = 0 != params[i].name_cp_index ? mh->constants()->symbol_at(params[i].name_cp_index) : NULL;
       int flags = params[i].flags;
-      oop param = Reflection::new_parameter(reflected_method, i, sym,
-                                            flags, CHECK_NULL);
+      oop param = Reflection::new_parameter(reflected_method, i, sym, flags, CHECK_NULL);
       result->obj_at_put(i, param);
     }
     return (jobjectArray)JNIHandles::make_local(env, result());
@@ -1516,8 +1464,7 @@ JVM_ENTRY(jobjectArray, JVM_GetNestMembers(JNIEnv* env, jclass current)) {
     Array<u2>* members = host->nest_members();
     int length = members == NULL ? 0 : members->length();
     // nest host is first in the array so make it one bigger
-    objArrayOop r = oopFactory::new_objArray(SystemDictionary::Class_klass(),
-                                             length + 1, CHECK_NULL);
+    objArrayOop r = oopFactory::new_objArray(SystemDictionary::Class_klass(), length + 1, CHECK_NULL);
     objArrayHandle result (THREAD, r);
     result->obj_at_put(0, host->java_mirror());
     if (length != 0) {
@@ -2429,11 +2376,6 @@ JVM_ENTRY(void, JVM_Yield(JNIEnv *env, jclass threadClass))
   os::naked_yield();
 JVM_END
 
-static void post_thread_sleep_event(EventThreadSleep* event, jlong millis) {
-  event->set_time(millis);
-  event->commit();
-}
-
 JVM_ENTRY(void, JVM_Sleep(JNIEnv* env, jclass threadClass, jlong millis))
   if (millis < 0) {
     THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "timeout value is negative");
@@ -2447,8 +2389,6 @@ JVM_ENTRY(void, JVM_Sleep(JNIEnv* env, jclass threadClass, jlong millis))
   // And set new thread state to SLEEPING.
   JavaThreadSleepState jtss(thread);
 
-  EventThreadSleep event;
-
   if (millis == 0) {
     os::naked_yield();
   } else {
@@ -2458,19 +2398,12 @@ JVM_ENTRY(void, JVM_Sleep(JNIEnv* env, jclass threadClass, jlong millis))
       // An asynchronous exception (e.g., ThreadDeathException) could have been thrown on
       // us while we were sleeping. We do not overwrite those.
       if (!HAS_PENDING_EXCEPTION) {
-        if (event.should_commit()) {
-          post_thread_sleep_event(&event, millis);
-        }
-
         // TODO-FIXME: THROW_MSG returns which means we will not call set_state()
         // to properly restore the thread state.  That's likely wrong.
         THROW_MSG(vmSymbols::java_lang_InterruptedException(), "sleep interrupted");
       }
     }
     thread->osthread()->set_state(old_state);
-  }
-  if (event.should_commit()) {
-    post_thread_sleep_event(&event, millis);
   }
 JVM_END
 

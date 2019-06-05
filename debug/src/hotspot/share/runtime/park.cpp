@@ -48,11 +48,11 @@ ParkEvent* ParkEvent::Allocate (Thread* t) {
   Thread::SpinRelease(&ListLock);
 
   if (ev != NULL) {
-    guarantee (ev->AssociatedWith == NULL, "invariant");
+    guarantee(ev->AssociatedWith == NULL, "invariant");
   } else {
     // Do this the hard way -- materialize a new ParkEvent.
     ev = new ParkEvent();
-    guarantee ((intptr_t(ev) & 0xFF) == 0, "invariant");
+    guarantee((intptr_t(ev) & 0xFF) == 0, "invariant");
   }
   ev->reset() ;                     // courtesy to caller
   ev->AssociatedWith = t;          // Associate ev with t
@@ -62,7 +62,7 @@ ParkEvent* ParkEvent::Allocate (Thread* t) {
 
 void ParkEvent::Release(ParkEvent* ev) {
   if (ev == NULL) return;
-  guarantee (ev->FreeNext == NULL      , "invariant");
+  guarantee(ev->FreeNext == NULL, "invariant");
   ev->AssociatedWith = NULL;
   // Note that if we didn't have the TSM/immortal constraint, then
   // when reattaching we could trim the list.
@@ -82,7 +82,7 @@ void ParkEvent::Release(ParkEvent* ev) {
 // although Niagara's hash function should help.
 
 void* ParkEvent::operator new (size_t sz) throw() {
-  return (void *) ((intptr_t (AllocateHeap(sz + 256, mtInternal, CALLER_PC)) + 256) & -256);
+  return (void *) ((intptr_t (AllocateHeap(sz + 256, mtInternal)) + 256) & -256);
 }
 
 void ParkEvent::operator delete (void * a) {
@@ -99,7 +99,7 @@ volatile int Parker::ListLock = 0;
 Parker* volatile Parker::FreeList = NULL;
 
 Parker* Parker::Allocate (JavaThread* t) {
-  guarantee (t != NULL, "invariant");
+  guarantee(t != NULL, "invariant");
   Parker* p;
 
   // Start by trying to recycle an existing but unassociated
@@ -116,7 +116,7 @@ Parker* Parker::Allocate (JavaThread* t) {
   Thread::SpinRelease(&ListLock);
 
   if (p != NULL) {
-    guarantee (p->AssociatedWith == NULL, "invariant");
+    guarantee(p->AssociatedWith == NULL, "invariant");
   } else {
     // Do this the hard way -- materialize a new Parker..
     p = new Parker();
@@ -128,8 +128,8 @@ Parker* Parker::Allocate (JavaThread* t) {
 
 void Parker::Release(Parker* p) {
   if (p == NULL) return;
-  guarantee (p->AssociatedWith != NULL, "invariant");
-  guarantee (p->FreeNext == NULL      , "invariant");
+  guarantee(p->AssociatedWith != NULL, "invariant");
+  guarantee(p->FreeNext == NULL      , "invariant");
   p->AssociatedWith = NULL;
 
   Thread::SpinAcquire(&ListLock, "ParkerFreeListRelease");

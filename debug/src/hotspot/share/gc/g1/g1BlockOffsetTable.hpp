@@ -115,30 +115,24 @@ private:
   // Returns the address of a block whose start is at most "addr".
   // If "has_max_index" is true, "assumes "max_index" is the last valid one
   // in the array.
-  inline HeapWord* block_at_or_preceding(const void* addr,
-                                         bool has_max_index,
-                                         size_t max_index) const;
+  inline HeapWord* block_at_or_preceding(const void* addr, bool has_max_index, size_t max_index) const;
 
   // "q" is a block boundary that is <= "addr"; "n" is the address of the
   // next block (or the end of the space.)  Return the address of the
   // beginning of the block that contains "addr".  Does so without side
   // effects (see, e.g., spec of  block_start.)
-  inline HeapWord* forward_to_block_containing_addr_const(HeapWord* q, HeapWord* n,
-                                                          const void* addr) const;
+  inline HeapWord* forward_to_block_containing_addr_const(HeapWord* q, HeapWord* n, const void* addr) const;
 
   // "q" is a block boundary that is <= "addr"; return the address of the
   // beginning of the block that contains "addr".  May have side effects
   // on "this", by updating imprecise entries.
-  inline HeapWord* forward_to_block_containing_addr(HeapWord* q,
-                                                    const void* addr);
+  inline HeapWord* forward_to_block_containing_addr(HeapWord* q, const void* addr);
 
   // "q" is a block boundary that is <= "addr"; "n" is the address of the
   // next block (or the end of the space.)  Return the address of the
   // beginning of the block that contains "addr".  May have side effects
   // on "this", by updating imprecise entries.
-  HeapWord* forward_to_block_containing_addr_slow(HeapWord* q,
-                                                  HeapWord* n,
-                                                  const void* addr);
+  HeapWord* forward_to_block_containing_addr_slow(HeapWord* q, HeapWord* n, const void* addr);
 
   // Requires that "*threshold_" be the first array entry boundary at or
   // above "blk_start", and that "*index_" be the corresponding array

@@ -351,8 +351,7 @@ void Modules::define_module(jobject module, jboolean is_open, jstring version, j
 
   // any errors ?
   if (dupl_modules) {
-     THROW_MSG(vmSymbols::java_lang_IllegalStateException(),
-               err_msg("Module %s is already defined", module_name));
+     THROW_MSG(vmSymbols::java_lang_IllegalStateException(), err_msg("Module %s is already defined", module_name));
   } else if (existing_pkg != NULL) {
       throw_dup_pkg_exception(module_name, existing_pkg, CHECK);
   }

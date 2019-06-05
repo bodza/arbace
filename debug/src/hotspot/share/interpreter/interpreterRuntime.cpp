@@ -42,7 +42,6 @@
 #include "runtime/threadCritical.hpp"
 #include "utilities/align.hpp"
 #include "utilities/copy.hpp"
-#include "utilities/events.hpp"
 
 class UnlockFlagSaver {
   private:
@@ -518,13 +517,11 @@ void InterpreterRuntime::resolve_get_put(JavaThread* thread, Bytecodes::Code byt
   LastFrameAccessor last_frame(thread);
   constantPoolHandle pool(thread, last_frame.method()->constants());
   methodHandle m(thread, last_frame.method());
-  bool is_put    = (bytecode == Bytecodes::_putfield  || bytecode == Bytecodes::_nofast_putfield ||
-                    bytecode == Bytecodes::_putstatic);
+  bool is_put    = (bytecode == Bytecodes::_putfield  || bytecode == Bytecodes::_nofast_putfield || bytecode == Bytecodes::_putstatic);
   bool is_static = (bytecode == Bytecodes::_getstatic || bytecode == Bytecodes::_putstatic);
 
   {
-    LinkResolver::resolve_field_access(info, pool, last_frame.get_index_u2_cpcache(bytecode),
-                                       m, bytecode, CHECK);
+    LinkResolver::resolve_field_access(info, pool, last_frame.get_index_u2_cpcache(bytecode), m, bytecode, CHECK);
   }
 
   // check if link resolution caused cpCache to be updated
@@ -662,9 +659,7 @@ void InterpreterRuntime::resolve_invoke(JavaThread* thread, Bytecodes::Code byte
   constantPoolHandle pool(thread, last_frame.method()->constants());
 
   {
-    LinkResolver::resolve_invoke(info, receiver, pool,
-                                 last_frame.get_index_u2_cpcache(bytecode), bytecode,
-                                 CHECK);
+    LinkResolver::resolve_invoke(info, receiver, pool, last_frame.get_index_u2_cpcache(bytecode), bytecode, CHECK);
   }
 
   // check if link resolution caused cpCache to be updated
@@ -701,9 +696,7 @@ void InterpreterRuntime::resolve_invokehandle(JavaThread* thread) {
   CallInfo info;
   constantPoolHandle pool(thread, last_frame.method()->constants());
   {
-    LinkResolver::resolve_invoke(info, Handle(), pool,
-                                 last_frame.get_index_u2_cpcache(bytecode), bytecode,
-                                 CHECK);
+    LinkResolver::resolve_invoke(info, Handle(), pool, last_frame.get_index_u2_cpcache(bytecode), bytecode, CHECK);
   }
 
   ConstantPoolCacheEntry* cp_cache_entry = last_frame.cache_entry();
@@ -724,8 +717,7 @@ void InterpreterRuntime::resolve_invokedynamic(JavaThread* thread) {
   constantPoolHandle pool(thread, last_frame.method()->constants());
   int index = last_frame.get_index_u4(bytecode);
   {
-    LinkResolver::resolve_invoke(info, Handle(), pool,
-                                 index, bytecode, CHECK);
+    LinkResolver::resolve_invoke(info, Handle(), pool, index, bytecode, CHECK);
   }
 
   ConstantPoolCacheEntry* cp_cache_entry = pool->invokedynamic_cp_cache_entry_at(index);

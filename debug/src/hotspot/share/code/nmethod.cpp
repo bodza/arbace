@@ -31,7 +31,6 @@
 #include "runtime/sweeper.hpp"
 #include "runtime/vmThread.hpp"
 #include "utilities/align.hpp"
-#include "utilities/events.hpp"
 #include "utilities/resourceHash.hpp"
 #include "utilities/xmlstream.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
@@ -554,7 +553,7 @@ inline void nmethod::initialize_immediate_oop(oop* dest, jobject handle) {
 void nmethod::copy_values(GrowableArray<jobject>* array) {
   int length = array->length();
   oop* dest = oops_begin();
-  for (int index = 0 ; index < length; index++) {
+  for (int index = 0; index < length; index++) {
     initialize_immediate_oop(&dest[index], array->at(index));
   }
 
@@ -569,7 +568,7 @@ void nmethod::copy_values(GrowableArray<jobject>* array) {
 void nmethod::copy_values(GrowableArray<Metadata*>* array) {
   int length = array->length();
   Metadata** dest = metadata_begin();
-  for (int index = 0 ; index < length; index++) {
+  for (int index = 0; index < length; index++) {
     dest[index] = array->at(index);
   }
 }
@@ -593,34 +592,6 @@ void nmethod::fix_oop_relocations(address begin, address end, bool initialize_im
   }
 }
 
-void nmethod::verify_clean_inline_caches() {
-  ResourceMark rm;
-  RelocIterator iter(this, oops_reloc_begin());
-  while (iter.next()) {
-    switch (iter.type()) {
-      case relocInfo::virtual_call_type:
-      case relocInfo::opt_virtual_call_type: {
-        CompiledIC *ic = CompiledIC_at(&iter);
-        // Ok, to lookup references to zombies here
-        CodeBlob *cb = CodeCache::find_blob_unsafe(ic->ic_destination());
-        nmethod* nm = cb->as_nmethod_or_null();
-        break;
-      }
-      case relocInfo::static_call_type: {
-        CompiledStaticCall *csc = compiledStaticCall_at(iter.reloc());
-        CodeBlob *cb = CodeCache::find_blob_unsafe(csc->destination());
-        nmethod* nm = cb->as_nmethod_or_null();
-        if (nm != NULL ) {
-          // Verify that inline caches pointing to both zombie and not_entrant methods are clean
-          if (!nm->is_in_use() || (nm->method()->code() != nm)) {
-          }
-        }
-        break;
-      }
-    }
-  }
-}
-
 // This is a private interface with the sweeper.
 void nmethod::mark_as_seen_on_stack() {
   // Set the traversal mark to ensure that the sweeper does 2
@@ -629,8 +600,7 @@ void nmethod::mark_as_seen_on_stack() {
 }
 
 // Tell if a non-entrant method can be converted to a zombie (i.e.,
-// there are no activations on the stack, not in use by the VM,
-// and not in use by the ServiceThread)
+// there are no activations on the stack and not in use by the VM)
 bool nmethod::can_convert_to_zombie() {
   // Since the nmethod sweeper only does partial sweep the sweeper's traversal
   // count can be greater than the stack traversal count before it hits the
@@ -834,9 +804,6 @@ bool nmethod::make_not_entrant_or_zombie(int state) {
 }
 
 void nmethod::flush() {
-  // completely deallocate this method
-  Events::log(JavaThread::current(), "flushing nmethod " INTPTR_FORMAT, p2i(this));
-
   // We need to deallocate any ExceptionCache data.
   // Note that we do not need to grab the nmethod lock for this, it
   // better be thread safe if we're disposing of it!

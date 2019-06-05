@@ -241,7 +241,7 @@ void ArrayCopyStub::emit_code(LIR_Assembler* ce) {
   r[4] = length()->as_register();
 
   // next registers will get stored on the stack
-  for (int i = 0; i < 5 ; i++) {
+  for (int i = 0; i < 5; i++) {
     VMReg r_1 = args[i].first();
     if (r_1->is_stack()) {
       int st_off = r_1->reg2stack() * wordSize;

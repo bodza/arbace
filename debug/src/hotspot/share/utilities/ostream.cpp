@@ -669,15 +669,6 @@ void ostream_init() {
   }
 }
 
-void ostream_init_log() {
-  // Note : this must be called AFTER ostream_init()
-
-  // If we haven't lazily initialized the logfile yet, do it now,
-  // to avoid the possibility of lazy initialization during a VM
-  // crash, which can affect the stability of the fatal error handler.
-  defaultStream::instance->false;
-}
-
 // ostream_exit() is called during normal VM exit to finish log files, flush
 // output and free resource.
 void ostream_exit() {

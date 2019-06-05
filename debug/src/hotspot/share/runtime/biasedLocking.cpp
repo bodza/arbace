@@ -353,22 +353,19 @@ protected:
   GrowableArray<Handle>* _objs;
   JavaThread* _requesting_thread;
   BiasedLocking::Condition _status_code;
-  traceid _biased_locker_id;
 
 public:
   VM_RevokeBias(Handle* obj, JavaThread* requesting_thread)
     : _obj(obj)
     , _objs(NULL)
     , _requesting_thread(requesting_thread)
-    , _status_code(BiasedLocking::NOT_BIASED)
-    , _biased_locker_id(0) { }
+    , _status_code(BiasedLocking::NOT_BIASED) { }
 
   VM_RevokeBias(GrowableArray<Handle>* objs, JavaThread* requesting_thread)
     : _obj(NULL)
     , _objs(objs)
     , _requesting_thread(requesting_thread)
-    , _status_code(BiasedLocking::NOT_BIASED)
-    , _biased_locker_id(0) { }
+    , _status_code(BiasedLocking::NOT_BIASED) { }
 
   virtual VMOp_Type type() const { return VMOp_RevokeBias; }
 
@@ -382,7 +379,7 @@ public:
         return true;
       }
     } else {
-      for (int i = 0 ; i < _objs->length(); i++) {
+      for (int i = 0; i < _objs->length(); i++) {
         markOop mark = (_objs->at(i))()->mark();
         if (mark->has_bias_pattern()) {
           return true;
@@ -396,9 +393,6 @@ public:
     if (_obj != NULL) {
       JavaThread* biased_locker = NULL;
       _status_code = revoke_bias((*_obj)(), false, false, _requesting_thread, &biased_locker);
-      if (biased_locker != NULL) {
-        _biased_locker_id = JFR_THREAD_ID(biased_locker);
-      }
       clean_up_cached_monitor_info();
       return;
     } else {
@@ -409,10 +403,6 @@ public:
   BiasedLocking::Condition status_code() const {
     return _status_code;
   }
-
-  traceid biased_locker() const {
-    return _biased_locker_id;
-  }
 };
 
 class VM_BulkRevokeBias : public VM_RevokeBias {
@@ -421,9 +411,7 @@ private:
   bool _attempt_rebias_of_object;
 
 public:
-  VM_BulkRevokeBias(Handle* obj, JavaThread* requesting_thread,
-                    bool bulk_rebias,
-                    bool attempt_rebias_of_object)
+  VM_BulkRevokeBias(Handle* obj, JavaThread* requesting_thread, bool bulk_rebias, bool attempt_rebias_of_object)
     : VM_RevokeBias(obj, requesting_thread)
     , _bulk_rebias(bulk_rebias)
     , _attempt_rebias_of_object(attempt_rebias_of_object) { }
@@ -436,31 +424,6 @@ public:
     clean_up_cached_monitor_info();
   }
 };
-
-template <typename E>
-static void set_safepoint_id(E* event) {
-  // Subtract 1 to match the id of events committed inside the safepoint
-  event->set_safepointId(SafepointSynchronize::safepoint_counter() - 1);
-}
-
-static void post_self_revocation_event(EventBiasedLockSelfRevocation* event, Klass* k) {
-  event->set_lockClass(k);
-  event->commit();
-}
-
-static void post_revocation_event(EventBiasedLockRevocation* event, Klass* k, VM_RevokeBias* revoke) {
-  event->set_lockClass(k);
-  set_safepoint_id(event);
-  event->set_previousOwner(revoke->biased_locker());
-  event->commit();
-}
-
-static void post_class_revocation_event(EventBiasedLockClassRevocation* event, Klass* k, bool disabled_bias) {
-  event->set_revokedClass(k);
-  event->set_disableBiasing(disabled_bias);
-  set_safepoint_id(event);
-  event->commit();
-}
 
 BiasedLocking::Condition BiasedLocking::revoke_and_rebias(Handle obj, bool attempt_rebias, TRAPS) {
   // We can revoke the biases of anonymously-biased objects
@@ -537,32 +500,18 @@ BiasedLocking::Condition BiasedLocking::revoke_and_rebias(Handle obj, bool attem
       // can come in with a CAS to steal the bias of an object that has a
       // stale epoch.
       ResourceMark rm;
-      EventBiasedLockSelfRevocation event;
       BiasedLocking::Condition cond = revoke_bias(obj(), false, false, (JavaThread*) THREAD, NULL);
       ((JavaThread*) THREAD)->set_cached_monitor_info(NULL);
-      if (event.should_commit()) {
-        post_self_revocation_event(&event, k);
-      }
       return cond;
     } else {
-      EventBiasedLockRevocation event;
       VM_RevokeBias revoke(&obj, (JavaThread*) THREAD);
       VMThread::execute(&revoke);
-      if (event.should_commit() && revoke.status_code() != NOT_BIASED) {
-        post_revocation_event(&event, k, &revoke);
-      }
       return revoke.status_code();
     }
   }
 
-  EventBiasedLockClassRevocation event;
-  VM_BulkRevokeBias bulk_revoke(&obj, (JavaThread*) THREAD,
-                                (heuristics == HR_BULK_REBIAS),
-                                attempt_rebias);
+  VM_BulkRevokeBias bulk_revoke(&obj, (JavaThread*) THREAD, (heuristics == HR_BULK_REBIAS), attempt_rebias);
   VMThread::execute(&bulk_revoke);
-  if (event.should_commit()) {
-    post_class_revocation_event(&event, obj->klass(), heuristics != HR_BULK_REBIAS);
-  }
   return bulk_revoke.status_code();
 }
 

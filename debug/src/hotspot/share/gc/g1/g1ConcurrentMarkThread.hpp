@@ -26,7 +26,6 @@ class G1ConcurrentMarkThread: public ConcurrentGCThread {
 
   volatile State _state;
 
-  // NULL testing support.
   ConcurrentGCPhaseManager::Stack _phase_manager_stack;
 
   void sleep_before_next_cycle();
@@ -64,10 +63,6 @@ class G1ConcurrentMarkThread: public ConcurrentGCThread {
   // as the CM thread might take some time to wake up before noticing
   // that started() is set and set in_progress().
   bool during_cycle()      { return !idle(); }
-
-  // NULL testing support.
-  const char* const* concurrent_phases() const;
-  bool request_concurrent_phase(const char* phase);
 
   ConcurrentGCPhaseManager::Stack* phase_manager_stack() {
     return &_phase_manager_stack;

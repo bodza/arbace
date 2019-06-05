@@ -703,10 +703,6 @@ void CodeCache::prune_scavenge_root_nmethods() {
   }
 }
 
-void CodeCache::verify_clean_inline_caches() { }
-
-void CodeCache::verify_icholder_relocations() { }
-
 void CodeCache::gc_prologue() { }
 
 void CodeCache::gc_epilogue() {
@@ -729,7 +725,6 @@ void CodeCache::do_unloading_nmethod_caches(bool class_unloading_occurred) {
   }
 
   set_needs_cache_clean(false);
-  verify_icholder_relocations();
 }
 
 void CodeCache::verify_oops() {
@@ -1068,20 +1063,6 @@ void CodeCache::report_codemem_full(int code_blob_type, bool print) {
   }
 
   heap->report_full();
-
-  EventCodeCacheFull event;
-  if (event.should_commit()) {
-    event.set_codeBlobType((u1)code_blob_type);
-    event.set_startAddress((u8)heap->low_boundary());
-    event.set_commitedTopAddress((u8)heap->high());
-    event.set_reservedTopAddress((u8)heap->high_boundary());
-    event.set_entryCount(heap->blob_count());
-    event.set_methodCount(heap->nmethod_count());
-    event.set_adaptorCount(heap->adapter_count());
-    event.set_unallocatedCapacity(heap->unallocated_capacity());
-    event.set_fullCount(heap->full_count());
-    event.commit();
-  }
 }
 PRAGMA_DIAG_POP
 
@@ -1116,10 +1097,8 @@ void CodeCache::print_summary(outputStream* st, bool detailed) {
     } else {
       st->print("CodeCache:");
     }
-    st->print_cr(" size=" SIZE_FORMAT "Kb used=" SIZE_FORMAT
-                 "Kb max_used=" SIZE_FORMAT "Kb free=" SIZE_FORMAT "Kb",
-                 total/K, (total - heap->unallocated_capacity())/K,
-                 heap->max_allocated_capacity()/K, heap->unallocated_capacity()/K);
+    st->print_cr(" size=" SIZE_FORMAT "Kb used=" SIZE_FORMAT "Kb max_used=" SIZE_FORMAT "Kb free=" SIZE_FORMAT "Kb",
+                 total/K, (total - heap->unallocated_capacity())/K, heap->max_allocated_capacity()/K, heap->unallocated_capacity()/K);
 
     if (detailed) {
       st->print_cr(" bounds [" INTPTR_FORMAT ", " INTPTR_FORMAT ", " INTPTR_FORMAT "]", p2i(heap->low_boundary()), p2i(heap->high()), p2i(heap->high_boundary()));
@@ -1129,16 +1108,10 @@ void CodeCache::print_summary(outputStream* st, bool detailed) {
   }
 
   if (detailed) {
-    st->print_cr(" total_blobs=" UINT32_FORMAT " nmethods=" UINT32_FORMAT
-                       " adapters=" UINT32_FORMAT,
-                       blob_count(), nmethod_count(), adapter_count());
+    st->print_cr(" total_blobs=" UINT32_FORMAT " nmethods=" UINT32_FORMAT " adapters=" UINT32_FORMAT, blob_count(), nmethod_count(), adapter_count());
     st->print_cr(" compilation: %s", CompileBroker::should_compile_new_jobs() ?
-                 "enabled" : Arguments::mode() == Arguments::_int ?
-                 "disabled (interpreter mode)" :
-                 "disabled (not enough contiguous free space left)");
-    st->print_cr("              stopped_count=%d, restarted_count=%d",
-                 CompileBroker::get_total_compiler_stopped_count(),
-                 CompileBroker::get_total_compiler_restarted_count());
+                 "enabled" : Arguments::mode() == Arguments::_int ? "disabled (interpreter mode)" : "disabled (not enough contiguous free space left)");
+    st->print_cr("              stopped_count=%d, restarted_count=%d", CompileBroker::get_total_compiler_stopped_count(), CompileBroker::get_total_compiler_restarted_count());
     st->print_cr(" full_count=%d", full_count);
   }
 }
@@ -1152,9 +1125,7 @@ void CodeCache::print_codelist(outputStream* st) {
     ResourceMark rm;
     char* method_name = cm->method()->name_and_sig_as_C_string();
     st->print_cr("%d %d %d %s [" INTPTR_FORMAT ", " INTPTR_FORMAT " - " INTPTR_FORMAT "]",
-                 cm->compile_id(), cm->comp_level(), cm->get_state(),
-                 method_name,
-                 (intptr_t)cm->header_begin(), (intptr_t)cm->code_begin(), (intptr_t)cm->code_end());
+                 cm->compile_id(), cm->comp_level(), cm->get_state(), method_name, (intptr_t)cm->header_begin(), (intptr_t)cm->code_begin(), (intptr_t)cm->code_end());
   }
 }
 

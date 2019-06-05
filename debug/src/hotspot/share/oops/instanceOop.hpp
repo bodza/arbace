@@ -15,9 +15,7 @@ class instanceOopDesc : public oopDesc {
   static int base_offset_in_bytes() {
     // offset computation code breaks if UseCompressedClassPointers
     // only is true
-    return (UseCompressedOops && UseCompressedClassPointers) ?
-             klass_gap_offset_in_bytes() :
-             sizeof(instanceOopDesc);
+    return (UseCompressedOops && UseCompressedClassPointers) ? klass_gap_offset_in_bytes() : sizeof(instanceOopDesc);
   }
 
   static bool contains_field_offset(int offset, int nonstatic_field_size) {

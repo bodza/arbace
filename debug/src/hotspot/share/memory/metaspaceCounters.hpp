@@ -3,10 +3,7 @@
 
 #include "memory/allocation.hpp"
 
-class MetaspacePerfCounters;
-
 class MetaspaceCounters: public AllStatic {
-  static MetaspacePerfCounters* _perf_counters;
   static size_t used();
   static size_t capacity();
   static size_t max_capacity();
@@ -17,7 +14,6 @@ class MetaspaceCounters: public AllStatic {
 };
 
 class CompressedClassSpaceCounters: public AllStatic {
-  static MetaspacePerfCounters* _perf_counters;
   static size_t used();
   static size_t capacity();
   static size_t max_capacity();

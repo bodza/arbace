@@ -58,9 +58,7 @@ private:
   size_t             _removed;
 
 public:
-  inline DiscoveredListIterator(DiscoveredList&    refs_list,
-                                OopClosure*        keep_alive,
-                                BoolObjectClosure* is_alive);
+  inline DiscoveredListIterator(DiscoveredList& refs_list, OopClosure* keep_alive, BoolObjectClosure* is_alive);
 
   // End Of List.
   inline bool has_next() const { return _current_discovered != NULL; }
@@ -284,8 +282,7 @@ public:
   void set_active_mt_degree(uint v);
 
   ReferencePolicy* setup_policy(bool always_clear) {
-    _current_soft_ref_policy = always_clear ?
-      _always_clear_soft_ref_policy : _default_soft_ref_policy;
+    _current_soft_ref_policy = always_clear ? _always_clear_soft_ref_policy : _default_soft_ref_policy;
     _current_soft_ref_policy->setup();   // snapshot the policy threshold
     return _current_soft_ref_policy;
   }
@@ -299,7 +296,7 @@ public:
   // The caller is responsible for taking care of potential
   // interference with concurrent operations on these lists
   // (or predicates involved) by other threads.
-  void preclean_discovered_references(BoolObjectClosure* is_alive, OopClosure*        keep_alive, VoidClosure*       complete_gc, YieldClosure*      yield, GCTimer*           gc_timer);
+  void preclean_discovered_references(BoolObjectClosure* is_alive, OopClosure* keep_alive, VoidClosure* complete_gc, YieldClosure* yield, GCTimer* gc_timer);
 
 private:
   // Returns the name of the discovered reference list

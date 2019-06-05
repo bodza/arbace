@@ -5,27 +5,13 @@
 #include "code/dependencyContext.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/atomic.hpp"
-#include "runtime/perfData.hpp"
 #include "utilities/exceptions.hpp"
-
-PerfCounter* DependencyContext::_perf_total_buckets_allocated_count   = NULL;
-PerfCounter* DependencyContext::_perf_total_buckets_deallocated_count = NULL;
-PerfCounter* DependencyContext::_perf_total_buckets_stale_count       = NULL;
-PerfCounter* DependencyContext::_perf_total_buckets_stale_acc_count   = NULL;
 
 void dependencyContext_init() {
   DependencyContext::init();
 }
 
-void DependencyContext::init() {
-  if (UsePerfData) {
-    EXCEPTION_MARK;
-    _perf_total_buckets_allocated_count = PerfDataManager::create_counter(SUN_CI, "nmethodBucketsAllocated", PerfData::U_Events, CHECK);
-    _perf_total_buckets_deallocated_count = PerfDataManager::create_counter(SUN_CI, "nmethodBucketsDeallocated", PerfData::U_Events, CHECK);
-    _perf_total_buckets_stale_count = PerfDataManager::create_counter(SUN_CI, "nmethodBucketsStale", PerfData::U_Events, CHECK);
-    _perf_total_buckets_stale_acc_count = PerfDataManager::create_counter(SUN_CI, "nmethodBucketsStaleAccumulated", PerfData::U_Events, CHECK);
-  }
-}
+void DependencyContext::init() { }
 
 //
 // Walk the list of dependent nmethods searching for nmethods which
@@ -60,9 +46,6 @@ void DependencyContext::add_dependent_nmethod(nmethod* nm, bool expunge) {
     }
   }
   set_dependencies(new nmethodBucket(nm, dependencies()));
-  if (UsePerfData) {
-    _perf_total_buckets_allocated_count->inc();
-  }
   if (expunge) {
     // Remove stale entries from the list.
     expunge_stale_entries();
@@ -91,17 +74,10 @@ void DependencyContext::remove_dependent_nmethod(nmethod* nm, bool expunge) {
             last->set_next(b->next());
           }
           delete b;
-          if (UsePerfData) {
-            _perf_total_buckets_deallocated_count->inc();
-          }
         } else {
           // Mark the context as having stale entries, since it is not safe to
           // expunge the list right now.
           set_has_stale_entries(true);
-          if (UsePerfData) {
-            _perf_total_buckets_stale_count->inc();
-            _perf_total_buckets_stale_acc_count->inc();
-          }
         }
       }
       if (expunge) {
@@ -143,10 +119,6 @@ void DependencyContext::expunge_stale_entries() {
   }
   set_dependencies(first);
   set_has_stale_entries(false);
-  if (UsePerfData && removed > 0) {
-    _perf_total_buckets_deallocated_count->inc(removed);
-    _perf_total_buckets_stale_count->dec(removed);
-  }
 }
 
 //
@@ -168,9 +140,6 @@ int DependencyContext::remove_all_dependents() {
     b = next;
   }
   set_has_stale_entries(false);
-  if (UsePerfData && removed > 0) {
-    _perf_total_buckets_deallocated_count->inc(removed);
-  }
   return marked;
 }
 

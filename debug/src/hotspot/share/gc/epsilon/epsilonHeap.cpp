@@ -26,13 +26,8 @@ jint EpsilonHeap::initialize() {
 
   // Precompute hot fields
   _max_tlab_size = MIN2(CollectedHeap::max_tlab_size(), align_object_size(EpsilonMaxTLABSize / HeapWordSize));
-  _step_counter_update = MIN2<size_t>(max_byte_size / 16, EpsilonUpdateCountersStep);
   _step_heap_print = (EpsilonPrintHeapSteps == 0) ? SIZE_MAX : (max_byte_size / EpsilonPrintHeapSteps);
   _decay_time_ns = (int64_t) EpsilonTLABDecayTime * NANOSECS_PER_MILLISEC;
-
-  // Enable monitoring
-  _monitoring_support = new EpsilonMonitoringSupport(this);
-  _last_counter_update = 0;
 
   // Install barrier set
   BarrierSet::set_barrier_set(new EpsilonBarrierSet());
@@ -96,16 +91,6 @@ HeapWord* EpsilonHeap::allocate_work(size_t size) {
 
     _space->set_end((HeapWord *) _virtual_space.high());
     res = _space->par_allocate(size);
-  }
-
-  size_t used = _space->used();
-
-  // Allocation successful, update counters
-  {
-    size_t last = _last_counter_update;
-    if ((used - last >= _step_counter_update) && Atomic::cmpxchg(used, &_last_counter_update, last) == last) {
-      _monitoring_support->update_counters();
-    }
   }
 
   return res;
@@ -188,8 +173,10 @@ void EpsilonHeap::collect(GCCause::Cause cause) {
 
       MetaspaceGC::compute_new_size();
       break;
+
+    default:
+      break;
   }
-  _monitoring_support->update_counters();
 }
 
 void EpsilonHeap::do_full_collection(bool clear_all_soft_refs) {

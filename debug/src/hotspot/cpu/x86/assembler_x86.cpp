@@ -2719,7 +2719,6 @@ void Assembler::nop(int i) {
         emit_int8((unsigned char)0x90);
                          // nop
         break;
-      default:
     }
     return;
   }
@@ -2782,7 +2781,6 @@ void Assembler::nop(int i) {
         emit_int8(0x66); // size prefix
         addr_nop_5();
         break;
-      default:
     }
 
     // Generate second nop for size between 11-1
@@ -2816,7 +2814,6 @@ void Assembler::nop(int i) {
         emit_int8((unsigned char)0x90);
                          // nop
         break;
-      default:
     }
     return;
   }
@@ -2898,7 +2895,6 @@ void Assembler::nop(int i) {
         emit_int8((unsigned char)0x90);
                          // nop
         break;
-      default:
     }
     return;
   }
@@ -2956,7 +2952,6 @@ void Assembler::nop(int i) {
     case 1:
       emit_int8((unsigned char)0x90);
       break;
-    default:
   }
 }
 
@@ -6712,9 +6707,7 @@ void Assembler::evex_prefix(bool vex_r, bool vex_b, bool vex_x, bool evex_r, boo
 
   // P2: byte 4 as zL'Lbv'aaa
   // kregs are implemented in the low 3 bits as aaa
-  int byte4 = (_attributes->is_no_reg_mask()) ?
-              0 :
-              _attributes->get_embedded_opmask_register_specifier();
+  int byte4 = (_attributes->is_no_reg_mask()) ? 0 : _attributes->get_embedded_opmask_register_specifier();
   // EVEX.v` for extending EVEX.vvvv or VIDX
   byte4 |= (evex_v ? 0: EVEX_V);
   // third EXEC.b for broadcast actions

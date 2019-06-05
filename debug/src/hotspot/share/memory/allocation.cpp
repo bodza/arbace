@@ -9,24 +9,19 @@
 #include "runtime/os.hpp"
 #include "runtime/task.hpp"
 #include "runtime/threadCritical.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/ostream.hpp"
 
 // allocate using malloc; will fail if no memory available
-char* AllocateHeap(size_t size, MEMFLAGS flags, const NativeCallStack& stack, AllocFailType alloc_failmode /* = AllocFailStrategy::EXIT_OOM*/) {
-  char* p = (char*) os::malloc(size, flags, stack);
+char* AllocateHeap(size_t size, MEMFLAGS flags, AllocFailType alloc_failmode /* = AllocFailStrategy::EXIT_OOM*/) {
+  char* p = (char*) os::malloc(size, flags);
   if (p == NULL && alloc_failmode == AllocFailStrategy::EXIT_OOM) {
     vm_exit_out_of_memory(size, OOM_MALLOC_ERROR, "AllocateHeap");
   }
   return p;
 }
 
-char* AllocateHeap(size_t size, MEMFLAGS flags, AllocFailType alloc_failmode /* = AllocFailStrategy::EXIT_OOM*/) {
-  return AllocateHeap(size, flags, CALLER_PC);
-}
-
 char* ReallocateHeap(char *old, size_t size, MEMFLAGS flag, AllocFailType alloc_failmode) {
-  char* p = (char*) os::realloc(old, size, flag, CALLER_PC);
+  char* p = (char*) os::realloc(old, size, flag);
   if (p == NULL && alloc_failmode == AllocFailStrategy::EXIT_OOM) {
     vm_exit_out_of_memory(size, OOM_MALLOC_ERROR, "ReallocateHeap");
   }
@@ -72,7 +67,7 @@ void* ResourceObj::operator new(size_t size, allocation_type type, MEMFLAGS flag
   address res = NULL;
   switch (type) {
    case C_HEAP:
-    res = (address)AllocateHeap(size, flags, CALLER_PC);
+    res = (address)AllocateHeap(size, flags);
     break;
    case RESOURCE_AREA:
     // new(size) sets allocation type RESOURCE_AREA.
@@ -94,7 +89,7 @@ void* ResourceObj::operator new(size_t size, const std::nothrow_t&  nothrow_cons
   address res = NULL;
   switch (type) {
    case C_HEAP:
-    res = (address)AllocateHeap(size, flags, CALLER_PC, AllocFailStrategy::RETURN_NULL);
+    res = (address)AllocateHeap(size, flags, AllocFailStrategy::RETURN_NULL);
     break;
    case RESOURCE_AREA:
     // new(size) sets allocation type RESOURCE_AREA.

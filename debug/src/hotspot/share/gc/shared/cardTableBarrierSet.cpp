@@ -7,7 +7,6 @@
 #include "memory/virtualspace.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/thread.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/align.hpp"
 #include "utilities/macros.hpp"
 #include "gc/shared/c1/cardTableBarrierSetC1.hpp"

@@ -170,8 +170,7 @@ void MacroAssembler::fast_log(FloatRegister vtmp0, FloatRegister vtmp1,
                               FloatRegister C3, FloatRegister C4,
                               Register tmp1, Register tmp2, Register tmp3,
                               Register tmp4, Register tmp5) {
-  Label DONE, CHECK_CORNER_CASES, SMALL_VALUE, MAIN,
-      CHECKED_CORNER_CASES, RETURN_MINF_OR_NAN;
+  Label DONE, CHECK_CORNER_CASES, SMALL_VALUE, MAIN, CHECKED_CORNER_CASES, RETURN_MINF_OR_NAN;
   const long INF_OR_NAN_PREFIX = 0x7FF0;
   const long MINF_OR_MNAN_PREFIX = 0xFFF0;
   const long ONE_PREFIX = 0x3FF0;

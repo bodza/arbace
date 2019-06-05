@@ -11,9 +11,7 @@
 #include "runtime/prefetch.inline.hpp"
 #include "utilities/align.hpp"
 
-inline HeapWord* G1ContiguousSpace::allocate_impl(size_t min_word_size,
-                                                  size_t desired_word_size,
-                                                  size_t* actual_size) {
+inline HeapWord* G1ContiguousSpace::allocate_impl(size_t min_word_size, size_t desired_word_size, size_t* actual_size) {
   HeapWord* obj = top();
   size_t available = pointer_delta(end(), obj);
   size_t want_to_allocate = MIN2(available, desired_word_size);
@@ -27,9 +25,7 @@ inline HeapWord* G1ContiguousSpace::allocate_impl(size_t min_word_size,
   }
 }
 
-inline HeapWord* G1ContiguousSpace::par_allocate_impl(size_t min_word_size,
-                                                      size_t desired_word_size,
-                                                      size_t* actual_size) {
+inline HeapWord* G1ContiguousSpace::par_allocate_impl(size_t min_word_size, size_t desired_word_size, size_t* actual_size) {
   do {
     HeapWord* obj = top();
     size_t available = pointer_delta(end(), obj);
@@ -50,9 +46,7 @@ inline HeapWord* G1ContiguousSpace::par_allocate_impl(size_t min_word_size,
   } while (true);
 }
 
-inline HeapWord* G1ContiguousSpace::allocate(size_t min_word_size,
-                                             size_t desired_word_size,
-                                             size_t* actual_size) {
+inline HeapWord* G1ContiguousSpace::allocate(size_t min_word_size, size_t desired_word_size, size_t* actual_size) {
   HeapWord* res = allocate_impl(min_word_size, desired_word_size, actual_size);
   if (res != NULL) {
     _bot_part.alloc_block(res, *actual_size);
@@ -73,9 +67,7 @@ inline HeapWord* G1ContiguousSpace::par_allocate(size_t word_size) {
 // Because of the requirement of keeping "_offsets" up to date with the
 // allocations, we sequentialize these with a lock.  Therefore, best if
 // this is used for larger LAB allocations only.
-inline HeapWord* G1ContiguousSpace::par_allocate(size_t min_word_size,
-                                                 size_t desired_word_size,
-                                                 size_t* actual_size) {
+inline HeapWord* G1ContiguousSpace::par_allocate(size_t min_word_size, size_t desired_word_size, size_t* actual_size) {
   MutexLocker x(&_par_alloc_lock);
   return allocate(min_word_size, desired_word_size, actual_size);
 }
@@ -176,9 +168,7 @@ inline void HeapRegion::apply_to_marked_objects(G1CMBitMap* bitmap, ApplyToMarke
   }
 }
 
-inline HeapWord* HeapRegion::par_allocate_no_bot_updates(size_t min_word_size,
-                                                         size_t desired_word_size,
-                                                         size_t* actual_word_size) {
+inline HeapWord* HeapRegion::par_allocate_no_bot_updates(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size) {
   return par_allocate_impl(min_word_size, desired_word_size, actual_word_size);
 }
 
@@ -187,9 +177,7 @@ inline HeapWord* HeapRegion::allocate_no_bot_updates(size_t word_size) {
   return allocate_no_bot_updates(word_size, word_size, &temp);
 }
 
-inline HeapWord* HeapRegion::allocate_no_bot_updates(size_t min_word_size,
-                                                     size_t desired_word_size,
-                                                     size_t* actual_word_size) {
+inline HeapWord* HeapRegion::allocate_no_bot_updates(size_t min_word_size, size_t desired_word_size, size_t* actual_word_size) {
   return allocate_impl(min_word_size, desired_word_size, actual_word_size);
 }
 

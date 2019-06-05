@@ -357,9 +357,7 @@ inline bm_word_t tail_of_map(bm_word_t value, idx_t tail_bits) {
 // old_value is the last word of the map, including bits beyond the end.
 // Returns old_value with the low tail_bits replaced by the corresponding
 // bits in new_value.
-inline bm_word_t merge_tail_of_map(bm_word_t new_value,
-                                   bm_word_t old_value,
-                                   idx_t tail_bits) {
+inline bm_word_t merge_tail_of_map(bm_word_t new_value, bm_word_t old_value, idx_t tail_bits) {
   bm_word_t mask = tail_mask(tail_bits);
   return (new_value & mask) | (old_value & ~mask);
 }

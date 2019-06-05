@@ -1753,40 +1753,10 @@
   diagnostic(bool, UseNewCode3, false, \
           "Testing Only: Use the new version while testing") \
  \
-  /* flags for performance data collection */ \
- \
-  product(bool, UsePerfData, true, \
-          "Flag to disable jvmstat instrumentation for performance testing and problem isolation purposes") \
- \
-  product(intx, PerfDataSamplingInterval, 50, \
-          "Data sampling interval (in milliseconds)") \
-          range(PeriodicTask::min_interval, max_jint) \
-          constraint(PerfDataSamplingIntervalFunc, AfterErgo) \
- \
-  product(bool, PerfDisableSharedMem, false, \
-          "Store performance data in standard memory") \
- \
-  product(intx, PerfDataMemorySize, 32*K, \
-          "Size of performance data memory region. Will be rounded up to a multiple of the native os page size.") \
-          range(128, 32*64*K) \
- \
-  product(intx, PerfMaxStringConstLength, 1024, \
-          "Maximum PerfStringConstant string length before truncation") \
-          range(32, 32*K) \
- \
-  product(bool, PerfAllowAtExitRegistration, false, \
-          "Allow registration of atexit() methods") \
- \
-  product(bool, PerfBypassFileSystemCheck, false, \
-          "Bypass Win32 file system criteria checks (Windows Only)") \
- \
   product(intx, UnguardOnExecutionViolation, 0, \
           "Unguard page and retry on no-execute fault (Win32 only) " \
           "0=off, 1=conservative, 2=aggressive") \
           range(0, 2) \
- \
-  diagnostic(bool, VerifyMethodHandles, trueInDebug, \
-          "perform extra checks when constructing method handles") \
  \
   diagnostic(bool, ShowHiddenFrames, false, \
           "show method handle implementation frames (usually hidden)") \
@@ -1897,9 +1867,6 @@
   product(ccstr, AllocateHeapAt, NULL, \
           "Path to the directoy where a temporary file will be created " \
           "to use as the backing store for Java Heap.") \
- \
-  diagnostic(bool, ShowRegistersOnAssert, false, \
-          "On internal errors, include registers in error report.") \
  \
   experimental(bool, UseSwitchProfiling, true, \
           "leverage profiling for table/lookup switch") \

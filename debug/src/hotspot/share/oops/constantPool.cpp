@@ -691,12 +691,7 @@ oop ConstantPool::resolve_constant_at_impl(const constantPoolHandle& this_cp, in
       Handle bootstrap_specifier = Handle(THREAD, bsm_info);
 
       // Resolve the Dynamically-Computed constant to invoke the BSM in order to obtain the resulting oop.
-      Handle value = SystemDictionary::link_dynamic_constant(current_klass,
-                                                             index,
-                                                             bootstrap_specifier,
-                                                             constant_name,
-                                                             constant_type,
-                                                             THREAD);
+      Handle value = SystemDictionary::link_dynamic_constant(current_klass, index, bootstrap_specifier, constant_name, constant_type, THREAD);
       result_oop = value();
       Exceptions::wrap_dynamic_exception(THREAD);
       if (HAS_PENDING_EXCEPTION) {

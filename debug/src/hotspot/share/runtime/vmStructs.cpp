@@ -61,8 +61,6 @@
 #include "runtime/java.hpp"
 #include "runtime/javaCalls.hpp"
 #include "runtime/os.hpp"
-#include "runtime/perfMemory.hpp"
-#include "runtime/serviceThread.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.inline.hpp"
@@ -359,37 +357,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   nonstatic_field(VirtualSpace,                _lower_high,                                   char*) \
   nonstatic_field(VirtualSpace,                _middle_high,                                  char*) \
   nonstatic_field(VirtualSpace,                _upper_high,                                   char*) \
- \
-  /************************/ \
-  /* PerfMemory - jvmstat */ \
-  /************************/ \
- \
-  nonstatic_field(PerfDataPrologue,            magic,                                         jint) \
-  nonstatic_field(PerfDataPrologue,            byte_order,                                    jbyte) \
-  nonstatic_field(PerfDataPrologue,            major_version,                                 jbyte) \
-  nonstatic_field(PerfDataPrologue,            minor_version,                                 jbyte) \
-  nonstatic_field(PerfDataPrologue,            accessible,                                    jbyte) \
-  nonstatic_field(PerfDataPrologue,            used,                                          jint) \
-  nonstatic_field(PerfDataPrologue,            overflow,                                      jint) \
-  nonstatic_field(PerfDataPrologue,            mod_time_stamp,                                jlong) \
-  nonstatic_field(PerfDataPrologue,            entry_offset,                                  jint) \
-  nonstatic_field(PerfDataPrologue,            num_entries,                                   jint) \
- \
-  nonstatic_field(PerfDataEntry,               entry_length,                                  jint) \
-  nonstatic_field(PerfDataEntry,               name_offset,                                   jint) \
-  nonstatic_field(PerfDataEntry,               vector_length,                                 jint) \
-  nonstatic_field(PerfDataEntry,               data_type,                                     jbyte) \
-  nonstatic_field(PerfDataEntry,               flags,                                         jbyte) \
-  nonstatic_field(PerfDataEntry,               data_units,                                    jbyte) \
-  nonstatic_field(PerfDataEntry,               data_variability,                              jbyte) \
-  nonstatic_field(PerfDataEntry,               data_offset,                                   jint) \
- \
-     static_field(PerfMemory,                  _start,                                        char*) \
-     static_field(PerfMemory,                  _end,                                          char*) \
-     static_field(PerfMemory,                  _top,                                          char*) \
-     static_field(PerfMemory,                  _capacity,                                     size_t) \
-     static_field(PerfMemory,                  _prologue,                                     PerfDataPrologue*) \
-     static_field(PerfMemory,                  _initialized,                                  int) \
  \
   /***************/ \
   /* SymbolTable */ \
@@ -1237,16 +1204,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   declare_toplevel_type(ClassLoaderData) \
   declare_toplevel_type(ClassLoaderDataGraph) \
  \
-  /************************/ \
-  /* PerfMemory - jvmstat */ \
-  /************************/ \
- \
-  declare_toplevel_type(PerfDataPrologue) \
-  declare_toplevel_type(PerfDataPrologue*) \
-  declare_toplevel_type(PerfDataEntry) \
-  declare_toplevel_type(PerfMemory) \
-  declare_type(PerfData, CHeapObj<mtInternal>) \
- \
   /*********************************/ \
   /* SymbolTable, SystemDictionary */ \
   /*********************************/ \
@@ -1279,7 +1236,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
            declare_type(NamedThread, Thread) \
            declare_type(WatcherThread, Thread) \
            declare_type(JavaThread, Thread) \
-           declare_type(ServiceThread, JavaThread) \
   declare_type(CompilerThread, JavaThread) \
   declare_type(CodeCacheSweeperThread, JavaThread) \
   declare_toplevel_type(OSThread) \
@@ -1939,17 +1895,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   declare_constant(HeapWordSize) \
   declare_constant(LogHeapWordSize) \
  \
- \
-  /************************/ \
-  /* PerfMemory - jvmstat */ \
-  /************************/ \
- \
-  declare_preprocessor_constant("PERFDATA_MAJOR_VERSION", PERFDATA_MAJOR_VERSION) \
-  declare_preprocessor_constant("PERFDATA_MINOR_VERSION", PERFDATA_MINOR_VERSION) \
-  declare_preprocessor_constant("PERFDATA_BIG_ENDIAN", PERFDATA_BIG_ENDIAN) \
-  declare_preprocessor_constant("PERFDATA_LITTLE_ENDIAN", PERFDATA_LITTLE_ENDIAN) \
- \
- \
   /************************************************************/ \
   /* HotSpot specific JVM_ACC constants from global anon enum */ \
   /************************************************************/ \
@@ -2442,17 +2387,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   declare_preprocessor_constant("REG_COUNT", REG_COUNT) \
   declare_c2_preprocessor_constant("SAVED_ON_ENTRY_REG_COUNT", SAVED_ON_ENTRY_REG_COUNT) \
   declare_c2_preprocessor_constant("C_SAVED_ON_ENTRY_REG_COUNT", C_SAVED_ON_ENTRY_REG_COUNT) \
- \
-  /***********************/ \
-  /* PerfData Units enum */ \
-  /***********************/ \
- \
-  declare_constant(PerfData::U_None) \
-  declare_constant(PerfData::U_Bytes) \
-  declare_constant(PerfData::U_Ticks) \
-  declare_constant(PerfData::U_Events) \
-  declare_constant(PerfData::U_String) \
-  declare_constant(PerfData::U_Hertz) \
  \
   /****************/ \
   /*  VMRegImpl   */ \

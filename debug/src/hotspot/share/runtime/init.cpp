@@ -13,7 +13,6 @@
 #include "runtime/init.hpp"
 #include "runtime/safepoint.hpp"
 #include "runtime/sharedRuntime.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/macros.hpp"
 
 // Initialization done by VM thread in vm_init_globals()
@@ -21,7 +20,6 @@ void check_ThreadShadow();
 void eventlog_init();
 void mutex_init();
 void chunkpool_init();
-void perfMemory_init();
 void SuspendibleThreadSet_init();
 
 // Initialization done by Java thread in init_globals()
@@ -57,10 +55,6 @@ bool universe_post_init();  // must happen after compiler_init
 void javaClasses_init();  // must happen after vtable initialization
 void stubRoutines_init2(); // note: StubRoutines need 2-phase init
 
-// Do not disable thread-local-storage, as it is important for some
-// JNI/JVM/JVMTI functions and signal handlers to work properly
-// during VM shutdown
-void perfMemory_exit();
 void ostream_exit();
 
 void vm_init_globals() {
@@ -69,7 +63,6 @@ void vm_init_globals() {
   eventlog_init();
   mutex_init();
   chunkpool_init();
-  perfMemory_init();
   SuspendibleThreadSet_init();
 }
 
@@ -129,7 +122,6 @@ void exit_globals() {
   static bool destructorsCalled = false;
   if (!destructorsCalled) {
     destructorsCalled = true;
-    perfMemory_exit();
     ostream_exit();
   }
 }

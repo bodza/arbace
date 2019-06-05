@@ -1,14 +1,12 @@
 #ifndef SHARE_VM_GC_SHARED_GENERATION_HPP
 #define SHARE_VM_GC_SHARED_GENERATION_HPP
 
-#include "gc/shared/collectorCounters.hpp"
 #include "gc/shared/referenceProcessor.hpp"
 #include "memory/allocation.hpp"
 #include "memory/memRegion.hpp"
 #include "memory/universe.hpp"
 #include "memory/virtualspace.hpp"
 #include "runtime/mutex.hpp"
-#include "runtime/perfData.hpp"
 
 // A Generation models a heap area for similarly-aged objects.
 // It will contain one ore more spaces holding the actual objects.
@@ -76,9 +74,6 @@ class Generation: public CHeapObj<mtGC> {
   // ("Weak") Reference processing support
   SpanSubjectToDiscoveryClosure _span_based_discoverer;
   ReferenceProcessor* _ref_processor;
-
-  // Performance Counters
-  CollectorCounters* _gc_counters;
 
   // Statistics for garbage collection
   GCStats* _gc_stats;
@@ -480,12 +475,6 @@ private:
   StatRecord _stat_record;
 public:
   StatRecord* stat_record() { return &_stat_record; }
-
-  virtual void print_summary_info_on(outputStream* st);
-
-  // Performance Counter support
-  virtual void update_counters() = 0;
-  virtual CollectorCounters* counters() { return _gc_counters; }
 
   GCMemoryManager* gc_manager() const {
     return _gc_manager;

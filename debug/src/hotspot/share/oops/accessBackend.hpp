@@ -986,15 +986,13 @@ namespace AccessInternal {
 
   template <DecoratorSet decorators>
   inline void store_reduce_types(narrowOop* addr, oop value) {
-    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP |
-                                             INTERNAL_RT_USE_COMPRESSED_OOPS;
+    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP | INTERNAL_RT_USE_COMPRESSED_OOPS;
     PreRuntimeDispatch::store<expanded_decorators>(addr, value);
   }
 
   template <DecoratorSet decorators>
   inline void store_reduce_types(narrowOop* addr, narrowOop value) {
-    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP |
-                                             INTERNAL_RT_USE_COMPRESSED_OOPS;
+    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP | INTERNAL_RT_USE_COMPRESSED_OOPS;
     PreRuntimeDispatch::store<expanded_decorators>(addr, value);
   }
 
@@ -1011,22 +1009,18 @@ namespace AccessInternal {
 
   template <DecoratorSet decorators>
   inline oop atomic_cmpxchg_reduce_types(oop new_value, narrowOop* addr, oop compare_value) {
-    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP |
-                                             INTERNAL_RT_USE_COMPRESSED_OOPS;
+    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP | INTERNAL_RT_USE_COMPRESSED_OOPS;
     return PreRuntimeDispatch::atomic_cmpxchg<expanded_decorators>(new_value, addr, compare_value);
   }
 
   template <DecoratorSet decorators>
   inline narrowOop atomic_cmpxchg_reduce_types(narrowOop new_value, narrowOop* addr, narrowOop compare_value) {
-    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP |
-                                             INTERNAL_RT_USE_COMPRESSED_OOPS;
+    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP | INTERNAL_RT_USE_COMPRESSED_OOPS;
     return PreRuntimeDispatch::atomic_cmpxchg<expanded_decorators>(new_value, addr, compare_value);
   }
 
   template <DecoratorSet decorators>
-  inline oop atomic_cmpxchg_reduce_types(oop new_value,
-                                         HeapWord* addr,
-                                         oop compare_value) {
+  inline oop atomic_cmpxchg_reduce_types(oop new_value, HeapWord* addr, oop compare_value) {
     const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP;
     return PreRuntimeDispatch::atomic_cmpxchg<expanded_decorators>(new_value, addr, compare_value);
   }
@@ -1039,15 +1033,13 @@ namespace AccessInternal {
 
   template <DecoratorSet decorators>
   inline oop atomic_xchg_reduce_types(oop new_value, narrowOop* addr) {
-    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP |
-                                             INTERNAL_RT_USE_COMPRESSED_OOPS;
+    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP | INTERNAL_RT_USE_COMPRESSED_OOPS;
     return PreRuntimeDispatch::atomic_xchg<expanded_decorators>(new_value, addr);
   }
 
   template <DecoratorSet decorators>
   inline narrowOop atomic_xchg_reduce_types(narrowOop new_value, narrowOop* addr) {
-    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP |
-                                             INTERNAL_RT_USE_COMPRESSED_OOPS;
+    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP | INTERNAL_RT_USE_COMPRESSED_OOPS;
     return PreRuntimeDispatch::atomic_xchg<expanded_decorators>(new_value, addr);
   }
 
@@ -1064,8 +1056,7 @@ namespace AccessInternal {
 
   template <DecoratorSet decorators, typename T>
   inline typename OopOrNarrowOop<T>::type load_reduce_types(narrowOop* addr) {
-    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP |
-                                             INTERNAL_RT_USE_COMPRESSED_OOPS;
+    const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP | INTERNAL_RT_USE_COMPRESSED_OOPS;
     return PreRuntimeDispatch::load<expanded_decorators, typename OopOrNarrowOop<T>::type>(addr);
   }
 
@@ -1076,24 +1067,18 @@ namespace AccessInternal {
   }
 
   template <DecoratorSet decorators, typename T>
-  inline bool arraycopy_reduce_types(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw,
-                                     arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw,
-                                     size_t length) {
+  inline bool arraycopy_reduce_types(arrayOop src_obj, size_t src_offset_in_bytes, T* src_raw, arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw, size_t length) {
     return PreRuntimeDispatch::arraycopy<decorators>(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
   }
 
   template <DecoratorSet decorators>
-  inline bool arraycopy_reduce_types(arrayOop src_obj, size_t src_offset_in_bytes, HeapWord* src_raw,
-                                     arrayOop dst_obj, size_t dst_offset_in_bytes, HeapWord* dst_raw,
-                                     size_t length) {
+  inline bool arraycopy_reduce_types(arrayOop src_obj, size_t src_offset_in_bytes, HeapWord* src_raw, arrayOop dst_obj, size_t dst_offset_in_bytes, HeapWord* dst_raw, size_t length) {
     const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP;
     return PreRuntimeDispatch::arraycopy<expanded_decorators>(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
   }
 
   template <DecoratorSet decorators>
-  inline bool arraycopy_reduce_types(arrayOop src_obj, size_t src_offset_in_bytes, narrowOop* src_raw,
-                                     arrayOop dst_obj, size_t dst_offset_in_bytes, narrowOop* dst_raw,
-                                     size_t length) {
+  inline bool arraycopy_reduce_types(arrayOop src_obj, size_t src_offset_in_bytes, narrowOop* src_raw, arrayOop dst_obj, size_t dst_offset_in_bytes, narrowOop* dst_raw, size_t length) {
     const DecoratorSet expanded_decorators = decorators | INTERNAL_CONVERT_COMPRESSED_OOP | INTERNAL_RT_USE_COMPRESSED_OOPS;
     return PreRuntimeDispatch::arraycopy<expanded_decorators>(src_obj, src_offset_in_bytes, src_raw, dst_obj, dst_offset_in_bytes, dst_raw, length);
   }
@@ -1118,9 +1103,7 @@ namespace AccessInternal {
     DecayedT decayed_value = value;
     // If a volatile address is passed in but no memory ordering decorator,
     // set the memory ordering to MO_VOLATILE by default.
-    const DecoratorSet expanded_decorators = DecoratorFixup<
-      (IsVolatile<P>::value && !HasDecorator<decorators, MO_DECORATOR_MASK>::value) ?
-      (MO_VOLATILE | decorators) : decorators>::value;
+    const DecoratorSet expanded_decorators = DecoratorFixup<(IsVolatile<P>::value && !HasDecorator<decorators, MO_DECORATOR_MASK>::value) ? (MO_VOLATILE | decorators) : decorators>::value;
     store_reduce_types<expanded_decorators>(const_cast<DecayedP*>(addr), decayed_value);
   }
 
@@ -1129,9 +1112,7 @@ namespace AccessInternal {
     verify_types<decorators, T>();
     typedef typename Decay<T>::type DecayedT;
     DecayedT decayed_value = value;
-    const DecoratorSet expanded_decorators = DecoratorFixup<decorators |
-                                             (HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value ?
-                                              INTERNAL_CONVERT_COMPRESSED_OOP : INTERNAL_EMPTY)>::value;
+    const DecoratorSet expanded_decorators = DecoratorFixup<decorators | (HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value ? INTERNAL_CONVERT_COMPRESSED_OOP : INTERNAL_EMPTY)>::value;
     PreRuntimeDispatch::store_at<expanded_decorators>(base, offset, decayed_value);
   }
 
@@ -1139,28 +1120,20 @@ namespace AccessInternal {
   inline T load(P* addr) {
     verify_types<decorators, T>();
     typedef typename Decay<P>::type DecayedP;
-    typedef typename Conditional<HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value,
-                                 typename OopOrNarrowOop<T>::type,
-                                 typename Decay<T>::type>::type DecayedT;
+    typedef typename Conditional<HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value, typename OopOrNarrowOop<T>::type, typename Decay<T>::type>::type DecayedT;
     // If a volatile address is passed in but no memory ordering decorator,
     // set the memory ordering to MO_VOLATILE by default.
-    const DecoratorSet expanded_decorators = DecoratorFixup<
-      (IsVolatile<P>::value && !HasDecorator<decorators, MO_DECORATOR_MASK>::value) ?
-      (MO_VOLATILE | decorators) : decorators>::value;
+    const DecoratorSet expanded_decorators = DecoratorFixup<(IsVolatile<P>::value && !HasDecorator<decorators, MO_DECORATOR_MASK>::value) ? (MO_VOLATILE | decorators) : decorators>::value;
     return load_reduce_types<expanded_decorators, DecayedT>(const_cast<DecayedP*>(addr));
   }
 
   template <DecoratorSet decorators, typename T>
   inline T load_at(oop base, ptrdiff_t offset) {
     verify_types<decorators, T>();
-    typedef typename Conditional<HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value,
-                                 typename OopOrNarrowOop<T>::type,
-                                 typename Decay<T>::type>::type DecayedT;
+    typedef typename Conditional<HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value, typename OopOrNarrowOop<T>::type, typename Decay<T>::type>::type DecayedT;
     // Expand the decorators (figure out sensible defaults)
     // Potentially remember if we need compressed oop awareness
-    const DecoratorSet expanded_decorators = DecoratorFixup<decorators |
-                                             (HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value ?
-                                              INTERNAL_CONVERT_COMPRESSED_OOP : INTERNAL_EMPTY)>::value;
+    const DecoratorSet expanded_decorators = DecoratorFixup<decorators | (HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value ? INTERNAL_CONVERT_COMPRESSED_OOP : INTERNAL_EMPTY)>::value;
     return PreRuntimeDispatch::load_at<expanded_decorators, DecayedT>(base, offset);
   }
 
@@ -1171,9 +1144,7 @@ namespace AccessInternal {
     typedef typename Decay<T>::type DecayedT;
     DecayedT new_decayed_value = new_value;
     DecayedT compare_decayed_value = compare_value;
-    const DecoratorSet expanded_decorators = DecoratorFixup<
-      (!HasDecorator<decorators, MO_DECORATOR_MASK>::value) ?
-      (MO_SEQ_CST | decorators) : decorators>::value;
+    const DecoratorSet expanded_decorators = DecoratorFixup<(!HasDecorator<decorators, MO_DECORATOR_MASK>::value) ? (MO_SEQ_CST | decorators) : decorators>::value;
     return atomic_cmpxchg_reduce_types<expanded_decorators>(new_decayed_value, const_cast<DecayedP*>(addr), compare_decayed_value);
   }
 
@@ -1184,13 +1155,9 @@ namespace AccessInternal {
     DecayedT new_decayed_value = new_value;
     DecayedT compare_decayed_value = compare_value;
     // Determine default memory ordering
-    const DecoratorSet expanded_decorators = DecoratorFixup<
-      (!HasDecorator<decorators, MO_DECORATOR_MASK>::value) ?
-      (MO_SEQ_CST | decorators) : decorators>::value;
+    const DecoratorSet expanded_decorators = DecoratorFixup<(!HasDecorator<decorators, MO_DECORATOR_MASK>::value) ? (MO_SEQ_CST | decorators) : decorators>::value;
     // Potentially remember that we need compressed oop awareness
-    const DecoratorSet final_decorators = expanded_decorators |
-                                          (HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value ?
-                                           INTERNAL_CONVERT_COMPRESSED_OOP : INTERNAL_EMPTY);
+    const DecoratorSet final_decorators = expanded_decorators | (HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value ? INTERNAL_CONVERT_COMPRESSED_OOP : INTERNAL_EMPTY);
     return PreRuntimeDispatch::atomic_cmpxchg_at<final_decorators>(new_decayed_value, base, offset, compare_decayed_value);
   }
 
@@ -1211,21 +1178,15 @@ namespace AccessInternal {
     typedef typename Decay<T>::type DecayedT;
     DecayedT new_decayed_value = new_value;
     // atomic_xchg is only available in SEQ_CST flavour.
-    const DecoratorSet expanded_decorators = DecoratorFixup<decorators | MO_SEQ_CST |
-                                             (HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value ?
-                                              INTERNAL_CONVERT_COMPRESSED_OOP : INTERNAL_EMPTY)>::value;
+    const DecoratorSet expanded_decorators = DecoratorFixup<decorators | MO_SEQ_CST | (HasDecorator<decorators, INTERNAL_VALUE_IS_OOP>::value ? INTERNAL_CONVERT_COMPRESSED_OOP : INTERNAL_EMPTY)>::value;
     return PreRuntimeDispatch::atomic_xchg_at<expanded_decorators>(new_decayed_value, base, offset);
   }
 
   template <DecoratorSet decorators, typename T>
-  inline bool arraycopy(arrayOop src_obj, size_t src_offset_in_bytes, const T* src_raw,
-                        arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw,
-                        size_t length) {
+  inline bool arraycopy(arrayOop src_obj, size_t src_offset_in_bytes, const T* src_raw, arrayOop dst_obj, size_t dst_offset_in_bytes, T* dst_raw, size_t length) {
     typedef typename Decay<T>::type DecayedT;
     const DecoratorSet expanded_decorators = DecoratorFixup<decorators | IS_ARRAY | IN_HEAP>::value;
-    return arraycopy_reduce_types<expanded_decorators>(src_obj, src_offset_in_bytes, const_cast<DecayedT*>(src_raw),
-                                                       dst_obj, dst_offset_in_bytes, const_cast<DecayedT*>(dst_raw),
-                                                       length);
+    return arraycopy_reduce_types<expanded_decorators>(src_obj, src_offset_in_bytes, const_cast<DecayedT*>(src_raw), dst_obj, dst_offset_in_bytes, const_cast<DecayedT*>(dst_raw), length);
   }
 
   template <DecoratorSet decorators>

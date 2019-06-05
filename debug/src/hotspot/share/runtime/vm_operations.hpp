@@ -316,7 +316,7 @@ class VM_PrintThreads: public VM_Operation {
   bool _print_extended_info;
  public:
   VM_PrintThreads()
-    : _out(tty), _print_concurrent_locks(false), _print_extended_info(false)
+    : _out(tty), _print_concurrent_locks(false), _print_extended_info(false)
   { }
   VM_PrintThreads(outputStream* out, bool print_concurrent_locks, bool print_extended_info)
     : _out(out), _print_concurrent_locks(print_concurrent_locks), _print_extended_info(print_extended_info)

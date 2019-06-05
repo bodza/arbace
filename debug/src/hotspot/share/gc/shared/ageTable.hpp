@@ -3,7 +3,6 @@
 
 #include "oops/markOop.hpp"
 #include "oops/oop.hpp"
-#include "runtime/perfData.hpp"
 
 // Age table for adaptive feedback-mediated tenuring (scavenging)
 //
@@ -39,9 +38,6 @@ class AgeTable {
 
   // Calculate new tenuring threshold based on age information.
   uint compute_tenuring_threshold(size_t desired_survivor_size);
-
- private:
-  PerfVariable* _perf_sizes[table_size];
 };
 
 #endif

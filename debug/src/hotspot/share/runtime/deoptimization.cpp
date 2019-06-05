@@ -33,7 +33,6 @@
 #include "runtime/vframe.hpp"
 #include "runtime/vframeArray.hpp"
 #include "runtime/vframe_hp.hpp"
-#include "utilities/events.hpp"
 #include "utilities/preserveException.hpp"
 #include "utilities/xmlstream.hpp"
 
@@ -444,9 +443,6 @@ JRT_LEAF(BasicType, Deoptimization::unpack_frames(JavaThread* thread, int exec_m
   // must point to the vframeArray for the unpack frame.
   vframeArray* array = thread->vframe_array_head();
 
-  Events::log(thread, "DEOPT UNPACKING pc=" INTPTR_FORMAT " sp=" INTPTR_FORMAT " mode %d",
-              p2i(stub_frame.pc()), p2i(stub_frame.sp()), exec_mode);
-
   UnrollBlock* info = array->unroll_block();
 
   // Unpack the interpreter frames and any adapter frame (c2 only) we might create.
@@ -747,8 +743,6 @@ void Deoptimization::relock_objects(GrowableArray<MonitorInfo*>* monitors, JavaT
 }
 
 vframeArray* Deoptimization::create_vframeArray(JavaThread* thread, frame fr, RegisterMap *reg_map, GrowableArray<compiledVFrame*>* chunk, bool realloc_failures) {
-  Events::log(thread, "DEOPT PACKING pc=" INTPTR_FORMAT " sp=" INTPTR_FORMAT, p2i(fr.pc()), p2i(fr.sp()));
-
   // Register map for next frame (used for stack crawl).  We capture
   // the state of the deopt'ing frame's caller.  Thus if we need to
   // stuff a C2I adapter we can properly fill in the callee-save
@@ -1026,10 +1020,6 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
   // before we are done with it.
   nmethodLocker nl(fr.pc());
 
-  // Log a message
-  Events::log(thread, "Uncommon trap: trap_request=" PTR32_FORMAT " fr.pc=" INTPTR_FORMAT " relative=" INTPTR_FORMAT,
-              trap_request, p2i(fr.pc()), fr.pc() - fr.cb()->code_begin());
-
   {
     ResourceMark rm;
 
@@ -1091,11 +1081,6 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
     }
 
     MethodData* trap_mdo = get_method_data(thread, profiled_method, create_if_missing);
-
-    // Log a message
-    Events::log_deopt_message(thread, "Uncommon trap: reason=%s action=%s pc=" INTPTR_FORMAT " method=%s @ %d %s",
-                              trap_reason_name(reason), trap_action_name(action), p2i(fr.pc()),
-                              trap_method->name_and_sig_as_C_string(), trap_bci, nm->compiler_name());
 
     // Load class if necessary
     if (unloaded_class_index >= 0) {

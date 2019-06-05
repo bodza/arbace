@@ -7,7 +7,6 @@
 #include "memory/universe.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/java.hpp"
-#include "services/memTracker.hpp"
 
 //////////////////////////////////////////////////////////////////////
 // BlockOffsetSharedArray
@@ -21,8 +20,6 @@ BlockOffsetSharedArray::BlockOffsetSharedArray(MemRegion reserved, size_t init_w
   if (!rs.is_reserved()) {
     vm_exit_during_initialization("Could not reserve enough space for heap offset array");
   }
-
-  MemTracker::record_virtual_memory_type((address)rs.base(), mtGC);
 
   if (!_vs.initialize(rs, 0)) {
     vm_exit_during_initialization("Could not reserve enough space for heap offset array");

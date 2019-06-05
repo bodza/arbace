@@ -367,7 +367,7 @@ void VM_Exit::doit() {
   set_vm_exited();
 
   // cleanup globals resources before exiting. exit_globals() currently
-  // cleans up outputStream resources and PerfMemory resources.
+  // cleans up outputStream resources.
   exit_globals();
 
   // Check for exit hook

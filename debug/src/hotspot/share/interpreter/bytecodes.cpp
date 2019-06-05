@@ -41,7 +41,7 @@ Bytecodes::Code Bytecodes::code_at(Method* method, int bci) {
 }
 
 Bytecodes::Code Bytecodes::non_breakpoint_code_at(const Method* method, address bcp) {
-  return 0;
+  return _nop; // oops!
 }
 
 int Bytecodes::special_length_at(Bytecodes::Code code, address bcp, address end) {
@@ -56,9 +56,9 @@ int Bytecodes::special_length_at(Bytecodes::Code code, address bcp, address end)
       if (end != NULL && aligned_bcp + 3*jintSize >= end) {
         return -1; // don't read past end of code buffer
       }
-      jlong lo = (jint)Bytes::get_Java_u4(aligned_bcp + 1*jintSize);
-      jlong hi = (jint)Bytes::get_Java_u4(aligned_bcp + 2*jintSize);
-      jlong len = (aligned_bcp - bcp) + (3 + hi - lo + 1)*jintSize;
+      jlong lo = (jint)Bytes::get_Java_u4(aligned_bcp + 1 * jintSize);
+      jlong hi = (jint)Bytes::get_Java_u4(aligned_bcp + 2 * jintSize);
+      jlong len = (aligned_bcp - bcp) + (3 + hi - lo + 1) * jintSize;
       // only return len if it can be represented as a positive int;
       // return -1 otherwise
       return (len > 0 && len == (int)len) ? len : -1;

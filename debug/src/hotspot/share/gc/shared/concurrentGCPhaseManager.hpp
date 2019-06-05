@@ -3,7 +3,7 @@
 
 #include "memory/allocation.hpp"
 
-// Manage concurrent phase information, to support NULL testing.
+// Manage concurrent phase information.
 // Managers are stack allocated.  Managers may be nested, to support
 // nested subphases.
 class ConcurrentGCPhaseManager : public StackObj {
@@ -84,7 +84,6 @@ public:
   // - this must be the current top of manager stack
   void deactivate();
 
-  // Used to implement CollectorPolicy::request_concurrent_phase().
   // Updates request to the new phase, and notifies threads blocked on
   // the old request of the change.  Returns true if the phase is
   // UNCONSTRAINED_PHASE.  Otherwise, waits until an active phase is

@@ -8,7 +8,6 @@
 #include "gc/shared/softRefGenPolicy.hpp"
 
 class AdaptiveSizePolicy;
-class GCPolicyCounters;
 class GenerationSpec;
 class StrongRootsScope;
 class SubTasksDone;
@@ -56,8 +55,6 @@ private:
 
   // The sizing of the heap is controlled by a sizing policy.
   AdaptiveSizePolicy* _size_policy;
-
-  GCPolicyCounters* _gc_policy_counters;
 
   // Indicates that the most recent previous incremental collection failed.
   // The flag is cleared when an action is taken that might clear the
@@ -154,9 +151,6 @@ public:
   virtual AdaptiveSizePolicy* size_policy() {
     return _size_policy;
   }
-
-  // Performance Counter support
-  GCPolicyCounters* counters()     { return _gc_policy_counters; }
 
   // Return the (conservative) maximum heap alignment
   static size_t conservative_max_heap_alignment() {

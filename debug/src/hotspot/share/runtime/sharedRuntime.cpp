@@ -41,7 +41,6 @@
 #include "runtime/vframe.inline.hpp"
 #include "runtime/vframeArray.hpp"
 #include "utilities/copy.hpp"
-#include "utilities/events.hpp"
 #include "utilities/hashtable.inline.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/xmlstream.hpp"
@@ -883,8 +882,7 @@ methodHandle SharedRuntime::resolve_sub_helper(JavaThread *thread,
   //       b) an exception is thrown if receiver is NULL for non-static calls
   CallInfo call_info;
   Bytecodes::Code invoke_code = Bytecodes::_illegal;
-  Handle receiver = find_callee_info(thread, invoke_code,
-                                     call_info, CHECK_(methodHandle()));
+  Handle receiver = find_callee_info(thread, invoke_code, call_info, CHECK_(methodHandle()));
   methodHandle callee_method = call_info.selected_method();
 
   // Do not patch call site for static call when the class is not
@@ -919,9 +917,7 @@ methodHandle SharedRuntime::resolve_sub_helper(JavaThread *thread,
   if (is_virtual) {
     bool static_bound = call_info.resolved_method()->can_be_statically_bound();
     Klass* klass = invoke_code == Bytecodes::_invokehandle ? NULL : receiver->klass();
-    CompiledIC::compute_monomorphic_entry(callee_method, klass,
-                     is_optimized, static_bound, is_nmethod, virtual_call_info,
-                     CHECK_(methodHandle()));
+    CompiledIC::compute_monomorphic_entry(callee_method, klass, is_optimized, static_bound, is_nmethod, virtual_call_info, CHECK_(methodHandle()));
   } else {
     // static call
     CompiledStaticCall::compute_entry(callee_method, is_nmethod, static_call_info);
@@ -1070,8 +1066,7 @@ methodHandle SharedRuntime::handle_ic_miss_helper(JavaThread *thread, TRAPS) {
 
   // receiver is NULL for static calls. An exception is thrown for NULL
   // receivers for non-static calls
-  Handle receiver = find_callee_info(thread, bc, call_info,
-                                     CHECK_(methodHandle()));
+  Handle receiver = find_callee_info(thread, bc, call_info, CHECK_(methodHandle()));
   // Compiler1 can produce virtual call sites that can actually be statically bound
   // If we fell thru to below we would think that the site was going megamorphic
   // when in fact the site can never miss. Worse because we'd think it was megamorphic
@@ -1122,11 +1117,7 @@ methodHandle SharedRuntime::handle_ic_miss_helper(JavaThread *thread, TRAPS) {
         // by using a new icBuffer.
         CompiledICInfo info;
         Klass* receiver_klass = receiver()->klass();
-        inline_cache->compute_monomorphic_entry(callee_method,
-                                                receiver_klass,
-                                                inline_cache->is_optimized(),
-                                                false, caller_nm->is_nmethod(),
-                                                info, CHECK_(methodHandle()));
+        inline_cache->compute_monomorphic_entry(callee_method, receiver_klass, inline_cache->is_optimized(), false, caller_nm->is_nmethod(), info, CHECK_(methodHandle()));
         inline_cache->set_to_monomorphic(info);
       } else if (!inline_cache->is_megamorphic() && !inline_cache->is_clean()) {
         // Potential change to megamorphic
@@ -2164,18 +2155,13 @@ frame SharedRuntime::look_for_reserved_stack_annotated_method(JavaThread* thread
           method = sd->method();
           if (method != NULL && method->has_reserved_stack_access()) {
             found = true;
-      }
-    }
+          }
+        }
       }
     }
     if (found) {
       activation = fr;
       warning("Potentially dangerous stack overflow in ReservedStackAccess annotated method %s [%d]", method->name_and_sig_as_C_string(), count++);
-      EventReservedStackActivation event;
-      if (event.should_commit()) {
-        event.set_method(method);
-        event.commit();
-      }
     }
     if (fr.is_first_java_frame()) {
       break;

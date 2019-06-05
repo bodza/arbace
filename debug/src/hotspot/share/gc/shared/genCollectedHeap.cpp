@@ -11,11 +11,8 @@
 #include "gc/shared/cardTableBarrierSet.hpp"
 #include "gc/shared/cardTableRS.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
-#include "gc/shared/collectorCounters.hpp"
 #include "gc/shared/gcId.hpp"
 #include "gc/shared/gcLocker.hpp"
-#include "gc/shared/gcPolicyCounters.hpp"
-#include "gc/shared/gcTrace.hpp"
 #include "gc/shared/genCollectedHeap.hpp"
 #include "gc/shared/genOopClosures.inline.hpp"
 #include "gc/shared/generationSpec.hpp"
@@ -45,17 +42,10 @@
 GenCollectedHeap::GenCollectedHeap(GenCollectorPolicy *policy, Generation::Name young, Generation::Name old, const char* policy_counters_name) :
   CollectedHeap(),
   _rem_set(NULL),
-  _young_gen_spec(new GenerationSpec(young,
-                                     policy->initial_young_size(),
-                                     policy->max_young_size(),
-                                     policy->gen_alignment())),
-  _old_gen_spec(new GenerationSpec(old,
-                                   policy->initial_old_size(),
-                                   policy->max_old_size(),
-                                   policy->gen_alignment())),
+  _young_gen_spec(new GenerationSpec(young, policy->initial_young_size(), policy->max_young_size(), policy->gen_alignment())),
+  _old_gen_spec(new GenerationSpec(old, policy->initial_old_size(), policy->max_old_size(), policy->gen_alignment())),
   _gen_policy(policy),
   _soft_ref_gen_policy(),
-  _gc_policy_counters(new GCPolicyCounters(policy_counters_name, 2, 2)),
   _process_strong_tasks(new SubTasksDone(GCH_PS_NumElements)),
   _full_collections_completed(0) {
 }
@@ -340,7 +330,6 @@ bool GenCollectedHeap::must_clear_all_soft_refs() {
 
 void GenCollectedHeap::collect_generation(Generation* gen, bool full, size_t size, bool is_tlab, bool run_verification, bool clear_soft_refs, bool restore_marks_for_biased_locking) {
   FormatBuffer<> title("Collect gen: %s", gen->short_name());
-  TraceCollectorStats tcs(gen->counters());
   TraceMemoryManagerStats tmms(gen->gc_manager(), gc_cause());
 
   gen->stat_record()->invocations++;

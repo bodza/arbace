@@ -196,9 +196,7 @@ void BarrierSetC1::generate_referent_check(LIRAccess& access, LabelObj* cont) {
 
   if (offset->is_constant()) {
     LIR_Const* constant = offset->as_constant_ptr();
-    jlong off_con = (constant->type() == T_INT ?
-                     (jlong)constant->as_jint() :
-                     constant->as_jlong());
+    jlong off_con = (constant->type() == T_INT ? (jlong)constant->as_jint() : constant->as_jlong());
 
     if (off_con != (jlong) java_lang_ref_Reference::referent_offset) {
       // The constant offset is something other than referent_offset.

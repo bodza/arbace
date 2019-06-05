@@ -84,13 +84,7 @@ extern Mutex*   ProfilePrint_lock;               // a lock used to serialize the
 extern Mutex*   ExceptionCache_lock;             // a lock used to synchronize exception cache updates
 extern Mutex*   OsrList_lock;                    // a lock used to serialize access to OSR queues
 
-extern Mutex*   Debug1_lock;                     // A bunch of pre-allocated locks that can be used for tracing
-extern Mutex*   Debug2_lock;                     // down synchronization related bugs!
-extern Mutex*   Debug3_lock;
-
 extern Mutex*   RawMonitor_lock;
-extern Mutex*   PerfDataMemAlloc_lock;           // a lock on the allocator for PerfData memory for performance data
-extern Mutex*   PerfDataManager_lock;            // a long on access to PerfDataManager resources
 extern Mutex*   ParkerFreeList_lock;
 extern Mutex*   OopMapCacheAlloc_lock;           // protects allocation of oop_map caches
 

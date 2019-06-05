@@ -3,7 +3,6 @@
 #include "gc/g1/g1CardCounts.hpp"
 #include "gc/g1/g1CollectedHeap.inline.hpp"
 #include "gc/shared/cardTableBarrierSet.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/copy.hpp"
 
 void G1CardCountsMappingChangedListener::on_commit(uint start_idx, size_t num_regions, bool zero_filled) {

@@ -31,7 +31,6 @@
 #include "runtime/timerTrace.hpp"
 #include "runtime/vframe.inline.hpp"
 #include "utilities/debug.hpp"
-#include "utilities/events.hpp"
 #include "utilities/formatBuffer.hpp"
 #include "utilities/macros.hpp"
 #include "c1/c1_Compiler.hpp"
@@ -65,30 +64,6 @@ int  CompileBroker::_last_compile_type     = no_compile;
 int  CompileBroker::_last_compile_level    = CompLevel_none;
 char CompileBroker::_last_method_compiled[CompileBroker::name_buffer_length];
 
-// Performance counters
-PerfCounter* CompileBroker::_perf_total_compilation = NULL;
-PerfCounter* CompileBroker::_perf_osr_compilation = NULL;
-PerfCounter* CompileBroker::_perf_standard_compilation = NULL;
-
-PerfCounter* CompileBroker::_perf_total_bailout_count = NULL;
-PerfCounter* CompileBroker::_perf_total_invalidated_count = NULL;
-PerfCounter* CompileBroker::_perf_total_compile_count = NULL;
-PerfCounter* CompileBroker::_perf_total_osr_compile_count = NULL;
-PerfCounter* CompileBroker::_perf_total_standard_compile_count = NULL;
-
-PerfCounter* CompileBroker::_perf_sum_osr_bytes_compiled = NULL;
-PerfCounter* CompileBroker::_perf_sum_standard_bytes_compiled = NULL;
-PerfCounter* CompileBroker::_perf_sum_nmethod_size = NULL;
-PerfCounter* CompileBroker::_perf_sum_nmethod_code_size = NULL;
-
-PerfStringVariable* CompileBroker::_perf_last_method = NULL;
-PerfStringVariable* CompileBroker::_perf_last_failed_method = NULL;
-PerfStringVariable* CompileBroker::_perf_last_invalidated_method = NULL;
-PerfVariable*       CompileBroker::_perf_last_compile_type = NULL;
-PerfVariable*       CompileBroker::_perf_last_compile_size = NULL;
-PerfVariable*       CompileBroker::_perf_last_failed_type = NULL;
-PerfVariable*       CompileBroker::_perf_last_invalidated_type = NULL;
-
 // Timers and counters for generating statistics
 elapsedTimer CompileBroker::_t_total_compilation;
 elapsedTimer CompileBroker::_t_osr_compilation;
@@ -113,45 +88,6 @@ long CompileBroker::_peak_compilation_time         = 0;
 
 CompileQueue* CompileBroker::_c2_compile_queue     = NULL;
 CompileQueue* CompileBroker::_c1_compile_queue     = NULL;
-
-class CompilationLog : public StringEventLog {
- public:
-  CompilationLog() : StringEventLog("Compilation events") { }
-
-  void log_compile(JavaThread* thread, CompileTask* task) {
-    StringLogMessage lm;
-    stringStream sstr = lm.stream();
-    // msg.time_stamp().update_to(tty->time_stamp().ticks());
-    task->print(&sstr, NULL, true, false);
-    log(thread, "%s", (const char*)lm);
-  }
-
-  void log_nmethod(JavaThread* thread, nmethod* nm) {
-    log(thread, "nmethod %d%s " INTPTR_FORMAT " code [" INTPTR_FORMAT ", " INTPTR_FORMAT "]",
-        nm->compile_id(), nm->is_osr_method() ? "%" : "",
-        p2i(nm), p2i(nm->code_begin()), p2i(nm->code_end()));
-  }
-
-  void log_failure(JavaThread* thread, CompileTask* task, const char* reason, const char* retry_message) {
-    StringLogMessage lm;
-    lm.print("%4d   COMPILE SKIPPED: %s", task->compile_id(), reason);
-    if (retry_message != NULL) {
-      lm.append(" (%s)", retry_message);
-    }
-    lm.print("\n");
-    log(thread, "%s", (const char*)lm);
-  }
-
-  void log_metaspace_failure(const char* reason) {
-    ResourceMark rm;
-    StringLogMessage lm;
-    lm.print("%4d   COMPILE PROFILING SKIPPED: %s", -1, reason);
-    lm.print("\n");
-    log(JavaThread::current(), "%s", (const char*)lm);
-  }
-};
-
-static CompilationLog* _compilation_log = NULL;
 
 bool compileBroker_init() {
   // init directives stack, adding default directive
@@ -505,31 +441,6 @@ void CompileBroker::compilation_init_phase1(TRAPS) {
   // by the implementation of java.lang.management.CompilationMBean.
   {
     EXCEPTION_MARK;
-    _perf_total_compilation = PerfDataManager::create_counter(JAVA_CI, "totalTime", PerfData::U_Ticks, CHECK);
-  }
-
-  if (UsePerfData) {
-    EXCEPTION_MARK;
-
-    // create the jvmstat performance counters
-    _perf_osr_compilation = PerfDataManager::create_counter(SUN_CI, "osrTime", PerfData::U_Ticks, CHECK);
-    _perf_standard_compilation = PerfDataManager::create_counter(SUN_CI, "standardTime", PerfData::U_Ticks, CHECK);
-    _perf_total_bailout_count = PerfDataManager::create_counter(SUN_CI, "totalBailouts", PerfData::U_Events, CHECK);
-    _perf_total_invalidated_count = PerfDataManager::create_counter(SUN_CI, "totalInvalidates", PerfData::U_Events, CHECK);
-    _perf_total_compile_count = PerfDataManager::create_counter(SUN_CI, "totalCompiles", PerfData::U_Events, CHECK);
-    _perf_total_osr_compile_count = PerfDataManager::create_counter(SUN_CI, "osrCompiles", PerfData::U_Events, CHECK);
-    _perf_total_standard_compile_count = PerfDataManager::create_counter(SUN_CI, "standardCompiles", PerfData::U_Events, CHECK);
-    _perf_sum_osr_bytes_compiled = PerfDataManager::create_counter(SUN_CI, "osrBytes", PerfData::U_Bytes, CHECK);
-    _perf_sum_standard_bytes_compiled = PerfDataManager::create_counter(SUN_CI, "standardBytes", PerfData::U_Bytes, CHECK);
-    _perf_sum_nmethod_size = PerfDataManager::create_counter(SUN_CI, "nmethodSize", PerfData::U_Bytes, CHECK);
-    _perf_sum_nmethod_code_size = PerfDataManager::create_counter(SUN_CI, "nmethodCodeSize", PerfData::U_Bytes, CHECK);
-    _perf_last_method = PerfDataManager::create_string_variable(SUN_CI, "lastMethod", CompilerCounters::cmname_buffer_length, "", CHECK);
-    _perf_last_failed_method = PerfDataManager::create_string_variable(SUN_CI, "lastFailedMethod", CompilerCounters::cmname_buffer_length, "", CHECK);
-    _perf_last_invalidated_method = PerfDataManager::create_string_variable(SUN_CI, "lastInvalidatedMethod", CompilerCounters::cmname_buffer_length, "", CHECK);
-    _perf_last_compile_type = PerfDataManager::create_variable(SUN_CI, "lastType", PerfData::U_None, (jlong)CompileBroker::no_compile, CHECK);
-    _perf_last_compile_size = PerfDataManager::create_variable(SUN_CI, "lastSize", PerfData::U_Bytes, (jlong)CompileBroker::no_compile, CHECK);
-    _perf_last_failed_type = PerfDataManager::create_variable(SUN_CI, "lastFailedType", PerfData::U_None, (jlong)CompileBroker::no_compile, CHECK);
-    _perf_last_invalidated_type = PerfDataManager::create_variable(SUN_CI, "lastInvalidatedType", PerfData::U_None, (jlong)CompileBroker::no_compile, CHECK);
   }
 }
 
@@ -656,10 +567,6 @@ void CompileBroker::init_compiler_sweeper_threads() {
       JavaThread *ct = make_thread(thread_handle, _c1_compile_queue, _compilers[0], /* compiler_thread */ true, CHECK);
       _compilers[0]->set_num_compiler_threads(i + 1);
     }
-  }
-
-  if (UsePerfData) {
-    PerfDataManager::create_constant(SUN_CI, "threads", PerfData::U_Bytes, _c1_count + _c2_count, CHECK);
   }
 
   if (MethodFlushing) {
@@ -1385,13 +1292,6 @@ void CompileBroker::compiler_thread_loop() {
   shutdown_compiler_runtime(thread->compiler(), thread);
 }
 
-void CompileBroker::log_metaspace_failure() {
-  const char* message = "some methods may not be compiled because metaspace is out of memory";
-  if (_compilation_log != NULL) {
-    _compilation_log->log_metaspace_failure(message);
-  }
-}
-
 // ------------------------------------------------------------------
 // CompileBroker::set_should_block
 //
@@ -1411,55 +1311,11 @@ void CompileBroker::maybe_block() {
   }
 }
 
-// wrapper for CodeCache::print_summary()
-static void codecache_print(bool detailed) {
-  ResourceMark rm;
-  stringStream s;
-  // Dump code cache  into a buffer before locking the tty,
-  {
-    MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-    CodeCache::print_summary(&s, detailed);
-  }
-  ttyLocker ttyl;
-  tty->print("%s", s.as_string());
-}
-
-// wrapper for CodeCache::print_summary() using outputStream
-static void codecache_print(outputStream* out, bool detailed) {
-  ResourceMark rm;
-  stringStream s;
-
-  // Dump code cache into a buffer
-  {
-    MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-    CodeCache::print_summary(&s, detailed);
-  }
-
-  char* remaining_log = s.as_string();
-  while (*remaining_log != '\0') {
-    char* eol = strchr(remaining_log, '\n');
-    if (eol == NULL) {
-      out->print_cr("%s", remaining_log);
-      remaining_log = remaining_log + strlen(remaining_log);
-    } else {
-      *eol = '\0';
-      out->print_cr("%s", remaining_log);
-      remaining_log = eol + 1;
-    }
-  }
-}
-
 void CompileBroker::post_compile(CompilerThread* thread, CompileTask* task, bool success, ciEnv* ci_env, int compilable, const char* failure_reason) {
   if (success) {
     task->mark_success();
     if (ci_env != NULL) {
       task->set_num_inlined_bytecodes(ci_env->num_inlined_bytecodes());
-    }
-    if (_compilation_log != NULL) {
-      nmethod* code = task->code();
-      if (code != NULL) {
-        _compilation_log->log_nmethod(thread, code);
-      }
     }
   } else if (AbortVMOnCompilationFailure) {
     if (compilable == ciEnv::MethodCompilable_not_at_tier) {
@@ -1469,17 +1325,6 @@ void CompileBroker::post_compile(CompilerThread* thread, CompileTask* task, bool
       fatal("Never compilable: %s", failure_reason);
     }
   }
-}
-
-static void post_compilation_event(EventCompilation* event, CompileTask* task) {
-  event->set_method(task->method());
-  event->set_compileId(task->compile_id());
-  event->set_compileLevel(task->comp_level());
-  event->set_succeded(task->is_success());
-  event->set_isOsr(task->osr_bci() != CompileBroker::standard_entry_bci);
-  event->set_codeSize((task->code() == NULL) ? 0 : task->code()->total_size());
-  event->set_inlinedBytes(task->num_inlined_bytecodes());
-  event->commit();
 }
 
 int DirectivesStack::_depth = 0;
@@ -1540,7 +1385,6 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     JVMCICompiler* jvmci = (JVMCICompiler*) comp;
 
     TraceTime t1("compilation", &time);
-    EventCompilation event;
 
     // Skip redefined methods
     if (target_handle->is_old()) {
@@ -1559,9 +1403,6 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
         }
     }
     post_compile(thread, task, task->code() != NULL, NULL, compilable, failure_reason);
-    if (event.should_commit()) {
-      post_compilation_event(&event, task);
-    }
   } else {
     NoHandleMark  nhm;
     ThreadToNativeFromVM ttn(thread);
@@ -1575,7 +1416,6 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     ciMethod* target = ci_env.get_method_from_handle(target_handle);
 
     TraceTime t1("compilation", &time);
-    EventCompilation event;
 
     if (comp == NULL) {
       ci_env.record_method_not_compilable("no compiler", !TieredCompilation);
@@ -1595,13 +1435,9 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     if (ci_env.failing()) {
       failure_reason = ci_env.failure_reason();
       retry_message = ci_env.retry_message();
-      ci_env.report_failure(failure_reason);
     }
 
     post_compile(thread, task, !ci_env.failing(), &ci_env, compilable, failure_reason);
-    if (event.should_commit()) {
-      post_compilation_event(&event, task);
-    }
   }
   // Remove the JNI handle block after the ciEnv destructor has run in
   // the previous block.
@@ -1609,9 +1445,6 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
 
   if (failure_reason != NULL) {
     task->set_failure_reason(failure_reason);
-    if (_compilation_log != NULL) {
-      _compilation_log->log_failure(thread, task, failure_reason, retry_message);
-    }
   }
 
   methodHandle method(thread, task->method());
@@ -1698,42 +1531,12 @@ void CompileBroker::set_last_compile(CompilerThread* thread, const methodHandle&
   char current_method[CompilerCounters::cmname_buffer_length];
   size_t maxLen = CompilerCounters::cmname_buffer_length;
 
-  if (UsePerfData) {
-    const char* class_name = method->method_holder()->name()->as_C_string();
-
-    size_t s1len = strlen(class_name);
-    size_t s2len = strlen(method_name);
-
-    // check if we need to truncate the string
-    if (s1len + s2len + 2 > maxLen) {
-      // the strategy is to lop off the leading characters of the
-      // class name and the trailing characters of the method name.
-
-      if (s2len + 2 > maxLen) {
-        // lop of the entire class name string, let snprintf handle
-        // truncation of the method name.
-        class_name += s1len; // null string
-      } else {
-        // lop off the extra characters from the front of the class name
-        class_name += ((s1len + s2len + 2) - maxLen);
-      }
-    }
-
-    jio_snprintf(current_method, maxLen, "%s %s", class_name, method_name);
-  }
-
   if (CICountOSR && is_osr) {
     _last_compile_type = osr_compile;
   } else {
     _last_compile_type = normal_compile;
   }
   _last_compile_level = comp_level;
-
-  if (UsePerfData) {
-    CompilerCounters* counters = thread->counters();
-    counters->set_current_method(current_method);
-    counters->set_compile_type((jlong)_last_compile_type);
-  }
 }
 
 // ------------------------------------------------------------------
@@ -1791,26 +1594,11 @@ void CompileBroker::collect_statistics(CompilerThread* thread, elapsedTimer time
 
   if (!success) {
     _total_bailout_count++;
-    if (UsePerfData) {
-      _perf_last_failed_method->set_value(counters->current_method());
-      _perf_last_failed_type->set_value(counters->compile_type());
-      _perf_total_bailout_count->inc();
-    }
     _t_bailedout_compilation.add(time);
   } else if (code == NULL) {
-    if (UsePerfData) {
-      _perf_last_invalidated_method->set_value(counters->current_method());
-      _perf_last_invalidated_type->set_value(counters->compile_type());
-      _perf_total_invalidated_count->inc();
-    }
     _total_invalidated_count++;
     _t_invalidated_compilation.add(time);
   } else {
-    // Compilation succeeded
-
-    // update compilation ticks - used by the implementation of
-    // java.lang.management.CompilationMBean
-    _perf_total_compilation->inc(time.ticks());
     _peak_compilation_time = time.milliseconds() > _peak_compilation_time ? time.milliseconds() : _peak_compilation_time;
 
     if (CITime) {
@@ -1834,25 +1622,11 @@ void CompileBroker::collect_statistics(CompilerThread* thread, elapsedTimer time
           }
           stats->_nmethods_size += code->total_size();
           stats->_nmethods_code_size += code->insts_size();
-        } else { // if (!stats)
+        } else {
           ShouldNotReachHere();
         }
-      } else { // if (!comp)
-        ShouldNotReachHere();
-      }
-    }
-
-    if (UsePerfData) {
-      // save the name of the last method compiled
-      _perf_last_method->set_value(counters->current_method());
-      _perf_last_compile_type->set_value(counters->compile_type());
-      _perf_last_compile_size->set_value(method->code_size() + task->num_inlined_bytecodes());
-      if (is_osr) {
-        _perf_osr_compilation->inc(time.ticks());
-        _perf_sum_osr_bytes_compiled->inc(method->code_size() + task->num_inlined_bytecodes());
       } else {
-        _perf_standard_compilation->inc(time.ticks());
-        _perf_sum_standard_bytes_compiled->inc(method->code_size() + task->num_inlined_bytecodes());
+        ShouldNotReachHere();
       }
     }
 
@@ -1866,22 +1640,12 @@ void CompileBroker::collect_statistics(CompilerThread* thread, elapsedTimer time
     _sum_nmethod_code_size += code->insts_size();
     _total_compile_count++;
 
-    if (UsePerfData) {
-      _perf_sum_nmethod_size->inc(     code->total_size());
-      _perf_sum_nmethod_code_size->inc(code->insts_size());
-      _perf_total_compile_count->inc();
-    }
-
     if (is_osr) {
-      if (UsePerfData) _perf_total_osr_compile_count->inc();
       _total_osr_compile_count++;
     } else {
-      if (UsePerfData) _perf_total_standard_compile_count->inc();
       _total_standard_compile_count++;
     }
   }
-  // set the current method for the thread to null
-  if (UsePerfData) counters->set_current_method("");
 }
 
 const char* CompileBroker::compiler_name(int comp_level) {

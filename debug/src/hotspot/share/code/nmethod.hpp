@@ -373,9 +373,6 @@ public:
   nmethod* osr_link() const                       { return _osr_link; }
   void     set_osr_link(nmethod *n)               { _osr_link = n; }
 
-  // Verify calls to dead methods have been cleaned.
-  void verify_clean_inline_caches();
-
   // unlink and deallocate this nmethod
   // Only NMethodSweeper class is expected to use this. NMethodSweeper is not
   // expected to use any other private methods/data in this class.
@@ -385,8 +382,7 @@ public:
 
  public:
   // When true is returned, it is unsafe to remove this nmethod even if
-  // it is a zombie, since the VM or the ServiceThread might still be
-  // using it.
+  // it is a zombie, since the VM might still be using it.
   bool is_locked_by_vm() const                    { return _lock_count >0; }
 
   // See comment at definition of _last_seen_on_stack

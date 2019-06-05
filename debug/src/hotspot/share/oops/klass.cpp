@@ -612,8 +612,7 @@ const char* Klass::class_in_module_of_loader(bool use_are, bool include_parent_l
   bool has_version = false;
   bool module_is_named = false;
   const char* module_name_phrase = "";
-  const Klass* bottom_klass = is_objArray_klass() ?
-                                ObjArrayKlass::cast(this)->bottom_klass() : this;
+  const Klass* bottom_klass = is_objArray_klass() ? ObjArrayKlass::cast(this)->bottom_klass() : this;
   if (bottom_klass->is_instance_klass()) {
     ModuleEntry* module = InstanceKlass::cast(bottom_klass)->module();
     if (module->is_named()) {

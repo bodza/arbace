@@ -4,7 +4,6 @@
 #include "gc/g1/g1RegionToSpaceMapper.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/virtualspace.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/align.hpp"
 #include "utilities/bitMap.inline.hpp"
 
@@ -15,8 +14,6 @@ G1RegionToSpaceMapper::G1RegionToSpaceMapper(ReservedSpace rs, size_t used_size,
   _commit_map(rs.size() * commit_factor / region_granularity, mtGC) {
   guarantee(is_power_of_2(page_size), "must be");
   guarantee(is_power_of_2(region_granularity), "must be");
-
-  MemTracker::record_virtual_memory_type((address)rs.base(), type);
 }
 
 // G1RegionToSpaceMapper implementation where the region granularity is larger than

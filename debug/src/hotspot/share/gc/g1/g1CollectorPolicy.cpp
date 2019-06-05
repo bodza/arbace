@@ -5,7 +5,6 @@
 #include "gc/g1/g1YoungGenSizer.hpp"
 #include "gc/g1/heapRegion.hpp"
 #include "gc/g1/heapRegionRemSet.hpp"
-#include "gc/shared/gcPolicyCounters.hpp"
 #include "runtime/globals.hpp"
 #include "utilities/debug.hpp"
 

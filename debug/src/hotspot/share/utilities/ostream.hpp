@@ -215,7 +215,6 @@ class fdStream : public outputStream {
 };
 
 void ostream_init();
-void ostream_init_log();
 void ostream_exit();
 void ostream_abort();
 

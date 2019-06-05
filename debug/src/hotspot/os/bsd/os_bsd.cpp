@@ -25,20 +25,15 @@
 #include "runtime/objectMonitor.hpp"
 #include "runtime/orderAccess.hpp"
 #include "runtime/osThread.hpp"
-#include "runtime/perfMemory.hpp"
 #include "runtime/semaphore.hpp"
 #include "runtime/sharedRuntime.hpp"
-#include "runtime/statSampler.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.inline.hpp"
 #include "runtime/threadCritical.hpp"
 #include "runtime/timer.hpp"
-#include "services/memTracker.hpp"
-#include "services/runtimeService.hpp"
 #include "utilities/align.hpp"
 #include "utilities/decoder.hpp"
 #include "utilities/defaultStream.hpp"
-#include "utilities/events.hpp"
 #include "utilities/growableArray.hpp"
 #include "utilities/vmError.hpp"
 
@@ -661,7 +656,6 @@ bool os::create_thread(Thread* thread, ThreadType thr_type, size_t req_stack_siz
   // calculate stack size if it's not specified by caller
   size_t stack_size = os::Posix::get_initial_stack_size(thr_type, req_stack_size);
   int status = pthread_attr_setstacksize(&attr, stack_size);
-  assert_status(status == 0, status, "pthread_attr_setstacksize");
 
   ThreadState state;
 
@@ -899,9 +893,6 @@ struct tm* os::localtime_pd(const time_t* clock, struct tm* res) {
 // called from signal handler. Before adding something to os::shutdown(), make
 // sure it is async-safe and can handle partially initialized VM.
 void os::shutdown() {
-  // allow PerfMemory to attempt cleanup of any persistent resources
-  perfMemory_exit();
-
   // flush buffered output, finish log files
   ostream_abort();
 
@@ -1954,26 +1945,11 @@ char* os::reserve_memory_special(size_t bytes, size_t alignment, char* req_addr,
     return NULL;
   }
 
-  // The memory is committed
-  MemTracker::record_virtual_memory_reserve_and_commit((address)addr, bytes, CALLER_PC);
-
   return addr;
 }
 
 bool os::release_memory_special(char* base, size_t bytes) {
-  if (MemTracker::tracking_level() > NMT_minimal) {
-    Tracker tkr(Tracker::release);
-    // detaching the SHM segment will also delete it, see reserve_memory_special()
-    int rslt = shmdt(base);
-    if (rslt == 0) {
-      tkr.record((address)base, bytes);
-      return true;
-    } else {
-      return false;
-    }
-  } else {
-    return shmdt(base) == 0;
-  }
+  return shmdt(base) == 0;
 }
 
 size_t os::large_page_size() {
@@ -2401,7 +2377,6 @@ static int SR_initialize() {
 
 static int sr_notify(OSThread* osthread) {
   int status = pthread_kill(osthread->pthread_id(), SR_signum);
-  assert_status(status == 0, status, "pthread_kill");
   return status;
 }
 
@@ -2717,11 +2692,7 @@ void os::Bsd::install_signal_handlers() {
     // handlers. By replacing the existing task exception handler, we disable gdb's mach
     // exception handling, while leaving the standard BSD signal handlers functional.
     kern_return_t kr;
-    kr = task_set_exception_ports(mach_task_self(),
-                                  EXC_MASK_BAD_ACCESS | EXC_MASK_ARITHMETIC,
-                                  MACH_PORT_NULL,
-                                  EXCEPTION_STATE_IDENTITY,
-                                  MACHINE_THREAD_STATE);
+    kr = task_set_exception_ports(mach_task_self(), EXC_MASK_BAD_ACCESS | EXC_MASK_ARITHMETIC, MACH_PORT_NULL, EXCEPTION_STATE_IDENTITY, MACHINE_THREAD_STATE);
 
 #endif
 
@@ -2966,13 +2937,6 @@ void os::init(void) {
   os::Posix::init();
 }
 
-// To install functions for atexit system call
-extern "C" {
-  static void perfMemory_exit_helper() {
-    perfMemory_exit();
-  }
-}
-
 // this is called _after_ the global arguments have been parsed
 jint os::init_2(void) {
   os::Posix::init_2();
@@ -3018,20 +2982,6 @@ jint os::init_2(void) {
   // atexit functions are called on return from main or as a result of a
   // call to exit(3C). There can be only 32 of these functions registered
   // and atexit() does not set errno.
-
-  if (PerfAllowAtExitRegistration) {
-    // only register atexit functions if PerfAllowAtExitRegistration is set.
-    // atexit functions can be delayed until process exit time, which
-    // can be problematic for embedded VM situations. Embedded VMs should
-    // call DestroyJavaVM() to assure that VM resources are released.
-
-    // note: perfMemory_exit_helper atexit function may be removed in
-    // the future if the appropriate cleanup code can be added to the
-    // VM_Exit VMOperation's doit method.
-    if (atexit(perfMemory_exit_helper) != 0) {
-      warning("os::init_2 atexit(perfMemory_exit_helper) failed");
-    }
-  }
 
   // initialize thread priority policy
   prio_init();

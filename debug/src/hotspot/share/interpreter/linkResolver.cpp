@@ -580,11 +580,7 @@ methodHandle LinkResolver::resolve_interface_method(const LinkInfo& link_info, B
     Klass* current_klass = link_info.current_klass();
 
     // check if method can be accessed by the referring class
-    check_method_accessability(current_klass,
-                               resolved_klass,
-                               resolved_method->method_holder(),
-                               resolved_method,
-                               CHECK_NULL);
+    check_method_accessability(current_klass, resolved_klass, resolved_method->method_holder(), resolved_method, CHECK_NULL);
 
     check_method_loader_constraints(link_info, resolved_method, "interface method", CHECK_NULL);
   }
@@ -858,17 +854,11 @@ void LinkResolver::runtime_resolve_special_method(CallInfo& result, const LinkIn
         ) {
       // Lookup super method
       Klass* super_klass = current_klass->super();
-      sel_method = lookup_instance_method_in_klasses(super_klass,
-                                                     resolved_method->name(),
-                                                     resolved_method->signature(),
-                                                     Klass::find_private, CHECK);
+      sel_method = lookup_instance_method_in_klasses(super_klass, resolved_method->name(), resolved_method->signature(), Klass::find_private, CHECK);
       // check if found
       if (sel_method.is_null()) {
         ResourceMark rm(THREAD);
-        THROW_MSG(vmSymbols::java_lang_AbstractMethodError(),
-                  Method::name_and_sig_as_C_string(resolved_klass,
-                                            resolved_method->name(),
-                                            resolved_method->signature()));
+        THROW_MSG(vmSymbols::java_lang_AbstractMethodError(), Method::name_and_sig_as_C_string(resolved_klass, resolved_method->name(), resolved_method->signature()));
       // check loader constraints if found a different method
       } else if (sel_method() != resolved_method()) {
         check_method_loader_constraints(link_info, sel_method, "method", CHECK);
@@ -996,12 +986,10 @@ void LinkResolver::runtime_resolve_virtual_method(CallInfo& result, const method
 void LinkResolver::resolve_interface_call(CallInfo& result, Handle recv, Klass* recv_klass, const LinkInfo& link_info, bool check_null_and_abstract, TRAPS) {
   // throws linktime exceptions
   methodHandle resolved_method = linktime_resolve_interface_method(link_info, CHECK);
-  runtime_resolve_interface_method(result, resolved_method,link_info.resolved_klass(),
-                                   recv, recv_klass, check_null_and_abstract, CHECK);
+  runtime_resolve_interface_method(result, resolved_method,link_info.resolved_klass(), recv, recv_klass, check_null_and_abstract, CHECK);
 }
 
-methodHandle LinkResolver::linktime_resolve_interface_method(const LinkInfo& link_info,
-                                                             TRAPS) {
+methodHandle LinkResolver::linktime_resolve_interface_method(const LinkInfo& link_info, TRAPS) {
   // normal interface method resolution
   methodHandle resolved_method = resolve_interface_method(link_info, Bytecodes::_invokeinterface, CHECK_NULL);
 
@@ -1031,10 +1019,7 @@ void LinkResolver::runtime_resolve_interface_method(CallInfo& result, const meth
     // This search must match the linktime preparation search for itable initialization
     // to correctly enforce loader constraints for interface method inheritance.
     // Private methods are skipped as the resolved method was not private.
-    selected_method = lookup_instance_method_in_klasses(recv_klass,
-                                                        resolved_method->name(),
-                                                        resolved_method->signature(),
-                                                        Klass::skip_private, CHECK);
+    selected_method = lookup_instance_method_in_klasses(recv_klass, resolved_method->name(), resolved_method->signature(), Klass::skip_private, CHECK);
 
     if (selected_method.is_null() && !check_null_and_abstract) {
       // In theory this is a harmless placeholder value, but
@@ -1123,8 +1108,7 @@ methodHandle LinkResolver::resolve_interface_call_or_null(Klass* receiver_klass,
 int LinkResolver::resolve_virtual_vtable_index(Klass* receiver_klass, const LinkInfo& link_info) {
   EXCEPTION_MARK;
   CallInfo info;
-  resolve_virtual_call(info, Handle(), receiver_klass, link_info,
-                       /*check_null_or_abstract*/false, THREAD);
+  resolve_virtual_call(info, Handle(), receiver_klass, link_info, /*check_null_or_abstract*/false, THREAD);
   if (HAS_PENDING_EXCEPTION) {
     CLEAR_PENDING_EXCEPTION;
     return Method::invalid_vtable_index;
@@ -1177,12 +1161,10 @@ void LinkResolver::resolve_invoke(CallInfo& result, Handle& recv, const methodHa
   LinkInfo link_info(defc, name, type);
   switch (byte) {
     case Bytecodes::_invokevirtual:
-      resolve_virtual_call(result, recv, recv->klass(), link_info,
-                           /*check_null_and_abstract=*/true, CHECK);
+      resolve_virtual_call(result, recv, recv->klass(), link_info, /*check_null_and_abstract=*/true, CHECK);
       break;
     case Bytecodes::_invokeinterface:
-      resolve_interface_call(result, recv, recv->klass(), link_info,
-                             /*check_null_and_abstract=*/true, CHECK);
+      resolve_interface_call(result, recv, recv->klass(), link_info, /*check_null_and_abstract=*/true, CHECK);
       break;
     case Bytecodes::_invokestatic:
       resolve_static_call(result, link_info, /*initialize_class=*/false, CHECK);
@@ -1229,8 +1211,7 @@ void LinkResolver::resolve_handle_call(CallInfo& result, const LinkInfo& link_in
   Klass* resolved_klass = link_info.resolved_klass();
   Handle       resolved_appendix;
   Handle       resolved_method_type;
-  methodHandle resolved_method = lookup_polymorphic_method(link_info,
-                                       &resolved_appendix, &resolved_method_type, CHECK);
+  methodHandle resolved_method = lookup_polymorphic_method(link_info, &resolved_appendix, &resolved_method_type, CHECK);
   result.set_handle(resolved_klass, resolved_method, resolved_appendix, resolved_method_type, CHECK);
 }
 
@@ -1247,9 +1228,7 @@ void LinkResolver::resolve_invokedynamic(CallInfo& result, const constantPoolHan
 
   if (cpce->is_f1_null()) {
     if (cpce->indy_resolution_failed()) {
-      ConstantPool::throw_resolution_error(pool,
-                                           ResolutionErrorTable::encode_cpcache_index(index),
-                                           CHECK);
+      ConstantPool::throw_resolution_error(pool, ResolutionErrorTable::encode_cpcache_index(index), CHECK);
     }
 
     // The initial step in Call Site Specifier Resolution is to resolve the symbolic

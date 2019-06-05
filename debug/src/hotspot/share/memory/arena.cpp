@@ -8,7 +8,6 @@
 #include "runtime/os.hpp"
 #include "runtime/task.hpp"
 #include "runtime/threadCritical.hpp"
-#include "services/memTracker.hpp"
 #include "utilities/ostream.hpp"
 
 //--------------------------------------------------------------------------------------
@@ -51,7 +50,7 @@ class ChunkPool: public CHeapObj<mtInternal> {
       _num_used++;
       p = get_first();
     }
-    if (p == NULL) p = os::malloc(bytes, mtChunk, CURRENT_PC);
+    if (p == NULL) p = os::malloc(bytes, mtChunk);
     if (p == NULL && alloc_failmode == AllocFailStrategy::EXIT_OOM) {
       vm_exit_out_of_memory(bytes, OOM_MALLOC_ERROR, "ChunkPool::allocate");
     }
@@ -164,7 +163,7 @@ void* Chunk::operator new (size_t requested_size, AllocFailType alloc_failmode, 
    case Chunk::init_size:   return ChunkPool::small_pool()->allocate(bytes, alloc_failmode);
    case Chunk::tiny_size:   return ChunkPool::tiny_pool()->allocate(bytes, alloc_failmode);
    default: {
-     void* p = os::malloc(bytes, mtChunk, CALLER_PC);
+     void* p = os::malloc(bytes, mtChunk);
      if (p == NULL && alloc_failmode == AllocFailStrategy::EXIT_OOM) {
        vm_exit_out_of_memory(bytes, OOM_MALLOC_ERROR, "Chunk::new");
      }
@@ -219,7 +218,6 @@ Arena::Arena(MEMFLAGS flag, size_t init_size) : _flags(flag), _size_in_bytes(0) 
   _first = _chunk = new (AllocFailStrategy::EXIT_OOM, init_size) Chunk(init_size);
   _hwm = _chunk->bottom();      // Save the cached hwm, max
   _max = _chunk->top();
-  MemTracker::record_new_arena(flag);
   set_size_in_bytes(init_size);
 }
 
@@ -227,7 +225,6 @@ Arena::Arena(MEMFLAGS flag) : _flags(flag), _size_in_bytes(0) {
   _first = _chunk = new (AllocFailStrategy::EXIT_OOM, Chunk::init_size) Chunk(Chunk::init_size);
   _hwm = _chunk->bottom();      // Save the cached hwm, max
   _max = _chunk->top();
-  MemTracker::record_new_arena(flag);
   set_size_in_bytes(Chunk::init_size);
 }
 
@@ -250,7 +247,6 @@ Arena *Arena::move_contents(Arena *copy) {
 
 Arena::~Arena() {
   destruct_contents();
-  MemTracker::record_arena_free(_flags);
 }
 
 void* Arena::operator new(size_t size) throw() {
@@ -265,11 +261,11 @@ void* Arena::operator new (size_t size, const std::nothrow_t& nothrow_constant) 
 
   // dynamic memory type binding
 void* Arena::operator new(size_t size, MEMFLAGS flags) throw() {
-  return (void *) AllocateHeap(size, flags, CALLER_PC);
+  return (void *) AllocateHeap(size, flags);
 }
 
 void* Arena::operator new(size_t size, const std::nothrow_t& nothrow_constant, MEMFLAGS flags) throw() {
-  return (void*)AllocateHeap(size, flags, CALLER_PC, AllocFailStrategy::RETURN_NULL);
+  return (void*) AllocateHeap(size, flags, AllocFailStrategy::RETURN_NULL);
 }
 
 void Arena::operator delete(void* p) {
@@ -295,7 +291,6 @@ void Arena::set_size_in_bytes(size_t size) {
   if (_size_in_bytes != size) {
     long delta = (long)(size - size_in_bytes());
     _size_in_bytes = size;
-    MemTracker::record_arena_size_change(delta, _flags);
   }
 }
 

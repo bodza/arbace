@@ -5,10 +5,8 @@
 #include "gc/shared/gcWhen.hpp"
 #include "memory/allocation.hpp"
 #include "runtime/handles.hpp"
-#include "runtime/perfData.hpp"
 #include "runtime/safepoint.hpp"
 #include "utilities/debug.hpp"
-#include "utilities/events.hpp"
 #include "utilities/formatBuffer.hpp"
 #include "utilities/growableArray.hpp"
 
@@ -22,7 +20,6 @@ class BarrierSet;
 class CollectorPolicy;
 class GCHeapSummary;
 class GCTimer;
-class GCTracer;
 class GCMemoryManager;
 class MemoryPool;
 class MetaspaceSummary;
@@ -43,14 +40,6 @@ class GCMessage : public FormatBuffer<1024> {
 
 class CollectedHeap;
 
-class GCHeapLog : public EventLogBase<GCMessage> {
- public:
-  GCHeapLog() : EventLogBase<GCMessage>("GC Heap History") { }
-
-  void log_heap_before(CollectedHeap* heap) { }
-  void log_heap_after(CollectedHeap* heap) { }
-};
-
 //
 // CollectedHeap
 //   GenCollectedHeap
@@ -67,7 +56,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   friend class MemAllocator;
 
  private:
-  GCHeapLog* _gc_heap_log;
   MemRegion _reserved;
 
  protected:
@@ -83,8 +71,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   // a value reflecting no collection between collections.
   GCCause::Cause _gc_cause;
   GCCause::Cause _gc_lastcause;
-  PerfStringVariable* _perf_gc_cause;
-  PerfStringVariable* _perf_gc_lastcause;
 
   // Constructor
   CollectedHeap();
@@ -122,21 +108,14 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   // Fill with a single object (either an int array or a java.lang.Object).
   static inline void fill_with_object_impl(HeapWord* start, size_t words, bool zap = true);
 
-  virtual void trace_heap(GCWhen::Type when, const GCTracer* tracer);
-
   // Verification functions
-  virtual void check_for_non_bad_heap_word_value(HeapWord* addr, size_t size)
-    { };
+  virtual void check_for_non_bad_heap_word_value(HeapWord* addr, size_t size) { };
 
  public:
   enum Name {
     None,
-    Serial,
-    Parallel,
-    CMS,
     G1,
-    Epsilon,
-    Z
+    Epsilon
   };
 
   static inline size_t filler_array_max_size() {
@@ -232,11 +211,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   }
 
   void set_gc_cause(GCCause::Cause v) {
-     if (UsePerfData) {
-       _gc_lastcause = _gc_cause;
-       _perf_gc_lastcause->set_value(GCCause::to_string(_gc_lastcause));
-       _perf_gc_cause->set_value(GCCause::to_string(v));
-     }
     _gc_cause = v;
   }
   GCCause::Cause gc_cause() { return _gc_cause; }
@@ -270,9 +244,7 @@ class CollectedHeap : public CHeapObj<mtInternal> {
 
   // Return the address "addr" aligned by "alignment_in_bytes" if such
   // an address is below "end".  Return NULL otherwise.
-  inline static HeapWord* align_allocation_or_fail(HeapWord* addr,
-                                                   HeapWord* end,
-                                                   unsigned short alignment_in_bytes);
+  inline static HeapWord* align_allocation_or_fail(HeapWord* addr, HeapWord* end, unsigned short alignment_in_bytes);
 
   // Some heaps may offer a contiguous region for shared non-blocking
   // allocation, via inlined code (by exporting the address of the top and
@@ -469,34 +441,6 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   virtual void register_nmethod(nmethod* nm) { }
   virtual void unregister_nmethod(nmethod* nm) { }
   virtual void verify_nmethod(nmethod* nmethod) { }
-
-  void trace_heap_before_gc(const GCTracer* gc_tracer);
-  void trace_heap_after_gc(const GCTracer* gc_tracer);
-
-  // Return true if concurrent phase control (via
-  // request_concurrent_phase_control) is supported by this collector.
-  // The default implementation returns false.
-  virtual bool supports_concurrent_phase_control() const;
-
-  // Return a NULL terminated array of concurrent phase names provided
-  // by this collector.  Supports Whitebox testing.  These are the
-  // names recognized by request_concurrent_phase(). The default
-  // implementation returns an array of one NULL element.
-  virtual const char* const* concurrent_phases() const;
-
-  // Request the collector enter the indicated concurrent phase, and
-  // wait until it does so.  Supports NULL testing.  Only one
-  // request may be active at a time.  Phases are designated by name;
-  // the set of names and their meaning is GC-specific.  Once the
-  // requested phase has been reached, the collector will attempt to
-  // avoid transitioning to a new phase until a new request is made.
-  // [Note: A collector might not be able to remain in a given phase.
-  // For example, a full collection might cancel an in-progress
-  // concurrent collection.]
-  //
-  // Returns true when the phase is reached.  Returns false for an
-  // unknown phase.  The default implementation returns false.
-  virtual bool request_concurrent_phase(const char* phase);
 
   // Provides a thread pool to SafepointSynchronize to use
   // for parallel safepoint cleanup.
