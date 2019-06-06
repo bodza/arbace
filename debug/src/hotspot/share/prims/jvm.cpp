@@ -262,7 +262,7 @@ JVM_ENTRY(jobject, JVM_InitProperties(JNIEnv *env, jobject properties))
 
     const char* compiler_name = "HotSpot " CSIZE "Client Compiler";
 
-    if (*compiler_name != '\0' && (Arguments::mode() != Arguments::_int)) {
+    if (*compiler_name != '\0') {
       PUTPROP(props, "sun.management.compiler", compiler_name);
     }
   }
@@ -963,7 +963,7 @@ JVM_ENTRY(jobject, JVM_GetStackAccessControlContext(JNIEnv *env, jclass cls))
   bool is_privileged = false;
   oop protection_domain = NULL;
 
-  for (; !vfst.at_end(); vfst.next()) {
+  for ( ; !vfst.at_end(); vfst.next()) {
     // get method of frame
     Method* method = vfst.method();
     intptr_t* frame_id   = vfst.frame_id();
@@ -1057,7 +1057,7 @@ JVM_ENTRY(jobjectArray, JVM_GetDeclaredClasses(JNIEnv *env, jclass ofClass))
   objArrayHandle result (THREAD, r);
   int members = 0;
 
-  for (; !iter.done(); iter.next()) {
+  for ( ; !iter.done(); iter.next()) {
     int ioff = iter.inner_class_info_index();
     int ooff = iter.outer_class_info_index();
 
@@ -2505,7 +2505,7 @@ JVM_ENTRY(jobjectArray, JVM_GetClassContext(JNIEnv *env))
 
   // Collect method holders
   GrowableArray<Klass*>* klass_array = new GrowableArray<Klass*>();
-  for (; !vfst.at_end(); vfst.security_next()) {
+  for ( ; !vfst.at_end(); vfst.security_next()) {
     Method* m = vfst.method();
     // Native frames are not returned
     if (!m->is_ignored_by_security_stack_walk() && !m->is_native()) {

@@ -84,12 +84,12 @@ protected:
 // ResourceMarks because deoptimization can not use a stack allocated mark. During
 // deoptimization we go thru the following steps:
 //
-// 0: start in assembly stub and call either uncommon_trap/fetch_unroll_info
+// 0: start in assembly stub and call either NULL/NULL
 // 1: create the vframeArray (contains pointers to Resource allocated structures)
 //   This allocates the DeoptResourceMark.
 // 2: return to assembly stub and remove stub frame and deoptee frame and create
 //    the new skeletal frames.
-// 3: push new stub frame and call unpack_frames
+// 3: push new stub frame and call NULL
 // 4: retrieve information from the vframeArray to populate the skeletal frames
 // 5: release the DeoptResourceMark
 // 6: return to stub and eventually to interpreter

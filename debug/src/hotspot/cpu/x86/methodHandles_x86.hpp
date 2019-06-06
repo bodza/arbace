@@ -18,7 +18,6 @@ public:
 
   static void verify_ref_kind(MacroAssembler* _masm, int ref_kind, Register member_reg, Register temp) { };
 
-  // Similar to InterpreterMacroAssembler::jump_from_interpreted.
   // Takes care of special dispatch from single stepping too.
   static void jump_from_method_handle(MacroAssembler* _masm, Register method, Register temp, bool for_compiler_entry);
 

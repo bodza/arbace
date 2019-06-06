@@ -4,7 +4,6 @@
 #include "code/compiledIC.hpp"
 #include "code/nmethod.hpp"
 #include "code/scopeDesc.hpp"
-#include "interpreter/interpreter.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/methodData.hpp"
 #include "oops/method.inline.hpp"
@@ -51,17 +50,14 @@ void CompilationPolicy::completed_vm_startup() {
 }
 
 // Returns true if m must be compiled before executing it
-// This is intended to force compiles for methods (usually for
-// debugging) that would otherwise be interpreted for some reason.
 bool CompilationPolicy::must_be_compiled(const methodHandle& m, int comp_level) {
   // Don't allow Xcomp to cause compiles in replay mode
   if (ReplayCompiles) return false;
 
-  if (m->has_compiled_code()) return false;       // already compiled
+  if (m->has_compiled_code()) return false; // already compiled
   if (!can_be_compiled(m, comp_level)) return false;
 
-  return !UseInterpreter ||                                              // must compile all methods
-         (UseCompiler && AlwaysCompileLoopMethods && m->has_loops() && CompileBroker::should_compile_new_jobs()); // eagerly compile loop methods
+  return true; // must compile all methods
 }
 
 void CompilationPolicy::compile_if_required(const methodHandle& selected_method, TRAPS) {
@@ -97,17 +93,11 @@ bool CompilationPolicy::can_be_compiled(const methodHandle& m, int comp_level) {
   // production because the invocation counter can't be incremented
   // but we shouldn't expose the system to this problem in testing
   // modes.
-  if (!AbstractInterpreter::can_be_compiled(m)) {
-    return false;
-  }
+  if (!NULL::can_be_compiled(m)) return false;
+
   if (comp_level == CompLevel_all) {
-    if (TieredCompilation) {
-      // enough to be compilable at any level for tiered
-      return !m->is_not_compilable(CompLevel_simple) || !m->is_not_compilable(CompLevel_full_optimization);
-    } else {
-      // must be compilable at available level for non-tiered
-      return !m->is_not_compilable(CompLevel_highest_tier);
-    }
+    // must be compilable at available level for non-tiered
+    return !m->is_not_compilable(CompLevel_highest_tier);
   } else if (is_compile(comp_level)) {
     return !m->is_not_compilable(comp_level);
   }
@@ -118,13 +108,8 @@ bool CompilationPolicy::can_be_compiled(const methodHandle& m, int comp_level) {
 bool CompilationPolicy::can_be_osr_compiled(const methodHandle& m, int comp_level) {
   bool result = false;
   if (comp_level == CompLevel_all) {
-    if (TieredCompilation) {
-      // enough to be osr compilable at any level for tiered
-      result = !m->is_not_osr_compilable(CompLevel_simple) || !m->is_not_osr_compilable(CompLevel_full_optimization);
-    } else {
-      // must be osr compilable at available level for non-tiered
-      result = !m->is_not_osr_compilable(CompLevel_highest_tier);
-    }
+    // must be osr compilable at available level for non-tiered
+    result = !m->is_not_osr_compilable(CompLevel_highest_tier);
   } else if (is_compile(comp_level)) {
     result = !m->is_not_osr_compilable(comp_level);
   }
@@ -167,7 +152,6 @@ void NonTieredCompPolicy::initialize() {
   }
 }
 
-// Note: this policy is used ONLY if TieredCompilation is off.
 // compiler_count() behaves the following way:
 // - with TIERED build (with both COMPILER1 and COMPILER2 defined) it should return
 //   zero for the c1 compilation levels in server compilation mode runs
@@ -258,7 +242,7 @@ void NonTieredCompPolicy::reprofile(ScopeDesc* trap_scope, bool is_osr) {
   ScopeDesc* sd = trap_scope;
   MethodCounters* mcs;
   InvocationCounter* c;
-  for (; !sd->is_top(); sd = sd->sender()) {
+  for ( ; !sd->is_top(); sd = sd->sender()) {
     mcs = sd->method()->method_counters();
     if (mcs != NULL) {
       // Reset ICs of inlined methods, since they can trigger compilations also.

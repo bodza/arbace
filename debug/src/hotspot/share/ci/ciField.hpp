@@ -137,8 +137,7 @@ public:
   // Usage note: if the same field is accessed multiple times
   // in the same compilation, will_link will need to be checked
   // at each point of access.
-  bool will_link(ciMethod* accessing_method,
-                 Bytecodes::Code bc);
+  bool will_link(ciMethod* accessing_method, Bytecodes::Code bc);
 
   // Java access flags
   bool is_public               () const { return flags().is_public(); }

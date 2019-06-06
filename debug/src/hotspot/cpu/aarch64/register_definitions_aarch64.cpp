@@ -4,7 +4,6 @@
 #include "asm/macroAssembler.inline.hpp"
 #include "asm/register.hpp"
 #include "register_aarch64.hpp"
-#include "interp_masm_aarch64.hpp"
 
 REGISTER_DEFINITION(Register, noreg);
 

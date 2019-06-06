@@ -117,13 +117,13 @@ void ExceptionHandlerTable::print_subtable_for(int catch_pco) const {
 // nmethod a zero length table takes no space.  This is detected by
 // nul_chk_table_size() == 0.  Otherwise the table has a length word
 // followed by pairs of <excp-offset, const-offset>.
-void ImplicitExceptionTable::set_size( uint size ) {
+void ImplicitExceptionTable::set_size(uint size) {
   _size = size;
   _data = NEW_RESOURCE_ARRAY(implicit_null_entry, (size*2));
   _len = 0;
 }
 
-void ImplicitExceptionTable::append( uint exec_off, uint cont_off ) {
+void ImplicitExceptionTable::append(uint exec_off, uint cont_off) {
   uint l = len();
   if (l == _size) {
     uint old_size_in_elements = _size*2;
@@ -166,7 +166,7 @@ ImplicitExceptionTable::ImplicitExceptionTable(const nmethod* nm) {
   _size = len();
 }
 
-void ImplicitExceptionTable::copy_to( nmethod* nm ) {
+void ImplicitExceptionTable::copy_to(nmethod* nm) {
   if (len() != 0) {
     implicit_null_entry* nmdata = (implicit_null_entry*)nm->nul_chk_table_begin();
     // store the length in the first uint

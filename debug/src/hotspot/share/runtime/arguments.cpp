@@ -1113,7 +1113,6 @@ void Arguments::set_mode_flags(Mode mode) {
   // This may not be the final mode; mode may change later in onload phase.
   PropertyList_unique_add(&_system_properties, "java.vm.info", VM_Version::vm_info_string(), AddProperty, UnwriteableProperty, ExternalProperty);
 
-  UseInterpreter             = true;
   UseCompiler                = true;
   UseLoopCounter             = true;
 
@@ -1123,40 +1122,18 @@ void Arguments::set_mode_flags(Mode mode) {
   AlwaysCompileLoopMethods   = Arguments::_AlwaysCompileLoopMethods;
   UseOnStackReplacement      = Arguments::_UseOnStackReplacement;
   BackgroundCompilation      = Arguments::_BackgroundCompilation;
-  if (TieredCompilation) {
-    if (FLAG_IS_DEFAULT(Tier3InvokeNotifyFreqLog)) {
-      Tier3InvokeNotifyFreqLog = Arguments::_Tier3InvokeNotifyFreqLog;
-    }
-    if (FLAG_IS_DEFAULT(Tier4InvocationThreshold)) {
-      Tier4InvocationThreshold = Arguments::_Tier4InvocationThreshold;
-    }
-  }
 
   // Change from defaults based on mode
   switch (mode) {
-  default:
-    ShouldNotReachHere();
-    break;
-  case _int:
-    UseCompiler              = false;
-    UseLoopCounter           = false;
-    AlwaysCompileLoopMethods = false;
-    UseOnStackReplacement    = false;
-    break;
   case _mixed:
     // same as default
     break;
   case _comp:
-    UseInterpreter           = false;
     BackgroundCompilation    = false;
     ClipInlining             = false;
-    // Be much more aggressive in tiered mode with -Xcomp and exercise C2 more.
-    // We will first compile a level 3 version (C1 with full profiling), then do one invocation of it and
-    // compile a level 4 (C2) and then continue executing it.
-    if (TieredCompilation) {
-      Tier3InvokeNotifyFreqLog = 0;
-      Tier4InvocationThreshold = 0;
-    }
+    break;
+  default:
+    ShouldNotReachHere();
     break;
   }
 }
@@ -1382,8 +1359,7 @@ jint Arguments::set_aggressive_heap_flags() {
   // when using ISM).  This is the maximum; because adaptive sizing
   // is turned on below, the actual space used may be smaller.
 
-  initHeapSize = MIN2(total_memory / (julong) 2,
-          total_memory - (julong) 160 * M);
+  initHeapSize = MIN2(total_memory / (julong) 2, total_memory - (julong) 160 * M);
 
   initHeapSize = limit_by_allocatable_memory(initHeapSize);
 
@@ -1399,8 +1375,7 @@ jint Arguments::set_aggressive_heap_flags() {
   }
   if (FLAG_IS_DEFAULT(NewSize)) {
     // Make the young generation 3/8ths of the total heap.
-    if (FLAG_SET_CMDLINE(size_t, NewSize,
-            ((julong) MaxHeapSize / (julong) 8) * (julong) 3) != JVMFlag::SUCCESS) {
+    if (FLAG_SET_CMDLINE(size_t, NewSize, ((julong) MaxHeapSize / (julong) 8) * (julong) 3) != JVMFlag::SUCCESS) {
       return JNI_EINVAL;
     }
     if (FLAG_SET_CMDLINE(size_t, MaxNewSize, NewSize) != JVMFlag::SUCCESS) {
@@ -1622,7 +1597,9 @@ bool Arguments::create_numbered_property(const char* prop_base_name, const char*
 }
 
 Arguments::ArgsRange Arguments::parse_memory_size(const char* s, julong* long_arg, julong min_size, julong max_size) {
-  if (!atojulong(s, long_arg)) return arg_unreadable;
+  if (!atojulong(s, long_arg)) {
+    return arg_unreadable;
+  }
   return check_memory_size(*long_arg, min_size, max_size);
 }
 
@@ -1636,10 +1613,6 @@ jint Arguments::parse_vm_init_args(const JavaVMInitArgs *java_tool_options_args,
   Arguments::_UseOnStackReplacement    = UseOnStackReplacement;
   Arguments::_ClipInlining             = ClipInlining;
   Arguments::_BackgroundCompilation    = BackgroundCompilation;
-  if (TieredCompilation) {
-    Arguments::_Tier3InvokeNotifyFreqLog = Tier3InvokeNotifyFreqLog;
-    Arguments::_Tier4InvocationThreshold = Tier4InvocationThreshold;
-  }
 
   // Setup flags for mixed which is the default
   set_mode_flags(_mixed);
@@ -2046,9 +2019,6 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
       if (!add_property(tail)) {
         return JNI_ENOMEM;
       }
-    // -Xint
-    } else if (match_option(option, "-Xint")) {
-          set_mode_flags(_int);
     // -Xmixed
     } else if (match_option(option, "-Xmixed")) {
           set_mode_flags(_mixed);
@@ -2256,23 +2226,20 @@ jint Arguments::finalize_vm_init_args(bool patch_mod_javabase) {
     // For backwards compatibility, we switch to interpreted mode if
     // -Djava.compiler="NONE" or "" is specified AND "-Xdebug" was
     // not specified.
-    set_mode_flags(_int);
+    set_mode_flags(NULL);
   }
 
   // CompileThresholdScaling == 0.0 is same as -Xint: Disable compilation (enable interpreter-only mode),
   // but like -Xint, leave compilation thresholds unaffected.
   // With tiered compilation disabled, setting CompileThreshold to 0 disables compilation as well.
-  if ((CompileThresholdScaling == 0.0) || (!TieredCompilation && CompileThreshold == 0)) {
-    set_mode_flags(_int);
+  if ((CompileThresholdScaling == 0.0) || (CompileThreshold == 0)) {
+    set_mode_flags(NULL);
   }
 
   // eventually fix up InitialTenuringThreshold if only MaxTenuringThreshold is set
   if (FLAG_IS_DEFAULT(InitialTenuringThreshold) && (InitialTenuringThreshold > MaxTenuringThreshold)) {
     FLAG_SET_ERGO(uintx, InitialTenuringThreshold, MaxTenuringThreshold);
   }
-
-  // Tiered compilation is undefined.
-  UNSUPPORTED_OPTION(TieredCompilation);
 
   if (!check_vm_args_consistency()) {
     return JNI_ERR;

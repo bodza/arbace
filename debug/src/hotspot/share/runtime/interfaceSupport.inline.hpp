@@ -15,8 +15,8 @@
 
 // Wrapper for all entry points to the virtual machine.
 
-// InterfaceSupport provides functionality used by the VM_LEAF_BASE and
-// VM_ENTRY_BASE macros. These macros are used to guard entry points into
+// InterfaceSupport provides functionality used by the
+// VM_ENTRY_BASE macro. These macros are used to guard entry points into
 // the VM and perform checks upon leave of the VM.
 
 class InterfaceSupport: AllStatic {
@@ -273,17 +273,9 @@ class JRTLeafVerifier : public NoSafepointVerifier {
   ~JRTLeafVerifier() { }
 };
 
-#define TRACE_CALL(result_type, header) \
-  /* do nothing */
-
 // LEAF routines do not lock, GC or throw exceptions
 
-#define VM_LEAF_BASE(result_type, header) \
-  TRACE_CALL(result_type, header) \
-  /* begin of body */
-
 #define VM_ENTRY_BASE_FROM_LEAF(result_type, header, thread) \
-  TRACE_CALL(result_type, header) \
   HandleMarkCleaner __hm(thread); \
   Thread* THREAD = thread; \
   /* begin of body */
@@ -291,7 +283,6 @@ class JRTLeafVerifier : public NoSafepointVerifier {
 // ENTRY routines may lock, GC and throw exceptions
 
 #define VM_ENTRY_BASE(result_type, header, thread) \
-  TRACE_CALL(result_type, header) \
   HandleMarkCleaner __hm(thread); \
   Thread* THREAD = thread; \
   /* begin of body */
@@ -299,26 +290,15 @@ class JRTLeafVerifier : public NoSafepointVerifier {
 // QUICK_ENTRY routines behave like ENTRY but without a handle mark
 
 #define VM_QUICK_ENTRY_BASE(result_type, header, thread) \
-  TRACE_CALL(result_type, header) \
   Thread* THREAD = thread; \
   /* begin of body */
 
-// Definitions for IRT (Interpreter Runtime)
+// Definitions for IRT (NULL Runtime)
 // (thread is an argument passed in to all these routines)
-
-#define IRT_ENTRY(result_type, header) \
-  result_type header { \
-    ThreadInVMfromJava __tiv(thread); \
-    VM_ENTRY_BASE(result_type, header, thread)
 
 #define IRT_LEAF(result_type, header) \
   result_type header { \
-    VM_LEAF_BASE(result_type, header)
-
-#define IRT_ENTRY_NO_ASYNC(result_type, header) \
-  result_type header { \
-    ThreadInVMfromJavaNoAsyncException __tiv(thread); \
-    VM_ENTRY_BASE(result_type, header, thread)
+    /* begin of body */
 
 #define IRT_END }
 
@@ -329,7 +309,7 @@ class JRTLeafVerifier : public NoSafepointVerifier {
 
 #define JRT_LEAF(result_type, header) \
   result_type header { \
-  VM_LEAF_BASE(result_type, header)
+  /* begin of body */
 
 #define JRT_ENTRY_NO_ASYNC(result_type, header) \
   result_type header { \
@@ -340,7 +320,6 @@ class JRTLeafVerifier : public NoSafepointVerifier {
 // to get back into Java from the VM
 #define JRT_BLOCK_ENTRY(result_type, header) \
   result_type header { \
-    TRACE_CALL(result_type, header) \
     HandleMarkCleaner __hm(thread);
 
 #define JRT_BLOCK \
@@ -383,7 +362,7 @@ extern "C" { \
 extern "C" { \
   result_type JNICALL header { \
     JavaThread* thread=JavaThread::thread_from_jni_environment(env); \
-    VM_LEAF_BASE(result_type, header)
+    /* begin of body */
 
 // Close the routine and the extern "C"
 #define JNI_END } }
@@ -415,7 +394,7 @@ extern "C" { \
 extern "C" { \
   result_type JNICALL header { \
     VM_Exit::block_if_vm_exited(); \
-    VM_LEAF_BASE(result_type, header)
+    /* begin of body */
 
 #define JVM_ENTRY_FROM_LEAF(env, result_type, header) \
   { { \

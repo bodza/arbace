@@ -3,8 +3,6 @@
 #include "jvm.h"
 #include "asm/macroAssembler.hpp"
 #include "classfile/javaClasses.inline.hpp"
-#include "interpreter/interpreter.hpp"
-#include "interpreter/interpreterRuntime.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "prims/methodHandles.hpp"

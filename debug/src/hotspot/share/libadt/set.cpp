@@ -24,8 +24,7 @@ const CoSet *Set::asCoSet() const { return NULL; }
 //------------------------------setstr-----------------------------------------
 // Create a string with a printable representation of a set.
 // The caller must deallocate the string.
-char *Set::setstr() const
-{
+char *Set::setstr() const {
   if (this == NULL ) return os::strdup("{no set}");
   Set &set = clone();           // Virtually copy the basic set.
   set.Sort();                   // Sort elements for in-order retrieval
@@ -43,7 +42,7 @@ char *Set::setstr() const
     if (hi + 1 == i.elem) {        // Moving sequentially thru range?
       hi = i.elem;                // Yes, just update hi end of range
     } else {                      // Else range ended
-      if (buf+len-s < 25 ) {      // Generous trailing space for upcoming numbers
+      if (buf+len-s < 25) {      // Generous trailing space for upcoming numbers
         int offset = (int)(s-buf);// Not enuf space; compute offset into buffer
         len <<= 1;                // Double string size
         buf = REALLOC_C_HEAP_ARRAY(char,buf,len, mtCompiler); // Reallocate doubled size
@@ -57,8 +56,8 @@ char *Set::setstr() const
       hi = lo = i.elem;
     }
   }
-  if (lo != (uint)-2 ) {
-    if (buf+len-s < 25 ) {      // Generous trailing space for upcoming numbers
+  if (lo != (uint)-2) {
+    if (buf+len-s < 25) {      // Generous trailing space for upcoming numbers
       int offset = (int)(s-buf);// Not enuf space; compute offset into buffer
       len <<= 1;                // Double string size
       buf = (char*)ReallocateHeap(buf, len, mtCompiler); // Reallocate doubled size
@@ -73,8 +72,7 @@ char *Set::setstr() const
 
 //------------------------------print------------------------------------------
 // Handier print routine
-void Set::print() const
-{
+void Set::print() const {
   char *printable_set = setstr();
   tty->print_cr("%s", printable_set);
   FreeHeap(printable_set);
@@ -83,8 +81,7 @@ void Set::print() const
 //------------------------------parse------------------------------------------
 // Convert a textual representation of a Set, to a Set and union into "this"
 // Set.  Return the amount of text parsed in "len", or zero in "len".
-int Set::parse(const char *s)
-{
+int Set::parse(const char *s) {
   register char c;              // Parse character
   register const char *t = s;   // Save the starting position of s.
   do c = *s++;                  // Skip characters
@@ -122,6 +119,4 @@ int Set::parse(const char *s)
 }
 
 //------------------------------Iterator---------------------------------------
-SetI_::~SetI_()
-{
-}
+SetI_::~SetI_() { }

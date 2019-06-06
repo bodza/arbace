@@ -7,7 +7,6 @@
 #include "ci/ciUtilities.hpp"
 #include "gc/shared/cardTable.hpp"
 #include "gc/shared/cardTableBarrierSet.hpp"
-#include "interpreter/interpreter.hpp"
 #include "nativeInst_x86.hpp"
 #include "oops/compiledICHolder.hpp"
 #include "oops/oop.inline.hpp"
@@ -649,7 +648,7 @@ OopMapSet* Runtime1::generate_patching(StubAssembler* sasm, address target) {
   //       the oop-map is shared for all calls.
   const int num_rt_args = 2;  // thread + dummy
 
-  DeoptimizationBlob* deopt_blob = SharedRuntime::deopt_blob();
+  NULL* NULL = SharedRuntime::NULL();
 
   OopMap* oop_map = save_live_registers(sasm, num_rt_args);
 
@@ -699,7 +698,7 @@ OopMapSet* Runtime1::generate_patching(StubAssembler* sasm, address target) {
     // registers and must leave throwing pc on the stack.  A patch may
     // have values live in registers so the entry point with the
     // exception in tls.
-    __ jump(RuntimeAddress(deopt_blob->unpack_with_exception_in_tls()));
+    __ jump(RuntimeAddress(NULL->unpack_with_exception_in_tls()));
 
     __ bind(L);
   }
@@ -716,7 +715,7 @@ OopMapSet* Runtime1::generate_patching(StubAssembler* sasm, address target) {
   // registers, pop all of our frame but the return address and jump to the deopt blob
   restore_live_registers(sasm);
   __ leave();
-  __ jump(RuntimeAddress(deopt_blob->unpack_with_reexecution()));
+  __ jump(RuntimeAddress(NULL->unpack_with_reexecution()));
 
   __ bind(cont);
   restore_live_registers(sasm);
@@ -1123,9 +1122,9 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         oop_maps = new OopMapSet();
         oop_maps->add_gc_map(call_offset, oop_map);
         restore_live_registers(sasm);
-        DeoptimizationBlob* deopt_blob = SharedRuntime::deopt_blob();
+        NULL* NULL = SharedRuntime::NULL();
         __ leave();
-        __ jump(RuntimeAddress(deopt_blob->unpack_with_reexecution()));
+        __ jump(RuntimeAddress(NULL->unpack_with_reexecution()));
       }
       break;
 
@@ -1242,9 +1241,9 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         oop_maps->add_gc_map(call_offset, map);
         restore_live_registers(sasm);
         __ leave();
-        DeoptimizationBlob* deopt_blob = SharedRuntime::deopt_blob();
+        NULL* NULL = SharedRuntime::NULL();
 
-        __ jump(RuntimeAddress(deopt_blob->unpack_with_reexecution()));
+        __ jump(RuntimeAddress(NULL->unpack_with_reexecution()));
       }
       break;
 

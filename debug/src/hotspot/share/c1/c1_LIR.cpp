@@ -139,8 +139,7 @@ LIR_OpBranch::LIR_OpBranch(LIR_Condition cond, BasicType type, BlockBegin* block
   , _block(block)
   , _ublock(ublock)
   , _stub(NULL)
-{
-}
+{ }
 
 void LIR_OpBranch::change_block(BlockBegin* b) {
   _block = b;
@@ -805,7 +804,7 @@ void LIR_List::append(LIR_InsertionBuffer* buffer) {
     int ip_index = buffer->number_of_insertion_points() - 1;
     int from_index = n - 1;
     int to_index = _operations.length() - 1;
-    for (; ip_index >= 0; ip_index--) {
+    for ( ; ip_index >= 0; ip_index--) {
       int index = buffer->index_at(ip_index);
       // make room after insertion point
       while (index < from_index) {
@@ -956,7 +955,7 @@ void LIR_List::store_check(LIR_Opr object, LIR_Opr array, LIR_Opr tmp1, LIR_Opr 
 void LIR_List::null_check(LIR_Opr opr, CodeEmitInfo* info, bool deoptimize_on_null) {
   if (deoptimize_on_null) {
     // Emit an explicit null check and deoptimize if opr is null
-    CodeStub* deopt = new DeoptimizeStub(info, Deoptimization::Reason_null_check, Deoptimization::Action_none);
+    CodeStub* deopt = new NULL(info, NULL::Reason_null_check, NULL::Action_none);
     cmp(lir_cond_equal, opr, LIR_OprFact::oopConst(NULL));
     branch(lir_cond_equal, T_OBJECT, deopt);
   } else {

@@ -609,12 +609,14 @@ bool nmethod::can_convert_to_zombie() {
 }
 
 void nmethod::inc_decompile_count() {
-  if (!is_compiled_by_c2() && !is_compiled_by_jvmci()) return;
-  // Could be gated by ProfileTraps, but do not bother...
+  if (!is_compiled_by_c2() && !is_compiled_by_jvmci())
+    return;
   Method* m = method();
-  if (m == NULL)  return;
+  if (m == NULL)
+    return;
   MethodData* mdo = m->method_data();
-  if (mdo == NULL)  return;
+  if (mdo == NULL)
+    return;
   // There is a benign race here.  See comments in methodData.hpp.
   mdo->inc_decompile_count();
 }
@@ -970,7 +972,7 @@ void nmethod::metadata_do(void f(Metadata*)) {
     // Visit all immediate references that are embedded in the instruction stream.
     RelocIterator iter(this, oops_reloc_begin());
     while (iter.next()) {
-      if (iter.type() == relocInfo::metadata_type ) {
+      if (iter.type() == relocInfo::metadata_type) {
         metadata_Relocation* r = iter.metadata_reloc();
         // In this metadata, we must only follow those metadatas directly embedded in
         // the code.  Other metadatas (oop_index > 0) are seen as part of
@@ -1013,7 +1015,7 @@ void nmethod::oops_do(OopClosure* f, bool allow_zombie) {
     RelocIterator iter(this, oops_reloc_begin());
 
     while (iter.next()) {
-      if (iter.type() == relocInfo::oop_type ) {
+      if (iter.type() == relocInfo::oop_type) {
         oop_Relocation* r = iter.oop_reloc();
         // In this loop, we must only follow those oops directly embedded in
         // the code.  Other oops (oop_index > 0) are seen as part of scopes_oops.
@@ -1120,7 +1122,7 @@ void nmethod::copy_scopes_pcs(PcDesc* pcs, int count) {
   // Adjust the final sentinel downward.
   PcDesc* last_pc = &scopes_pcs_begin()[count - 1];
   last_pc->set_pc_offset(content_size() + 1);
-  for (; last_pc + 1 < scopes_pcs_end(); last_pc += 1) {
+  for ( ; last_pc + 1 < scopes_pcs_end(); last_pc += 1) {
     // Fill any rounding gaps with copies of the last record.
     last_pc[1] = last_pc[0];
   }
@@ -1913,7 +1915,7 @@ void nmethod::invalidate_installed_code(Handle installedCode, TRAPS) {
     // Invalidating the InstalledCode means we want the nmethod
     // to be deoptimized.
     nm->mark_for_deoptimization();
-    VM_Deoptimize op;
+    NULL op;
     VMThread::execute(&op);
   }
 

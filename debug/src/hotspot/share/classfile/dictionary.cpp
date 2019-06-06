@@ -297,13 +297,11 @@ bool Dictionary::is_valid_protection_domain(unsigned int hash, Symbol* name, Han
 
 SymbolPropertyTable::SymbolPropertyTable(int table_size)
   : Hashtable<Symbol*, mtSymbol>(table_size, sizeof(SymbolPropertyEntry))
-{
-}
+{ }
 
 SymbolPropertyTable::SymbolPropertyTable(int table_size, HashtableBucket<mtSymbol>* t, int number_of_entries)
   : Hashtable<Symbol*, mtSymbol>(table_size, sizeof(SymbolPropertyEntry), t, number_of_entries)
-{
-}
+{ }
 
 SymbolPropertyEntry* SymbolPropertyTable::find_entry(int index, unsigned int hash, Symbol* sym, intptr_t sym_mode) {
   for (SymbolPropertyEntry* p = bucket(index); p != NULL; p = p->next()) {

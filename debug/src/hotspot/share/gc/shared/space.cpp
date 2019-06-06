@@ -56,7 +56,7 @@ void DirtyCardToOopClosure::walk_mem_region(MemRegion mr, HeapWord* bottom, Heap
   // version of oop_iterate() for all but the extremal objects
   // (for which we need to call the MemRegion version of
   // oop_iterate()) To be done post-beta XXX
-  for (; bottom < top; bottom += _sp->block_size(bottom)) {
+  for ( ; bottom < top; bottom += _sp->block_size(bottom)) {
     // As in the case of contiguous space above, we'd like to
     // just use the value returned by oop_iterate to increment the
     // current pointer; unfortunately, that won't work in CMS because

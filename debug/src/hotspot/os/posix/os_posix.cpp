@@ -61,7 +61,7 @@ int os::get_native_stack(address* stack, int frames, int toSkip) {
     }
   }
   num_of_frames = frame_idx;
-  for (; frame_idx < frames; frame_idx ++) {
+  for ( ; frame_idx < frames; frame_idx ++) {
     stack[frame_idx] = NULL;
   }
 
@@ -399,8 +399,7 @@ void os::funlockfile(FILE* fp) {
 //                                     such as "/a/b/libL.so"
 //            == false if only the base name of the library is passed in
 //               such as "L"
-char* os::build_agent_function_name(const char *sym_name, const char *lib_name,
-                                    bool is_absolute_path) {
+char* os::build_agent_function_name(const char *sym_name, const char *lib_name, bool is_absolute_path) {
   char *agent_entry_name;
   size_t len;
   size_t name_len;

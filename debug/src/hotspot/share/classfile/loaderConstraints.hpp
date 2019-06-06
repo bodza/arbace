@@ -10,15 +10,12 @@ class Symbol;
 
 class LoaderConstraintTable : public Hashtable<InstanceKlass*, mtClass> {
 private:
-  LoaderConstraintEntry** find_loader_constraint(Symbol* name,
-                                                 Handle loader);
+  LoaderConstraintEntry** find_loader_constraint(Symbol* name, Handle loader);
 
 public:
   LoaderConstraintTable(int table_size);
 
-  LoaderConstraintEntry* new_entry(unsigned int hash, Symbol* name,
-                                   InstanceKlass* klass, int num_loaders,
-                                   int max_loaders);
+  LoaderConstraintEntry* new_entry(unsigned int hash, Symbol* name, InstanceKlass* klass, int num_loaders, int max_loaders);
   void free_entry(LoaderConstraintEntry *entry);
 
   LoaderConstraintEntry* bucket(int i) const {
@@ -30,13 +27,10 @@ public:
   }
 
   // Check class loader constraints
-  bool add_entry(Symbol* name, InstanceKlass* klass1, Handle loader1,
-                                    InstanceKlass* klass2, Handle loader2);
+  bool add_entry(Symbol* name, InstanceKlass* klass1, Handle loader1, InstanceKlass* klass2, Handle loader2);
 
   // Note:  The main entry point for this module is via SystemDictionary.
-  // SystemDictionary::check_signature_loaders(Symbol* signature,
-  //                                           Handle loader1, Handle loader2,
-  //                                           bool is_method, TRAPS)
+  // SystemDictionary::check_signature_loaders(Symbol* signature, Handle loader1, Handle loader2, bool is_method, TRAPS)
 
   InstanceKlass* find_constrained_klass(Symbol* name, Handle loader);
 

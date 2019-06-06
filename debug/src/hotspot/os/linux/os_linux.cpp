@@ -7,7 +7,6 @@
 #include "code/vtableStubs.hpp"
 #include "compiler/compileBroker.hpp"
 #include "compiler/disassembler.hpp"
-#include "interpreter/interpreter.hpp"
 #include "memory/allocation.inline.hpp"
 #include "oops/oop.inline.hpp"
 #include "os_linux.inline.hpp"
@@ -156,7 +155,7 @@ julong os::Linux::available_memory() {
     }
     if (mem_limit > 0 && (mem_usage = OSContainer::memory_usage_in_bytes()) < 1) {
     }
-    if (mem_limit > 0 && mem_usage > 0 ) {
+    if (mem_limit > 0 && mem_usage > 0) {
       avail_mem = mem_limit > mem_usage ? (julong)mem_limit - (julong)mem_usage : 0;
       return avail_mem;
     }
@@ -1037,7 +1036,7 @@ void os::Linux::capture_initial_stack(size_t max_size) {
 // time support
 
 // Time since start-up in seconds to a fine granularity.
-// Used by VMSelfDestructTimer and the MemProfiler.
+// Used by VMSelfDestructTimer.
 double os::elapsedTime() {
   return ((double)os::elapsed_counter()) / os::elapsed_frequency(); // nanosecond resolution
 }
@@ -1301,8 +1300,7 @@ bool os::dll_address_to_function_name(address addr, char *buf, int buflen, int *
     }
     // no matching symbol so try for just file info
     if (dlinfo.dli_fname != NULL && dlinfo.dli_fbase != NULL) {
-      if (Decoder::decode((address)(addr - (address)dlinfo.dli_fbase),
-                          buf, buflen, offset, dlinfo.dli_fname, demangle)) {
+      if (Decoder::decode((address)(addr - (address)dlinfo.dli_fbase), buf, buflen, offset, dlinfo.dli_fname, demangle)) {
         return true;
       }
     }
@@ -2592,8 +2590,7 @@ bool os::get_page_info(char *start, page_info* info) {
   return false;
 }
 
-char *os::scan_pages(char *start, char* end, page_info* page_expected,
-                     page_info* page_found) {
+char *os::scan_pages(char *start, char* end, page_info* page_expected, page_info* page_found) {
   return end;
 }
 
@@ -3054,8 +3051,7 @@ static int anon_munmap(char * addr, size_t size) {
   return ::munmap(addr, size) == 0;
 }
 
-char* os::pd_reserve_memory(size_t bytes, char* requested_addr,
-                            size_t alignment_hint) {
+char* os::pd_reserve_memory(size_t bytes, char* requested_addr, size_t alignment_hint) {
   return anon_mmap(requested_addr, bytes, (requested_addr != NULL));
 }
 
@@ -3549,8 +3545,7 @@ char* os::Linux::reserve_memory_special_huge_tlbfs(size_t bytes, size_t alignmen
   }
 }
 
-char* os::reserve_memory_special(size_t bytes, size_t alignment,
-                                 char* req_addr, bool exec) {
+char* os::reserve_memory_special(size_t bytes, size_t alignment, char* req_addr, bool exec) {
   char* addr;
   if (UseSHM) {
     addr = os::Linux::reserve_memory_special_shm(bytes, alignment, req_addr, exec);

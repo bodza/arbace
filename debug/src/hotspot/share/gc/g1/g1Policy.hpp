@@ -301,8 +301,7 @@ public:
     return _bytes_copied_during_gc;
   }
 
-  bool next_gc_should_be_mixed(const char* true_action_str,
-                               const char* false_action_str) const;
+  bool next_gc_should_be_mixed(const char* true_action_str, const char* false_action_str) const;
 
   void finalize_collection_set(double target_pause_time_ms, G1SurvivorRegions* survivor);
 private:

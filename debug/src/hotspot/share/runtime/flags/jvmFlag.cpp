@@ -672,7 +672,7 @@ void JVMFlag::print_as_flag(outputStream* st) {
       // Not so efficient to print one character at a time,
       // but the choice is to do the transformation to a buffer
       // and print that.  And this need not be efficient.
-      for (; *cp != '\0'; cp += 1) {
+      for ( ; *cp != '\0'; cp += 1) {
         switch (*cp) {
           default:
             st->print("%c", *cp);

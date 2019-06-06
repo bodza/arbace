@@ -19,11 +19,7 @@ const char* strchrnul_(const char *s, int c) {
   return tmp == NULL ? s + strlen(s) : tmp;
 }
 
-JSON::JSON(const char* text, bool silent, outputStream* st)
-: start(text), pos(text), mark(text),
-  level(0), line(1), column(0), silent(silent), _valid(true), _st(st)
-{
-}
+JSON::JSON(const char* text, bool silent, outputStream* st) : start(text), pos(text), mark(text), level(0), line(1), column(0), silent(silent), _valid(true), _st(st) { }
 
 void JSON::parse() {
   if (start == NULL) {

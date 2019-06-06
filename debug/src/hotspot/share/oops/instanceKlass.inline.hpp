@@ -35,7 +35,7 @@ ALWAYSINLINE void InstanceKlass::oop_oop_iterate_oop_map(OopMapBlock* map, oop o
   T* p         = (T*)obj->obj_field_addr_raw<T>(map->offset());
   T* const end = p + map->count();
 
-  for (; p < end; ++p) {
+  for ( ; p < end; ++p) {
     Devirtualizer::do_oop(closure, p);
   }
 }
@@ -76,7 +76,7 @@ ALWAYSINLINE void InstanceKlass::oop_oop_iterate_oop_maps(oop obj, OopClosureTyp
   OopMapBlock* map           = start_of_nonstatic_oop_maps();
   OopMapBlock* const end_map = map + nonstatic_oop_map_count();
 
-  for (; map < end_map; ++map) {
+  for ( ; map < end_map; ++map) {
     oop_oop_iterate_oop_map<T>(map, obj, closure);
   }
 }

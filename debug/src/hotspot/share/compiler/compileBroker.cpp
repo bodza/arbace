@@ -661,15 +661,9 @@ void CompileBroker::compile_method_base(const methodHandle& method, int osr_bci,
     return;
   }
 
-  if (TieredCompilation) {
-    // Tiered policy requires MethodCounters to exist before adding a method to
-    // the queue. Create if we don't have them yet.
-    method->get_method_counters(thread);
-  }
-
   // Outputs from the following MutexLocker block:
-  CompileTask* task     = NULL;
-  CompileQueue* queue  = compile_queue(comp_level);
+  CompileTask* task   = NULL;
+  CompileQueue* queue = compile_queue(comp_level);
 
   // Acquire our lock.
   {
@@ -707,7 +701,7 @@ void CompileBroker::compile_method_base(const methodHandle& method, int osr_bci,
 
         // Don't allow blocking compiles if inside a class initializer or while performing class loading
         vframeStream vfst((JavaThread*) thread);
-        for (; !vfst.at_end(); vfst.next()) {
+        for ( ; !vfst.at_end(); vfst.next()) {
           if (vfst.method()->is_static_initializer() || (vfst.method()->method_holder()->is_subclass_of(SystemDictionary::ClassLoader_klass()) && vfst.method()->name() == vmSymbols::loadClass_name())) {
             blocking = false;
             break;
@@ -1194,11 +1188,10 @@ void CompileBroker::shutdown_compiler_runtime(AbstractCompiler* comp, CompilerTh
     }
 
     // Set flags so that we continue execution with using interpreter only.
-    UseCompiler    = false;
-    UseInterpreter = true;
+    UseCompiler = false;
 
     // We could delete compiler runtimes also. However, there are references to
-    // the compiler runtime(s) (e.g.,  nmethod::is_compiled_by_c1()) which then
+    // the compiler runtime(s) (e.g. nmethod::is_compiled_by_c1()) which then
     // fail. This can be done later if necessary.
   }
 }
@@ -1418,7 +1411,7 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     TraceTime t1("compilation", &time);
 
     if (comp == NULL) {
-      ci_env.record_method_not_compilable("no compiler", !TieredCompilation);
+      ci_env.record_method_not_compilable("no compiler");
     } else {
       comp->compile_method(&ci_env, target, osr_bci, directive);
     }
@@ -1426,7 +1419,7 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     if (!ci_env.failing() && task->code() == NULL) {
       // The compiler elected, without comment, not to register a result.
       // Do not attempt further compilations of this method.
-      ci_env.record_method_not_compilable("compile failed", !TieredCompilation);
+      ci_env.record_method_not_compilable("compile failed");
     }
 
     // Copy this bit to the enclosing block:
@@ -1490,8 +1483,7 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
  * since we currently handle a full code cache uniformly.
  */
 void CompileBroker::handle_full_code_cache(int code_blob_type) {
-  UseInterpreter = true;
-  if (UseCompiler || AlwaysCompileLoopMethods ) {
+  if (UseCompiler || AlwaysCompileLoopMethods) {
     if (xtty != NULL) {
       ResourceMark rm;
       stringStream s;

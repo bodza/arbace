@@ -3,9 +3,7 @@
 #include "classfile/resolutionErrors.hpp"
 #include "interpreter/bytecodeStream.hpp"
 #include "interpreter/bytecodes.hpp"
-#include "interpreter/interpreter.hpp"
 #include "interpreter/linkResolver.hpp"
-#include "interpreter/rewriter.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceClosure.hpp"
 #include "memory/resourceArea.hpp"
@@ -84,7 +82,7 @@ void ConstantPoolCacheEntry::set_field(Bytecodes::Code get_code, Bytecodes::Code
 
 void ConstantPoolCacheEntry::set_parameter_size(int value) {
   // This routine is called only in corner cases where the CPCE is not yet initialized.
-  // See AbstractInterpreter::deopt_continue_after_entry.
+  //
   // Setting the parameter size by itself is only safe if the
   // current value of _flags is 0, otherwise another thread may have
   // updated it and we don't want to overwrite that value.  Don't
@@ -118,7 +116,7 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
         set_f1(holder); // interface klass*
         break;
       } else {
-        // We get here from InterpreterRuntime::resolve_invoke when an invokeinterface
+        // We get here from NULL::resolve_invoke when an invokeinterface
         // instruction links to a non-interface method (in Object). This can happen when
         // an interface redeclares an Object method (like CharSequence declaring toString())
         // or when invokeinterface is used explicitly.
@@ -166,7 +164,6 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
       break;
   }
 
-  // Note:  byte_no also appears in TemplateTable::resolve.
   if (byte_no == 1) {
     bool do_resolve = true;
     // Don't mark invokespecial to method as resolved if sender is an interface.  The receiver
@@ -199,7 +196,6 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
       // because the actual selected method may not be public.
       //
       // We set bytecode_2() to _invokevirtual.
-      // See also interpreterRuntime.cpp. (8/25/2000)
     } else {
       if (invoke_code == Bytecodes::_invokeinterface && (method->is_private() || method->is_final())) {
         // We set bytecode_1() to _invokeinterface, because that is the

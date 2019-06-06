@@ -199,7 +199,6 @@ class InstanceKlass: public Klass {
   u2              _minor_version;        // minor version number of class file
   u2              _major_version;        // major version number of class file
   Thread*         _init_thread;          // Pointer to current thread doing initialization (to handle recusive initialization)
-  OopMapCache*    volatile _oop_map_cache;   // OopMapCache for all methods in the klass (allocated lazily)
   JNIid*          _jni_ids;              // First JNI identifier for static fields in this class
   jmethodID*      volatile _methods_jmethod_ids;  // jmethodIDs corresponding to method_idnum, or NULL if none
   intptr_t        _dep_context;          // packed DependencyContext structure
@@ -793,14 +792,9 @@ public:
   void call_class_initializer(TRAPS);
   void set_initialization_state_and_notify(ClassState state, TRAPS);
 
-  // OopMapCache support
-  OopMapCache* oop_map_cache()               { return _oop_map_cache; }
-  void set_oop_map_cache(OopMapCache *cache) { _oop_map_cache = cache; }
-  void mask_for(const methodHandle& method, int bci, InterpreterOopMap* entry);
-
   // JNI identifier support (for static fields - for jni performance)
-  JNIid* jni_ids()                               { return _jni_ids; }
-  void set_jni_ids(JNIid* ids)                   { _jni_ids = ids; }
+  JNIid* jni_ids()             { return _jni_ids; }
+  void set_jni_ids(JNIid* ids) { _jni_ids = ids; }
   JNIid* jni_id_for(int offset);
 
   // maintenance of deoptimization dependencies
@@ -810,8 +804,8 @@ public:
   void remove_dependent_nmethod(nmethod* nm, bool delete_immediately);
 
   // On-stack replacement support
-  nmethod* osr_nmethods_head() const         { return _osr_nmethods_head; };
-  void set_osr_nmethods_head(nmethod* h)     { _osr_nmethods_head = h; };
+  nmethod* osr_nmethods_head() const     { return _osr_nmethods_head; };
+  void set_osr_nmethods_head(nmethod* h) { _osr_nmethods_head = h; };
   void add_osr_nmethod(nmethod* n);
   bool remove_osr_nmethod(nmethod* n);
   int mark_osr_nmethods(const Method* m);

@@ -346,10 +346,10 @@ CodeEmitInfo* LIRGenerator::state_for(Instruction* x) {
 }
 
 void LIRGenerator::klass2reg_with_patching(LIR_Opr r, ciMetadata* obj, CodeEmitInfo* info, bool need_resolve) {
-  /* C2 relies on constant pool entries being resolved (ciTypeFlow), so if TieredCompilation
-   * is active and the class hasn't yet been resolved we need to emit a patch that resolves
-   * the class. */
-  if ((TieredCompilation && need_resolve) || !obj->is_loaded() || PatchALot) {
+  /* C2 relies on constant pool entries being resolved (ciTypeFlow), so if ... is active
+   * and the class hasn't yet been resolved we need to emit a patch that resolves the class.
+   */
+  if (!obj->is_loaded() || PatchALot) {
     __ klass2reg_patch(NULL, r, info);
   } else {
     // no patching needed
@@ -360,12 +360,10 @@ void LIRGenerator::klass2reg_with_patching(LIR_Opr r, ciMetadata* obj, CodeEmitI
 void LIRGenerator::array_range_check(LIR_Opr array, LIR_Opr index, CodeEmitInfo* null_check_info, CodeEmitInfo* range_check_info) {
   CodeStub* stub = new RangeCheckStub(range_check_info, index, array);
   if (index->is_constant()) {
-    cmp_mem_int(lir_cond_belowEqual, array, arrayOopDesc::length_offset_in_bytes(),
-                index->as_jint(), null_check_info);
+    cmp_mem_int(lir_cond_belowEqual, array, arrayOopDesc::length_offset_in_bytes(), index->as_jint(), null_check_info);
     __ branch(lir_cond_belowEqual, T_INT, stub); // forward branch
   } else {
-    cmp_reg_mem(lir_cond_aboveEqual, index, array,
-                arrayOopDesc::length_offset_in_bytes(), T_INT, null_check_info);
+    cmp_reg_mem(lir_cond_aboveEqual, index, array, arrayOopDesc::length_offset_in_bytes(), T_INT, null_check_info);
     __ branch(lir_cond_aboveEqual, T_INT, stub); // forward branch
   }
 }
@@ -2047,7 +2045,7 @@ void LIRGenerator::do_Goto(Goto* x) {
     signature.append(T_LONG); // pass a pointer to osrBuffer
     CallingConvention* cc = frame_map()->c_calling_convention(&signature);
     __ move(osrBuffer, cc->args()->at(0));
-    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::OSR_migration_end), getThreadTemp(), LIR_OprFact::illegalOpr, cc->args());
+    __ call_runtime_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::NULL), getThreadTemp(), LIR_OprFact::illegalOpr, cc->args());
   }
 
   if (x->is_safepoint()) {
@@ -2772,9 +2770,8 @@ void LIRGenerator::decrement_age(CodeEmitInfo* info) {
     __ load(counter, result);
     __ sub(result, LIR_OprFact::intConst(1), result);
     __ store(result, counter);
-    // DeoptimizeStub will reexecute from the current state in code info.
-    CodeStub* deopt = new DeoptimizeStub(info, Deoptimization::Reason_tenured,
-                                         Deoptimization::Action_make_not_entrant);
+    // NULL will reexecute from the current state in code info.
+    CodeStub* deopt = new NULL(info, NULL::Reason_tenured, NULL::Action_make_not_entrant);
     __ cmp(lir_cond_lessEqual, result, LIR_OprFact::intConst(0));
     __ branch(lir_cond_lessEqual, T_INT, deopt);
   }
@@ -2864,7 +2861,7 @@ void LIRGenerator::do_RuntimeCall(RuntimeCall* x) {
 void LIRGenerator::do_RangeCheckPredicate(RangeCheckPredicate *x) {
   Instruction *a = x->x();
   Instruction *b = x->y();
-  if (!a || StressRangeCheckElimination) {
+  if (!a || false) {
     CodeEmitInfo *info = state_for(x, x->state());
     CodeStub* stub = new PredicateFailedStub(info);
 

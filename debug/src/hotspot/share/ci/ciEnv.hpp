@@ -78,51 +78,24 @@ private:
   // The CI treats a klass as loaded if it is consistently defined in
   // another loader, even if it hasn't yet been loaded in all loaders
   // that could potentially see it via delegation.
-  ciKlass* get_klass_by_name(ciKlass* accessing_klass,
-                             ciSymbol* klass_name,
-                             bool require_local);
+  ciKlass* get_klass_by_name(ciKlass* accessing_klass, ciSymbol* klass_name, bool require_local);
 
   // Constant pool access.
-  ciKlass*   get_klass_by_index(const constantPoolHandle& cpool,
-                                int klass_index,
-                                bool& is_accessible,
-                                ciInstanceKlass* loading_klass);
-  ciConstant get_constant_by_index(const constantPoolHandle& cpool,
-                                   int pool_index, int cache_index,
-                                   ciInstanceKlass* accessor);
-  ciField*   get_field_by_index(ciInstanceKlass* loading_klass,
-                                int field_index);
-  ciMethod*  get_method_by_index(const constantPoolHandle& cpool,
-                                 int method_index, Bytecodes::Code bc,
-                                 ciInstanceKlass* loading_klass);
+  ciKlass*   get_klass_by_index(const constantPoolHandle& cpool, int klass_index, bool& is_accessible, ciInstanceKlass* loading_klass);
+  ciConstant get_constant_by_index(const constantPoolHandle& cpool, int pool_index, int cache_index, ciInstanceKlass* accessor);
+  ciField*   get_field_by_index(ciInstanceKlass* loading_klass, int field_index);
+  ciMethod*  get_method_by_index(const constantPoolHandle& cpool, int method_index, Bytecodes::Code bc, ciInstanceKlass* loading_klass);
 
   // Implementation methods for loading and constant pool access.
-  ciKlass* get_klass_by_name_impl(ciKlass* accessing_klass,
-                                  const constantPoolHandle& cpool,
-                                  ciSymbol* klass_name,
-                                  bool require_local);
-  ciKlass*   get_klass_by_index_impl(const constantPoolHandle& cpool,
-                                     int klass_index,
-                                     bool& is_accessible,
-                                     ciInstanceKlass* loading_klass);
-  ciConstant get_constant_by_index_impl(const constantPoolHandle& cpool,
-                                        int pool_index, int cache_index,
-                                        ciInstanceKlass* loading_klass);
-  ciField*   get_field_by_index_impl(ciInstanceKlass* loading_klass,
-                                     int field_index);
-  ciMethod*  get_method_by_index_impl(const constantPoolHandle& cpool,
-                                      int method_index, Bytecodes::Code bc,
-                                      ciInstanceKlass* loading_klass);
+  ciKlass* get_klass_by_name_impl(ciKlass* accessing_klass, const constantPoolHandle& cpool, ciSymbol* klass_name, bool require_local);
+  ciKlass*   get_klass_by_index_impl(const constantPoolHandle& cpool, int klass_index, bool& is_accessible, ciInstanceKlass* loading_klass);
+  ciConstant get_constant_by_index_impl(const constantPoolHandle& cpool, int pool_index, int cache_index, ciInstanceKlass* loading_klass);
+  ciField*   get_field_by_index_impl(ciInstanceKlass* loading_klass, int field_index);
+  ciMethod*  get_method_by_index_impl(const constantPoolHandle& cpool, int method_index, Bytecodes::Code bc, ciInstanceKlass* loading_klass);
 
   // Helper methods
-  bool       check_klass_accessibility(ciKlass* accessing_klass,
-                                      Klass* resolved_klass);
-  Method*    lookup_method(ciInstanceKlass* accessor,
-                           ciKlass*         holder,
-                           Symbol*          name,
-                           Symbol*          sig,
-                           Bytecodes::Code  bc,
-                           constantTag      tag);
+  bool       check_klass_accessibility(ciKlass* accessing_klass, Klass* resolved_klass);
+  Method*    lookup_method(ciInstanceKlass* accessor, ciKlass* holder, Symbol* name, Symbol* sig, Bytecodes::Code bc, constantTag tag);
 
   // Get a ciObject from the object factory.  Ensures uniqueness
   // of ciObjects.
@@ -187,18 +160,14 @@ private:
   // Get a ciMethod representing either an unfound method or
   // a method with an unloaded holder.  Ensures uniqueness of
   // the result.
-  ciMethod* get_unloaded_method(ciKlass*         holder,
-                                ciSymbol*        name,
-                                ciSymbol*        signature,
-                                ciInstanceKlass* accessor) {
+  ciMethod* get_unloaded_method(ciKlass* holder, ciSymbol* name, ciSymbol* signature, ciInstanceKlass* accessor) {
     ciInstanceKlass* declared_holder = get_instance_klass_for_declared_method_holder(holder);
     return _factory->get_unloaded_method(declared_holder, name, signature, accessor);
   }
 
   // Get a ciKlass representing an unloaded klass.
   // Ensures uniqueness of the result.
-  ciKlass* get_unloaded_klass(ciKlass*  accessing_klass,
-                              ciSymbol* name) {
+  ciKlass* get_unloaded_klass(ciKlass*  accessing_klass, ciSymbol* name) {
     return _factory->get_unloaded_klass(accessing_klass, name, true);
   }
 

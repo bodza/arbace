@@ -552,7 +552,7 @@ bool BitMap::iterate(BitMapClosure* blk, idx_t leftOffset, idx_t rightOffset) {
   idx_t endIndex   = MIN2(word_index(rightOffset) + 1, size_in_words());
   for (idx_t index = startIndex, offset = leftOffset; offset < rightOffset && index < endIndex; offset = (++index) << LogBitsPerWord) {
     idx_t rest = map(index) >> (offset & (BitsPerWord - 1));
-    for (; offset < rightOffset && rest != 0; offset++) {
+    for ( ; offset < rightOffset && rest != 0; offset++) {
       if (rest & 1) {
         if (!blk->do_bit(offset)) return false;
         //  resample at each closure application

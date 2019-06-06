@@ -130,13 +130,6 @@ class MacroAssembler: public Assembler {
   void build_frame(int framesize);
   void remove_frame(int framesize);
 
-  virtual void _call_Unimplemented(address call_site) {
-    mov(rscratch2, call_site);
-    haltsim();
-  }
-
-#define call_Unimplemented() _call_Unimplemented((address)__PRETTY_FUNCTION__)
-
   virtual void notify(int type);
 
   // aliases defined in AARCH64 spec
@@ -841,9 +834,7 @@ public:
   // Check for reserved stack access in method being exited (for JIT)
   void reserved_stack_check();
 
-  virtual RegisterOrConstant delayed_value_impl(intptr_t* delayed_value_addr,
-                                                Register tmp,
-                                                int offset);
+  virtual RegisterOrConstant delayed_value_impl(intptr_t* delayed_value_addr, Register tmp, int offset);
 
   // Support for serializing memory accesses between threads
   void serialize_memory(Register thread, Register tmp);
@@ -892,7 +883,7 @@ public:
   address trampoline_call(Address entry, CodeBuffer *cbuf = NULL);
 
   static bool far_branches() {
-    return ReservedCodeCacheSize > branch_range || UseAOT;
+    return ReservedCodeCacheSize > branch_range || false;
   }
 
   // Jumps that can reach anywhere in the code cache.
@@ -1027,12 +1018,6 @@ public:
   public:
   // enum used for aarch64--x86 linkage to define return type of x86 function
   enum ret_type { ret_type_void, ret_type_integral, ret_type_float, ret_type_double };
-
-#ifdef BUILTIN_SIM
-  void c_stub_prolog(int gp_arg_count, int fp_arg_count, int ret_type, address *prolog_ptr = NULL);
-#else
-  void c_stub_prolog(int gp_arg_count, int fp_arg_count, int ret_type) { }
-#endif
 
   // special version of call_VM_leaf_base needed for aarch64 simulator
   // where we need to specify both the gp and fp arg counts and the

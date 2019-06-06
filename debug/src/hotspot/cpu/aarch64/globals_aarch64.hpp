@@ -58,8 +58,6 @@ define_pd_global(bool, ThreadLocalHandshakes, true);
 
 define_pd_global(intx, InlineSmallCode,       1000);
 
-#ifdef BUILTIN_SIM
-#define UseBuiltinSim           true
 #define ARCH_FLAGS(develop, \
                    product, \
                    diagnostic, \
@@ -69,75 +67,18 @@ define_pd_global(intx, InlineSmallCode,       1000);
                    constraint, \
                    writeable) \
  \
-  product(bool, NotifySimulator, UseBuiltinSim, \
-         "tell the AArch64 sim where we are in method code") \
- \
-  product(bool, UseSimulatorCache, false, \
-         "tell sim to cache memory updates until exclusive op occurs") \
- \
-  product(bool, DisableBCCheck, true, \
-          "tell sim not to invoke bccheck callback") \
- \
-  product(bool, NearCpool, true, \
-         "constant pool is close to instructions") \
- \
-  product(bool, UseBarriersForVolatile, false, \
-          "Use memory barriers to implement volatile accesses") \
- \
-  product(bool, UseCRC32, false, \
-          "Use CRC32 instructions for CRC32 computation") \
- \
-  product(bool, UseLSE, false, \
-          "Use LSE instructions")
-
-// Don't attempt to use Neon on builtin sim until builtin sim supports it
-#define UseCRC32 false
-#define UseSIMDForMemoryOps    false
-#define AvoidUnalignedAcesses false
-
-#else
-#define UseBuiltinSim           false
-#define NotifySimulator         false
-#define UseSimulatorCache       false
-#define DisableBCCheck          true
-#define ARCH_FLAGS(develop, \
-                   product, \
-                   diagnostic, \
-                   experimental, \
-                   notproduct, \
-                   range, \
-                   constraint, \
-                   writeable) \
- \
-  product(bool, NearCpool, true, \
-         "constant pool is close to instructions") \
- \
-  product(bool, UseBarriersForVolatile, false, \
-          "Use memory barriers to implement volatile accesses") \
-  product(bool, UseNeon, false, \
-          "Use Neon for CRC32 computation") \
-  product(bool, UseCRC32, false, \
-          "Use CRC32 instructions for CRC32 computation") \
-  product(bool, UseSIMDForMemoryOps, false, \
-          "Use SIMD instructions in generated memory move code") \
-  product(bool, UseSIMDForArrayEquals, true, \
-          "Use SIMD instructions in generated array equals code") \
-  product(bool, UseSimpleArrayEquals, false, \
-          "Use simpliest and shortest implementation for array equals") \
-  product(bool, AvoidUnalignedAccesses, false, \
-          "Avoid generating unaligned memory accesses") \
-  product(bool, UseLSE, false, \
-          "Use LSE instructions") \
-  product(bool, UseBlockZeroing, true, \
-          "Use DC ZVA for block zeroing") \
-  product(intx, BlockZeroingLowLimit, 256, \
-          "Minimum size in bytes when block zeroing will be used") \
-          range(1, max_jint) \
-  product(bool, TraceTraps, false, "Trace all traps the signal handler") \
-  product(int, SoftwarePrefetchHintDistance, -1, \
-          "Use prfm hint with specified distance in compiled code." \
-          "Value -1 means off.") \
-          range(-1, 4096)
-#endif
+  product(bool, NearCpool,                    true,  "constant pool is close to instructions") \
+  product(bool, UseBarriersForVolatile,       false, "Use memory barriers to implement volatile accesses") \
+  product(bool, UseNeon,                      false, "Use Neon for CRC32 computation") \
+  product(bool, UseCRC32,                     false, "Use CRC32 instructions for CRC32 computation") \
+  product(bool, UseSIMDForMemoryOps,          false, "Use SIMD instructions in generated memory move code") \
+  product(bool, UseSIMDForArrayEquals,        true,  "Use SIMD instructions in generated array equals code") \
+  product(bool, UseSimpleArrayEquals,         false, "Use simpliest and shortest implementation for array equals") \
+  product(bool, AvoidUnalignedAccesses,       false, "Avoid generating unaligned memory accesses") \
+  product(bool, UseLSE,                       false, "Use LSE instructions") \
+  product(bool, UseBlockZeroing,              true,  "Use DC ZVA for block zeroing") \
+  product(intx, BlockZeroingLowLimit,         256,   "Minimum size in bytes when block zeroing will be used")                       range(1, max_jint) \
+  product(bool, TraceTraps,                   false, "Trace all traps the signal handler") \
+  product(int,  SoftwarePrefetchHintDistance, -1,    "Use prfm hint with specified distance in compiled code. Value -1 means off.") range(-1, 4096)
 
 #endif

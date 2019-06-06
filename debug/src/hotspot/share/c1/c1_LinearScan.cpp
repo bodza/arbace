@@ -2532,12 +2532,7 @@ void MoveResolver::resolve_and_append_moves() {
 
 // **** Implementation of Range *************************************
 
-Range::Range(int from, int to, Range* next) :
-  _from(from),
-  _to(to),
-  _next(next)
-{
-}
+Range::Range(int from, int to, Range* next) : _from(from), _to(to), _next(next) { }
 
 // initialize sentinel
 Range* Range::_end = NULL;
@@ -3943,11 +3938,7 @@ bool LinearScanWalker::activate_current() {
 
 // Implementation of EdgeMoveOptimizer
 
-EdgeMoveOptimizer::EdgeMoveOptimizer() :
-  _edge_instructions(4),
-  _edge_instructions_idx(4)
-{
-}
+EdgeMoveOptimizer::EdgeMoveOptimizer() : _edge_instructions(4), _edge_instructions_idx(4) { }
 
 void EdgeMoveOptimizer::optimize(BlockList* code) {
   EdgeMoveOptimizer optimizer = EdgeMoveOptimizer();
@@ -4152,10 +4143,7 @@ void EdgeMoveOptimizer::optimize_moves_at_block_begin(BlockBegin* block) {
 
 // Implementation of ControlFlowOptimizer
 
-ControlFlowOptimizer::ControlFlowOptimizer() :
-  _original_preds(4)
-{
-}
+ControlFlowOptimizer::ControlFlowOptimizer() : _original_preds(4) { }
 
 void ControlFlowOptimizer::optimize(BlockList* code) {
   ControlFlowOptimizer optimizer = ControlFlowOptimizer();

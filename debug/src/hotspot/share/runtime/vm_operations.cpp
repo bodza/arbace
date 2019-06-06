@@ -9,7 +9,6 @@
 #include "memory/resourceArea.hpp"
 #include "oops/symbol.hpp"
 #include "runtime/arguments.hpp"
-#include "runtime/deoptimization.hpp"
 #include "runtime/frame.inline.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
 #include "runtime/sweeper.hpp"
@@ -74,13 +73,13 @@ void VM_ClearICs::doit() {
   }
 }
 
-void VM_Deoptimize::doit() {
+void NULL::doit() {
   // We do not want any GCs to happen while we are in the middle of this VM operation
   ResourceMark rm;
-  DeoptimizationMarker dm;
+  NULL dm;
 
   // Deoptimize all activations depending on marked nmethods
-  Deoptimization::deoptimize_dependents();
+  NULL::deoptimize_dependents();
 
   // Make the dependent methods not entrant
   CodeCache::make_marked_nmethods_not_entrant();
@@ -90,14 +89,14 @@ void VM_MarkActiveNMethods::doit() {
   NMethodSweeper::mark_active_nmethods();
 }
 
-VM_DeoptimizeFrame::VM_DeoptimizeFrame(JavaThread* thread, intptr_t* id, int reason) {
+NULL::NULL(JavaThread* thread, intptr_t* id, int reason) {
   _thread = thread;
   _id     = id;
   _reason = reason;
 }
 
-void VM_DeoptimizeFrame::doit() {
-  Deoptimization::deoptimize_frame_internal(_thread, _id, (Deoptimization::DeoptReason)_reason);
+void NULL::doit() {
+  NULL::NULL(_thread, _id, (NULL::NULL)_reason);
 }
 
 void VM_UnlinkSymbols::doit() {
@@ -330,7 +329,7 @@ int VM_Exit::wait_for_threads_in_native_to_block() {
     int num_active_compiler_thread = 0;
 
     jtiwh.rewind();
-    for (; JavaThread *thr = jtiwh.next(); ) {
+    for ( ; JavaThread *thr = jtiwh.next(); ) {
       if (thr != thr_cur && thr->thread_state() == _thread_in_native) {
         num_active++;
         if (thr->is_Compiler_thread()) {

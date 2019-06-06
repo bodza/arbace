@@ -15,9 +15,7 @@
 // maintain a FIFO queue.
 
 template <class Chunk>
-FreeList<Chunk>::FreeList() :
-  _head(NULL), _tail(NULL)
-{
+FreeList<Chunk>::FreeList() : _head(NULL), _tail(NULL) {
   _size         = 0;
   _count        = 0;
 }

@@ -22,8 +22,7 @@ ciArrayKlass::ciArrayKlass(Klass* k) : ciKlass(k) {
 // ciArrayKlass::ciArrayKlass
 //
 // Unloaded array klass.
-ciArrayKlass::ciArrayKlass(ciSymbol* name, int dimension, BasicType bt)
-  : ciKlass(name, bt) {
+ciArrayKlass::ciArrayKlass(ciSymbol* name, int dimension, BasicType bt) : ciKlass(name, bt) {
   _dimension = dimension;
 }
 

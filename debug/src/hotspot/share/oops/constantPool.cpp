@@ -1339,7 +1339,7 @@ void ConstantPool::copy_operands(const constantPoolHandle& from_cp, const consta
 void ConstantPool::copy_cp_to_impl(const constantPoolHandle& from_cp, int start_i, int end_i, const constantPoolHandle& to_cp, int to_i, TRAPS) {
   int dest_i = to_i;  // leave original alone for debug purposes
 
-  for (int src_i = start_i; src_i <= end_i; /* see loop bottom */ ) {
+  for (int src_i = start_i; src_i <= end_i; /* see loop bottom */) {
     copy_entry_to(from_cp, src_i, to_cp, dest_i, CHECK);
 
     switch (from_cp->tag_at(src_i).value()) {

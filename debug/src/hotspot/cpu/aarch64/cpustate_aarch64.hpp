@@ -239,8 +239,7 @@ public:
 #define X86_Z (1 << X86_Z_IDX)
 #define X86_N (1 << X86_N_IDX)
 
-inline u_int32_t convertX86Flags(u_int32_t x86flags)
-{
+inline u_int32_t convertX86Flags(u_int32_t x86flags) {
   u_int32_t flags;
   // set N flag
   flags = ((x86flags & X86_N) >> X86_N_IDX);
@@ -257,8 +256,7 @@ inline u_int32_t convertX86Flags(u_int32_t x86flags)
   return flags;
 }
 
-inline u_int32_t convertX86FlagsFP(u_int32_t x86flags)
-{
+inline u_int32_t convertX86FlagsFP(u_int32_t x86flags) {
   // x86 flags set by fcomi(x,y) are ZF:PF:CF
   // (yes, that's PF for parity, WTF?)
   // where
@@ -348,7 +346,6 @@ enum PrintFormat
  */
 class CPUState
 {
-  friend class AArch64Simulator;
 private:
   // this is the PC of the instruction being executed
   u_int64_t pc;

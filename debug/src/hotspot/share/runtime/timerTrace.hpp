@@ -24,25 +24,18 @@ class TraceTime: public StackObj {
 
  public:
   // Constructors
-  TraceTime(const char* title,
-            bool doit = true);
-
-  TraceTime(const char* title,
-            elapsedTimer* accumulator,
-            bool doit = true,
-            bool verbose = false);
-
-  TraceTime(const char* title,
-            TraceTimerLogPrintFunc ttlpf);
+  TraceTime(const char* title, bool doit = true);
+  TraceTime(const char* title, elapsedTimer* accumulator, bool doit = true, bool verbose = false);
+  TraceTime(const char* title, TraceTimerLogPrintFunc ttlpf);
 
   ~TraceTime();
 
   // Accessors
-  bool verbose() const            { return _verbose; }
+  bool verbose() const { return _verbose; }
 
   // Activation
-  void suspend()  { if (_active) _t.stop(); }
-  void resume()   { if (_active) _t.start(); }
+  void suspend() { if (_active) _t.stop(); }
+  void resume()  { if (_active) _t.start(); }
 };
 
 #endif

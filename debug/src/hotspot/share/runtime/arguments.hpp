@@ -199,7 +199,6 @@ class Arguments : AllStatic {
  public:
   // Operation modi
   enum Mode {
-    _int,       // corresponds to -Xint
     _mixed,     // corresponds to -Xmixed
     _comp       // corresponds to -Xcomp
   };
@@ -549,8 +548,7 @@ class Arguments : AllStatic {
   static void  fix_appclasspath();
 
   // Operation modi
-  static Mode mode()                        { return _mode; }
-  static bool is_interpreter_only() { return mode() == _int; }
+  static Mode mode() { return _mode; }
 
   // preview features
   static void set_enable_preview() { _enable_preview = true; }

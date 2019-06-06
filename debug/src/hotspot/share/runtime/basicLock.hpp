@@ -42,7 +42,7 @@ class BasicObjectLock {
   void set_obj(oop obj)                               { _obj = obj; }
   BasicLock* lock()                                   { return &_lock; }
 
-  // Note: Use frame::interpreter_frame_monitor_size() for the size of BasicObjectLocks
+  // Note: Use frame::NULL() for the size of BasicObjectLocks
   //       in interpreter activation frames since it includes machine-specific padding.
   static int size()                                   { return sizeof(BasicObjectLock)/wordSize; }
 

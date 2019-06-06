@@ -11,8 +11,7 @@ ValueMap::ValueMap()
   , _entries(ValueMapInitialSize, ValueMapInitialSize, NULL)
   , _killed_values()
   , _entry_count(0)
-{
-}
+{ }
 
 ValueMap::ValueMap(ValueMap* old)
   : _nesting(old->_nesting + 1)

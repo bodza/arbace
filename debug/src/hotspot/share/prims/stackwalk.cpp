@@ -48,8 +48,7 @@ void JavaFrameStream::next() { _vfst.next(); }
 //  frames_array   User-supplied buffers.  The 0th element is reserved
 //                 for this BaseFrameStream to use
 //
-BaseFrameStream* BaseFrameStream::from_current(JavaThread* thread, jlong magic, objArrayHandle frames_array)
-{
+BaseFrameStream* BaseFrameStream::from_current(JavaThread* thread, jlong magic, objArrayHandle frames_array) {
   oop m1 = frames_array->obj_at(magic_pos);
   if (!oopDesc::equals(m1, thread->threadObj())) return NULL;
   if (magic == 0L)                    return NULL;
@@ -79,7 +78,7 @@ BaseFrameStream* BaseFrameStream::from_current(JavaThread* thread, jlong magic, 
 //
 int StackWalk::fill_in_frames(jlong mode, BaseFrameStream& stream, int max_nframes, int start_index, objArrayHandle frames_array, int& end_index, TRAPS) {
   int frames_decoded = 0;
-  for (; !stream.at_end(); stream.next()) {
+  for ( ; !stream.at_end(); stream.next()) {
     Method* method = stream.method();
 
     if (method == NULL) continue;
@@ -124,8 +123,7 @@ void JavaFrameStream::fill_frame(int index, objArrayHandle frames_array, const m
 // Create and return a LiveStackFrame.PrimitiveSlot (if needed) for the
 // StackValue at the given index. 'type' is expected to be T_INT, T_LONG,
 // T_OBJECT, or T_CONFLICT.
-oop LiveFrameStream::create_primitive_slot_instance(StackValueCollection* values,
-                                                    int i, BasicType type, TRAPS) {
+oop LiveFrameStream::create_primitive_slot_instance(StackValueCollection* values, int i, BasicType type, TRAPS) {
   Klass* k = SystemDictionary::resolve_or_null(vmSymbols::java_lang_LiveStackFrameInfo(), CHECK_NULL);
   InstanceKlass* ik = InstanceKlass::cast(k);
 
@@ -217,9 +215,7 @@ void LiveFrameStream::fill_live_stackframe(Handle stackFrame, const methodHandle
     GrowableArray<MonitorInfo*>* monitors = _jvf->monitors();
 
     int mode = 0;
-    if (_jvf->is_interpreted_frame()) {
-      mode = MODE_INTERPRETED;
-    } else if (_jvf->is_compiled_frame()) {
+    if (_jvf->is_compiled_frame()) {
       mode = MODE_COMPILED;
     }
 
@@ -254,10 +250,7 @@ void LiveFrameStream::fill_live_stackframe(Handle stackFrame, const methodHandle
 //
 // Returns Object returned from AbstractStackWalker::doStackWalk call.
 //
-oop StackWalk::walk(Handle stackStream, jlong mode,
-                    int skip_frames, int frame_count, int start_index,
-                    objArrayHandle frames_array,
-                    TRAPS) {
+oop StackWalk::walk(Handle stackStream, jlong mode, int skip_frames, int frame_count, int start_index, objArrayHandle frames_array, TRAPS) {
   ResourceMark rm(THREAD);
   JavaThread* jt = (JavaThread*)THREAD;
 
@@ -348,8 +341,7 @@ oop StackWalk::fetchFirstBatch(BaseFrameStream& stream, Handle stackStream, jlon
 //
 // Returns the end index of frame filled in the buffer.
 //
-jint StackWalk::fetchNextBatch(Handle stackStream, jlong mode, jlong magic, int frame_count, int start_index, objArrayHandle frames_array, TRAPS)
-{
+jint StackWalk::fetchNextBatch(Handle stackStream, jlong mode, jlong magic, int frame_count, int start_index, objArrayHandle frames_array, TRAPS) {
   JavaThread* jt = (JavaThread*)THREAD;
   BaseFrameStream* existing_stream = BaseFrameStream::from_current(jt, magic, frames_array);
   if (existing_stream == NULL) {

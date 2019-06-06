@@ -6,7 +6,6 @@
 #include "ci/ciUtilities.inline.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
-#include "runtime/deoptimization.hpp"
 #include "utilities/copy.hpp"
 
 // ciMethodData
@@ -289,13 +288,13 @@ ciProfileData* ciMethodData::bci_to_data(int bci, ciMethod* m) {
 
 // Conservatively decode the trap_state of a ciProfileData.
 int ciMethodData::has_trap_at(ciProfileData* data, int reason) {
-  typedef Deoptimization::DeoptReason DR_t;
-  int per_bc_reason = Deoptimization::reason_recorded_per_bytecode_if_any((DR_t) reason);
+  typedef NULL::NULL DR_t;
+  int per_bc_reason = NULL::reason_recorded_per_bytecode_if_any((DR_t) reason);
   if (trap_count(reason) == 0) {
     // Impossible for this trap to have occurred, regardless of trap_state.
     // Note:  This happens if the MDO is empty.
     return 0;
-  } else if (per_bc_reason == Deoptimization::Reason_none) {
+  } else if (per_bc_reason == NULL::Reason_none) {
     // We cannot conclude anything; a trap happened somewhere, maybe here.
     return -1;
   } else if (data == NULL) {
@@ -308,7 +307,7 @@ int ciMethodData::has_trap_at(ciProfileData* data, int reason) {
     else
       return -1;                // bail with a conservative answer
   } else {
-    return Deoptimization::trap_state_has_reason(data->trap_state(), per_bc_reason);
+    return NULL::trap_state_has_reason(data->trap_state(), per_bc_reason);
   }
 }
 
@@ -316,7 +315,7 @@ int ciMethodData::trap_recompiled_at(ciProfileData* data) {
   if (data == NULL) {
     return (_saw_free_extra_data? 0: -1);  // (see previous method)
   } else {
-    return Deoptimization::trap_state_is_recompiled(data->trap_state()) ? 1 : 0;
+    return NULL::trap_state_is_recompiled(data->trap_state()) ? 1 : 0;
   }
 }
 
@@ -476,7 +475,7 @@ ciArgInfoData *ciMethodData::arg_info() const {
   // Should be last, have to skip all traps.
   DataLayout* dp  = extra_data_base();
   DataLayout* end = args_data_limit();
-  for (; dp < end; dp = MethodData::next_extra(dp)) {
+  for ( ; dp < end; dp = MethodData::next_extra(dp)) {
     if (dp->tag() == DataLayout::arg_info_data_tag)
       return new ciArgInfoData(dp);
   }

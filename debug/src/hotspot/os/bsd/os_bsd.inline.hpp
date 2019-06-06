@@ -47,13 +47,11 @@ inline void os::dll_unload(void *lib) {
 
 inline const int os::default_file_open_flags() { return 0; }
 
-inline DIR* os::opendir(const char* dirname)
-{
+inline DIR* os::opendir(const char* dirname) {
   return ::opendir(dirname);
 }
 
-inline int os::readdir_buf_size(const char *path)
-{
+inline int os::readdir_buf_size(const char *path) {
   return NAME_MAX + sizeof(dirent) + 1;
 }
 
@@ -69,8 +67,7 @@ inline int os::ftruncate(int fd, jlong length) {
   return ::ftruncate(fd, length);
 }
 
-inline struct dirent* os::readdir(DIR* dirp, dirent *dbuf)
-{
+inline struct dirent* os::readdir(DIR* dirp, dirent *dbuf) {
   dirent* p;
   int status;
 

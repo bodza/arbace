@@ -27,15 +27,15 @@
 // In the rare case of the non-nmethod code heap getting full, non-nmethod code
 // will be stored in the non-profiled code heap as a fallback solution.
 //
-// Depending on the availability of compilers and TieredCompilation there
-// may be fewer heaps. The size of the code heaps depends on the values of
+// Depending on the availability of compilers there may be fewer heaps.
+// The size of the code heaps depends on the values of
 // ReservedCodeCacheSize, NonProfiledCodeHeapSize and ProfiledCodeHeapSize
 // (see CodeCache::heap_available(..) and CodeCache::initialize_heaps(..)
 // for details).
 //
 // Code cache segmentation is controlled by the flag SegmentedCodeCache.
 // If turned off, all code types are stored in a single code heap. By default
-// code cache segmentation is turned on if TieredCompilation is enabled and
+// code cache segmentation is turned on if ... is enabled and
 // ReservedCodeCacheSize >= 240 MB.
 //
 // All methods of the CodeCache accepting a CodeBlobType only apply to
@@ -114,7 +114,6 @@ class CodeCache : AllStatic {
   static int  alignment_unit();                            // guaranteed alignment of all CodeBlobs
   static int  alignment_offset();                          // guaranteed offset of first CodeBlob byte within alignment unit (i.e., allocation header)
   static void free(CodeBlob* cb);                          // frees a CodeBlob
-  static void free_unused_tail(CodeBlob* cb, size_t used); // frees the unused tail of a CodeBlob (only used by TemplateInterpreter::initialize())
   static bool contains(void *p);                           // returns whether p is included
   static bool contains(nmethod* nm);                       // returns whether nm is included
   static void blobs_do(void f(CodeBlob* cb));              // iterates over all CodeBlobs
@@ -233,7 +232,7 @@ class CodeCache : AllStatic {
     return 0;
   }
 
-  // Deoptimization
+  // NULL
  private:
   static int  mark_for_deoptimization(KlassDepChange& changes);
 

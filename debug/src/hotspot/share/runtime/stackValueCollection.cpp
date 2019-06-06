@@ -43,9 +43,8 @@ void StackValueCollection::set_obj_at(int slot, Handle value) {
 void StackValueCollection::set_float_at(int slot, jfloat value) {
   union {
     intptr_t jd;
-    jint    array[2];
+    jint array[2];
   } val;
-  // Interpreter stores 32 bit floats in first half of 64 bit word.
   val.array[0] = *(jint*)(&value);
   val.array[1] = 0;
   at(slot)->set_int(val.jd);

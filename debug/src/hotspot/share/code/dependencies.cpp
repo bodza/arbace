@@ -307,9 +307,7 @@ void Dependencies::copy_to(nmethod* nm) {
   address beg = nm->dependencies_begin();
   address end = nm->dependencies_end();
   guarantee(end - beg >= (ptrdiff_t) size_in_bytes(), "bad sizing");
-  Copy::disjoint_words((HeapWord*) content_bytes(),
-                       (HeapWord*) beg,
-                       size_in_bytes() / sizeof(HeapWord));
+  Copy::disjoint_words((HeapWord*) content_bytes(), (HeapWord*) beg, size_in_bytes() / sizeof(HeapWord));
 }
 
 static int sort_dep(ciBaseObject** p1, ciBaseObject** p2, int narg) {
@@ -319,12 +317,9 @@ static int sort_dep(ciBaseObject** p1, ciBaseObject** p2, int narg) {
   }
   return 0;
 }
-static int sort_dep_arg_1(ciBaseObject** p1, ciBaseObject** p2)
-{ return sort_dep(p1, p2, 1); }
-static int sort_dep_arg_2(ciBaseObject** p1, ciBaseObject** p2)
-{ return sort_dep(p1, p2, 2); }
-static int sort_dep_arg_3(ciBaseObject** p1, ciBaseObject** p2)
-{ return sort_dep(p1, p2, 3); }
+static int sort_dep_arg_1(ciBaseObject** p1, ciBaseObject** p2) { return sort_dep(p1, p2, 1); }
+static int sort_dep_arg_2(ciBaseObject** p1, ciBaseObject** p2) { return sort_dep(p1, p2, 2); }
+static int sort_dep_arg_3(ciBaseObject** p1, ciBaseObject** p2) { return sort_dep(p1, p2, 3); }
 
 // metadata deps are sorted before object deps
 static int sort_dep_value(Dependencies::DepValue* p1, Dependencies::DepValue* p2, int narg) {
@@ -334,12 +329,9 @@ static int sort_dep_value(Dependencies::DepValue* p1, Dependencies::DepValue* p2
   }
   return 0;
 }
-static int sort_dep_value_arg_1(Dependencies::DepValue* p1, Dependencies::DepValue* p2)
-{ return sort_dep_value(p1, p2, 1); }
-static int sort_dep_value_arg_2(Dependencies::DepValue* p1, Dependencies::DepValue* p2)
-{ return sort_dep_value(p1, p2, 2); }
-static int sort_dep_value_arg_3(Dependencies::DepValue* p1, Dependencies::DepValue* p2)
-{ return sort_dep_value(p1, p2, 3); }
+static int sort_dep_value_arg_1(Dependencies::DepValue* p1, Dependencies::DepValue* p2) { return sort_dep_value(p1, p2, 1); }
+static int sort_dep_value_arg_2(Dependencies::DepValue* p1, Dependencies::DepValue* p2) { return sort_dep_value(p1, p2, 2); }
+static int sort_dep_value_arg_3(Dependencies::DepValue* p1, Dependencies::DepValue* p2) { return sort_dep_value(p1, p2, 3); }
 
 void Dependencies::sort_all_deps() {
   if (_using_dep_values) {
@@ -551,7 +543,7 @@ Dependencies::DepType Dependencies::validate_dependencies(CompileTask* task, boo
   // the system dictionary hasn't changed to verify that no invalid
   // dependencies were inserted.  Any violated dependences in this
   // case are dumped to the tty.
-  if (!counter_changed && !trueInDebug) {
+  if (!counter_changed && !false) {
     return end_marker;
   }
 
@@ -867,13 +859,9 @@ class ClassHierarchyWalker {
 
  private:
   // the actual search method:
-  Klass* find_witness_anywhere(Klass* context_type,
-                                 bool participants_hide_witnesses,
-                                 bool top_level_call = true);
+  Klass* find_witness_anywhere(Klass* context_type, bool participants_hide_witnesses, bool top_level_call = true);
   // the spot-checking version:
-  Klass* find_witness_in(KlassDepChange& changes,
-                         Klass* context_type,
-                           bool participants_hide_witnesses);
+  Klass* find_witness_in(KlassDepChange& changes, Klass* context_type, bool participants_hide_witnesses);
  public:
   Klass* find_witness_subtype(Klass* context_type, KlassDepChange* changes = NULL) {
     // When looking for unexpected concrete types,
@@ -1011,8 +999,8 @@ Klass* ClassHierarchyWalker::find_witness_anywhere(Klass* context_type, bool par
       } else if (is_witness(sub) && !ignore_witness(sub)) {
         return sub;
       }
-      if (chaini < (VerifyDependencies? 2: CHAINMAX)) {
-        // Fast path.  (Partially disabled if VerifyDependencies.)
+      if (chaini < CHAINMAX) {
+        // Fast path.  (Partially disabled if ...)
         ADD_SUBCLASS_CHAIN(sub);
       } else {
         // Worklist overflow.  Do a recursive call.  Should be rare.
@@ -1020,9 +1008,7 @@ Klass* ClassHierarchyWalker::find_witness_anywhere(Klass* context_type, bool par
         // (Note that sub has already been tested, so that there is
         // no need for the recursive call to re-test.  That's handy,
         // since the recursive call sees sub as the context_type.)
-        Klass* witness = find_witness_anywhere(sub,
-                                                 participants_hide_witnesses,
-                                                 /*top_level_call=*/ false);
+        Klass* witness = find_witness_anywhere(sub, participants_hide_witnesses, /*top_level_call=*/ false);
         if (witness != NULL)  return witness;
       }
     }

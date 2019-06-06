@@ -246,8 +246,7 @@ void ModuleEntry::delete_unnamed_module() {
 
 ModuleEntryTable::ModuleEntryTable(int table_size)
   : Hashtable<Symbol*, mtModule>(table_size, sizeof(ModuleEntry))
-{
-}
+{ }
 
 ModuleEntryTable::~ModuleEntryTable() {
   // Walk through all buckets and all entries in each bucket,

@@ -6,8 +6,6 @@
 #include "code/nmethod.hpp"
 #include "code/pcDesc.hpp"
 #include "code/scopeDesc.hpp"
-#include "interpreter/interpreter.hpp"
-#include "interpreter/oopMapCache.hpp"
 #include "oops/instanceKlass.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/basicLock.hpp"

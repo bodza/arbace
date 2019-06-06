@@ -166,8 +166,7 @@ OopStorage::Block::Block(const OopStorage* owner, void* memory) :
   _allocate_entry(),
   _deferred_updates_next(NULL),
   _release_refcount(0)
-{
-}
+{ }
 
 OopStorage::Block::~Block() {
   // Clear fields used by block_for_ptr and entry validation, which

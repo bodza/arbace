@@ -3539,7 +3539,7 @@ public:
 
       end = MIN2(end, _num_work_items);
 
-      for (; cur < end; cur++) {
+      for ( ; cur < end; cur++) {
         bool is_young = _work_items[cur].is_young;
 
         do_parallel_work_for_region(_work_items[cur].region_idx, is_young, _work_items[cur].evacuation_failed);

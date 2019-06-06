@@ -11,8 +11,7 @@
 
 // ------------------------------------------------------------------
 // ciConstantPoolCache::ciConstantPoolCache
-ciConstantPoolCache::ciConstantPoolCache(Arena* arena,
-                                 int expected_size) {
+ciConstantPoolCache::ciConstantPoolCache(Arena* arena, int expected_size) {
   _elements = new (arena) GrowableArray<void*>(arena, expected_size, 0, 0);
   _keys = new (arena) GrowableArray<int>(arena, expected_size, 0, 0);
 }
@@ -20,7 +19,7 @@ ciConstantPoolCache::ciConstantPoolCache(Arena* arena,
 int ciConstantPoolCache::key_compare(const int& key, const int& elt) {
   if (key < elt)      return -1;
   else if (key > elt) return 1;
-  else                  return 0;
+  else                return 0;
 }
 
 // ------------------------------------------------------------------

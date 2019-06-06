@@ -48,7 +48,7 @@ BasicType FieldType::get_array_info(Symbol* signature, FieldArrayInfo& fd, TRAPS
     dim++;
   }
   ResourceMark rm;
-  char *element = signature->as_C_string() + index;
+  char* element = signature->as_C_string() + index;
   BasicType element_type = char2type(element[0]);
   if (element_type == T_OBJECT) {
     int len = (int)strlen(element);

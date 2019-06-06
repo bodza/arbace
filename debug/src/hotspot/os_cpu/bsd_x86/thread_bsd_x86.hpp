@@ -10,8 +10,8 @@
 
  public:
   // Mutators are highly dangerous....
-  intptr_t* last_Java_fp()                       { return _anchor.last_Java_fp(); }
-  void  set_last_Java_fp(intptr_t* fp)           { _anchor.set_last_Java_fp(fp); }
+  intptr_t* last_Java_fp()              { return _anchor.last_Java_fp(); }
+  void  set_last_Java_fp(intptr_t* fp)  { _anchor.set_last_Java_fp(fp); }
 
   void set_base_of_stack_pointer(intptr_t* base_sp) { }
 
@@ -24,11 +24,8 @@
   }
   void record_base_of_stack_pointer() { }
 
-  bool pd_get_top_frame_for_signal_handler(frame* fr_addr, void* ucontext,
-    bool isInJava);
-
-  bool pd_get_top_frame_for_profiling(frame* fr_addr, void* ucontext,
-    bool isInJava);
+  bool pd_get_top_frame_for_signal_handler(frame* fr_addr, void* ucontext, bool isInJava);
+  bool pd_get_top_frame_for_profiling(frame* fr_addr, void* ucontext, bool isInJava);
 
 private:
   bool pd_get_top_frame(frame* fr_addr, void* ucontext, bool isInJava);

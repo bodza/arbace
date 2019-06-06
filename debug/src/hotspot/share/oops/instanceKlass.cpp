@@ -14,8 +14,6 @@
 #include "code/dependencyContext.hpp"
 #include "compiler/compileBroker.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
-#include "interpreter/oopMapCache.hpp"
-#include "interpreter/rewriter.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/heapInspection.hpp"
 #include "memory/iterator.inline.hpp"
@@ -607,11 +605,10 @@ bool InstanceKlass::link_class_impl(bool throw_verifyerror, TRAPS) {
 // Rewrite the byte codes of all of the methods of a class.
 // The rewriter must be called exactly once. Rewriting must happen after
 // verification but before the first method of the class is executed.
-void InstanceKlass::rewrite_class(TRAPS) {
+void InstanceKlass::rewrite_class(TRAPS) {
   if (is_rewritten()) {
     return;
   }
-  Rewriter::rewrite(this, CHECK);
   set_rewritten();
 }
 
@@ -1024,23 +1021,6 @@ void InstanceKlass::call_class_initializer(TRAPS) {
     JavaValue result(T_VOID);
     JavaCalls::call(&result, h_method, &args, CHECK); // Static call (no args)
   }
-}
-
-void InstanceKlass::mask_for(const methodHandle& method, int bci, InterpreterOopMap* entry_for) {
-  // Lazily create the _oop_map_cache at first request
-  // Lock-free access requires load_acquire.
-  OopMapCache* oop_map_cache = OrderAccess::load_acquire(&_oop_map_cache);
-  if (oop_map_cache == NULL) {
-    MutexLocker x(OopMapCacheAlloc_lock);
-    // Check if _oop_map_cache was allocated while we were waiting for this lock
-    if ((oop_map_cache = _oop_map_cache) == NULL) {
-      oop_map_cache = new OopMapCache();
-      // Ensure _oop_map_cache is stable, since it is examined without a lock
-      OrderAccess::release_store(&_oop_map_cache, oop_map_cache);
-    }
-  }
-  // _oop_map_cache is constant after init; lookup below does its own locking.
-  oop_map_cache->lookup(method, bci, entry_for);
 }
 
 bool InstanceKlass::find_local_field(Symbol* name, Symbol* sig, fieldDescriptor* fd) const {
@@ -1826,7 +1806,6 @@ void InstanceKlass::remove_unshareable_info() {
   _init_thread = NULL;
   _methods_jmethod_ids = NULL;
   _jni_ids = NULL;
-  _oop_map_cache = NULL;
   // clear _nest_host to ensure re-load at runtime
   _nest_host = NULL;
 }
@@ -1904,12 +1883,6 @@ void InstanceKlass::release_C_heap_structures() {
   // Can't release the constant pool here because the constant pool can be
   // deallocated separately from the InstanceKlass for default methods and
   // redefine classes.
-
-  // Deallocate oop map cache
-  if (_oop_map_cache != NULL) {
-    delete _oop_map_cache;
-    _oop_map_cache = NULL;
-  }
 
   // Deallocate JNI identifiers for jfieldIDs
   JNIid::deallocate(jni_ids());
@@ -2251,7 +2224,7 @@ jint InstanceKlass::compute_modifier_flags(TRAPS) const {
 
   // But check if it happens to be member class.
   InnerClassesIterator iter(this);
-  for (; !iter.done(); iter.next()) {
+  for ( ; !iter.done(); iter.next()) {
     int ioff = iter.inner_class_info_index();
     // Inner class attribute can be zero, skip it.
     // Strange but true:  JVM spec. allows null inner class refs.
@@ -2311,21 +2284,6 @@ void InstanceKlass::add_osr_nmethod(nmethod* n) {
     MutexLockerEx ml(OsrList_lock, Mutex::_no_safepoint_check_flag);
     n->set_osr_link(osr_nmethods_head());
     set_osr_nmethods_head(n);
-    // Raise the highest osr level if necessary
-    if (TieredCompilation) {
-      Method* m = n->method();
-      m->set_highest_osr_comp_level(MAX2(m->highest_osr_comp_level(), n->comp_level()));
-    }
-  }
-
-  // Get rid of the osr methods for the same bci that have lower levels.
-  if (TieredCompilation) {
-    for (int l = CompLevel_limited_profile; l < n->comp_level(); l++) {
-      nmethod *inv = lookup_osr_nmethod(n->method(), n->osr_entry_bci(), l, true);
-      if (inv != NULL && inv->is_in_use()) {
-        inv->make_not_entrant();
-      }
-    }
   }
 }
 
@@ -2340,10 +2298,6 @@ bool InstanceKlass::remove_osr_nmethod(nmethod* n) {
   // Search for match
   bool found = false;
   while (cur != NULL && cur != n) {
-    if (TieredCompilation && m == cur->method()) {
-      // Find max level before n
-      max_level = MAX2(max_level, cur->comp_level());
-    }
     last = cur;
     cur = cur->osr_link();
   }
@@ -2359,17 +2313,6 @@ bool InstanceKlass::remove_osr_nmethod(nmethod* n) {
     }
   }
   n->set_osr_link(NULL);
-  if (TieredCompilation) {
-    cur = next;
-    while (cur != NULL) {
-      // Find max level after n
-      if (m == cur->method()) {
-        max_level = MAX2(max_level, cur->comp_level());
-      }
-      cur = cur->osr_link();
-    }
-    m->set_highest_osr_comp_level(max_level);
-  }
   return found;
 }
 
@@ -2504,13 +2447,6 @@ void InstanceKlass::verify_on(outputStream* st) {
 
   // Verify that klass is present in ClassLoaderData
   guarantee(class_loader_data()->contains_klass(this), "this class isn't found in class loader data");
-
-  // Verify vtables
-  if (is_linked()) {
-    // $$$ This used to be done only for m/s collections.  Doing it
-    // always seemed a valid generalization.  (DLD -- 6/00)
-    vtable().verify(st);
-  }
 
   // Verify first subklass
   if (subklass() != NULL) {

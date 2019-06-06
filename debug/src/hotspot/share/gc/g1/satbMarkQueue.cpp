@@ -19,8 +19,7 @@ SATBMarkQueue::SATBMarkQueue(SATBMarkQueueSet* qset, bool permanent) :
   // created during a cycle and its SATB queue needs to be activated
   // before the thread starts running, we'll need to set its active
   // field to true. This is done in G1SBarrierSet::on_thread_attach().
-  PtrQueue(qset, permanent, false /* active */)
-{ }
+  PtrQueue(qset, permanent, false /* active */) { }
 
 void SATBMarkQueue::flush() {
   // Filter now to possibly save work later.  If filtering empties the

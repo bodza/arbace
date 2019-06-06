@@ -114,12 +114,12 @@ void OopMap::set_narrowoop(VMReg reg) {
   set_xxx(reg, OopMapValue::narrowoop_value, VMRegImpl::Bad());
 }
 
-void OopMap::set_callee_saved(VMReg reg, VMReg caller_machine_register ) {
+void OopMap::set_callee_saved(VMReg reg, VMReg caller_machine_register) {
   set_xxx(reg, OopMapValue::callee_saved_value, caller_machine_register);
 }
 
-void OopMap::set_derived_oop(VMReg reg, VMReg derived_from_local_register ) {
-  if (reg == derived_from_local_register ) {
+void OopMap::set_derived_oop(VMReg reg, VMReg derived_from_local_register) {
+  if (reg == derived_from_local_register) {
     // Actually an oop, derived shares storage with base,
     set_oop(reg);
   } else {
@@ -144,7 +144,7 @@ void OopMapSet::grow_om_data() {
   set_om_data(new_data);
 }
 
-void OopMapSet::add_gc_map(int pc_offset, OopMap *map ) {
+void OopMapSet::add_gc_map(int pc_offset, OopMap *map) {
   if (om_count() >= om_size()) {
     grow_om_data();
   }
@@ -224,7 +224,7 @@ void OopMapSet::all_do(const frame *fr, const RegisterMap *reg_map, OopClosure* 
       // this was allowed previously because value_value items might
       // be missing?
       guarantee(loc != NULL, "missing saved register");
-      if (omv.type() == OopMapValue::oop_value ) {
+      if (omv.type() == OopMapValue::oop_value) {
         oop val = *loc;
         if (val == (oop)NULL || Universe::is_narrow_oop_base(val)) {
           // Ignore NULL oops and decoded NULL narrow oops which
@@ -235,7 +235,7 @@ void OopMapSet::all_do(const frame *fr, const RegisterMap *reg_map, OopClosure* 
           continue;
         }
         oop_fn->do_oop(loc);
-      } else if (omv.type() == OopMapValue::narrowoop_value ) {
+      } else if (omv.type() == OopMapValue::narrowoop_value) {
         narrowOop *nl = (narrowOop*)loc;
 #ifndef VM_LITTLE_ENDIAN
         VMReg vmReg = omv.reg();

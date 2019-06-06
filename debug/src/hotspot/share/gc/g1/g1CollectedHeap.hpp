@@ -375,8 +375,7 @@ private:
   //   cleared during the GC.
   // - it returns false if it is unable to do the collection due to the
   //   GC locker being active, true otherwise.
-  bool do_full_collection(bool explicit_gc,
-                          bool clear_all_soft_refs);
+  bool do_full_collection(bool explicit_gc, bool clear_all_soft_refs);
 
   // Callback from VM_G1CollectFull operation, or collect_as_vm_thread.
   virtual void do_full_collection(bool clear_all_soft_refs);
@@ -597,10 +596,7 @@ private:
   // it has to be read while holding the Heap_lock. Currently, both
   // methods that call do_collection_pause() release the Heap_lock
   // before the call, so it's easy to read gc_count_before just before.
-  HeapWord* do_collection_pause(size_t         word_size,
-                                uint           gc_count_before,
-                                bool*          succeeded,
-                                GCCause::Cause gc_cause);
+  HeapWord* do_collection_pause(size_t word_size, uint gc_count_before, bool* succeeded, GCCause::Cause gc_cause);
 
   void wait_for_root_region_scanning();
 

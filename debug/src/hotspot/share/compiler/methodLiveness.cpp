@@ -249,7 +249,7 @@ void MethodLiveness::init_basic_blocks() {
     int block_start = block->start_bci();
     int block_limit = block->limit_bci();
     ciExceptionHandlerStream handlers(method());
-    for (; !handlers.is_done(); handlers.next()) {
+    for ( ; !handlers.is_done(); handlers.next()) {
       ciExceptionHandler* handler = handlers.handler();
       int start       = handler->start();
       int limit       = handler->limit();
@@ -765,7 +765,7 @@ MethodLivenessResult MethodLiveness::BasicBlock::get_liveness_at(ciMethod* metho
     return answer;
   }
 
-  if (_last_bci != bci || trueInDebug) {
+  if (_last_bci != bci || false) {
     ciBytecodeStream bytes(method);
     bytes.reset_to_bci(bci);
     bytes.set_max_bci(limit_bci());

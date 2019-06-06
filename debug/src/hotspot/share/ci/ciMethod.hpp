@@ -12,7 +12,6 @@
 class ciMethodBlocks;
 class MethodLiveness;
 class Arena;
-class BCEscapeAnalyzer;
 class InlineTree;
 
 // Whether profiling found an oop to be always, never or sometimes
@@ -175,7 +174,6 @@ class ciMethod : public ciMetadata {
     address bcp = code() + bci;
     return Bytecodes::code_at(NULL, bcp);
   }
-  BCEscapeAnalyzer  *get_bcea();
   ciMethodBlocks    *get_method_blocks();
 
   bool    has_linenumber_table() const;          // length unknown until decompression
@@ -186,7 +184,6 @@ class ciMethod : public ciMetadata {
   // Runtime information.
   int           vtable_index();
   address       native_entry();
-  address       interpreter_entry();
 
   // Analysis and profiling.
   //

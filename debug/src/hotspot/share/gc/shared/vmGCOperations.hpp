@@ -190,7 +190,7 @@ class SvcGCMarker : public StackObj {
  public:
   typedef enum { MINOR, FULL, CONCURRENT, OTHER } reason_type;
 
-  SvcGCMarker(reason_type reason ) {
+  SvcGCMarker(reason_type reason) {
     VM_GC_Operation::notify_gc_begin(reason == FULL);
   }
 

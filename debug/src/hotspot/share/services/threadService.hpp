@@ -359,9 +359,7 @@ class ThreadsListEnumerator : public StackObj {
 private:
   GrowableArray<instanceHandle>* _threads_array;
 public:
-  ThreadsListEnumerator(Thread* cur_thread,
-                        bool include_jvmti_agent_threads = false,
-                        bool include_jni_attaching_threads = true);
+  ThreadsListEnumerator(Thread* cur_thread, bool include_jvmti_agent_threads = false, bool include_jni_attaching_threads = true);
   int            num_threads()            { return _threads_array->length(); }
   instanceHandle get_threadObj(int index) { return _threads_array->at(index); }
 };

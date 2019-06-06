@@ -62,14 +62,11 @@ class ReservedSpace {
   }
 };
 
-ReservedSpace
-ReservedSpace::first_part(size_t partition_size, bool split, bool realloc)
-{
+ReservedSpace ReservedSpace::first_part(size_t partition_size, bool split, bool realloc) {
   return first_part(partition_size, alignment(), split, realloc);
 }
 
-ReservedSpace ReservedSpace::last_part(size_t partition_size)
-{
+ReservedSpace ReservedSpace::last_part(size_t partition_size) {
   return last_part(partition_size, alignment());
 }
 

@@ -9,7 +9,6 @@
 #include "gc/shared/cardTable.hpp"
 #include "gc/shared/barrierSetAssembler.hpp"
 #include "gc/shared/cardTableBarrierSet.hpp"
-#include "interpreter/interpreter.hpp"
 #include "compiler/disassembler.hpp"
 #include "memory/resourceArea.hpp"
 #include "nativeInst_aarch64.hpp"
@@ -546,25 +545,25 @@ void MacroAssembler::biased_locking_exit(Register obj_reg, Register temp_reg, La
 }
 
 static void pass_arg0(MacroAssembler* masm, Register arg) {
-  if (c_rarg0 != arg ) {
+  if (c_rarg0 != arg) {
     masm->mov(c_rarg0, arg);
   }
 }
 
 static void pass_arg1(MacroAssembler* masm, Register arg) {
-  if (c_rarg1 != arg ) {
+  if (c_rarg1 != arg) {
     masm->mov(c_rarg1, arg);
   }
 }
 
 static void pass_arg2(MacroAssembler* masm, Register arg) {
-  if (c_rarg2 != arg ) {
+  if (c_rarg2 != arg) {
     masm->mov(c_rarg2, arg);
   }
 }
 
 static void pass_arg3(MacroAssembler* masm, Register arg) {
-  if (c_rarg3 != arg ) {
+  if (c_rarg3 != arg) {
     masm->mov(c_rarg3, arg);
   }
 }
@@ -763,8 +762,6 @@ void MacroAssembler::get_vm_result_2(Register metadata_result, Register java_thr
 void MacroAssembler::align(int modulus) {
   while (offset() % modulus != 0) nop();
 }
-
-// these are no-ops overridden by InterpreterMacroAssembler
 
 RegisterOrConstant MacroAssembler::delayed_value_impl(intptr_t* delayed_value_addr, Register tmp, int offset) {
   intptr_t value = *delayed_value_addr;
@@ -1115,9 +1112,8 @@ void MacroAssembler::verify_oop_addr(Address addr, const char* s) {
 }
 
 Address MacroAssembler::argument_address(RegisterOrConstant arg_slot, int extra_slot_offset) {
-  // cf. TemplateTable::prepare_invoke(), if (load_receiver).
-  int stackElementSize = Interpreter::stackElementSize;
-  int offset = Interpreter::expr_offset_in_bytes(extra_slot_offset + 0);
+  int stackElementSize = NULL::stackElementSize;
+  int offset = NULL::expr_offset_in_bytes(extra_slot_offset + 0);
   if (arg_slot.is_constant()) {
     return Address(esp, arg_slot.as_constant() * stackElementSize + offset);
   } else {
@@ -1270,8 +1266,7 @@ void MacroAssembler::mov(FloatRegister Vd, SIMD_Arrangement T, u_int32_t imm32) 
   }
 }
 
-void MacroAssembler::mov_immediate64(Register dst, u_int64_t imm64)
-{
+void MacroAssembler::mov_immediate64(Register dst, u_int64_t imm64) {
   if (operand_valid_for_logical_immediate(false, imm64)) {
     orr(dst, zr, imm64);
   } else {
@@ -1376,8 +1371,7 @@ void MacroAssembler::mov_immediate64(Register dst, u_int64_t imm64)
   }
 }
 
-void MacroAssembler::mov_immediate32(Register dst, u_int32_t imm32)
-{
+void MacroAssembler::mov_immediate32(Register dst, u_int32_t imm32) {
   if (operand_valid_for_logical_immediate(true, imm32)) {
     orrw(dst, zr, imm32);
   } else {
@@ -1454,8 +1448,7 @@ void MacroAssembler::atomic_incw(Register counter_addr, Register tmp, Register t
   cbnzw(tmp2, retry_load);
 }
 
-int MacroAssembler::corrected_idivl(Register result, Register ra, Register rb, bool want_remainder, Register scratch)
-{
+int MacroAssembler::corrected_idivl(Register result, Register ra, Register rb, bool want_remainder, Register scratch) {
   // Full implementation of Java idiv and irem.  The function
   // returns the (pc) offset of the div instruction - may be needed
   // for implicit exceptions.
@@ -1481,8 +1474,7 @@ int MacroAssembler::corrected_idivl(Register result, Register ra, Register rb, b
   return idivl_offset;
 }
 
-int MacroAssembler::corrected_idivq(Register result, Register ra, Register rb, bool want_remainder, Register scratch)
-{
+int MacroAssembler::corrected_idivq(Register result, Register ra, Register rb, bool want_remainder, Register scratch) {
   // Full implementation of Java ldiv and lrem.  The function
   // returns the (pc) offset of the div instruction - may be needed
   // for implicit exceptions.
@@ -1567,13 +1559,11 @@ void MacroAssembler::strw(Register Rw, const Address &adr) {
 
 // MacroAssembler routines found actually to be needed
 
-void MacroAssembler::push(Register src)
-{
+void MacroAssembler::push(Register src) {
   str(src, Address(pre(esp, -1 * wordSize)));
 }
 
-void MacroAssembler::pop(Register dst)
-{
+void MacroAssembler::pop(Register dst) {
   ldr(dst, Address(post(esp, 1 * wordSize)));
 }
 
@@ -1634,8 +1624,7 @@ void MacroAssembler::store_sized_value(Address dst, Register src, size_t size_in
   }
 }
 
-void MacroAssembler::decrementw(Register reg, int value)
-{
+void MacroAssembler::decrementw(Register reg, int value) {
   if (value < 0)  { incrementw(reg, -value);      return; }
   if (value == 0) {                               return; }
   if (value < (1 << 12)) { subw(reg, reg, value); return; }
@@ -1646,8 +1635,7 @@ void MacroAssembler::decrementw(Register reg, int value)
   }
 }
 
-void MacroAssembler::decrement(Register reg, int value)
-{
+void MacroAssembler::decrement(Register reg, int value) {
   if (value < 0)  { increment(reg, -value);      return; }
   if (value == 0) {                              return; }
   if (value < (1 << 12)) { sub(reg, reg, value); return; }
@@ -1657,8 +1645,7 @@ void MacroAssembler::decrement(Register reg, int value)
   }
 }
 
-void MacroAssembler::decrementw(Address dst, int value)
-{
+void MacroAssembler::decrementw(Address dst, int value) {
   if (dst.getMode() == Address::literal) {
     lea(rscratch2, dst);
     dst = Address(rscratch2);
@@ -1668,8 +1655,7 @@ void MacroAssembler::decrementw(Address dst, int value)
   strw(rscratch1, dst);
 }
 
-void MacroAssembler::decrement(Address dst, int value)
-{
+void MacroAssembler::decrement(Address dst, int value) {
   if (dst.getMode() == Address::literal) {
     lea(rscratch2, dst);
     dst = Address(rscratch2);
@@ -1679,8 +1665,7 @@ void MacroAssembler::decrement(Address dst, int value)
   str(rscratch1, dst);
 }
 
-void MacroAssembler::incrementw(Register reg, int value)
-{
+void MacroAssembler::incrementw(Register reg, int value) {
   if (value < 0)  { decrementw(reg, -value);      return; }
   if (value == 0) {                               return; }
   if (value < (1 << 12)) { addw(reg, reg, value); return; }
@@ -1690,8 +1675,7 @@ void MacroAssembler::incrementw(Register reg, int value)
   }
 }
 
-void MacroAssembler::increment(Register reg, int value)
-{
+void MacroAssembler::increment(Register reg, int value) {
   if (value < 0)  { decrement(reg, -value);      return; }
   if (value == 0) {                              return; }
   if (value < (1 << 12)) { add(reg, reg, value); return; }
@@ -1701,8 +1685,7 @@ void MacroAssembler::increment(Register reg, int value)
   }
 }
 
-void MacroAssembler::incrementw(Address dst, int value)
-{
+void MacroAssembler::incrementw(Address dst, int value) {
   if (dst.getMode() == Address::literal) {
     lea(rscratch2, dst);
     dst = Address(rscratch2);
@@ -1712,8 +1695,7 @@ void MacroAssembler::incrementw(Address dst, int value)
   strw(rscratch1, dst);
 }
 
-void MacroAssembler::increment(Address dst, int value)
-{
+void MacroAssembler::increment(Address dst, int value) {
   if (dst.getMode() == Address::literal) {
     lea(rscratch2, dst);
     dst = Address(rscratch2);
@@ -1889,8 +1871,7 @@ void MacroAssembler::subw(Register Rd, Register Rn, RegisterOrConstant decrement
   }
 }
 
-void MacroAssembler::reinit_heapbase()
-{
+void MacroAssembler::reinit_heapbase() {
   if (UseCompressedOops) {
     if (Universe::is_fully_initialized()) {
       mov(rheapbase, Universe::narrow_ptrs_base());
@@ -2114,47 +2095,6 @@ void MacroAssembler::debug64(char* msg, int64_t pc, int64_t regs[]) {
   ShouldNotReachHere();
 }
 
-#ifdef BUILTIN_SIM
-// routine to generate an x86 prolog for a stub function which
-// bootstraps into the generated ARM code which directly follows the
-// stub
-//
-// the argument encodes the number of general and fp registers
-// passed by the caller and the callng convention (currently just
-// the number of general registers and assumes C argument passing)
-
-extern "C" {
-int aarch64_stub_prolog_size();
-void aarch64_stub_prolog();
-void aarch64_prolog();
-}
-
-void MacroAssembler::c_stub_prolog(int gp_arg_count, int fp_arg_count, int ret_type, address *prolog_ptr)
-{
-  int calltype = (((ret_type & 0x3) << 8) | ((fp_arg_count & 0xf) << 4) | (gp_arg_count & 0xf));
-
-  // the addresses for the x86 to ARM entry code we need to use
-  address start = pc();
-  // printf("start = %lx\n", start);
-  int byteCount =  aarch64_stub_prolog_size();
-  // printf("byteCount = %x\n", byteCount);
-  int instructionCount = (byteCount + 3)/ 4;
-  // printf("instructionCount = %x\n", instructionCount);
-  for (int i = 0; i < instructionCount; i++) {
-    nop();
-  }
-
-  memcpy(start, (void*)aarch64_stub_prolog, byteCount);
-
-  // write the address of the setup routine and the call format at the
-  // end of into the copied code
-  u_int64_t *patch_end = (u_int64_t *)(start + byteCount);
-  if (prolog_ptr)
-    patch_end[-2] = (u_int64_t)prolog_ptr;
-  patch_end[-1] = calltype;
-}
-#endif
-
 void MacroAssembler::push_call_clobbered_registers() {
   int step = 4 * wordSize;
   push(RegSet::range(r0, r18) - RegSet::of(rscratch1, rscratch2), sp);
@@ -2217,8 +2157,7 @@ Address MacroAssembler::offsetted_address(Register r, Register r1, Address::exte
   }
 }
 
-Address MacroAssembler::spill_address(int size, int offset, Register tmp)
-{
+Address MacroAssembler::spill_address(int size, int offset, Register tmp) {
   // Offset reachable ?
   //   Not aligned - 9 bits signed offset
   //   Aligned - 12 bits unsigned offset shifted
@@ -3986,8 +3925,7 @@ void MacroAssembler::string_indexof(Register str2, Register str1, Register cnt2,
 typedef void (MacroAssembler::* chr_insn)(Register Rt, const Address &adr);
 typedef void (MacroAssembler::* uxt_insn)(Register Rd, Register Rn);
 
-void MacroAssembler::string_indexof_char(Register str1, Register cnt1, Register ch, Register result, Register tmp1, Register tmp2, Register tmp3)
-{
+void MacroAssembler::string_indexof_char(Register str1, Register cnt1, Register ch, Register result, Register tmp1, Register tmp2, Register tmp3) {
   Label CH1_LOOP, HAS_ZERO, DO1_SHORT, DO1_LOOP, MATCH, NOMATCH, DONE;
   Register cnt1_neg = cnt1;
   Register ch1 = rscratch1;
@@ -4512,8 +4450,7 @@ void MacroAssembler::arrays_equals(Register a1, Register a2, Register tmp3, Regi
 // performed 8 bytes at a time.  For strings < 8 bytes, we compare a
 // halfword, then a short, and then a byte.
 
-void MacroAssembler::string_equals(Register a1, Register a2, Register result, Register cnt1, int elem_size)
-{
+void MacroAssembler::string_equals(Register a1, Register a2, Register result, Register cnt1, int elem_size) {
   Label SAME, DONE, SHORT, NEXT_WORD;
   Register tmp1 = rscratch1;
   Register tmp2 = rscratch2;
@@ -4593,8 +4530,7 @@ const int MacroAssembler::zero_words_block_size = 8;
 // cnt:   Count in HeapWords.
 //
 // ptr, cnt, rscratch1, and rscratch2 are clobbered.
-void MacroAssembler::zero_words(Register ptr, Register cnt)
-{
+void MacroAssembler::zero_words(Register ptr, Register cnt) {
   BLOCK_COMMENT("zero_words {");
   cmp(cnt, zero_words_block_size);
   Label around, done, done16;
@@ -4628,19 +4564,18 @@ void MacroAssembler::zero_words(Register ptr, Register cnt)
 // base:         Address of a buffer to be zeroed, 8 bytes aligned.
 // cnt:          Immediate count in HeapWords.
 #define SmallArraySize (18 * BytesPerLong)
-void MacroAssembler::zero_words(Register base, u_int64_t cnt)
-{
+void MacroAssembler::zero_words(Register base, u_int64_t cnt) {
   BLOCK_COMMENT("zero_words {");
   int i = cnt & 1;  // store any odd word to start
   if (i) str(zr, Address(base));
 
   if (cnt <= SmallArraySize / BytesPerLong) {
-    for (; i < (int)cnt; i += 2)
+    for ( ; i < (int)cnt; i += 2)
       stp(zr, zr, Address(base, i * wordSize));
   } else {
     const int unroll = 4; // Number of stp(zr, zr) instructions we'll unroll
     int remainder = cnt % (2 * unroll);
-    for (; i < remainder; i += 2)
+    for ( ; i < remainder; i += 2)
       stp(zr, zr, Address(base, i * wordSize));
 
     Label loop;
@@ -4740,15 +4675,13 @@ void MacroAssembler::fill_words(Register base, Register cnt, Register value) {
 
 // Intrinsic for sun/nio/cs/ISO_8859_1$Encoder.implEncodeISOArray and
 // java/lang/StringUTF16.compress.
-void MacroAssembler::encode_iso_array(Register src, Register dst, Register len, Register result, FloatRegister Vtmp1, FloatRegister Vtmp2, FloatRegister Vtmp3, FloatRegister Vtmp4)
-{
+void MacroAssembler::encode_iso_array(Register src, Register dst, Register len, Register result, FloatRegister Vtmp1, FloatRegister Vtmp2, FloatRegister Vtmp3, FloatRegister Vtmp4) {
     Label DONE, SET_RESULT, NEXT_32, NEXT_32_PRFM, LOOP_8, NEXT_8, LOOP_1, NEXT_1,
         NEXT_32_START, NEXT_32_PRFM_START;
     Register tmp1 = rscratch1, tmp2 = rscratch2;
 
       mov(result, len); // Save initial len
 
-#ifndef BUILTIN_SIM
       cmp(len, 8); // handle shortest strings first
       br(LT, LOOP_1);
       cmp(len, 32);
@@ -4824,7 +4757,6 @@ void MacroAssembler::encode_iso_array(Register src, Register dst, Register len, 
       br(GE, NEXT_8);
 
     BIND(LOOP_1);
-#endif
     cbz(len, DONE);
     BIND(NEXT_1);
       ldrh(tmp1, Address(post(src, 2)));

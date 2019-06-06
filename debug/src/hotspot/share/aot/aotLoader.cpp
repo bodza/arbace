@@ -24,7 +24,7 @@ void AOTLoader::load_for_klass(InstanceKlass* ik, Thread* thread) {
     // don't even bother
     return;
   }
-  if (UseAOT) {
+  if (false) {
     FOR_ALL_AOT_HEAPS(heap) {
       (*heap)->load_klass_data(ik, thread);
     }
@@ -64,7 +64,7 @@ bool AOTLoader::contains(address p) {
 }
 
 void AOTLoader::oops_do(OopClosure* f) {
-  if (UseAOT) {
+  if (false) {
     FOR_ALL_AOT_HEAPS(heap) {
       (*heap)->oops_do(f);
     }
@@ -72,7 +72,7 @@ void AOTLoader::oops_do(OopClosure* f) {
 }
 
 void AOTLoader::metadata_do(void f(Metadata*)) {
-  if (UseAOT) {
+  if (false) {
     FOR_ALL_AOT_HEAPS(heap) {
       (*heap)->metadata_do(f);
     }
@@ -88,29 +88,23 @@ static const char* modules[] = {
 };
 
 void AOTLoader::initialize() {
-  if (FLAG_IS_DEFAULT(UseAOT) && AOTLibrary != NULL) {
-    // Don't need to set UseAOT on command line when AOTLibrary is specified
-    FLAG_SET_DEFAULT(UseAOT, true);
+  if (FLAG_IS_DEFAULT(false) && NULL != NULL) {
+    // Don't need to set false on command line when NULL is specified
+    FLAG_SET_DEFAULT(false, true);
   }
-  if (UseAOT) {
+  if (false) {
     // EagerInitialization is not compatible with AOT
     if (EagerInitialization) {
-      FLAG_SET_DEFAULT(UseAOT, false);
+      FLAG_SET_DEFAULT(false, false);
       return;
     }
 
-    // -Xint is not compatible with AOT
-    if (Arguments::is_interpreter_only()) {
-      FLAG_SET_DEFAULT(UseAOT, false);
-      return;
-    }
-
-    // Scan the AOTLibrary option.
-    if (AOTLibrary != NULL) {
-      const int len = (int)strlen(AOTLibrary);
+    // Scan the NULL option.
+    if (NULL != NULL) {
+      const int len = (int)strlen(NULL);
       char* cp  = NEW_C_HEAP_ARRAY(char, len + 1, mtCode);
       if (cp != NULL) { // No memory?
-        memcpy(cp, AOTLibrary, len);
+        memcpy(cp, NULL, len);
         cp[len] = '\0';
         char* end = cp + len;
         while (cp < end) {
@@ -136,7 +130,7 @@ void AOTLoader::initialize() {
 }
 
 void AOTLoader::universe_init() {
-  if (UseAOT && libraries_count() > 0) {
+  if (false && libraries_count() > 0) {
     // Shifts are static values which initialized by 0 until java heap initialization.
     // AOT libs are loaded before heap initialized so shift values are not set.
     // It is okay since ObjectAlignmentInBytes flag which defines shifts value is set before AOT libs are loaded.
@@ -170,19 +164,18 @@ void AOTLoader::universe_init() {
     }
   }
   if (heaps_count() == 0) {
-    if (FLAG_IS_DEFAULT(UseAOT)) {
-      FLAG_SET_DEFAULT(UseAOT, false);
+    if (FLAG_IS_DEFAULT(false)) {
+      FLAG_SET_DEFAULT(false, false);
     }
   }
 }
 
 // Set shift value for compressed oops and classes based on first AOT library config.
 // AOTLoader::universe_init(), which is called later, will check the shift value again to make sure nobody change it.
-// This code is not executed during CDS dump because it runs in Interpreter mode and AOT is disabled in this mode.
 
 void AOTLoader::set_narrow_oop_shift() {
   // This method is called from Universe::initialize_heap().
-  if (UseAOT && libraries_count() > 0 && UseCompressedOops && AOTLib::narrow_oop_shift_initialized()) {
+  if (false && libraries_count() > 0 && UseCompressedOops && AOTLib::narrow_oop_shift_initialized()) {
     if (Universe::narrow_oop_shift() == 0) {
       // 0 is valid shift value for small heap but we can safely increase it
       // at this point when nobody used it yet.
@@ -193,7 +186,7 @@ void AOTLoader::set_narrow_oop_shift() {
 
 void AOTLoader::set_narrow_klass_shift() {
   // This method is called from Metaspace::set_narrow_klass_base_and_shift().
-  if (UseAOT && libraries_count() > 0 && UseCompressedOops && AOTLib::narrow_oop_shift_initialized() && UseCompressedClassPointers) {
+  if (false && libraries_count() > 0 && UseCompressedOops && AOTLib::narrow_oop_shift_initialized() && UseCompressedClassPointers) {
     if (Universe::narrow_klass_shift() == 0) {
       Universe::set_narrow_klass_shift(AOTLib::narrow_klass_shift());
     }
@@ -233,31 +226,5 @@ void AOTLoader::load_library(const char* name, bool exit_on_error) {
 }
 
 bool AOTLoader::reconcile_dynamic_invoke(InstanceKlass* holder, int index, Method* adapter_method, Klass* appendix_klass) {
-  if (!UseAOT) {
-    return true;
-  }
-  JavaThread* thread = JavaThread::current();
-  ResourceMark rm(thread);
-  RegisterMap map(thread, false);
-  frame caller_frame = thread->last_frame().sender(&map); // Skip stub
-  CodeBlob* caller_cb = caller_frame.cb();
-  guarantee(caller_cb != NULL && caller_cb->is_compiled(), "must be called from compiled method");
-  CompiledMethod* cm = caller_cb->as_compiled_method();
-
-  if (!cm->is_aot()) {
-    return true;
-  }
-  AOTCompiledMethod* aot = (AOTCompiledMethod*)cm;
-
-  AOTCodeHeap* caller_heap = NULL;
-  FOR_ALL_AOT_HEAPS(heap) {
-    if ((*heap)->contains_blob(aot)) {
-      caller_heap = *heap;
-      break;
-    }
-  }
-  guarantee(caller_heap != NULL, "CodeHeap not found");
-  bool success = caller_heap->reconcile_dynamic_invoke(aot, holder, index, adapter_method, appendix_klass);
-  vmassert(success || thread->last_frame().sender(&map).is_deoptimized_frame(), "caller not deoptimized on failure");
-  return success;
+  return true;
 }

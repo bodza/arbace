@@ -19,7 +19,7 @@ private:
   static void load_library(const char* name, bool exit_on_error);
 
 public:
-  static void initialize() { FLAG_SET_ERGO(bool, UseAOT, false); };
+  static void initialize() { FLAG_SET_ERGO(bool, false, false); };
 
   static void universe_init() { };
   static void set_narrow_oop_shift() { };

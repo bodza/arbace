@@ -7,8 +7,6 @@
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "interpreter/bytecodeStream.hpp"
 #include "interpreter/bytecodes.hpp"
-#include "interpreter/interpreter.hpp"
-#include "interpreter/oopMapCache.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/heapInspection.hpp"
 #include "memory/metadataFactory.hpp"
@@ -167,18 +165,6 @@ int Method::fast_exception_handler_bci_for(const methodHandle& mh, Klass* ex_kla
   }
 
   return -1;
-}
-
-void Method::mask_for(int bci, InterpreterOopMap* mask) {
-  methodHandle h_this(Thread::current(), this);
-  // Only GC uses the OopMapCache during thread stack root scanning
-  // any other uses generate an oopmap but do not save it in the cache.
-  if (Universe::heap()->is_gc_active()) {
-    method_holder()->mask_for(h_this, bci, mask);
-  } else {
-    OopMapCache::compute_one_oop_map(h_this, bci, mask);
-  }
-  return;
 }
 
 int Method::bci_from(address bcp) const {
@@ -356,8 +342,8 @@ bool Method::init_method_counters(MethodCounters* counters) {
 }
 
 int Method::extra_stack_words() {
-  // not an inline function, to avoid a header dependency on Interpreter
-  return extra_stack_entries() * Interpreter::stackElementSize;
+  // not an inline function, to avoid a header dependency on NULL
+  return extra_stack_entries() * NULL::stackElementSize;
 }
 
 void Method::compute_size_of_parameters(Thread *thread) {
@@ -738,83 +724,13 @@ void Method::clear_code(bool acquire_lock /* = true */) {
   _code = NULL;
 }
 
-/****************************************************************************
-// The following illustrates how the entries work for CDS shared Methods:
-//
-// Our goal is to delay writing into a shared Method until it's compiled.
-// Hence, we want to determine the initial values for _i2i_entry,
-// _from_interpreted_entry and _from_compiled_entry during CDS dump time.
-//
-// In this example, both Methods A and B have the _i2i_entry of "zero_locals".
-// They also have similar signatures so that they will share the same
-// AdapterHandlerEntry.
-//
-// _adapter_trampoline points to a fixed location in the RW section of
-// the CDS archive. This location initially contains a NULL pointer. When the
-// first of method A or B is linked, an AdapterHandlerEntry is allocated
-// dynamically, and its c2i/i2c entries are generated.
-//
-// _i2i_entry and _from_interpreted_entry initially points to the same
-// (fixed) location in the CODE section of the CDS archive. This contains
-// an unconditional branch to the actual entry for "zero_locals", which is
-// generated at run time and may be on an arbitrary address. Thus, the
-// unconditional branch is also generated at run time to jump to the correct
-// address.
-//
-// Similarly, _from_compiled_entry points to a fixed address in the CODE
-// section. This address has enough space for an unconditional branch
-// instruction, and is initially zero-filled. After the AdapterHandlerEntry is
-// initialized, and the address for the actual c2i_entry is known, we emit a
-// branch instruction here to branch to the actual c2i_entry.
-//
-// The effect of the extra branch on the i2i and c2i entries is negligible.
-//
-// The reason for putting _adapter_trampoline in RO is many shared Methods
-// share the same AdapterHandlerEntry, so we can save space in the RW section
-// by having the extra indirection.
-
-[Method A: RW]
-  _constMethod ----> [ConstMethod: RO]
-                       _adapter_trampoline -----------+
-                                                      |
-  _i2i_entry              (same value as method B)    |
-  _from_interpreted_entry (same value as method B)    |
-  _from_compiled_entry    (same value as method B)    |
-                                                      |
-                                                      |
-[Method B: RW]                               +--------+
-  _constMethod ----> [ConstMethod: RO]       |
-                       _adapter_trampoline --+--->(AdapterHandlerEntry* ptr: RW)-+
-                                                                                 |
-                                                 +-------------------------------+
-                                                 |
-                                                 +----> [AdapterHandlerEntry] (allocated at run time)
-                                                              _fingerprint
-                                                              _c2i_entry ---------------------------------+->[c2i entry..]
- _i2i_entry  -------------+                                   _i2c_entry ---------------+-> [i2c entry..] |
- _from_interpreted_entry  |                                   _c2i_unverified_entry     |                 |
-         |                |                                                             |                 |
-         |                |  (_cds_entry_table: CODE)                                   |                 |
-         |                +->[0]: jmp _entry_table[0] --> (i2i_entry_for "zero_locals") |                 |
-         |                |                               (allocated at run time)       |                 |
-         |                |  ...                           [asm code ...]               |                 |
-         +-[not compiled]-+  [n]: jmp _entry_table[n]                                   |                 |
-         |                                                                              |                 |
-         |                                                                              |                 |
-         +-[compiled]-------------------------------------------------------------------+                 |
-                                                                                                          |
- _from_compiled_entry------------>  (_c2i_entry_trampoline: CODE)                                         |
-                                    [jmp c2i_entry] ------------------------------------------------------+
-
-***/
-
 // Called when the method_holder is getting linked. Setup entrypoints so the method
 // is ready to be called from interpreter, compiler, and vtables.
 void Method::link_method(const methodHandle& h_method, TRAPS) {
   // If the code cache is full, we may reenter this function for the
   // leftover methods that weren't linked.
   if (is_shared()) {
-    address entry = Interpreter::entry_for_cds_method(h_method);
+    address entry = NULL::entry_for_cds_method(h_method);
     if (adapter() != NULL) {
       return;
     }
@@ -823,7 +739,7 @@ void Method::link_method(const methodHandle& h_method, TRAPS) {
   }
 
   if (!is_shared()) {
-    address entry = Interpreter::entry_for_method(h_method);
+    address entry = NULL::entry_for_method(h_method);
     // Sets both _i2i_entry and _from_interpreted_entry
     set_interpreter_entry(entry);
   }
@@ -851,7 +767,7 @@ address Method::make_adapters(const methodHandle& mh, TRAPS) {
   // small (generally < 100 bytes) and quick to make (and cached and shared)
   // so making them eagerly shouldn't be too expensive.
   AdapterHandlerEntry* adapter = AdapterHandlerLibrary::get_adapter(mh);
-  if (adapter == NULL ) {
+  if (adapter == NULL) {
     if (!is_init_completed()) {
       // Don't throw exceptions during VM initialization because java.lang.* classes
       // might not have been initialized, causing problems when constructing the
@@ -930,8 +846,9 @@ void Method::set_code(const methodHandle& mh, CompiledMethod *code) {
   mh->_from_compiled_entry = code->verified_entry_point();
   OrderAccess::storestore();
   // Instantly compiled code can execute.
-  if (!mh->is_method_handle_intrinsic())
+  if (!mh->is_method_handle_intrinsic()) {
     mh->_from_interpreted_entry = mh->get_i2c_entry();
+  }
 }
 
 bool Method::is_overridden_in(Klass* k) const {
@@ -1369,34 +1286,12 @@ bool CompressedLineNumberReadStream::read_pair() {
 
 int Method::invocation_count() {
   MethodCounters *mcs = method_counters();
-  if (TieredCompilation) {
-    MethodData* const mdo = method_data();
-    if (((mcs != NULL) ? mcs->invocation_counter()->carry() : false) ||
-        ((mdo != NULL) ? mdo->invocation_counter()->carry() : false)) {
-      return InvocationCounter::count_limit;
-    } else {
-      return ((mcs != NULL) ? mcs->invocation_counter()->count() : 0) +
-             ((mdo != NULL) ? mdo->invocation_counter()->count() : 0);
-    }
-  } else {
-    return (mcs == NULL) ? 0 : mcs->invocation_counter()->count();
-  }
+  return (mcs == NULL) ? 0 : mcs->invocation_counter()->count();
 }
 
 int Method::backedge_count() {
   MethodCounters *mcs = method_counters();
-  if (TieredCompilation) {
-    MethodData* const mdo = method_data();
-    if (((mcs != NULL) ? mcs->backedge_counter()->carry() : false) ||
-        ((mdo != NULL) ? mdo->backedge_counter()->carry() : false)) {
-      return InvocationCounter::count_limit;
-    } else {
-      return ((mcs != NULL) ? mcs->backedge_counter()->count() : 0) +
-             ((mdo != NULL) ? mdo->backedge_counter()->count() : 0);
-    }
-  } else {
-    return (mcs == NULL) ? 0 : mcs->backedge_counter()->count();
-  }
+  return (mcs == NULL) ? 0 : mcs->backedge_counter()->count();
 }
 
 int Method::highest_comp_level() const {

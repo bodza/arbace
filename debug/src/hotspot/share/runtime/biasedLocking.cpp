@@ -285,7 +285,7 @@ static BiasedLocking::Condition bulk_revoke_or_rebias_at_safepoint(oop o, bool b
 
         // Now walk all threads' stacks and adjust epochs of any biased
         // and locked objects of this data type we encounter
-        for (; JavaThread *thr = jtiwh.next(); ) {
+        for ( ; JavaThread *thr = jtiwh.next(); ) {
           GrowableArray<MonitorInfo*>* cached_monitor_info = get_or_compute_monitor_info(thr);
           for (int i = 0; i < cached_monitor_info->length(); i++) {
             MonitorInfo* mon_info = cached_monitor_info->at(i);
@@ -311,7 +311,7 @@ static BiasedLocking::Condition bulk_revoke_or_rebias_at_safepoint(oop o, bool b
 
       // Now walk all threads' stacks and forcibly revoke the biases of
       // any locked and biased objects of this data type we encounter.
-      for (; JavaThread *thr = jtiwh.next(); ) {
+      for ( ; JavaThread *thr = jtiwh.next(); ) {
         GrowableArray<MonitorInfo*>* cached_monitor_info = get_or_compute_monitor_info(thr);
         for (int i = 0; i < cached_monitor_info->length(); i++) {
           MonitorInfo* mon_info = cached_monitor_info->at(i);

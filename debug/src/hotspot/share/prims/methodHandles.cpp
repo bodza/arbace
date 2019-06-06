@@ -5,8 +5,6 @@
 #include "code/codeCache.hpp"
 #include "code/dependencyContext.hpp"
 #include "compiler/compileBroker.hpp"
-#include "interpreter/interpreter.hpp"
-#include "interpreter/oopMapCache.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/oopFactory.hpp"
@@ -62,12 +60,12 @@ void MethodHandles::generate_adapters() {
 void MethodHandlesAdapterGenerator::generate() {
   // Generate generic method handle adapters.
   // Generate interpreter entries
-  for (Interpreter::MethodKind mk = Interpreter::method_handle_invoke_FIRST; mk <= Interpreter::method_handle_invoke_LAST; mk = Interpreter::MethodKind(1 + (int)mk)) {
-    vmIntrinsics::ID iid = Interpreter::method_handle_intrinsic(mk);
-    StubCodeMark mark(this, "MethodHandle::interpreter_entry", vmIntrinsics::name_at(iid));
+  for (NULL::MethodKind mk = NULL::method_handle_invoke_FIRST; mk <= NULL::method_handle_invoke_LAST; mk = NULL::MethodKind(1 + (int)mk)) {
+    vmIntrinsics::ID iid = NULL::method_handle_intrinsic(mk);
+    StubCodeMark mark(this, "MethodHandle::NULL", vmIntrinsics::name_at(iid));
     address entry = MethodHandles::generate_method_handle_interpreter_entry(_masm, iid);
     if (entry != NULL) {
-      Interpreter::set_entry_for_kind(mk, entry);
+      NULL::set_entry_for_kind(mk, entry);
     }
     // If the entry is not set, it will throw AbstractMethodError.
   }
@@ -315,7 +313,7 @@ bool MethodHandles::is_method_handle_invoke_name(Klass* klass, Symbol* name) {
   int me;
   int ms = iklass->find_method_by_name(name, &me);
   if (ms == -1) return false;
-  for (; ms < me; ms++) {
+  for ( ; ms < me; ms++) {
     Method* m = iklass->methods()->at(ms);
     int required = JVM_ACC_NATIVE | JVM_ACC_VARARGS;
     int flags = m->access_flags().as_int();
@@ -415,7 +413,7 @@ bool MethodHandles::is_signature_polymorphic_public_name(Klass* klass, Symbol* n
     InstanceKlass* iklass = InstanceKlass::cast(klass);
     int me;
     int ms = iklass->find_method_by_name(name, &me);
-    for (; ms < me; ms++) {
+    for ( ; ms < me; ms++) {
       Method* m = iklass->methods()->at(ms);
       int required = JVM_ACC_NATIVE | JVM_ACC_VARARGS | JVM_ACC_PUBLIC;
       int flags = m->access_flags().as_int();
@@ -979,7 +977,7 @@ void MethodHandles::flush_dependent_nmethods(Handle call_site, Handle target) {
   }
   if (marked > 0) {
     // At least one nmethod has been marked for deoptimization.
-    VM_Deoptimize op;
+    NULL op;
     VMThread::execute(&op);
   }
 }

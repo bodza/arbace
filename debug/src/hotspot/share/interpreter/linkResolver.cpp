@@ -10,7 +10,6 @@
 #include "compiler/compileBroker.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "interpreter/bytecode.hpp"
-#include "interpreter/interpreterRuntime.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
@@ -286,10 +285,8 @@ int LinkResolver::vtable_index_of_interface_method(Klass* klass, const methodHan
 
   // First check in default method array
   if (!resolved_method->is_abstract() && ik->default_methods() != NULL) {
-    int index = InstanceKlass::find_method_index(ik->default_methods(),
-                                                 name, signature, Klass::find_overpass,
-                                                 Klass::find_static, Klass::find_private);
-    if (index >= 0 ) {
+    int index = InstanceKlass::find_method_index(ik->default_methods(), name, signature, Klass::find_overpass, Klass::find_static, Klass::find_private);
+    if (index >= 0) {
       vtable_index = ik->default_vtable_indices()->at(index);
     }
   }
@@ -390,8 +387,7 @@ void LinkResolver::check_method_accessability(Klass* ref_klass, Klass* resolved_
   }
 }
 
-methodHandle LinkResolver::resolve_method_statically(Bytecodes::Code code,
-                                                     const constantPoolHandle& pool, int index, TRAPS) {
+methodHandle LinkResolver::resolve_method_statically(Bytecodes::Code code, const constantPoolHandle& pool, int index, TRAPS) {
   // This method is used only
   // (1) in C2 from InlineTree::ok_to_inline (via ciMethod::check_call),
   // and
@@ -478,8 +474,7 @@ void LinkResolver::check_field_loader_constraints(Symbol* field, Symbol* sig, Kl
   }
 }
 
-methodHandle LinkResolver::resolve_method(const LinkInfo& link_info,
-                                          Bytecodes::Code code, TRAPS) {
+methodHandle LinkResolver::resolve_method(const LinkInfo& link_info, Bytecodes::Code code, TRAPS) {
   Handle nested_exception;
   Klass* resolved_klass = link_info.resolved_klass();
 
@@ -767,8 +762,7 @@ void LinkResolver::resolve_special_call(CallInfo& result, Handle recv, const Lin
 }
 
 // throws linktime exceptions
-methodHandle LinkResolver::linktime_resolve_special_method(const LinkInfo& link_info,
-                                                           TRAPS) {
+methodHandle LinkResolver::linktime_resolve_special_method(const LinkInfo& link_info, TRAPS) {
   // Invokespecial is called for multiple special reasons:
   // <init>
   // local private method invocation, for classes and interfaces
@@ -850,8 +844,7 @@ void LinkResolver::runtime_resolve_special_method(CallInfo& result, const LinkIn
         // This check is not performed for super.invoke for interface methods
         // in super interfaces.
         current_klass->is_subclass_of(resolved_klass) &&
-        current_klass != resolved_klass
-        ) {
+        current_klass != resolved_klass) {
       // Lookup super method
       Klass* super_klass = current_klass->super();
       sel_method = lookup_instance_method_in_klasses(super_klass, resolved_method->name(), resolved_method->signature(), Klass::find_private, CHECK);
@@ -1201,13 +1194,12 @@ void LinkResolver::resolve_invokeinterface(CallInfo& result, Handle recv, const 
 }
 
 void LinkResolver::resolve_invokehandle(CallInfo& result, const constantPoolHandle& pool, int index, TRAPS) {
-  // This guy is reached from InterpreterRuntime::resolve_invokehandle.
   LinkInfo link_info(pool, index, CHECK);
   resolve_handle_call(result, link_info, CHECK);
 }
 
 void LinkResolver::resolve_handle_call(CallInfo& result, const LinkInfo& link_info, TRAPS) {
-  // JSR 292:  this must be an implicitly generated method MethodHandle.invokeExact(*...) or similar
+  // JSR 292: this must be an implicitly generated method MethodHandle.invokeExact(*...) or similar
   Klass* resolved_klass = link_info.resolved_klass();
   Handle       resolved_appendix;
   Handle       resolved_method_type;

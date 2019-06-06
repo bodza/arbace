@@ -8,7 +8,6 @@
 #include "oops/oop.inline.hpp"
 #include "runtime/compilationPolicy.hpp"
 #include "runtime/frame.inline.hpp"
-#include "runtime/deoptimization.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
 #include "runtime/vframe.inline.hpp"
 #include "aot/aotLoader.hpp"
@@ -138,8 +137,7 @@ JRT_BLOCK_ENTRY(void, CompilerRuntime::resolve_dynamic_invoke(JavaThread *thread
     }
 
     int cpi = cp_cache_entry->constant_pool_index();
-    if (!AOTLoader::reconcile_dynamic_invoke(holder, cpi, adapter_method(),
-      appendix_klass)) {
+    if (!AOTLoader::reconcile_dynamic_invoke(holder, cpi, adapter_method(), appendix_klass)) {
       return;
     }
 
@@ -206,42 +204,4 @@ JRT_BLOCK_ENTRY(Klass*, CompilerRuntime::initialize_klass_by_symbol(JavaThread *
     }
   JRT_BLOCK_END
   return k;
-JRT_END
-
-JRT_BLOCK_ENTRY(void, CompilerRuntime::invocation_event(JavaThread *thread, MethodCounters* counters))
-  if (!TieredCompilation) {
-    // Ignore the event if tiered is off
-    return;
-  }
-  JRT_BLOCK
-    methodHandle mh(THREAD, counters->method());
-    RegisterMap map(thread, false);
-
-    // Compute the enclosing method
-    frame fr = thread->last_frame().sender(&map);
-    CompiledMethod* cm = fr.cb()->as_compiled_method_or_null();
-    methodHandle emh(THREAD, cm->method());
-
-    CompilationPolicy::policy()->event(emh, mh, InvocationEntryBci, InvocationEntryBci, CompLevel_aot, cm, thread);
-  JRT_BLOCK_END
-JRT_END
-
-JRT_BLOCK_ENTRY(void, CompilerRuntime::backedge_event(JavaThread *thread, MethodCounters* counters, int branch_bci, int target_bci))
-  if (!TieredCompilation) {
-    // Ignore the event if tiered is off
-    return;
-  }
-  JRT_BLOCK
-    methodHandle mh(THREAD, counters->method());
-    RegisterMap map(thread, false);
-
-    // Compute the enclosing method
-    frame fr = thread->last_frame().sender(&map);
-    CompiledMethod* cm = fr.cb()->as_compiled_method_or_null();
-    methodHandle emh(THREAD, cm->method());
-    nmethod* osr_nm = CompilationPolicy::policy()->event(emh, mh, branch_bci, target_bci, CompLevel_aot, cm, thread);
-    if (osr_nm != NULL) {
-      Deoptimization::deoptimize_frame(thread, fr.id());
-    }
-  JRT_BLOCK_END
 JRT_END

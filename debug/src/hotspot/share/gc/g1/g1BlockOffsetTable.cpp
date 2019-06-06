@@ -32,8 +32,7 @@ G1BlockOffsetTablePart::G1BlockOffsetTablePart(G1BlockOffsetTable* array, G1Cont
   _space(gsp),
   _next_offset_threshold(NULL),
   _next_offset_index(0)
-{
-}
+{ }
 
 // The arguments follow the normal convention of denoting
 // a right-open interval: [start, end)

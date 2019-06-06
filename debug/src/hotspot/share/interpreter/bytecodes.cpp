@@ -177,7 +177,7 @@ int Bytecodes::compute_flags(const char* format, int more_flags) {
     case 'c': this_flag = _fmt_has_c; has_jbo = 1; break;
     case 'o': this_flag = _fmt_has_o; has_jbo = 1; break;
 
-    // uppercase versions mark native byte order (from Rewriter)
+    // uppercase versions mark native byte order
     // actually, only the 'J' case happens currently
     case 'J': this_flag = _fmt_has_j; has_nbo = 1; break;
     case 'K': this_flag = _fmt_has_k; has_nbo = 1; break;

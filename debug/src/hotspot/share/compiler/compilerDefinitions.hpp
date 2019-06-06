@@ -31,11 +31,11 @@ enum CompLevel {
   CompLevel_any               = -2,
   CompLevel_all               = -2,
   CompLevel_aot               = -1,
-  CompLevel_none              = 0,         // Interpreter
-  CompLevel_simple            = 1,         // C1
-  CompLevel_limited_profile   = 2,         // C1, invocation & backedge counters
-  CompLevel_full_profile      = 3,         // C1, invocation & backedge counters + mdo
-  CompLevel_full_optimization = 4          // C2 or JVMCI
+  CompLevel_none              = 0,
+  CompLevel_simple            = 1, // C1
+  CompLevel_limited_profile   = 2, // C1, invocation & backedge counters
+  CompLevel_full_profile      = 3, // C1, invocation & backedge counters + mdo
+  CompLevel_full_optimization = 4  // C2 or JVMCI
 };
 
 extern CompLevel CompLevel_highest_tier;
@@ -49,29 +49,12 @@ enum CompMode {
 
 extern CompMode Compilation_mode;
 
-inline bool is_server_compilation_mode_vm() {
-  return Compilation_mode == CompMode_server;
-}
-
-inline bool is_client_compilation_mode_vm() {
-  return Compilation_mode == CompMode_client;
-}
-
-inline bool is_c1_compile(int comp_level) {
-  return comp_level > CompLevel_none && comp_level < CompLevel_full_optimization;
-}
-
-inline bool is_c2_compile(int comp_level) {
-  return comp_level == CompLevel_full_optimization;
-}
-
-inline bool is_highest_tier_compile(int comp_level) {
-  return comp_level == CompLevel_highest_tier;
-}
-
-inline bool is_compile(int comp_level) {
-  return is_c1_compile(comp_level) || is_c2_compile(comp_level);
-}
+inline bool is_server_compilation_mode_vm()         { return Compilation_mode == CompMode_server; }
+inline bool is_client_compilation_mode_vm()         { return Compilation_mode == CompMode_client; }
+inline bool is_c1_compile(int comp_level)           { return comp_level > CompLevel_none && comp_level < CompLevel_full_optimization; }
+inline bool is_c2_compile(int comp_level)           { return comp_level == CompLevel_full_optimization; }
+inline bool is_highest_tier_compile(int comp_level) { return comp_level == CompLevel_highest_tier; }
+inline bool is_compile(int comp_level)              { return is_c1_compile(comp_level) || is_c2_compile(comp_level); }
 
 // States of Restricted Transactional Memory usage.
 enum RTMState {

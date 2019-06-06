@@ -13,14 +13,12 @@
 #include "gc/shared/gcLocker.hpp"
 #include "gc/shared/strongRootsScope.hpp"
 #include "gc/shared/workgroup.hpp"
-#include "interpreter/interpreter.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
 #include "oops/oop.inline.hpp"
 #include "oops/symbol.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/compilationPolicy.hpp"
-#include "runtime/deoptimization.hpp"
 #include "runtime/frame.inline.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
 #include "runtime/mutexLocker.hpp"
@@ -136,9 +134,6 @@ void SafepointSynchronize::begin() {
     }
 
     if (SafepointMechanism::uses_global_page_poll()) {
-      // Make interpreter safepoint aware
-      Interpreter::notice_safepoints();
-
       // Make polling safepoint aware
       guarantee(PageArmed == 0, "invariant");
       PageArmed = 1;
@@ -159,7 +154,7 @@ void SafepointSynchronize::begin() {
       int steps = 0;
       while (still_running > 0) {
         jtiwh.rewind();
-        for (; JavaThread *cur = jtiwh.next(); ) {
+        for ( ; JavaThread *cur = jtiwh.next(); ) {
           ThreadSafepointState *cur_state = cur->safepoint_state();
           if (cur_state->is_running()) {
             cur_state->examine_state_of_thread();
@@ -316,8 +311,6 @@ void SafepointSynchronize::end() {
     }
 
     if (SafepointMechanism::uses_global_page_poll()) {
-      // Remove safepoint check from interpreter
-      Interpreter::ignore_safepoints();
     }
 
     {
@@ -327,7 +320,7 @@ void SafepointSynchronize::end() {
         _state = _not_synchronized;
         OrderAccess::storestore(); // global state -> local state
         jtiwh.rewind();
-        for (; JavaThread *current = jtiwh.next(); ) {
+        for ( ; JavaThread *current = jtiwh.next(); ) {
           ThreadSafepointState* cur_state = current->safepoint_state();
           cur_state->restart(); // TSS _running
           SafepointMechanism::disarm_local_poll(current);
@@ -340,7 +333,7 @@ void SafepointSynchronize::end() {
 
         // Start suspended threads
         jtiwh.rewind();
-        for (; JavaThread *current = jtiwh.next(); ) {
+        for ( ; JavaThread *current = jtiwh.next(); ) {
           // A problem occurring on Solaris is when attempting to restart threads
           // the first #cpus - 1 go well, but then the VMThread is preempted when we get
           // to the next one (since it has been running the longest).  We then have
@@ -883,7 +876,7 @@ void ThreadSafepointState::handle_polling_page_exception() {
     // as otherwise we may never deliver it.
     if (thread()->has_async_condition()) {
       ThreadInVMfromJavaNoAsyncException __tiv(thread());
-      Deoptimization::deoptimize_frame(thread(), caller_fr.id());
+      NULL::NULL(thread(), caller_fr.id());
     }
 
     // If an exception has been installed we must check for a pending deoptimization

@@ -105,7 +105,7 @@ Bytecodes::Code ciBytecodeStream::next_wide_or_table(Bytecodes::Code bc) {
 
 // ------------------------------------------------------------------
 // ciBytecodeStream::reset_to_bci
-void ciBytecodeStream::reset_to_bci( int bci ) {
+void ciBytecodeStream::reset_to_bci(int bci) {
   _bc_start=_was_wide=0;
   _pc = _start+bci;
 }

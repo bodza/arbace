@@ -83,8 +83,7 @@ void* ResourceObj::operator new [](size_t size, allocation_type type, MEMFLAGS f
   return (address) operator new(size, type, flags);
 }
 
-void* ResourceObj::operator new(size_t size, const std::nothrow_t&  nothrow_constant,
-    allocation_type type, MEMFLAGS flags) throw() {
+void* ResourceObj::operator new(size_t size, const std::nothrow_t&  nothrow_constant, allocation_type type, MEMFLAGS flags) throw() {
   // should only call this with std::nothrow, use other operator new() otherwise
   address res = NULL;
   switch (type) {
@@ -101,8 +100,7 @@ void* ResourceObj::operator new(size_t size, const std::nothrow_t&  nothrow_cons
   return res;
 }
 
-void* ResourceObj::operator new [](size_t size, const std::nothrow_t&  nothrow_constant,
-    allocation_type type, MEMFLAGS flags) throw() {
+void* ResourceObj::operator new [](size_t size, const std::nothrow_t&  nothrow_constant, allocation_type type, MEMFLAGS flags) throw() {
   return (address)operator new(size, nothrow_constant, type, flags);
 }
 

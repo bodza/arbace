@@ -2062,7 +2062,7 @@ void CodeHeapState::print_names(outputStream* out, CodeHeap* heap) {
     }
     // Only check granule if it contains at least one blob.
     unsigned int nBlobs  = StatArray[ix].t1_count   + StatArray[ix].t2_count + StatArray[ix].tx_count + StatArray[ix].stub_count + StatArray[ix].dead_count;
-    if (nBlobs > 0 ) {
+    if (nBlobs > 0) {
     for (unsigned int is = 0; is < granule_size; is+=(unsigned int)seg_size) {
       // heap->find_start() is safe. Only working with _segmap. Returns NULL or void*. Returned CodeBlob may be uninitialized.
       CodeBlob* this_blob = (CodeBlob *)(heap->find_start(low_bound+ix*granule_size+is));

@@ -38,11 +38,6 @@ void JVMCICompiler::initialize() {
 }
 
 void JVMCICompiler::bootstrap(TRAPS) {
-  if (Arguments::mode() == Arguments::_int) {
-    // Nothing to do in -Xint mode
-    return;
-  }
-
   _bootstrapping = true;
   ResourceMark rm;
   HandleMark hm;

@@ -66,7 +66,6 @@ void JNIHandleMark::pop_jni_handle_block() {
 #define C2V_VMENTRY(result_type, name, signature) \
   JNIEXPORT result_type JNICALL c2v_ ## name signature { \
   TRACE_jvmci_1("CompilerToVM::" #name); \
-  TRACE_CALL(result_type, jvmci_ ## name signature) \
   JVMCI_VM_ENTRY_MARK;
 
 #define C2V_END }
@@ -173,7 +172,6 @@ C2V_VMENTRY(jbyteArray, getBytecode, (JNIEnv *, jobject, jobject jvmci_method))
 
     if (len > 1) {
       // Restore the big-endian constant pool indexes.
-      // Cf. Rewriter::scan_method
       switch (code) {
         case Bytecodes::_getstatic:
         case Bytecodes::_putstatic:
@@ -1002,8 +1000,8 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
                   }
                 }
               }
-              bool realloc_failures = Deoptimization::realloc_objects(thread, fst.current(), objects, CHECK_NULL);
-              Deoptimization::reassign_fields(fst.current(), fst.register_map(), objects, realloc_failures, false);
+              bool realloc_failures = NULL::realloc_objects(thread, fst.current(), objects, CHECK_NULL);
+              NULL::reassign_fields(fst.current(), fst.register_map(), objects, realloc_failures, false);
               realloc_called = true;
 
               GrowableArray<ScopeValue*>* local_values = scope->locals();
@@ -1024,20 +1022,6 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
             HotSpotStackFrameReference::set_bci(frame_reference, cvf->bci());
             oop method = CompilerToVM::get_jvmci_method(cvf->method(), CHECK_NULL);
             HotSpotStackFrameReference::set_method(frame_reference, method);
-          }
-        }
-      } else if (vf->is_interpreted_frame()) {
-        // interpreted method frame
-        interpretedVFrame* ivf = interpretedVFrame::cast(vf);
-        if (methods == NULL || matches(methods, ivf->method())) {
-          if (initialSkip > 0) {
-            initialSkip--;
-          } else {
-            locals = ivf->locals();
-            HotSpotStackFrameReference::set_bci(frame_reference, ivf->bci());
-            oop method = CompilerToVM::get_jvmci_method(ivf->method(), CHECK_NULL);
-            HotSpotStackFrameReference::set_method(frame_reference, method);
-            HotSpotStackFrameReference::set_localIsVirtual(frame_reference, NULL);
           }
         }
       }
@@ -1208,7 +1192,7 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
     }
     ((nmethod*) fst.current()->cb())->make_not_entrant();
   }
-  Deoptimization::deoptimize(thread, *fst.current(), fst.register_map(), Deoptimization::Reason_none);
+  NULL::deoptimize(thread, *fst.current(), fst.register_map(), NULL::Reason_none);
   // look for the frame again as it has been updated by deopt (pc, deopt state...)
   StackFrameStream fstAfterDeopt(thread);
   while (fstAfterDeopt.current()->sp() != stack_pointer && !fstAfterDeopt.is_done()) {
@@ -1245,8 +1229,8 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
     return;
   }
 
-  bool realloc_failures = Deoptimization::realloc_objects(thread, fstAfterDeopt.current(), objects, CHECK);
-  Deoptimization::reassign_fields(fstAfterDeopt.current(), fstAfterDeopt.register_map(), objects, realloc_failures, false);
+  bool realloc_failures = NULL::realloc_objects(thread, fstAfterDeopt.current(), objects, CHECK);
+  NULL::reassign_fields(fstAfterDeopt.current(), fstAfterDeopt.register_map(), objects, realloc_failures, false);
 
   for (int frame_index = 0; frame_index < virtualFrames->length(); frame_index++) {
     compiledVFrame* cvf = virtualFrames->at(frame_index);
@@ -1381,13 +1365,7 @@ C2V_VMENTRY(int, interpreterFrameSize, (JNIEnv*, jobject, jobject bytecode_frame
     bool is_top_frame = (bytecode_frame == top_bytecode_frame);
     Method* method = getMethodFromHotSpotMethod(BytecodePosition::method(bytecode_frame));
 
-    int frame_size = BytesPerWord * Interpreter::size_activation(method->max_stack(),
-                                                                 temps + callee_parameters,
-                                                                 extra_args,
-                                                                 locks,
-                                                                 callee_parameters,
-                                                                 callee_locals,
-                                                                 is_top_frame);
+    int frame_size = BytesPerWord * NULL::size_activation(method->max_stack(), temps + callee_parameters, extra_args, locks, callee_parameters, callee_locals, is_top_frame);
     size += frame_size;
 
     callee_parameters = method->size_of_parameters();
@@ -1395,7 +1373,7 @@ C2V_VMENTRY(int, interpreterFrameSize, (JNIEnv*, jobject, jobject bytecode_frame
     extra_args = 0;
     bytecode_frame = BytecodePosition::caller(bytecode_frame);
   }
-  return size + Deoptimization::last_frame_adjust(0, callee_locals) * BytesPerWord;
+  return size + NULL::last_frame_adjust(0, callee_locals) * BytesPerWord;
 C2V_END
 
 C2V_VMENTRY(void, compileToBytecode, (JNIEnv*, jobject, jobject lambda_form_handle))
@@ -1405,8 +1383,7 @@ C2V_VMENTRY(void, compileToBytecode, (JNIEnv*, jobject, jobject lambda_form_hand
     JavaValue result(T_VOID);
     JavaCalls::call_special(&result, lambda_form, SystemDictionary::LambdaForm_klass(), compileToBytecode, vmSymbols::void_method_signature(), CHECK);
   } else {
-    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
-                err_msg("Unexpected type: %s", lambda_form->klass()->external_name()));
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), err_msg("Unexpected type: %s", lambda_form->klass()->external_name()));
   }
 C2V_END
 

@@ -22,9 +22,7 @@ XHandlers::XHandlers(ciMethod* method) : _list(method->exception_table_length())
 }
 
 // deep copy of all XHandler contained in list
-XHandlers::XHandlers(XHandlers* other) :
-  _list(other->length())
-{
+XHandlers::XHandlers(XHandlers* other) : _list(other->length()) {
   for (int i = 0; i < other->length(); i++) {
     _list.append(new XHandler(other->handler_at(i)));
   }
@@ -137,7 +135,7 @@ bool IRScopeDebugInfo::should_reexecute() {
   int       cur_bci    = bci();
   if (cur_method != NULL && cur_bci != SynchronizationEntryBCI) {
     Bytecodes::Code code = cur_method->java_code_at_bci(cur_bci);
-    return Interpreter::bytecode_should_reexecute(code);
+    return NULL::bytecode_should_reexecute(code);
   } else
     return false;
 }
@@ -197,13 +195,7 @@ int CodeEmitInfo::interpreter_frame_size() const {
     bool is_top_frame = (state == _stack);
     ciMethod* method = state->scope()->method();
 
-    int frame_size = BytesPerWord * Interpreter::size_activation(method->max_stack(),
-                                                                 temps + callee_parameters,
-                                                                 extra_args,
-                                                                 locks,
-                                                                 callee_parameters,
-                                                                 callee_locals,
-                                                                 is_top_frame);
+    int frame_size = BytesPerWord * NULL::size_activation(method->max_stack(), temps + callee_parameters, extra_args, locks, callee_parameters, callee_locals, is_top_frame);
     size += frame_size;
 
     callee_parameters = method->size_of_parameters();
@@ -211,7 +203,7 @@ int CodeEmitInfo::interpreter_frame_size() const {
     extra_args = 0;
     state = state->caller_state();
   }
-  return size + Deoptimization::last_frame_adjust(0, callee_locals) * BytesPerWord;
+  return size + NULL::last_frame_adjust(0, callee_locals) * BytesPerWord;
 }
 
 // Implementation of IR

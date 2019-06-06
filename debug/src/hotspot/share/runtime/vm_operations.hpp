@@ -262,9 +262,9 @@ class VM_GTestExecuteAtSafepoint: public VM_Operation {
   VM_GTestExecuteAtSafepoint() { }
 };
 
-class VM_Deoptimize: public VM_Operation {
+class NULL: public VM_Operation {
  public:
-  VM_Deoptimize() { }
+  NULL() { }
   VMOp_Type type() const                        { return VMOp_Deoptimize; }
   void doit();
   bool allow_nested_vm_operations() const        { return true; }
@@ -279,15 +279,15 @@ class VM_MarkActiveNMethods: public VM_Operation {
 };
 
 // Deopt helper that can deoptimize frames in threads other than the
-// current thread.  Only used through Deoptimization::deoptimize_frame.
-class VM_DeoptimizeFrame: public VM_Operation {
-  friend class Deoptimization;
+// current thread.  Only used through NULL::NULL.
+class NULL: public VM_Operation {
+  friend class NULL;
 
  private:
   JavaThread* _thread;
   intptr_t*   _id;
   int _reason;
-  VM_DeoptimizeFrame(JavaThread* thread, intptr_t* id, int reason);
+  NULL(JavaThread* thread, intptr_t* id, int reason);
 
  public:
   VMOp_Type type() const                         { return VMOp_DeoptimizeFrame; }

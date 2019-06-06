@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "interpreter/interpreter.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/markOop.hpp"
 #include "oops/method.hpp"
@@ -65,7 +64,7 @@ bool frame::safe_for_sender(JavaThread *thread) {
   // to construct the sender and do some validation of it. This goes a long way
   // toward eliminating issues when we get in frame construction code
 
-  if (_cb != NULL ) {
+  if (_cb != NULL) {
     // First check if frame is complete and tester is reliable
     // Unfortunately we can only check frame complete for runtime stubs and nmethod
     // other generic buffer blobs are more problematic so we just assume they are
@@ -93,20 +92,7 @@ bool frame::safe_for_sender(JavaThread *thread) {
     address   sender_pc = NULL;
     intptr_t* saved_fp =  NULL;
 
-    if (is_interpreted_frame()) {
-      // fp must be safe
-      if (!fp_safe) {
-        return false;
-      }
-
-      sender_pc = (address) this->fp()[return_addr_offset];
-      // for interpreted frames, the value below is the sender "raw" sp,
-      // which can be different from the sender unextended sp (the sp seen
-      // by the sender) because of current frame local variables
-      sender_sp = (intptr_t*) addr_at(sender_sp_offset);
-      sender_unextended_sp = (intptr_t*) this->fp()[interpreter_frame_sender_sp_offset];
-      saved_fp = (intptr_t*) this->fp()[link_offset];
-    } else {
+    {
       // must be some sort of compiled/runtime frame
       // fp does not have to be safe (although it could be check for c1?)
 
@@ -124,25 +110,6 @@ bool frame::safe_for_sender(JavaThread *thread) {
       sender_pc = (address) *(sender_sp - 1);
       // Note: frame::sender_sp_offset is only valid for compiled frame
       saved_fp = (intptr_t*) *(sender_sp - frame::sender_sp_offset);
-    }
-
-    // If the potential sender is the interpreter then we can do some more checking
-    if (Interpreter::contains(sender_pc)) {
-      // fp is always saved in a recognizable place in any code we generate. However
-      // only if the sender is interpreted/call_stub (c1 too?) are we certain that the saved fp
-      // is really a frame pointer.
-
-      bool saved_fp_safe = ((address)saved_fp < thread->stack_base()) && (saved_fp > sender_sp);
-
-      if (!saved_fp_safe) {
-        return false;
-      }
-
-      // construct the potential sender
-
-      frame sender(sender_sp, sender_unextended_sp, saved_fp, sender_pc);
-
-      return sender.is_interpreted_frame_valid(thread);
     }
 
     // We must always be able to find a recognizable pc
@@ -248,10 +215,6 @@ void frame::patch_pc(Thread* thread, address pc) {
   }
 }
 
-bool frame::is_interpreted_frame() const {
-  return Interpreter::contains(pc());
-}
-
 int frame::frame_size(RegisterMap* map) const {
   frame sender = this->sender(map);
   return sender.sp() - sp();
@@ -259,38 +222,9 @@ int frame::frame_size(RegisterMap* map) const {
 
 intptr_t* frame::entry_frame_argument_at(int offset) const {
   // convert offset to index to deal with tsi
-  int index = (Interpreter::expr_offset_in_bytes(offset)/wordSize);
+  int index = (NULL::expr_offset_in_bytes(offset)/wordSize);
   // Entry frame's arguments are always in relation to unextended_sp()
   return &unextended_sp()[index];
-}
-
-// sender_sp
-intptr_t* frame::interpreter_frame_sender_sp() const {
-  return (intptr_t*) at(interpreter_frame_sender_sp_offset);
-}
-
-void frame::set_interpreter_frame_sender_sp(intptr_t* sender_sp) {
-  ptr_at_put(interpreter_frame_sender_sp_offset, (intptr_t) sender_sp);
-}
-
-// monitor elements
-
-BasicObjectLock* frame::interpreter_frame_monitor_begin() const {
-  return (BasicObjectLock*) addr_at(interpreter_frame_monitor_block_bottom_offset);
-}
-
-BasicObjectLock* frame::interpreter_frame_monitor_end() const {
-  BasicObjectLock* result = (BasicObjectLock*) *addr_at(interpreter_frame_monitor_block_top_offset);
-  return result;
-}
-
-void frame::interpreter_frame_set_monitor_end(BasicObjectLock* value) {
-  *((BasicObjectLock**)addr_at(interpreter_frame_monitor_block_top_offset)) = value;
-}
-
-// Used by template based interpreter deoptimization
-void frame::interpreter_frame_set_last_sp(intptr_t* sp) {
-    *((intptr_t**)addr_at(interpreter_frame_last_sp_offset)) = sp;
 }
 
 frame frame::sender_for_entry_frame(RegisterMap* map) const {
@@ -349,23 +283,6 @@ void frame::update_map_with_saved_link(RegisterMap* map, intptr_t** link_addr) {
 }
 
 //------------------------------------------------------------------------------
-// frame::sender_for_interpreter_frame
-frame frame::sender_for_interpreter_frame(RegisterMap* map) const {
-  // SP is the raw SP from the sender after adapter or interpreter
-  // extension.
-  intptr_t* sender_sp = this->sender_sp();
-
-  // This is the sp before any possible extension (adapter/locals).
-  intptr_t* unextended_sp = interpreter_frame_sender_sp();
-
-  if (map->update_map()) {
-    update_map_with_saved_link(map, (intptr_t**) addr_at(link_offset));
-  }
-
-  return frame(sender_sp, unextended_sp, link(), sender_pc());
-}
-
-//------------------------------------------------------------------------------
 // frame::sender_for_compiled_frame
 frame frame::sender_for_compiled_frame(RegisterMap* map) const {
   // we cannot rely upon the last fp having been saved to the thread
@@ -411,8 +328,6 @@ frame frame::sender(RegisterMap* map) const {
 
   if (is_entry_frame())
     return sender_for_entry_frame(map);
-  if (is_interpreted_frame())
-    return sender_for_interpreter_frame(map);
 
   // This test looks odd: why is it not is_compiled_frame() ?  That's
   // because stubs also have OOP maps.
@@ -423,115 +338,6 @@ frame frame::sender(RegisterMap* map) const {
   // Must be native-compiled frame, i.e. the marshaling code for native
   // methods that exists in the core system.
   return frame(sender_sp(), link(), sender_pc());
-}
-
-bool frame::is_interpreted_frame_valid(JavaThread* thread) const {
-  // These are reasonable sanity checks
-  if (fp() == 0 || (intptr_t(fp()) & (wordSize - 1)) != 0) {
-    return false;
-  }
-  if (sp() == 0 || (intptr_t(sp()) & (wordSize - 1)) != 0) {
-    return false;
-  }
-  if (fp() + interpreter_frame_initial_sp_offset < sp()) {
-    return false;
-  }
-  // These are hacks to keep us out of trouble.
-  // The problem with these is that they mask other problems
-  if (fp() <= sp()) {        // this attempts to deal with unsigned comparison above
-    return false;
-  }
-
-  // do some validation of frame elements
-
-  // first the method
-
-  Method* m = *interpreter_frame_method_addr();
-
-  // validate the method we'd find in this potential sender
-  if (!m->is_valid_method()) return false;
-
-  // stack frames shouldn't be much larger than max_stack elements
-  // this test requires the use of unextended_sp which is the sp as seen by
-  // the current frame, and not sp which is the "raw" pc which could point
-  // further because of local variables of the callee method inserted after
-  // method arguments
-  if (fp() - unextended_sp() > 1024 + m->max_stack()*Interpreter::stackElementSize) {
-    return false;
-  }
-
-  // validate bci/bcx
-
-  address  bcp    = interpreter_frame_bcp();
-  if (m->validate_bci_from_bcp(bcp) < 0) {
-    return false;
-  }
-
-  // validate constantPoolCache*
-  ConstantPoolCache* cp = *interpreter_frame_cache_addr();
-  if (cp == NULL || !cp->is_metaspace_object()) return false;
-
-  // validate locals
-
-  address locals =  (address) *interpreter_frame_locals_addr();
-
-  if (locals > thread->stack_base() || locals < (address) fp()) return false;
-
-  // We'd have to be pretty unlucky to be mislead at this point
-  return true;
-}
-
-BasicType frame::interpreter_frame_result(oop* oop_result, jvalue* value_result) {
-  Method* method = interpreter_frame_method();
-  BasicType type = method->result_type();
-
-  intptr_t* tos_addr;
-  if (method->is_native()) {
-    // TODO : ensure AARCH64 does the same as Intel here i.e. push v0 then r0
-    // Prior to calling into the runtime to report the method_exit the possible
-    // return value is pushed to the native stack. If the result is a jfloat/jdouble
-    // then ST0 is saved before EAX/EDX. See the note in generate_native_result
-    tos_addr = (intptr_t*)sp();
-    if (type == T_FLOAT || type == T_DOUBLE) {
-      // This is times two because we do a push(ltos) after pushing XMM0
-      // and that takes two interpreter stack slots.
-      tos_addr += 2 * Interpreter::stackElementWords;
-    }
-  } else {
-    tos_addr = (intptr_t*)interpreter_frame_tos_address();
-  }
-
-  switch (type) {
-    case T_OBJECT:
-    case T_ARRAY: {
-      oop obj;
-      if (method->is_native()) {
-        obj = cast_to_oop(at(interpreter_frame_oop_temp_offset));
-      } else {
-        oop* obj_p = (oop*)tos_addr;
-        obj = (obj_p == NULL) ? (oop)NULL : *obj_p;
-      }
-      *oop_result = obj;
-      break;
-    }
-    case T_BOOLEAN: value_result->z = *(jboolean*)tos_addr; break;
-    case T_BYTE:    value_result->b = *(jbyte*)tos_addr; break;
-    case T_CHAR:    value_result->c = *(jchar*)tos_addr; break;
-    case T_SHORT:   value_result->s = *(jshort*)tos_addr; break;
-    case T_INT:     value_result->i = *(jint*)tos_addr; break;
-    case T_LONG:    value_result->j = *(jlong*)tos_addr; break;
-    case T_FLOAT:   value_result->f = *(jfloat*)tos_addr; break;
-    case T_DOUBLE:  value_result->d = *(jdouble*)tos_addr; break;
-    case T_VOID: /* Nothing to do */ break;
-    default: ShouldNotReachHere();
-  }
-
-  return type;
-}
-
-intptr_t* frame::interpreter_frame_tos_at(jint offset) const {
-  int index = (Interpreter::expr_offset_in_bytes(offset)/wordSize);
-  return &interpreter_frame_tos_address()[index];
 }
 
 intptr_t *frame::initial_deoptimization_info() {
@@ -585,13 +391,8 @@ void internal_pf(unsigned long sp, unsigned long fp, unsigned long pc, unsigned 
 
   DESCRIBE_FP_OFFSET(return_addr);
   DESCRIBE_FP_OFFSET(link);
-  DESCRIBE_FP_OFFSET(interpreter_frame_sender_sp);
-  DESCRIBE_FP_OFFSET(interpreter_frame_last_sp);
-  DESCRIBE_FP_OFFSET(interpreter_frame_method);
-  DESCRIBE_FP_OFFSET(interpreter_frame_mdp);
   DESCRIBE_FP_OFFSET(interpreter_frame_cache);
   DESCRIBE_FP_OFFSET(interpreter_frame_locals);
-  DESCRIBE_FP_OFFSET(interpreter_frame_bcp);
   DESCRIBE_FP_OFFSET(interpreter_frame_initial_sp);
   unsigned long *p = (unsigned long *)fp;
 
@@ -600,7 +401,7 @@ void internal_pf(unsigned long sp, unsigned long fp, unsigned long pc, unsigned 
   // unwind them; for everything else we assume that the native frame
   // pointer chain is intact.
   frame this_frame((intptr_t*)sp, (intptr_t*)fp, (address)pc);
-  if (this_frame.is_compiled_frame() || this_frame.is_interpreted_frame()) {
+  if (this_frame.is_compiled_frame()) {
     frame sender = this_frame.sender(reg_map);
     nextfp = (unsigned long)sender.fp();
     nextpc = (unsigned long)sender.pc();
@@ -612,15 +413,9 @@ void internal_pf(unsigned long sp, unsigned long fp, unsigned long pc, unsigned 
   }
 
   if (bcx == -1ul)
-    bcx = p[frame::interpreter_frame_bcp_offset];
+    bcx = p[frame::NULL];
 
-  if (Interpreter::contains((address)pc)) {
-    Method* m = (Method*)p[frame::interpreter_frame_method_offset];
-    if (m && m->is_method()) {
-      printbc(m, bcx);
-    } else
-      printf("not a Method\n");
-  } else {
+  {
     CodeBlob *cb = CodeCache::find_blob((address)pc);
     if (cb != NULL) {
       if (cb->is_nmethod()) {
@@ -657,16 +452,6 @@ extern "C" void pf(unsigned long sp, unsigned long fp, unsigned long pc, unsigne
       fp = sp + wordSize * (cb->frame_size() - 2);
   }
   internal_pf(sp, fp, pc, bcx);
-}
-
-// support for printing out where we are in a Java method
-// needs to be passed current fp and bcp register values
-// prints method name, bc index and bytecode name
-extern "C" void pm(unsigned long fp, unsigned long bcx) {
-  DESCRIBE_FP_OFFSET(interpreter_frame_method);
-  unsigned long *p = (unsigned long *)fp;
-  Method* m = (Method*)p[frame::interpreter_frame_method_offset];
-  printbc(m, bcx);
 }
 
 void JavaFrameAnchor::make_walkable(JavaThread* thread) {

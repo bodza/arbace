@@ -140,7 +140,7 @@ Dict::Dict( const Dict &d ) : _size(d._size), _cnt(d._cnt), _hash(d._hash),_cmp(
 
 //------------------------------Dict-----------------------------------------
 // Deep copy a dictionary.
-Dict &Dict::operator =( const Dict &d ) {
+Dict &Dict::operator =(const Dict &d) {
   if (_size < d._size ) {       // If must have more buckets
     _arena = d._arena;
     _bin = (bucket*)_arena->Arealloc( _bin, sizeof(bucket)*_size, sizeof(bucket)*d._size );
@@ -189,7 +189,7 @@ void *Dict::Insert(void *key, void *val, bool replace) {
     b = &_bin[i];               // Handy shortcut
   }
   if (b->_cnt == b->_max ) {    // Must grow bucket?
-    if (!b->_keyvals ) {
+    if (!b->_keyvals) {
       b->_max = 2;              // Initial bucket size
       b->_keyvals = (void**)_arena->Amalloc_4(sizeof(void*) * b->_max * 2);
     } else {
@@ -254,7 +254,7 @@ int32_t Dict::operator ==(const Dict &d2) const {
 void Dict::print() {
   DictI i(this); // Moved definition in iterator here because of g++.
   tty->print("Dict@" INTPTR_FORMAT "[%d] = {", p2i(this), _cnt);
-  for ( ; i.test(); ++i ) {
+  for ( ; i.test(); ++i) {
     tty->print("(" INTPTR_FORMAT "," INTPTR_FORMAT "),", p2i(i._key), p2i(i._value));
   }
   tty->print_cr("}");
@@ -311,7 +311,7 @@ int32_t cmpkey(const void *key1, const void *key2) {
 //=============================================================================
 //------------------------------reset------------------------------------------
 // Create an iterator and initialize the first variables.
-void DictI::reset( const Dict *dict ) {
+void DictI::reset(const Dict *dict) {
   _d = dict;                    // The dictionary
   _i = (uint)-1;                // Before the first bin
   _j = 0;                       // Nothing left in the current bin

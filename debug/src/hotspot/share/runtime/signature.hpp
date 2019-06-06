@@ -215,7 +215,7 @@ class Fingerprinter: public SignatureIterator {
       return mh->constMethod()->fingerprint();
     }
 
-    if (mh->size_of_parameters() > max_size_of_parameters ) {
+    if (mh->size_of_parameters() > max_size_of_parameters) {
       _fingerprint = (uint64_t)CONST64(-1);
       mh->constMethod()->set_fingerprint(_fingerprint);
       return _fingerprint;
@@ -291,7 +291,7 @@ class NativeSignatureIterator: public SignatureIterator {
   }
 
   // Optimized path if we have the bitvector form of signature
-  void iterate( uint64_t fingerprint ) {
+  void iterate(uint64_t fingerprint) {
     if (!is_static()) {
       // handle receiver (not handled by iterate because not in signature)
       pass_object(); _jni_offset++; _offset++;

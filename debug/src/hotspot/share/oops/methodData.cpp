@@ -11,7 +11,6 @@
 #include "oops/methodData.inline.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/compilationPolicy.hpp"
-#include "runtime/deoptimization.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/orderAccess.hpp"
 #include "runtime/safepointVerifiers.hpp"
@@ -291,7 +290,7 @@ void RetData::post_initialize(BytecodeStream* stream, MethodData* mdo) {
 // wrapper around a derived oop, taking the lock in _this_ method will
 // basically cause the 'this' pointer's _data field to contain junk after the
 // lock.  We require the caller to take the lock before making the ProfileData
-// structure.  Currently the only caller is InterpreterRuntime::update_mdp_for_ret
+// structure.
 address RetData::fixup_ret(int return_bci, MethodData* h_mdo) {
   // First find the mdp which corresponds to the return bci.
   address mdp = h_mdo->bci_to_dp(return_bci);
@@ -539,25 +538,8 @@ bool MethodData::is_speculative_trap_bytecode(Bytecodes::Code code) {
   return false;
 }
 
-int MethodData::compute_extra_data_count(int data_size, int empty_bc_count, bool needs_speculative_traps) {
-  if (ProfileTraps) {
-    // Assume that up to 30% of the possibly trapping BCIs with no MDP will need to allocate one.
-    int extra_data_count = MIN2(empty_bc_count, MAX2(4, (empty_bc_count * 30) / 100));
-
-    // Make sure we have a minimum number of extra data slots to
-    // allocate SpeculativeTrapData entries. We would want to have one
-    // entry per compilation that inlines this method and for which
-    // some type speculation assumption fails. So the room we need for
-    // the SpeculativeTrapData entries doesn't directly depend on the
-    // size of the method. Because it's hard to estimate, we reserve
-    // space for an arbitrary number of entries.
-    int spec_data_count = (needs_speculative_traps ? SpecTrapLimitExtraEntries : 0) *
-      (SpeculativeTrapData::static_cell_count() + DataLayout::header_size_in_cells());
-
-    return MAX2(extra_data_count, spec_data_count);
-  } else {
-    return 0;
-  }
+int MethodData::compute_extra_data_count(int data_size, int empty_bc_count, bool needs_speculative_traps) {
+  return 0;
 }
 
 // Compute the size of the MethodData* necessary to store
@@ -896,16 +878,13 @@ void MethodData::init() {
   _nof_overflow_recompiles = 0;
   _nof_overflow_traps = 0;
   clear_escape_info();
-  Copy::zero_to_words((HeapWord*) &_trap_hist,
-                      sizeof(_trap_hist) / sizeof(HeapWord));
+  Copy::zero_to_words((HeapWord*) &_trap_hist, sizeof(_trap_hist) / sizeof(HeapWord));
 }
 
 // Get a measure of how much mileage the method has on it.
 int MethodData::mileage_of(Method* method) {
   int mileage = 0;
-  if (TieredCompilation) {
-    mileage = MAX2(method->invocation_count(), method->backedge_count());
-  } else {
+  {
     int iic = method->interpreter_invocation_count();
     if (mileage < iic)  mileage = iic;
     MethodCounters* mcs = method->method_counters();
@@ -1062,7 +1041,7 @@ ProfileData* MethodData::bci_to_extra_data(int bci, Method* m, bool create_if_mi
 ArgInfoData *MethodData::arg_info() {
   DataLayout* dp    = extra_data_base();
   DataLayout* end   = args_data_limit();
-  for (; dp < end; dp = next_extra(dp)) {
+  for ( ; dp < end; dp = next_extra(dp)) {
     if (dp->tag() == DataLayout::arg_info_data_tag)
       return new ArgInfoData(dp);
   }
@@ -1258,7 +1237,7 @@ void MethodData::clean_extra_data(CleanExtraDataClosure* cl) {
   DataLayout* end = args_data_limit();
 
   int shift = 0;
-  for (; dp < end; dp = next_extra(dp)) {
+  for ( ; dp < end; dp = next_extra(dp)) {
     switch (dp->tag()) {
     case DataLayout::speculative_trap_data_tag: {
       SpeculativeTrapData* data = new SpeculativeTrapData(dp);

@@ -36,17 +36,8 @@ JVMFlag::Error AliasLevelConstraintFunc(intx value, bool verbose) {
  *    the minimum number of compiler threads is 2.
  */
 JVMFlag::Error CICompilerCountConstraintFunc(intx value, bool verbose) {
-  int min_number_of_compiler_threads = 0;
-  if (!TieredCompilation || (TieredStopAtLevel < CompLevel_full_optimization)) {
-    min_number_of_compiler_threads = 1; // case 2 or case 3
-  } else {
-    min_number_of_compiler_threads = 2;   // case 4 (tiered)
-  }
+  int min_number_of_compiler_threads = 1; // case 2 or case 3
 
-  // The default CICompilerCount's value is CI_COMPILER_COUNT.
-  // With a client VM, -XX:+TieredCompilation causes TieredCompilation
-  // to be true here (the option is validated later) and
-  // min_number_of_compiler_threads to exceed CI_COMPILER_COUNT.
   min_number_of_compiler_threads = MIN2(min_number_of_compiler_threads, CI_COMPILER_COUNT);
 
   if (value < (intx)min_number_of_compiler_threads) {
@@ -100,23 +91,7 @@ JVMFlag::Error CompileThresholdConstraintFunc(intx value, bool verbose) {
 
 JVMFlag::Error OnStackReplacePercentageConstraintFunc(intx value, bool verbose) {
   int backward_branch_limit;
-  if (ProfileInterpreter) {
-    if (OnStackReplacePercentage < InterpreterProfilePercentage) {
-      JVMFlag::printError(verbose, "OnStackReplacePercentage (" INTX_FORMAT ") must be larger than InterpreterProfilePercentage (" INTX_FORMAT ")\n", OnStackReplacePercentage, InterpreterProfilePercentage);
-      return JVMFlag::VIOLATES_CONSTRAINT;
-    }
-
-    backward_branch_limit = ((CompileThreshold * (OnStackReplacePercentage - InterpreterProfilePercentage)) / 100) << InvocationCounter::count_shift;
-
-    if (backward_branch_limit < 0) {
-      JVMFlag::printError(verbose,
-                          "CompileThreshold * (InterpreterProfilePercentage - OnStackReplacePercentage) / 100 = " INTX_FORMAT " "
-                          "must be between 0 and " INTX_FORMAT ", try changing CompileThreshold, InterpreterProfilePercentage, and/or OnStackReplacePercentage\n",
-                          (CompileThreshold * (OnStackReplacePercentage - InterpreterProfilePercentage)) / 100,
-                          INT_MAX >> InvocationCounter::count_shift);
-      return JVMFlag::VIOLATES_CONSTRAINT;
-    }
-  } else {
+  {
     if (OnStackReplacePercentage < 0) {
       JVMFlag::printError(verbose, "OnStackReplacePercentage (" INTX_FORMAT ") must be non-negative\n", OnStackReplacePercentage);
       return JVMFlag::VIOLATES_CONSTRAINT;

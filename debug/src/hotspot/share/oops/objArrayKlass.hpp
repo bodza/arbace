@@ -28,24 +28,23 @@ class ObjArrayKlass : public ArrayKlass {
   ObjArrayKlass() { }
 
   // Instance variables
-  Klass* element_klass() const      { return _element_klass; }
-  void set_element_klass(Klass* k)  { _element_klass = k; }
-  Klass** element_klass_addr()      { return &_element_klass; }
+  Klass* element_klass() const     { return _element_klass; }
+  void set_element_klass(Klass* k) { _element_klass = k; }
+  Klass** element_klass_addr()     { return &_element_klass; }
 
-  Klass* bottom_klass() const       { return _bottom_klass; }
-  void set_bottom_klass(Klass* k)   { _bottom_klass = k; }
-  Klass** bottom_klass_addr()       { return &_bottom_klass; }
+  Klass* bottom_klass() const      { return _bottom_klass; }
+  void set_bottom_klass(Klass* k)  { _bottom_klass = k; }
+  Klass** bottom_klass_addr()      { return &_bottom_klass; }
 
   ModuleEntry* module() const;
   PackageEntry* package() const;
 
-  // Compiler/Interpreter offset
+  // Compiler offset
   static ByteSize element_klass_offset() { return in_ByteSize(offset_of(ObjArrayKlass, _element_klass)); }
 
   // Dispatched operation
   bool can_be_primary_super_slow() const;
-  GrowableArray<Klass*>* compute_secondary_supers(int num_extra_slots,
-                                                  Array<Klass*>* transitive_interfaces);
+  GrowableArray<Klass*>* compute_secondary_supers(int num_extra_slots, Array<Klass*>* transitive_interfaces);
   bool compute_is_subtype_of(Klass* k);
   int oop_size(oop obj) const;
 

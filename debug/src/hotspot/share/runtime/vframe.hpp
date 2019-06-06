@@ -19,7 +19,6 @@
 // The vframe inheritance hierarchy:
 // - vframe
 //   - javaVFrame
-//     - interpretedVFrame
 //     - compiledVFrame     ; (used for both compiled Java methods and native stubs)
 //   - externalVFrame
 //     - entryVFrame        ; special frame created when calling Java from C
@@ -39,12 +38,12 @@ class vframe: public ResourceObj {
   static vframe* new_vframe(const frame* f, const RegisterMap *reg_map, JavaThread* thread);
 
   // Accessors
-  frame              fr()           const { return _fr; }
-  CodeBlob*          cb()         const { return _fr.cb(); }
-  CompiledMethod*   nm()         const { return (CompiledMethod*) cb(); }
+  frame           fr() const { return _fr; }
+  CodeBlob*       cb() const { return _fr.cb(); }
+  CompiledMethod* nm() const { return (CompiledMethod*) cb(); }
 
 // ???? Does this need to be a copy?
-  frame*             frame_pointer() { return &_fr; }
+  frame*             frame_pointer()      { return &_fr; }
   const RegisterMap* register_map() const { return &_reg_map; }
   JavaThread*        thread()       const { return _thread; }
 
@@ -64,7 +63,6 @@ class vframe: public ResourceObj {
   // Type testing operations
   virtual bool is_entry_frame()       const { return false; }
   virtual bool is_java_frame()        const { return false; }
-  virtual bool is_interpreted_frame() const { return false; }
   virtual bool is_compiled_frame()    const { return false; }
 };
 
@@ -101,45 +99,6 @@ class javaVFrame: public vframe {
 
   // printing used during stack dumps and diagnostics
   static void print_locked_object_class_name(outputStream* st, Handle obj, const char* lock_state);
-  void print_lock_info_on(outputStream* st, int frame_count);
-  void print_lock_info(int frame_count) { print_lock_info_on(tty, frame_count); }
-
-  friend class vframe;
-};
-
-class interpretedVFrame: public javaVFrame {
- public:
-  // JVM state
-  Method*                      method()         const;
-  int                          bci()            const;
-  StackValueCollection*        locals()         const;
-  StackValueCollection*        expressions()    const;
-  GrowableArray<MonitorInfo*>* monitors()       const;
-
-  void set_locals(StackValueCollection* values) const;
-
-  // Test operation
-  bool is_interpreted_frame() const { return true; }
-
- protected:
-  interpretedVFrame(const frame* fr, const RegisterMap* reg_map, JavaThread* thread) : javaVFrame(fr, reg_map, thread) { };
-
- public:
-  // Accessors for Byte Code Pointer
-  u_char* bcp() const;
-  void set_bcp(u_char* bcp);
-
-  // casting
-  static interpretedVFrame* cast(vframe* vf) {
-    return (interpretedVFrame*) vf;
-  }
-
- private:
-  static const int bcp_offset;
-  intptr_t* locals_addr_at(int offset) const;
-  StackValueCollection* stack_data(bool expressions) const;
-  // returns where the parameters starts relative to the frame pointer
-  int start_of_parameters() const;
 
   friend class vframe;
 };
@@ -220,7 +179,6 @@ class vframeStreamCommon : StackObj {
   void fill_from_compiled_frame(int decode_offset);
   void fill_from_compiled_native_frame();
 
-  void fill_from_interpreter_frame();
   bool fill_from_frame();
 
   // Helper routine for security_get_caller_frame
@@ -236,11 +194,10 @@ class vframeStreamCommon : StackObj {
   inline intptr_t* frame_id() const;
   address frame_pc() const { return _frame.pc(); }
 
-  CodeBlob*          cb()         const { return _frame.cb(); }
-  CompiledMethod*   nm()         const { return (CompiledMethod*) cb(); }
+  CodeBlob*       cb() const { return _frame.cb(); }
+  CompiledMethod* nm() const { return (CompiledMethod*) cb(); }
 
   // Frame type
-  inline bool is_interpreted_frame() const;
   inline bool is_entry_frame() const;
 
   // Iteration

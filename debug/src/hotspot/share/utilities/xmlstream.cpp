@@ -7,7 +7,6 @@
 #include "oops/methodData.hpp"
 #include "oops/method.hpp"
 #include "oops/oop.inline.hpp"
-#include "runtime/deoptimization.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/vmThread.hpp"
 #include "utilities/vmError.hpp"
@@ -280,7 +279,7 @@ void xmlStream::method(const methodHandle& method) {
     if (cnt != 0)  print(" decompiles='%d'", cnt);
     for (uint reason = 0; reason < mdo->trap_reason_limit(); reason++) {
       cnt = mdo->trap_count(reason);
-      if (cnt != 0)  print(" %s_traps='%d'", Deoptimization::trap_reason_name(reason), cnt);
+      if (cnt != 0)  print(" %s_traps='%d'", NULL::trap_reason_name(reason), cnt);
     }
     cnt = mdo->overflow_trap_count();
     if (cnt != 0)  print(" overflow_traps='%d'", cnt);

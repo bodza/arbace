@@ -103,24 +103,6 @@ void G1ConcurrentMarkThread::delay_to_keep_mmu(G1Policy* g1_policy, bool remark)
   }
 }
 
-static const char* const concurrent_phase_names[] = {
-#define CONCURRENT_PHASE_NAME(tag, ignore_value, ignore_title) XSTR(tag),
-  EXPAND_CONCURRENT_PHASES(CONCURRENT_PHASE_NAME)
-#undef CONCURRENT_PHASE_NAME
-  NULL                          // terminator
-};
-
-// Returns the phase number for name, or a negative value if unknown.
-static int lookup_concurrent_phase(const char* name) {
-  const char* const* names = concurrent_phase_names;
-  for (uint i = 0; names[i] != NULL; ++i) {
-    if (strcmp(name, names[i]) == 0) {
-      return static_cast<int>(i);
-    }
-  }
-  return -1;
-}
-
 // The phase must be valid and must have a title.
 static const char* lookup_concurrent_phase_title(int phase) {
   static const char* const titles[] = {

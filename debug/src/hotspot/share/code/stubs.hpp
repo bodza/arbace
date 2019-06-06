@@ -160,8 +160,6 @@ class StubQueue: public CHeapObj<mtCode> {
   void  remove_first(int n);                     // remove the first n stubs in the queue
   void  remove_all();                            // remove all stubs in the queue
 
-  void deallocate_unused_tail();                 // deallocate the unused tail of the underlying CodeBlob
-                                                 // only used from TemplateInterpreter::initialize()
   // Iteration
   Stub* first() const                            { return number_of_stubs() > 0 ? stub_at(_queue_begin) : NULL; }
   Stub* next(Stub* s) const                      { int i = index_of(s) + stub_size(s);

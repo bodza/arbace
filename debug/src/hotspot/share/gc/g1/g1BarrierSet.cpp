@@ -73,8 +73,7 @@ void G1BarrierSet::write_ref_field_post_slow(volatile jbyte* byte) {
     if (thr->is_Java_thread()) {
       G1ThreadLocalData::dirty_card_queue(thr).enqueue(byte);
     } else {
-      MutexLockerEx x(Shared_DirtyCardQ_lock,
-                      Mutex::_no_safepoint_check_flag);
+      MutexLockerEx x(Shared_DirtyCardQ_lock, Mutex::_no_safepoint_check_flag);
       _dirty_card_queue_set.shared_dirty_card_queue()->enqueue(byte);
     }
   }
@@ -88,14 +87,14 @@ void G1BarrierSet::invalidate(MemRegion mr) {
   jbyte* last_byte = _card_table->byte_for(mr.last());
   Thread* thr = Thread::current();
     // skip all consecutive young cards
-  for (; byte <= last_byte && *byte == G1CardTable::g1_young_card_val(); byte++)
+  for ( ; byte <= last_byte && *byte == G1CardTable::g1_young_card_val(); byte++)
     ;
 
   if (byte <= last_byte) {
     OrderAccess::storeload();
     // Enqueue if necessary.
     if (thr->is_Java_thread()) {
-      for (; byte <= last_byte; byte++) {
+      for ( ; byte <= last_byte; byte++) {
         if (*byte == G1CardTable::g1_young_card_val()) {
           continue;
         }
@@ -105,9 +104,8 @@ void G1BarrierSet::invalidate(MemRegion mr) {
         }
       }
     } else {
-      MutexLockerEx x(Shared_DirtyCardQ_lock,
-                      Mutex::_no_safepoint_check_flag);
-      for (; byte <= last_byte; byte++) {
+      MutexLockerEx x(Shared_DirtyCardQ_lock, Mutex::_no_safepoint_check_flag);
+      for ( ; byte <= last_byte; byte++) {
         if (*byte == G1CardTable::g1_young_card_val()) {
           continue;
         }

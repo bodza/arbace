@@ -10,8 +10,6 @@ inline vframeStreamCommon::vframeStreamCommon(JavaThread* thread) : _reg_map(thr
 
 inline intptr_t* vframeStreamCommon::frame_id() const { return _frame.id(); }
 
-inline bool vframeStreamCommon::is_interpreted_frame() const { return _frame.is_interpreted_frame(); }
-
 inline bool vframeStreamCommon::is_entry_frame() const { return _frame.is_entry_frame(); }
 
 inline void vframeStreamCommon::next() {
@@ -81,12 +79,6 @@ inline void vframeStreamCommon::fill_from_compiled_native_frame() {
 }
 
 inline bool vframeStreamCommon::fill_from_frame() {
-  // Interpreted frame
-  if (_frame.is_interpreted_frame()) {
-    fill_from_interpreter_frame();
-    return true;
-  }
-
   // Compiled frame
 
   if (cb() != NULL && cb()->is_compiled()) {
@@ -120,7 +112,7 @@ inline bool vframeStreamCommon::fill_from_frame() {
         // one that would produce a pcDesc since the trans state
         // would be one that might in fact anticipate a safepoint
 
-        if (state == _thread_in_Java ) {
+        if (state == _thread_in_Java) {
           // This will get a method a zero bci and no inlining.
           // Might be nice to have a unique bci to signify this
           // particular case but for now zero will do.
@@ -155,25 +147,6 @@ inline bool vframeStreamCommon::fill_from_frame() {
   }
 
   return false;
-}
-
-inline void vframeStreamCommon::fill_from_interpreter_frame() {
-  Method* method = _frame.interpreter_frame_method();
-  address   bcp    = _frame.interpreter_frame_bcp();
-  int       bci    = method->validate_bci_from_bcp(bcp);
-  // 6379830 AsyncGetCallTrace sometimes feeds us wild frames.
-  // AsyncGetCallTrace interrupts the VM asynchronously. As a result
-  // it is possible to access an interpreter frame for which
-  // no Java-level information is yet available (e.g., becasue
-  // the frame was being created when the VM interrupted it).
-  // In this scenario, pretend that the interpreter is at the point
-  // of entering the method.
-  if (bci < 0) {
-    bci = 0;
-  }
-  _mode   = interpreted_mode;
-  _method = method;
-  _bci    = bci;
 }
 
 #endif

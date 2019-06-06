@@ -12,8 +12,7 @@
 // ------------------------------------------------------------------
 // ciConstant::print
 void ciConstant::print() {
-  tty->print("<ciConstant type=%s value=",
-             basictype_to_str(basic_type()));
+  tty->print("<ciConstant type=%s value=", basictype_to_str(basic_type()));
   switch (basic_type()) {
   case T_BOOLEAN:
     tty->print("%s", bool_to_str(_value._int != 0));

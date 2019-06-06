@@ -15,8 +15,6 @@
 #include "compiler/disassembler.hpp"
 #include "gc/shared/barrierSet.hpp"
 #include "gc/shared/gcLocker.inline.hpp"
-#include "interpreter/interpreter.hpp"
-#include "interpreter/interpreterRuntime.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
 #include "oops/klass.hpp"
@@ -55,20 +53,20 @@ RuntimeStub*        SharedRuntime::_resolve_virtual_call_blob;
 RuntimeStub*        SharedRuntime::_resolve_static_call_blob;
 address             SharedRuntime::_resolve_static_call_entry;
 
-DeoptimizationBlob* SharedRuntime::_deopt_blob;
+NULL* SharedRuntime::NULL;
 SafepointBlob*      SharedRuntime::_polling_page_vectors_safepoint_handler_blob;
 SafepointBlob*      SharedRuntime::_polling_page_safepoint_handler_blob;
 SafepointBlob*      SharedRuntime::_polling_page_return_handler_blob;
 
 //----------------------------generate_stubs-----------------------------------
 void SharedRuntime::generate_stubs() {
-  _wrong_method_blob                   = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::handle_wrong_method),          "wrong_method_stub");
-  _wrong_method_abstract_blob          = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::handle_wrong_method_abstract), "wrong_method_abstract_stub");
-  _ic_miss_blob                        = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::handle_wrong_method_ic_miss),  "ic_miss_stub");
-  _resolve_opt_virtual_call_blob       = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::resolve_opt_virtual_call_C),   "resolve_opt_virtual_call");
-  _resolve_virtual_call_blob           = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::resolve_virtual_call_C),       "resolve_virtual_call");
-  _resolve_static_call_blob            = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::resolve_static_call_C),        "resolve_static_call");
-  _resolve_static_call_entry           = _resolve_static_call_blob->entry_point();
+  _wrong_method_blob             = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::handle_wrong_method),          "wrong_method_stub");
+  _wrong_method_abstract_blob    = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::handle_wrong_method_abstract), "wrong_method_abstract_stub");
+  _ic_miss_blob                  = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::handle_wrong_method_ic_miss),  "ic_miss_stub");
+  _resolve_opt_virtual_call_blob = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::resolve_opt_virtual_call_C),   "resolve_opt_virtual_call");
+  _resolve_virtual_call_blob     = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::resolve_virtual_call_C),       "resolve_virtual_call");
+  _resolve_static_call_blob      = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::resolve_static_call_C),        "resolve_static_call");
+  _resolve_static_call_entry     = _resolve_static_call_blob->entry_point();
 
   // Vectors are generated only by C2 and JVMCI.
   bool support_wide = is_wide_vector(MaxVectorSize);
@@ -77,8 +75,6 @@ void SharedRuntime::generate_stubs() {
   }
   _polling_page_safepoint_handler_blob = generate_handler_blob(CAST_FROM_FN_PTR(address, SafepointSynchronize::handle_polling_page_exception), POLL_AT_LOOP);
   _polling_page_return_handler_blob    = generate_handler_blob(CAST_FROM_FN_PTR(address, SafepointSynchronize::handle_polling_page_exception), POLL_AT_RETURN);
-
-  generate_deopt_blob();
 }
 
 #include <math.h>
@@ -320,7 +316,7 @@ address SharedRuntime::raw_exception_handler_for_return_address(JavaThread* thre
       if (thread->reserved_stack_activation() != thread->stack_base()) {
         thread->set_reserved_stack_activation(thread->stack_base());
       }
-      return SharedRuntime::deopt_blob()->unpack_with_exception();
+      return SharedRuntime::NULL()->unpack_with_exception();
     } else {
       return nm->exception_begin();
     }
@@ -329,10 +325,6 @@ address SharedRuntime::raw_exception_handler_for_return_address(JavaThread* thre
   // Entry code
   if (StubRoutines::returns_to_call_stub(return_address)) {
     return StubRoutines::catch_exception_entry();
-  }
-  // Interpreted code
-  if (Interpreter::contains(return_address)) {
-    return Interpreter::rethrow_exception_entry();
   }
 
   guarantee(blob == NULL || !blob->is_runtime_stub(), "caller should have skipped stub");
@@ -366,9 +358,9 @@ address SharedRuntime::get_poll_stub(address pc) {
   return stub;
 }
 
-oop SharedRuntime::retrieve_receiver( Symbol* sig, frame caller ) {
+oop SharedRuntime::retrieve_receiver(Symbol* sig, frame caller) {
   int args_size = ArgumentSizeComputer(sig).size() + 1;
-  oop result = cast_to_oop(*caller.interpreter_frame_tos_at(args_size - 1));
+  oop result = cast_to_oop(*caller.NULL(args_size - 1));
   return result;
 }
 
@@ -398,8 +390,7 @@ JRT_END
 
 // ret_pc points into caller; we are returning caller's exception handler
 // for given exception
-address SharedRuntime::compute_compiled_exc_handler(CompiledMethod* cm, address ret_pc, Handle& exception,
-                                                    bool force_unwind, bool top_frame_only, bool& recursive_exception_occurred) {
+address SharedRuntime::compute_compiled_exc_handler(CompiledMethod* cm, address ret_pc, Handle& exception, bool force_unwind, bool top_frame_only, bool& recursive_exception_occurred) {
   ResourceMark rm;
 
   if (cm->is_compiled_by_jvmci()) {
@@ -410,7 +401,7 @@ address SharedRuntime::compute_compiled_exc_handler(CompiledMethod* cm, address 
     if (t != NULL) {
       return cm->code_begin() + t->pco();
     } else {
-      return Deoptimization::deoptimize_for_missing_exception_handler(cm);
+      return NULL::deoptimize_for_missing_exception_handler(cm);
     }
   }
 
@@ -547,129 +538,117 @@ void SharedRuntime::throw_StackOverflowError_common(JavaThread* thread, bool del
 
 address SharedRuntime::deoptimize_for_implicit_exception(JavaThread* thread, address pc, CompiledMethod* nm, int deopt_reason) {
   thread->set_jvmci_implicit_exception_pc(pc);
-  thread->set_pending_deoptimization(Deoptimization::make_trap_request((Deoptimization::DeoptReason)deopt_reason, Deoptimization::Action_reinterpret));
-  return (SharedRuntime::deopt_blob()->implicit_exception_uncommon_trap());
+  thread->set_pending_deoptimization(NULL::make_trap_request((NULL::NULL)deopt_reason, NULL::Action_reinterpret));
+  return (SharedRuntime::NULL()->implicit_exception_uncommon_trap());
 }
 
 address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread, address pc, SharedRuntime::ImplicitExceptionKind exception_kind) {
   address target_pc = NULL;
 
-  if (Interpreter::contains(pc)) {
-    switch (exception_kind) {
-      case IMPLICIT_NULL:           return Interpreter::throw_NullPointerException_entry();
-      case IMPLICIT_DIVIDE_BY_ZERO: return Interpreter::throw_ArithmeticException_entry();
-      case STACK_OVERFLOW:          return Interpreter::throw_StackOverflowError_entry();
-      default:                      ShouldNotReachHere();
+  switch (exception_kind) {
+    case STACK_OVERFLOW: {
+      // Stack overflow only occurs upon frame setup; the callee is
+      // going to be unwound. Dispatch to a shared runtime stub
+      // which will cause the StackOverflowError to be fabricated
+      // and processed.
+      // Stack overflow should never occur during deoptimization:
+      // the compiled method bangs the stack by as much as the
+      // interpreter would need in case of a deoptimization. The
+      // deoptimization blob and uncommon trap blob bang the stack
+      // in a debug VM to verify the correctness of the compiled
+      // method stack banging.
+      return StubRoutines::throw_StackOverflowError_entry();
     }
-  } else {
-    switch (exception_kind) {
-      case STACK_OVERFLOW: {
-        // Stack overflow only occurs upon frame setup; the callee is
-        // going to be unwound. Dispatch to a shared runtime stub
-        // which will cause the StackOverflowError to be fabricated
-        // and processed.
-        // Stack overflow should never occur during deoptimization:
-        // the compiled method bangs the stack by as much as the
-        // interpreter would need in case of a deoptimization. The
-        // deoptimization blob and uncommon trap blob bang the stack
-        // in a debug VM to verify the correctness of the compiled
-        // method stack banging.
-        return StubRoutines::throw_StackOverflowError_entry();
-      }
 
-      case IMPLICIT_NULL: {
-        if (VtableStubs::contains(pc)) {
-          // We haven't yet entered the callee frame. Fabricate an
-          // exception and begin dispatching it in the caller. Since
-          // the caller was at a call site, it's safe to destroy all
-          // caller-saved registers, as these entry points do.
-          VtableStub* vt_stub = VtableStubs::stub_containing(pc);
+    case IMPLICIT_NULL: {
+      if (VtableStubs::contains(pc)) {
+        // We haven't yet entered the callee frame. Fabricate an
+        // exception and begin dispatching it in the caller. Since
+        // the caller was at a call site, it's safe to destroy all
+        // caller-saved registers, as these entry points do.
+        VtableStub* vt_stub = VtableStubs::stub_containing(pc);
 
-          // If vt_stub is NULL, then return NULL to signal handler to report the SEGV error.
-          if (vt_stub == NULL) return NULL;
+        // If vt_stub is NULL, then return NULL to signal handler to report the SEGV error.
+        if (vt_stub == NULL) return NULL;
 
-          if (vt_stub->is_abstract_method_error(pc)) {
-            // Instead of throwing the abstract method error here directly, we re-resolve
-            // and will throw the AbstractMethodError during resolve. As a result, we'll
-            // get a more detailed error message.
-            return SharedRuntime::get_handle_wrong_method_stub();
-          } else {
-            return StubRoutines::throw_NullPointerException_at_call_entry();
-          }
+        if (vt_stub->is_abstract_method_error(pc)) {
+          // Instead of throwing the abstract method error here directly, we re-resolve
+          // and will throw the AbstractMethodError during resolve. As a result, we'll
+          // get a more detailed error message.
+          return SharedRuntime::get_handle_wrong_method_stub();
         } else {
-          CodeBlob* cb = CodeCache::find_blob(pc);
+          return StubRoutines::throw_NullPointerException_at_call_entry();
+        }
+      } else {
+        CodeBlob* cb = CodeCache::find_blob(pc);
 
-          // If code blob is NULL, then return NULL to signal handler to report the SEGV error.
-          if (cb == NULL) return NULL;
+        // If code blob is NULL, then return NULL to signal handler to report the SEGV error.
+        if (cb == NULL) return NULL;
 
-          // Exception happened in CodeCache. Must be either:
-          // 1. Inline-cache check in C2I handler blob,
-          // 2. Inline-cache check in nmethod, or
-          // 3. Implicit null exception in nmethod
+        // Exception happened in CodeCache. Must be either:
+        // 1. Inline-cache check in C2I handler blob,
+        // 2. Inline-cache check in nmethod, or
+        // 3. Implicit null exception in nmethod
 
-          if (!cb->is_compiled()) {
-            bool is_in_blob = cb->is_adapter_blob() || cb->is_method_handles_adapter_blob();
-            if (!is_in_blob) {
-              // Allow normal crash reporting to handle this
-              return NULL;
-            }
-            // There is no handler here, so we will simply unwind.
-            return StubRoutines::throw_NullPointerException_at_call_entry();
+        if (!cb->is_compiled()) {
+          bool is_in_blob = cb->is_adapter_blob() || cb->is_method_handles_adapter_blob();
+          if (!is_in_blob) {
+            // Allow normal crash reporting to handle this
+            return NULL;
           }
-
-          // Otherwise, it's a compiled method.  Consult its exception handlers.
-          CompiledMethod* cm = (CompiledMethod*)cb;
-          if (cm->inlinecache_check_contains(pc)) {
-            // exception happened inside inline-cache check code
-            // => the nmethod is not yet active (i.e., the frame
-            // is not set up yet) => use return address pushed by
-            // caller => don't push another return address
-            return StubRoutines::throw_NullPointerException_at_call_entry();
-          }
-
-          if (cm->method()->is_method_handle_intrinsic()) {
-            // exception happened inside MH dispatch code, similar to a vtable stub
-            return StubRoutines::throw_NullPointerException_at_call_entry();
-          }
-
-          if (cm->is_compiled_by_jvmci() && cm->pc_desc_at(pc) != NULL) {
-            // If there's no PcDesc then we'll die way down inside of
-            // deopt instead of just getting normal error reporting,
-            // so only go there if it will succeed.
-            return deoptimize_for_implicit_exception(thread, pc, cm, Deoptimization::Reason_null_check);
-          } else {
-          target_pc = ((nmethod*)cm)->continuation_for_implicit_exception(pc);
-          }
-          // If there's an unexpected fault, target_pc might be NULL,
-          // in which case we want to fall through into the normal
-          // error handling code.
+          // There is no handler here, so we will simply unwind.
+          return StubRoutines::throw_NullPointerException_at_call_entry();
         }
 
-        break; // fall through
-      }
+        // Otherwise, it's a compiled method.  Consult its exception handlers.
+        CompiledMethod* cm = (CompiledMethod*)cb;
+        if (cm->inlinecache_check_contains(pc)) {
+          // exception happened inside inline-cache check code
+          // => the nmethod is not yet active (i.e., the frame
+          // is not set up yet) => use return address pushed by
+          // caller => don't push another return address
+          return StubRoutines::throw_NullPointerException_at_call_entry();
+        }
 
-      case IMPLICIT_DIVIDE_BY_ZERO: {
-        CompiledMethod* cm = CodeCache::find_compiled(pc);
-        guarantee(cm != NULL, "must have containing compiled method for implicit division-by-zero exceptions");
+        if (cm->method()->is_method_handle_intrinsic()) {
+          // exception happened inside MH dispatch code, similar to a vtable stub
+          return StubRoutines::throw_NullPointerException_at_call_entry();
+        }
+
         if (cm->is_compiled_by_jvmci() && cm->pc_desc_at(pc) != NULL) {
-          return deoptimize_for_implicit_exception(thread, pc, cm, Deoptimization::Reason_div0_check);
+          // If there's no PcDesc then we'll die way down inside of
+          // deopt instead of just getting normal error reporting,
+          // so only go there if it will succeed.
+          return deoptimize_for_implicit_exception(thread, pc, cm, NULL::Reason_null_check);
         } else {
-        target_pc = cm->continuation_for_implicit_exception(pc);
+          target_pc = ((nmethod*)cm)->continuation_for_implicit_exception(pc);
         }
         // If there's an unexpected fault, target_pc might be NULL,
         // in which case we want to fall through into the normal
         // error handling code.
-        break; // fall through
       }
 
-      default: ShouldNotReachHere();
+      break; // fall through
     }
 
-    return target_pc;
+    case IMPLICIT_DIVIDE_BY_ZERO: {
+      CompiledMethod* cm = CodeCache::find_compiled(pc);
+      guarantee(cm != NULL, "must have containing compiled method for implicit division-by-zero exceptions");
+      if (cm->is_compiled_by_jvmci() && cm->pc_desc_at(pc) != NULL) {
+        return deoptimize_for_implicit_exception(thread, pc, cm, NULL::Reason_div0_check);
+      } else {
+        target_pc = cm->continuation_for_implicit_exception(pc);
+      }
+      // If there's an unexpected fault, target_pc might be NULL,
+      // in which case we want to fall through into the normal
+      // error handling code.
+      break; // fall through
+    }
+
+    default: ShouldNotReachHere();
   }
 
-  ShouldNotReachHere();
-  return NULL;
+  return target_pc;
 }
 
 /**
@@ -851,9 +830,7 @@ methodHandle SharedRuntime::find_callee_method(JavaThread* thread, TRAPS) {
 }
 
 // Resolves a call.
-methodHandle SharedRuntime::resolve_helper(JavaThread *thread,
-                                           bool is_virtual,
-                                           bool is_optimized, TRAPS) {
+methodHandle SharedRuntime::resolve_helper(JavaThread *thread, bool is_virtual, bool is_optimized, TRAPS) {
   methodHandle callee_method;
   callee_method = resolve_sub_helper(thread, is_virtual, is_optimized, THREAD);
   return callee_method;
@@ -861,9 +838,7 @@ methodHandle SharedRuntime::resolve_helper(JavaThread *thread,
 
 // Resolves a call.  The compilers generate code for calls that go here
 // and are patched with the real destination of the call.
-methodHandle SharedRuntime::resolve_sub_helper(JavaThread *thread,
-                                           bool is_virtual,
-                                           bool is_optimized, TRAPS) {
+methodHandle SharedRuntime::resolve_sub_helper(JavaThread *thread, bool is_virtual, bool is_optimized, TRAPS) {
   ResourceMark rm(thread);
   RegisterMap cbl_map(thread, false);
   frame caller_frame = thread->last_frame().sender(&cbl_map);
@@ -979,7 +954,7 @@ JRT_BLOCK_ENTRY(address, SharedRuntime::handle_wrong_method(JavaThread* thread))
   frame stub_frame = thread->last_frame();
   frame caller_frame = stub_frame.sender(&reg_map);
 
-  if (caller_frame.is_interpreted_frame() || caller_frame.is_entry_frame()) {
+  if (caller_frame.is_entry_frame()) {
     Method* callee = thread->callee_target();
     guarantee(callee != NULL && callee->is_method(), "bad handshake");
     thread->set_vm_result_2(callee);
@@ -1705,15 +1680,10 @@ void AdapterHandlerLibrary::initialize() {
   // Pass wrong_method_abstract for the c2i transitions to return
   // AbstractMethodError for invalid invocations.
   address wrong_method_abstract = SharedRuntime::get_handle_wrong_method_abstract_stub();
-  _abstract_method_handler = AdapterHandlerLibrary::new_entry(new AdapterFingerPrint(0, NULL),
-                                                              StubRoutines::throw_AbstractMethodError_entry(),
-                                                              wrong_method_abstract, wrong_method_abstract);
+  _abstract_method_handler = AdapterHandlerLibrary::new_entry(new AdapterFingerPrint(0, NULL), StubRoutines::throw_AbstractMethodError_entry(), wrong_method_abstract, wrong_method_abstract);
 }
 
-AdapterHandlerEntry* AdapterHandlerLibrary::new_entry(AdapterFingerPrint* fingerprint,
-                                                      address i2c_entry,
-                                                      address c2i_entry,
-                                                      address c2i_unverified_entry) {
+AdapterHandlerEntry* AdapterHandlerLibrary::new_entry(AdapterFingerPrint* fingerprint, address i2c_entry, address c2i_entry, address c2i_unverified_entry) {
   return _adapters->new_entry(fingerprint, i2c_entry, c2i_entry, c2i_unverified_entry);
 }
 
@@ -1730,10 +1700,6 @@ AdapterHandlerEntry* AdapterHandlerLibrary::get_adapter(const methodHandle& meth
       CodeBuffer buffer(trampoline, (int)SharedRuntime::trampoline_size());
       MacroAssembler _masm(&buffer);
       SharedRuntime::generate_trampoline(&_masm, entry->get_c2i_entry());
-
-      if (PrintInterpreter) {
-        Disassembler::decode(buffer.insts_begin(), buffer.insts_end());
-      }
     }
   }
 
@@ -1788,7 +1754,7 @@ AdapterHandlerEntry* AdapterHandlerLibrary::get_adapter0(const methodHandle& met
     fingerprint = new AdapterFingerPrint(total_args_passed, sig_bt);
 
     // StubRoutines::code2() is initialized after this function can be called. As a result,
-    // VerifyAdapterCalls and VerifyAdapterSharing can fail if we re-use code that generated
+    // VerifyAdapterSharing can fail if we re-use code that generated
     // prior to StubRoutines::code2() being set. Checks refer to checks generated in an I2C
     // stub that ensure that an I2C stub is called from an interpreter frame.
     bool contains_all_checks = StubRoutines::code2() != NULL;
@@ -1798,16 +1764,10 @@ AdapterHandlerEntry* AdapterHandlerLibrary::get_adapter0(const methodHandle& met
     if (buf != NULL) {
       CodeBuffer buffer(buf);
       short buffer_locs[20];
-      buffer.insts()->initialize_shared_locs((relocInfo*)buffer_locs,
-                                             sizeof(buffer_locs)/sizeof(relocInfo));
+      buffer.insts()->initialize_shared_locs((relocInfo*)buffer_locs, sizeof(buffer_locs)/sizeof(relocInfo));
 
       MacroAssembler _masm(&buffer);
-      entry = SharedRuntime::generate_i2c2i_adapters(&_masm,
-                                                     total_args_passed,
-                                                     comp_args_on_stack,
-                                                     sig_bt,
-                                                     regs,
-                                                     fingerprint);
+      entry = SharedRuntime::generate_i2c2i_adapters(&_masm, total_args_passed, comp_args_on_stack, sig_bt, regs, fingerprint);
 
       new_adapter = AdapterBlob::create(&buffer);
     }
@@ -1818,11 +1778,7 @@ AdapterHandlerEntry* AdapterHandlerLibrary::get_adapter0(const methodHandle& met
       return NULL; // Out of CodeCache space
     }
     entry->relocate(new_adapter->content_begin());
-    // Add the entry only if the entry contains all required checks (see sharedRuntime_xxx.cpp)
-    // The checks are inserted only if -XX:+VerifyAdapterCalls is specified.
-    if (contains_all_checks || !VerifyAdapterCalls) {
-      _adapters->add(entry);
-    }
+    _adapters->add(entry);
   }
   // Outside of the lock
   if (new_adapter != NULL) {
@@ -1891,7 +1847,7 @@ void AdapterHandlerLibrary::create_native_wrapper(const methodHandle& method) {
       if (!method->is_static())  // Pass in receiver first
         sig_bt[i++] = T_OBJECT;
       SignatureStream ss(method->signature());
-      for (; !ss.at_return_type(); ss.next()) {
+      for ( ; !ss.at_return_type(); ss.next()) {
         sig_bt[i++] = ss.type();  // Collect remaining bits of signature
         if (ss.type() == T_LONG || ss.type() == T_DOUBLE)
           sig_bt[i++] = T_VOID;   // Longs & doubles take 2 Java slots
@@ -2029,72 +1985,6 @@ VMRegPair *SharedRuntime::find_callee_arguments(Symbol* sig, bool has_receiver, 
   return regs;
 }
 
-// OSR Migration Code
-//
-// This code is used convert interpreter frames into compiled frames.  It is
-// called from very start of a compiled OSR nmethod.  A temp array is
-// allocated to hold the interesting bits of the interpreter frame.  All
-// active locks are inflated to allow them to move.  The displaced headers and
-// active interpreter locals are copied into the temp buffer.  Then we return
-// back to the compiled code.  The compiled code then pops the current
-// interpreter frame off the stack and pushes a new compiled frame.  Then it
-// copies the interpreter locals and displaced headers where it wants.
-// Finally it calls back to free the temp buffer.
-//
-// All of this is done NOT at any Safepoint, nor is any safepoint or GC allowed.
-
-JRT_LEAF(intptr_t*, SharedRuntime::OSR_migration_begin( JavaThread *thread))
-
-  //
-  // This code is dependent on the memory layout of the interpreter local
-  // array and the monitors. On all of our platforms the layout is identical
-  // so this code is shared. If some platform lays the their arrays out
-  // differently then this code could move to platform specific code or
-  // the code here could be modified to copy items one at a time using
-  // frame accessor methods and be platform independent.
-
-  frame fr = thread->last_frame();
-
-  // Figure out how many monitors are active.
-  int active_monitor_count = 0;
-  for (BasicObjectLock *kptr = fr.interpreter_frame_monitor_end(); kptr < fr.interpreter_frame_monitor_begin(); kptr = fr.next_monitor_in_interpreter_frame(kptr)) {
-    if (kptr->obj() != NULL) active_monitor_count++;
-  }
-
-  // QQQ we could place number of active monitors in the array so that compiled code
-  // could double check it.
-
-  Method* moop = fr.interpreter_frame_method();
-  int max_locals = moop->max_locals();
-  // Allocate temp buffer, 1 word per local & 2 per active monitor
-  int buf_size_words = max_locals + active_monitor_count * BasicObjectLock::size();
-  intptr_t *buf = NEW_C_HEAP_ARRAY(intptr_t,buf_size_words, mtCode);
-
-  // Copy the locals.  Order is preserved so that loading of longs works.
-  // Since there's no GC I can copy the oops blindly.
-  Copy::disjoint_words((HeapWord*)fr.interpreter_frame_local_at(max_locals - 1), (HeapWord*)&buf[0], max_locals);
-
-  // Inflate locks.  Copy the displaced headers.  Be careful, there can be holes.
-  int i = max_locals;
-  for (BasicObjectLock *kptr2 = fr.interpreter_frame_monitor_end(); kptr2 < fr.interpreter_frame_monitor_begin(); kptr2 = fr.next_monitor_in_interpreter_frame(kptr2)) {
-    if (kptr2->obj() != NULL) {         // Avoid 'holes' in the monitor array
-      BasicLock *lock = kptr2->lock();
-      // Inflate so the displaced header becomes position-independent
-      if (lock->displaced_header()->is_unlocked())
-        ObjectSynchronizer::inflate_helper(kptr2->obj());
-      // Now the displaced header is free to move
-      buf[i++] = (intptr_t)lock->displaced_header();
-      buf[i++] = cast_from_oop<intptr_t>(kptr2->obj());
-    }
-  }
-
-  return buf;
-JRT_END
-
-JRT_LEAF(void, SharedRuntime::OSR_migration_end( intptr_t* buf))
-  FREE_C_HEAP_ARRAY(intptr_t, buf);
-JRT_END
-
 bool AdapterHandlerLibrary::contains(const CodeBlob* b) {
   AdapterHandlerTableIterator iter(_adapters);
   while (iter.has_next()) {
@@ -2139,12 +2029,7 @@ frame SharedRuntime::look_for_reserved_stack_annotated_method(JavaThread* thread
   while (true) {
     Method* method = NULL;
     bool found = false;
-    if (fr.is_interpreted_frame()) {
-      method = fr.interpreter_frame_method();
-      if (method != NULL && method->has_reserved_stack_access()) {
-        found = true;
-      }
-    } else {
+    {
       CodeBlob* cb = fr.cb();
       if (cb != NULL && cb->is_compiled()) {
         nm = cb->as_compiled_method();

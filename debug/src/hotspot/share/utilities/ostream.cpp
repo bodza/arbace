@@ -492,7 +492,7 @@ long fileStream::fileSize() {
   return size;
 }
 
-char* fileStream::readln(char *data, int count ) {
+char* fileStream::readln(char *data, int count) {
   char * ret = ::fgets(data, count, _file);
   //Get rid of annoying \n char
   data[::strlen(data)-1] = '\0';

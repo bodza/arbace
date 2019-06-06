@@ -212,7 +212,7 @@ void LIR_Assembler::osr_entry() {
   Register OSR_buf = osrBufferPointer()->as_pointer_register();
   {
     int monitor_offset = BytesPerWord * method()->max_locals() + (2 * BytesPerWord) * (number_of_locks - 1);
-    // SharedRuntime::OSR_migration_begin() packs BasicObjectLocks in
+    // SharedRuntime::NULL() packs BasicObjectLocks in
     // the OSR buffer using 2 word entries: first the lock and then
     // the oop.
     for (int i = 0; i < number_of_locks; i++) {
@@ -394,7 +394,7 @@ int LIR_Assembler::emit_deopt_handler() {
   int offset = code_offset();
 
   __ adr(lr, pc());
-  __ far_jump(RuntimeAddress(SharedRuntime::deopt_blob()->unpack()));
+  __ far_jump(RuntimeAddress(SharedRuntime::NULL()->unpack()));
   guarantee(code_offset() - offset <= deopt_handler_size(), "overflow");
   __ end_a_stub();
 
@@ -1931,8 +1931,7 @@ void LIR_Assembler::emit_arraycopy(LIR_OpArrayCopy* op) {
   if (basic_type == T_ARRAY) basic_type = T_OBJECT;
 
   // if we don't know anything, just go through the generic arraycopy
-  if (default_type == NULL // || basic_type == T_OBJECT
-      ) {
+  if (default_type == NULL) { // || basic_type == T_OBJECT
     Label done;
 
     // Save the arguments in case the generic arraycopy fails and we

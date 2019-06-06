@@ -44,8 +44,7 @@ void VMError::interrupt_reporting_thread() {
   ::pthread_kill(reporter_thread_id, SIGILL);
 }
 
-static void save_signal(int idx, int sig)
-{
+static void save_signal(int idx, int sig) {
   struct sigaction sa;
   sigaction(sig, NULL, &sa);
   resettedSigflags[idx]   = sa.sa_flags;

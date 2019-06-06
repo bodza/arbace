@@ -9,8 +9,7 @@ G1IHOPControl::G1IHOPControl(double initial_ihop_percent) :
   _target_occupancy(0),
   _last_allocated_bytes(0),
   _last_allocation_time_s(0.0)
-{
-}
+{ }
 
 void G1IHOPControl::update_target_occupancy(size_t new_target_occupancy) {
   _target_occupancy = new_target_occupancy;
@@ -36,8 +35,7 @@ G1AdaptiveIHOPControl::G1AdaptiveIHOPControl(double ihop_percent, G1Predictions 
   _last_unrestrained_young_size(0),
   _heap_reserve_percent(heap_reserve_percent),
   _heap_waste_percent(heap_waste_percent)
-{
-}
+{ }
 
 size_t G1AdaptiveIHOPControl::actual_target_threshold() const {
   guarantee(_target_occupancy > 0, "Target occupancy still not updated yet.");

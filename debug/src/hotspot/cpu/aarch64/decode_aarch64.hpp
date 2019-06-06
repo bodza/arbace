@@ -106,33 +106,28 @@ enum Shift {
 
 // 32 bit mask with bits [hi,...,lo] set
 
-static inline u_int32_t mask32(int hi = 31, int lo = 0)
-{
+static inline u_int32_t mask32(int hi = 31, int lo = 0) {
   int nbits = (hi + 1) - lo;
   return ((1 << nbits) - 1) << lo;
 }
 
-static inline u_int64_t mask64(int hi = 63, int lo = 0)
-{
+static inline u_int64_t mask64(int hi = 63, int lo = 0) {
   int nbits = (hi + 1) - lo;
   return ((1L << nbits) - 1) << lo;
 }
 
 // pick bits [hi,...,lo] from val
-static inline u_int32_t pick32(u_int32_t val, int hi = 31, int lo = 0)
-{
+static inline u_int32_t pick32(u_int32_t val, int hi = 31, int lo = 0) {
   return (val & mask32(hi, lo));
 }
 
 // pick bits [hi,...,lo] from val
-static inline u_int64_t pick64(u_int64_t val, int hi = 31, int lo = 0)
-{
+static inline u_int64_t pick64(u_int64_t val, int hi = 31, int lo = 0) {
   return (val & mask64(hi, lo));
 }
 
 // pick bits [hi,...,lo] from val and shift to [(hi-(newlo - lo)),newlo]
-static inline u_int32_t pickshift32(u_int32_t val, int hi = 31, int lo = 0, int newlo = 0)
-{
+static inline u_int32_t pickshift32(u_int32_t val, int hi = 31, int lo = 0, int newlo = 0) {
   u_int32_t bits = pick32(val, hi, lo);
   if (lo < newlo) {
     return (bits << (newlo - lo));
@@ -141,14 +136,12 @@ static inline u_int32_t pickshift32(u_int32_t val, int hi = 31, int lo = 0, int 
   }
 }
 // mask [hi,lo] and shift down to start at bit 0
-static inline u_int32_t pickbits32(u_int32_t val, int hi = 31, int lo = 0)
-{
+static inline u_int32_t pickbits32(u_int32_t val, int hi = 31, int lo = 0) {
   return (pick32(val, hi, lo) >> lo);
 }
 
 // mask [hi,lo] and shift down to start at bit 0
-static inline u_int64_t pickbits64(u_int64_t val, int hi = 63, int lo = 0)
-{
+static inline u_int64_t pickbits64(u_int64_t val, int hi = 63, int lo = 0) {
   return (pick64(val, hi, lo) >> lo);
 }
 
@@ -156,18 +149,15 @@ static inline u_int64_t pickbits64(u_int64_t val, int hi = 63, int lo = 0)
  * decode registers, immediates and constants of various types
  */
 
-static inline GReg greg(u_int32_t val, int lo)
-{
+static inline GReg greg(u_int32_t val, int lo) {
   return (GReg)pickbits32(val, lo + 4, lo);
 }
 
-static inline VReg vreg(u_int32_t val, int lo)
-{
+static inline VReg vreg(u_int32_t val, int lo) {
   return (VReg)pickbits32(val, lo + 4, lo);
 }
 
-static inline u_int32_t uimm(u_int32_t val, int hi, int lo)
-{
+static inline u_int32_t uimm(u_int32_t val, int hi, int lo) {
   return pickbits32(val, hi, lo);
 }
 
@@ -204,8 +194,7 @@ static inline CondCode condcode(u_int32_t val, int lo)   { return (CondCode)pick
  */
 // bits [28,25] are the primary dispatch vector
 
-static inline u_int32_t dispatchGroup(u_int32_t val)
-{
+static inline u_int32_t dispatchGroup(u_int32_t val) {
   return pickshift32(val, 28, 25, 0);
 }
 
@@ -238,8 +227,7 @@ enum DispatchGroup {
 
 // bits [31, 29] of a Pseudo are the secondary dispatch vector
 
-static inline u_int32_t dispatchPseudo(u_int32_t val)
-{
+static inline u_int32_t dispatchPseudo(u_int32_t val) {
   return pickshift32(val, 31, 29, 0);
 }
 
@@ -261,8 +249,7 @@ enum DispatchPseudo {
 
 // bits [25, 23] of a DPImm are the secondary dispatch vector
 
-static inline u_int32_t dispatchDPImm(u_int32_t instr)
-{
+static inline u_int32_t dispatchDPImm(u_int32_t instr) {
   return pickshift32(instr, 25, 23, 0);
 }
 
@@ -284,8 +271,7 @@ enum DispatchDPImm {
 
 // bits [29,28:26] of a LS are the secondary dispatch vector
 
-static inline u_int32_t dispatchLS(u_int32_t instr)
-{
+static inline u_int32_t dispatchLS(u_int32_t instr) {
   return (pickshift32(instr, 29, 28, 1) |
           pickshift32(instr, 26, 26, 0));
 }
@@ -308,8 +294,7 @@ enum DispatchLS {
 
 // bits [28:24:21] of a DPReg are the secondary dispatch vector
 
-static inline u_int32_t dispatchDPReg(u_int32_t instr)
-{
+static inline u_int32_t dispatchDPReg(u_int32_t instr) {
   return (pickshift32(instr, 28, 28, 2) |
           pickshift32(instr, 24, 24, 1) |
           pickshift32(instr, 21, 21, 0));
@@ -335,8 +320,7 @@ enum DispatchDPReg {
 
 // bits [31,29] of a BrExSys are the secondary dispatch vector
 
-static inline u_int32_t dispatchBrExSys(u_int32_t instr)
-{
+static inline u_int32_t dispatchBrExSys(u_int32_t instr) {
   return pickbits32(instr, 31, 29);
 }
 

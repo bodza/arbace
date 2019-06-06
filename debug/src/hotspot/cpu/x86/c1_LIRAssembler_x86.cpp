@@ -258,7 +258,7 @@ void LIR_Assembler::osr_entry() {
   Register OSR_buf = osrBufferPointer()->as_pointer_register();
   {
     int monitor_offset = BytesPerWord * method()->max_locals() + (BasicObjectLock::size() * BytesPerWord) * (number_of_locks - 1);
-    // SharedRuntime::OSR_migration_begin() packs BasicObjectLocks in
+    // SharedRuntime::NULL() packs BasicObjectLocks in
     // the OSR buffer using 2 word entries: first the lock and then
     // the oop.
     for (int i = 0; i < number_of_locks; i++) {
@@ -411,7 +411,7 @@ int LIR_Assembler::emit_deopt_handler() {
   InternalAddress here(__ pc());
 
   __ pushptr(here.addr());
-  __ jump(RuntimeAddress(SharedRuntime::deopt_blob()->unpack()));
+  __ jump(RuntimeAddress(SharedRuntime::NULL()->unpack()));
   guarantee(code_offset() - offset <= deopt_handler_size(), "overflow");
   __ end_a_stub();
 
@@ -1490,7 +1490,7 @@ void LIR_Assembler::emit_opTypeCheck(LIR_OpTypeCheck* op) {
 }
 
 void LIR_Assembler::emit_compare_and_swap(LIR_OpCompareAndSwap* op) {
-  if (op->code() == lir_cas_int || op->code() == lir_cas_obj ) {
+  if (op->code() == lir_cas_int || op->code() == lir_cas_obj) {
     Register addr = (op->addr()->is_single_cpu() ? op->addr()->as_register() : op->addr()->as_register_lo());
     Register newval = op->new_value()->as_register();
     Register cmpval = op->cmp_value()->as_register();
@@ -2224,7 +2224,7 @@ void LIR_Assembler::emit_static_call_stub() {
   // On 64bit this will die since it will take a movq & jmp, must be only a jmp
   __ jump(RuntimeAddress(__ pc()));
 
-  if (UseAOT) {
+  if (false) {
     // Trampoline to aot code
     __ relocate(static_stub_Relocation::spec(call_pc, true /* is_aot */));
     __ mov64(rax, CONST64(0));  // address is zapped till fixup time.

@@ -280,13 +280,9 @@ RuntimeStub::RuntimeStub(
   int         frame_size,
   OopMapSet*  oop_maps,
   bool        caller_must_gc_arguments
-)
-: RuntimeBlob(name, cb, sizeof(RuntimeStub), size, frame_complete, frame_size, oop_maps, caller_must_gc_arguments)
-{
-}
+) : RuntimeBlob(name, cb, sizeof(RuntimeStub), size, frame_complete, frame_size, oop_maps, caller_must_gc_arguments) { }
 
-RuntimeStub* RuntimeStub::new_runtime_stub(const char* stub_name, CodeBuffer* cb, int frame_complete, int frame_size, OopMapSet* oop_maps, bool caller_must_gc_arguments)
-{
+RuntimeStub* RuntimeStub::new_runtime_stub(const char* stub_name, CodeBuffer* cb, int frame_complete, int frame_size, OopMapSet* oop_maps, bool caller_must_gc_arguments) {
   RuntimeStub* stub = NULL;
   ThreadInVMfromUnknown __tiv;  // get to VM state in case we block on CodeCache_lock
   {
@@ -314,61 +310,13 @@ void* SingletonBlob::operator new(size_t s, unsigned size) throw() {
 }
 
 //----------------------------------------------------------------------------------------------------
-// Implementation of DeoptimizationBlob
-
-DeoptimizationBlob::DeoptimizationBlob(
-  CodeBuffer* cb,
-  int         size,
-  OopMapSet*  oop_maps,
-  int         unpack_offset,
-  int         unpack_with_exception_offset,
-  int         unpack_with_reexecution_offset,
-  int         frame_size
-)
-: SingletonBlob("DeoptimizationBlob", cb, sizeof(DeoptimizationBlob), size, frame_size, oop_maps)
-{
-  _unpack_offset           = unpack_offset;
-  _unpack_with_exception   = unpack_with_exception_offset;
-  _unpack_with_reexecution = unpack_with_reexecution_offset;
-  _unpack_with_exception_in_tls   = -1;
-}
-
-DeoptimizationBlob* DeoptimizationBlob::create(
-  CodeBuffer* cb,
-  OopMapSet*  oop_maps,
-  int        unpack_offset,
-  int        unpack_with_exception_offset,
-  int        unpack_with_reexecution_offset,
-  int        frame_size)
-{
-  DeoptimizationBlob* blob = NULL;
-  ThreadInVMfromUnknown __tiv;  // get to VM state in case we block on CodeCache_lock
-  {
-    MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-    unsigned int size = CodeBlob::allocation_size(cb, sizeof(DeoptimizationBlob));
-    blob = new (size) DeoptimizationBlob(cb,
-                                         size,
-                                         oop_maps,
-                                         unpack_offset,
-                                         unpack_with_exception_offset,
-                                         unpack_with_reexecution_offset,
-                                         frame_size);
-  }
-
-  trace_new_stub(blob, "DeoptimizationBlob");
-
-  return blob;
-}
-
-//----------------------------------------------------------------------------------------------------
 // Implementation of SafepointBlob
 
 SafepointBlob::SafepointBlob(CodeBuffer* cb, int size, OopMapSet* oop_maps, int frame_size)
 : SingletonBlob("SafepointBlob", cb, sizeof(SafepointBlob), size, frame_size, oop_maps)
 { }
 
-SafepointBlob* SafepointBlob::create(CodeBuffer* cb, OopMapSet* oop_maps, int frame_size)
-{
+SafepointBlob* SafepointBlob::create(CodeBuffer* cb, OopMapSet* oop_maps, int frame_size) {
   SafepointBlob* blob = NULL;
   ThreadInVMfromUnknown __tiv;  // get to VM state in case we block on CodeCache_lock
   {
@@ -396,18 +344,6 @@ void CodeBlob::print_value_on(outputStream* st) const {
 
 void CodeBlob::dump_for_addr(address addr, outputStream* st, bool verbose) const {
   if (is_buffer_blob()) {
-    // the interpreter is generated into a buffer blob
-    InterpreterCodelet* i = Interpreter::codelet_containing(addr);
-    if (i != NULL) {
-      st->print_cr(INTPTR_FORMAT " is at code_begin+%d in an Interpreter codelet", p2i(addr), (int)(addr - i->code_begin()));
-      i->print_on(st);
-      return;
-    }
-    if (Interpreter::contains(addr)) {
-      st->print_cr(INTPTR_FORMAT " is pointing into interpreter code (not bytecode specific)", p2i(addr));
-      return;
-    }
-    //
     if (AdapterHandlerLibrary::contains(this)) {
       st->print_cr(INTPTR_FORMAT " is at code_begin+%d in an AdapterHandler", p2i(addr), (int)(addr - code_begin()));
       AdapterHandlerLibrary::print_handler_on(st, this);
@@ -483,8 +419,4 @@ void SingletonBlob::print_on(outputStream* st) const {
 
 void SingletonBlob::print_value_on(outputStream* st) const {
   st->print_cr("%s", name());
-}
-
-void DeoptimizationBlob::print_value_on(outputStream* st) const {
-  st->print_cr("Deoptimization (frame not available)");
 }

@@ -189,7 +189,6 @@ class MacroAssembler: public Assembler {
   void super_call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1, Register arg_2, Register arg_3, bool check_exceptions = true);
   void super_call_VM(Register oop_result, Register last_java_sp, address entry_point, Register arg_1, Register arg_2, Register arg_3, Register arg_4, bool check_exceptions = true);
 
-  void call_VM_leaf0(address entry_point);
   void call_VM_leaf(address entry_point, int number_of_arguments = 0);
   void call_VM_leaf(address entry_point, Register arg_1);
   void call_VM_leaf(address entry_point, Register arg_1, Register arg_2);
@@ -554,11 +553,7 @@ class MacroAssembler: public Assembler {
   // check info (currently consumed only by C1). If
   // swap_reg_contains_mark is true then returns -1 as it is assumed
   // the calling code has already passed any potential faults.
-  int biased_locking_enter(Register lock_reg, Register obj_reg,
-                           Register swap_reg, Register tmp_reg,
-                           bool swap_reg_contains_mark,
-                           Label& done, Label* slow_case = NULL,
-                           BiasedLockingCounters* counters = NULL);
+  int biased_locking_enter(Register lock_reg, Register obj_reg, Register swap_reg, Register tmp_reg, bool swap_reg_contains_mark, Label& done, Label* slow_case = NULL, BiasedLockingCounters* counters = NULL);
   void biased_locking_exit (Register obj_reg, Register temp_reg, Label& done);
 
   Condition negate_condition(Condition cond);

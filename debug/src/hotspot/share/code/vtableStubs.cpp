@@ -91,11 +91,11 @@ void VtableStubs::check_and_set_size_limit(bool is_vtable_stub, int code_size, i
   guarantee(code_size <= code_size_limit(is_vtable_stub), "buffer overflow in %s stub, code_size is %d, limit is %d", name, code_size, code_size_limit(is_vtable_stub));
 
   if (is_vtable_stub) {
-    if ((code_size + padding) > _vtab_stub_size ) {
+    if ((code_size + padding) > _vtab_stub_size) {
       _vtab_stub_size = code_size + padding;
     }
   } else {  // itable stub
-    if ((code_size + padding) > _itab_stub_size ) {
+    if ((code_size + padding) > _itab_stub_size) {
       _itab_stub_size = code_size + padding;
     }
   }

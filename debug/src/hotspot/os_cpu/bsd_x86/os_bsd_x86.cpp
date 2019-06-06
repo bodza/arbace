@@ -7,7 +7,6 @@
 #include "code/codeCache.hpp"
 #include "code/icBuffer.hpp"
 #include "code/vtableStubs.hpp"
-#include "interpreter/interpreter.hpp"
 #include "memory/allocation.inline.hpp"
 #include "os_share_bsd.hpp"
 #include "prims/jniFastGetField.hpp"
@@ -334,19 +333,7 @@ frame os::fetch_frame_from_ucontext(Thread* thread, void* ucVoid) {
 
 bool os::Bsd::get_frame_at_stack_banging_point(JavaThread* thread, ucontext_t* uc, frame* fr) {
   address pc = (address) os::Bsd::ucontext_get_pc(uc);
-  if (Interpreter::contains(pc)) {
-    // interpreter performs stack banging after the fixed frame header has
-    // been generated while the compilers perform it before. To maintain
-    // semantic consistency between interpreted and compiled frames, the
-    // method returns the Java sender of the current frame.
-    *fr = os::fetch_frame_from_ucontext(thread, uc);
-    if (!fr->is_first_java_frame()) {
-      // get_frame_at_stack_banging_point() is only called when we
-      // have well defined stacks so java_sender() calls do not need
-      // to assert safe_for_sender() first.
-      *fr = fr->java_sender();
-    }
-  } else {
+  {
     CodeBlob* cb = CodeCache::find_blob(pc);
     if (cb == NULL || !cb->is_nmethod() || cb->is_frame_complete_at(pc)) {
       // Not sure where the pc points to, fallback to default
@@ -442,7 +429,7 @@ JVM_handle_bsd_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unrec
   JavaThread* thread = NULL;
   VMThread* vmthread = NULL;
   if (os::Bsd::signal_handlers_are_installed) {
-    if (t != NULL ) {
+    if (t != NULL) {
       if (t->is_Java_thread()) {
         thread = (JavaThread*)t;
       } else if (t->is_VM_thread()) {
@@ -479,11 +466,7 @@ JVM_handle_bsd_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unrec
                 frame activation = SharedRuntime::look_for_reserved_stack_annotated_method(thread, fr);
                 if (activation.sp() != NULL) {
                   thread->disable_stack_reserved_zone();
-                  if (activation.is_interpreted_frame()) {
-                    thread->set_reserved_stack_activation((address)(activation.fp() + frame::interpreter_frame_initial_sp_offset));
-                  } else {
-                    thread->set_reserved_stack_activation((address)activation.unextended_sp());
-                  }
+                  thread->set_reserved_stack_activation((address)activation.unextended_sp());
                   return 1;
                 }
               }

@@ -4,7 +4,6 @@
 #include "c1/c1_Runtime1.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "gc/shared/collectedHeap.hpp"
-#include "interpreter/interpreter.hpp"
 #include "oops/arrayOop.hpp"
 #include "oops/markOop.hpp"
 #include "runtime/basicLock.hpp"
@@ -13,8 +12,7 @@
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/stubRoutines.hpp"
 
-void C1_MacroAssembler::float_cmp(bool is_float, int unordered_result, FloatRegister f0, FloatRegister f1, Register result)
-{
+void C1_MacroAssembler::float_cmp(bool is_float, int unordered_result, FloatRegister f0, FloatRegister f1, Register result) {
   Label done;
   if (is_float) {
     fcmps(f0, f1);
@@ -204,7 +202,7 @@ void C1_MacroAssembler::initialize_object(Register obj, Register klass, Register
          str(zr, Address(obj, i));
          i += BytesPerWord;
        }
-       for (; i < con_size_in_bytes; i += 2 * BytesPerWord)
+       for ( ; i < con_size_in_bytes; i += 2 * BytesPerWord)
          stp(zr, zr, Address(obj, i));
      } else if (con_size_in_bytes > hdr_size_in_bytes) {
        block_comment("zero memory");
@@ -279,16 +277,10 @@ void C1_MacroAssembler::build_frame(int framesize, int bang_size_in_bytes) {
   // Note that we do this before doing an enter().
   generate_stack_overflow_check(bang_size_in_bytes);
   MacroAssembler::build_frame(framesize + 2 * wordSize);
-  if (NotifySimulator) {
-    notify(Assembler::method_entry);
-  }
 }
 
 void C1_MacroAssembler::remove_frame(int framesize) {
   MacroAssembler::remove_frame(framesize + 2 * wordSize);
-  if (NotifySimulator) {
-    notify(Assembler::method_reentry);
-  }
 }
 
 void C1_MacroAssembler::verified_entry() { }

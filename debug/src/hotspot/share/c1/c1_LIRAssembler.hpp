@@ -222,7 +222,7 @@ class LIR_Assembler: public CompilationResourceObj {
 
  public:
   static int call_stub_size() {
-    if (UseAOT) {
+    if (false) {
       return _call_stub_size + _call_aot_stub_size;
     } else {
       return _call_stub_size;

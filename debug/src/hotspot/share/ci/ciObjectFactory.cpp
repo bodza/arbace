@@ -50,8 +50,7 @@ volatile bool             ciObjectFactory::_initialized = false;
 
 // ------------------------------------------------------------------
 // ciObjectFactory::ciObjectFactory
-ciObjectFactory::ciObjectFactory(Arena* arena,
-                                 int expected_size) {
+ciObjectFactory::ciObjectFactory(Arena* arena, int expected_size) {
   for (int i = 0; i < NON_PERM_BUCKETS; i++) {
     _non_perm_bucket[i] = NULL;
   }

@@ -1094,7 +1094,7 @@ void ClassFileParser::parse_fields(const ClassFileStream* const cfs, bool is_int
   // for generic signature indexes are discarded.
   {
     int i = 0;
-    for (; i < index * FieldInfo::field_slots; i++) {
+    for ( ; i < index * FieldInfo::field_slots; i++) {
       _fields->at_put(i, fa[i]);
     }
     for (int j = total_fields * FieldInfo::field_slots; j < generic_signature_slot; j++) {
@@ -2555,14 +2555,14 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
   int next_nonstatic_double_offset = 0;
 
   // Rearrange fields for a given allocation style
-  if (allocation_style == 0 ) {
+  if (allocation_style == 0) {
     // Fields order: oops, longs/doubles, ints, shorts/chars, bytes, padded fields
     next_nonstatic_oop_offset    = next_nonstatic_field_offset;
     next_nonstatic_double_offset = next_nonstatic_oop_offset + (nonstatic_oop_count * heapOopSize);
-  } else if (allocation_style == 1 ) {
+  } else if (allocation_style == 1) {
     // Fields order: longs/doubles, ints, shorts/chars, bytes, oops, padded fields
     next_nonstatic_double_offset = next_nonstatic_field_offset;
-  } else if (allocation_style == 2 ) {
+  } else if (allocation_style == 2) {
     // Fields allocation: oops fields in super and sub classes are together.
     if (nonstatic_field_size > 0 && _super_klass != NULL && _super_klass->nonstatic_oop_map_size() > 0) {
       const unsigned int map_count = _super_klass->nonstatic_oop_map_count();
@@ -2575,7 +2575,7 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
         next_nonstatic_double_offset = next_nonstatic_oop_offset + (nonstatic_oop_count * heapOopSize);
       }
     }
-    if (allocation_style == 2 ) {
+    if (allocation_style == 2) {
       allocation_style = 1;     // allocate oops last
       next_nonstatic_double_offset = next_nonstatic_field_offset;
     }
@@ -2637,9 +2637,9 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
   int next_nonstatic_padded_offset = next_nonstatic_byte_offset + nonstatic_byte_count;
 
   // let oops jump before padding with this allocation style
-  if (allocation_style == 1 ) {
+  if (allocation_style == 1) {
     next_nonstatic_oop_offset = next_nonstatic_padded_offset;
-    if (nonstatic_oop_count > 0 ) {
+    if (nonstatic_oop_count > 0) {
       next_nonstatic_oop_offset = align_up(next_nonstatic_oop_offset, heapOopSize);
     }
     next_nonstatic_padded_offset = next_nonstatic_oop_offset + (nonstatic_oop_count * heapOopSize);
@@ -2681,7 +2681,7 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
         next_static_double_offset += BytesPerLong;
         break;
       case NONSTATIC_OOP:
-        if (nonstatic_oop_space_count > 0 ) {
+        if (nonstatic_oop_space_count > 0) {
           real_offset = nonstatic_oop_space_offset;
           nonstatic_oop_space_offset += heapOopSize;
           nonstatic_oop_space_count  -= 1;
@@ -2705,7 +2705,7 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
         }
         break;
       case NONSTATIC_BYTE:
-        if (nonstatic_byte_space_count > 0 ) {
+        if (nonstatic_byte_space_count > 0) {
           real_offset = nonstatic_byte_space_offset;
           nonstatic_byte_space_offset += 1;
           nonstatic_byte_space_count  -= 1;
@@ -2715,7 +2715,7 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
         }
         break;
       case NONSTATIC_SHORT:
-        if (nonstatic_short_space_count > 0 ) {
+        if (nonstatic_short_space_count > 0) {
           real_offset = nonstatic_short_space_offset;
           nonstatic_short_space_offset += BytesPerShort;
           nonstatic_short_space_count  -= 1;
@@ -2725,7 +2725,7 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
         }
         break;
       case NONSTATIC_WORD:
-        if (nonstatic_word_space_count > 0 ) {
+        if (nonstatic_word_space_count > 0) {
           real_offset = nonstatic_word_space_offset;
           nonstatic_word_space_offset += BytesPerInt;
           nonstatic_word_space_count  -= 1;
@@ -2813,7 +2813,7 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
             next_nonstatic_padded_offset += heapOopSize;
 
             // Record this oop in the oop maps
-            if (nonstatic_oop_map_count > 0 && nonstatic_oop_offsets[nonstatic_oop_map_count - 1] == real_offset - int(nonstatic_oop_counts[nonstatic_oop_map_count - 1]) * heapOopSize ) {
+            if (nonstatic_oop_map_count > 0 && nonstatic_oop_offsets[nonstatic_oop_map_count - 1] == real_offset - int(nonstatic_oop_counts[nonstatic_oop_map_count - 1]) * heapOopSize) {
               // This oop is adjacent to the previous one, add to current oop map
               nonstatic_oop_counts[nonstatic_oop_map_count - 1] += 1;
             } else {
@@ -3253,7 +3253,7 @@ bool ClassFileParser::verify_unqualified_name(const char* name, unsigned int len
   for (const char* p = name; p != name + length;) {
     jchar ch = *p;
     if (ch < 128) {
-      if (ch == '.' || ch == ';' || ch == '[' ) {
+      if (ch == '.' || ch == ';' || ch == '[') {
         return false;   // do not permit '.', ';', or '['
       }
       if (ch == '/') {
@@ -3434,7 +3434,7 @@ jint ClassFileParser::layout_size() const {
 
 static void check_methods_for_intrinsics(const InstanceKlass* ik, const Array<Method*>* methods) {
   // Set up Method*::intrinsic_id as soon as we know the names of methods.
-  // (We used to do this lazily, but now we query it in Rewriter,
+  // (We used to do this lazily, but now we query it in NULL,
   // which is eagerly done for every method, so we might as well do it now,
   // when everything is fresh in memory.)
   const vmSymbols::SID klass_id = Method::klass_id_for_intrinsics(ik);
@@ -3472,7 +3472,7 @@ InstanceKlass* ClassFileParser::create_instance_klass(bool changed_by_loadhook, 
   fill_instance_klass(ik, changed_by_loadhook, CHECK_NULL);
 
   ik->set_has_passed_fingerprint_check(false);
-  if (UseAOT && ik->supers_have_passed_fingerprint_checks()) {
+  if (false && ik->supers_have_passed_fingerprint_checks()) {
     uint64_t aot_fp = AOTLoader::get_saved_fingerprint(ik);
     if (aot_fp != 0 && aot_fp == _stream->compute_fingerprint()) {
       // This class matches with a class saved in an AOT library
@@ -3560,12 +3560,9 @@ void ClassFileParser::fill_instance_klass(InstanceKlass* ik, bool changed_by_loa
   apply_parsed_class_attributes(ik);
 
   // Miranda methods
-  if ((_num_miranda_methods > 0) ||
-      // if this class introduced new miranda methods or
-      (_super_klass != NULL && _super_klass->has_miranda_methods())
-        // super class exists and this class inherited miranda methods
-     ) {
-       ik->set_has_miranda_methods(); // then set a flag
+  // if this class introduced new miranda methods or super class exists and this class inherited miranda methods
+  if ((_num_miranda_methods > 0) || (_super_klass != NULL && _super_klass->has_miranda_methods())) {
+    ik->set_has_miranda_methods(); // then set a flag
   }
 
   // Fill in information needed to compute superclasses.
@@ -3578,10 +3575,7 @@ void ClassFileParser::fill_instance_klass(InstanceKlass* ik, bool changed_by_loa
 
   // Compute transitive closure of interfaces this class implements
   // Do final class setup
-  fill_oop_maps(ik,
-                _field_info->nonstatic_oop_map_count,
-                _field_info->nonstatic_oop_offsets,
-                _field_info->nonstatic_oop_counts);
+  fill_oop_maps(ik, _field_info->nonstatic_oop_map_count, _field_info->nonstatic_oop_offsets, _field_info->nonstatic_oop_counts);
 
   // Fill in has_finalizer, has_vanilla_constructor, and layout_helper
   set_precomputed_flags(ik);

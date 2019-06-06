@@ -23,9 +23,7 @@
 // ciInstanceKlass::ciInstanceKlass
 //
 // Loaded instance klass.
-ciInstanceKlass::ciInstanceKlass(Klass* k) :
-  ciKlass(k)
-{
+ciInstanceKlass::ciInstanceKlass(Klass* k) : ciKlass(k) {
   InstanceKlass* ik = get_instanceKlass();
 
   AccessFlags access_flags = ik->access_flags();
@@ -84,10 +82,7 @@ ciInstanceKlass::ciInstanceKlass(Klass* k) :
 }
 
 // Version for unloaded classes:
-ciInstanceKlass::ciInstanceKlass(ciSymbol* name,
-                                 jobject loader, jobject protection_domain)
-  : ciKlass(name, T_OBJECT)
-{
+ciInstanceKlass::ciInstanceKlass(ciSymbol* name, jobject loader, jobject protection_domain) : ciKlass(name, T_OBJECT) {
   _init_state = (InstanceKlass::ClassState)0;
   _nonstatic_field_size = -1;
   _has_nonstatic_fields = false;

@@ -19,9 +19,7 @@ static BasicType fixup_element_type(BasicType bt) {
   return bt;
 }
 
-ciConstant ciArray::element_value_impl(BasicType elembt,
-                                       arrayOop ary,
-                                       int index) {
+ciConstant ciArray::element_value_impl(BasicType elembt, arrayOop ary, int index) {
   if (ary == NULL)
     return ciConstant();
   if (index < 0 || index >= ary->length())

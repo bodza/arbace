@@ -72,7 +72,6 @@ class KlassSizeStats;
 class ConstantPool : public Metadata {
   friend class VMStructs;
   friend class JVMCIVMStructs;
-  friend class BytecodeInterpreter;  // Directly extracts a klass in the pool for fast instanceof/checkcast
   friend class Universe;             // For null constructor
  private:
   // If you add a new field that points to any metaspace object, you
@@ -175,7 +174,7 @@ class ConstantPool : public Metadata {
   void set_pool_holder(InstanceKlass* k)  { _pool_holder = k; }
   InstanceKlass** pool_holder_addr()      { return &_pool_holder; }
 
-  // Interpreter runtime support
+  // NULL runtime support
   ConstantPoolCache* cache() const        { return _cache; }
   void set_cache(ConstantPoolCache* cache) { _cache = cache; }
 
@@ -535,11 +534,9 @@ class ConstantPool : public Metadata {
     return offset;
   }
   // Compare a bootsrap specifier in the operands arrays
-  bool compare_operand_to(int bootstrap_specifier_index1, const constantPoolHandle& cp2,
-                          int bootstrap_specifier_index2, TRAPS);
+  bool compare_operand_to(int bootstrap_specifier_index1, const constantPoolHandle& cp2, int bootstrap_specifier_index2, TRAPS);
   // Find a bootsrap specifier in the operands array
-  int find_matching_operand(int bootstrap_specifier_index, const constantPoolHandle& search_cp,
-                            int operands_cur_len, TRAPS);
+  int find_matching_operand(int bootstrap_specifier_index, const constantPoolHandle& search_cp, int operands_cur_len, TRAPS);
   // Resize the operands array with delta_len and delta_size
   void resize_operands(int delta_len, int delta_size, TRAPS);
   // Extend the operands array with the length and size of the ext_cp operands

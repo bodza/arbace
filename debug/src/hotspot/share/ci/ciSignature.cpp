@@ -29,7 +29,7 @@ ciSignature::ciSignature(ciKlass* accessing_klass, const constantPoolHandle& cpo
   ResourceMark rm(THREAD);
   Symbol* sh = symbol->get_symbol();
   SignatureStream ss(sh);
-  for (; ; ss.next()) {
+  for ( ; ; ss.next()) {
     // Process one element of the signature
     ciType* type;
     if (!ss.is_object()) {

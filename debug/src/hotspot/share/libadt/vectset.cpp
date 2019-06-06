@@ -38,14 +38,12 @@ VectorSet::VectorSet(Arena *arena) : Set(arena) {
 }
 
 //------------------------------Construct--------------------------------------
-Set &VectorSet_Construct(Arena *arena)
-{
+Set &VectorSet_Construct(Arena *arena) {
   return *(new VectorSet(arena));
 }
 
 //------------------------------operator=--------------------------------------
-Set &VectorSet::operator = (const Set &set)
-{
+Set &VectorSet::operator = (const Set &set) {
   if (&set == this ) return *this;
   // The cast is a virtual function that checks that "set" is a VectorSet.
   slamin(*(set.asVectorSet()));
@@ -54,8 +52,7 @@ Set &VectorSet::operator = (const Set &set)
 
 //------------------------------slamin-----------------------------------------
 // Initialize one set with another.  No regard is made to the existing Set.
-void VectorSet::slamin(const VectorSet& s)
-{
+void VectorSet::slamin(const VectorSet& s) {
   size = s.size;                // Use new size
   data = (uint32_t*)s._set_arena->Amalloc(size*sizeof(uint32_t)); // Make array of required size
   memcpy( data, s.data, size*sizeof(uint32_t)); // Fill the array
@@ -63,8 +60,7 @@ void VectorSet::slamin(const VectorSet& s)
 
 //------------------------------grow-------------------------------------------
 // Expand the existing set to a bigger size
-void VectorSet::grow( uint newsize )
-{
+void VectorSet::grow( uint newsize ) {
   newsize = (newsize + 31) >> 5;  // Convert to longwords
   uint x = size;
   while ( x < newsize ) x <<= 1;
@@ -75,8 +71,7 @@ void VectorSet::grow( uint newsize )
 
 //------------------------------operator<<=------------------------------------
 // Insert a member into an existing Set.
-Set &VectorSet::operator <<= (uint elem)
-{
+Set &VectorSet::operator <<= (uint elem) {
   register uint word = elem >> 5;            // Get the longword offset
   register uint32_t mask = 1L << (elem & 31);  // Get bit mask
 
@@ -88,8 +83,7 @@ Set &VectorSet::operator <<= (uint elem)
 
 //------------------------------operator>>=------------------------------------
 // Delete a member from an existing Set.
-Set &VectorSet::operator >>= (uint elem)
-{
+Set &VectorSet::operator >>= (uint elem) {
   register uint word = elem >> 5; // Get the longword offset
   if (word >= size )              // Beyond the last?
     return *this;                 // Then it's clear & return clear
@@ -100,8 +94,7 @@ Set &VectorSet::operator >>= (uint elem)
 
 //------------------------------operator&=-------------------------------------
 // Intersect one set into another.
-VectorSet &VectorSet::operator &= (const VectorSet &s)
-{
+VectorSet &VectorSet::operator &= (const VectorSet &s) {
   // NOTE: The intersection is never any larger than the smallest set.
   if (s.size < size ) size = s.size; // Get smaller size
   register uint32_t *u1 = data;   // Pointer to the destination data
@@ -112,16 +105,14 @@ VectorSet &VectorSet::operator &= (const VectorSet &s)
 }
 
 //------------------------------operator&=-------------------------------------
-Set &VectorSet::operator &= (const Set &set)
-{
+Set &VectorSet::operator &= (const Set &set) {
   // The cast is a virtual function that checks that "set" is a VectorSet.
   return (*this) &= *(set.asVectorSet());
 }
 
 //------------------------------operator|=-------------------------------------
 // Union one set into another.
-VectorSet &VectorSet::operator |= (const VectorSet &s)
-{
+VectorSet &VectorSet::operator |= (const VectorSet &s) {
   // This many words must be unioned
   register uint cnt = ((size < s.size) ? size : s.size);
   register uint32_t *u1 = data;   // Pointer to the destination data
@@ -137,16 +128,14 @@ VectorSet &VectorSet::operator |= (const VectorSet &s)
 }
 
 //------------------------------operator|=-------------------------------------
-Set &VectorSet::operator |= (const Set &set)
-{
+Set &VectorSet::operator |= (const Set &set) {
   // The cast is a virtual function that checks that "set" is a VectorSet.
   return (*this) |= *(set.asVectorSet());
 }
 
 //------------------------------operator-=-------------------------------------
 // Difference one set from another.
-VectorSet &VectorSet::operator -= (const VectorSet &s)
-{
+VectorSet &VectorSet::operator -= (const VectorSet &s) {
   // This many words must be unioned
   register uint cnt = ((size < s.size) ? size : s.size);
   register uint32_t *u1 = data;   // Pointer to the destination data
@@ -157,8 +146,7 @@ VectorSet &VectorSet::operator -= (const VectorSet &s)
 }
 
 //------------------------------operator-=-------------------------------------
-Set &VectorSet::operator -= (const Set &set)
-{
+Set &VectorSet::operator -= (const Set &set) {
   // The cast is a virtual function that checks that "set" is a VectorSet.
   return (*this) -= *(set.asVectorSet());
 }
@@ -169,8 +157,7 @@ Set &VectorSet::operator -= (const Set &set)
 //        X1 --  A is a subset of B
 //        0X --  B is not a subset of A
 //        1X --  B is a subset of A
-int VectorSet::compare (const VectorSet &s) const
-{
+int VectorSet::compare (const VectorSet &s) const {
   register uint32_t *u1 = data;   // Pointer to the destination data
   register uint32_t *u2 = s.data; // Pointer to the source data
   register uint32_t AnotB = 0, BnotA = 0;
@@ -187,7 +174,7 @@ int VectorSet::compare (const VectorSet &s) const
   }
 
   // Get bits from bigger set
-  if (size < s.size ) {
+  if (size < s.size) {
     for ( ; i<s.size; i++)      // For data in larger set
       BnotA |= *u2++;           // These bits are in B not A
   } else {
@@ -201,22 +188,19 @@ int VectorSet::compare (const VectorSet &s) const
 
 //------------------------------operator==-------------------------------------
 // Test for set equality
-int VectorSet::operator == (const VectorSet &s) const
-{
+int VectorSet::operator == (const VectorSet &s) const {
   return compare(s) == 3;       // TRUE if A and B are mutual subsets
 }
 
 //------------------------------operator==-------------------------------------
-int VectorSet::operator == (const Set &set) const
-{
+int VectorSet::operator == (const Set &set) const {
   // The cast is a virtual function that checks that "set" is a VectorSet.
   return (*this) == *(set.asVectorSet());
 }
 
 //------------------------------disjoint---------------------------------------
 // Check for sets being disjoint.
-int VectorSet::disjoint(const Set &set) const
-{
+int VectorSet::disjoint(const Set &set) const {
   // The cast is a virtual function that checks that "set" is a VectorSet.
   const VectorSet &s = *(set.asVectorSet());
 
@@ -232,36 +216,31 @@ int VectorSet::disjoint(const Set &set) const
 
 //------------------------------operator<--------------------------------------
 // Test for strict subset
-int VectorSet::operator < (const VectorSet &s) const
-{
+int VectorSet::operator < (const VectorSet &s) const {
   return compare(s) == 1;       // A subset B, B not subset A
 }
 
 //------------------------------operator<--------------------------------------
-int VectorSet::operator < (const Set &set) const
-{
+int VectorSet::operator < (const Set &set) const {
   // The cast is a virtual function that checks that "set" is a VectorSet.
   return (*this) < *(set.asVectorSet());
 }
 
 //------------------------------operator<=-------------------------------------
 // Test for subset
-int VectorSet::operator <= (const VectorSet &s) const
-{
+int VectorSet::operator <= (const VectorSet &s) const {
   return compare(s) & 1;        // A subset B
 }
 
 //------------------------------operator<=-------------------------------------
-int VectorSet::operator <= (const Set &set) const
-{
+int VectorSet::operator <= (const Set &set) const {
   // The cast is a virtual function that checks that "set" is a VectorSet.
   return (*this) <= *(set.asVectorSet());
 }
 
 //------------------------------operator[]-------------------------------------
 // Test for membership.  A Zero/Non-Zero value is returned!
-int VectorSet::operator[](uint elem) const
-{
+int VectorSet::operator[](uint elem) const {
   register uint word = elem >> 5; // Get the longword offset
   if (word >= size )              // Beyond the last?
     return 0;                     // Then it's clear
@@ -271,8 +250,7 @@ int VectorSet::operator[](uint elem) const
 
 //------------------------------getelem----------------------------------------
 // Get any element from the set.
-uint VectorSet::getelem(void) const
-{
+uint VectorSet::getelem(void) const {
   uint i;                       // Exit value of loop
   for (i = 0; i<size; i++)
     if (data[i] )
@@ -285,8 +263,7 @@ uint VectorSet::getelem(void) const
 
 //------------------------------Clear------------------------------------------
 // Clear a set
-void VectorSet::Clear(void)
-{
+void VectorSet::Clear(void) {
   if (size > 100) {            // Reclaim storage only if huge
     FREE_RESOURCE_ARRAY(uint32_t,data,size);
     size = 2;                   // Small initial size
@@ -297,8 +274,7 @@ void VectorSet::Clear(void)
 
 //------------------------------Size-------------------------------------------
 // Return number of elements in a Set
-uint VectorSet::Size(void) const
-{
+uint VectorSet::Size(void) const {
   uint sum = 0;                 // Cumulative size so far.
   uint8_t* currByte = (uint8_t*) data;
   for (uint32_t i = 0; i < (size << 2); i++) // While have bytes to process
@@ -308,13 +284,10 @@ uint VectorSet::Size(void) const
 
 //------------------------------Sort-------------------------------------------
 // Sort the elements for the next forall statement
-void VectorSet::Sort(void)
-{
-}
+void VectorSet::Sort(void) { }
 
 //------------------------------hash-------------------------------------------
-int VectorSet::hash() const
-{
+int VectorSet::hash() const {
   uint32_t _xor = 0;
   uint lim = ((size < 4) ? size : 4);
   for (uint i = 0; i < lim; i++)
@@ -341,8 +314,7 @@ SetI_ *VectorSet::iterate(uint &elem) const {
 //------------------------------next-------------------------------------------
 // Find and return the next element of a vector set, or return garbage and
 // make "VectorSetI::test()" fail.
-uint VectorSetI::next(void)
-{
+uint VectorSetI::next(void) {
   j++;                          // Next element in word
   mask = (mask & max_jint) << 1;// Next bit in word
   do {                          // Do While still have words

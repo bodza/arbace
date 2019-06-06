@@ -109,7 +109,6 @@ class ConstantPoolCacheEntry {
   friend class VMStructs;
   friend class constantPoolCacheKlass;
   friend class ConstantPool;
-  friend class InterpreterRuntime;
 
  private:
   volatile intx     _indices;  // constant pool index & rewrite bytecodes
@@ -247,17 +246,16 @@ class ConstantPoolCacheEntry {
   // resolution logic needs to make slightly different assessments about the
   // number and types of arguments.
   void set_method_handle_common(
-    const constantPoolHandle& cpool,                    // holding constant pool (required for locking)
-    Bytecodes::Code invoke_code,                 // _invokehandle or _invokedynamic
-    const CallInfo &call_info                    // Call link information
+    const constantPoolHandle& cpool, // holding constant pool (required for locking)
+    Bytecodes::Code invoke_code,     // _invokehandle or _invokedynamic
+    const CallInfo &call_info        // Call link information
   );
 
   // Return TRUE if resolution failed and this thread got to record the failure
   // status.  Return FALSE if another thread succeeded or failed in resolving
   // the method and recorded the success or failure before this thread had a
   // chance to record its failure.
-  bool save_and_throw_indy_exc(const constantPoolHandle& cpool, int cpool_index,
-                               int index, constantTag tag, TRAPS);
+  bool save_and_throw_indy_exc(const constantPoolHandle& cpool, int cpool_index, int index, constantTag tag, TRAPS);
 
   // invokedynamic and invokehandle call sites have two entries in the
   // resolved references array:
@@ -307,7 +305,7 @@ class ConstantPoolCacheEntry {
   Method*   f1_as_method() const;
   Klass*    f1_as_klass() const;
   // Use the accessor f1() to acquire _f1's value. This is needed for
-  // example in BytecodeInterpreter::run(), where is_f1_null() is
+  // example in NULL::run(), where is_f1_null() is
   // called to check if an invokedynamic call is resolved. This load
   // of _f1 must be ordered with the loads performed by
   // cache->main_entry_index().

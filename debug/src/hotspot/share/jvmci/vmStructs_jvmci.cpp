@@ -114,15 +114,6 @@
   nonstatic_field(DataLayout,                  _header._struct._traps,                 u4) \
   nonstatic_field(DataLayout,                  _cells[0],                              intptr_t) \
  \
-  nonstatic_field(Deoptimization::UnrollBlock, _size_of_deoptimized_frame,             int) \
-  nonstatic_field(Deoptimization::UnrollBlock, _caller_adjustment,                     int) \
-  nonstatic_field(Deoptimization::UnrollBlock, _number_of_frames,                      int) \
-  nonstatic_field(Deoptimization::UnrollBlock, _total_frame_sizes,                     int) \
-  nonstatic_field(Deoptimization::UnrollBlock, _frame_sizes,                           intptr_t*) \
-  nonstatic_field(Deoptimization::UnrollBlock, _frame_pcs,                             address*) \
-  nonstatic_field(Deoptimization::UnrollBlock, _initial_info,                          intptr_t) \
-  nonstatic_field(Deoptimization::UnrollBlock, _unpack_kind,                           int) \
- \
   nonstatic_field(ExceptionTableElement,       start_pc,                                      u2) \
   nonstatic_field(ExceptionTableElement,       end_pc,                                        u2) \
   nonstatic_field(ExceptionTableElement,       handler_pc,                                    u2) \
@@ -453,42 +444,6 @@
   declare_constant(DataLayout::parameters_type_data_tag) \
   declare_constant(DataLayout::speculative_trap_data_tag) \
  \
-  declare_constant(Deoptimization::Unpack_deopt) \
-  declare_constant(Deoptimization::Unpack_exception) \
-  declare_constant(Deoptimization::Unpack_uncommon_trap) \
-  declare_constant(Deoptimization::Unpack_reexecute) \
- \
-  declare_constant(Deoptimization::_action_bits) \
-  declare_constant(Deoptimization::_reason_bits) \
-  declare_constant(Deoptimization::_debug_id_bits) \
-  declare_constant(Deoptimization::_action_shift) \
-  declare_constant(Deoptimization::_reason_shift) \
-  declare_constant(Deoptimization::_debug_id_shift) \
- \
-  declare_constant(Deoptimization::Action_none) \
-  declare_constant(Deoptimization::Action_maybe_recompile) \
-  declare_constant(Deoptimization::Action_reinterpret) \
-  declare_constant(Deoptimization::Action_make_not_entrant) \
-  declare_constant(Deoptimization::Action_make_not_compilable) \
- \
-  declare_constant(Deoptimization::Reason_none) \
-  declare_constant(Deoptimization::Reason_null_check) \
-  declare_constant(Deoptimization::Reason_range_check) \
-  declare_constant(Deoptimization::Reason_class_check) \
-  declare_constant(Deoptimization::Reason_array_check) \
-  declare_constant(Deoptimization::Reason_unreached0) \
-  declare_constant(Deoptimization::Reason_constraint) \
-  declare_constant(Deoptimization::Reason_div0_check) \
-  declare_constant(Deoptimization::Reason_loop_limit_check) \
-  declare_constant(Deoptimization::Reason_type_checked_inlining) \
-  declare_constant(Deoptimization::Reason_optimized_type_check) \
-  declare_constant(Deoptimization::Reason_aliasing) \
-  declare_constant(Deoptimization::Reason_transfer_to_interpreter) \
-  declare_constant(Deoptimization::Reason_not_compiled_exception_handler) \
-  declare_constant(Deoptimization::Reason_unresolved) \
-  declare_constant(Deoptimization::Reason_jsr_mismatch) \
-  declare_constant(Deoptimization::Reason_LIMIT) \
- \
   declare_constant(FieldInfo::access_flags_offset) \
   declare_constant(FieldInfo::name_index_offset) \
   declare_constant(FieldInfo::signature_index_offset) \
@@ -574,7 +529,6 @@
 #define VM_ADDRESSES(declare_address, declare_preprocessor_address, declare_function) \
   declare_function(SharedRuntime::register_finalizer) \
   declare_function(SharedRuntime::exception_handler_for_return_address) \
-  declare_function(SharedRuntime::OSR_migration_end) \
   declare_function(SharedRuntime::enable_stack_reserved_zone) \
   declare_function(SharedRuntime::frem) \
   declare_function(SharedRuntime::drem) \
@@ -584,9 +538,8 @@
   declare_function(os::javaTimeMillis) \
   declare_function(os::javaTimeNanos) \
  \
-  declare_function(Deoptimization::fetch_unroll_info) \
-  declare_function(Deoptimization::uncommon_trap) \
-  declare_function(Deoptimization::unpack_frames) \
+  declare_function(NULL::NULL) \
+  declare_function(NULL::NULL) \
  \
   declare_function(JVMCIRuntime::new_instance) \
   declare_function(JVMCIRuntime::new_array) \
@@ -670,8 +623,6 @@
 
 #define VM_INT_CONSTANTS_CPU(declare_constant, declare_preprocessor_constant, declare_c1_constant, declare_c2_constant, declare_c2_preprocessor_constant) \
   declare_constant(frame::arg_reg_save_area_bytes) \
-  declare_constant(frame::interpreter_frame_sender_sp_offset) \
-  declare_constant(frame::interpreter_frame_last_sp_offset) \
   declare_constant(VM_Version::CPU_CX8) \
   declare_constant(VM_Version::CPU_CMOV) \
   declare_constant(VM_Version::CPU_FXSR) \

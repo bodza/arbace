@@ -131,7 +131,7 @@ BitMap::get_next_one_offset(idx_t l_offset, idx_t r_offset) const {
   bm_word_t res = map(index) >> pos;
   if (res != 0) {
     // find the position of the 1-bit
-    for (; !(res & 1); res_offset++) {
+    for ( ; !(res & 1); res_offset++) {
       res = res >> 1;
     }
 
@@ -166,7 +166,7 @@ BitMap::get_next_zero_offset(idx_t l_offset, idx_t r_offset) const {
 
   if (res != 0) {
     // find the position of the 1-bit
-    for (; !(res & 1); res_offset++) {
+    for ( ; !(res & 1); res_offset++) {
       res = res >> 1;
     }
     return MIN2(res_offset, r_offset);
@@ -200,7 +200,7 @@ BitMap::get_next_one_offset_aligned_right(idx_t l_offset, idx_t r_offset) const 
   bm_word_t res = map(index) >> bit_in_word(res_offset);
   if (res != 0) {
     // find the position of the 1-bit
-    for (; !(res & 1); res_offset++) {
+    for ( ; !(res & 1); res_offset++) {
       res = res >> 1;
     }
     return res_offset;

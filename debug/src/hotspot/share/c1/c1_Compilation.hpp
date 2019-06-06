@@ -6,7 +6,6 @@
 #include "code/exceptionHandlerTable.hpp"
 #include "compiler/compilerDirectives.hpp"
 #include "memory/resourceArea.hpp"
-#include "runtime/deoptimization.hpp"
 
 class CompilationResourceObj;
 class XHandlers;
@@ -205,7 +204,7 @@ class Compilation: public StackObj {
   // will compilation make optimistic assumptions that might lead to
   // deoptimization and that the runtime will account for?
   bool is_optimistic() const {
-    return !TieredCompilation && (RangeCheckElimination || UseLoopInvariantCodeMotion) && method()->method_data()->trap_count(Deoptimization::Reason_none) == 0;
+    return (RangeCheckElimination || UseLoopInvariantCodeMotion) && method()->method_data()->trap_count(NULL::Reason_none) == 0;
   }
 
   ciKlass* cha_exact_type(ciType* type);

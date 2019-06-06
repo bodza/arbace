@@ -164,11 +164,6 @@ void CompileTask::print_impl(outputStream* st, Method* method, int compile_id, i
 
   // print method attributes
   st->print("%c%c%c%c%c ", compile_type, sync_char, exception_char, blocking_char, native_char);
-
-  if (TieredCompilation) {
-    if (comp_level != -1)  st->print("%d ", comp_level);
-    else                   st->print("- ");
-  }
   st->print("     ");  // more indent
 
   if (method == NULL) {
@@ -199,12 +194,10 @@ void CompileTask::print_inline_indent(int inline_level, outputStream* st) {
   st->print("     ");        // print compilation number
   //         %s!bn
   st->print("      ");       // print method attributes
-  if (TieredCompilation) {
-    st->print("  ");
-  }
   st->print("     ");        // more indent
   st->print("    ");         // initial inlining indent
-  for (int i = 0; i < inline_level; i++)  st->print("  ");
+  for (int i = 0; i < inline_level; i++)
+    st->print("  ");
 }
 
 // ------------------------------------------------------------------
@@ -297,13 +290,11 @@ void CompileTask::print_inlining_inner(outputStream* st, ciMethod* method, int i
     st->print("      ");     // print method attributes
   }
 
-  if (TieredCompilation) {
-    st->print("  ");
-  }
   st->print("     ");        // more indent
   st->print("    ");         // initial inlining indent
 
-  for (int i = 0; i < inline_level; i++)  st->print("  ");
+  for (int i = 0; i < inline_level; i++)
+    st->print("  ");
 
   st->print("@ %d  ", bci);  // print bci
   method->print_short_name(st);

@@ -10,7 +10,6 @@
 #include "code/icBuffer.hpp"
 #include "code/vtableStubs.hpp"
 #include "gc/shared/vmGCOperations.hpp"
-#include "interpreter/interpreter.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/oop.inline.hpp"
@@ -426,14 +425,12 @@ void* os::native_java_library() {
     // Try to load verify dll first. In 1.3 java dll depends on it and is not
     // always able to find it when the loading executable is outside the JDK.
     // In order to keep working with 1.2 we ignore any loading errors.
-    if (dll_locate_lib(buffer, sizeof(buffer), Arguments::get_dll_dir(),
-                       "verify")) {
+    if (dll_locate_lib(buffer, sizeof(buffer), Arguments::get_dll_dir(), "verify")) {
       dll_load(buffer, ebuf, sizeof(ebuf));
     }
 
     // Load java dll
-    if (dll_locate_lib(buffer, sizeof(buffer), Arguments::get_dll_dir(),
-                       "java")) {
+    if (dll_locate_lib(buffer, sizeof(buffer), Arguments::get_dll_dir(), "java")) {
       _native_java_library = dll_load(buffer, ebuf, sizeof(ebuf));
     }
     if (_native_java_library == NULL) {
@@ -443,8 +440,7 @@ void* os::native_java_library() {
 #if defined(__OpenBSD__)
     // Work-around OpenBSD's lack of $ORIGIN support by pre-loading libnet.so
     // ignore errors
-    if (dll_locate_lib(buffer, sizeof(buffer), Arguments::get_dll_dir(),
-                       "net")) {
+    if (dll_locate_lib(buffer, sizeof(buffer), Arguments::get_dll_dir(), "net")) {
       dll_load(buffer, ebuf, sizeof(ebuf));
     }
 #endif
@@ -1174,7 +1170,7 @@ bool os::stack_shadow_pages_available(Thread *thread, const methodHandle& method
   // the handler for stack overflow.  'instanceof' in the stack overflow
   // handler or a println uses at least 8k stack of VM and native code
   // respectively.
-  const int framesize_in_bytes = Interpreter::size_top_interpreter_activation(method()) * wordSize;
+  const int framesize_in_bytes = NULL::size_top_interpreter_activation(method()) * wordSize;
 
   address limit = ((JavaThread*)thread)->stack_end() + (JavaThread::stack_guard_zone_size() + JavaThread::stack_shadow_zone_size());
 

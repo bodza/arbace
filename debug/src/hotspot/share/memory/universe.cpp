@@ -12,7 +12,6 @@
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "gc/shared/gcArguments.hpp"
 #include "gc/shared/gcConfig.hpp"
-#include "interpreter/interpreter.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceClosure.hpp"
 #include "memory/metaspaceCounters.hpp"
@@ -33,7 +32,6 @@
 #include "runtime/atomic.hpp"
 #include "runtime/flags/flagSetting.hpp"
 #include "runtime/flags/jvmFlagConstraintList.hpp"
-#include "runtime/deoptimization.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/init.hpp"
 #include "runtime/java.hpp"
@@ -737,9 +735,7 @@ bool universe_post_init() {
   Universe::_fully_initialized = true;
   EXCEPTION_MARK;
   { ResourceMark rm;
-    Interpreter::initialize();      // needed for interpreter entry points
-    {
-      HandleMark hm(THREAD);
+    { HandleMark hm(THREAD);
       Klass* ok = SystemDictionary::Object_klass();
       Universe::reinitialize_vtable_of(ok, CHECK_false);
       Universe::reinitialize_itables(CHECK_false);

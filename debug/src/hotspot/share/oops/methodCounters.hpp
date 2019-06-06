@@ -33,8 +33,7 @@ class MethodCounters : public Metadata {
   int               _invoke_mask;                         // per-method Tier0InvokeNotifyFreqLog
   int               _backedge_mask;                       // per-method Tier0BackedgeNotifyFreqLog
 
-  MethodCounters(const methodHandle& mh) :
-                                    _nmethod_age(INT_MAX)
+  MethodCounters(const methodHandle& mh) : _nmethod_age(INT_MAX)
   {
     set_interpreter_invocation_count(0);
     set_interpreter_throwout_count(0);
@@ -47,14 +46,7 @@ class MethodCounters : public Metadata {
 
     int compile_threshold = CompilerConfig::scaled_compile_threshold(CompileThreshold, scale);
     _interpreter_invocation_limit = compile_threshold << InvocationCounter::count_shift;
-    if (ProfileInterpreter) {
-      // If interpreter profiling is enabled, the backward branch limit
-      // is compared against the method data counter rather than an invocation
-      // counter, therefore no shifting of bits is required.
-      _interpreter_backward_branch_limit = (compile_threshold * (OnStackReplacePercentage - InterpreterProfilePercentage)) / 100;
-    } else {
-      _interpreter_backward_branch_limit = ((compile_threshold * OnStackReplacePercentage) / 100) << InvocationCounter::count_shift;
-    }
+    _interpreter_backward_branch_limit = ((compile_threshold * OnStackReplacePercentage) / 100) << InvocationCounter::count_shift;
     _interpreter_profile_limit = ((compile_threshold * InterpreterProfilePercentage) / 100) << InvocationCounter::count_shift;
     _invoke_mask = right_n_bits(CompilerConfig::scaled_freq_log(Tier0InvokeNotifyFreqLog, scale)) << InvocationCounter::count_shift;
     _backedge_mask = right_n_bits(CompilerConfig::scaled_freq_log(Tier0BackedgeNotifyFreqLog, scale)) << InvocationCounter::count_shift;

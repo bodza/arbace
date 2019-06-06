@@ -344,42 +344,38 @@ static bool can_relax_access_check_for(const Klass* accessor, const Klass* acces
   if (under_host_klass(accessor_ik, accessee_ik) || under_host_klass(accessee_ik, accessor_ik))
     return true;
 
-  if ((RelaxAccessControlCheck &&
-    accessor_ik->major_version() < Verifier::NO_RELAX_ACCESS_CTRL_CHECK_VERSION &&
-    accessee_ik->major_version() < Verifier::NO_RELAX_ACCESS_CTRL_CHECK_VERSION) ||
-    (accessor_ik->major_version() < Verifier::STRICTER_ACCESS_CTRL_CHECK_VERSION &&
-    accessee_ik->major_version() < Verifier::STRICTER_ACCESS_CTRL_CHECK_VERSION)) {
-    return classloader_only &&
-      accessor_ik->protection_domain() == accessee_ik->protection_domain() &&
-      accessor_ik->class_loader() == accessee_ik->class_loader();
+  if ((accessor_ik->major_version() < Verifier::NO_RELAX_ACCESS_CTRL_CHECK_VERSION && accessee_ik->major_version() < Verifier::NO_RELAX_ACCESS_CTRL_CHECK_VERSION) ||
+    (accessor_ik->major_version() < Verifier::STRICTER_ACCESS_CTRL_CHECK_VERSION && accessee_ik->major_version() < Verifier::STRICTER_ACCESS_CTRL_CHECK_VERSION)) {
+    return classloader_only && accessor_ik->protection_domain() == accessee_ik->protection_domain() && accessor_ik->class_loader() == accessee_ik->class_loader();
   }
 
   return false;
 }
 
 /*
-    Type Accessibility check for public types: Callee Type T is accessible to Caller Type S if:
+ *   Type Accessibility check for public types: Callee Type T is accessible to Caller Type S if:
+ *
+ *                         Callee T in              Callee T in package PT,
+ *                         unnamed module           runtime module MT
+ * -----------------------------------------------------------------------------------------------
+ *
+ * Caller S in package     If MS is loose: YES      If same classloader/package (PS == PT): YES
+ * PS, runtime module MS   If MS can read T's       If same runtime module: (MS == MT): YES
+ *                         unnamed module: YES
+ *                                                  Else if (MS can read MT (establish readability) &&
+ *                                                    ((MT exports PT to MS or to all modules) ||
+ *                                                     (MT is open))): YES
+ *
+ * -----------------------------------------------------------------------------------------------
+ * Caller S in unnamed         YES                  Readability exists because unnamed module
+ * module UM                                            "reads" all modules
+ *                                                  if (MT exports PT to UM or to all modules): YES
+ *
+ * -----------------------------------------------------------------------------------------------
+ *
+ * Note: a loose module is a module that can read all current and future unnamed modules.
+ */
 
-                        Callee T in             Callee T in package PT,
-                        unnamed module          runtime module MT
- ------------------------------------------------------------------------------------------------
-
- Caller S in package     If MS is loose: YES      If same classloader/package (PS == PT): YES
- PS, runtime module MS   If MS can read T's       If same runtime module: (MS == MT): YES
-                         unnamed module: YES
-                                                  Else if (MS can read MT (establish readability) &&
-                                                    ((MT exports PT to MS or to all modules) ||
-                                                     (MT is open))): YES
-
- ------------------------------------------------------------------------------------------------
- Caller S in unnamed         YES                  Readability exists because unnamed module
- module UM                                            "reads" all modules
-                                                  if (MT exports PT to UM or to all modules): YES
-
- ------------------------------------------------------------------------------------------------
-
- Note: a loose module is a module that can read all current and future unnamed modules.
-*/
 Reflection::VerifyClassAccessResults Reflection::verify_class_access(const Klass* current_class, const InstanceKlass* new_class, bool classloader_only) {
   // Verify that current_class can access new_class.  If the classloader_only
   // flag is set, we automatically allow any accesses in which current_class
@@ -600,7 +596,7 @@ bool Reflection::is_same_class_package(const Klass* class1, const Klass* class2)
 void Reflection::check_for_inner_class(const InstanceKlass* outer, const InstanceKlass* inner, bool inner_is_member, TRAPS) {
   InnerClassesIterator iter(outer);
   constantPoolHandle cp   (THREAD, outer->constants());
-  for (; !iter.done(); iter.next()) {
+  for ( ; !iter.done(); iter.next()) {
      int ioff = iter.inner_class_info_index();
      int ooff = iter.outer_class_info_index();
 
@@ -815,8 +811,7 @@ oop Reflection::new_field(fieldDescriptor* fd, TRAPS) {
   return rh();
 }
 
-oop Reflection::new_parameter(Handle method, int index, Symbol* sym,
-                              int flags, TRAPS) {
+oop Reflection::new_parameter(Handle method, int index, Symbol* sym, int flags, TRAPS) {
   Handle rh = java_lang_reflect_Parameter::create(CHECK_NULL);
 
   if (NULL != sym) {

@@ -48,24 +48,6 @@
     return_addr_offset                               =  1,
     sender_sp_offset                                 =  2,
 
-    // Interpreter frames
-    interpreter_frame_oop_temp_offset                =  3, // for native calls only
-
-    interpreter_frame_sender_sp_offset               = -1,
-    // outgoing sp before a call to an invoked method
-    interpreter_frame_last_sp_offset                 = interpreter_frame_sender_sp_offset - 1,
-    interpreter_frame_method_offset                  = interpreter_frame_last_sp_offset - 1,
-    interpreter_frame_mdp_offset                     = interpreter_frame_method_offset - 1,
-    interpreter_frame_padding_offset                 = interpreter_frame_mdp_offset - 1,
-    interpreter_frame_mirror_offset                  = interpreter_frame_padding_offset - 1,
-    interpreter_frame_cache_offset                   = interpreter_frame_mirror_offset - 1,
-    interpreter_frame_locals_offset                  = interpreter_frame_cache_offset - 1,
-    interpreter_frame_bcp_offset                     = interpreter_frame_locals_offset - 1,
-    interpreter_frame_initial_sp_offset              = interpreter_frame_bcp_offset - 1,
-
-    interpreter_frame_monitor_block_top_offset       = interpreter_frame_initial_sp_offset,
-    interpreter_frame_monitor_block_bottom_offset    = interpreter_frame_initial_sp_offset,
-
     // Entry frames
     // n.b. these values are determined by the layout defined in
     // stubGenerator for the Java call stub
@@ -114,18 +96,12 @@
 
   // accessors for the instance variables
   // Note: not necessarily the real 'frame pointer' (see real_fp)
-  intptr_t*   fp() const { return _fp; }
+  intptr_t* fp() const { return _fp; }
 
   inline address* sender_pc_addr() const;
 
-  // expression stack tos if we are nested in a java call
-  intptr_t* interpreter_frame_last_sp() const;
-
   // helper to update a map with callee-saved RBP
   static void update_map_with_saved_link(RegisterMap* map, intptr_t** link_addr);
-
-  // deoptimization support
-  void interpreter_frame_set_last_sp(intptr_t* sp);
 
   static jint interpreter_frame_expression_stack_direction() { return -1; }
 

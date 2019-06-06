@@ -7,7 +7,6 @@
 #include "ci/ciUtilities.hpp"
 #include "oops/methodData.hpp"
 #include "oops/oop.hpp"
-#include "runtime/deoptimization.hpp"
 
 class ciBitData;
 class ciCounterData;

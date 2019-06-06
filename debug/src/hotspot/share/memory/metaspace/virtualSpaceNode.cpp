@@ -36,7 +36,7 @@ VirtualSpaceNode::VirtualSpaceNode(bool is_class, size_t bytes) :
 void VirtualSpaceNode::purge(ChunkManager* chunk_manager) {
     Metachunk* chunk = first_chunk();
   Metachunk* invalid_chunk = (Metachunk*) top();
-  while (chunk < invalid_chunk ) {
+  while (chunk < invalid_chunk) {
     MetaWord* next = ((MetaWord*)chunk) + chunk->word_size();
     chunk_manager->remove_chunk(chunk);
     chunk->remove_sentinel();

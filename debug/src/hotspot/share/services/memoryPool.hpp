@@ -45,12 +45,7 @@ class MemoryPool : public CHeapObj<mtInternal> {
   void add_manager(MemoryManager* mgr);
 
  public:
-  MemoryPool(const char* name,
-             PoolType type,
-             size_t init_size,
-             size_t max_size,
-             bool support_usage_threshold,
-             bool support_gc_threshold);
+  MemoryPool(const char* name, PoolType type, size_t init_size, size_t max_size, bool support_usage_threshold, bool support_gc_threshold);
 
   const char* name()                       { return _name; }
   bool        is_heap()                    { return _type == Heap; }

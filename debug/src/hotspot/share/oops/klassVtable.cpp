@@ -31,12 +31,9 @@ inline InstanceKlass* klassVtable::ik() const {
 // with the same name and signature as m), then m is a Miranda method which is
 // entered as a public abstract method in C's vtable.  From then on it should
 // treated as any other public method in C for method over-ride purposes.
-void klassVtable::compute_vtable_size_and_num_mirandas(
-    int* vtable_length_ret, int* num_new_mirandas,
-    GrowableArray<Method*>* all_mirandas, const Klass* super,
-    Array<Method*>* methods, AccessFlags class_flags, u2 major_version,
-    Handle classloader, Symbol* classname, Array<Klass*>* local_interfaces,
-    TRAPS) {
+void klassVtable::compute_vtable_size_and_num_mirandas(int* vtable_length_ret, int* num_new_mirandas,
+    GrowableArray<Method*>* all_mirandas, const Klass* super, Array<Method*>* methods, AccessFlags class_flags, u2 major_version,
+    Handle classloader, Symbol* classname, Array<Klass*>* local_interfaces, TRAPS) {
   NoSafepointVerifier nsv;
 
   // set up default result values
@@ -423,9 +420,8 @@ bool klassVtable::needs_new_vtable_entry(const methodHandle& target_method, cons
       // a super's method, in which case they re-use its entry
       (target_method()->is_static()) ||
       // static methods don't need to be in vtable
-      (target_method()->name() ==  vmSymbols::object_initializer_name())
+      (target_method()->name() ==  vmSymbols::object_initializer_name())) {
       // <init> is never called dynamically-bound
-      ) {
     return false;
   }
 

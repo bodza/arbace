@@ -4,7 +4,6 @@
 #include "asm/macroAssembler.inline.hpp"
 #include "gc/shared/barrierSet.hpp"
 #include "gc/shared/barrierSetAssembler.hpp"
-#include "interpreter/interpreter.hpp"
 #include "nativeInst_x86.hpp"
 #include "oops/instanceOop.hpp"
 #include "oops/method.hpp"
@@ -90,7 +89,7 @@ class StubGenerator: public StubCodeGenerator {
     // stub code
     __ enter();
     __ movptr(rcx, parameter_size);              // parameter counter
-    __ shlptr(rcx, Interpreter::logStackElementSize); // convert parameter count to bytes
+    __ shlptr(rcx, NULL::logStackElementSize); // convert parameter count to bytes
     __ addptr(rcx, locals_count_in_bytes);       // reserve space for register saves
     __ subptr(rsp, rcx);
     __ andptr(rsp, -(StackAlignmentInBytes));    // Align stack
@@ -137,8 +136,8 @@ class StubGenerator: public StubCodeGenerator {
     __ BIND(loop);
 
     // get parameter
-    __ movptr(rax, Address(rdx, rcx, Interpreter::stackElementScale(), -wordSize));
-    __ movptr(Address(rsp, rbx, Interpreter::stackElementScale(), Interpreter::expr_offset_in_bytes(0)), rax);          // store parameter
+    __ movptr(rax, Address(rdx, rcx, NULL::stackElementScale(), -wordSize));
+    __ movptr(Address(rsp, rbx, NULL::stackElementScale(), NULL::expr_offset_in_bytes(0)), rax);          // store parameter
     __ increment(rbx);
     __ decrement(rcx);
     __ jcc(Assembler::notZero, loop);

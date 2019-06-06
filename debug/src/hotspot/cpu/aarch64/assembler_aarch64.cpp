@@ -5,7 +5,6 @@
 
 #include "asm/assembler.hpp"
 #include "asm/assembler.inline.hpp"
-#include "interpreter/interpreter.hpp"
 
 #include "compiler/disassembler.hpp"
 #include "memory/resourceArea.hpp"
@@ -327,8 +326,7 @@ void Assembler::bang_stack_with_offset(int offset) { Unimplemented(); }
 // above encode and decode functions
 
 uint32_t
-asm_util::encode_logical_immediate(bool is32, uint64_t imm)
-{
+asm_util::encode_logical_immediate(bool is32, uint64_t imm) {
   if (is32) {
     /* Allow all zeros or all ones in top 32-bits, so that
        constant expressions like ~1 are permitted. */

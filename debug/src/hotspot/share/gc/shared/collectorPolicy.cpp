@@ -115,8 +115,7 @@ size_t GenCollectorPolicy::scale_by_NewRatio_aligned(size_t base_size) {
   return align_down_bounded(base_size / (NewRatio + 1), _gen_alignment);
 }
 
-size_t GenCollectorPolicy::bound_minus_alignment(size_t desired_size,
-                                                 size_t maximum_size) {
+size_t GenCollectorPolicy::bound_minus_alignment(size_t desired_size, size_t maximum_size) {
   size_t max_minus = maximum_size - _gen_alignment;
   return desired_size < max_minus ? desired_size : max_minus;
 }

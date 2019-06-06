@@ -15,7 +15,6 @@
 #include "oops/oop.inline.hpp"
 #include "opto/compile.hpp"
 #include "opto/node.hpp"
-#include "runtime/deoptimization.hpp"
 #include "utilities/growableArray.hpp"
 
 // ciTypeFlow::JsrSet
@@ -314,7 +313,7 @@ const ciTypeFlow::StateVector* ciTypeFlow::get_start_state() {
   Cell cell = state->next_cell(state->tos());
   state->set_stack_size(0);
   int limit = state->limit_cell();
-  for (; cell < limit; cell = state->next_cell(cell)) {
+  for ( ; cell < limit; cell = state->next_cell(cell)) {
     state->set_type_at(cell, state->bottom_type());
   }
   // Lock an object, if necessary.
@@ -448,19 +447,13 @@ void ciTypeFlow::StateVector::do_aaload(ciBytecodeStream* str) {
   }
   if (!array_klass->is_loaded()) {
     // Only fails for some -Xcomp runs
-    trap(str, array_klass,
-         Deoptimization::make_trap_request
-         (Deoptimization::Reason_unloaded,
-          Deoptimization::Action_reinterpret));
+    trap(str, array_klass, NULL::make_trap_request (NULL::Reason_unloaded, NULL::Action_reinterpret));
     return;
   }
   ciKlass* element_klass = array_klass->element_klass();
   if (!element_klass->is_loaded() && element_klass->is_instance_klass()) {
     Untested("unloaded array element class in ciTypeFlow");
-    trap(str, element_klass,
-         Deoptimization::make_trap_request
-         (Deoptimization::Reason_unloaded,
-          Deoptimization::Action_reinterpret));
+    trap(str, element_klass, NULL::make_trap_request (NULL::Reason_unloaded, NULL::Action_reinterpret));
   } else {
     push_object(element_klass);
   }
@@ -537,9 +530,9 @@ void ciTypeFlow::StateVector::do_invoke(ciBytecodeStream* str, bool has_receiver
     // We weren't able to find the method.
     if (str->cur_bc() == Bytecodes::_invokedynamic) {
       trap(str, NULL,
-           Deoptimization::make_trap_request
-           (Deoptimization::Reason_uninitialized,
-            Deoptimization::Action_reinterpret));
+           NULL::make_trap_request
+           (NULL::Reason_uninitialized,
+            NULL::Action_reinterpret));
     } else {
       ciKlass* unloaded_holder = callee->holder();
       trap(str, unloaded_holder, str->get_method_holder_index());
@@ -702,7 +695,7 @@ void ciTypeFlow::StateVector::trap(ciBytecodeStream* str, ciKlass* klass, int in
 void ciTypeFlow::StateVector::do_null_assert(ciKlass* unloaded_klass) {
   if (unloaded_klass->is_loaded()) {
     // We failed to link, but we can still compute with this class,
-    // since it is loaded somewhere.  The compiler will uncommon_trap
+    // since it is loaded somewhere.  The compiler will NULL
     // if the object is not null, but the typeflow pass can not assume
     // that the object will be null, otherwise it may incorrectly tell
     // the parser that an object is known to be null. 4761344, 4807707

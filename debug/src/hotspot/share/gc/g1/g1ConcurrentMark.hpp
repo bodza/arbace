@@ -362,10 +362,10 @@ class G1ConcurrentMark : public CHeapObj<mtGC> {
   // mark or remark) and how many threads are currently active.
   void set_concurrency_and_phase(uint active_tasks, bool concurrent);
 
-  HeapWord*               finger()          { return _finger; }
-  bool                    concurrent()      { return _concurrent; }
-  uint                    active_tasks()    { return _num_active_tasks; }
-  ParallelTaskTerminator* terminator()      { return &_terminator; }
+  HeapWord*               finger()       { return _finger; }
+  bool                    concurrent()   { return _concurrent; }
+  uint                    active_tasks() { return _num_active_tasks; }
+  ParallelTaskTerminator* terminator()   { return &_terminator; }
 
   // Claims the next available region to be scanned by a marking
   // task/thread. It might return NULL if the next region is empty or

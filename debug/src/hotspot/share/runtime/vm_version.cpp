@@ -84,11 +84,9 @@ const char* Abstract_VM_Version::vm_vendor() {
 
 const char* Abstract_VM_Version::vm_info_string() {
   switch (Arguments::mode()) {
-    case Arguments::_int:
-      return "interpreted mode";
     case Arguments::_mixed:
       {
-        if (UseAOT) {
+        if (false) {
           return "mixed mode, aot";
         } else {
           return "mixed mode";

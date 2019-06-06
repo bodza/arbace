@@ -261,8 +261,7 @@ RelocationHolder Relocation::spec_simple(relocInfo::relocType rtype) {
   return itr._rh;
 }
 
-address Relocation::old_addr_for(address newa,
-                                 const CodeBuffer* src, CodeBuffer* dest) {
+address Relocation::old_addr_for(address newa, const CodeBuffer* src, CodeBuffer* dest) {
   int sect = dest->section_index_of(newa);
   guarantee(sect != CodeBuffer::SECT_NONE, "lost track of this address");
   address ostart = src->code_section(sect)->start();
@@ -270,12 +269,11 @@ address Relocation::old_addr_for(address newa,
   return ostart + (newa - nstart);
 }
 
-address Relocation::new_addr_for(address olda,
-                                 const CodeBuffer* src, CodeBuffer* dest) {
+address Relocation::new_addr_for(address olda, const CodeBuffer* src, CodeBuffer* dest) {
   int sect = CodeBuffer::SECT_NONE;
   // Look for olda in the source buffer, and all previous incarnations
   // if the source buffer has been expanded.
-  for (; src != NULL; src = src->before_expand()) {
+  for ( ; src != NULL; src = src->before_expand()) {
     sect = src->section_index_of(olda);
     if (sect != CodeBuffer::SECT_NONE)  break;
   }
@@ -372,7 +370,7 @@ void static_stub_Relocation::unpack_data() {
   _is_aot = (is_aot == 1);
 }
 
-void trampoline_stub_Relocation::pack_data_to(CodeSection* dest ) {
+void trampoline_stub_Relocation::pack_data_to(CodeSection* dest) {
   short* p = (short*) dest->locs_end();
   CodeSection* insts = dest->outer()->insts();
   normalize_address(_owner, insts);

@@ -240,8 +240,7 @@ bool StringDedupTable::equals(typeArrayOop value1, typeArrayOop value2) {
   return (oopDesc::equals(value1, value2) || (value1->length() == value2->length() && (!memcmp(value1->base(T_BYTE), value2->base(T_BYTE), value1->length() * sizeof(jbyte)))));
 }
 
-typeArrayOop StringDedupTable::lookup(typeArrayOop value, bool latin1, unsigned int hash,
-                                      StringDedupEntry** list, uintx &count) {
+typeArrayOop StringDedupTable::lookup(typeArrayOop value, bool latin1, unsigned int hash, StringDedupEntry** list, uintx &count) {
   for (StringDedupEntry* entry = *list; entry != NULL; entry = entry->next()) {
     if (entry->hash() == hash && entry->latin1() == latin1) {
       oop* obj_addr = (oop*)entry->obj_addr();

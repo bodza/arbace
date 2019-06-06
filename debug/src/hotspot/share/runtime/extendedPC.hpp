@@ -11,9 +11,9 @@ class ExtendedPC {
   address _pc;
 
  public:
-  address pc() const { return _pc; }
-  ExtendedPC(address pc) { _pc  = pc; }
-  ExtendedPC()           { _pc  = NULL; }
+  address pc() const     { return _pc; }
+  ExtendedPC(address pc) { _pc = pc; }
+  ExtendedPC()           { _pc = NULL; }
 };
 
 #endif

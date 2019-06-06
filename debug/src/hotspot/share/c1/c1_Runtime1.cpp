@@ -19,7 +19,6 @@
 #include "gc/shared/c1/barrierSetC1.hpp"
 #include "gc/shared/collectedHeap.hpp"
 #include "interpreter/bytecode.hpp"
-#include "interpreter/interpreter.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
@@ -92,7 +91,7 @@ static void deopt_caller() {
     RegisterMap reg_map(thread, false);
     frame runtime_frame = thread->last_frame();
     frame caller_frame = runtime_frame.sender(&reg_map);
-    Deoptimization::deoptimize_frame(thread, caller_frame.id());
+    NULL::NULL(thread, caller_frame.id());
   }
 }
 
@@ -175,7 +174,6 @@ const char* Runtime1::name_for_address(address entry) {
 
   FUNCTION_CASE(entry, os::javaTimeMillis);
   FUNCTION_CASE(entry, os::javaTimeNanos);
-  FUNCTION_CASE(entry, SharedRuntime::OSR_migration_end);
   FUNCTION_CASE(entry, SharedRuntime::d2f);
   FUNCTION_CASE(entry, SharedRuntime::d2i);
   FUNCTION_CASE(entry, SharedRuntime::d2l);
@@ -324,7 +322,7 @@ JRT_BLOCK_ENTRY(address, Runtime1::counter_overflow(JavaThread* thread, int bci,
     if (osr_nm != NULL) {
       RegisterMap map(thread, false);
       frame fr =  thread->last_frame().sender(&map);
-      Deoptimization::deoptimize_frame(thread, fr.id());
+      NULL::NULL(thread, fr.id());
     }
   JRT_BLOCK_END
   return NULL;
@@ -439,7 +437,7 @@ address Runtime1::exception_handler_for_pc(JavaThread* thread) {
   // Now check to see if the nmethod we were called from is now deoptimized.
   // If so we must return to the deopt blob and deoptimize the nmethod
   if (nm != NULL && caller_is_deopted()) {
-    continuation = SharedRuntime::deopt_blob()->unpack_with_exception_in_tls();
+    continuation = SharedRuntime::NULL()->unpack_with_exception_in_tls();
   }
 
   return continuation;
@@ -517,13 +515,13 @@ JRT_ENTRY(void, Runtime1::deoptimize(JavaThread* thread, jint trap_request))
   frame caller_frame = stub_frame.sender(&reg_map);
   nmethod* nm = caller_frame.cb()->as_nmethod_or_null();
   methodHandle method(thread, nm->method());
-  Deoptimization::DeoptAction action = Deoptimization::trap_request_action(trap_request);
-  Deoptimization::DeoptReason reason = Deoptimization::trap_request_reason(trap_request);
+  NULL::NULL action = NULL::trap_request_action(trap_request);
+  NULL::NULL reason = NULL::trap_request_reason(trap_request);
 
-  if (action == Deoptimization::Action_make_not_entrant) {
+  if (action == NULL::Action_make_not_entrant) {
     if (nm->make_not_entrant()) {
-      if (reason == Deoptimization::Reason_tenured) {
-        MethodData* trap_mdo = Deoptimization::get_method_data(thread, method, true /*create_if_missing*/);
+      if (reason == NULL::Reason_tenured) {
+        MethodData* trap_mdo = NULL::get_method_data(thread, method, true /*create_if_missing*/);
         if (trap_mdo != NULL) {
           trap_mdo->inc_tenure_traps();
         }
@@ -532,7 +530,7 @@ JRT_ENTRY(void, Runtime1::deoptimize(JavaThread* thread, jint trap_request))
   }
 
   // Deoptimize the caller frame.
-  Deoptimization::deoptimize_frame(thread, caller_frame.id());
+  NULL::NULL(thread, caller_frame.id());
   // Return to the now deoptimized frame.
 JRT_END
 
@@ -765,7 +763,7 @@ JRT_ENTRY(void, Runtime1::patch_code(JavaThread* thread, Runtime1::StubID stub_i
     // At compile time we assumed the field wasn't volatile/atomic but after
     // loading it turns out it was volatile/atomic so we have to throw the
     // compiled code out and let it be regenerated.
-    if (TracePatching) {
+    if (false) {
       if (deoptimize_for_volatile) {
         tty->print_cr("Deoptimizing for patching volatile field reference");
       }
@@ -781,7 +779,7 @@ JRT_ENTRY(void, Runtime1::patch_code(JavaThread* thread, Runtime1::StubID stub_i
       nm->make_not_entrant();
     }
 
-    Deoptimization::deoptimize_frame(thread, caller_frame.id());
+    NULL::NULL(thread, caller_frame.id());
 
     // Return to the now deoptimized frame.
   }
@@ -791,7 +789,7 @@ JRT_ENTRY(void, Runtime1::patch_code(JavaThread* thread, Runtime1::StubID stub_i
   {
     MutexLockerEx ml_patch (Patching_lock, Mutex::_no_safepoint_check_flag);
     //
-    // Deoptimization may have happened while we waited for the lock.
+    // NULL may have happened while we waited for the lock.
     // In that case we don't bother to do any patching we just return
     // and let the deopt happen
     if (!caller_is_deopted()) {
@@ -818,7 +816,7 @@ JRT_ENTRY(void, Runtime1::patch_code(JavaThread* thread, Runtime1::StubID stub_i
         unsigned char* being_initialized_entry_offset = (unsigned char*) (stub_location - 3);
         address copy_buff = stub_location - *byte_skip - *byte_count;
         address being_initialized_entry = stub_location - *being_initialized_entry_offset;
-        if (TracePatching) {
+        if (false) {
           ttyLocker ttyl;
           tty->print_cr(" Patching %s at bci %d at address " INTPTR_FORMAT "  (%s)", Bytecodes::name(code), bci,
                         p2i(instr_pc), (stub_id == Runtime1::access_field_patching_id) ? "field" : "klass");
@@ -861,7 +859,7 @@ JRT_ENTRY(void, Runtime1::patch_code(JavaThread* thread, Runtime1::StubID stub_i
               n_copy->set_data(cast_from_oop<intx>(mirror()));
             }
 
-            if (TracePatching) {
+            if (false) {
               Disassembler::decode(copy_buff, copy_buff + *byte_count, tty);
             }
           }
@@ -869,7 +867,7 @@ JRT_ENTRY(void, Runtime1::patch_code(JavaThread* thread, Runtime1::StubID stub_i
           NativeMovConstReg* n_copy = nativeMovConstReg_at(copy_buff);
           n_copy->set_data(cast_from_oop<intx>(appendix()));
 
-          if (TracePatching) {
+          if (false) {
             Disassembler::decode(copy_buff, copy_buff + *byte_count, tty);
           }
         } else {
@@ -947,7 +945,7 @@ JRT_END
 JRT_ENTRY(void, Runtime1::patch_code(JavaThread* thread, Runtime1::StubID stub_id ))
   RegisterMap reg_map(thread, false);
 
-  if (TracePatching) {
+  if (false) {
     tty->print_cr("Deoptimizing because patch is needed");
   }
 
@@ -961,7 +959,7 @@ JRT_ENTRY(void, Runtime1::patch_code(JavaThread* thread, Runtime1::StubID stub_i
     nm->make_not_entrant();
   }
 
-  Deoptimization::deoptimize_frame(thread, caller_frame.id());
+  NULL::NULL(thread, caller_frame.id());
 
   // Return to the now deoptimized frame.
 JRT_END
@@ -1098,10 +1096,10 @@ JRT_ENTRY(void, Runtime1::predicate_failed_trap(JavaThread* thread))
   }
 
   if (mdo != NULL) {
-    mdo->inc_trap_count(Deoptimization::Reason_none);
+    mdo->inc_trap_count(NULL::Reason_none);
   }
 
-  if (TracePredicateFailedTraps) {
+  if (false) {
     stringStream ss1, ss2;
     vframeStream vfst(thread);
     methodHandle inlinee = methodHandle(vfst.method());
@@ -1110,5 +1108,5 @@ JRT_ENTRY(void, Runtime1::predicate_failed_trap(JavaThread* thread))
     tty->print_cr("Predicate failed trap in method %s at bci %d inlined in %s at pc " INTPTR_FORMAT, ss1.as_string(), vfst.bci(), ss2.as_string(), p2i(caller_frame.pc()));
   }
 
-  Deoptimization::deoptimize_frame(thread, caller_frame.id());
+  NULL::NULL(thread, caller_frame.id());
 JRT_END

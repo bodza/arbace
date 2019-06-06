@@ -362,23 +362,15 @@ ciKlass* ciEnv::get_klass_by_name_impl(ciKlass* accessing_klass,
 
 // ------------------------------------------------------------------
 // ciEnv::get_klass_by_name
-ciKlass* ciEnv::get_klass_by_name(ciKlass* accessing_klass,
-                                  ciSymbol* klass_name,
-                                  bool require_local) {
-  GUARDED_VM_ENTRY(return get_klass_by_name_impl(accessing_klass,
-                                                 constantPoolHandle(),
-                                                 klass_name,
-                                                 require_local);)
+ciKlass* ciEnv::get_klass_by_name(ciKlass* accessing_klass, ciSymbol* klass_name, bool require_local) {
+  GUARDED_VM_ENTRY(return get_klass_by_name_impl(accessing_klass, constantPoolHandle(), klass_name, require_local);)
 }
 
 // ------------------------------------------------------------------
 // ciEnv::get_klass_by_index_impl
 //
 // Implementation of get_klass_by_index.
-ciKlass* ciEnv::get_klass_by_index_impl(const constantPoolHandle& cpool,
-                                        int index,
-                                        bool& is_accessible,
-                                        ciInstanceKlass* accessor) {
+ciKlass* ciEnv::get_klass_by_index_impl(const constantPoolHandle& cpool, int index, bool& is_accessible, ciInstanceKlass* accessor) {
   EXCEPTION_CONTEXT;
   Klass* klass = NULL;
   Symbol* klass_name = NULL;
@@ -396,10 +388,7 @@ ciKlass* ciEnv::get_klass_by_index_impl(const constantPoolHandle& cpool,
 
   if (klass == NULL) {
     // Not found in constant pool.  Use the name to do the lookup.
-    ciKlass* k = get_klass_by_name_impl(accessor,
-                                        cpool,
-                                        get_symbol(klass_name),
-                                        false);
+    ciKlass* k = get_klass_by_name_impl(accessor, cpool, get_symbol(klass_name), false);
     // Calculate accessibility the hard way.
     if (!k->is_loaded()) {
       is_accessible = false;
@@ -431,10 +420,7 @@ ciKlass* ciEnv::get_klass_by_index_impl(const constantPoolHandle& cpool,
 // ciEnv::get_klass_by_index
 //
 // Get a klass from the constant pool.
-ciKlass* ciEnv::get_klass_by_index(const constantPoolHandle& cpool,
-                                   int index,
-                                   bool& is_accessible,
-                                   ciInstanceKlass* accessor) {
+ciKlass* ciEnv::get_klass_by_index(const constantPoolHandle& cpool, int index, bool& is_accessible, ciInstanceKlass* accessor) {
   GUARDED_VM_ENTRY(return get_klass_by_index_impl(cpool, index, is_accessible, accessor);)
 }
 
@@ -442,9 +428,7 @@ ciKlass* ciEnv::get_klass_by_index(const constantPoolHandle& cpool,
 // ciEnv::get_constant_by_index_impl
 //
 // Implementation of get_constant_by_index().
-ciConstant ciEnv::get_constant_by_index_impl(const constantPoolHandle& cpool,
-                                             int pool_index, int cache_index,
-                                             ciInstanceKlass* accessor) {
+ciConstant ciEnv::get_constant_by_index_impl(const constantPoolHandle& cpool, int pool_index, int cache_index, ciInstanceKlass* accessor) {
   bool ignore_will_link;
   EXCEPTION_CONTEXT;
   int index = pool_index;
@@ -561,8 +545,7 @@ ciConstant ciEnv::get_constant_by_index(const constantPoolHandle& cpool,
 //
 // Implementation note: the results of field lookups are cached
 // in the accessor klass.
-ciField* ciEnv::get_field_by_index_impl(ciInstanceKlass* accessor,
-                                        int index) {
+ciField* ciEnv::get_field_by_index_impl(ciInstanceKlass* accessor, int index) {
   ciConstantPoolCache* cache = accessor->field_cache();
   if (cache == NULL) {
     ciField* field = new (arena()) ciField(accessor, index);
@@ -581,8 +564,7 @@ ciField* ciEnv::get_field_by_index_impl(ciInstanceKlass* accessor,
 // ciEnv::get_field_by_index
 //
 // Get a field by index from a klass's constant pool.
-ciField* ciEnv::get_field_by_index(ciInstanceKlass* accessor,
-                                   int index) {
+ciField* ciEnv::get_field_by_index(ciInstanceKlass* accessor, int index) {
   GUARDED_VM_ENTRY(return get_field_by_index_impl(accessor, index);)
 }
 
@@ -617,9 +599,7 @@ Method* ciEnv::lookup_method(ciInstanceKlass* accessor, ciKlass* holder, Symbol*
 
 // ------------------------------------------------------------------
 // ciEnv::get_method_by_index_impl
-ciMethod* ciEnv::get_method_by_index_impl(const constantPoolHandle& cpool,
-                                          int index, Bytecodes::Code bc,
-                                          ciInstanceKlass* accessor) {
+ciMethod* ciEnv::get_method_by_index_impl(const constantPoolHandle& cpool, int index, Bytecodes::Code bc, ciInstanceKlass* accessor) {
   if (bc == Bytecodes::_invokedynamic) {
     ConstantPoolCacheEntry* cpce = cpool->invokedynamic_cp_cache_entry_at(index);
     bool is_resolved = !cpce->is_f1_null();
@@ -721,9 +701,7 @@ ciInstanceKlass* ciEnv::get_instance_klass_for_declared_method_holder(ciKlass* m
 
 // ------------------------------------------------------------------
 // ciEnv::get_method_by_index
-ciMethod* ciEnv::get_method_by_index(const constantPoolHandle& cpool,
-                                     int index, Bytecodes::Code bc,
-                                     ciInstanceKlass* accessor) {
+ciMethod* ciEnv::get_method_by_index(const constantPoolHandle& cpool, int index, Bytecodes::Code bc, ciInstanceKlass* accessor) {
   GUARDED_VM_ENTRY(return get_method_by_index_impl(cpool, index, bc, accessor);)
 }
 
@@ -820,15 +798,7 @@ void ciEnv::register_method(ciMethod* target, int entry_bci, CodeOffsets* offset
       return;
     }
 
-    nm =  nmethod::new_nmethod(method,
-                               compile_id(),
-                               entry_bci,
-                               offsets,
-                               orig_pc_offset,
-                               debug_info(), dependencies(), code_buffer,
-                               frame_words, oop_map_set,
-                               handler_table, inc_table,
-                               compiler, task()->comp_level());
+    nm =  nmethod::new_nmethod(method, compile_id(), entry_bci, offsets, orig_pc_offset, debug_info(), dependencies(), code_buffer, frame_words, oop_map_set, handler_table, inc_table, compiler, task()->comp_level());
 
     // Free codeBlobs
     code_buffer->free_blob();
@@ -847,13 +817,6 @@ void ciEnv::register_method(ciMethod* target, int entry_bci, CodeOffsets* offset
       }
 
       if (entry_bci == InvocationEntryBci) {
-        if (TieredCompilation) {
-          // If there is an old version we're done with it
-          CompiledMethod* old = method->code();
-          if (old != NULL) {
-            old->make_not_used();
-          }
-        }
         // Allow the code to be executed
         method->set_code(method, nm);
       } else {

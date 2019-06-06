@@ -354,7 +354,7 @@ JRT_END
  *              log2(x) = w1 + w2,
  *         where w1 has 53-24 = 29 bit trailing zeros.
  *      2. Perform y*log2(x) = n+y' by simulating muti-precision
- *         arithmetic, where |y'|<=0.5.
+ *         arithmetic, where |y'| <= 0.5.
  *      3. Return x**y = 2**n*exp(y'*log2)
  *
  * Special cases:
@@ -624,7 +624,7 @@ double __ieee754_pow(double x, double y) {
   z  = one-(r-z);
   j  = high(z);
   j += (n << 20);
-  if ((j >> 20)<=0) z = scalbnA(z,n);       /* subnormal output */
+  if ((j >> 20) <= 0) z = scalbnA(z,n);       /* subnormal output */
   else set_high(&z, high(z) + (n << 20));
   return s*z;
 }

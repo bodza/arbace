@@ -941,8 +941,7 @@ bind(compute_size_end1);
   }
 }
 
-void MacroAssembler::sha512_AVX2_one_round_compute(Register  old_h, Register a, Register b, Register c, Register d, Register e, Register f, Register g, Register h, int iteration)
-{
+void MacroAssembler::sha512_AVX2_one_round_compute(Register  old_h, Register a, Register b, Register c, Register d, Register e, Register f, Register g, Register h, int iteration) {
     const Register& y0 = r13;
     const Register& y1 = r14;
     const Register& y2 = r15;

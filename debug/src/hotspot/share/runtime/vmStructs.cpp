@@ -22,7 +22,6 @@
 #include "compiler/oopMap.hpp"
 #include "gc/shared/vmStructs_gc.hpp"
 #include "interpreter/bytecodes.hpp"
-#include "interpreter/interpreter.hpp"
 #include "memory/allocation.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/heap.hpp"
@@ -55,7 +54,6 @@
 #include "oops/typeArrayKlass.hpp"
 #include "oops/typeArrayOop.hpp"
 #include "runtime/arguments.hpp"
-#include "runtime/deoptimization.hpp"
 #include "runtime/flags/jvmFlag.hpp"
 #include "runtime/globals.hpp"
 #include "runtime/java.hpp"
@@ -174,7 +172,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   nonstatic_field(InstanceKlass,               _init_thread,                                  Thread*) \
   nonstatic_field(InstanceKlass,               _itable_len,                                   int) \
   nonstatic_field(InstanceKlass,               _reference_type,                               u1) \
-  volatile_nonstatic_field(InstanceKlass,      _oop_map_cache,                                OopMapCache*) \
   nonstatic_field(InstanceKlass,               _jni_ids,                                      JNIid*) \
   nonstatic_field(InstanceKlass,               _osr_nmethods_head,                            nmethod*) \
   nonstatic_field(InstanceKlass,               _generic_signature_index,                      u2) \
@@ -458,12 +455,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   nonstatic_field(HeapBlock::Header,           _length,                                       size_t) \
   nonstatic_field(HeapBlock::Header,           _used,                                         bool) \
  \
-  /**********************************/ \
-  /* Interpreter (NOTE: incomplete) */ \
-  /**********************************/ \
- \
-     static_field(AbstractInterpreter,         _code,                                         StubQueue*) \
- \
   /****************************/ \
   /* Stubs (NOTE: incomplete) */ \
   /****************************/ \
@@ -473,9 +464,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   nonstatic_field(StubQueue,                   _queue_begin,                                  int) \
   nonstatic_field(StubQueue,                   _queue_end,                                    int) \
   nonstatic_field(StubQueue,                   _number_of_stubs,                              int) \
-  nonstatic_field(InterpreterCodelet,          _size,                                         int) \
-  nonstatic_field(InterpreterCodelet,          _description,                                  const char*) \
-  nonstatic_field(InterpreterCodelet,          _bytecode,                                     Bytecodes::Code) \
  \
   /***********************************/ \
   /* StubRoutines (NOTE: incomplete) */ \
@@ -540,7 +528,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
  \
      static_field(SharedRuntime,               _wrong_method_blob,                            RuntimeStub*) \
      static_field(SharedRuntime,               _ic_miss_blob,                                 RuntimeStub*) \
-     static_field(SharedRuntime,               _deopt_blob,                                   DeoptimizationBlob*) \
  \
   /***************************************/ \
   /* PcDesc and other compiled code info */ \
@@ -566,8 +553,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   nonstatic_field(CodeBlob,                 _code_end,                               address) \
   nonstatic_field(CodeBlob,                 _content_begin,                          address) \
   nonstatic_field(CodeBlob,                 _data_end,                               address) \
- \
-  nonstatic_field(DeoptimizationBlob,          _unpack_offset,                                int) \
  \
   nonstatic_field(RuntimeStub,                 _caller_must_gc_arguments,                     bool) \
  \
@@ -608,20 +593,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   volatile_nonstatic_field(nmethod,            _stack_traversal_mark,                         long) \
   nonstatic_field(nmethod,                     _compile_id,                                   int) \
   nonstatic_field(nmethod,                     _comp_level,                                   int) \
- \
-  unchecked_c2_static_field(Deoptimization,    _trap_reason_name,                             void*) \
- \
-  nonstatic_field(Deoptimization::UnrollBlock, _size_of_deoptimized_frame,                    int) \
-  nonstatic_field(Deoptimization::UnrollBlock, _caller_adjustment,                            int) \
-  nonstatic_field(Deoptimization::UnrollBlock, _number_of_frames,                             int) \
-  nonstatic_field(Deoptimization::UnrollBlock, _total_frame_sizes,                            int) \
-  nonstatic_field(Deoptimization::UnrollBlock, _unpack_kind,                                  int) \
-  nonstatic_field(Deoptimization::UnrollBlock, _frame_sizes,                                  intptr_t*) \
-  nonstatic_field(Deoptimization::UnrollBlock, _frame_pcs,                                    address*) \
-  nonstatic_field(Deoptimization::UnrollBlock, _register_block,                               intptr_t*) \
-  nonstatic_field(Deoptimization::UnrollBlock, _return_type,                                  BasicType) \
-  nonstatic_field(Deoptimization::UnrollBlock, _initial_info,                                 intptr_t) \
-  nonstatic_field(Deoptimization::UnrollBlock, _caller_actual_parameters,                     int) \
  \
   /********************************/ \
   /* JavaCalls (NOTE: incomplete) */ \
@@ -1241,12 +1212,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   declare_toplevel_type(OSThread) \
   declare_toplevel_type(JavaFrameAnchor) \
  \
-  /***************/ \
-  /* Interpreter */ \
-  /***************/ \
- \
-  declare_toplevel_type(AbstractInterpreter) \
- \
   /*********/ \
   /* Stubs */ \
   /*********/ \
@@ -1254,7 +1219,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   declare_toplevel_type(StubQueue) \
   declare_toplevel_type(StubRoutines) \
   declare_toplevel_type(Stub) \
-           declare_type(InterpreterCodelet, Stub) \
  \
   /*************/ \
   /* JavaCalls */ \
@@ -1294,9 +1258,7 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   declare_type(RuntimeStub,              RuntimeBlob) \
   declare_type(SingletonBlob,            RuntimeBlob) \
   declare_type(SafepointBlob,            SingletonBlob) \
-  declare_type(DeoptimizationBlob,       SingletonBlob) \
   declare_c2_type(ExceptionBlob,         SingletonBlob) \
-  declare_c2_type(UncommonTrapBlob,      RuntimeBlob) \
  \
   /***************************************/ \
   /* PcDesc and other compiled code info */ \
@@ -1307,8 +1269,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   declare_toplevel_type(PcDescCache) \
   declare_toplevel_type(Dependencies) \
   declare_toplevel_type(CompileTask) \
-  declare_toplevel_type(Deoptimization) \
-  declare_toplevel_type(Deoptimization::UnrollBlock) \
  \
   /************************/ \
   /* OopMap and OopMapSet */ \
@@ -1831,7 +1791,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   declare_toplevel_type(PaddedObjectMonitor*) \
   declare_toplevel_type(oop*) \
   declare_toplevel_type(OopMap**) \
-  declare_toplevel_type(OopMapCache*) \
   declare_toplevel_type(OopMapSet*) \
   declare_toplevel_type(VMReg) \
   declare_toplevel_type(OSThread*) \
@@ -2192,64 +2151,11 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   declare_constant(Location::on_stack) \
   declare_constant(Location::in_register) \
  \
-  declare_constant(Deoptimization::Reason_many) \
-  declare_constant(Deoptimization::Reason_none) \
-  declare_constant(Deoptimization::Reason_null_check) \
-  declare_constant(Deoptimization::Reason_null_assert) \
-  declare_constant(Deoptimization::Reason_range_check) \
-  declare_constant(Deoptimization::Reason_class_check) \
-  declare_constant(Deoptimization::Reason_array_check) \
-  declare_constant(Deoptimization::Reason_intrinsic) \
-  declare_constant(Deoptimization::Reason_bimorphic) \
-  declare_constant(Deoptimization::Reason_profile_predicate) \
-  declare_constant(Deoptimization::Reason_unloaded) \
-  declare_constant(Deoptimization::Reason_uninitialized) \
-  declare_constant(Deoptimization::Reason_unreached) \
-  declare_constant(Deoptimization::Reason_unhandled) \
-  declare_constant(Deoptimization::Reason_constraint) \
-  declare_constant(Deoptimization::Reason_div0_check) \
-  declare_constant(Deoptimization::Reason_age) \
-  declare_constant(Deoptimization::Reason_predicate) \
-  declare_constant(Deoptimization::Reason_loop_limit_check) \
-  declare_constant(Deoptimization::Reason_speculate_class_check) \
-  declare_constant(Deoptimization::Reason_speculate_null_check) \
-  declare_constant(Deoptimization::Reason_speculate_null_assert) \
-  declare_constant(Deoptimization::Reason_rtm_state_change) \
-  declare_constant(Deoptimization::Reason_unstable_if) \
-  declare_constant(Deoptimization::Reason_unstable_fused_if) \
-  declare_constant(Deoptimization::Reason_aliasing) \
-  declare_constant(Deoptimization::Reason_transfer_to_interpreter) \
-  declare_constant(Deoptimization::Reason_not_compiled_exception_handler) \
-  declare_constant(Deoptimization::Reason_unresolved) \
-  declare_constant(Deoptimization::Reason_jsr_mismatch) \
-  declare_constant(Deoptimization::Reason_tenured) \
-  declare_constant(Deoptimization::Reason_LIMIT) \
-  declare_constant(Deoptimization::Reason_RECORDED_LIMIT) \
- \
-  declare_constant(Deoptimization::Action_none) \
-  declare_constant(Deoptimization::Action_maybe_recompile) \
-  declare_constant(Deoptimization::Action_reinterpret) \
-  declare_constant(Deoptimization::Action_make_not_entrant) \
-  declare_constant(Deoptimization::Action_make_not_compilable) \
-  declare_constant(Deoptimization::Action_LIMIT) \
- \
   /***************************************************/ \
   /* DEFAULT_CACHE_LINE_SIZE (globalDefinitions.hpp) */ \
   /***************************************************/ \
  \
   declare_preprocessor_constant("DEFAULT_CACHE_LINE_SIZE", DEFAULT_CACHE_LINE_SIZE) \
- \
-  declare_constant(Deoptimization::Unpack_deopt) \
-  declare_constant(Deoptimization::Unpack_exception) \
-  declare_constant(Deoptimization::Unpack_uncommon_trap) \
-  declare_constant(Deoptimization::Unpack_reexecute) \
- \
-  declare_constant(Deoptimization::_action_bits) \
-  declare_constant(Deoptimization::_reason_bits) \
-  declare_constant(Deoptimization::_debug_id_bits) \
-  declare_constant(Deoptimization::_action_shift) \
-  declare_constant(Deoptimization::_reason_shift) \
-  declare_constant(Deoptimization::_debug_id_shift) \
  \
   /******************************************/ \
   /* BasicType enum (globalDefinitions.hpp) */ \

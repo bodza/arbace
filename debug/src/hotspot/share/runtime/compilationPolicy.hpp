@@ -102,6 +102,4 @@ class SimpleCompPolicy : public NonTieredCompPolicy {
   virtual void method_back_branch_event(const methodHandle& m, int bci, JavaThread* thread);
 };
 
-// StackWalkCompPolicy - existing C2 policy
-
 #endif

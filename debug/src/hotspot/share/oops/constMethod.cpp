@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "interpreter/interpreter.hpp"
 #include "memory/heapInspection.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/metaspaceClosure.hpp"

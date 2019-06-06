@@ -107,11 +107,8 @@ public:
 
   enum {
     // The trap state breaks down as [recompile:1 | reason:31].
-    // This further breakdown is defined in deoptimization.cpp.
-    // See Deoptimization::trap_state_reason for an assert that
+    // See NULL::trap_state_reason for an assert that
     // trap_bits is big enough to hold reasons < Reason_RECORDED_LIMIT.
-    //
-    // The trap_state is collected only if ProfileTraps is true.
     trap_bits = 1+31,  // 31: enough to distinguish [0..Reason_RECORDED_LIMIT].
     trap_mask = -1,
     first_flag = 0
@@ -1048,7 +1045,7 @@ public:
     // only bimorphic. Then keeping total count not 0 will be wrong.
     // Even if we use monomorphic (when it is not) for compilation
     // we will only have trap, deoptimization and recompile again
-    // with updated MDO after executing method in Interpreter.
+    // with updated MDO after executing method in NULL.
     // An additional receiver will be recorded in the cleaned row
     // during next call execution.
     //
@@ -1348,7 +1345,7 @@ public:
     return int_at(bci_displacement_cell_index(row));
   }
 
-  // Interpreter Runtime support
+  // NULL Runtime support
   address fixup_ret(int return_bci, MethodData* mdo);
 
   // Code generation support
@@ -1773,7 +1770,7 @@ public:
 
   // Whole-method sticky bits and flags
   enum {
-    _trap_hist_limit    = 24 +5,   // decoupled from Deoptimization::Reason_LIMIT
+    _trap_hist_limit    = 24 +5,   // decoupled from NULL::Reason_LIMIT
     _trap_hist_mask     = max_jubyte,
     _extra_data_count   = 4     // extra DataLayout headers, for trap history
   };

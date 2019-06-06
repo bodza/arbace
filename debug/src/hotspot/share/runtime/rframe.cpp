@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "code/codeCache.hpp"
-#include "interpreter/interpreter.hpp"
 #include "oops/method.inline.hpp"
 #include "oops/oop.inline.hpp"
 #include "oops/symbol.hpp"
@@ -24,16 +23,14 @@ void RFrame::set_distance(int d) {
   _distance = d;
 }
 
-InterpretedRFrame::InterpretedRFrame(frame fr, JavaThread* thread, RFrame*const callee)
-: RFrame(fr, thread, callee) {
+InterpretedRFrame::InterpretedRFrame(frame fr, JavaThread* thread, RFrame*const callee) : RFrame(fr, thread, callee) {
   RegisterMap map(thread, false);
   _vf     = javaVFrame::cast(vframe::new_vframe(&_fr, &map, thread));
   _method = _vf->method();
   init();
 }
 
-InterpretedRFrame::InterpretedRFrame(frame fr, JavaThread* thread, Method* m)
-: RFrame(fr, thread, NULL) {
+InterpretedRFrame::InterpretedRFrame(frame fr, JavaThread* thread, Method* m) : RFrame(fr, thread, NULL) {
   RegisterMap map(thread, false);
   _vf     = javaVFrame::cast(vframe::new_vframe(&_fr, &map, thread));
   _method = m;
@@ -41,26 +38,20 @@ InterpretedRFrame::InterpretedRFrame(frame fr, JavaThread* thread, Method* m)
   init();
 }
 
-CompiledRFrame::CompiledRFrame(frame fr, JavaThread* thread, RFrame*const  callee)
-: RFrame(fr, thread, callee) {
+CompiledRFrame::CompiledRFrame(frame fr, JavaThread* thread, RFrame*const  callee) : RFrame(fr, thread, callee) {
   init();
 }
 
-CompiledRFrame::CompiledRFrame(frame fr, JavaThread* thread)
-: RFrame(fr, thread, NULL) {
+CompiledRFrame::CompiledRFrame(frame fr, JavaThread* thread) : RFrame(fr, thread, NULL) {
   init();
 }
 
-DeoptimizedRFrame::DeoptimizedRFrame(frame fr, JavaThread* thread, RFrame* const callee)
-: InterpretedRFrame(fr, thread, callee) { }
+DeoptimizedRFrame::DeoptimizedRFrame(frame fr, JavaThread* thread, RFrame* const callee) : InterpretedRFrame(fr, thread, callee) { }
 
 RFrame* RFrame::new_RFrame(frame fr, JavaThread* thread, RFrame* const callee) {
   RFrame* rf = NULL;
   int dist = callee ? callee->distance() : -1;
-  if (fr.is_interpreted_frame()) {
-    rf = new InterpretedRFrame(fr, thread, callee);
-    dist++;
-  } else if (fr.is_compiled_frame()) {
+  if (fr.is_compiled_frame()) {
     // Even deopted frames look compiled because the deopt
     // is invisible until it happens.
     rf = new CompiledRFrame(fr, thread, callee);

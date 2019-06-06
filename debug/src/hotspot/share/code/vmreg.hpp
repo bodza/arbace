@@ -90,7 +90,7 @@ public:
   }
 
   // Convert register numbers to stack slots and vice versa
-  static VMReg stack2reg( int idx ) {
+  static VMReg stack2reg(int idx) {
     return (VMReg) (intptr_t) (stack0->value() + idx);
   }
 
@@ -118,14 +118,12 @@ private:
   VMReg _second;
   VMReg _first;
 public:
-  void set_bad (                   ) { _second=VMRegImpl::Bad(); _first=VMRegImpl::Bad(); }
-  void set1    (         VMReg v  ) { _second=VMRegImpl::Bad(); _first=v; }
-  void set2    (         VMReg v  ) { _second=v->next();  _first=v; }
-  void set_pair( VMReg second, VMReg first    ) { _second= second;    _first= first; }
-  void set_ptr ( VMReg ptr ) {
-    _second = ptr->next();
-    _first = ptr;
-  }
+  void set_bad()                           { _second=VMRegImpl::Bad(); _first=VMRegImpl::Bad(); }
+  void set1(VMReg v)                       { _second=VMRegImpl::Bad(); _first=v; }
+  void set2(VMReg v)                       { _second=v->next();        _first=v; }
+  void set_pair(VMReg second, VMReg first) { _second= second;          _first= first; }
+  void set_ptr(VMReg ptr)                  { _second = ptr->next();    _first = ptr; }
+
   // Return true if single register, even if the pair is really just adjacent stack slots
   bool is_single_reg() const {
     return (_first->is_valid()) && (_first->value() + 1 == _second->value());

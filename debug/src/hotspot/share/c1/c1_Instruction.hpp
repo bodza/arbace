@@ -1297,25 +1297,25 @@ BASE(TypeCheck, StateSplit)
   }
 
   // accessors
-  ciKlass* klass() const                         { return _klass; }
-  Value obj() const                              { return _obj; }
-  bool is_loaded() const                         { return klass() != NULL; }
-  bool direct_compare() const                    { return check_flag(DirectCompareFlag); }
+  ciKlass* klass() const                        { return _klass; }
+  Value obj() const                             { return _obj; }
+  bool is_loaded() const                        { return klass() != NULL; }
+  bool direct_compare() const                   { return check_flag(DirectCompareFlag); }
 
   // manipulation
-  void set_direct_compare(bool flag)             { set_flag(DirectCompareFlag, flag); }
+  void set_direct_compare(bool flag)            { set_flag(DirectCompareFlag, flag); }
 
   // generic
-  virtual bool can_trap() const                  { return true; }
-  virtual void input_values_do(ValueVisitor* f)   { StateSplit::input_values_do(f); f->visit(&_obj); }
+  virtual bool can_trap() const                 { return true; }
+  virtual void input_values_do(ValueVisitor* f) { StateSplit::input_values_do(f); f->visit(&_obj); }
 
   // Helpers for MethodData* profiling
-  void set_should_profile(bool value)                { set_flag(ProfileMDOFlag, value); }
-  void set_profiled_method(ciMethod* method)         { _profiled_method = method; }
-  void set_profiled_bci(int bci)                     { _profiled_bci = bci; }
-  bool      should_profile() const                   { return check_flag(ProfileMDOFlag); }
-  ciMethod* profiled_method() const                  { return _profiled_method; }
-  int       profiled_bci() const                     { return _profiled_bci; }
+  void set_should_profile(bool value)           { set_flag(ProfileMDOFlag, value); }
+  void set_profiled_method(ciMethod* method)    { _profiled_method = method; }
+  void set_profiled_bci(int bci)                { _profiled_bci = bci; }
+  bool      should_profile() const              { return check_flag(ProfileMDOFlag); }
+  ciMethod* profiled_method() const             { return _profiled_method; }
+  int       profiled_bci() const                { return _profiled_bci; }
 };
 
 LEAF(CheckCast, TypeCheck)
@@ -1414,13 +1414,7 @@ LEAF(Intrinsic, StateSplit)
   // block after the Intrinsic, all of the registers are intact. This
   // allows load elimination and common expression elimination to be
   // performed across the Intrinsic.  The default value is false.
-  Intrinsic(ValueType* type,
-            vmIntrinsics::ID id,
-            Values* args,
-            bool has_receiver,
-            ValueStack* state_before,
-            bool preserves_state,
-            bool cantrap = true)
+  Intrinsic(ValueType* type, vmIntrinsics::ID id, Values* args, bool has_receiver, ValueStack* state_before, bool preserves_state, bool cantrap = true)
   : StateSplit(type, state_before)
   , _id(id)
   , _args(args)
@@ -1441,13 +1435,13 @@ LEAF(Intrinsic, StateSplit)
   }
 
   // accessors
-  vmIntrinsics::ID id() const                    { return _id; }
-  int number_of_arguments() const                { return _args->length(); }
-  Value argument_at(int i) const                 { return _args->at(i); }
+  vmIntrinsics::ID id() const            { return _id; }
+  int number_of_arguments() const        { return _args->length(); }
+  Value argument_at(int i) const         { return _args->at(i); }
 
-  bool has_receiver() const                      { return (_recv != NULL); }
-  Value receiver() const                         { return _recv; }
-  bool preserves_state() const                   { return check_flag(PreservesStateFlag); }
+  bool has_receiver() const              { return (_recv != NULL); }
+  Value receiver() const                 { return _recv; }
+  bool preserves_state() const           { return check_flag(PreservesStateFlag); }
 
   bool arg_needs_null_check(int i) const {
     return _nonnull_state.arg_needs_null_check(i);
@@ -1458,7 +1452,7 @@ LEAF(Intrinsic, StateSplit)
   }
 
   // generic
-  virtual bool can_trap() const                  { return check_flag(CanTrapFlag); }
+  virtual bool can_trap() const          { return check_flag(CanTrapFlag); }
   virtual void input_values_do(ValueVisitor* f) {
     StateSplit::input_values_do(f);
     for (int i = 0; i < _args->length(); i++) f->visit(_args->adr_at(i));

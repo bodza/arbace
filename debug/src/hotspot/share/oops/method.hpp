@@ -221,8 +221,7 @@ class Method : public Metadata {
   // an IllegalAccessError (bugid 4307310) or an OutOfMemoryError.
   // If an exception is thrown, returns the bci of the
   // exception handler which caused the exception to be thrown, which
-  // is needed for proper retries. See, for example,
-  // InterpreterRuntime::exception_handler_for_exception.
+  // is needed for proper retries.
   static int fast_exception_handler_bci_for(const methodHandle& mh, Klass* ex_klass, int throw_bci, TRAPS);
 
   // method data access
@@ -255,16 +254,10 @@ class Method : public Metadata {
   static MethodCounters* build_method_counters(Method* m, TRAPS);
 
   int interpreter_invocation_count() {
-    if (TieredCompilation) {
-      return invocation_count();
-    } else {
-      MethodCounters* mcs = method_counters();
-      return (mcs == NULL) ? 0 : mcs->interpreter_invocation_count();
-    }
+    MethodCounters* mcs = method_counters();
+    return (mcs == NULL) ? 0 : mcs->interpreter_invocation_count();
   }
   int increment_interpreter_invocation_count(TRAPS) {
-    if (TieredCompilation)
-        ShouldNotReachHere();
     MethodCounters* mcs = get_method_counters(CHECK_0);
     return (mcs == NULL) ? 0 : mcs->increment_interpreter_invocation_count();
   }
@@ -318,8 +311,6 @@ class Method : public Metadata {
   int  itable_index() const                      { return itable_index_max - _vtable_index; }
   void set_itable_index(int index);
 
-  // interpreter entry
-  address interpreter_entry() const              { return _i2i_entry; }
   // Only used when first initialize so we can set _i2i_entry and _from_interpreted_entry
   void set_interpreter_entry(address entry) {
     if (_i2i_entry != entry) {
@@ -346,9 +337,6 @@ class Method : public Metadata {
   // signature handler (used for native methods only)
   address signature_handler() const              { return *(signature_handler_addr()); }
   void set_signature_handler(address handler);
-
-  // Interpreter oopmap support
-  void mask_for(int bci, InterpreterOopMap* mask);
 
   // operations on invocation counter
   void print_invocation_count();
@@ -536,7 +524,7 @@ class Method : public Metadata {
   // presize interpreter frames for extra interpreter stack entries, if needed
   // Account for the extra appendix argument for invokehandle/invokedynamic
   static int extra_stack_entries() { return extra_stack_entries_for_jsr292; }
-  static int extra_stack_words();  // = extra_stack_entries() * Interpreter::stackElementSize
+  static int extra_stack_words();  // = extra_stack_entries() * NULL::stackElementSize
 
   // RedefineClasses() support:
   bool is_old() const                               { return access_flags().is_old(); }

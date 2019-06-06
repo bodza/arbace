@@ -6,7 +6,6 @@
 #include "c1/c1_Canonicalizer.hpp"
 #include "c1/c1_ValueMap.hpp"
 #include "ci/ciMethodData.hpp"
-#include "runtime/deoptimization.hpp"
 
 // Macros for the Trace and the Assertion flag
 #define TRACE_RANGE_CHECK_ELIMINATION(code)

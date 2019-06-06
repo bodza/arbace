@@ -49,4 +49,3 @@ const char* HeapRegionType::get_short_str() const {
       return NULL; // keep some compilers happy
   }
 }
-}

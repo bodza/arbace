@@ -4,7 +4,6 @@
 #include "asm/assembler.inline.hpp"
 #include "gc/shared/cardTableBarrierSet.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
-#include "interpreter/interpreter.hpp"
 #include "memory/resourceArea.hpp"
 #include "prims/methodHandles.hpp"
 #include "runtime/biasedLocking.hpp"
@@ -472,7 +471,7 @@ void Assembler::emit_operand(Register reg, Register base, Register index, Addres
       emit_int8(0x04 | regenc);
       emit_int8(scale << 6 | indexenc | 0x05);
       emit_data(disp, rspec, disp32_operand);
-    } else if (rtype != relocInfo::none ) {
+    } else if (rtype != relocInfo::none) {
       // [disp] (64bit) RIP-RELATIVE (32bit) abs
       // [00 000 101] disp32
 
@@ -2409,13 +2408,13 @@ void Assembler::movlpd(XMMRegister dst, Address src) {
   emit_operand(dst, src);
 }
 
-void Assembler::movq( MMXRegister dst, Address src ) {
+void Assembler::movq(MMXRegister dst, Address src) {
   emit_int8(0x0F);
   emit_int8(0x6F);
   emit_operand(dst, src);
 }
 
-void Assembler::movq( Address dst, MMXRegister src ) {
+void Assembler::movq(Address dst, MMXRegister src) {
   emit_int8(0x0F);
   emit_int8(0x7F);
   // workaround gcc (3.2.1-7a) bug
@@ -6906,7 +6905,7 @@ bool Assembler::reachable(AddressLiteral adr) {
   if (adr.reloc() == relocInfo::virtual_call_type ||
       adr.reloc() == relocInfo::opt_virtual_call_type ||
       adr.reloc() == relocInfo::static_call_type ||
-      adr.reloc() == relocInfo::static_stub_type ) {
+      adr.reloc() == relocInfo::static_stub_type) {
     // This should be rip relative within the code cache and easily
     // reachable until we get huge code caches. (At which point
     // ic code is going to have issues).
@@ -6915,7 +6914,7 @@ bool Assembler::reachable(AddressLiteral adr) {
   if (adr.reloc() != relocInfo::external_word_type &&
       adr.reloc() != relocInfo::poll_return_type &&  // these are really external_word but need special
       adr.reloc() != relocInfo::poll_type &&         // relocs to identify them
-      adr.reloc() != relocInfo::runtime_call_type ) {
+      adr.reloc() != relocInfo::runtime_call_type) {
     return false;
   }
 

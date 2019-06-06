@@ -75,9 +75,7 @@ inline void ConcurrentHashTable<VALUE, CONFIG, F>::Bucket::lock() {
 }
 
 template <typename VALUE, typename CONFIG, MEMFLAGS F>
-inline void ConcurrentHashTable<VALUE, CONFIG, F>::Bucket::release_assign_last_node_next(
-     typename ConcurrentHashTable<VALUE, CONFIG, F>::Node* node)
-{
+inline void ConcurrentHashTable<VALUE, CONFIG, F>::Bucket::release_assign_last_node_next(typename ConcurrentHashTable<VALUE, CONFIG, F>::Node* node) {
   Node* const volatile * ret = first_ptr();
   while (clear_state(*ret) != NULL) {
     ret = clear_state(*ret)->next_ptr();
@@ -136,9 +134,7 @@ inline ConcurrentHashTable<VALUE, CONFIG, F>::InternalTable::~InternalTable() {
 
 // ScopedCS
 template <typename VALUE, typename CONFIG, MEMFLAGS F>
-inline ConcurrentHashTable<VALUE, CONFIG, F>::ScopedCS::ScopedCS(Thread* thread, ConcurrentHashTable<VALUE, CONFIG, F>* cht)
-    : _thread(thread), _cht(cht)
-{
+inline ConcurrentHashTable<VALUE, CONFIG, F>::ScopedCS::ScopedCS(Thread* thread, ConcurrentHashTable<VALUE, CONFIG, F>* cht) : _thread(thread), _cht(cht) {
   GlobalCounter::critical_section_begin(_thread);
   // This version is published now.
   if (OrderAccess::load_acquire(&_cht->_invisible_epoch) != NULL) {

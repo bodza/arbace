@@ -19,15 +19,14 @@ class arrayOopDesc : public oopDesc {
   friend class VMStructs;
   friend class arrayOopDescTest;
 
-  // Interpreter/Compiler offsets
+  // Compiler offsets
 
   // Header size computation.
   // The header is considered the oop part of this type plus the length.
   // Returns the aligned header_size_in_bytes.  This is not equivalent to
   // sizeof(arrayOopDesc) which should not appear in the code.
   static int header_size_in_bytes() {
-    size_t hs = align_up(length_offset_in_bytes() + sizeof(int),
-                              HeapWordSize);
+    size_t hs = align_up(length_offset_in_bytes() + sizeof(int), HeapWordSize);
     return (int)hs;
   }
 
@@ -43,8 +42,7 @@ class arrayOopDesc : public oopDesc {
   // declared nonstatic fields in arrayOopDesc if not compressed, otherwise
   // it occupies the second half of the _klass field in oopDesc.
   static int length_offset_in_bytes() {
-    return UseCompressedClassPointers ? klass_gap_offset_in_bytes() :
-                               sizeof(arrayOopDesc);
+    return UseCompressedClassPointers ? klass_gap_offset_in_bytes() : sizeof(arrayOopDesc);
   }
 
   // Returns the offset of the first element.

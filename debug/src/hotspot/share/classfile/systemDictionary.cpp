@@ -22,7 +22,6 @@
 #include "compiler/compileBroker.hpp"
 #include "gc/shared/oopStorage.inline.hpp"
 #include "interpreter/bytecodeStream.hpp"
-#include "interpreter/interpreter.hpp"
 #include "memory/metaspaceClosure.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
@@ -1675,9 +1674,7 @@ Symbol* SystemDictionary::check_signature_loaders(Symbol* signature, Handle load
   return NULL;
 }
 
-methodHandle SystemDictionary::find_method_handle_intrinsic(vmIntrinsics::ID iid,
-                                                            Symbol* signature,
-                                                            TRAPS) {
+methodHandle SystemDictionary::find_method_handle_intrinsic(vmIntrinsics::ID iid, Symbol* signature, TRAPS) {
   methodHandle empty;
 
   unsigned int hash  = invoke_method_table()->compute_hash(signature, iid);
@@ -1688,7 +1685,7 @@ methodHandle SystemDictionary::find_method_handle_intrinsic(vmIntrinsics::ID iid
     spe = NULL;
     // Must create lots of stuff here, but outside of the SystemDictionary lock.
     m = Method::make_method_handle_intrinsic(iid, signature, CHECK_(empty));
-    if (!Arguments::is_interpreter_only()) {
+    {
       // Generate a compiled form of the MH intrinsic.
       AdapterHandlerLibrary::create_native_wrapper(m);
       // Check if have the compiled code.

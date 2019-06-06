@@ -20,8 +20,6 @@ class CompilerRuntime : AllStatic {
   static Klass* resolve_klass_by_symbol(JavaThread *thread, Klass** klass_result, const char* name);
   static Klass* initialize_klass_by_symbol(JavaThread *thread, Klass** klass_result, const char* name);
   static MethodCounters* resolve_method_by_symbol_and_load_counters(JavaThread *thread, MethodCounters** counters_result, Klass* klass_hint, const char* data);
-  static void invocation_event(JavaThread *thread, MethodCounters* counters);
-  static void backedge_event(JavaThread *thread, MethodCounters* counters, int branch_bci, int target_bci);
 };
 
 #endif

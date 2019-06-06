@@ -90,18 +90,10 @@ private:
   Symbol* allocate_symbol(const u1* name, int len, bool c_heap, TRAPS); // Assumes no characters larger than 0x7F
 
   // Adding elements
-  Symbol* basic_add(int index, u1* name, int len, unsigned int hashValue,
-                    bool c_heap, TRAPS);
-  bool basic_add(ClassLoaderData* loader_data,
-                 const constantPoolHandle& cp, int names_count,
-                 const char** names, int* lengths, int* cp_indices,
-                 unsigned int* hashValues, TRAPS);
+  Symbol* basic_add(int index, u1* name, int len, unsigned int hashValue, bool c_heap, TRAPS);
+  bool basic_add(ClassLoaderData* loader_data, const constantPoolHandle& cp, int names_count, const char** names, int* lengths, int* cp_indices, unsigned int* hashValues, TRAPS);
 
-  static void new_symbols(ClassLoaderData* loader_data,
-                          const constantPoolHandle& cp, int names_count,
-                          const char** name, int* lengths,
-                          int* cp_indices, unsigned int* hashValues,
-                          TRAPS) {
+  static void new_symbols(ClassLoaderData* loader_data, const constantPoolHandle& cp, int names_count, const char** name, int* lengths, int* cp_indices, unsigned int* hashValues, TRAPS) {
     add(loader_data, cp, names_count, name, lengths, cp_indices, hashValues, THREAD);
   }
 

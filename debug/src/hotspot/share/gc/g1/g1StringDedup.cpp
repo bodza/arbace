@@ -82,10 +82,7 @@ private:
   G1GCPhaseTimes* _phase_times;
 
 public:
-  G1StringDedupUnlinkOrOopsDoTask(BoolObjectClosure* is_alive,
-                                  OopClosure* keep_alive,
-                                  bool allow_resize_and_rehash,
-                                  G1GCPhaseTimes* phase_times) :
+  G1StringDedupUnlinkOrOopsDoTask(BoolObjectClosure* is_alive, OopClosure* keep_alive, bool allow_resize_and_rehash, G1GCPhaseTimes* phase_times) :
     AbstractGangTask("G1StringDedupUnlinkOrOopsDoTask"),
     _cl(is_alive, keep_alive, allow_resize_and_rehash), _phase_times(phase_times) { }
 

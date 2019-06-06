@@ -161,19 +161,16 @@ add_planned_handle_capacity(JNIHandleBlock* handles, size_t capacity) {
 }
 
 static inline void
-functionEnterCritical(JavaThread* thr)
-{
+functionEnterCritical(JavaThread* thr) {
   check_pending_exception(thr);
 }
 
 static inline void
-functionEnterCriticalExceptionAllowed(JavaThread* thr)
-{
+functionEnterCriticalExceptionAllowed(JavaThread* thr) {
 }
 
 static inline void
-functionEnter(JavaThread* thr)
-{
+functionEnter(JavaThread* thr) {
   if (thr->in_critical()) {
     tty->print_cr("%s", warn_other_function_in_critical);
   }
@@ -181,16 +178,14 @@ functionEnter(JavaThread* thr)
 }
 
 static inline void
-functionEnterExceptionAllowed(JavaThread* thr)
-{
+functionEnterExceptionAllowed(JavaThread* thr) {
   if (thr->in_critical()) {
     tty->print_cr("%s", warn_other_function_in_critical);
   }
 }
 
 static inline void
-functionExit(JavaThread* thr)
-{
+functionExit(JavaThread* thr) {
   JNIHandleBlock* handles = thr->active_handles();
   size_t planned_capacity = handles->get_planned_capacity();
   size_t live_handles = handles->get_number_of_live_handles();
@@ -205,8 +200,7 @@ functionExit(JavaThread* thr)
 }
 
 static inline void
-checkStaticFieldID(JavaThread* thr, jfieldID fid, jclass cls, int ftype)
-{
+checkStaticFieldID(JavaThread* thr, jfieldID fid, jclass cls, int ftype) {
   fieldDescriptor fd;
 
   /* make sure it is a static field */
@@ -231,8 +225,7 @@ checkStaticFieldID(JavaThread* thr, jfieldID fid, jclass cls, int ftype)
 }
 
 static inline void
-checkInstanceFieldID(JavaThread* thr, jfieldID fid, jobject obj, int ftype)
-{
+checkInstanceFieldID(JavaThread* thr, jfieldID fid, jobject obj, int ftype) {
   fieldDescriptor fd;
 
   /* make sure it is an instance field */
@@ -266,16 +259,14 @@ checkInstanceFieldID(JavaThread* thr, jfieldID fid, jobject obj, int ftype)
 }
 
 static inline void
-checkString(JavaThread* thr, jstring js)
-{
+checkString(JavaThread* thr, jstring js) {
   oop s = jniCheck::validate_object(thr, js);
   if ((s == NULL) || !java_lang_String::is_instance(s))
     ReportJNIFatalError(thr, fatal_non_string);
 }
 
 static inline arrayOop
-check_is_array(JavaThread* thr, jarray jArray)
-{
+check_is_array(JavaThread* thr, jarray jArray) {
   arrayOop aOop;
 
   aOop = (arrayOop)jniCheck::validate_object(thr, jArray);
@@ -296,8 +287,7 @@ check_is_primitive_array(JavaThread* thr, jarray jArray) {
 }
 
 static inline void
-check_primitive_array_type(JavaThread* thr, jarray jArray, BasicType elementType)
-{
+check_primitive_array_type(JavaThread* thr, jarray jArray, BasicType elementType) {
   BasicType array_type;
   arrayOop aOop;
 

@@ -201,7 +201,7 @@ void ObjectSynchronizer::fast_exit(oop object, BasicLock* lock, TRAPS) {
 }
 
 // -----------------------------------------------------------------------------
-// Interpreter/Compiler Slow Case
+// Compiler Slow Case
 // This routine is used to handle interpreter/compiler slow case
 // We don't need to use fast path here, because it must have been
 // failed in the interpreter/compiler code.
@@ -777,7 +777,7 @@ void ObjectSynchronizer::oops_do(OopClosure* f) {
 
 void ObjectSynchronizer::global_oops_do(OopClosure* f) {
   PaddedEnd<ObjectMonitor> * block = OrderAccess::load_acquire(&gBlockList);
-  for (; block != NULL; block = next(block)) {
+  for ( ; block != NULL; block = next(block)) {
     for (int i = 1; i < _BLOCKSIZE; i++) {
       ObjectMonitor* mid = (ObjectMonitor *)&block[i];
       if (mid->object() != NULL) {
@@ -1436,7 +1436,7 @@ void ObjectSynchronizer::deflate_idle_monitors(DeflateMonitorCounters* counters)
     }
   } else {
     PaddedEnd<ObjectMonitor> * block = OrderAccess::load_acquire(&gBlockList);
-    for (; block != NULL; block = next(block)) {
+    for ( ; block != NULL; block = next(block)) {
       // Iterate over all extant monitors - Scavenge all idle monitors.
       counters->nInCirculation += _BLOCKSIZE;
       for (int i = 1; i < _BLOCKSIZE; i++) {

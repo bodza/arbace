@@ -5,7 +5,6 @@
 #include "ci/ciUtilities.hpp"
 #include "gc/shared/barrierSet.hpp"
 #include "gc/shared/barrierSetAssembler.hpp"
-#include "interpreter/interpreter.hpp"
 #include "nativeInst_x86.hpp"
 #include "oops/instanceOop.hpp"
 #include "oops/method.hpp"
@@ -401,7 +400,7 @@ class StubGenerator: public StubCodeGenerator {
   //    c_rarg2: compare_value
   //
   // Result:
-  //    if (compare_value == *dest ) {
+  //    if (compare_value == *dest) {
   //       *dest = exchange_value
   //       return compare_value;
   //    else
@@ -427,7 +426,7 @@ class StubGenerator: public StubCodeGenerator {
   //    c_rarg2: compare_value
   //
   // Result:
-  //    if (compare_value == *dest ) {
+  //    if (compare_value == *dest) {
   //       *dest = exchange_value
   //       return compare_value;
   //    else
@@ -453,7 +452,7 @@ class StubGenerator: public StubCodeGenerator {
   //    c_rarg2: compare_value
   //
   // Result:
-  //    if (compare_value == *dest ) {
+  //    if (compare_value == *dest) {
   //       *dest = exchange_value
   //       return compare_value;
   //    else
@@ -770,7 +769,7 @@ class StubGenerator: public StubCodeGenerator {
   // Stack after saving c_rarg3:
   //    [tos + 0]: saved c_rarg3
   //    [tos + 1]: saved c_rarg2
-  //    [tos + 2]: saved r12 (several TemplateTable methods use it)
+  //    [tos + 2]: saved r12
   //    [tos + 3]: saved flags
   //    [tos + 4]: return address
   //  * [tos + 5]: error message (char*)

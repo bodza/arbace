@@ -97,15 +97,10 @@ CardTableRS* GenCollectedHeap::create_rem_set(const MemRegion& reserved_region) 
 
 void GenCollectedHeap::initialize_size_policy(size_t init_eden_size, size_t init_promo_size, size_t init_survivor_size) {
   const double max_gc_pause_sec = ((double) MaxGCPauseMillis) / 1000.0;
-  _size_policy = new AdaptiveSizePolicy(init_eden_size,
-                                        init_promo_size,
-                                        init_survivor_size,
-                                        max_gc_pause_sec,
-                                        GCTimeRatio);
+  _size_policy = new AdaptiveSizePolicy(init_eden_size, init_promo_size, init_survivor_size, max_gc_pause_sec, GCTimeRatio);
 }
 
-char* GenCollectedHeap::allocate(size_t alignment,
-                                 ReservedSpace* heap_rs) {
+char* GenCollectedHeap::allocate(size_t alignment, ReservedSpace* heap_rs) {
   // Now figure out the total size.
   const size_t pageSize = UseLargePages ? os::large_page_size() : os::vm_page_size();
 
@@ -613,7 +608,7 @@ void GenCollectedHeap::process_roots(StrongRootsScope* scope, ScanningOption so,
   if (!_process_strong_tasks->is_task_claimed(GCH_PS_Management_oops_do)) {
     Management::oops_do(strong_roots);
   }
-  if (UseAOT && !_process_strong_tasks->is_task_claimed(GCH_PS_aot_oops_do)) {
+  if (false && !_process_strong_tasks->is_task_claimed(GCH_PS_aot_oops_do)) {
     AOTLoader::oops_do(strong_roots);
   }
 

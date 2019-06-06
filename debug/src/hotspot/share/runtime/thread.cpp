@@ -14,9 +14,7 @@
 #include "gc/shared/gcId.hpp"
 #include "gc/shared/gcLocker.inline.hpp"
 #include "gc/shared/workgroup.hpp"
-#include "interpreter/interpreter.hpp"
 #include "interpreter/linkResolver.hpp"
-#include "interpreter/oopMapCache.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
@@ -36,7 +34,6 @@
 #include "runtime/flags/jvmFlagConstraintList.hpp"
 #include "runtime/flags/jvmFlagRangeList.hpp"
 #include "runtime/flags/jvmFlagWriteableList.hpp"
-#include "runtime/deoptimization.hpp"
 #include "runtime/frame.inline.hpp"
 #include "runtime/handshake.hpp"
 #include "runtime/init.hpp"
@@ -44,7 +41,6 @@
 #include "runtime/java.hpp"
 #include "runtime/javaCalls.hpp"
 #include "runtime/jniHandles.inline.hpp"
-#include "runtime/memprofiler.hpp"
 #include "runtime/mutexLocker.hpp"
 #include "runtime/objectMonitor.hpp"
 #include "runtime/orderAccess.hpp"
@@ -549,8 +545,7 @@ JavaThread::is_thread_fully_suspended(bool wait_for_suspend, uint32_t *bits) {
     if (wait_for_suspend) {
       // We are allowed to wait for the external suspend to complete
       // so give the other thread a chance to get suspended.
-      if (!wait_for_ext_suspend_completion(SuspendRetryCount,
-                                           SuspendRetryDelay, bits)) {
+      if (!wait_for_ext_suspend_completion(SuspendRetryCount, SuspendRetryDelay, bits)) {
         // Didn't make it so let the caller know.
         return false;
       }
@@ -895,8 +890,7 @@ int WatcherThread::sleep() const {
   jlong time_before_loop = os::javaTimeNanos();
 
   while (true) {
-    bool timedout = PeriodicTask_lock->wait(Mutex::_no_safepoint_check_flag,
-                                            remaining);
+    bool timedout = PeriodicTask_lock->wait(Mutex::_no_safepoint_check_flag, remaining);
     jlong now = os::javaTimeNanos();
 
     if (remaining == 0) {
@@ -1046,7 +1040,7 @@ void JavaThread::collect_counters(typeArrayOop array) {
     for (int i = 0; i < array->length(); i++) {
       array->long_at_put(i, _jvmci_old_thread_counters[i]);
     }
-    for (; JavaThread *tp = jtiwh.next(); ) {
+    for ( ; JavaThread *tp = jtiwh.next(); ) {
       if (jvmci_counters_include(tp)) {
         for (int i = 0; i < array->length(); i++) {
           array->long_at_put(i, array->long_at(i) + tp->_jvmci_counters[i]);
@@ -1188,16 +1182,14 @@ void JavaThread::block_if_vm_exited() {
 static void compiler_thread_entry(JavaThread* thread, TRAPS);
 static void sweeper_thread_entry(JavaThread* thread, TRAPS);
 
-JavaThread::JavaThread(ThreadFunction entry_point, size_t stack_sz) :
-                       Thread() {
+JavaThread::JavaThread(ThreadFunction entry_point, size_t stack_sz) : Thread() {
   initialize();
   _jni_attach_state = _not_attaching_via_jni;
   set_entry_point(entry_point);
   // Create the native thread itself.
   // %note runtime_23
   os::ThreadType thr_type = os::java_thread;
-  thr_type = entry_point == &compiler_thread_entry ? os::compiler_thread :
-                                                     os::java_thread;
+  thr_type = entry_point == &compiler_thread_entry ? os::compiler_thread : os::java_thread;
   os::create_thread(this, thr_type, stack_sz);
   // The _osthread may be NULL here because we ran out of memory (too many threads active).
   // We need to throw and OutOfMemoryError - however we cannot do this here because the caller
@@ -1216,12 +1208,12 @@ JavaThread::~JavaThread() {
   Parker::Release(_parker);
   _parker = NULL;
 
-  // Free any remaining  previous UnrollBlock
+  // Free any remaining  previous NULL
   vframeArray* old_array = vframe_array_last();
 
   if (old_array != NULL) {
-    Deoptimization::UnrollBlock* old_info = old_array->unroll_block();
-    old_array->set_unroll_block(NULL);
+    NULL::NULL* old_info = old_array->NULL();
+    old_array->NULL(NULL);
     delete old_info;
     delete old_array;
   }
@@ -1639,7 +1631,7 @@ void JavaThread::send_thread_stop(oop java_throwable) {
           RegisterMap reg_map(this, UseBiasedLocking);
           frame compiled_frame = f.sender(&reg_map);
           if (compiled_frame.can_be_deoptimized()) {
-            Deoptimization::deoptimize(this, compiled_frame, &reg_map);
+            NULL::deoptimize(this, compiled_frame, &reg_map);
           }
         }
       }
@@ -2014,9 +2006,9 @@ void JavaThread::deoptimized_wrt_marked_nmethods() {
   if (!has_last_Java_frame()) return;
   // BiasedLocking needs an updated RegisterMap for the revoke monitors pass
   StackFrameStream fst(this, UseBiasedLocking);
-  for (; !fst.is_done(); fst.next()) {
+  for ( ; !fst.is_done(); fst.next()) {
     if (fst.current()->should_be_deoptimized()) {
-      Deoptimization::deoptimize(this, *fst.current(), fst.register_map());
+      NULL::deoptimize(this, *fst.current(), fst.register_map());
     }
   }
 }
@@ -2827,7 +2819,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
     if (!force_JVMCI_intialization) {
       // 8145270: Force initialization of JVMCI runtime otherwise requests for blocking
       // compilations via JVMCI will not actually block until JVMCI is initialized.
-      force_JVMCI_intialization = UseJVMCICompiler && (!UseInterpreter || !BackgroundCompilation);
+      force_JVMCI_intialization = UseJVMCICompiler;
     }
   }
   CompileBroker::compilation_init_phase1(CHECK_JNI_ERR);
@@ -2857,9 +2849,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
     JVMCIRuntime::force_initialization(CHECK_JNI_ERR);
     CompileBroker::compilation_init_phase2();
   }
-
-  if (MemProfiling)
-    MemProfiler::engage();
 
   BiasedLocking::init();
 
@@ -2928,8 +2917,7 @@ static OnLoadEntry_t lookup_on_load(AgentLibrary* agent, const char *on_load_sym
       }
     } else {
       // Try to load the agent from the standard dll directory
-      if (os::dll_locate_lib(buffer, sizeof(buffer), Arguments::get_dll_dir(),
-                             name)) {
+      if (os::dll_locate_lib(buffer, sizeof(buffer), Arguments::get_dll_dir(), name)) {
         library = os::dll_load(buffer, ebuf, sizeof ebuf);
       }
       if (library == NULL) { // Try the library path directory.

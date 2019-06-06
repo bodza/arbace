@@ -132,9 +132,7 @@ void NewObjectArrayStub::emit_code(LIR_Assembler* ce) {
 }
 // Implementation of MonitorAccessStubs
 
-MonitorEnterStub::MonitorEnterStub(LIR_Opr obj_reg, LIR_Opr lock_reg, CodeEmitInfo* info)
-: MonitorAccessStub(obj_reg, lock_reg)
-{
+MonitorEnterStub::MonitorEnterStub(LIR_Opr obj_reg, LIR_Opr lock_reg, CodeEmitInfo* info) : MonitorAccessStub(obj_reg, lock_reg) {
   _info = new CodeEmitInfo(info);
 }
 
@@ -187,7 +185,7 @@ void PatchingStub::emit_code(LIR_Assembler* ce) {
   ShouldNotReachHere();
 }
 
-void DeoptimizeStub::emit_code(LIR_Assembler* ce) {
+void NULL::emit_code(LIR_Assembler* ce) {
   __ bind(_entry);
   ce->store_parameter(_trap_request, 0);
   __ far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::deoptimize_id)));

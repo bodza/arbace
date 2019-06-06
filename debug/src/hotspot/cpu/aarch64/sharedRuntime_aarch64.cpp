@@ -5,7 +5,6 @@
 #include "code/debugInfoRec.hpp"
 #include "code/icBuffer.hpp"
 #include "code/vtableStubs.hpp"
-#include "interpreter/interpreter.hpp"
 #include "interpreter/interp_masm.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/compiledICHolder.hpp"
@@ -18,10 +17,6 @@
 #include "adfiles/ad_aarch64.hpp"
 #include "opto/runtime.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
-
-#ifdef BUILTIN_SIM
-#include "../../../../../../simulator/simulator.hpp"
-#endif
 
 #define __ masm->
 
@@ -309,9 +304,9 @@ static void gen_c2i_adapter(MacroAssembler *masm, int total_args_passed, int com
   int words_pushed = 0;
 
   // Since all args are passed on the stack, total_args_passed *
-  // Interpreter::stackElementSize is the space we need.
+  // NULL::stackElementSize is the space we need.
 
-  int extraspace = total_args_passed * Interpreter::stackElementSize;
+  int extraspace = total_args_passed * NULL::stackElementSize;
 
   __ mov(r13, sp);
 
@@ -328,8 +323,8 @@ static void gen_c2i_adapter(MacroAssembler *masm, int total_args_passed, int com
     }
 
     // offset to start parameters
-    int st_off   = (total_args_passed - i - 1) * Interpreter::stackElementSize;
-    int next_off = st_off - Interpreter::stackElementSize;
+    int st_off   = (total_args_passed - i - 1) * NULL::stackElementSize;
+    int next_off = st_off - NULL::stackElementSize;
 
     // Say 4 args:
     // i   st_off
@@ -414,9 +409,8 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed,
   // Adapters are frameless.
 
   // An i2c adapter is frameless because the *caller* frame, which is
-  // interpreted, routinely repairs its own esp (from
-  // interpreter_frame_last_sp), even if a callee has modified the
-  // stack pointer.  It also recalculates and aligns sp.
+  // interpreted, routinely repairs its own esp, even if a callee has
+  // modified the stack pointer.  It also recalculates and aligns sp.
 
   // A c2i adapter is frameless because the *callee* frame, which is
   // interpreted, routinely repairs its caller's sp (from sender_sp,
@@ -432,9 +426,6 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed,
   // If this happens, control eventually transfers back to the compiled
   // caller, but with an uncorrected stack, causing delayed havoc.
 
-  if (VerifyAdapterCalls && (Interpreter::code() != NULL || StubRoutines::code1() != NULL)) {
-  }
-
   // Cut-out for having no stack args.
   int comp_words_on_stack = align_up(comp_args_on_stack*VMRegImpl::stack_slot_size, wordSize)>>LogBytesPerWord;
   if (comp_args_on_stack) {
@@ -446,7 +437,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed,
   // Pre-load the register-jump target early, to schedule it better.
   __ ldr(rscratch1, Address(rmethod, in_bytes(Method::from_compiled_offset())));
 
-  if (EnableJVMCI || UseAOT) {
+  if (EnableJVMCI || false) {
     // check if this call should be routed towards a specific entry point
     __ ldr(rscratch2, Address(rthread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())));
     Label no_alternative_target;
@@ -465,9 +456,9 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed,
     // Pick up 0, 1 or 2 words from SP+offset.
 
     // Load in argument order going down.
-    int ld_off = (total_args_passed - i - 1)*Interpreter::stackElementSize;
+    int ld_off = (total_args_passed - i - 1) * NULL::stackElementSize;
     // Point to interpreter value (vs. tag)
-    int next_off = ld_off - Interpreter::stackElementSize;
+    int next_off = ld_off - NULL::stackElementSize;
     //
     //
     //
@@ -476,6 +467,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed,
     if (!r_1->is_valid()) {
       continue;
     }
+
     if (r_1->is_stack()) {
       // Convert stack slot to an SP offset (+ wordSize to account for return address )
       int st_off = regs[i].first()->reg2stack()*VMRegImpl::stack_slot_size;
@@ -491,7 +483,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed,
         // So we must adjust where to pick up the data to match the
         // interpreter.
         //
-        // Interpreter local[n] == MSW, local[n+1] == LSW however locals
+        // ... local[n] == MSW, local[n+1] == LSW however locals
         // are accessed as negative so LSW is at LOW address
 
         // ld_off is MSW so get LSW
@@ -542,84 +534,9 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed,
   __ br(rscratch1);
 }
 
-#ifdef BUILTIN_SIM
-static void generate_i2c_adapter_name(char *result, int total_args_passed, const BasicType *sig_bt)
-{
-  strcpy(result, "i2c(");
-  int idx = 4;
-  for (int i = 0; i < total_args_passed; i++) {
-    switch (sig_bt[i]) {
-    case T_BOOLEAN:
-      result[idx++] = 'Z';
-      break;
-    case T_CHAR:
-      result[idx++] = 'C';
-      break;
-    case T_FLOAT:
-      result[idx++] = 'F';
-      break;
-    case T_DOUBLE:
-      i++;
-      result[idx++] = 'D';
-      break;
-    case T_BYTE:
-      result[idx++] = 'B';
-      break;
-    case T_SHORT:
-      result[idx++] = 'S';
-      break;
-    case T_INT:
-      result[idx++] = 'I';
-      break;
-    case T_LONG:
-      i++;
-      result[idx++] = 'L';
-      break;
-    case T_OBJECT:
-      result[idx++] = 'O';
-      break;
-    case T_ARRAY:
-      result[idx++] = '[';
-      break;
-    case T_ADDRESS:
-      result[idx++] = 'P';
-      break;
-    case T_NARROWOOP:
-      result[idx++] = 'N';
-      break;
-    case T_METADATA:
-      result[idx++] = 'M';
-      break;
-    case T_NARROWKLASS:
-      result[idx++] = 'K';
-      break;
-    default:
-      result[idx++] = '?';
-      break;
-    }
-  }
-  result[idx++] = ')';
-  result[idx] = '\0';
-}
-#endif
-
 // ---------------------------------------------------------------
 AdapterHandlerEntry* SharedRuntime::generate_i2c2i_adapters(MacroAssembler *masm, int total_args_passed, int comp_args_on_stack, const BasicType *sig_bt, const VMRegPair *regs, AdapterFingerPrint* fingerprint) {
   address i2c_entry = __ pc();
-#ifdef BUILTIN_SIM
-  char *name = NULL;
-  AArch64Simulator *sim = NULL;
-  size_t len = 65536;
-  if (NotifySimulator) {
-    name = NEW_C_HEAP_ARRAY(char, len, mtInternal);
-  }
-
-  if (name) {
-    generate_i2c_adapter_name(name, total_args_passed, sig_bt);
-    sim = AArch64Simulator::get_current(UseSimulatorCache, DisableBCCheck);
-    sim->notifyCompile(name, i2c_entry);
-  }
-#endif
   gen_i2c_adapter(masm, total_args_passed, comp_args_on_stack, sig_bt, regs);
 
   address c2i_unverified_entry = __ pc();
@@ -660,15 +577,6 @@ AdapterHandlerEntry* SharedRuntime::generate_i2c2i_adapters(MacroAssembler *masm
   }
 
   address c2i_entry = __ pc();
-
-#ifdef BUILTIN_SIM
-  if (name) {
-    name[0] = 'c';
-    name[2] = 'i';
-    sim->notifyCompile(name, c2i_entry);
-    FREE_C_HEAP_ARRAY(char, name, mtInternal);
-  }
-#endif
 
   gen_c2i_adapter(masm, total_args_passed, comp_args_on_stack, sig_bt, regs, skip_fixup);
 
@@ -1038,7 +946,6 @@ static void rt_call(MacroAssembler* masm, address dest, int gpargs, int fpargs, 
     __ far_call(RuntimeAddress(dest));
   } else {
     __ lea(rscratch1, RuntimeAddress(dest));
-    if (UseBuiltinSim)   __ mov(rscratch2, (gpargs << 6) | (fpargs << 2) | type);
     __ blrt(rscratch1, rscratch2);
     __ maybe_isb();
   }
@@ -1143,24 +1050,6 @@ static void gen_special_dispatch(MacroAssembler* masm, const methodHandle& metho
 //    return to caller
 //
 nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const methodHandle& method, int compile_id, BasicType* in_sig_bt, VMRegPair* in_regs, BasicType ret_type) {
-#ifdef BUILTIN_SIM
-  if (NotifySimulator) {
-    // Names are up to 65536 chars long.  UTF8-coded strings are up to
-    // 3 bytes per character.  We concatenate three such strings.
-    // Yes, I know this is ridiculous, but it's debug code and glibc
-    // allocates large arrays very efficiently.
-    size_t len = (65536 * 3) * 3;
-    char *name = new char[len];
-
-    strncpy(name, method()->method_holder()->name()->as_utf8(), len);
-    strncat(name, ".", len);
-    strncat(name, method()->name()->as_utf8(), len);
-    strncat(name, method()->signature()->as_utf8(), len);
-    AArch64Simulator::get_current(UseSimulatorCache, DisableBCCheck)->notifyCompile(name, __ pc());
-    delete[] name;
-  }
-#endif
-
   if (method->is_method_handle_intrinsic()) {
     vmIntrinsics::ID iid = method->intrinsic_id();
     intptr_t start = (intptr_t)__ pc();
@@ -1408,19 +1297,13 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
   // Frame is now completed as far as size and linkage.
   int frame_complete = ((intptr_t)__ pc()) - start;
 
-  // record entry into native wrapper code
-  if (NotifySimulator) {
-    __ notify(Assembler::method_entry);
-  }
-
   // We use r20 as the oop handle for the receiver/klass
   // It is callee save so it survives the call to native
 
   const Register oop_handle_reg = r20;
 
   if (is_critical_native) {
-    check_needs_gc_for_critical_native(masm, stack_slots, total_c_args, total_in_args,
-                                       oop_handle_offset, oop_maps, in_regs, in_sig_bt);
+    check_needs_gc_for_critical_native(masm, stack_slots, total_c_args, total_in_args, oop_handle_offset, oop_maps, in_regs, in_sig_bt);
   }
 
   //
@@ -1802,11 +1685,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
     __ cbnz(rscratch1, exception_pending);
   }
 
-  // record exit from native wrapper code
-  if (NotifySimulator) {
-    __ notify(Assembler::method_reentry);
-  }
-
   // We're done
   __ ret(lr);
 
@@ -1849,7 +1727,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
     // If we haven't already saved the native result we must save it now as xmm registers
     // are still exposed.
 
-    if (ret_type == T_FLOAT || ret_type == T_DOUBLE ) {
+    if (ret_type == T_FLOAT || ret_type == T_DOUBLE) {
       save_native_result(masm, ret_type, stack_slots);
     }
 
@@ -1866,7 +1744,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
 
     __ str(r19, Address(rthread, in_bytes(Thread::pending_exception_offset())));
 
-    if (ret_type == T_FLOAT || ret_type == T_DOUBLE ) {
+    if (ret_type == T_FLOAT || ret_type == T_DOUBLE) {
       restore_native_result(masm, ret_type, stack_slots);
     }
     __ b(unlock_done);
@@ -1934,529 +1812,16 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
 
 // this function returns the adjust size (in number of words) to a c2i adapter
 // activation for use during deoptimization
-int Deoptimization::last_frame_adjust(int callee_parameters, int callee_locals) {
+int NULL::last_frame_adjust(int callee_parameters, int callee_locals) {
   if (callee_locals < callee_parameters)
     return 0;                   // No adjustment for negative locals
-  int diff = (callee_locals - callee_parameters) * Interpreter::stackElementWords;
+  int diff = (callee_locals - callee_parameters) * NULL::stackElementWords;
   // diff is counted in stack words
   return align_up(diff, 2);
 }
 
-//------------------------------generate_deopt_blob----------------------------
-void SharedRuntime::generate_deopt_blob() {
-  // Allocate space for the code
-  ResourceMark rm;
-  // Setup code generation tools
-  int pad = 0;
-  if (EnableJVMCI || UseAOT) {
-    pad += 512; // Increase the buffer size when compiling for JVMCI
-  }
-  CodeBuffer buffer("deopt_blob", 2048+pad, 1024);
-  MacroAssembler* masm = new MacroAssembler(&buffer);
-  int frame_size_in_words;
-  OopMap* map = NULL;
-  OopMapSet *oop_maps = new OopMapSet();
-
-#ifdef BUILTIN_SIM
-  AArch64Simulator *simulator;
-  if (NotifySimulator) {
-    simulator = AArch64Simulator::get_current(UseSimulatorCache, DisableBCCheck);
-    simulator->notifyCompile(const_cast<char*>("SharedRuntime::deopt_blob"), __ pc());
-  }
-#endif
-
-  // -------------
-  // This code enters when returning to a de-optimized nmethod.  A return
-  // address has been pushed on the the stack, and return values are in
-  // registers.
-  // If we are doing a normal deopt then we were called from the patched
-  // nmethod from the point we returned to the nmethod. So the return
-  // address on the stack is wrong by NativeCall::instruction_size
-  // We will adjust the value so it looks like we have the original return
-  // address on the stack (like when we eagerly deoptimized).
-  // In the case of an exception pending when deoptimizing, we enter
-  // with a return address on the stack that points after the call we patched
-  // into the exception handler. We have the following register state from,
-  // e.g., the forward exception stub (see stubGenerator_x86_64.cpp).
-  //    r0: exception oop
-  //    r19: exception handler
-  //    r3: throwing pc
-  // So in this case we simply jam r3 into the useless return address and
-  // the stack looks just like we want.
-  //
-  // At this point we need to de-opt.  We save the argument return
-  // registers.  We call the first C routine, fetch_unroll_info().  This
-  // routine captures the return values and returns a structure which
-  // describes the current frame size and the sizes of all replacement frames.
-  // The current frame is compiled code and may contain many inlined
-  // functions, each with their own JVM state.  We pop the current frame, then
-  // push all the new frames.  Then we call the C routine unpack_frames() to
-  // populate these frames.  Finally unpack_frames() returns us the new target
-  // address.  Notice that callee-save registers are BLOWN here; they have
-  // already been captured in the vframeArray at the time the return PC was
-  // patched.
-  address start = __ pc();
-  Label cont;
-
-  // Prolog for non exception case!
-
-  // Save everything in sight.
-  map = RegisterSaver::save_live_registers(masm, 0, &frame_size_in_words);
-
-  // Normal deoptimization.  Save exec mode for unpack_frames.
-  __ movw(rcpool, Deoptimization::Unpack_deopt); // callee-saved
-  __ b(cont);
-
-  int reexecute_offset = __ pc() - start;
-
-  // Reexecute case
-  // return address is the pc describes what bci to do re-execute at
-
-  // No need to update map as each call to save_live_registers will produce identical oopmap
-  (void) RegisterSaver::save_live_registers(masm, 0, &frame_size_in_words);
-
-  __ movw(rcpool, Deoptimization::Unpack_reexecute); // callee-saved
-  __ b(cont);
-
-  Label after_fetch_unroll_info_call;
-  int implicit_exception_uncommon_trap_offset = 0;
-  int uncommon_trap_offset = 0;
-
-  if (EnableJVMCI || UseAOT) {
-    implicit_exception_uncommon_trap_offset = __ pc() - start;
-
-    __ ldr(lr, Address(rthread, in_bytes(JavaThread::jvmci_implicit_exception_pc_offset())));
-    __ str(zr, Address(rthread, in_bytes(JavaThread::jvmci_implicit_exception_pc_offset())));
-
-    uncommon_trap_offset = __ pc() - start;
-
-    // Save everything in sight.
-    RegisterSaver::save_live_registers(masm, 0, &frame_size_in_words);
-    // fetch_unroll_info needs to call last_java_frame()
-    Label retaddr;
-    __ set_last_Java_frame(sp, noreg, retaddr, rscratch1);
-
-    __ ldrw(c_rarg1, Address(rthread, in_bytes(JavaThread::pending_deoptimization_offset())));
-    __ movw(rscratch1, -1);
-    __ strw(rscratch1, Address(rthread, in_bytes(JavaThread::pending_deoptimization_offset())));
-
-    __ movw(rcpool, (int32_t)Deoptimization::Unpack_reexecute);
-    __ mov(c_rarg0, rthread);
-    __ movw(c_rarg2, rcpool); // exec mode
-    __ lea(rscratch1, RuntimeAddress(CAST_FROM_FN_PTR(address, Deoptimization::uncommon_trap)));
-    __ blrt(rscratch1, 2, 0, MacroAssembler::ret_type_integral);
-    __ bind(retaddr);
-    oop_maps->add_gc_map( __ pc()-start, map->deep_copy());
-
-    __ reset_last_Java_frame(false);
-
-    __ b(after_fetch_unroll_info_call);
-  }
-
-  int exception_offset = __ pc() - start;
-
-  // Prolog for exception case
-
-  // all registers are dead at this entry point, except for r0, and
-  // r3 which contain the exception oop and exception pc
-  // respectively.  Set them in TLS and fall thru to the
-  // unpack_with_exception_in_tls entry point.
-
-  __ str(r3, Address(rthread, JavaThread::exception_pc_offset()));
-  __ str(r0, Address(rthread, JavaThread::exception_oop_offset()));
-
-  int exception_in_tls_offset = __ pc() - start;
-
-  // new implementation because exception oop is now passed in JavaThread
-
-  // Prolog for exception case
-  // All registers must be preserved because they might be used by LinearScan
-  // Exceptiop oop and throwing PC are passed in JavaThread
-  // tos: stack at point of call to method that threw the exception (i.e. only
-  // args are on the stack, no return address)
-
-  // The return address pushed by save_live_registers will be patched
-  // later with the throwing pc. The correct value is not available
-  // now because loading it from memory would destroy registers.
-
-  // NB: The SP at this point must be the SP of the method that is
-  // being deoptimized.  Deoptimization assumes that the frame created
-  // here by save_live_registers is immediately below the method's SP.
-  // This is a somewhat fragile mechanism.
-
-  // Save everything in sight.
-  map = RegisterSaver::save_live_registers(masm, 0, &frame_size_in_words);
-
-  // Now it is safe to overwrite any register
-
-  // Deopt during an exception.  Save exec mode for unpack_frames.
-  __ mov(rcpool, Deoptimization::Unpack_exception); // callee-saved
-
-  // load throwing pc from JavaThread and patch it as the return address
-  // of the current frame. Then clear the field in JavaThread
-
-  __ ldr(r3, Address(rthread, JavaThread::exception_pc_offset()));
-  __ str(r3, Address(rfp, wordSize));
-  __ str(zr, Address(rthread, JavaThread::exception_pc_offset()));
-
-  __ bind(cont);
-
-  // Call C code.  Need thread and this frame, but NOT official VM entry
-  // crud.  We cannot block on this call, no GC can happen.
-  //
-  // UnrollBlock* fetch_unroll_info(JavaThread* thread)
-
-  // fetch_unroll_info needs to call last_java_frame().
-
-  Label retaddr;
-  __ set_last_Java_frame(sp, noreg, retaddr, rscratch1);
-#ifdef ASSERT0
-  { Label L;
-    __ ldr(rscratch1, Address(rthread, JavaThread::last_Java_fp_offset()));
-    __ cbz(rscratch1, L);
-    __ stop("SharedRuntime::generate_deopt_blob: last_Java_fp not cleared");
-    __ bind(L);
-  }
-#endif
-  __ mov(c_rarg0, rthread);
-  __ mov(c_rarg1, rcpool);
-  __ lea(rscratch1, RuntimeAddress(CAST_FROM_FN_PTR(address, Deoptimization::fetch_unroll_info)));
-  __ blrt(rscratch1, 1, 0, 1);
-  __ bind(retaddr);
-
-  // Need to have an oopmap that tells fetch_unroll_info where to
-  // find any register it might need.
-  oop_maps->add_gc_map(__ pc() - start, map);
-
-  __ reset_last_Java_frame(false);
-
-  if (EnableJVMCI || UseAOT) {
-    __ bind(after_fetch_unroll_info_call);
-  }
-
-  // Load UnrollBlock* into r5
-  __ mov(r5, r0);
-
-  __ ldrw(rcpool, Address(r5, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes()));
-   Label noException;
-  __ cmpw(rcpool, Deoptimization::Unpack_exception);   // Was exception pending?
-  __ br(Assembler::NE, noException);
-  __ ldr(r0, Address(rthread, JavaThread::exception_oop_offset()));
-  // QQQ this is useless it was NULL above
-  __ ldr(r3, Address(rthread, JavaThread::exception_pc_offset()));
-  __ str(zr, Address(rthread, JavaThread::exception_oop_offset()));
-  __ str(zr, Address(rthread, JavaThread::exception_pc_offset()));
-
-  __ verify_oop(r0);
-
-  // Overwrite the result registers with the exception results.
-  __ str(r0, Address(sp, RegisterSaver::r0_offset_in_bytes()));
-  // I think this is useless
-  // __ str(r3, Address(sp, RegisterSaver::r3_offset_in_bytes()));
-
-  __ bind(noException);
-
-  // Only register save data is on the stack.
-  // Now restore the result registers.  Everything else is either dead
-  // or captured in the vframeArray.
-  RegisterSaver::restore_result_registers(masm);
-
-  // All of the register save area has been popped of the stack. Only the
-  // return address remains.
-
-  // Pop all the frames we must move/replace.
-  //
-  // Frame picture (youngest to oldest)
-  // 1: self-frame (no frame link)
-  // 2: deopting frame  (no frame link)
-  // 3: caller of deopting frame (could be compiled/interpreted).
-  //
-  // Note: by leaving the return address of self-frame on the stack
-  // and using the size of frame 2 to adjust the stack
-  // when we are done the return to frame 3 will still be on the stack.
-
-  // Pop deoptimized frame
-  __ ldrw(r2, Address(r5, Deoptimization::UnrollBlock::size_of_deoptimized_frame_offset_in_bytes()));
-  __ sub(r2, r2, 2 * wordSize);
-  __ add(sp, sp, r2);
-  __ ldp(rfp, lr, __ post(sp, 2 * wordSize));
-  // LR should now be the return address to the caller (3)
-
-  // Load address of array of frame pcs into r2
-  __ ldr(r2, Address(r5, Deoptimization::UnrollBlock::frame_pcs_offset_in_bytes()));
-
-  // Trash the old pc
-  // __ addptr(sp, wordSize);  FIXME ????
-
-  // Load address of array of frame sizes into r4
-  __ ldr(r4, Address(r5, Deoptimization::UnrollBlock::frame_sizes_offset_in_bytes()));
-
-  // Load counter into r3
-  __ ldrw(r3, Address(r5, Deoptimization::UnrollBlock::number_of_frames_offset_in_bytes()));
-
-  // Now adjust the caller's stack to make up for the extra locals
-  // but record the original sp so that we can save it in the skeletal interpreter
-  // frame and the stack walking of interpreter_sender will get the unextended sp
-  // value and not the "real" sp value.
-
-  const Register sender_sp = r6;
-
-  __ mov(sender_sp, sp);
-  __ ldrw(r19, Address(r5, Deoptimization::UnrollBlock::caller_adjustment_offset_in_bytes()));
-  __ sub(sp, sp, r19);
-
-  // Push interpreter frames in a loop
-  __ mov(rscratch1, (address)0xDEADDEAD);        // Make a recognizable pattern
-  __ mov(rscratch2, rscratch1);
-  Label loop;
-  __ bind(loop);
-  __ ldr(r19, Address(__ post(r4, wordSize)));          // Load frame size
-  __ sub(r19, r19, 2*wordSize);           // We'll push pc and fp by hand
-  __ ldr(lr, Address(__ post(r2, wordSize)));  // Load pc
-  __ enter();                           // Save old & set new fp
-  __ sub(sp, sp, r19);                  // Prolog
-  // This value is corrected by layout_activation_impl
-  __ str(zr, Address(rfp, frame::interpreter_frame_last_sp_offset * wordSize));
-  __ str(sender_sp, Address(rfp, frame::interpreter_frame_sender_sp_offset * wordSize)); // Make it walkable
-  __ mov(sender_sp, sp);               // Pass sender_sp to next frame
-  __ sub(r3, r3, 1);                   // Decrement counter
-  __ cbnz(r3, loop);
-
-    // Re-push self-frame
-  __ ldr(lr, Address(r2));
-  __ enter();
-
-  // Allocate a full sized register save area.  We subtract 2 because
-  // enter() just pushed 2 words
-  __ sub(sp, sp, (frame_size_in_words - 2) * wordSize);
-
-  // Restore frame locals after moving the frame
-  __ strd(v0, Address(sp, RegisterSaver::v0_offset_in_bytes()));
-  __ str(r0, Address(sp, RegisterSaver::r0_offset_in_bytes()));
-
-  // Call C code.  Need thread but NOT official VM entry
-  // crud.  We cannot block on this call, no GC can happen.  Call should
-  // restore return values to their stack-slots with the new SP.
-  //
-  // void Deoptimization::unpack_frames(JavaThread* thread, int exec_mode)
-
-  // Use rfp because the frames look interpreted now
-  // Don't need the precise return PC here, just precise enough to point into this code blob.
-  address the_pc = __ pc();
-  __ set_last_Java_frame(sp, rfp, the_pc, rscratch1);
-
-  __ mov(c_rarg0, rthread);
-  __ movw(c_rarg1, rcpool); // second arg: exec_mode
-  __ lea(rscratch1, RuntimeAddress(CAST_FROM_FN_PTR(address, Deoptimization::unpack_frames)));
-  __ blrt(rscratch1, 2, 0, 0);
-
-  // Set an oopmap for the call site
-  // Use the same PC we used for the last java frame
-  oop_maps->add_gc_map(the_pc - start, new OopMap(frame_size_in_words, 0));
-
-  // Clear fp AND pc
-  __ reset_last_Java_frame(true);
-
-  // Collect return values
-  __ ldrd(v0, Address(sp, RegisterSaver::v0_offset_in_bytes()));
-  __ ldr(r0, Address(sp, RegisterSaver::r0_offset_in_bytes()));
-  // I think this is useless (throwing pc?)
-  // __ ldr(r3, Address(sp, RegisterSaver::r3_offset_in_bytes()));
-
-  // Pop self-frame.
-  __ leave();                           // Epilog
-
-  // Jump to interpreter
-  __ ret(lr);
-
-  // Make sure all code is generated
-  masm->flush();
-
-  _deopt_blob = DeoptimizationBlob::create(&buffer, oop_maps, 0, exception_offset, reexecute_offset, frame_size_in_words);
-  _deopt_blob->set_unpack_with_exception_in_tls_offset(exception_in_tls_offset);
-  if (EnableJVMCI || UseAOT) {
-    _deopt_blob->set_uncommon_trap_offset(uncommon_trap_offset);
-    _deopt_blob->set_implicit_exception_uncommon_trap_offset(implicit_exception_uncommon_trap_offset);
-  }
-#ifdef BUILTIN_SIM
-  if (NotifySimulator) {
-    unsigned char *base = _deopt_blob->code_begin();
-    simulator->notifyRelocate(start, base - start);
-  }
-#endif
-}
-
 uint SharedRuntime::out_preserve_stack_slots() {
   return 0;
-}
-
-//------------------------------generate_uncommon_trap_blob--------------------
-
-void SharedRuntime::generate_uncommon_trap_blob() {
-  // Allocate space for the code
-  ResourceMark rm;
-  // Setup code generation tools
-  CodeBuffer buffer("uncommon_trap_blob", 2048, 1024);
-  MacroAssembler* masm = new MacroAssembler(&buffer);
-
-#ifdef BUILTIN_SIM
-  AArch64Simulator *simulator;
-  if (NotifySimulator) {
-    simulator = AArch64Simulator::get_current(UseSimulatorCache, DisableBCCheck);
-    simulator->notifyCompile(const_cast<char*>("SharedRuntime:uncommon_trap_blob"), __ pc());
-  }
-#endif
-
-  address start = __ pc();
-
-  // Push self-frame.  We get here with a return address in LR
-  // and sp should be 16 byte aligned
-  // push rfp and retaddr by hand
-  __ stp(rfp, lr, Address(__ pre(sp, -2 * wordSize)));
-  // we don't expect an arg reg save area
-  // compiler left unloaded_class_index in j_rarg0 move to where the
-  // runtime expects it.
-  if (c_rarg1 != j_rarg0) {
-    __ movw(c_rarg1, j_rarg0);
-  }
-
-  // we need to set the past SP to the stack pointer of the stub frame
-  // and the pc to the address where this runtime call will return
-  // although actually any pc in this code blob will do).
-  Label retaddr;
-  __ set_last_Java_frame(sp, noreg, retaddr, rscratch1);
-
-  // Call C code.  Need thread but NOT official VM entry
-  // crud.  We cannot block on this call, no GC can happen.  Call should
-  // capture callee-saved registers as well as return values.
-  // Thread is in rdi already.
-  //
-  // UnrollBlock* uncommon_trap(JavaThread* thread, jint unloaded_class_index);
-  //
-  // n.b. 2 gp args, 0 fp args, integral return type
-
-  __ mov(c_rarg0, rthread);
-  __ movw(c_rarg2, (unsigned)Deoptimization::Unpack_uncommon_trap);
-  __ lea(rscratch1, RuntimeAddress(CAST_FROM_FN_PTR(address, Deoptimization::uncommon_trap)));
-  __ blrt(rscratch1, 2, 0, MacroAssembler::ret_type_integral);
-  __ bind(retaddr);
-
-  // Set an oopmap for the call site
-  OopMapSet* oop_maps = new OopMapSet();
-  OopMap* map = new OopMap(SimpleRuntimeFrame::framesize, 0);
-
-  // location of rfp is known implicitly by the frame sender code
-
-  oop_maps->add_gc_map(__ pc() - start, map);
-
-  __ reset_last_Java_frame(false);
-
-  // move UnrollBlock* into r4
-  __ mov(r4, r0);
-
-  // Pop all the frames we must move/replace.
-  //
-  // Frame picture (youngest to oldest)
-  // 1: self-frame (no frame link)
-  // 2: deopting frame  (no frame link)
-  // 3: caller of deopting frame (could be compiled/interpreted).
-
-  // Pop self-frame.  We have no frame, and must rely only on r0 and sp.
-  __ add(sp, sp, (SimpleRuntimeFrame::framesize) << LogBytesPerInt); // Epilog!
-
-  // Pop deoptimized frame (int)
-  __ ldrw(r2, Address(r4, Deoptimization::UnrollBlock::size_of_deoptimized_frame_offset_in_bytes()));
-  __ sub(r2, r2, 2 * wordSize);
-  __ add(sp, sp, r2);
-  __ ldp(rfp, lr, __ post(sp, 2 * wordSize));
-  // LR should now be the return address to the caller (3) frame
-
-  // Load address of array of frame pcs into r2 (address*)
-  __ ldr(r2, Address(r4, Deoptimization::UnrollBlock::frame_pcs_offset_in_bytes()));
-
-  // Load address of array of frame sizes into r5 (intptr_t*)
-  __ ldr(r5, Address(r4, Deoptimization::UnrollBlock::frame_sizes_offset_in_bytes()));
-
-  // Counter
-  __ ldrw(r3, Address(r4, Deoptimization::UnrollBlock::number_of_frames_offset_in_bytes())); // (int)
-
-  // Now adjust the caller's stack to make up for the extra locals but
-  // record the original sp so that we can save it in the skeletal
-  // interpreter frame and the stack walking of interpreter_sender
-  // will get the unextended sp value and not the "real" sp value.
-
-  const Register sender_sp = r8;
-
-  __ mov(sender_sp, sp);
-  __ ldrw(r1, Address(r4, Deoptimization::UnrollBlock::caller_adjustment_offset_in_bytes())); // (int)
-  __ sub(sp, sp, r1);
-
-  // Push interpreter frames in a loop
-  Label loop;
-  __ bind(loop);
-  __ ldr(r1, Address(r5, 0));       // Load frame size
-  __ sub(r1, r1, 2 * wordSize);     // We'll push pc and rfp by hand
-  __ ldr(lr, Address(r2, 0));       // Save return address
-  __ enter();                       // and old rfp & set new rfp
-  __ sub(sp, sp, r1);               // Prolog
-  __ str(sender_sp, Address(rfp, frame::interpreter_frame_sender_sp_offset * wordSize)); // Make it walkable
-  // This value is corrected by layout_activation_impl
-  __ str(zr, Address(rfp, frame::interpreter_frame_last_sp_offset * wordSize));
-  __ mov(sender_sp, sp);          // Pass sender_sp to next frame
-  __ add(r5, r5, wordSize);       // Bump array pointer (sizes)
-  __ add(r2, r2, wordSize);       // Bump array pointer (pcs)
-  __ subsw(r3, r3, 1);            // Decrement counter
-  __ br(Assembler::GT, loop);
-  __ ldr(lr, Address(r2, 0));     // save final return address
-  // Re-push self-frame
-  __ enter();                     // & old rfp & set new rfp
-
-  // Use rfp because the frames look interpreted now
-  // Save "the_pc" since it cannot easily be retrieved using the last_java_SP after we aligned SP.
-  // Don't need the precise return PC here, just precise enough to point into this code blob.
-  address the_pc = __ pc();
-  __ set_last_Java_frame(sp, rfp, the_pc, rscratch1);
-
-  // Call C code.  Need thread but NOT official VM entry
-  // crud.  We cannot block on this call, no GC can happen.  Call should
-  // restore return values to their stack-slots with the new SP.
-  // Thread is in rdi already.
-  //
-  // BasicType unpack_frames(JavaThread* thread, int exec_mode);
-  //
-  // n.b. 2 gp args, 0 fp args, integral return type
-
-  // sp should already be aligned
-  __ mov(c_rarg0, rthread);
-  __ movw(c_rarg1, (unsigned)Deoptimization::Unpack_uncommon_trap);
-  __ lea(rscratch1, RuntimeAddress(CAST_FROM_FN_PTR(address, Deoptimization::unpack_frames)));
-  __ blrt(rscratch1, 2, 0, MacroAssembler::ret_type_integral);
-
-  // Set an oopmap for the call site
-  // Use the same PC we used for the last java frame
-  oop_maps->add_gc_map(the_pc - start, new OopMap(SimpleRuntimeFrame::framesize, 0));
-
-  // Clear fp AND pc
-  __ reset_last_Java_frame(true);
-
-  // Pop self-frame.
-  __ leave();                 // Epilog
-
-  // Jump to interpreter
-  __ ret(lr);
-
-  // Make sure all code is generated
-  masm->flush();
-
-  _uncommon_trap_blob =  UncommonTrapBlob::create(&buffer, oop_maps,
-                                                 SimpleRuntimeFrame::framesize >> 1);
-
-#ifdef BUILTIN_SIM
-  if (NotifySimulator) {
-    unsigned char *base = _deopt_blob->code_begin();
-    simulator->notifyRelocate(start, base - start);
-  }
-#endif
 }
 
 //------------------------------generate_handler_blob------

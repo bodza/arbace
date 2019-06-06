@@ -575,8 +575,7 @@ void CompilerOracle::parse_from_line(char* line) {
           || strcmp(option, "bool") == 0
           || strcmp(option, "ccstr") == 0
           || strcmp(option, "ccstrlist") == 0
-          || strcmp(option, "double") == 0
-          ) {
+          || strcmp(option, "double") == 0) {
         char errorbuf[1024] = { 0 };
         // Type (2) option: parse flag name and value.
         scan_flag_and_value(option, line, bytes_read, typed_matcher, errorbuf, sizeof(errorbuf));

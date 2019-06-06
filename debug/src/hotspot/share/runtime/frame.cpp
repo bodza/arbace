@@ -5,8 +5,6 @@
 #include "compiler/abstractCompiler.hpp"
 #include "compiler/disassembler.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
-#include "interpreter/interpreter.hpp"
-#include "interpreter/oopMapCache.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
 #include "oops/markOop.hpp"
@@ -110,8 +108,9 @@ bool frame::is_native_frame() const {
 }
 
 bool frame::is_java_frame() const {
-  if (is_interpreted_frame()) return true;
-  if (is_compiled_frame())    return true;
+  if (is_compiled_frame()) {
+    return true;
+  }
   return false;
 }
 
@@ -267,109 +266,8 @@ frame frame::real_sender(RegisterMap* map) const {
   return result;
 }
 
-// Note: called by profiler - NOT for current thread
-frame frame::profile_find_Java_sender_frame(JavaThread *thread) {
-// If we don't recognize this frame, walk back up the stack until we do
-  RegisterMap map(thread, false);
-  frame first_java_frame = frame();
-
-  // Find the first Java frame on the stack starting with input frame
-  if (is_java_frame()) {
-    // top frame is compiled frame or deoptimized frame
-    first_java_frame = *this;
-  } else if (safe_for_sender(thread)) {
-    for (frame sender_frame = sender(&map); sender_frame.safe_for_sender(thread) && !sender_frame.is_first_frame(); sender_frame = sender_frame.sender(&map)) {
-      if (sender_frame.is_java_frame()) {
-        first_java_frame = sender_frame;
-        break;
-      }
-    }
-  }
-  return first_java_frame;
-}
-
-// Interpreter frames
-
-void frame::interpreter_frame_set_locals(intptr_t* locs) {
-  *interpreter_frame_locals_addr() = locs;
-}
-
-Method* frame::interpreter_frame_method() const {
-  Method* m = *interpreter_frame_method_addr();
-  return m;
-}
-
-void frame::interpreter_frame_set_method(Method* method) {
-  *interpreter_frame_method_addr() = method;
-}
-
-void frame::interpreter_frame_set_mirror(oop mirror) {
-  *interpreter_frame_mirror_addr() = mirror;
-}
-
-jint frame::interpreter_frame_bci() const {
-  address bcp = interpreter_frame_bcp();
-  return interpreter_frame_method()->bci_from(bcp);
-}
-
-address frame::interpreter_frame_bcp() const {
-  address bcp = (address)*interpreter_frame_bcp_addr();
-  return interpreter_frame_method()->bcp_from(bcp);
-}
-
-void frame::interpreter_frame_set_bcp(address bcp) {
-  *interpreter_frame_bcp_addr() = (intptr_t)bcp;
-}
-
-address frame::interpreter_frame_mdp() const {
-  return (address)*interpreter_frame_mdp_addr();
-}
-
-void frame::interpreter_frame_set_mdp(address mdp) {
-  *interpreter_frame_mdp_addr() = (intptr_t)mdp;
-}
-
-BasicObjectLock* frame::next_monitor_in_interpreter_frame(BasicObjectLock* current) const {
-  BasicObjectLock* next = (BasicObjectLock*) (((intptr_t*) current) + interpreter_frame_monitor_size());
-  return next;
-}
-
-BasicObjectLock* frame::previous_monitor_in_interpreter_frame(BasicObjectLock* current) const {
-  BasicObjectLock* previous = (BasicObjectLock*) (((intptr_t*) current) - interpreter_frame_monitor_size());
-  return previous;
-}
-
-// Interpreter locals and expression stack locations.
-
-intptr_t* frame::interpreter_frame_local_at(int index) const {
-  const int n = Interpreter::local_offset_in_bytes(index)/wordSize;
-  return &((*interpreter_frame_locals_addr())[n]);
-}
-
-intptr_t* frame::interpreter_frame_expression_stack_at(jint offset) const {
-  const int i = offset * interpreter_frame_expression_stack_direction();
-  const int n = i * Interpreter::stackElementWords;
-  return &(interpreter_frame_expression_stack()[n]);
-}
-
-jint frame::interpreter_frame_expression_stack_size() const {
-  // Number of elements on the interpreter expression stack
-  // Callers should span by stackElementWords
-  int element_size = Interpreter::stackElementWords;
-  size_t stack_size = 0;
-  if (frame::interpreter_frame_expression_stack_direction() < 0) {
-    stack_size = (interpreter_frame_expression_stack() - interpreter_frame_tos_address() + 1)/element_size;
-  } else {
-    stack_size = (interpreter_frame_tos_address() - interpreter_frame_expression_stack() + 1)/element_size;
-  }
-  return ((jint)stack_size);
-}
-
-// (frame::interpreter_frame_sender_sp accessor is in frame_<arch>.cpp)
-
 const char* frame::print_name() const {
   if (is_native_frame())      return "Native";
-  if (is_interpreted_frame()) return "Interpreted";
   if (is_compiled_frame()) {
     if (is_deoptimized_frame()) return "Deoptimized";
     return "Compiled";
@@ -381,24 +279,13 @@ const char* frame::print_name() const {
 void frame::print_value_on(outputStream* st, JavaThread *thread) const {
   st->print("%s frame (sp=" INTPTR_FORMAT " unextended sp=" INTPTR_FORMAT, print_name(), p2i(sp()), p2i(unextended_sp()));
   if (sp() != NULL)
-    st->print(", fp=" INTPTR_FORMAT ", real_fp=" INTPTR_FORMAT ", pc=" INTPTR_FORMAT,
-              p2i(fp()), p2i(real_fp()), p2i(pc()));
+    st->print(", fp=" INTPTR_FORMAT ", real_fp=" INTPTR_FORMAT ", pc=" INTPTR_FORMAT, p2i(fp()), p2i(real_fp()), p2i(pc()));
 
   if (StubRoutines::contains(pc())) {
     st->print_cr(")");
     st->print("(");
     StubCodeDesc* desc = StubCodeDesc::desc_for(pc());
     st->print("~Stub::%s", desc->name());
-  } else if (Interpreter::contains(pc())) {
-    st->print_cr(")");
-    st->print("(");
-    InterpreterCodelet* desc = Interpreter::codelet_containing(pc());
-    if (desc != NULL) {
-      st->print("~");
-      desc->print_on(st);
-    } else {
-      st->print("~interpreter");
-    }
   }
   st->print_cr(")");
 
@@ -411,12 +298,7 @@ void frame::print_value_on(outputStream* st, JavaThread *thread) const {
 
 void frame::print_on(outputStream* st) const {
   print_value_on(st,NULL);
-  if (is_interpreted_frame()) {
-    interpreter_frame_print_on(st);
-  }
 }
-
-void frame::interpreter_frame_print_on(outputStream* st) const { }
 
 // Print whether the frame is in the VM or OS indicating a HotSpot problem.
 // Otherwise, it's likely a bug in the native library that the Java code calls,
@@ -465,25 +347,7 @@ void frame::print_C_frame(outputStream* st, char* buf, int buflen, address pc) {
 
 void frame::print_on_error(outputStream* st, char* buf, int buflen, bool verbose) const {
   if (_cb != NULL) {
-    if (Interpreter::contains(pc())) {
-      Method* m = this->interpreter_frame_method();
-      if (m != NULL) {
-        m->name_and_sig_as_C_string(buf, buflen);
-        st->print("j  %s", buf);
-        st->print("+%d", this->interpreter_frame_bci());
-        ModuleEntry* module = m->method_holder()->module();
-        if (module->is_named()) {
-          module->name()->as_C_string(buf, buflen);
-          st->print(" %s", buf);
-          if (module->version() != NULL) {
-            module->version()->as_C_string(buf, buflen);
-            st->print("@%s", buf);
-          }
-        }
-      } else {
-        st->print("j  " PTR_FORMAT, p2i(pc()));
-      }
-    } else if (StubRoutines::contains(pc())) {
+    if (StubRoutines::contains(pc())) {
       StubCodeDesc* desc = StubCodeDesc::desc_for(pc());
       if (desc != NULL) {
         st->print("v  ~StubRoutines::%s", desc->name());
@@ -528,7 +392,7 @@ void frame::print_on_error(outputStream* st, char* buf, int buflen, bool verbose
     } else if (_cb->is_runtime_stub()) {
       st->print("v  ~RuntimeStub::%s", ((RuntimeStub *)_cb)->name());
     } else if (_cb->is_deoptimization_stub()) {
-      st->print("v  ~DeoptimizationBlob");
+      st->print("v  ~NULL");
     } else if (_cb->is_exception_stub()) {
       st->print("v  ~ExceptionBlob");
     } else if (_cb->is_safepoint_stub()) {
@@ -540,92 +404,6 @@ void frame::print_on_error(outputStream* st, char* buf, int buflen, bool verbose
     print_C_frame(st, buf, buflen, pc());
   }
 }
-
-/*
-  The interpreter_frame_expression_stack_at method in the case of SPARC needs the
-  max_stack value of the method in order to compute the expression stack address.
-  It uses the Method* in order to get the max_stack value but during GC this
-  Method* value saved on the frame is changed by reverse_and_push and hence cannot
-  be used. So we save the max_stack value in the FrameClosure object and pass it
-  down to the interpreter_frame_expression_stack_at method
-*/
-class InterpreterFrameClosure : public OffsetClosure {
- private:
-  frame* _fr;
-  OopClosure* _f;
-  int    _max_locals;
-  int    _max_stack;
-
- public:
-  InterpreterFrameClosure(frame* fr, int max_locals, int max_stack,
-                          OopClosure* f) {
-    _fr         = fr;
-    _max_locals = max_locals;
-    _max_stack  = max_stack;
-    _f          = f;
-  }
-
-  void offset_do(int offset) {
-    oop* addr;
-    if (offset < _max_locals) {
-      addr = (oop*) _fr->interpreter_frame_local_at(offset);
-      _f->do_oop(addr);
-    } else {
-      addr = (oop*) _fr->interpreter_frame_expression_stack_at((offset - _max_locals));
-      // In case of exceptions, the expression stack is invalid and the esp will be reset to express
-      // this condition. Therefore, we call f only if addr is 'inside' the stack (i.e., addr >= esp for Intel).
-      bool in_stack;
-      if (frame::interpreter_frame_expression_stack_direction() > 0) {
-        in_stack = (intptr_t*)addr <= _fr->interpreter_frame_tos_address();
-      } else {
-        in_stack = (intptr_t*)addr >= _fr->interpreter_frame_tos_address();
-      }
-      if (in_stack) {
-        _f->do_oop(addr);
-      }
-    }
-  }
-
-  int max_locals()  { return _max_locals; }
-  frame* fr()       { return _fr; }
-};
-
-class InterpretedArgumentOopFinder: public SignatureInfo {
- private:
-  OopClosure* _f;        // Closure to invoke
-  int    _offset;        // TOS-relative offset, decremented with each argument
-  bool   _has_receiver;  // true if the callee has a receiver
-  frame* _fr;
-
-  void set(int size, BasicType type) {
-    _offset -= size;
-    if (type == T_OBJECT || type == T_ARRAY) oop_offset_do();
-  }
-
-  void oop_offset_do() {
-    oop* addr;
-    addr = (oop*)_fr->interpreter_frame_tos_at(_offset);
-    _f->do_oop(addr);
-  }
-
- public:
-  InterpretedArgumentOopFinder(Symbol* signature, bool has_receiver, frame* fr, OopClosure* f) : SignatureInfo(signature), _has_receiver(has_receiver) {
-    // compute size of arguments
-    int args_size = ArgumentSizeComputer(signature).size() + (has_receiver ? 1 : 0);
-    // initialize InterpretedArgumentOopFinder
-    _f         = f;
-    _fr        = fr;
-    _offset    = args_size;
-  }
-
-  void oops_do() {
-    if (_has_receiver) {
-      --_offset;
-      oop_offset_do();
-    }
-    iterate_parameters();
-  }
-};
 
 // Entry frame has following form (n arguments)
 //         +-----------+
@@ -645,7 +423,9 @@ class EntryFrameOopFinder: public SignatureInfo {
   OopClosure* _f;
 
   void set(int size, BasicType type) {
-    if (type == T_OBJECT || type == T_ARRAY) oop_at_offset_do(_offset);
+    if (type == T_OBJECT || type == T_ARRAY) {
+        oop_at_offset_do(_offset);
+    }
     _offset -= size;
   }
 
@@ -664,84 +444,12 @@ class EntryFrameOopFinder: public SignatureInfo {
 
   void arguments_do(OopClosure* f) {
     _f = f;
-    if (!_is_static) oop_at_offset_do(_offset + 1); // do the receiver
+    if (!_is_static) {
+      oop_at_offset_do(_offset + 1); // do the receiver
+    }
     iterate_parameters();
   }
 };
-
-oop* frame::interpreter_callee_receiver_addr(Symbol* signature) {
-  ArgumentSizeComputer asc(signature);
-  int size = asc.size();
-  return (oop *)interpreter_frame_tos_at(size);
-}
-
-void frame::oops_interpreted_do(OopClosure* f, const RegisterMap* map, bool query_oop_map_cache) {
-  Thread *thread = Thread::current();
-  methodHandle m (thread, interpreter_frame_method());
-  jint      bci = interpreter_frame_bci();
-
-  // Handle the monitor elements in the activation
-  for (BasicObjectLock* current = interpreter_frame_monitor_end(); current < interpreter_frame_monitor_begin(); current = next_monitor_in_interpreter_frame(current)) {
-    current->oops_do(f);
-  }
-
-  if (m->is_native()) {
-    f->do_oop(interpreter_frame_temp_oop_addr());
-  }
-
-  // The method pointer in the frame might be the only path to the method's
-  // klass, and the klass needs to be kept alive while executing. The GCs
-  // don't trace through method pointers, so the mirror of the method's klass
-  // is installed as a GC root.
-  f->do_oop(interpreter_frame_mirror_addr());
-
-  int max_locals = m->is_native() ? m->size_of_parameters() : m->max_locals();
-
-  Symbol* signature = NULL;
-  bool has_receiver = false;
-
-  // Process a callee's arguments if we are at a call site
-  // (i.e., if we are at an invoke bytecode)
-  // This is used sometimes for calling into the VM, not for another
-  // interpreted or compiled frame.
-  if (!m->is_native()) {
-    Bytecode_invoke call = Bytecode_invoke_check(m, bci);
-    if (call.is_valid()) {
-      signature = call.signature();
-      has_receiver = call.has_receiver();
-      if (map->include_argument_oops() && interpreter_frame_expression_stack_size() > 0) {
-        ResourceMark rm(thread);  // is this right ???
-        // we are at a call site & the expression stack is not empty
-        // => process callee's arguments
-        //
-        // Note: The expression stack can be empty if an exception
-        //       occurred during method resolution/execution. In all
-        //       cases we empty the expression stack completely be-
-        //       fore handling the exception (the exception handling
-        //       code in the interpreter calls a blocking runtime
-        //       routine which can cause this code to be executed).
-        //       (was bug gri 7/27/98)
-        oops_interpreted_arguments_do(signature, has_receiver, f);
-      }
-    }
-  }
-
-  InterpreterFrameClosure blk(this, max_locals, m->max_stack(), f);
-
-  // process locals & expression stack
-  InterpreterOopMap mask;
-  if (query_oop_map_cache) {
-    m->mask_for(bci, &mask);
-  } else {
-    OopMapCache::compute_one_oop_map(m, bci, &mask);
-  }
-  mask.iterate_oop(&blk);
-}
-
-void frame::oops_interpreted_arguments_do(Symbol* signature, bool has_receiver, OopClosure* f) {
-  InterpretedArgumentOopFinder finder(signature, has_receiver, this, f);
-  finder.oops_do();
-}
 
 void frame::oops_code_blob_do(OopClosure* f, CodeBlobClosure* cf, const RegisterMap* reg_map) {
   if (_cb->oop_maps() != NULL) {
@@ -866,10 +574,8 @@ void frame::oops_entry_do(OopClosure* f, const RegisterMap* map) {
   entry_frame_call_wrapper()->oops_do(f);
 }
 
-void frame::oops_do_internal(OopClosure* f, CodeBlobClosure* cf, RegisterMap* map, bool use_interpreter_oop_map_cache) {
-  if (is_interpreted_frame()) {
-    oops_interpreted_do(f, map, use_interpreter_oop_map_cache);
-  } else if (is_entry_frame()) {
+void frame::oops_do_internal(OopClosure* f, CodeBlobClosure* cf, RegisterMap* map) {
+  if (is_entry_frame()) {
     oops_entry_do(f, map);
   } else if (CodeCache::contains(pc())) {
     oops_code_blob_do(f, cf, map);
@@ -886,12 +592,7 @@ void frame::nmethods_do(CodeBlobClosure* cf) {
 
 // call f() on the interpreted Method*s in the stack.
 // Have to walk the entire code cache for the compiled frames Yuck.
-void frame::metadata_do(void f(Metadata*)) {
-  if (is_interpreted_frame()) {
-    Method* m = this->interpreter_frame_method();
-    f(m);
-  }
-}
+void frame::metadata_do(void f(Metadata*)) { }
 
 //-----------------------------------------------------------------------------------
 // StackFrameStream implementation

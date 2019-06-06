@@ -7,7 +7,6 @@
 #include "gc/shared/barrierSet.hpp"
 #include "gc/shared/barrierSetAssembler.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
-#include "interpreter/interpreter.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
 #include "oops/accessDecorators.hpp"
@@ -325,25 +324,25 @@ void MacroAssembler::set_last_Java_frame(Register last_java_sp, Register last_ja
 }
 
 static void pass_arg0(MacroAssembler* masm, Register arg) {
-  if (c_rarg0 != arg ) {
+  if (c_rarg0 != arg) {
     masm->mov(c_rarg0, arg);
   }
 }
 
 static void pass_arg1(MacroAssembler* masm, Register arg) {
-  if (c_rarg1 != arg ) {
+  if (c_rarg1 != arg) {
     masm->mov(c_rarg1, arg);
   }
 }
 
 static void pass_arg2(MacroAssembler* masm, Register arg) {
-  if (c_rarg2 != arg ) {
+  if (c_rarg2 != arg) {
     masm->mov(c_rarg2, arg);
   }
 }
 
 static void pass_arg3(MacroAssembler* masm, Register arg) {
-  if (c_rarg3 != arg ) {
+  if (c_rarg3 != arg) {
     masm->mov(c_rarg3, arg);
   }
 }
@@ -889,11 +888,6 @@ void MacroAssembler::call_VM_helper(Register oop_result, address entry_point, in
   lea(rax, Address(rsp, wordSize));
 
   call_VM_base(oop_result, noreg, rax, entry_point, number_of_arguments, check_exceptions);
-}
-
-// Use this method when MacroAssembler version of call_VM_leaf_base() should be called from Interpreter.
-void MacroAssembler::call_VM_leaf0(address entry_point) {
-  MacroAssembler::call_VM_leaf_base(entry_point, 0);
 }
 
 void MacroAssembler::call_VM_leaf(address entry_point, int number_of_arguments) {
@@ -2749,9 +2743,8 @@ RegisterOrConstant MacroAssembler::delayed_value_impl(intptr_t* delayed_value_ad
 }
 
 Address MacroAssembler::argument_address(RegisterOrConstant arg_slot, int extra_slot_offset) {
-  // cf. TemplateTable::prepare_invoke(), if (load_receiver).
-  int stackElementSize = Interpreter::stackElementSize;
-  int offset = Interpreter::expr_offset_in_bytes(extra_slot_offset+0);
+  int stackElementSize = NULL::stackElementSize;
+  int offset = NULL::expr_offset_in_bytes(extra_slot_offset+0);
   Register             scale_reg    = noreg;
   Address::ScaleFactor scale_factor = Address::no_scale;
   if (arg_slot.is_constant()) {
@@ -3510,11 +3503,6 @@ void MacroAssembler::verified_entry(int framesize, int stack_bang_size, bool fp_
         addptr(rbp, framesize);
       }
     }
-  }
-
-  if (VerifyStackAtCalls) { // Majik cookie to verify stack depth
-    framesize -= wordSize;
-    movptr(Address(rsp, framesize), (int32_t)0xbadb100d);
   }
 }
 
@@ -5420,7 +5408,7 @@ void MacroAssembler::crc32c_ipl_alg2_alt2(Register in_out, Register in1, Registe
   Label L_byteByByte;
   Label L_exit;
 
-  if (is_pclmulqdq_supported ) {
+  if (is_pclmulqdq_supported) {
     const_or_pre_comp_const_index[1] = *(uint32_t *)StubRoutines::_crc32c_table_addr;
     const_or_pre_comp_const_index[0] = *((uint32_t *)StubRoutines::_crc32c_table_addr + 1);
 

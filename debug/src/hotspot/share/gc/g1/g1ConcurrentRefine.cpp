@@ -24,8 +24,7 @@ G1ConcurrentRefineThreadControl::G1ConcurrentRefineThreadControl() :
   _cr(NULL),
   _threads(NULL),
   _num_max_threads(0)
-{
-}
+{ }
 
 G1ConcurrentRefineThreadControl::~G1ConcurrentRefineThreadControl() {
   for (uint i = 0; i < _num_max_threads; i++) {
@@ -142,8 +141,7 @@ G1ConcurrentRefine::G1ConcurrentRefine(size_t green_zone, size_t yellow_zone, si
   _yellow_zone(yellow_zone),
   _red_zone(red_zone),
   _min_yellow_zone_size(min_yellow_zone_size)
-{
-}
+{ }
 
 jint G1ConcurrentRefine::initialize() {
   return _thread_control.initialize(this, max_num_threads());

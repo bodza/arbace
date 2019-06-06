@@ -14,7 +14,6 @@
 #include "classfile/vmSymbols.hpp"
 #include "compiler/compileBroker.hpp"
 #include "interpreter/bytecodeStream.hpp"
-#include "interpreter/oopMapCache.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
@@ -753,8 +752,7 @@ objArrayOop ClassLoader::get_system_packages(TRAPS) {
 }
 
 // caller needs ResourceMark
-const char* ClassLoader::file_name_for_class_name(const char* class_name,
-                                                  int class_name_len) {
+const char* ClassLoader::file_name_for_class_name(const char* class_name, int class_name_len) {
   static const char class_suffix[] = ".class";
 
   char* const file_name = NEW_RESOURCE_ARRAY(char, class_name_len + sizeof(class_suffix)); // includes term NULL

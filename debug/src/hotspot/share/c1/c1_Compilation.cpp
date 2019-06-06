@@ -422,7 +422,7 @@ Compilation::Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* metho
   _implicit_exception_table.set_size(0);
   compile_method();
   if (bailed_out()) {
-    _env->record_method_not_compilable(bailout_msg(), !TieredCompilation);
+    _env->record_method_not_compilable(bailout_msg());
     if (is_profiling()) {
       // Compilation failed, create MDO, which would signal the interpreter
       // to start profiling on its own.

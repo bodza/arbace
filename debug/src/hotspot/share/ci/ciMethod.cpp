@@ -13,16 +13,13 @@
 #include "classfile/systemDictionary.hpp"
 #include "compiler/abstractCompiler.hpp"
 #include "compiler/methodLiveness.hpp"
-#include "interpreter/interpreter.hpp"
 #include "interpreter/linkResolver.hpp"
-#include "interpreter/oopMapCache.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/generateOopMap.hpp"
 #include "oops/method.inline.hpp"
 #include "oops/oop.inline.hpp"
 #include "prims/nativeLookup.hpp"
-#include "runtime/deoptimization.hpp"
 #include "utilities/bitMap.inline.hpp"
 #include "utilities/xmlstream.hpp"
 
@@ -35,10 +32,7 @@
 // ciMethod::ciMethod
 //
 // Loaded method.
-ciMethod::ciMethod(const methodHandle& h_m, ciInstanceKlass* holder) :
-  ciMetadata(h_m()),
-  _holder(holder)
-{
+ciMethod::ciMethod(const methodHandle& h_m, ciInstanceKlass* holder) : ciMetadata(h_m()), _holder(holder) {
   // These fields are always filled in in loaded methods.
   _flags = ciFlags(h_m()->access_flags());
 
@@ -87,12 +81,7 @@ ciMethod::ciMethod(const methodHandle& h_m, ciInstanceKlass* holder) :
   _method_data = NULL;
   _nmethod_age = h_m()->nmethod_age();
   // Take a snapshot of these values, so they will be commensurate with the MDO.
-  if (ProfileInterpreter || TieredCompilation) {
-    int invcnt = h_m()->interpreter_invocation_count();
-    // if the value overflowed report it as max int
-    _interpreter_invocation_count = invcnt < 0 ? max_jint : invcnt;
-    _interpreter_throwout_count   = h_m()->interpreter_throwout_count();
-  } else {
+  {
     _interpreter_invocation_count = 0;
     _interpreter_throwout_count = 0;
   }
@@ -105,11 +94,7 @@ ciMethod::ciMethod(const methodHandle& h_m, ciInstanceKlass* holder) :
 // ciMethod::ciMethod
 //
 // Unloaded method.
-ciMethod::ciMethod(ciInstanceKlass* holder,
-                   ciSymbol*        name,
-                   ciSymbol*        signature,
-                   ciInstanceKlass* accessor) :
-  ciMetadata((Metadata*)NULL),
+ciMethod::ciMethod(ciInstanceKlass* holder, ciSymbol* name, ciSymbol* signature, ciInstanceKlass* accessor) : ciMetadata((Metadata*)NULL),
   _name(                   name),
   _holder(                 holder),
   _intrinsic_id(           vmIntrinsics::_none),
@@ -211,17 +196,6 @@ address ciMethod::native_entry() {
 }
 
 // ------------------------------------------------------------------
-// ciMethod::interpreter_entry
-//
-// Get the entry point for running this method in the interpreter.
-address ciMethod::interpreter_entry() {
-  check_is_loaded();
-  VM_ENTRY_MARK;
-  methodHandle mh(THREAD, get_Method());
-  return Interpreter::entry_for_method(mh);
-}
-
-// ------------------------------------------------------------------
 // ciMethod::uses_balanced_monitors
 //
 // Does this method use monitors in a strict stack-disciplined manner?
@@ -314,13 +288,12 @@ MethodLivenessResult ciMethod::liveness_at_bci(int bci) {
 
 ResourceBitMap ciMethod::live_local_oops_at_bci(int bci) {
   VM_ENTRY_MARK;
-  InterpreterOopMap mask;
-  OopMapCache::compute_one_oop_map(get_Method(), bci, &mask);
+  NULL::compute_one_oop_map(get_Method(), bci, &NULL);
   int mask_size = max_locals();
   ResourceBitMap result(mask_size);
   int i;
   for (i = 0; i < mask_size ; i++) {
-    if (mask.is_oop(i)) result.set_bit(i);
+    if (NULL.is_oop(i)) result.set_bit(i);
   }
   return result;
 }
@@ -369,16 +342,6 @@ ciCallProfile ciMethod::call_profile_at_bci(int bci) {
           morphism++;
         }
         int epsilon = 0;
-        if (TieredCompilation) {
-          // For a call, it is assumed that either the type of the receiver(s)
-          // is recorded or an associated counter is incremented, but not both. With
-          // tiered compilation, however, both can happen due to the interpreter and
-          // C1 profiling invocations differently. Address that inconsistency here.
-          if (morphism == 1 && count > 0) {
-            epsilon = count;
-            count = 0;
-          }
-        }
         for (uint i = 0; i < call->row_limit(); i++) {
           ciKlass* receiver = call->receiver(i);
           if (receiver == NULL)  continue;
@@ -422,7 +385,7 @@ void ciCallProfile::add_receiver(ciKlass* receiver, int receiver_count) {
   // is placed to the last array element which is not used).
   // First array's element contains most called receiver.
   int i = _limit;
-  for (; i > 0 && receiver_count > _receiver_count[i - 1]; i--) {
+  for ( ; i > 0 && receiver_count > _receiver_count[i - 1]; i--) {
     _receiver[i] = _receiver[i - 1];
     _receiver_count[i] = _receiver_count[i - 1];
   }
@@ -732,10 +695,7 @@ int ciMethod::scale_count(int count, float prof_factor) {
   if (count > 0 && method_data() != NULL) {
     int counter_life;
     int method_life = interpreter_invocation_count();
-    if (TieredCompilation) {
-      // In tiered the MDO's life is measured directly, so just use the snapshotted counters
-      counter_life = MAX2(method_data()->invocation_count(), method_data()->backedge_count());
-    } else {
+    {
       int current_mileage = method_data()->current_mileage();
       int creation_mileage = method_data()->creation_mileage();
       counter_life = current_mileage - creation_mileage;
@@ -1005,7 +965,7 @@ int ciMethod::instructions_size() {
 bool ciMethod::is_not_reached(int bci) {
   check_is_loaded();
   VM_ENTRY_MARK;
-  return Interpreter::is_not_reached(methodHandle(THREAD, get_Method()), bci);
+  return NULL::is_not_reached(methodHandle(THREAD, get_Method()), bci);
 }
 
 // ------------------------------------------------------------------
@@ -1023,7 +983,7 @@ bool ciMethod::has_unloaded_classes_in_signature() {
     EXCEPTION_MARK;
     methodHandle m(THREAD, get_Method());
     bool has_unloaded = Method::has_unloaded_classes_in_signature(m, (JavaThread *)THREAD);
-    if (HAS_PENDING_EXCEPTION ) {
+    if (HAS_PENDING_EXCEPTION) {
       CLEAR_PENDING_EXCEPTION;
       return true;     // Declare that we may have unloaded classes
     }
@@ -1121,11 +1081,6 @@ bool ciMethod::is_unboxing_method() const {
     }
   }
   return false;
-}
-
-BCEscapeAnalyzer *ciMethod::get_bcea() {
-  ShouldNotReachHere();
-  return NULL;
 }
 
 ciMethodBlocks *ciMethod::get_method_blocks() {

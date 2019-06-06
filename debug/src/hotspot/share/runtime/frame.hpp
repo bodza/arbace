@@ -7,8 +7,6 @@
 #include "runtime/registerMap.hpp"
 #include "utilities/macros.hpp"
 
-typedef class BytecodeInterpreter* interpreterState;
-
 class CodeBlob;
 class FrameValues;
 class vframeArray;
@@ -80,7 +78,6 @@ class frame {
   bool equal(frame other) const;
 
   // type testers
-  bool is_interpreted_frame()    const;
   bool is_java_frame()           const;
   bool is_entry_frame()          const;             // Java frame called from C?
   bool is_stub_frame()           const;
@@ -95,8 +92,6 @@ class frame {
   bool is_first_frame() const; // oldest frame? (has no sender)
   bool is_first_java_frame() const;              // same for Java frame
 
-  bool is_interpreted_frame_valid(JavaThread* thread) const;       // performs sanity checks on interpreted frames.
-
   // tells whether this frame is marked for deoptimization
   bool should_be_deoptimized() const;
 
@@ -109,9 +104,6 @@ class frame {
   // returns the sending frame
   frame sender(RegisterMap* map) const;
 
-  // for Profiling - acting on another frame. walks sender frames
-  // if valid.
-  frame profile_find_Java_sender_frame(JavaThread *thread);
   bool safe_for_sender(JavaThread *thread);
 
   // returns the sender, but skips conversion frames
@@ -125,7 +117,6 @@ class frame {
   // Helper methods for better factored code in frame::sender
   frame sender_for_compiled_frame(RegisterMap* map) const;
   frame sender_for_entry_frame(RegisterMap* map) const;
-  frame sender_for_interpreter_frame(RegisterMap* map) const;
   frame sender_for_native_frame(RegisterMap* map) const;
 
   bool is_entry_frame_valid(JavaThread* thread) const;
@@ -135,29 +126,29 @@ class frame {
   // A low-level interface for vframes:
 
  public:
-  intptr_t* addr_at(int index) const             { return &fp()[index]; }
-  intptr_t  at(int index) const                  { return *addr_at(index); }
+  intptr_t* addr_at(int index) const      { return &fp()[index]; }
+  intptr_t  at(int index) const           { return *addr_at(index); }
 
   // accessors for locals
-  oop obj_at(int offset) const                   { return *obj_at_addr(offset); }
-  void obj_at_put(int offset, oop value)         { *obj_at_addr(offset) = value; }
+  oop obj_at(int offset) const            { return *obj_at_addr(offset); }
+  void obj_at_put(int offset, oop value)  { *obj_at_addr(offset) = value; }
 
-  jint int_at(int offset) const                  { return *int_at_addr(offset); }
-  void int_at_put(int offset, jint value)        { *int_at_addr(offset) = value; }
+  jint int_at(int offset) const           { return *int_at_addr(offset); }
+  void int_at_put(int offset, jint value) { *int_at_addr(offset) = value; }
 
-  oop*      obj_at_addr(int offset) const        { return (oop*)     addr_at(offset); }
+  oop* obj_at_addr(int offset) const      { return (oop*) addr_at(offset); }
 
-  oop*      adjusted_obj_at_addr(Method* method, int index) { return obj_at_addr(adjust_offset(method, index)); }
+  oop* adjusted_obj_at_addr(Method* method, int index) { return obj_at_addr(adjust_offset(method, index)); }
 
  private:
-  jint*    int_at_addr(int offset) const         { return (jint*)    addr_at(offset); }
+  jint* int_at_addr(int offset) const     { return (jint*) addr_at(offset); }
 
  public:
   // Link (i.e., the pointer to the previous frame)
   intptr_t* link() const;
 
   // Return address
-  address  sender_pc() const;
+  address sender_pc() const;
 
   // Support for deoptimization
   void deoptimize(JavaThread* thread);
@@ -178,37 +169,12 @@ class frame {
   // this frame goes from real_fp() to sp().
   intptr_t* real_fp() const;
 
-  // Deoptimization info, if needed (platform dependent).
+  // NULL info, if needed (platform dependent).
   // Stored in the initial_info field of the unroll info, to be used by
   // the platform dependent deoptimization blobs.
   intptr_t *initial_deoptimization_info();
 
-  // Interpreter frames:
-
- private:
-  intptr_t** interpreter_frame_locals_addr() const;
-  intptr_t*  interpreter_frame_bcp_addr() const;
-  intptr_t*  interpreter_frame_mdp_addr() const;
-
  public:
-  // Locals
-
-  // The _at version returns a pointer because the address is used for GC.
-  intptr_t* interpreter_frame_local_at(int index) const;
-
-  void interpreter_frame_set_locals(intptr_t* locs);
-
-  // byte code index
-  jint interpreter_frame_bci() const;
-
-  // byte code pointer
-  address interpreter_frame_bcp() const;
-  void    interpreter_frame_set_bcp(address bcp);
-
-  // method data pointer
-  address interpreter_frame_mdp() const;
-  void    interpreter_frame_set_mdp(address dp);
-
   // Find receiver out of caller's (compiled) argument list
   oop retrieve_receiver(RegisterMap *reg_map);
 
@@ -218,69 +184,6 @@ class frame {
   // (via VM_GetReceiver) to retrieve the receiver from a native wrapper frame.
   BasicLock* get_native_monitor();
   oop        get_native_receiver();
-
-  // Find receiver for an invoke when arguments are just pushed on stack (i.e., callee stack-frame is
-  // not setup)
-  oop interpreter_callee_receiver(Symbol* signature)     { return *interpreter_callee_receiver_addr(signature); }
-
-  oop* interpreter_callee_receiver_addr(Symbol* signature);
-
-  // expression stack (may go up or down, direction == 1 or -1)
- public:
-  intptr_t* interpreter_frame_expression_stack() const;
-
-  // The _at version returns a pointer because the address is used for GC.
-  intptr_t* interpreter_frame_expression_stack_at(jint offset) const;
-
-  // top of expression stack
-  intptr_t* interpreter_frame_tos_at(jint offset) const;
-  intptr_t* interpreter_frame_tos_address() const;
-
-  jint  interpreter_frame_expression_stack_size() const;
-
-  intptr_t* interpreter_frame_sender_sp() const;
-
-  // template based interpreter deoptimization support
-  void  set_interpreter_frame_sender_sp(intptr_t* sender_sp);
-  void interpreter_frame_set_monitor_end(BasicObjectLock* value);
-
-  // Address of the temp oop in the frame. Needed as GC root.
-  oop* interpreter_frame_temp_oop_addr() const;
-
-  // BasicObjectLocks:
-  //
-  // interpreter_frame_monitor_begin is higher in memory than interpreter_frame_monitor_end
-  // Interpreter_frame_monitor_begin points to one element beyond the oldest one,
-  // interpreter_frame_monitor_end   points to the youngest one, or if there are none,
-  //                                 it points to one beyond where the first element will be.
-  // interpreter_frame_monitor_size  reports the allocation size of a monitor in the interpreter stack.
-  //                                 this value is >= BasicObjectLock::size(), and may be rounded up
-
-  BasicObjectLock* interpreter_frame_monitor_begin() const;
-  BasicObjectLock* interpreter_frame_monitor_end()   const;
-  BasicObjectLock* next_monitor_in_interpreter_frame(BasicObjectLock* current) const;
-  BasicObjectLock* previous_monitor_in_interpreter_frame(BasicObjectLock* current) const;
-  static int interpreter_frame_monitor_size();
-
-  void interpreter_frame_verify_monitor(BasicObjectLock* value) const;
-
-  // Return/result value from this interpreter frame
-  // If the method return type is T_OBJECT or T_ARRAY populates oop_result
-  // For other (non-T_VOID) the appropriate field in the jvalue is populated
-  // with the result value.
-  // Should only be called when at method exit when the method is not
-  // exiting due to an exception.
-  BasicType interpreter_frame_result(oop* oop_result, jvalue* value_result);
-
- public:
-  // Method & constant pool cache
-  Method* interpreter_frame_method() const;
-  void interpreter_frame_set_method(Method* method);
-  Method** interpreter_frame_method_addr() const;
-  ConstantPoolCache** interpreter_frame_cache_addr() const;
-  oop* interpreter_frame_mirror_addr() const;
-
-  void interpreter_frame_set_mirror(oop mirror);
 
  public:
   // Entry frames
@@ -308,7 +211,6 @@ class frame {
   void print_value() const { print_value_on(tty,NULL); }
   void print_value_on(outputStream* st, JavaThread *thread) const;
   void print_on(outputStream* st) const;
-  void interpreter_frame_print_on(outputStream* st) const;
   void print_on_error(outputStream* st, char* buf, int buflen, bool verbose = false) const;
   static void print_C_frame(outputStream* st, char* buf, int buflen, address pc);
 
@@ -320,19 +222,16 @@ class frame {
 
   // Oops-do's
   void oops_compiled_arguments_do(Symbol* signature, bool has_receiver, bool has_appendix, const RegisterMap* reg_map, OopClosure* f);
-  void oops_interpreted_do(OopClosure* f, const RegisterMap* map, bool query_oop_map_cache = true);
 
  private:
-  void oops_interpreted_arguments_do(Symbol* signature, bool has_receiver, OopClosure* f);
-
   // Iteration of oops
-  void oops_do_internal(OopClosure* f, CodeBlobClosure* cf, RegisterMap* map, bool use_interpreter_oop_map_cache);
+  void oops_do_internal(OopClosure* f, CodeBlobClosure* cf, RegisterMap* map);
   void oops_entry_do(OopClosure* f, const RegisterMap* map);
   void oops_code_blob_do(OopClosure* f, CodeBlobClosure* cf, const RegisterMap* map);
   int adjust_offset(Method* method, int index); // helper for above fn
  public:
   // Memory management
-  void oops_do(OopClosure* f, CodeBlobClosure* cf, RegisterMap* map) { oops_do_internal(f, cf, map, true); }
+  void oops_do(OopClosure* f, CodeBlobClosure* cf, RegisterMap* map) { oops_do_internal(f, cf, map); }
   void nmethods_do(CodeBlobClosure* cf);
 
   // RedefineClasses support for finding live interpreted methods on the stack

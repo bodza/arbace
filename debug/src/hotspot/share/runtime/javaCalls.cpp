@@ -4,7 +4,6 @@
 #include "classfile/vmSymbols.hpp"
 #include "code/nmethod.hpp"
 #include "compiler/compileBroker.hpp"
-#include "interpreter/interpreter.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "memory/universe.hpp"
 #include "oops/method.inline.hpp"
@@ -284,7 +283,7 @@ void JavaCalls::call_helper(JavaValue* result, const methodHandle& method, JavaC
 
   CompilationPolicy::compile_if_required(method, CHECK);
 
-  // Since the call stub sets up like the interpreter we call the from_interpreted_entry
+  // Since the call stub sets up like the interpreter we call the from_interpreted_entry,
   // so we can go compiled via a i2c. Otherwise initial entry method will always
   // run interpreted.
   address entry_point = method->from_interpreted_entry();
@@ -411,11 +410,7 @@ class SignatureChekker : public SignatureIterator {
  public:
   bool _is_return;
 
-  SignatureChekker(Symbol* signature,
-                   BasicType return_type,
-                   bool is_static,
-                   u_char* value_state,
-                   intptr_t* value) :
+  SignatureChekker(Symbol* signature, BasicType return_type, bool is_static, u_char* value_state, intptr_t* value) :
     SignatureIterator(signature),
     _pos(0),
     _return_type(return_type),

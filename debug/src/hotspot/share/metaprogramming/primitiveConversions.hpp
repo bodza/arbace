@@ -31,10 +31,7 @@ public:
   template<typename T> struct Translate : public FalseType { };
 
 private:
-  template<typename T,
-           typename U,
-           bool same_size = sizeof(T) == sizeof(U),
-           typename Enable = void>
+  template<typename T, typename U, bool same_size = sizeof(T) == sizeof(U), typename Enable = void>
   struct Cast;
 
   template<typename T, typename U> static T cast_using_union(U x);

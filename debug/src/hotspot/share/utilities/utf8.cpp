@@ -147,13 +147,13 @@ template<typename T> void UTF8::convert_to_unicode(const char* utf8_str, T* unic
   int index = 0;
 
   /* ASCII case loop optimization */
-  for (; index < unicode_length; index++) {
+  for ( ; index < unicode_length; index++) {
     if ((ch = ptr[0]) > 0x7F) { break; }
     unicode_str[index] = (T)ch;
     ptr = (const char *)(ptr + 1);
   }
 
-  for (; index < unicode_length; index++) {
+  for ( ; index < unicode_length; index++) {
     ptr = UTF8::next(ptr, &unicode_str[index]);
   }
 }
@@ -321,7 +321,7 @@ bool UTF8::is_legal_utf8(const unsigned char* buffer, int length, bool version_l
     if (res >= 128) break;
     i += 4;
   }
-  for (; i < length; i++) {
+  for ( ; i < length; i++) {
     unsigned short c;
     // no embedded zeros
     if (buffer[i] == 0) return false;

@@ -471,7 +471,7 @@
   diagnostic(bool, VerifyDuringStartup, false, \
           "Verify memory system before executing any Java code during VM initialization") \
  \
-  diagnostic(bool, VerifyBeforeExit, trueInDebug, \
+  diagnostic(bool, VerifyBeforeExit, false, \
           "Verify system before exiting") \
  \
   diagnostic(bool, VerifyBeforeGC, false, \

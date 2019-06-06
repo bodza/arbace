@@ -9,7 +9,6 @@
 #include "code/debugInfo.hpp"
 #include "code/dependencyContext.hpp"
 #include "code/pcDesc.hpp"
-#include "interpreter/interpreter.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
@@ -111,8 +110,7 @@ static void compute_offset(int& dest_offset, InstanceKlass* ik, const char* name
 // Old versions should be cleaned out since Hotspot only supports the current JDK, and this
 // function should be removed.
 static void
-compute_optional_offset(int& dest_offset,
-                        InstanceKlass* ik, Symbol* name_symbol, Symbol* signature_symbol) {
+compute_optional_offset(int& dest_offset, InstanceKlass* ik, Symbol* name_symbol, Symbol* signature_symbol) {
   fieldDescriptor fd;
   if (ik->find_local_field(name_symbol, signature_symbol, &fd)) {
     dest_offset = fd.offset();
@@ -1753,12 +1751,7 @@ void java_lang_Throwable::fill_in_stack_trace(Handle throwable, const methodHand
     } else {
       if (fr.is_first_frame()) break;
       address pc = fr.pc();
-      if (fr.is_interpreted_frame()) {
-        address bcp = fr.interpreter_frame_bcp();
-        method = fr.interpreter_frame_method();
-        bci =  method->bci_from(bcp);
-        fr = fr.sender(&map);
-      } else {
+      {
         CodeBlob* cb = fr.cb();
         // HMMM QQQ might be nice to have frame return nm as NULL if cb is non-NULL
         // but non nmethod

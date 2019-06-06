@@ -10,9 +10,7 @@
 namespace metaspace {
 // FreeChunksStatistics methods
 
-FreeChunksStatistics::FreeChunksStatistics()
-: _num(0), _cap(0)
-{ }
+FreeChunksStatistics::FreeChunksStatistics() : _num(0), _cap(0) { }
 
 void FreeChunksStatistics::reset() {
   _num = 0; _cap = 0;
@@ -66,9 +64,7 @@ void ChunkManagerStatistics::print_on(outputStream* st, size_t scale) const {
 
 // UsedChunksStatistics methods
 
-UsedChunksStatistics::UsedChunksStatistics()
-: _num(0), _cap(0), _used(0), _free(0), _waste(0), _overhead(0)
-{ }
+UsedChunksStatistics::UsedChunksStatistics() : _num(0), _cap(0), _used(0), _free(0), _waste(0), _overhead(0) { }
 
 void UsedChunksStatistics::reset() {
   _num = 0;

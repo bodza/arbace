@@ -6,7 +6,6 @@
 #include "code/nmethod.hpp"
 #include "code/scopeDesc.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
-#include "interpreter/interpreter.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"

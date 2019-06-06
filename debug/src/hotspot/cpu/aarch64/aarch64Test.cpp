@@ -9,8 +9,7 @@
 
 extern "C" void entry(CodeBuffer*);
 
-void aarch64TestHook()
-{
+void aarch64TestHook() {
   BufferBlob* b = BufferBlob::create("aarch64Test", 500000);
   CodeBuffer code(b);
   MacroAssembler _masm(&code);

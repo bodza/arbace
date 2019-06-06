@@ -336,7 +336,7 @@ void LIRGenerator::do_ArithmeticOp_FPU(ArithmeticOp* x) {
 
 // for  _ladd, _lmul, _lsub, _ldiv, _lrem
 void LIRGenerator::do_ArithmeticOp_Long(ArithmeticOp* x) {
-  if (x->op() == Bytecodes::_ldiv || x->op() == Bytecodes::_lrem ) {
+  if (x->op() == Bytecodes::_ldiv || x->op() == Bytecodes::_lrem) {
     // long division is implemented as a direct call into the runtime
     LIRItem left(x->x(), this);
     LIRItem right(x->y(), this);
@@ -473,7 +473,7 @@ void LIRGenerator::do_ArithmeticOp_Int(ArithmeticOp* x) {
     left_arg->load_item();
 
     // do not need to load right, as we can handle stack and constants
-    if (x->op() == Bytecodes::_imul ) {
+    if (x->op() == Bytecodes::_imul) {
       // check if we can use shift instead
       bool use_constant = false;
       bool use_tmp = false;
@@ -1159,7 +1159,7 @@ void LIRGenerator::do_CheckCast(CheckCast* x) {
   if (x->is_incompatible_class_change_check()) {
     stub = new SimpleExceptionStub(Runtime1::throw_incompatible_class_change_error_id, LIR_OprFact::illegalOpr, info_for_exception);
   } else if (x->is_invokespecial_receiver_check()) {
-    stub = new DeoptimizeStub(info_for_exception, Deoptimization::Reason_class_check, Deoptimization::Action_none);
+    stub = new NULL(info_for_exception, NULL::Reason_class_check, NULL::Action_none);
   } else {
     stub = new SimpleExceptionStub(Runtime1::throw_class_cast_exception_id, obj.result(), info_for_exception);
   }

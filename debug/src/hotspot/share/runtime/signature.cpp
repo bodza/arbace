@@ -106,7 +106,7 @@ void SignatureIterator::iterate_parameters() {
 }
 
 // Optimized version of iterate_parameters when fingerprint is known
-void SignatureIterator::iterate_parameters( uint64_t fingerprint ) {
+void SignatureIterator::iterate_parameters(uint64_t fingerprint) {
   uint64_t saved_fingerprint = fingerprint;
 
   // Check for too many arguments

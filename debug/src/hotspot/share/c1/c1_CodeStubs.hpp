@@ -353,16 +353,16 @@ class PatchingStub: public CodeStub {
 };
 
 //------------------------------------------------------------------------------
-// DeoptimizeStub
+// NULL
 //
-class DeoptimizeStub : public CodeStub {
+class NULL : public CodeStub {
 private:
   CodeEmitInfo* _info;
   jint _trap_request;
 
 public:
-  DeoptimizeStub(CodeEmitInfo* info, Deoptimization::DeoptReason reason, Deoptimization::DeoptAction action) :
-    _info(new CodeEmitInfo(info)), _trap_request(Deoptimization::make_trap_request(reason, action)) { }
+  NULL(CodeEmitInfo* info, NULL::NULL reason, NULL::NULL action) :
+    _info(new CodeEmitInfo(info)), _trap_request(NULL::make_trap_request(reason, action)) { }
 
   virtual void emit_code(LIR_Assembler* e);
   virtual CodeEmitInfo* info() const           { return _info; }

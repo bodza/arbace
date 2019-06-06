@@ -255,7 +255,7 @@ void CollectedHeap::ensure_parsability(bool retire_tlabs) {
   // has added itself to the threads list at vm boot-up.
   JavaThreadIteratorWithHandle jtiwh;
   BarrierSet *bs = BarrierSet::barrier_set();
-  for (; JavaThread *thread = jtiwh.next(); ) {
+  for ( ; JavaThread *thread = jtiwh.next(); ) {
      if (use_tlab) thread->tlab().make_parsable(retire_tlabs);
      bs->make_parsable(thread);
   }

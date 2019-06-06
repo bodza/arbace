@@ -679,7 +679,7 @@ int CodeInstaller::estimate_stubs_size(TRAPS) {
           }
         }
       }
-      if (UseAOT && site->is_a(site_Call::klass())) {
+      if (false && site->is_a(site_Call::klass())) {
         oop target = site_Call::target(site);
         InstanceKlass* target_klass = InstanceKlass::cast(target->klass());
         if (!target_klass->is_subclass_of(SystemDictionary::HotSpotForeignCallTarget_klass())) {

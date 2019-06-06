@@ -248,8 +248,7 @@ void BinaryTreeDictionary<Chunk_t, FreeList_t>::reset() {
 // Get a free block of size at least size from tree, or NULL.
 template <class Chunk_t, class FreeList_t>
 TreeChunk<Chunk_t, FreeList_t>*
-BinaryTreeDictionary<Chunk_t, FreeList_t>::get_chunk_from_tree(size_t size)
-{
+BinaryTreeDictionary<Chunk_t, FreeList_t>::get_chunk_from_tree(size_t size) {
   TreeList<Chunk_t, FreeList_t> *curTL, *prevTL;
   TreeChunk<Chunk_t, FreeList_t>* retTC = NULL;
 
@@ -393,7 +392,7 @@ template <class Chunk_t, class FreeList_t>
 TreeList<Chunk_t, FreeList_t>* BinaryTreeDictionary<Chunk_t, FreeList_t>::remove_tree_minimum(TreeList<Chunk_t, FreeList_t>* tl) {
   // locate the subtree minimum by walking down left branches
   TreeList<Chunk_t, FreeList_t>* curTL = tl;
-  for (; curTL->left() != NULL; curTL = curTL->left())
+  for ( ; curTL->left() != NULL; curTL = curTL->left())
     ;
   // obviously curTL now has at most one child, a right child
   if (curTL != root()) {  // Should this test just be removed?
@@ -468,7 +467,7 @@ size_t BinaryTreeDictionary<Chunk_t, FreeList_t>::max_chunk_size() const {
   verify_par_locked();
   TreeList<Chunk_t, FreeList_t>* tc = root();
   if (tc == NULL) return 0;
-  for (; tc->right() != NULL; tc = tc->right());
+  for ( ; tc->right() != NULL; tc = tc->right());
   return tc->size();
 }
 

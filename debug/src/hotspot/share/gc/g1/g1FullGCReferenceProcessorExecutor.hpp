@@ -21,6 +21,9 @@ public:
   G1FullGCReferenceProcessingExecutor(G1FullCollector* collector);
   ~G1FullGCReferenceProcessingExecutor();
 
+  // Do reference processing.
+  void execute(STWGCTimer* timer);
+
   // Executes the given task using concurrent marking worker threads.
   virtual void execute(ProcessTask& task, uint ergo_workers);
 
@@ -30,9 +33,9 @@ private:
 
   class G1RefProcTaskProxy : public AbstractGangTask {
     typedef AbstractRefProcTaskExecutor::ProcessTask ProcessTask;
-    ProcessTask&             _proc_task;
-    G1FullCollector*         _collector;
-    ParallelTaskTerminator   _terminator;
+    ProcessTask&           _proc_task;
+    G1FullCollector*       _collector;
+    ParallelTaskTerminator _terminator;
 
   public:
     G1RefProcTaskProxy(ProcessTask& proc_task, G1FullCollector* scope);

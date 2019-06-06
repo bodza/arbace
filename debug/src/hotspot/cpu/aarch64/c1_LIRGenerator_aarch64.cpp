@@ -1142,7 +1142,7 @@ void LIRGenerator::do_CheckCast(CheckCast* x) {
   if (x->is_incompatible_class_change_check()) {
     stub = new SimpleExceptionStub(Runtime1::throw_incompatible_class_change_error_id, LIR_OprFact::illegalOpr, info_for_exception);
   } else if (x->is_invokespecial_receiver_check()) {
-    stub = new DeoptimizeStub(info_for_exception, Deoptimization::Reason_class_check, Deoptimization::Action_none);
+    stub = new NULL(info_for_exception, NULL::Reason_class_check, NULL::Action_none);
   } else {
     stub = new SimpleExceptionStub(Runtime1::throw_class_cast_exception_id, obj.result(), info_for_exception);
   }

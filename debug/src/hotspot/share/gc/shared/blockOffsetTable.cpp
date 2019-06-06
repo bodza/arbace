@@ -12,9 +12,7 @@
 // BlockOffsetSharedArray
 //////////////////////////////////////////////////////////////////////
 
-BlockOffsetSharedArray::BlockOffsetSharedArray(MemRegion reserved, size_t init_word_size) :
-  _reserved(reserved), _end(NULL)
-{
+BlockOffsetSharedArray::BlockOffsetSharedArray(MemRegion reserved, size_t init_word_size) : _reserved(reserved), _end(NULL) {
   size_t size = compute_size(reserved.word_size());
   ReservedSpace rs(size);
   if (!rs.is_reserved()) {
@@ -56,10 +54,7 @@ bool BlockOffsetSharedArray::is_card_boundary(HeapWord* p) const {
 // BlockOffsetArray
 //////////////////////////////////////////////////////////////////////
 
-BlockOffsetArray::BlockOffsetArray(BlockOffsetSharedArray* array, MemRegion mr, bool init_to_zero_) :
-  BlockOffsetTable(mr.start(), mr.end()),
-  _array(array)
-{
+BlockOffsetArray::BlockOffsetArray(BlockOffsetSharedArray* array, MemRegion mr, bool init_to_zero_) : BlockOffsetTable(mr.start(), mr.end()), _array(array) {
   set_init_to_zero(init_to_zero_);
   if (!init_to_zero_) {
     // initialize cards to point back to mr.start()

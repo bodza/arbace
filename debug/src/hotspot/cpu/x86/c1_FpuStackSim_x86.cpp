@@ -30,9 +30,7 @@ void FpuStackSim::inc_stack_size() {
   _stack_size++;
 }
 
-FpuStackSim::FpuStackSim(Compilation* compilation)
- : _compilation(compilation)
-{
+FpuStackSim::FpuStackSim(Compilation* compilation) : _compilation(compilation) {
   _stack_size = 0;
   for (int i = 0; i < FrameMap::nof_fpu_regs; i++) {
     set_regs_at(i, EMPTY);

@@ -115,11 +115,7 @@ void InvocationCounter::reinitialize(bool delay_overflow) {
   // methodData counter, rather than an InvocationCounter.  In the former case, we
   // don't need the shift by number_of_noncount_bits, but we do need to adjust
   // the factor by which we scale the threshold.
-  if (ProfileInterpreter) {
-    InterpreterBackwardBranchLimit = (CompileThreshold * (OnStackReplacePercentage - InterpreterProfilePercentage)) / 100;
-  } else {
-    InterpreterBackwardBranchLimit = ((CompileThreshold * OnStackReplacePercentage) / 100) << number_of_noncount_bits;
-  }
+  InterpreterBackwardBranchLimit = ((CompileThreshold * OnStackReplacePercentage) / 100) << number_of_noncount_bits;
 }
 
 void invocationCounter_init() {

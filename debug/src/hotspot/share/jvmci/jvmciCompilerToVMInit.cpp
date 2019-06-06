@@ -71,8 +71,8 @@ void CompilerToVM::Data::initialize(TRAPS) {
 
   SharedRuntime_ic_miss_stub = SharedRuntime::get_ic_miss_stub();
   SharedRuntime_handle_wrong_method_stub = SharedRuntime::get_handle_wrong_method_stub();
-  SharedRuntime_deopt_blob_unpack = SharedRuntime::deopt_blob()->unpack();
-  SharedRuntime_deopt_blob_uncommon_trap = SharedRuntime::deopt_blob()->uncommon_trap();
+  SharedRuntime_deopt_blob_unpack = SharedRuntime::NULL()->unpack();
+  SharedRuntime_deopt_blob_uncommon_trap = SharedRuntime::NULL()->NULL();
 
   ThreadLocalAllocBuffer_alignment_reserve = ThreadLocalAllocBuffer::alignment_reserve();
 

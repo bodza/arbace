@@ -131,15 +131,15 @@ template<class E> class GrowableArray : public GenericGrowableArray {
     : GenericGrowableArray(initial_size, initial_len, C_heap, memflags) {
     _data = (E*)raw_allocate(sizeof(E));
     int i = 0;
-    for (; i < _len; i++) ::new ((void*)&_data[i]) E(filler);
-    for (; i < _max; i++) ::new ((void*)&_data[i]) E();
+    for ( ; i < _len; i++) ::new ((void*)&_data[i]) E(filler);
+    for ( ; i < _max; i++) ::new ((void*)&_data[i]) E();
   }
 
   GrowableArray(Arena* arena, int initial_size, int initial_len, const E& filler) : GenericGrowableArray(arena, initial_size, initial_len) {
     _data = (E*)raw_allocate(sizeof(E));
     int i = 0;
-    for (; i < _len; i++) ::new ((void*)&_data[i]) E(filler);
-    for (; i < _max; i++) ::new ((void*)&_data[i]) E();
+    for ( ; i < _len; i++) ::new ((void*)&_data[i]) E(filler);
+    for ( ; i < _max; i++) ::new ((void*)&_data[i]) E();
   }
 
   GrowableArray() : GenericGrowableArray(2, 0, false) {

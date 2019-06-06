@@ -5,8 +5,7 @@
 #include "oops/objArrayOop.inline.hpp"
 #include "oops/oop.inline.hpp"
 
-oop objArrayOopDesc::atomic_compare_exchange_oop(int index, oop exchange_value,
-                                                 oop compare_value) {
+oop objArrayOopDesc::atomic_compare_exchange_oop(int index, oop exchange_value, oop compare_value) {
   ptrdiff_t offs;
   if (UseCompressedOops) {
     offs = objArrayOopDesc::obj_at_offset<narrowOop>(index);

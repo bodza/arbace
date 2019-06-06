@@ -1,10 +1,8 @@
 #ifndef SHARE_VM_JVMCI_JVMCI_RUNTIME_HPP
 #define SHARE_VM_JVMCI_JVMCI_RUNTIME_HPP
 
-#include "interpreter/interpreter.hpp"
 #include "memory/allocation.hpp"
 #include "runtime/arguments.hpp"
-#include "runtime/deoptimization.hpp"
 
 #define JVMCI_ERROR(...) \
   { Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::jdk_vm_ci_common_JVMCIError(), __VA_ARGS__); return; }

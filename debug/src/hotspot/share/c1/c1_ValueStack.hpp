@@ -203,7 +203,7 @@ class ValueStack: public CompilationResourceObj {
 #define temp_var     temp_var2(__LINE__)
 
 #define for_each_state(state) \
-  for (; state != NULL; state = state->caller_state())
+  for ( ; state != NULL; state = state->caller_state())
 
 #define for_each_local_value(state, index, value) \
   int temp_var = state->locals_size(); \

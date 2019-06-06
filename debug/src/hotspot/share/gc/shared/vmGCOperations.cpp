@@ -6,7 +6,6 @@
 #include "gc/shared/gcLocker.hpp"
 #include "gc/shared/genCollectedHeap.hpp"
 #include "gc/shared/vmGCOperations.hpp"
-#include "interpreter/oopMapCache.hpp"
 #include "memory/oopFactory.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/init.hpp"
@@ -67,9 +66,6 @@ bool VM_GC_Operation::doit_prologue() {
 }
 
 void VM_GC_Operation::doit_epilogue() {
-  // Clean up old interpreter OopMap entries that were replaced
-  // during the GC thread root traversal.
-  OopMapCache::cleanup_old_entries();
   if (Universe::has_reference_pending_list()) {
     Heap_lock->notify_all();
   }

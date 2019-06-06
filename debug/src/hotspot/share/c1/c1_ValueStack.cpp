@@ -13,8 +13,7 @@ ValueStack::ValueStack(IRScope* scope, ValueStack* caller_state)
 , _locals(scope->method()->max_locals(), scope->method()->max_locals(), NULL)
 , _stack(scope->method()->max_stack())
 , _locks()
-{
-}
+{ }
 
 ValueStack::ValueStack(ValueStack* copy_from, Kind kind, int bci)
   : _scope(copy_from->scope())

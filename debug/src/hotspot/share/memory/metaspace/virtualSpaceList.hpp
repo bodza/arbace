@@ -60,15 +60,11 @@ class VirtualSpaceList : public CHeapObj<mtClass> {
 
   size_t free_bytes();
 
-  Metachunk* get_new_chunk(size_t chunk_word_size,
-                           size_t suggested_commit_granularity);
+  Metachunk* get_new_chunk(size_t chunk_word_size, size_t suggested_commit_granularity);
 
-  bool expand_node_by(VirtualSpaceNode* node,
-                      size_t min_words,
-                      size_t preferred_words);
+  bool expand_node_by(VirtualSpaceNode* node, size_t min_words, size_t preferred_words);
 
-  bool expand_by(size_t min_words,
-                 size_t preferred_words);
+  bool expand_by(size_t min_words, size_t preferred_words);
 
   VirtualSpaceNode* current_virtual_space() {
     return _current_virtual_space;

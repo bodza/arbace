@@ -379,7 +379,7 @@ void store_to_stackslot(CodeBuffer &cbuf, int opcode, int rm_field, int disp) {
 }
 
    // rRegI ereg, memory mem) %{    // emit_reg_mem
-void encode_RegMem( CodeBuffer &cbuf, int reg_encoding, int base, int index, int scale, int displace, relocInfo::relocType disp_reloc ) {
+void encode_RegMem(CodeBuffer &cbuf, int reg_encoding, int base, int index, int scale, int displace, relocInfo::relocType disp_reloc) {
   // There is no index & no scale, use form without SIB byte
   if ((index == 0x4) &&
       (scale == 0) && (base != ESP_enc)) {
@@ -395,14 +395,14 @@ void encode_RegMem( CodeBuffer &cbuf, int reg_encoding, int base, int index, int
         if (base == -1) { // Special flag for absolute address
           emit_rm(cbuf, 0x0, reg_encoding, 0x5);
           // (manual lies; no SIB needed here)
-          if (disp_reloc != relocInfo::none ) {
+          if (disp_reloc != relocInfo::none) {
             emit_d32_reloc(cbuf, displace, disp_reloc, 1);
           } else {
             emit_d32      (cbuf, displace);
           }
         } else {                // Normal base + offset
           emit_rm(cbuf, 0x2, reg_encoding, base);
-          if (disp_reloc != relocInfo::none ) {
+          if (disp_reloc != relocInfo::none) {
             emit_d32_reloc(cbuf, displace, disp_reloc, 1);
           } else {
             emit_d32      (cbuf, displace);
@@ -429,7 +429,7 @@ void encode_RegMem( CodeBuffer &cbuf, int reg_encoding, int base, int index, int
           emit_rm(cbuf, 0x2, reg_encoding, 0x4);
           emit_rm(cbuf, scale, index, base);
         }
-        if (disp_reloc != relocInfo::none ) {
+        if (disp_reloc != relocInfo::none) {
           emit_d32_reloc(cbuf, displace, disp_reloc, 1);
         } else {
           emit_d32      (cbuf, displace);
@@ -439,8 +439,8 @@ void encode_RegMem( CodeBuffer &cbuf, int reg_encoding, int base, int index, int
   }
 }
 
-void encode_Copy( CodeBuffer &cbuf, int dst_encoding, int src_encoding ) {
-  if (dst_encoding == src_encoding ) {
+void encode_Copy(CodeBuffer &cbuf, int dst_encoding, int src_encoding) {
+  if (dst_encoding == src_encoding) {
     // reg-reg copy, use an empty encoding
   } else {
     emit_opcode(cbuf, 0x8B);
@@ -545,9 +545,7 @@ void MachEpilogNode::emit(CodeBuffer &cbuf, PhaseRegAlloc *ra_) const {
 
   int framesize = C->frame_size_in_bytes();
   // Remove two words for return addr and rbp,
-  framesize -= 2*wordSize;
-
-  // Note that VerifyStackAtCalls' Majik cookie does not change the frame size popped here
+  framesize -= 2 * wordSize;
 
   if (framesize >= 128) {
     emit_opcode(cbuf, 0x81); // add  SP, #framesize
@@ -600,7 +598,7 @@ int MachEpilogNode::safepoint_offset() const { return 0; }
 //=============================================================================
 
 enum RC { rc_bad, rc_int, rc_float, rc_xmm, rc_stack };
-static enum RC rc_class( OptoReg::Name reg ) {
+static enum RC rc_class(OptoReg::Name reg) {
   if (!OptoReg::is_valid(reg)  ) return rc_bad;
   if (OptoReg::is_stack(reg)) return rc_stack;
 
@@ -612,8 +610,8 @@ static enum RC rc_class( OptoReg::Name reg ) {
   return rc_xmm;
 }
 
-static int impl_helper( CodeBuffer *cbuf, bool do_size, bool is_load, int offset, int reg, int opcode, const char *op_str, int size, outputStream* st ) {
-  if (cbuf ) {
+static int impl_helper(CodeBuffer *cbuf, bool do_size, bool is_load, int offset, int reg, int opcode, const char *op_str, int size, outputStream* st) {
+  if (cbuf) {
     emit_opcode  (*cbuf, opcode );
     encode_RegMem(*cbuf, Matcher::_regEncode[reg], ESP_enc, 0x4, 0, offset, relocInfo::none);
   }
@@ -622,7 +620,7 @@ static int impl_helper( CodeBuffer *cbuf, bool do_size, bool is_load, int offset
 }
 
 // Helper for XMM registers.  Extra opcode bits, limited syntax.
-static int impl_x_helper( CodeBuffer *cbuf, bool do_size, bool is_load, int offset, int reg_lo, int reg_hi, int size, outputStream* st ) {
+static int impl_x_helper(CodeBuffer *cbuf, bool do_size, bool is_load, int offset, int reg_lo, int reg_hi, int size, outputStream* st) {
   int in_size_in_bits = Assembler::EVEX_32bit;
   int evex_encoding = 0;
   if (reg_lo + 1 == reg_hi) {
@@ -663,7 +661,7 @@ static int impl_x_helper( CodeBuffer *cbuf, bool do_size, bool is_load, int offs
   return size + 5 + offset_size;
 }
 
-static int impl_movx_helper( CodeBuffer *cbuf, bool do_size, int src_lo, int dst_lo, int src_hi, int dst_hi, int size, outputStream* st ) {
+static int impl_movx_helper(CodeBuffer *cbuf, bool do_size, int src_lo, int dst_lo, int src_hi, int dst_hi, int size, outputStream* st) {
   if (cbuf) {
     MacroAssembler _masm(cbuf);
     // EVEX spills remain EVEX: logic complex between full EVEX, partial and AVX, manage EVEX spill code one way.
@@ -682,7 +680,7 @@ static int impl_movx_helper( CodeBuffer *cbuf, bool do_size, int src_lo, int dst
   return size + sz;
 }
 
-static int impl_movgpr2x_helper( CodeBuffer *cbuf, bool do_size, int src_lo, int dst_lo, int src_hi, int dst_hi, int size, outputStream* st ) {
+static int impl_movgpr2x_helper(CodeBuffer *cbuf, bool do_size, int src_lo, int dst_lo, int src_hi, int dst_hi, int size, outputStream* st) {
   // 32-bit
   if (cbuf) {
     MacroAssembler _masm(cbuf);
@@ -693,7 +691,7 @@ static int impl_movgpr2x_helper( CodeBuffer *cbuf, bool do_size, int src_lo, int
   return (UseAVX> 2) ? 6 : 4;
 }
 
-static int impl_movx2gpr_helper( CodeBuffer *cbuf, bool do_size, int src_lo, int dst_lo, int src_hi, int dst_hi, int size, outputStream* st ) {
+static int impl_movx2gpr_helper(CodeBuffer *cbuf, bool do_size, int src_lo, int dst_lo, int src_hi, int dst_hi, int size, outputStream* st) {
   // 32-bit
   if (cbuf) {
     MacroAssembler _masm(cbuf);
@@ -704,17 +702,17 @@ static int impl_movx2gpr_helper( CodeBuffer *cbuf, bool do_size, int src_lo, int
   return (UseAVX> 2) ? 6 : 4;
 }
 
-static int impl_mov_helper( CodeBuffer *cbuf, bool do_size, int src, int dst, int size, outputStream* st ) {
-  if (cbuf ) {
-    emit_opcode(*cbuf, 0x8B );
+static int impl_mov_helper(CodeBuffer *cbuf, bool do_size, int src, int dst, int size, outputStream* st) {
+  if (cbuf) {
+    emit_opcode(*cbuf, 0x8B);
     emit_rm    (*cbuf, 0x3, Matcher::_regEncode[dst], Matcher::_regEncode[src] );
   }
   return size + 2;
 }
 
-static int impl_fp_store_helper( CodeBuffer *cbuf, bool do_size, int src_lo, int src_hi, int dst_lo, int dst_hi, int offset, int size, outputStream* st ) {
+static int impl_fp_store_helper(CodeBuffer *cbuf, bool do_size, int src_lo, int src_hi, int dst_lo, int dst_hi, int offset, int size, outputStream* st) {
   if (src_lo != FPR1L_num ) {      // Move value to top of FP stack, if not already there
-    if (cbuf ) {
+    if (cbuf) {
       emit_opcode(*cbuf, 0xD9);  // FLD (i.e., push it)
       emit_d8( *cbuf, 0xC0-1+Matcher::_regEncode[src_lo] );
     }
@@ -826,17 +824,17 @@ uint MachSpillCopyNode::implementation( CodeBuffer *cbuf, PhaseRegAlloc *ra_, bo
 
   if (bottom_type()->isa_vect() != NULL) {
     uint ireg = ideal_reg();
-    if (src_first_rc == rc_stack && dst_first_rc == rc_stack ) {
+    if (src_first_rc == rc_stack && dst_first_rc == rc_stack) {
       // mem -> mem
       int src_offset = ra_->reg2offset(src_first);
       int dst_offset = ra_->reg2offset(dst_first);
       return vec_stack_to_stack_helper(cbuf, do_size, src_offset, dst_offset, ireg, st);
-    } else if (src_first_rc == rc_xmm && dst_first_rc == rc_xmm ) {
+    } else if (src_first_rc == rc_xmm && dst_first_rc == rc_xmm) {
       return vec_mov_helper(cbuf, do_size, src_first, dst_first, src_second, dst_second, ireg, st);
-    } else if (src_first_rc == rc_xmm && dst_first_rc == rc_stack ) {
+    } else if (src_first_rc == rc_xmm && dst_first_rc == rc_stack) {
       int stack_offset = ra_->reg2offset(dst_first);
       return vec_spill_helper(cbuf, do_size, false, stack_offset, src_first, ireg, st);
-    } else if (src_first_rc == rc_stack && dst_first_rc == rc_xmm ) {
+    } else if (src_first_rc == rc_stack && dst_first_rc == rc_xmm) {
       int stack_offset = ra_->reg2offset(src_first);
       return vec_spill_helper(cbuf, do_size, true,  stack_offset, dst_first, ireg, st);
     } else {
@@ -846,7 +844,7 @@ uint MachSpillCopyNode::implementation( CodeBuffer *cbuf, PhaseRegAlloc *ra_, bo
 
   // --------------------------------------
   // Check for mem-mem move.  push/pop to move.
-  if (src_first_rc == rc_stack && dst_first_rc == rc_stack ) {
+  if (src_first_rc == rc_stack && dst_first_rc == rc_stack) {
     if (src_second == dst_first ) { // overlapping stack copy ranges
       size = impl_helper(cbuf,do_size,true ,ra_->reg2offset(src_second),ESI_num,0xFF,"PUSH  ",size, st);
       size = impl_helper(cbuf,do_size,false,ra_->reg2offset(dst_second),EAX_num,0x8F,"POP   ",size, st);
@@ -864,30 +862,30 @@ uint MachSpillCopyNode::implementation( CodeBuffer *cbuf, PhaseRegAlloc *ra_, bo
 
   // --------------------------------------
   // Check for integer reg-reg copy
-  if (src_first_rc == rc_int && dst_first_rc == rc_int )
+  if (src_first_rc == rc_int && dst_first_rc == rc_int)
     size = impl_mov_helper(cbuf,do_size,src_first,dst_first,size, st);
 
   // Check for integer store
-  if (src_first_rc == rc_int && dst_first_rc == rc_stack )
+  if (src_first_rc == rc_int && dst_first_rc == rc_stack)
     size = impl_helper(cbuf,do_size,false,ra_->reg2offset(dst_first),src_first,0x89,"MOV ",size, st);
 
   // Check for integer load
-  if (dst_first_rc == rc_int && src_first_rc == rc_stack )
+  if (dst_first_rc == rc_int && src_first_rc == rc_stack)
     size = impl_helper(cbuf,do_size,true ,ra_->reg2offset(src_first),dst_first,0x8B,"MOV ",size, st);
 
   // Check for integer reg-xmm reg copy
-  if (src_first_rc == rc_int && dst_first_rc == rc_xmm ) {
+  if (src_first_rc == rc_int && dst_first_rc == rc_xmm) {
     return impl_movgpr2x_helper(cbuf,do_size,src_first,dst_first,src_second, dst_second, size, st);
   }
   // --------------------------------------
   // Check for float reg-reg copy
-  if (src_first_rc == rc_float && dst_first_rc == rc_float ) {
-    if (cbuf ) {
+  if (src_first_rc == rc_float && dst_first_rc == rc_float) {
+    if (cbuf) {
       // Note the mucking with the register encode to compensate for the 0/1
       // indexing issue mentioned in a comment in the reg_def sections
       // for FPR registers many lines above here.
 
-      if (src_first != FPR1L_num ) {
+      if (src_first != FPR1L_num) {
         emit_opcode  (*cbuf, 0xD9);           // FLD    ST(i)
         emit_d8      (*cbuf, 0xC0 + Matcher::_regEncode[src_first] - 1);
         emit_opcode  (*cbuf, 0xDD);           // FSTP   ST(i)
@@ -901,12 +899,12 @@ uint MachSpillCopyNode::implementation( CodeBuffer *cbuf, PhaseRegAlloc *ra_, bo
   }
 
   // Check for float store
-  if (src_first_rc == rc_float && dst_first_rc == rc_stack ) {
+  if (src_first_rc == rc_float && dst_first_rc == rc_stack) {
     return impl_fp_store_helper(cbuf,do_size,src_first,src_second,dst_first,dst_second,ra_->reg2offset(dst_first),size, st);
   }
 
   // Check for float load
-  if (dst_first_rc == rc_float && src_first_rc == rc_stack ) {
+  if (dst_first_rc == rc_float && src_first_rc == rc_stack) {
     int offset = ra_->reg2offset(src_first);
     const char *op_str;
     int op;
@@ -917,10 +915,10 @@ uint MachSpillCopyNode::implementation( CodeBuffer *cbuf, PhaseRegAlloc *ra_, bo
       op_str = "FLD_S";
       op = 0xD9;
     }
-    if (cbuf ) {
-      emit_opcode  (*cbuf, op );
+    if (cbuf) {
+      emit_opcode  (*cbuf, op);
       encode_RegMem(*cbuf, 0x0, ESP_enc, 0x4, 0, offset, relocInfo::none);
-      emit_opcode  (*cbuf, 0xDD );           // FSTP   ST(i)
+      emit_opcode  (*cbuf, 0xDD);           // FSTP   ST(i)
       emit_d8      (*cbuf, 0xD8+Matcher::_regEncode[dst_first] );
     }
     int offset_size = (offset == 0) ? 0 : ((offset <= 127) ? 1 : 4);
@@ -928,30 +926,30 @@ uint MachSpillCopyNode::implementation( CodeBuffer *cbuf, PhaseRegAlloc *ra_, bo
   }
 
   // Check for xmm reg-reg copy
-  if (src_first_rc == rc_xmm && dst_first_rc == rc_xmm ) {
+  if (src_first_rc == rc_xmm && dst_first_rc == rc_xmm) {
     return impl_movx_helper(cbuf,do_size,src_first,dst_first,src_second, dst_second, size, st);
   }
 
   // Check for xmm reg-integer reg copy
-  if (src_first_rc == rc_xmm && dst_first_rc == rc_int ) {
+  if (src_first_rc == rc_xmm && dst_first_rc == rc_int) {
     return impl_movx2gpr_helper(cbuf,do_size,src_first,dst_first,src_second, dst_second, size, st);
   }
 
   // Check for xmm store
-  if (src_first_rc == rc_xmm && dst_first_rc == rc_stack ) {
+  if (src_first_rc == rc_xmm && dst_first_rc == rc_stack) {
     return impl_x_helper(cbuf,do_size,false,ra_->reg2offset(dst_first),src_first, src_second, size, st);
   }
 
   // Check for float xmm load
-  if (dst_first_rc == rc_xmm && src_first_rc == rc_stack ) {
+  if (dst_first_rc == rc_xmm && src_first_rc == rc_stack) {
     return impl_x_helper(cbuf,do_size,true ,ra_->reg2offset(src_first),dst_first, dst_second, size, st);
   }
 
   // Copy from float reg to xmm reg
-  if (dst_first_rc == rc_xmm && src_first_rc == rc_float ) {
+  if (dst_first_rc == rc_xmm && src_first_rc == rc_float) {
     // copy to the top of stack from floating point reg
     // and use LEA to preserve flags
-    if (cbuf ) {
+    if (cbuf) {
       emit_opcode(*cbuf,0x8D);  // LEA  ESP,[ESP-8]
       emit_rm(*cbuf, 0x1, ESP_enc, 0x04);
       emit_rm(*cbuf, 0x0, 0x04, ESP_enc);
@@ -964,7 +962,7 @@ uint MachSpillCopyNode::implementation( CodeBuffer *cbuf, PhaseRegAlloc *ra_, bo
     // Copy from the temp memory to the xmm reg.
     size = impl_x_helper(cbuf,do_size,true ,0,dst_first, dst_second, size, st);
 
-    if (cbuf ) {
+    if (cbuf) {
       emit_opcode(*cbuf,0x8D);  // LEA  ESP,[ESP+8]
       emit_rm(*cbuf, 0x1, ESP_enc, 0x04);
       emit_rm(*cbuf, 0x0, 0x04, ESP_enc);
@@ -1136,7 +1134,7 @@ void Matcher::pd_implicit_null_fixup(MachNode *node, uint idx) {
   uint skipped  = node->oper_input_base();  // Sum of leaves skipped so far
   uint opcnt     = 1;                 // First operand
   uint num_edges = node->_opnds[1]->num_edges(); // leaves for first operand
-  while ( idx >= skipped+num_edges ) {
+  while (idx >= skipped+num_edges) {
     skipped += num_edges;
     opcnt++;                          // Bump operand count
     num_edges = node->_opnds[opcnt]->num_edges(); // leaves for next operand
@@ -1491,7 +1489,7 @@ encode %{
   %}
 
   enc_class Verify_FPU_For_Leaf %{
-    if (VerifyFPU ) {
+    if (VerifyFPU) {
       MacroAssembler masm(&cbuf);
       masm.verify_FPU( -3, "Returning from Runtime Leaf call");
     }
@@ -1599,7 +1597,7 @@ encode %{
 //     // int imo_reg    = Matcher::interpreter_method_oop_reg();
 //     // int imo_encode = Matcher::_regEncode[imo_reg];
 //
-//     // // Interpreter expects method_oop in EBX, currently a callee-saved register,
+//     // // ... expects method_oop in EBX, currently a callee-saved register,
 //     // // so we load it immediately before the call
 //     // emit_opcode(cbuf, 0x8B);                     // MOV    imo_reg,ic_reg  # method_oop
 //     // emit_rm(cbuf, 0x03, imo_encode, ic_encode ); // R/M byte
@@ -2874,7 +2872,7 @@ frame %{
 
   // Compiled code's Frame Pointer
   frame_pointer(ESP);
-  // Interpreter stores its frame pointer in a register which is
+  // ... stores its frame pointer in a register which is
   // stored to the stack by I2CAdaptors.
   // I2CAdaptors convert from interpreted java to compiled java.
   interpreter_frame_pointer(EBP);
@@ -2887,7 +2885,7 @@ frame %{
   // a new frame.  The PROLOG must add this many slots to the stack.  The
   // EPILOG must remove this many slots.  Intel needs one slot for
   // return address and one for rbp, (must save rbp)
-  in_preserve_stack_slots(2+VerifyStackAtCalls);
+  in_preserve_stack_slots(2);
 
   // Number of outgoing stack slots killed above the out_preserve_stack_slots
   // for calls to C.  Supports the var-args backing area for register parms.
@@ -2899,10 +2897,7 @@ frame %{
   // stack slot.
   // Ret Addr is on stack in slot 0 if no locks or verification or alignment.
   // Otherwise, it is above the locks and verification slot and alignment word
-  return_addr(STACK - 1 +
-              align_up((Compile::current()->in_preserve_stack_slots() +
-                        Compile::current()->fixed_slots()),
-                       stack_alignment_in_slots()));
+  return_addr(STACK - 1 + align_up((Compile::current()->in_preserve_stack_slots() + Compile::current()->fixed_slots()), stack_alignment_in_slots()));
 
   // Body of function which returns an integer array locating
   // arguments either in registers or in stack slots.  Passed an array

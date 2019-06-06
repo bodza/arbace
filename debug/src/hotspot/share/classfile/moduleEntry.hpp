@@ -166,8 +166,7 @@ public:
 private:
   static ModuleEntry* _javabase_module;
 
-  ModuleEntry* new_entry(unsigned int hash, Handle module_handle, bool is_open,
-                         Symbol* name, Symbol* version, Symbol* location, ClassLoaderData* loader_data);
+  ModuleEntry* new_entry(unsigned int hash, Handle module_handle, bool is_open, Symbol* name, Symbol* version, Symbol* location, ClassLoaderData* loader_data);
   void add_entry(int index, ModuleEntry* new_entry);
 
   int entry_size() const { return BasicHashtable<mtModule>::entry_size(); }
@@ -189,12 +188,7 @@ public:
 
   // Create module in loader's module entry table, if already exists then
   // return null.  Assume Module_lock has been locked by caller.
-  ModuleEntry* locked_create_entry_or_null(Handle module_handle,
-                                           bool is_open,
-                                           Symbol* module_name,
-                                           Symbol* module_version,
-                                           Symbol* module_location,
-                                           ClassLoaderData* loader_data);
+  ModuleEntry* locked_create_entry_or_null(Handle module_handle, bool is_open, Symbol* module_name, Symbol* module_version, Symbol* module_location, ClassLoaderData* loader_data);
 
   // Only lookup module within loader's module entry table.  The table read is lock-free.
   ModuleEntry* lookup_only(Symbol* name);

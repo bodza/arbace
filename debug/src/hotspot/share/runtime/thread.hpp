@@ -844,14 +844,14 @@ class JavaThread: public Thread {
   // The _pending_* fields below are used to communicate extra information
   // from an uncommon trap in JVMCI compiled code to the uncommon trap handler.
 
-  // Communicates the DeoptReason and DeoptAction of the uncommon trap
+  // Communicates the NULL and NULL of the uncommon trap
   int       _pending_deoptimization;
 
   // Specifies whether the uncommon trap is to bci 0 of a synchronized method
   // before the monitor has been acquired.
   bool      _pending_monitorenter;
 
-  // Specifies if the DeoptReason for the last uncommon trap was Reason_transfer_to_interpreter
+  // Specifies if the NULL for the last uncommon trap was Reason_transfer_to_interpreter
   bool      _pending_transfer_to_interpreter;
 
   // Guard for re-entrant call to JVMCIRuntime::adjust_comp_level

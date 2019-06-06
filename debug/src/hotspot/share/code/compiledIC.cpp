@@ -6,7 +6,6 @@
 #include "code/icBuffer.hpp"
 #include "code/nmethod.hpp"
 #include "code/vtableStubs.hpp"
-#include "interpreter/interpreter.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "memory/metadataFactory.hpp"
 #include "memory/oopFactory.hpp"
@@ -114,9 +113,7 @@ void CompiledIC::initialize_from_iter(RelocIterator* iter) {
   }
 }
 
-CompiledIC::CompiledIC(CompiledMethod* cm, NativeCall* call)
-  : _method(cm)
-{
+CompiledIC::CompiledIC(CompiledMethod* cm, NativeCall* call) : _method(cm) {
   _call = _method->call_wrapper_at((address) call);
   address ic_call = _call->instruction_address();
 
@@ -127,9 +124,7 @@ CompiledIC::CompiledIC(CompiledMethod* cm, NativeCall* call)
   initialize_from_iter(&iter);
 }
 
-CompiledIC::CompiledIC(RelocIterator* iter)
-  : _method(iter->code())
-{
+CompiledIC::CompiledIC(RelocIterator* iter) : _method(iter->code()) {
   _call = _method->call_wrapper_at(iter->addr());
   address ic_call = _call->instruction_address();
 
@@ -305,9 +300,9 @@ void CompiledIC::compute_monomorphic_entry(const methodHandle& method, Klass* re
     //     it looks vanilla but is optimized. Code in is_call_to_interpreted
     //     is aware of this and weakens its asserts.
     if (is_optimized) {
-      entry      = method_code->verified_entry_point();
+      entry = method_code->verified_entry_point();
     } else {
-      entry      = method_code->entry_point();
+      entry = method_code->entry_point();
     }
   }
   bool far_c2a = entry != NULL && caller_is_nmethod && method_code->is_far_code();

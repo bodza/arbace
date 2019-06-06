@@ -1,7 +1,6 @@
 #ifndef SHARE_VM_RUNTIME_SHAREDRUNTIME_HPP
 #define SHARE_VM_RUNTIME_SHAREDRUNTIME_HPP
 
-#include "interpreter/bytecodeHistogram.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "memory/allocation.hpp"
 #include "memory/resourceArea.hpp"
@@ -14,10 +13,9 @@ class AdapterFingerPrint;
 class vframeStream;
 
 // Runtime is the base class for various runtime interfaces
-// (InterpreterRuntime, CompilerRuntime, etc.). It provides
-// shared functionality such as exception forwarding (C++ to
-// Java exceptions), locking/unlocking mechanisms, statistical
-// information, etc.
+// (CompilerRuntime, etc.). It provides shared functionality
+// such as exception forwarding (C++ to Java exceptions),
+// locking/unlocking mechanisms, statistical information, etc.
 
 class SharedRuntime: AllStatic {
   friend class VMStructs;
@@ -34,8 +32,6 @@ class SharedRuntime: AllStatic {
   static RuntimeStub*        _resolve_virtual_call_blob;
   static RuntimeStub*        _resolve_static_call_blob;
   static address             _resolve_static_call_entry;
-
-  static DeoptimizationBlob* _deopt_blob;
 
   static SafepointBlob*      _polling_page_vectors_safepoint_handler_blob;
   static SafepointBlob*      _polling_page_safepoint_handler_blob;
@@ -243,13 +239,7 @@ class SharedRuntime: AllStatic {
   // compiled code.
   static methodHandle resolve_helper(JavaThread *thread, bool is_virtual, bool is_optimized, TRAPS);
 
- private:
-  // deopt blob
-  static void generate_deopt_blob(void);
-
  public:
-  static DeoptimizationBlob* deopt_blob(void)      { return _deopt_blob; }
-
   // Resets a call-site in compiled code so it will get resolved again.
   static methodHandle reresolve_call_site(JavaThread *thread, TRAPS);
 
@@ -334,22 +324,6 @@ class SharedRuntime: AllStatic {
   static AdapterHandlerEntry* generate_i2c2i_adapters(MacroAssembler *_masm, int total_args_passed, int max_arg, const BasicType *sig_bt, const VMRegPair *regs, AdapterFingerPrint* fingerprint);
 
   static void gen_i2c_adapter(MacroAssembler *_masm, int total_args_passed, int comp_args_on_stack, const BasicType *sig_bt, const VMRegPair *regs);
-
-  // OSR support
-
-  // OSR_migration_begin will extract the jvm state from an interpreter
-  // frame (locals, monitors) and store the data in a piece of C heap
-  // storage. This then allows the interpreter frame to be removed from the
-  // stack and the OSR nmethod to be called. That method is called with a
-  // pointer to the C heap storage. This pointer is the return value from
-  // OSR_migration_begin.
-
-  static intptr_t* OSR_migration_begin(JavaThread *thread);
-
-  // OSR_migration_end is a trivial routine. It is called after the compiled
-  // method has extracted the jvm state from the C heap that OSR_migration_begin
-  // created. It's entire job is to simply free this storage.
-  static void OSR_migration_end(intptr_t* buf);
 
   // Convert a sig into a calling convention register layout
   // and find interesting things about it.

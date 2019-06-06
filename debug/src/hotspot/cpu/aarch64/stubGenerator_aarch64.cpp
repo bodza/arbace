@@ -4,7 +4,6 @@
 #include "asm/macroAssembler.inline.hpp"
 #include "gc/shared/barrierSet.hpp"
 #include "gc/shared/barrierSetAssembler.hpp"
-#include "interpreter/interpreter.hpp"
 #include "nativeInst_aarch64.hpp"
 #include "oops/instanceOop.hpp"
 #include "oops/method.hpp"
@@ -18,10 +17,6 @@
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.inline.hpp"
 #include "utilities/align.hpp"
-
-#ifdef BUILTIN_SIM
-#include "../../../../../../simulator/simulator.hpp"
-#endif
 
 // Declaration and definition of StubGenerator (no .hpp file).
 // For a more detailed description of the stub routine structure
@@ -169,16 +164,8 @@ class StubGenerator: public StubCodeGenerator {
 
     // stub code
 
-    // we need a C prolog to bootstrap the x86 caller into the sim
-    __ c_stub_prolog(8, 0, MacroAssembler::ret_type_void);
-
     address aarch64_entry = __ pc();
 
-#ifdef BUILTIN_SIM
-    // Save sender's SP for stack traces.
-    __ mov(rscratch1, sp);
-    __ str(rscratch1, Address(__ pre(sp, -2 * wordSize)));
-#endif
     // set up frame and move sp to end of save area
     __ enter();
     __ sub(sp, rfp, -sp_after_call_off * wordSize);
@@ -238,22 +225,7 @@ class StubGenerator: public StubCodeGenerator {
     __ mov(r13, sp);
     __ blr(c_rarg4);
 
-    // tell the simulator we have returned to the stub
-
-    // we do this here because the notify will already have been done
-    // if we get to the next instruction via an exception
-    //
-    // n.b. adding this instruction here affects the calculation of
-    // whether or not a routine returns to the call stub (used when
-    // doing stack walks) since the normal test is to check the return
-    // pc against the address saved below. so we may need to allow for
-    // this extra instruction in the check.
-
-    if (NotifySimulator) {
-      __ notify(Assembler::method_reentry);
-    }
     // save current address for use by exception handling code
-
     return_address = __ pc();
 
     // store result depending on type (everything that is not
@@ -1201,12 +1173,6 @@ class StubGenerator: public StubCodeGenerator {
     __ leave();
     __ mov(r0, zr); // return 0
     __ ret(lr);
-#ifdef BUILTIN_SIM
-    {
-      AArch64Simulator *sim = AArch64Simulator::get_current(UseSimulatorCache, DisableBCCheck);
-      sim->notifyCompile(const_cast<char*>(name), start);
-    }
-#endif
     return start;
   }
 
@@ -1270,12 +1236,6 @@ class StubGenerator: public StubCodeGenerator {
     __ leave();
     __ mov(r0, zr); // return 0
     __ ret(lr);
-#ifdef BUILTIN_SIM
-    {
-      AArch64Simulator *sim = AArch64Simulator::get_current(UseSimulatorCache, DisableBCCheck);
-      sim->notifyCompile(const_cast<char*>(name), start);
-    }
-#endif
     return start;
 }
 
@@ -2768,7 +2728,6 @@ class StubGenerator: public StubCodeGenerator {
     return start;
   }
 
-#ifndef BUILTIN_SIM
   // Safefetch stubs.
   void generate_safefetch(const char* name, int size, address* entry, address* fault_pc, address* continuation_pc) {
     // safefetch signatures:
@@ -2807,7 +2766,6 @@ class StubGenerator: public StubCodeGenerator {
     __ mov(r0, c_rarg1);
     __ ret(lr);
   }
-#endif
 
   /**
    *  Arguments:
@@ -5201,7 +5159,6 @@ class StubGenerator: public StubCodeGenerator {
       StubRoutines::_montgomerySquare = g.generate_multiply();
     }
 
-#ifndef BUILTIN_SIM
     // generate GHASH intrinsics code
     if (UseGHASHIntrinsics) {
       StubRoutines::_ghash_processBlocks = generate_ghash_processBlocks();
@@ -5235,7 +5192,6 @@ class StubGenerator: public StubCodeGenerator {
     generate_safefetch("SafeFetchN", sizeof(intptr_t), &StubRoutines::_safefetchN_entry,
                                                        &StubRoutines::_safefetchN_fault_pc,
                                                        &StubRoutines::_safefetchN_continuation_pc);
-#endif
     StubRoutines::aarch64::set_completed();
   }
 

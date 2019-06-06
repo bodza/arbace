@@ -9,8 +9,6 @@
 #include "compiler/compileBroker.hpp"
 #include "compiler/disassembler.hpp"
 #include "gc/shared/collectedHeap.hpp"
-#include "interpreter/bytecodeHistogram.hpp"
-#include "interpreter/interpreter.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
 #include "oops/oop.inline.hpp"
@@ -44,13 +42,11 @@ void warning(const char* format, ...) {
 // Place-holder for non-existent suppression check:
 #define error_is_suppressed(file_name, line_no) (false)
 
-void report_vm_error(const char* file, int line, const char* error_msg)
-{
+void report_vm_error(const char* file, int line, const char* error_msg) {
   report_vm_error(file, line, error_msg, "%s", "");
 }
 
-void report_vm_error(const char* file, int line, const char* error_msg, const char* detail_fmt, ...)
-{
+void report_vm_error(const char* file, int line, const char* error_msg, const char* detail_fmt, ...) {
   if (error_is_suppressed(file, line)) return;
   va_list detail_args;
   va_start(detail_args, detail_fmt);
@@ -63,8 +59,7 @@ void report_vm_status_error(const char* file, int line, const char* error_msg, i
   report_vm_error(file, line, error_msg, "error %s(%d), %s", os::errno_name(status), status, detail);
 }
 
-void report_fatal(const char* file, int line, const char* detail_fmt, ...)
-{
+void report_fatal(const char* file, int line, const char* detail_fmt, ...) {
   if (error_is_suppressed(file, line)) return;
   va_list detail_args;
   va_start(detail_args, detail_fmt);

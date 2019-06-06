@@ -93,9 +93,9 @@ public:
   // With:
   //     if (visited.test_set(idx)) return;
   //
-  int test_set( uint elem ) {
+  int test_set(uint elem) {
     uint word = elem >> 5;           // Get the longword offset
-    if (word >= size )               // Beyond the last?
+    if (word >= size)               // Beyond the last?
       return test_set_grow(elem);    // Then grow; set; return 0;
     uint32_t mask = 1L << (elem & 31); // Get bit mask
     uint32_t datum = data[word] & mask;// Get bit
@@ -108,7 +108,7 @@ public:
   }
 
   // Fast inlined test
-  int test( uint elem ) const {
+  int test(uint elem) const {
     uint word = elem >> 5;      // Get the longword offset
     if (word >= size ) return 0; // Beyond the last?
     uint32_t mask = 1L << (elem & 31); // Get bit mask
@@ -116,9 +116,9 @@ public:
   }
 
   // Fast inlined set
-  void set( uint elem ) {
+  void set(uint elem) {
     uint word = elem >> 5;      // Get the longword offset
-    if (word >= size ) {        // Beyond the last?
+    if (word >= size) {        // Beyond the last?
       test_set_grow(elem);      // Then grow and set
     } else {
       uint32_t mask = 1L << (elem & 31); // Get bit mask

@@ -8,7 +8,6 @@
 #include "gc/shared/cardTableBarrierSet.hpp"
 #include "gc/shared/gcConfig.hpp"
 #include "gc/g1/heapRegion.hpp"
-#include "interpreter/abstractInterpreter.hpp"
 #include "jvmci/compilerRuntime.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #include "memory/allocation.inline.hpp"
@@ -77,7 +76,7 @@ Klass* AOTCodeHeap::lookup_klass(const char* name, int len, const Method* method
 }
 
 void AOTLib::handle_config_error(const char* format, ...) {
-  if (UseAOTStrictLoading) {
+  if (false) {
     vm_exit(1);
   }
   _valid = false;
@@ -139,7 +138,7 @@ void AOTLib::verify_config() {
   verify_flag(_config->_restrictContended, RestrictContended, "RestrictContended");
   verify_flag(_config->_threadLocalHandshakes, ThreadLocalHandshakes, "ThreadLocalHandshakes");
 
-  if (!TieredCompilation && _config->_tieredAOT) {
+  if (_config->_tieredAOT) {
     handle_config_error("Shared file %s error: Expected to run with tiered compilation on", _name);
   }
 
@@ -245,8 +244,7 @@ AOTCodeHeap::AOTCodeHeap(AOTLib* lib) :
 
 void AOTCodeHeap::publish_aot(const methodHandle& mh, AOTMethodData* method_data, int code_id) {
   // The method may be explicitly excluded by the user.
-  // Or Interpreter uses an intrinsic for this method.
-  if (CompilerOracle::should_exclude(mh) || !AbstractInterpreter::can_be_compiled(mh)) {
+  if (CompilerOracle::should_exclude(mh) || !NULL::can_be_compiled(mh)) {
     return;
   }
 
@@ -369,23 +367,20 @@ void AOTCodeHeap::link_shared_runtime_symbols() {
     SET_AOT_GLOBAL_SYMBOL_VALUE("_resolve_static_entry", address, SharedRuntime::get_resolve_static_call_stub());
     SET_AOT_GLOBAL_SYMBOL_VALUE("_resolve_virtual_entry", address, SharedRuntime::get_resolve_virtual_call_stub());
     SET_AOT_GLOBAL_SYMBOL_VALUE("_resolve_opt_virtual_entry", address, SharedRuntime::get_resolve_opt_virtual_call_stub());
-    SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_deopt_blob_unpack", address, SharedRuntime::deopt_blob()->unpack());
-    SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_deopt_blob_uncommon_trap", address, SharedRuntime::deopt_blob()->uncommon_trap());
+    SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_deopt_blob_unpack", address, SharedRuntime::NULL()->unpack());
+    SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_deopt_blob_uncommon_trap", address, SharedRuntime::NULL()->NULL());
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_ic_miss_stub", address, SharedRuntime::get_ic_miss_stub());
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_handle_wrong_method_stub", address, SharedRuntime::get_handle_wrong_method_stub());
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_exception_handler_for_return_address", address, SharedRuntime::exception_handler_for_return_address);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_register_finalizer", address, SharedRuntime::register_finalizer);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_object_notify", address, JVMCIRuntime::object_notify);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_object_notifyAll", address, JVMCIRuntime::object_notifyAll);
-    SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_OSR_migration_end", address, SharedRuntime::OSR_migration_end);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_enable_stack_reserved_zone", address, SharedRuntime::enable_stack_reserved_zone);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_resolve_dynamic_invoke", address, CompilerRuntime::resolve_dynamic_invoke);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_resolve_string_by_symbol", address, CompilerRuntime::resolve_string_by_symbol);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_resolve_klass_by_symbol", address, CompilerRuntime::resolve_klass_by_symbol);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_resolve_method_by_symbol_and_load_counters", address, CompilerRuntime::resolve_method_by_symbol_and_load_counters);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_initialize_klass_by_symbol", address, CompilerRuntime::initialize_klass_by_symbol);
-    SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_invocation_event", address, CompilerRuntime::invocation_event);
-    SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_backedge_event", address, CompilerRuntime::backedge_event);
 
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_shared_runtime_dpow", address, SharedRuntime::dpow);
     SET_AOT_GLOBAL_SYMBOL_VALUE("_aot_shared_runtime_dexp", address, SharedRuntime::dexp);
@@ -592,7 +587,7 @@ void AOTCodeHeap::sweep_dependent_methods(int* indexes, int methods_cnt) {
     }
   }
   if (marked > 0) {
-    VM_Deoptimize op;
+    NULL op;
     VMThread::execute(&op);
   }
 }

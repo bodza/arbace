@@ -53,10 +53,7 @@ class RemoveSelfForwardPtrObjClosure: public ObjectClosure {
   HeapWord* _last_forwarded_object_end;
 
 public:
-  RemoveSelfForwardPtrObjClosure(HeapRegion* hr,
-                                 UpdateRSetDeferred* update_rset_cl,
-                                 bool during_initial_mark,
-                                 uint worker_id) :
+  RemoveSelfForwardPtrObjClosure(HeapRegion* hr, UpdateRSetDeferred* update_rset_cl, bool during_initial_mark, uint worker_id) :
     _g1h(G1CollectedHeap::heap()),
     _cm(_g1h->concurrent_mark()),
     _hr(hr),

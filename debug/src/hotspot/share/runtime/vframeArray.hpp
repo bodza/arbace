@@ -3,7 +3,6 @@
 
 #include "memory/allocation.hpp"
 #include "oops/arrayOop.hpp"
-#include "runtime/deoptimization.hpp"
 #include "runtime/frame.hpp"
 #include "runtime/monitorChunk.hpp"
 #include "utilities/growableArray.hpp"
@@ -35,42 +34,23 @@ class vframeArrayElement {
     StackValueCollection* _expressions;
 
   public:
-  frame* iframe(void)                { return &_frame; }
+  frame* iframe(void)                           { return &_frame; }
 
   int bci(void) const;
 
-  int raw_bci(void) const            { return _bci; }
-  bool should_reexecute(void) const  { return _reexecute; }
+  int raw_bci(void) const                       { return _bci; }
+  bool should_reexecute(void) const             { return _reexecute; }
 
-  Method* method(void) const       { return _method; }
+  Method* method(void) const                    { return _method; }
 
-  MonitorChunk* monitors(void) const { return _monitors; }
+  MonitorChunk* monitors(void) const            { return _monitors; }
 
   void free_monitors(JavaThread* jt);
 
-  StackValueCollection* locals(void) const             { return _locals; }
-
-  StackValueCollection* expressions(void) const        { return _expressions; }
+  StackValueCollection* locals(void) const      { return _locals; }
+  StackValueCollection* expressions(void) const { return _expressions; }
 
   void fill_in(compiledVFrame* vf, bool realloc_failures);
-
-  // Formerly part of deoptimizedVFrame
-
-  // Returns the on stack word size for this frame
-  // callee_parameters is the number of callee locals residing inside this frame
-  int on_stack_size(int callee_parameters,
-                    int callee_locals,
-                    bool is_top_frame,
-                    int popframe_extra_stack_expression_els) const;
-
-  // Unpacks the element to skeletal interpreter frame
-  void unpack_on_stack(int caller_actual_parameters,
-                       int callee_parameters,
-                       int callee_locals,
-                       frame* caller,
-                       bool is_top_frame,
-                       bool is_bottom_frame,
-                       int exec_mode);
 };
 
 // this can be a ResourceObj if we don't save the last one...
@@ -84,33 +64,30 @@ class vframeArray: public CHeapObj<mtCompiler> {
   // Here is what a vframeArray looks like in memory
 
   /*
-      fixed part
-        description of the original frame
-        _frames - number of vframes in this array
-        adapter info
-        callee register save area
-      variable part
-        vframeArrayElement   [ 0 ]
-        ...
-        vframeArrayElement   [_frames - 1]
+   *  fixed part
+   *    description of the original frame
+   *    _frames - number of vframes in this array
+   *    adapter info
+   *    callee register save area
+   *  variable part
+   *    vframeArrayElement   [ 0 ]
+   *    ...
+   *    vframeArrayElement   [_frames - 1]
+   */
 
-  */
+  JavaThread*        _owner_thread;
+  vframeArray*       _next;
+  frame              _original;          // the original frame of the deoptee
+  frame              _caller;            // caller of root frame in vframeArray
+  frame              _sender;
 
-  JavaThread*                  _owner_thread;
-  vframeArray*                 _next;
-  frame                        _original;          // the original frame of the deoptee
-  frame                        _caller;            // caller of root frame in vframeArray
-  frame                        _sender;
+  int                _frame_size;
+  int                _frames; // number of javavframes in the array (does not count any adapter)
 
-  Deoptimization::UnrollBlock* _unroll_block;
-  int                          _frame_size;
+  intptr_t           _callee_registers[RegisterMap::reg_count];
+  unsigned char      _valid[RegisterMap::reg_count];
 
-  int                          _frames; // number of javavframes in the array (does not count any adapter)
-
-  intptr_t                     _callee_registers[RegisterMap::reg_count];
-  unsigned char                _valid[RegisterMap::reg_count];
-
-  vframeArrayElement           _elements[1];   // First variable section.
+  vframeArrayElement _elements[1];   // First variable section.
 
   void fill_in_element(int index, compiledVFrame* vf);
 
@@ -119,14 +96,14 @@ class vframeArray: public CHeapObj<mtCompiler> {
 
  public:
   // Tells whether index is within bounds.
-  bool is_within_bounds(int index) const        { return 0 <= index && index < frames(); }
+  bool is_within_bounds(int index) const     { return 0 <= index && index < frames(); }
 
   // Accessories for instance variable
-  int frames() const                            { return _frames; }
+  int frames() const                         { return _frames; }
 
   static vframeArray* allocate(JavaThread* thread, int frame_size, GrowableArray<compiledVFrame*>* chunk, RegisterMap* reg_map, frame sender, frame caller, frame self, bool realloc_failures);
 
-  vframeArrayElement* element(int index)        { return &_elements[index]; }
+  vframeArrayElement* element(int index)     { return &_elements[index]; }
 
   // Allocates a new vframe in the array and fills the array with vframe information in chunk
   void fill_in(JavaThread* thread, int frame_size, GrowableArray<compiledVFrame*>* chunk, const RegisterMap *reg_map, bool realloc_failures);
@@ -144,22 +121,12 @@ class vframeArray: public CHeapObj<mtCompiler> {
   intptr_t* unextended_sp() const;
 
   address original_pc() const                { return _original.pc(); }
-
   frame original() const                     { return _original; }
-
   frame caller() const                       { return _caller; }
-
   frame sender() const                       { return _sender; }
 
-  // Accessors for unroll block
-  Deoptimization::UnrollBlock* unroll_block() const         { return _unroll_block; }
-  void set_unroll_block(Deoptimization::UnrollBlock* block) { _unroll_block = block; }
-
   // Returns the size of the frame that got deoptimized
-  int frame_size() const { return _frame_size; }
-
-  // Unpack the array on the stack passed in stack interval
-  void unpack_to_stack(frame &unpack_frame, int exec_mode, int caller_actual_parameters);
+  int frame_size() const                     { return _frame_size; }
 
   // Deallocates monitor chunks allocated during deoptimization.
   // This should be called when the array is not used anymore.

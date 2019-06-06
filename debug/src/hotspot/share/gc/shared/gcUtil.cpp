@@ -96,7 +96,7 @@ void LinearLeastSquareFit::update(double x, double y) {
   _sum_xy = _sum_xy + x * y;
   _mean_x.sample(x);
   _mean_y.sample(y);
-  if (_mean_x.count() > 1 ) {
+  if (_mean_x.count() > 1) {
     double slope_denominator;
     slope_denominator = (_mean_x.count() * _sum_x_squared - _sum_x * _sum_x);
     // Some tolerance should be injected here.  A denominator that is
@@ -120,7 +120,7 @@ void LinearLeastSquareFit::update(double x, double y) {
 double LinearLeastSquareFit::y(double x) {
   double new_y;
 
-  if (_mean_x.count() > 1 ) {
+  if (_mean_x.count() > 1) {
     new_y = (_intercept + _slope * x);
     return new_y;
   } else {

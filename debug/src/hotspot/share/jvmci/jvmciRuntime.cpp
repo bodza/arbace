@@ -74,7 +74,7 @@ static void deopt_caller() {
     RegisterMap reg_map(thread, false);
     frame runtime_frame = thread->last_frame();
     frame caller_frame = runtime_frame.sender(&reg_map);
-    Deoptimization::deoptimize_frame(thread, caller_frame.id(), Deoptimization::Reason_constraint);
+    NULL::NULL(thread, caller_frame.id(), NULL::Reason_constraint);
   }
 }
 
@@ -225,7 +225,7 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
     // another exception during the computation of the compiled
     // exception handler. Checking for exception oop equality is not
     // sufficient because some exceptions are pre-allocated and reused.
-    if (continuation != NULL && !recursive_exception && !SharedRuntime::deopt_blob()->contains(continuation)) {
+    if (continuation != NULL && !recursive_exception && !SharedRuntime::NULL()->contains(continuation)) {
       cm->add_handler_for_exception_and_pc(exception, pc, continuation);
     }
   }
@@ -257,7 +257,7 @@ address JVMCIRuntime::exception_handler_for_pc(JavaThread* thread) {
   // Now check to see if the compiled method we were called from is now deoptimized.
   // If so we must return to the deopt blob and deoptimize the nmethod
   if (cm != NULL && caller_is_deopted()) {
-    continuation = SharedRuntime::deopt_blob()->unpack_with_exception_in_tls();
+    continuation = SharedRuntime::NULL()->unpack_with_exception_in_tls();
   }
 
   return continuation;

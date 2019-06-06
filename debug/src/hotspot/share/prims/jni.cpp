@@ -489,7 +489,6 @@ class JNI_ArgumentPusherVaArg : public JNI_ArgumentPusher {
   inline void get_bool()   {
     // Normalize boolean arguments from native code by converting 1-255 to JNI_TRUE and
     // 0 to JNI_FALSE.  Boolean return values from native are normalized the same in
-    // TemplateInterpreterGenerator::generate_result_handler_for and
     // SharedRuntime::generate_native_wrapper.
     jboolean b = va_arg(_ap, jint);
     _arguments->push_int((jint)(b == 0 ? JNI_FALSE : JNI_TRUE));
@@ -521,7 +520,7 @@ class JNI_ArgumentPusherVaArg : public JNI_ArgumentPusher {
   }
 
   // Optimized path if we have the bitvector form of signature
-  void iterate( uint64_t fingerprint ) {
+  void iterate(uint64_t fingerprint) {
     if (fingerprint == (uint64_t)CONST64(-1)) {
       SignatureIterator::iterate(); // Must be too many arguments
     } else {
@@ -559,7 +558,6 @@ class JNI_ArgumentPusherArray : public JNI_ArgumentPusher {
   inline void get_bool()   {
     // Normalize boolean arguments from native code by converting 1-255 to JNI_TRUE and
     // 0 to JNI_FALSE.  Boolean return values from native are normalized the same in
-    // TemplateInterpreterGenerator::generate_result_handler_for and
     // SharedRuntime::generate_native_wrapper.
     jboolean b = (_ap++)->z;
     _arguments->push_int((jint)(b == 0 ? JNI_FALSE : JNI_TRUE));
@@ -587,7 +585,7 @@ class JNI_ArgumentPusherArray : public JNI_ArgumentPusher {
   }
 
   // Optimized path if we have the bitvector form of signature
-  void iterate( uint64_t fingerprint ) {
+  void iterate(uint64_t fingerprint) {
     if (fingerprint == (uint64_t)CONST64(-1)) {
       SignatureIterator::iterate(); // Must be too many arguments
     } else {
@@ -1890,8 +1888,7 @@ static bool initializeDirectBufferSupport(JNIEnv* env, JavaThread* thread) {
   return !directBufferSupportInitializeFailed;
 }
 
-extern "C" jobject JNICALL jni_NewDirectByteBuffer(JNIEnv *env, void* address, jlong capacity)
-{
+extern "C" jobject JNICALL jni_NewDirectByteBuffer(JNIEnv *env, void* address, jlong capacity) {
   // thread_from_jni_environment() will block if VM is gone.
   JavaThread* thread = JavaThread::thread_from_jni_environment(env);
 

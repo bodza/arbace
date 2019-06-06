@@ -701,7 +701,7 @@ void encode_RegMem(CodeBuffer &cbuf, int reg, int base, int index, int scale, in
         emit_d8(cbuf, disp);
       } else {
         // If 32-bit displacement
-        if (base == 0x04 ) {
+        if (base == 0x04) {
           emit_rm(cbuf, 0x2, regenc, 0x4);
           emit_rm(cbuf, scale, indexenc, 0x04); // XXX is this valid???
         } else {
@@ -814,9 +814,7 @@ void MachEpilogNode::emit(CodeBuffer& cbuf, PhaseRegAlloc* ra_) const {
   int framesize = C->frame_size_in_bytes();
   // Remove word for return adr already pushed
   // and RBP
-  framesize -= 2*wordSize;
-
-  // Note that VerifyStackAtCalls' Majik cookie does not change the frame size popped here
+  framesize -= 2 * wordSize;
 
   if (framesize) {
     emit_opcode(cbuf, Assembler::REX_W);
@@ -956,17 +954,17 @@ uint MachSpillCopyNode::implementation(CodeBuffer* cbuf, PhaseRegAlloc* ra_, boo
   }
   if (bottom_type()->isa_vect() != NULL) {
     uint ireg = ideal_reg();
-    if (src_first_rc == rc_stack && dst_first_rc == rc_stack ) {
+    if (src_first_rc == rc_stack && dst_first_rc == rc_stack) {
       // mem -> mem
       int src_offset = ra_->reg2offset(src_first);
       int dst_offset = ra_->reg2offset(dst_first);
       vec_stack_to_stack_helper(cbuf, src_offset, dst_offset, ireg, st);
-    } else if (src_first_rc == rc_float && dst_first_rc == rc_float ) {
+    } else if (src_first_rc == rc_float && dst_first_rc == rc_float) {
       vec_mov_helper(cbuf, false, src_first, dst_first, src_second, dst_second, ireg, st);
-    } else if (src_first_rc == rc_float && dst_first_rc == rc_stack ) {
+    } else if (src_first_rc == rc_float && dst_first_rc == rc_stack) {
       int stack_offset = ra_->reg2offset(dst_first);
       vec_spill_helper(cbuf, false, false, stack_offset, src_first, ireg, st);
-    } else if (src_first_rc == rc_stack && dst_first_rc == rc_float ) {
+    } else if (src_first_rc == rc_stack && dst_first_rc == rc_float) {
       int stack_offset = ra_->reg2offset(src_first);
       vec_spill_helper(cbuf, false, true,  stack_offset, dst_first, ireg, st);
     } else {
@@ -1352,7 +1350,7 @@ bool Matcher::is_spillable_arg(int reg) {
   return can_be_java_arg(reg);
 }
 
-bool Matcher::use_asm_for_ldiv_by_con( jlong divisor ) {
+bool Matcher::use_asm_for_ldiv_by_con(jlong divisor) {
   // In 64 bit mode a code which use multiply when
   // devisor is constant is faster than hardware
   // DIV instruction (it uses MulHiL).
@@ -2340,7 +2338,7 @@ frame %{
   // Compiled code's Frame Pointer
   frame_pointer(RSP);
 
-  // Interpreter stores its frame pointer in a register which is
+  // ... stores its frame pointer in a register which is
   // stored to the stack by I2CAdaptors.
   // I2CAdaptors convert from interpreted java to compiled java.
   interpreter_frame_pointer(RBP);
@@ -2352,7 +2350,7 @@ frame %{
   // a new frame.  The PROLOG must add this many slots to the stack.  The
   // EPILOG must remove this many slots.  amd64 needs two slots for
   // return address.
-  in_preserve_stack_slots(4 + 2 * VerifyStackAtCalls);
+  in_preserve_stack_slots(4);
 
   // Number of outgoing stack slots killed above the out_preserve_stack_slots
   // for calls to C.  Supports the var-args backing area for register parms.

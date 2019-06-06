@@ -121,69 +121,6 @@ inline address frame::sender_pc() const { return *sender_pc_addr(); }
 
 inline intptr_t* frame::sender_sp() const { return addr_at( sender_sp_offset); }
 
-inline intptr_t** frame::interpreter_frame_locals_addr() const {
-  return (intptr_t**)addr_at(interpreter_frame_locals_offset);
-}
-
-inline intptr_t* frame::interpreter_frame_last_sp() const {
-  return *(intptr_t**)addr_at(interpreter_frame_last_sp_offset);
-}
-
-inline intptr_t* frame::interpreter_frame_bcp_addr() const {
-  return (intptr_t*)addr_at(interpreter_frame_bcp_offset);
-}
-
-inline intptr_t* frame::interpreter_frame_mdp_addr() const {
-  return (intptr_t*)addr_at(interpreter_frame_mdp_offset);
-}
-
-// Constant pool cache
-
-inline ConstantPoolCache** frame::interpreter_frame_cache_addr() const {
-  return (ConstantPoolCache**)addr_at(interpreter_frame_cache_offset);
-}
-
-// Method
-
-inline Method** frame::interpreter_frame_method_addr() const {
-  return (Method**)addr_at(interpreter_frame_method_offset);
-}
-
-// Mirror
-
-inline oop* frame::interpreter_frame_mirror_addr() const {
-  return (oop*)addr_at(interpreter_frame_mirror_offset);
-}
-
-// top of expression stack
-inline intptr_t* frame::interpreter_frame_tos_address() const {
-  intptr_t* last_sp = interpreter_frame_last_sp();
-  if (last_sp == NULL) {
-    return sp();
-  } else {
-    // sp() may have been extended or shrunk by an adapter.  At least
-    // check that we don't fall behind the legal region.
-    // For top deoptimized frame last_sp == interpreter_frame_monitor_end.
-    return last_sp;
-  }
-}
-
-inline oop* frame::interpreter_frame_temp_oop_addr() const {
-  return (oop *)(fp() + interpreter_frame_oop_temp_offset);
-}
-
-inline int frame::interpreter_frame_monitor_size() {
-  return BasicObjectLock::size();
-}
-
-// expression stack
-// (the max_stack arguments are used by the GC; see class FrameClosure)
-
-inline intptr_t* frame::interpreter_frame_expression_stack() const {
-  intptr_t* monitor_end = (intptr_t*) interpreter_frame_monitor_end();
-  return monitor_end - 1;
-}
-
 // Entry frames
 
 inline JavaCallWrapper** frame::entry_frame_call_wrapper_addr() const {

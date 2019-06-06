@@ -5,8 +5,6 @@
 #include "memory/allocation.hpp"
 #include "oops/access.hpp"
 
-class InterpreterMacroAssembler;
-
 class BarrierSetAssembler: public CHeapObj<mtGC> {
 private:
   void incr_allocated_bytes(MacroAssembler* masm, Register thread, Register var_size_in_bytes, int con_size_in_bytes, Register t1);

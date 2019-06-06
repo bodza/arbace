@@ -19,7 +19,6 @@
 #include "oops/verifyOopClosure.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/compilationPolicy.hpp"
-#include "runtime/deoptimization.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/icache.hpp"
 #include "runtime/java.hpp"
@@ -296,14 +295,8 @@ bool CodeCache::heap_available(int code_blob_type) {
   if (!SegmentedCodeCache) {
     // No segmentation: use a single code heap
     return (code_blob_type == CodeBlobType::All);
-  } else if (Arguments::is_interpreter_only()) {
-    // Interpreter only: we don't need any method code heaps
-    return (code_blob_type == CodeBlobType::NonNMethod);
-  } else if (TieredCompilation && (TieredStopAtLevel > CompLevel_simple)) {
-    // Tiered compilation: use all code heaps
-    return (code_blob_type < CodeBlobType::All);
   } else {
-    // No TieredCompilation: we only need the non-nmethod and non-profiled code heap
+    // We only need the non-nmethod and non-profiled code heap
     return (code_blob_type == CodeBlobType::NonNMethod) || (code_blob_type == CodeBlobType::MethodNonProfiled);
   }
 }
@@ -487,20 +480,6 @@ void CodeCache::free(CodeBlob* cb) {
 
   // Get heap for given CodeBlob and deallocate
   get_code_heap(cb)->deallocate(cb);
-}
-
-void CodeCache::free_unused_tail(CodeBlob* cb, size_t used) {
-  guarantee(cb->is_buffer_blob() && strncmp("Interpreter", cb->name(), 11) == 0, "Only possible for interpreter!");
-  print_trace("free_unused_tail", cb);
-
-  // We also have to account for the extra space (i.e. header) used by the CodeBlob
-  // which provides the memory (see BufferBlob::create() in codeBlob.cpp).
-  used += CodeBlob::align_code_offset(cb->header_size());
-
-  // Get heap for given CodeBlob and deallocate its unused tail
-  get_code_heap(cb)->deallocate_tail(cb, used);
-  // Adjust the sizes of the CodeBlob
-  cb->adjust_size(used);
 }
 
 void CodeCache::commit(CodeBlob* cb) {
@@ -993,7 +972,7 @@ void CodeCache::flush_dependents_on(InstanceKlass* dependee) {
   // Compute the dependent nmethods
   if (mark_for_deoptimization(changes) > 0) {
     // At least one nmethod has been marked for deoptimization
-    VM_Deoptimize op;
+    NULL op;
     VMThread::execute(&op);
   }
 }
@@ -1009,14 +988,14 @@ void CodeCache::flush_dependents_on_method(const methodHandle& m_h) {
     // At least one nmethod has been marked for deoptimization
 
     // All this already happens inside a VM_Operation, so we'll do all the work here.
-    // Stuff copied from VM_Deoptimize and modified slightly.
+    // Stuff copied from NULL and modified slightly.
 
     // We do not want any GCs to happen while we are in the middle of this VM operation
     ResourceMark rm;
-    DeoptimizationMarker dm;
+    NULL dm;
 
     // Deoptimize all activations depending on marked nmethods
-    Deoptimization::deoptimize_dependents();
+    NULL::deoptimize_dependents();
 
     // Make the dependent methods not entrant
     make_marked_nmethods_not_entrant();
@@ -1109,8 +1088,7 @@ void CodeCache::print_summary(outputStream* st, bool detailed) {
 
   if (detailed) {
     st->print_cr(" total_blobs=" UINT32_FORMAT " nmethods=" UINT32_FORMAT " adapters=" UINT32_FORMAT, blob_count(), nmethod_count(), adapter_count());
-    st->print_cr(" compilation: %s", CompileBroker::should_compile_new_jobs() ?
-                 "enabled" : Arguments::mode() == Arguments::_int ? "disabled (interpreter mode)" : "disabled (not enough contiguous free space left)");
+    st->print_cr(" compilation: %s", CompileBroker::should_compile_new_jobs() ? "enabled" : "disabled (not enough contiguous free space left)");
     st->print_cr("              stopped_count=%d, restarted_count=%d", CompileBroker::get_total_compiler_stopped_count(), CompileBroker::get_total_compiler_restarted_count());
     st->print_cr(" full_count=%d", full_count);
   }

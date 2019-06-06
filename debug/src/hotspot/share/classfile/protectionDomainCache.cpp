@@ -19,8 +19,7 @@ int ProtectionDomainCacheTable::index_for(Handle protection_domain) {
 
 ProtectionDomainCacheTable::ProtectionDomainCacheTable(int table_size)
   : Hashtable<ClassLoaderWeakHandle, mtClass>(table_size, sizeof(ProtectionDomainCacheEntry))
-{
-}
+{ }
 
 void ProtectionDomainCacheTable::unlink() {
   for (int i = 0; i < table_size(); ++i) {

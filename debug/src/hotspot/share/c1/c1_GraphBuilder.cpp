@@ -366,7 +366,7 @@ int BlockListBuilder::mark_loops(BlockBegin* block, bool in_subroutine) {
   block->set_depth_first_number(_next_block_number);
   _next_block_number--;
 
-  if (loop_state != 0 || in_subroutine ) {
+  if (loop_state != 0 || in_subroutine) {
     // block is contained at least in one loop, so phi functions are necessary
     // phi functions are also necessary for all locals stored in a subroutine
     scope()->requires_phi_function().set_union(block->stores_to_locals());

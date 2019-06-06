@@ -424,13 +424,6 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
 
         if (installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(installed_code())) {
           if (entry_bci == InvocationEntryBci) {
-            if (TieredCompilation) {
-              // If there is an old version we're done with it
-              CompiledMethod* old = method->code();
-              if (old != NULL ) {
-                old->make_not_entrant();
-              }
-            }
             // Allow the code to be executed
             method->set_code(method, nm);
           } else {

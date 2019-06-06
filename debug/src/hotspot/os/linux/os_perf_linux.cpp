@@ -1042,8 +1042,7 @@ int64_t NetworkPerformanceInterface::NetworkPerformance::read_counter(const char
   return value;
 }
 
-int NetworkPerformanceInterface::NetworkPerformance::network_utilization(NetworkInterface** network_interfaces) const
-{
+int NetworkPerformanceInterface::NetworkPerformance::network_utilization(NetworkInterface** network_interfaces) const {
   ifaddrs* addresses;
   ifaddrs* cur_address;
 

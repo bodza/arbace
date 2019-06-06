@@ -791,7 +791,6 @@ class  InterpretedRFrame;
 
 class vframe;
 class   javaVFrame;
-class     interpretedVFrame;
 class     compiledVFrame;
 class     deoptimizedVFrame;
 class   externalVFrame;
@@ -835,10 +834,6 @@ class MonitorArray;
 
 class MonitorInfo;
 
-class OffsetClosure;
-class OopMapCache;
-class InterpreterOopMap;
-class OopMapCacheEntry;
 class OSThread;
 
 typedef int (*OSThreadStartFunc)(void*);
@@ -1058,7 +1053,7 @@ inline u8 build_u8_from(u1 c1, u1 c2, u1 c3, u1 c4, u1 c5, u1 c6, u1 c7, u1 c8) 
 }
 
 // This routine takes four bytes:
-inline u4 build_u4_from( u1 c1, u1 c2, u1 c3, u1 c4 ) {
+inline u4 build_u4_from(u1 c1, u1 c2, u1 c3, u1 c4) {
   return ((u4(c1) << 24) & 0xff000000)
        | ((u4(c2) << 16) & 0x00ff0000)
        | ((u4(c3) <<  8) & 0x0000ff00)
@@ -1071,7 +1066,7 @@ inline u4 build_u4_from(u1* p) {
 }
 
 // Ditto for two-byte ints:
-inline u2 build_u2_from( u1 c1, u1 c2 ) {
+inline u2 build_u2_from(u1 c1, u1 c2) {
   return  u2(((u2(c1) << 8) & 0xff00)
           |  ((u2(c2) << 0) & 0x00ff));
 }

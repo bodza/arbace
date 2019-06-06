@@ -24,8 +24,7 @@ struct li_pair {
 static struct li_pair InverseLITable[LI_TABLE_SIZE];
 
 // comparator to sort entries in the inverse table
-int compare_immediate_pair(const void *i1, const void *i2)
-{
+int compare_immediate_pair(const void *i1, const void *i2) {
   struct li_pair *li1 = (struct li_pair *)i1;
   struct li_pair *li2 = (struct li_pair *)i2;
   if (li1->immediate < li2->immediate) {
@@ -40,22 +39,19 @@ int compare_immediate_pair(const void *i1, const void *i2)
 // helper functions used by expandLogicalImmediate
 
 // for i = 1, ... N result<i-1> = 1 other bits are zero
-static inline u_int64_t ones(int N)
-{
+static inline u_int64_t ones(int N) {
   return (N == 64 ? (u_int64_t)-1UL : ((1UL << N) - 1));
 }
 
 // result<0> to val<N>
-static inline u_int64_t pickbit(u_int64_t val, int N)
-{
+static inline u_int64_t pickbit(u_int64_t val, int N) {
   return pickbits64(val, N, N);
 }
 
 // SPEC bits(M*N) Replicate(bits(M) x, integer N);
 // this is just an educated guess
 
-u_int64_t replicate(u_int64_t bits, int nbits, int count)
-{
+u_int64_t replicate(u_int64_t bits, int nbits, int count) {
   u_int64_t result = 0;
   // nbits may be 64 in which case we want mask to be -1
   u_int64_t mask = ones(nbits);
@@ -71,8 +67,7 @@ u_int64_t replicate(u_int64_t bits, int nbits, int count)
 // encoding must be treated as an UNALLOC instruction
 
 // construct a 32 bit immediate value for a logical immediate operation
-int expandLogicalImmediate(u_int32_t immN, u_int32_t immr, u_int32_t imms, u_int64_t &bimm)
-{
+int expandLogicalImmediate(u_int32_t immN, u_int32_t immr, u_int32_t imms, u_int64_t &bimm) {
   int len;                  // ought to be <= 6
   u_int32_t levels;         // 6 bits
   u_int32_t tmask_and;      // 6 bits
@@ -173,8 +168,7 @@ int expandLogicalImmediate(u_int32_t immN, u_int32_t immr, u_int32_t imms, u_int
 // constructor to initialise the lookup tables
 
 static void initLITables() __attribute__ ((constructor));
-static void initLITables()
-{
+static void initLITables() {
   li_table_entry_count = 0;
   for (unsigned index = 0; index < LI_TABLE_SIZE; index++) {
     u_int32_t N = uimm(index, 12, 12);
@@ -193,13 +187,11 @@ static void initLITables()
 
 // public APIs provided for logical immediate lookup and reverse lookup
 
-u_int64_t logical_immediate_for_encoding(u_int32_t encoding)
-{
+u_int64_t logical_immediate_for_encoding(u_int32_t encoding) {
   return LITable[encoding];
 }
 
-u_int32_t encoding_for_logical_immediate(u_int64_t immediate)
-{
+u_int32_t encoding_for_logical_immediate(u_int64_t immediate) {
   struct li_pair pair;
   struct li_pair *result;
 
@@ -222,8 +214,7 @@ u_int32_t encoding_for_logical_immediate(u_int64_t immediate)
 // fpimm[3:0] = fraction (assuming leading 1)
 // i.e. F = s * 1.f * 2^(e - b)
 
-u_int64_t fp_immediate_for_encoding(u_int32_t imm8, int is_dp)
-{
+u_int64_t fp_immediate_for_encoding(u_int32_t imm8, int is_dp) {
   union {
     float fpval;
     double dpval;
@@ -258,8 +249,7 @@ u_int64_t fp_immediate_for_encoding(u_int32_t imm8, int is_dp)
   return val;
 }
 
-u_int32_t encoding_for_fp_immediate(float immediate)
-{
+u_int32_t encoding_for_fp_immediate(float immediate) {
   // given a float which is of the form
   //
   //     s * n/16 * 2r

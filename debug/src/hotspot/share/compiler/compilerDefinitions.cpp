@@ -78,14 +78,13 @@ void CompilerConfig::set_tiered_flags() {
   }
   // Increase the code cache size - tiered compiles a lot more.
   if (FLAG_IS_DEFAULT(ReservedCodeCacheSize)) {
-    FLAG_SET_ERGO(uintx, ReservedCodeCacheSize,
-                  MIN2(CODE_CACHE_DEFAULT_LIMIT, (size_t)ReservedCodeCacheSize * 5));
+    FLAG_SET_ERGO(uintx, ReservedCodeCacheSize, MIN2(CODE_CACHE_DEFAULT_LIMIT, (size_t)ReservedCodeCacheSize * 5));
   }
-  // Enable SegmentedCodeCache if TieredCompilation is enabled and ReservedCodeCacheSize >= 240M
+  // Enable SegmentedCodeCache if ... is enabled and ReservedCodeCacheSize >= 240M
   if (FLAG_IS_DEFAULT(SegmentedCodeCache) && ReservedCodeCacheSize >= 240*M) {
     FLAG_SET_ERGO(bool, SegmentedCodeCache, true);
   }
-  if (!UseInterpreter) { // -Xcomp
+  { // -Xcomp
     Tier3InvokeNotifyFreqLog = 0;
     Tier4InvocationThreshold = 0;
   }
@@ -159,7 +158,6 @@ void set_jvmci_specific_flags() {
 
 bool CompilerConfig::check_args_consistency(bool status) {
   // Check lower bounds of the code cache
-  // Template Interpreter code is approximately 3X larger in debug builds.
   uint min_code_cache_size = CodeCacheMinimumUseSpace;
   if (ReservedCodeCacheSize < InitialCodeCacheSize) {
     jio_fprintf(defaultStream::error_stream(), "Invalid ReservedCodeCacheSize: %dK. Must be at least InitialCodeCacheSize=%dK.\n", ReservedCodeCacheSize/K, InitialCodeCacheSize/K);
@@ -187,51 +185,16 @@ bool CompilerConfig::check_args_consistency(bool status) {
     FLAG_SET_CMDLINE(bool, BackgroundCompilation, false);
   }
 
-  if (Arguments::is_interpreter_only()) {
-    if (UseCompiler) {
-      if (!FLAG_IS_DEFAULT(UseCompiler)) {
-        warning("UseCompiler disabled due to -Xint.");
-      }
-      FLAG_SET_CMDLINE(bool, UseCompiler, false);
-    }
-    if (ProfileInterpreter) {
-      if (!FLAG_IS_DEFAULT(ProfileInterpreter)) {
-        warning("ProfileInterpreter disabled due to -Xint.");
-      }
-      FLAG_SET_CMDLINE(bool, ProfileInterpreter, false);
-    }
-    if (TieredCompilation) {
-      if (!FLAG_IS_DEFAULT(TieredCompilation)) {
-        warning("TieredCompilation disabled due to -Xint.");
-      }
-      FLAG_SET_CMDLINE(bool, TieredCompilation, false);
-    }
-    if (EnableJVMCI) {
-      if (!FLAG_IS_DEFAULT(EnableJVMCI) || !FLAG_IS_DEFAULT(UseJVMCICompiler)) {
-        warning("JVMCI Compiler disabled due to -Xint.");
-      }
-      FLAG_SET_CMDLINE(bool, EnableJVMCI, false);
-      FLAG_SET_CMDLINE(bool, UseJVMCICompiler, false);
-    }
-  } else {
-    status = status && JVMCIGlobals::check_jvmci_flags_are_consistent();
-  }
-  return status;
+  return status && JVMCIGlobals::check_jvmci_flags_are_consistent();
 }
 
 void CompilerConfig::ergo_initialize() {
-  if (Arguments::is_interpreter_only()) {
-    return; // Nothing to do.
-  }
-
   // Check that JVMCI compiler supports selested GC.
   // Should be done after GCConfig::initialize() was called.
   JVMCIGlobals::check_jvmci_supported_gc();
   set_jvmci_specific_flags();
 
-  if (TieredCompilation) {
-    set_tiered_flags();
-  } else {
+  {
     int max_compilation_policy_choice = 1;
     // Check if the policy is valid.
     if (CompilationPolicyChoice >= max_compilation_policy_choice) {

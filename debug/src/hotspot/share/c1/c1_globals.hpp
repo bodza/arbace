@@ -87,20 +87,11 @@
   product(bool, UseLoopInvariantCodeMotion, true, \
           "Simple loop invariant code motion for short loops during GVN") \
  \
-  develop(bool, TracePredicateFailedTraps, false, \
+  develop(bool, false, false, \
           "trace runtime traps caused by predicate failure") \
  \
   develop(bool, StressLoopInvariantCodeMotion, false, \
           "stress loop invariant code motion") \
- \
-  develop(bool, TraceRangeCheckElimination, false, \
-          "Trace Range Check Elimination") \
- \
-  develop(bool, AssertRangeCheckElimination, false, \
-          "Assert Range Check Elimination") \
- \
-  develop(bool, StressRangeCheckElimination, false, \
-          "stress Range Check Elimination") \
  \
   develop(bool, PrintValueNumbering, false, \
           "Print Value Numbering") \
@@ -225,9 +216,6 @@
   develop(bool, PrintBailouts, false, \
           "Print bailout and its reason") \
  \
-  develop(bool, TracePatching, false, \
-         "Trace patching of field access on uninitialized classes") \
- \
   develop(bool, PatchALot, false, \
           "Marks all fields as having unloaded classes") \
  \
@@ -290,7 +278,7 @@
   product(bool, C1OptimizeVirtualCallProfiling, true, \
           "Use CHA and exact type results at call sites when updating MDOs") \
  \
-  product(bool, C1UpdateMethodData, trueInTiered, \
+  product(bool, C1UpdateMethodData, false, \
           "Update MethodData*s in Tier1-generated code") \
  \
   develop(bool, PrintCFGToFile, false, \

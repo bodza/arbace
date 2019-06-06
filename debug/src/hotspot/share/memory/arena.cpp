@@ -191,7 +191,7 @@ Chunk::Chunk(size_t length) : _len(length) {
 
 void Chunk::chop() {
   Chunk *k = this;
-  while ( k ) {
+  while (k) {
     Chunk *tmp = k->next();
     // clear out this chunk (to detect allocation bugs)
     if (ZapResourceArea) memset(k->bottom(), badResourceValue, k->length());

@@ -294,8 +294,7 @@ class StringTableCreateEntry : public StackObj {
   }
 };
 
-oop StringTable::do_intern(Handle string_or_null_h, jchar* name,
-                           int len, uintx hash, TRAPS) {
+oop StringTable::do_intern(Handle string_or_null_h, jchar* name, int len, uintx hash, TRAPS) {
   HandleMark hm(THREAD);  // cleanup strings created
   Handle string_h;
 
@@ -363,8 +362,7 @@ void StringTable::oops_do(OopClosure* f) {
   StringTable::the_table()->_weak_handles->oops_do(f);
 }
 
-void StringTable::possibly_parallel_unlink(OopStorage::ParState<false, false>* _par_state_string, BoolObjectClosure* cl, int* processed, int* removed)
-{
+void StringTable::possibly_parallel_unlink(OopStorage::ParState<false, false>* _par_state_string, BoolObjectClosure* cl, int* processed, int* removed) {
   DoNothingClosure dnc;
   StringTableIsAliveCounter stiac(cl);
 
@@ -377,8 +375,7 @@ void StringTable::possibly_parallel_unlink(OopStorage::ParState<false, false>* _
   *removed = (int) stiac._count;
 }
 
-void StringTable::possibly_parallel_oops_do(OopStorage::ParState<false /* concurrent */, false /* const */>* _par_state_string, OopClosure* f)
-{
+void StringTable::possibly_parallel_oops_do(OopStorage::ParState<false /* concurrent */, false /* const */>* _par_state_string, OopClosure* f) {
   _par_state_string->oops_do(f);
 }
 

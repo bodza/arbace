@@ -117,8 +117,7 @@ void PackageEntry::delete_qualified_exports() {
 
 PackageEntryTable::PackageEntryTable(int table_size)
   : Hashtable<Symbol*, mtModule>(table_size, sizeof(PackageEntry))
-{
-}
+{ }
 
 PackageEntryTable::~PackageEntryTable() {
   // Walk through all buckets and all entries in each bucket,

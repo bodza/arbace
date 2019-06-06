@@ -243,12 +243,11 @@ static void report_vm_version(outputStream* st, char* buf, int buflen) {
    st->print_cr("# JRE version: %s (%s) (%sbuild %s)", runtime_name, buf, jdk_debug_level, runtime_version);
 
    // This is the long version with some default settings added
-   st->print_cr("# Java VM: %s (%s%s, %s%s%s%s%s, %s, %s)",
+   st->print_cr("# Java VM: %s (%s%s, %s%s%s%s, %s, %s)",
                  Abstract_VM_Version::vm_name(),
                  jdk_debug_level,
                  Abstract_VM_Version::vm_release(),
                  Abstract_VM_Version::vm_info_string(),
-                 TieredCompilation ? ", tiered" : "",
                  EnableJVMCI ? ", jvmci" : "",
                  UseJVMCICompiler ? ", jvmci compiler" : "",
                  UseCompressedOops ? ", compressed oops" : "",
@@ -616,25 +615,16 @@ void VMError::report(outputStream* st, bool _verbose) {
      if (_verbose && _context) {
        CodeBlob* cb = CodeCache::find_blob(_pc);
        if (cb != NULL) {
-         if (Interpreter::contains(_pc)) {
-           // The interpreter CodeBlob is very large so try to print the codelet instead.
-           InterpreterCodelet* codelet = Interpreter::codelet_containing(_pc);
-           if (codelet != NULL) {
-             codelet->print_on(st);
-             Disassembler::decode(codelet->code_begin(), codelet->code_end(), st);
-           }
-         } else {
-           StubCodeDesc* desc = StubCodeDesc::desc_for(_pc);
-           if (desc != NULL) {
-             desc->print_on(st);
-             Disassembler::decode(desc->begin(), desc->end(), st);
-           } else if (_thread != NULL) {
-             // Disassembling nmethod will incur resource memory allocation,
-             // only do so when thread is valid.
-             ResourceMark rm(_thread);
-             Disassembler::decode(cb, st);
-             st->cr();
-           }
+         StubCodeDesc* desc = StubCodeDesc::desc_for(_pc);
+         if (desc != NULL) {
+           desc->print_on(st);
+           Disassembler::decode(desc->begin(), desc->end(), st);
+         } else if (_thread != NULL) {
+           // Disassembling nmethod will incur resource memory allocation,
+           // only do so when thread is valid.
+           ResourceMark rm(_thread);
+           Disassembler::decode(cb, st);
+           st->cr();
          }
        }
      }
@@ -1042,34 +1032,29 @@ const char* VMError::_filename;
 int         VMError::_lineno;
 size_t      VMError::_size;
 
-void VMError::report_and_die(Thread* thread, unsigned int sig, address pc, void* siginfo, void* context, const char* detail_fmt, ...)
-{
+void VMError::report_and_die(Thread* thread, unsigned int sig, address pc, void* siginfo, void* context, const char* detail_fmt, ...) {
   va_list detail_args;
   va_start(detail_args, detail_fmt);
   report_and_die(sig, NULL, detail_fmt, detail_args, thread, pc, siginfo, context, NULL, 0, 0);
   va_end(detail_args);
 }
 
-void VMError::report_and_die(Thread* thread, unsigned int sig, address pc, void* siginfo, void* context)
-{
+void VMError::report_and_die(Thread* thread, unsigned int sig, address pc, void* siginfo, void* context) {
   report_and_die(thread, sig, pc, siginfo, context, "%s", "");
 }
 
-void VMError::report_and_die(const char* message, const char* detail_fmt, ...)
-{
+void VMError::report_and_die(const char* message, const char* detail_fmt, ...) {
   va_list detail_args;
   va_start(detail_args, detail_fmt);
   report_and_die(INTERNAL_ERROR, message, detail_fmt, detail_args, NULL, NULL, NULL, NULL, NULL, 0, 0);
   va_end(detail_args);
 }
 
-void VMError::report_and_die(const char* message)
-{
+void VMError::report_and_die(const char* message) {
   report_and_die(message, "%s", "");
 }
 
-void VMError::report_and_die(Thread* thread, void* context, const char* filename, int lineno, const char* message, const char* detail_fmt, va_list detail_args)
-{
+void VMError::report_and_die(Thread* thread, void* context, const char* filename, int lineno, const char* message, const char* detail_fmt, va_list detail_args) {
   report_and_die(INTERNAL_ERROR, message, detail_fmt, detail_args, thread, NULL, NULL, context, filename, lineno, 0);
 }
 
@@ -1077,8 +1062,7 @@ void VMError::report_and_die(Thread* thread, const char* filename, int lineno, s
   report_and_die(vm_err_type, NULL, detail_fmt, detail_args, thread, NULL, NULL, NULL, filename, lineno, size);
 }
 
-void VMError::report_and_die(int id, const char* message, const char* detail_fmt, va_list detail_args, Thread* thread, address pc, void* siginfo, void* context, const char* filename, int lineno, size_t size)
-{
+void VMError::report_and_die(int id, const char* message, const char* detail_fmt, va_list detail_args, Thread* thread, address pc, void* siginfo, void* context, const char* filename, int lineno, size_t size) {
   // Don't allocate large buffer on stack
   static char buffer[O_BUFLEN];
   out.set_scratch_buffer(buffer, sizeof(buffer));

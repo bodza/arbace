@@ -55,7 +55,7 @@ ciBlock *ciMethodBlocks::split_block_at(int bci) {
 
 ciBlock *ciMethodBlocks::make_block_at(int bci) {
   ciBlock *cb = block_containing(bci);
-  if (cb == NULL ) {
+  if (cb == NULL) {
     // This is our first time visiting this bytecode.  Create
     // a fresh block and assign it this starting point.
     ciBlock *nb = new(_arena) ciBlock(_method, _num_blocks++, bci);
@@ -225,8 +225,7 @@ void ciMethodBlocks::do_analysis() {
   cur_block->set_limit_bci(limit_bci);
 }
 
-ciMethodBlocks::ciMethodBlocks(Arena *arena, ciMethod *meth): _method(meth),
-                          _arena(arena), _num_blocks(0), _code_size(meth->code_size()) {
+ciMethodBlocks::ciMethodBlocks(Arena *arena, ciMethod *meth): _method(meth), _arena(arena), _num_blocks(0), _code_size(meth->code_size()) {
   int block_estimate = _code_size / 8;
 
   _blocks =  new(_arena) GrowableArray<ciBlock *>(_arena, block_estimate, 0, NULL);

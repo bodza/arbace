@@ -52,8 +52,6 @@ Handle Bytecode_invoke::appendix(TRAPS) {
 }
 
 int Bytecode_member_ref::index() const {
-  // Note:  Rewriter::rewrite changes the Java_u2 of an invokedynamic to a native_u4,
-  // at the same time it allocates per-call-site CP cache entries.
   Bytecodes::Code rawc = code();
   if (has_index_u4(rawc))
     return get_index_u4(rawc);

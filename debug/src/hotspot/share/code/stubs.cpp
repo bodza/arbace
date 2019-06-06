@@ -62,14 +62,6 @@ StubQueue::~StubQueue() {
   Unimplemented();
 }
 
-void StubQueue::deallocate_unused_tail() {
-  CodeBlob* blob = CodeCache::find_blob((void*)_stub_buffer);
-  CodeCache::free_unused_tail(blob, used_space());
-  // Update the limits to the new, trimmed CodeBlob size
-  _buffer_size = blob->content_size();
-  _buffer_limit = blob->content_size();
-}
-
 Stub* StubQueue::stub_containing(address pc) const {
   if (contains(pc)) {
     for (Stub* s = first(); s != NULL; s = next(s)) {

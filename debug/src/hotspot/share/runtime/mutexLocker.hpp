@@ -30,7 +30,6 @@ extern Monitor* JNICritical_lock;                // a lock used while entering a
 extern Monitor* Heap_lock;                       // a lock on the heap
 extern Mutex*   ExpandHeap_lock;                 // a lock on expanding the heap
 extern Mutex*   AdapterHandlerLibrary_lock;      // a lock on the AdapterHandlerLibrary
-extern Mutex*   SignatureHandlerLibrary_lock;    // a lock on the SignatureHandlerLibrary
 extern Mutex*   VtableStubs_lock;                // a lock on the VtableStubs
 extern Mutex*   SymbolTable_lock;                // a lock on the symbol table
 extern Mutex*   StringTable_lock;                // a lock on the interned string table
@@ -86,7 +85,6 @@ extern Mutex*   OsrList_lock;                    // a lock used to serialize acc
 
 extern Mutex*   RawMonitor_lock;
 extern Mutex*   ParkerFreeList_lock;
-extern Mutex*   OopMapCacheAlloc_lock;           // protects allocation of oop_map caches
 
 extern Mutex*   FreeList_lock;                   // protects the free region list during safepoints
 extern Mutex*   OldSets_lock;                    // protects the old region sets
@@ -193,9 +191,7 @@ class MonitorLockerEx: public MutexLockerEx {
     // Superclass destructor will do unlocking
   }
 
-  bool wait(bool no_safepoint_check = !Mutex::_no_safepoint_check_flag,
-            long timeout = 0,
-            bool as_suspend_equivalent = !Mutex::_as_suspend_equivalent_flag) {
+  bool wait(bool no_safepoint_check = !Mutex::_no_safepoint_check_flag, long timeout = 0, bool as_suspend_equivalent = !Mutex::_as_suspend_equivalent_flag) {
     if (_monitor != NULL) {
       return _monitor->wait(no_safepoint_check, timeout, as_suspend_equivalent);
     }

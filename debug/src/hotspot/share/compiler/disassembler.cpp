@@ -343,7 +343,7 @@ void decode_env::print_insn_bytes(address pc, address pc_limit) {
     address pc0 = pc;
     address pc1 = pc + perline;
     if (pc1 > pc_limit)  pc1 = pc_limit;
-    for (; pc < pc1; pc += incr) {
+    for ( ; pc < pc1; pc += incr) {
       if (pc == pc0) {
         st->print(BYTES_COMMENT);
       } else if ((uint)(pc - pc0) % sizeof(int) == 0) {

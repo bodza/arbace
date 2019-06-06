@@ -39,7 +39,7 @@ private:
   Bytecodes::Code _bc;             // Current bytecode
   Bytecodes::Code _raw_bc;         // Current bytecode, raw form
 
-  void reset( address base, unsigned int size ) {
+  void reset(address base, unsigned int size) {
     _bc_start =_was_wide = 0;
     _start = _pc = base; _end = base + size;
   }
@@ -81,7 +81,7 @@ public:
   // Force the iterator to report a certain bci.
   void force_bci(int bci);
 
-  void set_max_bci( int max ) {
+  void set_max_bci(int max) {
     _end = _start + max;
   }
 
@@ -142,7 +142,7 @@ public:
     return bytecode().get_index_u2(cur_bc_raw(), is_wide);
   }
 
-  // Get 2-byte index in native byte order.  (Rewriter::rewrite makes these.)
+  // Get 2-byte index in native byte order.
   int get_index_u2_cpcache() const {
     return bytecode().get_index_u2_cpcache(cur_bc_raw());
   }

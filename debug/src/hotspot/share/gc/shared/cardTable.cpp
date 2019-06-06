@@ -185,9 +185,7 @@ void CardTable::resize_covered_region(MemRegion new_region) {
       // Must commit new pages.
       MemRegion const new_committed = MemRegion(cur_committed.end(), new_end_for_commit);
 
-      os::commit_memory_or_exit((char*)new_committed.start(),
-                                new_committed.byte_size(), _page_size,
-                                !ExecMem, "card table expansion");
+      os::commit_memory_or_exit((char*)new_committed.start(), new_committed.byte_size(), _page_size, !ExecMem, "card table expansion");
     // Use new_end_aligned (as opposed to new_end_for_commit) because
     // the cur_committed region may include the guard region.
     } else if (new_end_aligned < cur_committed.end()) {
@@ -198,8 +196,7 @@ void CardTable::resize_covered_region(MemRegion new_region) {
         // the generations is moving.  A shrink can uncommit cards
         // owned by generation A but being used by generation B.
         if (!UseAdaptiveGCBoundary) {
-          if (!os::uncommit_memory((char*)uncommit_region.start(),
-                                   uncommit_region.byte_size())) {
+          if (!os::uncommit_memory((char*)uncommit_region.start(), uncommit_region.byte_size())) {
             ShouldNotReachHere();
             // The call failed so don't change the end of the
             // committed region.  This is better than taking the

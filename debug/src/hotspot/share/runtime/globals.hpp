@@ -15,11 +15,6 @@
 // and are responsible for those alignments.
 #define ScaleForWordSize(x) align_down_((x) * 13 / 10, HeapWordSize)
 
-// use this for flags that are true per default in the tiered build
-// but false in non-tiered builds, and vice versa
-#define  trueInTiered false
-#define falseInTiered true
-
 #include CPU_HEADER(globals)
 #include OS_HEADER(globals)
 #include OS_CPU_HEADER(globals)
@@ -27,16 +22,6 @@
 #include OS_HEADER(c1_globals)
 
 #define CI_COMPILER_COUNT 2
-
-// use this for flags that are true by default in the debug version but
-// false in the optimized version, and vice versa
-#define trueInDebug  false
-#define falseInDebug true
-
-// use this for flags that are true per default in the product build
-// but false in development builds, and vice versa
-#define trueInProduct  true
-#define falseInProduct false
 
 // develop flags are settable / visible only during development and are constant in the PRODUCT version
 // product flags are always settable / visible
@@ -174,7 +159,7 @@
   experimental(bool, AlwaysSafeConstructors, false, \
           "Force safe construction, as if all fields are final.") \
  \
-  diagnostic(bool, UnlockDiagnosticVMOptions, trueInDebug, \
+  diagnostic(bool, UnlockDiagnosticVMOptions, false, \
           "Enable normal processing of flags relating to field diagnostics") \
  \
   experimental(bool, UnlockExperimentalVMOptions, false, \
@@ -351,7 +336,7 @@
   notproduct(bool, WalkStackALot, false, \
           "Trace stack (no print) at every exit from the runtime system") \
  \
-  notproduct(bool, StrictSafepointChecks, trueInDebug, \
+  notproduct(bool, StrictSafepointChecks, false, \
           "Enable strict checks that safepoints cannot happen for threads that use NoSafepointVerifier") \
  \
   notproduct(bool, VerifyLastFrame, false, \
@@ -379,11 +364,8 @@
   product(bool, MaxFDLimit, true, \
           "Bump the number of file descriptors to maximum in Solaris") \
  \
-  develop(bool, ForceFloatExceptions, trueInDebug, \
+  develop(bool, ForceFloatExceptions, false, \
           "Force exceptions on FP stack under/overflow") \
- \
-  develop(bool, VerifyStackAtCalls, false, \
-          "Verify that the stack pointer is unchanged after calls") \
  \
   notproduct(bool, VerifyCodeCache, false, \
           "Verify code cache on memory allocation/deallocation") \
@@ -391,22 +373,22 @@
   develop(bool, UseMallocOnly, false, \
           "Use only malloc/free for allocation (no resource area/arena)") \
  \
-  develop(bool, ZapResourceArea, trueInDebug, \
+  develop(bool, ZapResourceArea, false, \
           "Zap freed resource/arena space with 0xABABABAB") \
  \
-  notproduct(bool, ZapVMHandleArea, trueInDebug, \
+  notproduct(bool, ZapVMHandleArea, false, \
           "Zap freed VM handle space with 0xBCBCBCBC") \
  \
-  notproduct(bool, ZapStackSegments, trueInDebug, \
+  notproduct(bool, ZapStackSegments, false, \
           "Zap allocated/freed stack segments with 0xFADFADED") \
  \
-  develop(bool, ZapUnusedHeapArea, trueInDebug, \
+  develop(bool, ZapUnusedHeapArea, false, \
           "Zap unused heap space with 0xBAADBABE") \
  \
   develop(bool, CheckZapUnusedHeapArea, false, \
           "Check zapping of unused heap space") \
  \
-  develop(bool, ZapFillerObjects, trueInDebug, \
+  develop(bool, ZapFillerObjects, false, \
           "Zap filler objects with 0xDEAFBABE") \
  \
   develop(bool, PrintVMMessages, true, \
@@ -446,9 +428,6 @@
   product(bool, AlwaysRestoreFPU, false, \
           "Restore the FPU control word after every JNI call (expensive)") \
  \
-  diagnostic(bool, VerifyAdapterCalls, trueInDebug, \
-          "Verify that i2c/c2i adapters are called properly") \
- \
   develop(bool, VerifyAdapterSharing, false, \
           "Verify that the code for shared adapters is the equivalent") \
  \
@@ -479,10 +458,6 @@
   develop(bool, RegisterReferences, true, \
           "Tell whether the VM should register soft/weak/final/phantom references") \
  \
-  develop(bool, IgnoreRewrites, false, \
-          "Suppress rewrites of bytecodes in the oopmap generator. " \
-          "This is unsafe!") \
- \
   develop(bool, UsePrivilegedStack, true, \
           "Enable the security JVM functions") \
  \
@@ -494,9 +469,6 @@
  \
   develop(bool, DisableStartThread, false, \
           "Disable starting of additional Java threads (for debugging only)") \
- \
-  develop(bool, MemProfiling, false, \
-          "Write memory usage profiling to log file") \
  \
   diagnostic(bool, DynamicallyResizeSystemDictionaries, true, \
           "Dynamically resize system dictionaries as needed") \
@@ -654,9 +626,6 @@
           "JVM aborts, producing an error log and core/mini dump, on the " \
           "first occurrence of an out-of-memory error") \
  \
-  develop(bool, VerifyDependencies, trueInDebug, \
-          "Exercise and verify the compilation dependency mechanism") \
- \
   develop(bool, TimeOopMap, false, \
           "Time calls to GenerateOopMap::compute_map() in sum") \
  \
@@ -754,7 +723,7 @@
   diagnostic(bool, EnableThreadSMRExtraValidityChecks, true, \
              "Enable Thread SMR extra validity checks") \
  \
-  diagnostic(bool, EnableThreadSMRStatistics, trueInDebug, \
+  diagnostic(bool, EnableThreadSMRStatistics, false, \
              "Enable Thread SMR Statistics") \
  \
   product(bool, Inline, true, \
@@ -910,12 +879,6 @@
   product_pd(bool, RewriteFrequentPairs, \
           "Rewrite frequently used bytecode pairs into a single bytecode") \
  \
-  diagnostic(bool, PrintInterpreter, false, \
-          "Print the generated interpreter code") \
- \
-  product(bool, UseInterpreter, true, \
-          "Use interpreter for non-compiled methods") \
- \
   develop(bool, UseFastSignatureHandlers, true, \
           "Use fast signature handlers for native calls") \
  \
@@ -937,7 +900,7 @@
   develop(bool, CheckUnhandledOops, false, \
           "Check for unhandled oops in VM code") \
  \
-  develop(bool, VerifyJNIFields, trueInDebug, \
+  develop(bool, VerifyJNIFields, false, \
           "Verify jfieldIDs for instance fields") \
  \
   notproduct(bool, VerifyJNIEnvThread, false, \
@@ -955,23 +918,13 @@
   develop_pd(bool, InlineIntrinsics, \
           "Inline intrinsics that can be statically resolved") \
  \
-  product_pd(bool, ProfileInterpreter, \
-          "Profile at the bytecode level during interpretation") \
- \
-  develop_pd(bool, ProfileTraps, \
-          "Profile deoptimization traps at the bytecode level") \
- \
   product(intx, ProfileMaturityPercentage, 20, \
           "number of method invocations/branches (expressed as % of " \
           "CompileThreshold) before using the method's profile") \
           range(0, 100) \
  \
-  develop(bool, VerifyDataPointer, trueInDebug, \
+  develop(bool, VerifyDataPointer, false, \
           "Verify the method data pointer during interpreter profiling") \
- \
-  develop(bool, VerifyCompiledCode, false, \
-          "Include miscellaneous runtime verifications in nmethod code; " \
-          "default off because it disturbs nmethod size heuristics") \
  \
   /* compilation */ \
   product(bool, UseCompiler, true, \
@@ -998,18 +951,6 @@
   /* Bytecode escape analysis estimation. */ \
   product(bool, EstimateArgEscape, true, \
           "Analyze bytecodes to estimate escape state of arguments") \
- \
-  product(intx, BCEATraceLevel, 0, \
-          "How much tracing to do of bytecode escape analysis estimates (0-3)") \
-          range(0, 3) \
- \
-  product(intx, MaxBCEAEstimateLevel, 5, \
-          "Maximum number of nested calls that are analyzed by BC EA") \
-          range(0, max_jint) \
- \
-  product(intx, MaxBCEAEstimateSize, 150, \
-          "Maximum bytecode size of a method to be analyzed by BC EA") \
-          range(0, max_jint) \
  \
   product(intx,  AllocatePrefetchStyle, 1, \
           "0 = no prefetch, " \
@@ -1066,9 +1007,6 @@
   notproduct(intx, SweeperLogEntries, 1024, \
           "Number of records in the ring buffer of sweeper activity") \
  \
-  notproduct(intx, MemProfilingInterval, 500, \
-          "Time between each invocation of the MemProfiler") \
- \
   develop(intx, MallocCatchPtr, -1, \
           "Hit breakpoint when mallocing/freeing this pointer") \
  \
@@ -1114,30 +1052,8 @@
           "The minimum invocation count a method needs to have to be inlined") \
           range(0, max_jint) \
  \
-  develop(intx, MethodHistogramCutoff, 100, \
-          "The cutoff value for method invocation histogram (+CountCalls)") \
- \
-  diagnostic(intx, ProfilerNumberOfInterpretedMethods, 25, \
-          "Number of interpreted methods to show in profile") \
- \
-  diagnostic(intx, ProfilerNumberOfCompiledMethods, 25, \
-          "Number of compiled methods to show in profile") \
- \
-  diagnostic(intx, ProfilerNumberOfStubMethods, 25, \
-          "Number of stub methods to show in profile") \
- \
-  diagnostic(intx, ProfilerNumberOfRuntimeStubNodes, 25, \
-          "Number of runtime stub nodes to show in profile") \
- \
-  product(intx, ProfileIntervalsTicks, 100, \
-          "Number of ticks between printing of interval profile") \
-          range(0, max_intx) \
- \
   develop(intx, DontYieldALotInterval, 10, \
           "Interval between which yields will be dropped (milliseconds)") \
- \
-  develop(intx, ProfilerPCTickThreshold, 15, \
-          "Number of ticks in a PC buckets to be a hotspot") \
  \
   notproduct(intx, DeoptimizeALotInterval, 5, \
           "Number of exits until DeoptimizeALot kicks in") \
@@ -1194,10 +1110,6 @@
   develop(intx, InlineThrowMaxSize, 200, \
           "Force inlining of throwing methods smaller than this") \
           range(0, max_jint) \
- \
-  develop(intx, ProfilerNodeSize, 1024, \
-          "Size in K to allocate for the Profile Nodes of each thread") \
-          range(0, 1024) \
  \
   product_pd(size_t, MetaspaceSize, \
           "Initial threshold (in bytes) at which a garbage collection is done to reduce Metaspace usage") \
@@ -1357,26 +1269,6 @@
           "Segmented code cache: X[%] of the non-profiled heap." \
           "Non-segmented code cache: X[%] of the total code cache") \
           range(0, 100) \
- \
-  /* AOT parameters */ \
-  product(bool, UseAOT, false, \
-          "Use AOT compiled files") \
- \
-  product(ccstrlist, AOTLibrary, NULL, \
-          "AOT library") \
- \
-  diagnostic(bool, UseAOTStrictLoading, false, \
-          "Exit the VM if any of the AOT libraries has invalid config") \
- \
-  /* interpreter debugging */ \
-  develop(intx, BinarySwitchThreshold, 5, \
-          "Minimal number of lookupswitch entries for rewriting to binary switch") \
- \
-  develop(intx, StopInterpreterAt, 0, \
-          "Stop interpreter execution at specified bytecode number") \
- \
-  develop(intx, TraceBytecodesAt, 0, \
-          "Trace bytecodes starting with specified bytecode number") \
  \
   /* compiler interface */ \
   develop(intx, CIStart, 0, \
@@ -1577,7 +1469,7 @@
           range(0.0, DBL_MAX) \
  \
   product(intx, Tier0InvokeNotifyFreqLog, 7, \
-          "Interpreter (tier 0) invocation notification frequency") \
+          "NULL (tier 0) invocation notification frequency") \
           range(0, 30) \
  \
   product(intx, Tier2InvokeNotifyFreqLog, 11, \
@@ -1593,7 +1485,7 @@
           range(0, 30) \
  \
   product(intx, Tier0BackedgeNotifyFreqLog, 10, \
-          "Interpreter (tier 0) invocation notification frequency") \
+          "NULL (tier 0) invocation notification frequency") \
           range(0, 30) \
  \
   product(intx, Tier2BackedgeNotifyFreqLog, 14, \
@@ -1706,9 +1598,6 @@
           "Maximum rate sampling interval (in milliseconds)") \
           range(0, max_intx) \
  \
-  product_pd(bool, TieredCompilation, \
-          "Enable tiered compilation") \
- \
   product_pd(intx, OnStackReplacePercentage, \
           "NON_TIERED number of method invocations/branches (expressed as " \
           "% of CompileThreshold) before (re-)compiling OSR code") \
@@ -1782,9 +1671,6 @@
   diagnostic(ccstr, PauseAtStartupFile, NULL, \
           "The file to create and for whose removal to await when pausing " \
           "at startup. (default: ./vm.paused.<pid>)") \
- \
-  product(bool, RelaxAccessControlCheck, false, \
-          "Relax the access control checks in the verifier") \
  \
   product(uintx, StringTableSize, defaultStringTableSize, \
           "Number of buckets in the interned String table " \

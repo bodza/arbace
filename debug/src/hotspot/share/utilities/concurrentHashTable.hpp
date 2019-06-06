@@ -253,8 +253,7 @@ class ConcurrentHashTable : public CHeapObj<F> {
 
   // Finds a node.
   template <typename LOOKUP_FUNC>
-  Node* get_node(const Bucket* const bucket, LOOKUP_FUNC& lookup_f,
-                 bool* have_dead, size_t* loops = NULL) const;
+  Node* get_node(const Bucket* const bucket, LOOKUP_FUNC& lookup_f, bool* have_dead, size_t* loops = NULL) const;
 
   // Method for shrinking.
   bool internal_shrink_prolog(Thread* thread, size_t log2_size);
@@ -263,9 +262,7 @@ class ConcurrentHashTable : public CHeapObj<F> {
   bool internal_shrink(Thread* thread, size_t size_limit_log2);
 
   // Methods for growing.
-  bool unzip_bucket(Thread* thread, InternalTable* old_table,
-                    InternalTable* new_table, size_t even_index,
-                    size_t odd_index);
+  bool unzip_bucket(Thread* thread, InternalTable* old_table, InternalTable* new_table, size_t even_index, size_t odd_index);
   bool internal_grow_prolog(Thread* thread, size_t log2_size);
   void internal_grow_epilog(Thread* thread);
   void internal_grow_range(Thread* thread, size_t start, size_t stop);
@@ -273,19 +270,16 @@ class ConcurrentHashTable : public CHeapObj<F> {
 
   // Get a value.
   template <typename LOOKUP_FUNC>
-  VALUE* internal_get(Thread* thread, LOOKUP_FUNC& lookup_f,
-                      bool* grow_hint = NULL);
+  VALUE* internal_get(Thread* thread, LOOKUP_FUNC& lookup_f, bool* grow_hint = NULL);
 
   // Insert which handles a number of cases.
   template <typename LOOKUP_FUNC, typename VALUE_FUNC, typename CALLBACK_FUNC>
-  bool internal_insert(Thread* thread, LOOKUP_FUNC& lookup_f, VALUE_FUNC& value_f,
-                       CALLBACK_FUNC& callback, bool* grow_hint = NULL);
+  bool internal_insert(Thread* thread, LOOKUP_FUNC& lookup_f, VALUE_FUNC& value_f, CALLBACK_FUNC& callback, bool* grow_hint = NULL);
 
   // Returns true if an item matching LOOKUP_FUNC is removed.
   // Calls DELETE_FUNC before destroying the node.
   template <typename LOOKUP_FUNC, typename DELETE_FUNC>
-  bool internal_remove(Thread* thread, LOOKUP_FUNC& lookup_f,
-                       DELETE_FUNC& delete_f);
+  bool internal_remove(Thread* thread, LOOKUP_FUNC& lookup_f, DELETE_FUNC& delete_f);
 
   // Visits nodes with FUNC.
   template <typename FUNC>
@@ -359,38 +353,33 @@ class ConcurrentHashTable : public CHeapObj<F> {
   // and CALLBACK_FUNC is called with new or old value. Returns true if the
   // value already exists.
   template <typename LOOKUP_FUNC, typename VALUE_FUNC, typename CALLBACK_FUNC>
-  bool get_insert_lazy(Thread* thread, LOOKUP_FUNC& lookup_f, VALUE_FUNC& val_f,
-                       CALLBACK_FUNC& callback_f, bool* grow_hint = NULL) {
+  bool get_insert_lazy(Thread* thread, LOOKUP_FUNC& lookup_f, VALUE_FUNC& val_f, CALLBACK_FUNC& callback_f, bool* grow_hint = NULL) {
     return !internal_insert(thread, lookup_f, val_f, callback_f, grow_hint);
   }
 
   // Same without CALLBACK_FUNC.
   template <typename LOOKUP_FUNC, typename VALUE_FUNC>
-  bool get_insert_lazy(Thread* thread, LOOKUP_FUNC& lookup_f, VALUE_FUNC& val_f,
-                       bool* grow_hint = NULL) {
+  bool get_insert_lazy(Thread* thread, LOOKUP_FUNC& lookup_f, VALUE_FUNC& val_f, bool* grow_hint = NULL) {
     return get_insert_lazy(thread, lookup_f, val_f, noOp, grow_hint);
   }
 
   // Same without VALUE_FUNC.
   template <typename LOOKUP_FUNC, typename CALLBACK_FUNC>
-  bool get_insert(Thread* thread, LOOKUP_FUNC& lookup_f, const VALUE& value,
-                  CALLBACK_FUNC& callback_f, bool* grow_hint = NULL) {
+  bool get_insert(Thread* thread, LOOKUP_FUNC& lookup_f, const VALUE& value, CALLBACK_FUNC& callback_f, bool* grow_hint = NULL) {
     LazyValueRetrieve vp(value);
     return get_insert_lazy(thread, lookup_f, vp, callback_f, grow_hint);
   }
 
   // Same without CALLBACK_FUNC and VALUE_FUNC.
   template <typename LOOKUP_FUNC>
-  bool get_insert(Thread* thread, LOOKUP_FUNC& lookup_f, const VALUE& value,
-                  bool* grow_hint = NULL) {
+  bool get_insert(Thread* thread, LOOKUP_FUNC& lookup_f, const VALUE& value, bool* grow_hint = NULL) {
     return get_insert(thread, lookup_f, value, noOp, grow_hint);
   }
 
   // Get methods return true on found item with LOOKUP_FUNC and FOUND_FUNC is
   // called.
   template <typename LOOKUP_FUNC, typename FOUND_FUNC>
-  bool get(Thread* thread, LOOKUP_FUNC& lookup_f, FOUND_FUNC& foundf,
-           bool* grow_hint = NULL);
+  bool get(Thread* thread, LOOKUP_FUNC& lookup_f, FOUND_FUNC& foundf, bool* grow_hint = NULL);
 
   // Return a copy of an item found with LOOKUP_FUNC.
   template <typename LOOKUP_FUNC>
@@ -399,8 +388,7 @@ class ConcurrentHashTable : public CHeapObj<F> {
   // Returns true true if the item was inserted, duplicates are found with
   // LOOKUP_FUNC.
   template <typename LOOKUP_FUNC>
-  bool insert(Thread* thread, LOOKUP_FUNC& lookup_f, const VALUE& value,
-              bool* grow_hint = NULL) {
+  bool insert(Thread* thread, LOOKUP_FUNC& lookup_f, const VALUE& value, bool* grow_hint = NULL) {
     LazyValueRetrieve vp(value);
     return internal_insert(thread, lookup_f, vp, noOp, grow_hint);
   }
@@ -434,8 +422,7 @@ class ConcurrentHashTable : public CHeapObj<F> {
   // Destroying items matching EVALUATE_FUNC, before destroying items
   // DELETE_FUNC is called, if resize lock is obtained. Else returns false.
   template <typename EVALUATE_FUNC, typename DELETE_FUNC>
-  bool try_bulk_delete(Thread* thread, EVALUATE_FUNC& eval_f,
-                       DELETE_FUNC& del_f);
+  bool try_bulk_delete(Thread* thread, EVALUATE_FUNC& eval_f, DELETE_FUNC& del_f);
 
   // Destroying items matching EVALUATE_FUNC, before destroying items
   // DELETE_FUNC is called, when the resize lock is successfully obtained.
