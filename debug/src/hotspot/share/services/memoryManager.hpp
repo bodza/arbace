@@ -38,7 +38,7 @@ protected:
 public:
   MemoryManager(const char* name);
 
-  int num_memory_pools() const           { return _num_pools; }
+  int num_memory_pools()           const { return _num_pools; }
   MemoryPool* get_memory_pool(int index) {
     return _pools[index];
   }

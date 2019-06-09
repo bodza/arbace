@@ -180,8 +180,6 @@ vframe* compiledVFrame::sender() const {
     nmethod* nm = code()->as_nmethod();
     return vframe::sender();
   } else {
-    return scope()->is_top()
-      ? vframe::sender()
-      : new compiledVFrame(&f, register_map(), thread(), scope()->sender(), vframe_id() + 1);
+    return scope()->is_top() ? vframe::sender() : new compiledVFrame(&f, register_map(), thread(), scope()->sender(), vframe_id() + 1);
   }
 }

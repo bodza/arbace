@@ -23,7 +23,6 @@ extern Mutex*   StringTableWeakActive_lock;      // STringTable weak storage act
 extern Mutex*   JNIHandleBlockFreeList_lock;     // a lock on the JNI handle block free list
 extern Mutex*   VMWeakAlloc_lock;                // VM Weak Handles storage allocate list lock
 extern Mutex*   VMWeakActive_lock;               // VM Weak Handles storage active list lock
-extern Mutex*   ResolvedMethodTable_lock;        // a lock on the ResolvedMethodTable updates
 extern Mutex*   JmethodIdCreation_lock;          // a lock on creating JNI method identifiers
 extern Mutex*   JfieldIdCreation_lock;           // a lock on creating JNI static field identifiers
 extern Monitor* JNICritical_lock;                // a lock used while entering and exiting JNI critical regions, allows GC to sometimes get in
@@ -46,25 +45,16 @@ extern Monitor* VMOperationRequest_lock;         // a lock on Threads waiting fo
 extern Monitor* Safepoint_lock;                  // a lock used by the safepoint abstraction
 extern Monitor* Threads_lock;                    // a lock on the Threads table of active Java threads
                                                  // (also used by Safepoints too to block threads creation/destruction)
-extern Monitor* CGC_lock;                        // used for coordination between
-                                                 // fore- & background GC threads.
+extern Monitor* CGC_lock;                        // used for coordination between fore- & background GC threads.
 extern Monitor* STS_lock;                        // used for joining/leaving SuspendibleThreadSet.
 extern Monitor* FullGCCount_lock;                // in support of "concurrent" full gc
-extern Mutex*   SATB_Q_FL_lock;                  // Protects SATB Q
-                                                 // buffer free list.
-extern Monitor* SATB_Q_CBL_mon;                  // Protects SATB Q
-                                                 // completed buffer queue.
-extern Mutex*   Shared_SATB_Q_lock;              // Lock protecting SATB
-                                                 // queue shared by
-                                                 // non-Java threads.
+extern Mutex*   SATB_Q_FL_lock;                  // Protects SATB Q buffer free list.
+extern Monitor* SATB_Q_CBL_mon;                  // Protects SATB Q completed buffer queue.
+extern Mutex*   Shared_SATB_Q_lock;              // Lock protecting SATB queue shared by non-Java threads.
 
-extern Mutex*   DirtyCardQ_FL_lock;              // Protects dirty card Q
-                                                 // buffer free list.
-extern Monitor* DirtyCardQ_CBL_mon;              // Protects dirty card Q
-                                                 // completed buffer queue.
-extern Mutex*   Shared_DirtyCardQ_lock;          // Lock protecting dirty card
-                                                 // queue shared by
-                                                 // non-Java threads.
+extern Mutex*   DirtyCardQ_FL_lock;              // Protects dirty card Q buffer free list.
+extern Monitor* DirtyCardQ_CBL_mon;              // Protects dirty card Q completed buffer queue.
+extern Mutex*   Shared_DirtyCardQ_lock;          // Lock protecting dirty card queue shared by non-Java threads.
 extern Mutex*   MarkStackFreeList_lock;          // Protects access to the global mark stack free list.
 extern Mutex*   MarkStackChunkList_lock;         // Protects access to the global mark stack chunk list.
 extern Mutex*   ParGCRareEvent_lock;             // Synchronizes various (rare) parallel GC ops.
@@ -81,7 +71,6 @@ extern Monitor* BeforeExit_lock;                 // a lock used to guard cleanup
 extern Monitor* Notify_lock;                     // a lock used to synchronize the start-up of the vm
 extern Mutex*   ProfilePrint_lock;               // a lock used to serialize the printing of profiles
 extern Mutex*   ExceptionCache_lock;             // a lock used to synchronize exception cache updates
-extern Mutex*   OsrList_lock;                    // a lock used to serialize access to OSR queues
 
 extern Mutex*   RawMonitor_lock;
 extern Mutex*   ParkerFreeList_lock;

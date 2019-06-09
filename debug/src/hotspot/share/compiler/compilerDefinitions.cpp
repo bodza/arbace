@@ -178,9 +178,9 @@ bool CompilerConfig::check_args_consistency(bool status) {
     warning("The VM option CICompilerCountPerCPU overrides CICompilerCount.");
   }
 
-  if (BackgroundCompilation && (CompileTheWorld || ReplayCompiles)) {
+  if (BackgroundCompilation && CompileTheWorld) {
     if (!FLAG_IS_DEFAULT(BackgroundCompilation)) {
-      warning("BackgroundCompilation disabled due to CompileTheWorld or ReplayCompiles options.");
+      warning("BackgroundCompilation disabled due to CompileTheWorld or false options.");
     }
     FLAG_SET_CMDLINE(bool, BackgroundCompilation, false);
   }
@@ -205,10 +205,5 @@ void CompilerConfig::ergo_initialize() {
     if (!FLAG_IS_DEFAULT(CompileThresholdScaling) && CompileThresholdScaling > 0.0) {
       FLAG_SET_ERGO(intx, CompileThreshold, scaled_compile_threshold(CompileThreshold));
     }
-  }
-
-  if (UseOnStackReplacement && !UseLoopCounter) {
-    warning("On-stack-replacement requires loop counters; enabling loop counters");
-    FLAG_SET_DEFAULT(UseLoopCounter, true);
   }
 }

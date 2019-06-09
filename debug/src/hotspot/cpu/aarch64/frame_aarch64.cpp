@@ -4,7 +4,6 @@
 #include "oops/markOop.hpp"
 #include "oops/method.hpp"
 #include "oops/oop.inline.hpp"
-#include "prims/methodHandles.hpp"
 #include "runtime/frame.inline.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/javaCalls.hpp"
@@ -20,9 +19,9 @@
 // Profiling/safepoint support
 
 bool frame::safe_for_sender(JavaThread *thread) {
-  address   sp = (address)_sp;
-  address   fp = (address)_fp;
-  address   unextended_sp = (address)_unextended_sp;
+  address sp = (address)_sp;
+  address fp = (address)_fp;
+  address unextended_sp = (address)_unextended_sp;
 
   // consider stack guards when trying to determine "safe" stack pointers
   static size_t stack_guard_size = os::uses_stack_guard_pages() ? (JavaThread::stack_red_zone_size() + JavaThread::stack_yellow_zone_size()) : 0;
@@ -148,16 +147,7 @@ bool frame::safe_for_sender(JavaThread *thread) {
       // Validate the JavaCallWrapper an entry frame must have
       address jcw = (address)sender.entry_frame_call_wrapper();
 
-      bool jcw_safe = (jcw < thread->stack_base()) && (jcw > (address)sender.fp());
-
-      return jcw_safe;
-    }
-
-    CompiledMethod* nm = sender_blob->as_compiled_method_or_null();
-    if (nm != NULL) {
-      if (nm->is_deopt_mh_entry(sender_pc) || nm->is_deopt_entry(sender_pc) || nm->method()->is_method_handle_intrinsic()) {
-        return false;
-      }
+      return (jcw < thread->stack_base()) && (jcw > (address)sender.fp());
     }
 
     // If the frame size is 0 something (or less) is bad because every nmethod has a non-zero frame size
@@ -194,7 +184,9 @@ bool frame::safe_for_sender(JavaThread *thread) {
 
   // Will the pc we fetch be non-zero (which we'll find at the oldest frame)
 
-  if ((address) this->fp()[return_addr_offset] == NULL) return false;
+  if ((address) this->fp()[return_addr_offset] == NULL) {
+    return false;
+  }
 
   // could try and do some more potential verification of native frame if we could think of some...
 
@@ -205,14 +197,7 @@ void frame::patch_pc(Thread* thread, address pc) {
   address* pc_addr = &(((address*) sp())[-1]);
   *pc_addr = pc;
   _cb = CodeCache::find_blob(pc);
-  address original_pc = CompiledMethod::get_deopt_original_pc(this);
-  if (original_pc != NULL) {
-    _deopt_state = is_deoptimized;
-    // leave _pc as is
-  } else {
-    _deopt_state = not_deoptimized;
-    _pc = pc;
-  }
+  _pc = pc;
 }
 
 int frame::frame_size(RegisterMap* map) const {
@@ -238,31 +223,10 @@ frame frame::sender_for_entry_frame(RegisterMap* map) const {
     jfa->capture_last_Java_pc();
   }
   map->clear();
-  vmassert(jfa->last_Java_pc() != NULL, "not walkable");
   frame fr(jfa->last_Java_sp(), jfa->last_Java_fp(), jfa->last_Java_pc());
   return fr;
 }
 
-//------------------------------------------------------------------------------
-// frame::verify_deopt_original_pc
-//
-// Verifies the calculated original PC of a deoptimization PC for the
-// given unextended SP.
-
-//------------------------------------------------------------------------------
-// frame::adjust_unextended_sp
-void frame::adjust_unextended_sp() {
-  // On aarch64, sites calling method handle intrinsics and lambda forms are treated
-  // as any other call site. Therefore, no special action is needed when we are
-  // returning to any of these call sites.
-
-  if (_cb != NULL) {
-    CompiledMethod* sender_cm = _cb->as_compiled_method_or_null();
-  }
-}
-
-//------------------------------------------------------------------------------
-// frame::update_map_with_saved_link
 void frame::update_map_with_saved_link(RegisterMap* map, intptr_t** link_addr) {
   // The interpreter and compiler(s) always save fp in a known
   // location on entry. We must record where that location is
@@ -282,8 +246,6 @@ void frame::update_map_with_saved_link(RegisterMap* map, intptr_t** link_addr) {
   }
 }
 
-//------------------------------------------------------------------------------
-// frame::sender_for_compiled_frame
 frame frame::sender_for_compiled_frame(RegisterMap* map) const {
   // we cannot rely upon the last fp having been saved to the thread
   // in C2 code but it will have been pushed onto the stack. so we
@@ -296,9 +258,6 @@ frame frame::sender_for_compiled_frame(RegisterMap* map) const {
   address sender_pc = (address) *(l_sender_sp - 1);
 
   intptr_t** saved_fp_addr = (intptr_t**) (l_sender_sp - frame::sender_sp_offset);
-
-  // assert (sender_sp() == l_sender_sp, "should be");
-  // assert (*saved_fp_addr == link(), "should be");
 
   if (map->update_map()) {
     // Tell GC to use argument oopmaps for some runtime stubs that need it.
@@ -319,8 +278,6 @@ frame frame::sender_for_compiled_frame(RegisterMap* map) const {
   return frame(l_sender_sp, unextended_sp, *saved_fp_addr, sender_pc);
 }
 
-//------------------------------------------------------------------------------
-// frame::sender
 frame frame::sender(RegisterMap* map) const {
   // Default is we done have to follow them. The sender_for_xxx will
   // update it accordingly
@@ -340,11 +297,6 @@ frame frame::sender(RegisterMap* map) const {
   return frame(sender_sp(), link(), sender_pc());
 }
 
-intptr_t *frame::initial_deoptimization_info() {
-  // Not used on aarch64, but we must return something.
-  return NULL;
-}
-
 intptr_t* frame::real_fp() const {
   if (_cb != NULL) {
     // use the frame size if valid
@@ -357,117 +309,14 @@ intptr_t* frame::real_fp() const {
   return fp();
 }
 
-#undef DESCRIBE_FP_OFFSET
-
-#define DESCRIBE_FP_OFFSET(name) \
-  { \
-    unsigned long *p = (unsigned long *)fp; \
-    printf("0x%016lx 0x%016lx %s\n", (unsigned long)(p + frame::name##_offset), p[frame::name##_offset], #name); \
-  }
-
-static __thread unsigned long nextfp;
-static __thread unsigned long nextpc;
-static __thread unsigned long nextsp;
-static __thread RegisterMap *reg_map;
-
-static void printbc(Method *m, intptr_t bcx) {
-  const char *name;
-  char buf[16];
-  if (m->validate_bci_from_bcp((address)bcx) < 0 || !m->contains((address)bcx)) {
-    name = "???";
-    snprintf(buf, sizeof buf, "(bad)");
-  } else {
-    int bci = m->bci_from((address)bcx);
-    snprintf(buf, sizeof buf, "%d", bci);
-    name = Bytecodes::name(m->code_at(bci));
-  }
-  ResourceMark rm;
-  printf("%s : %s ==> %s\n", m->name_and_sig_as_C_string(), buf, name);
-}
-
-void internal_pf(unsigned long sp, unsigned long fp, unsigned long pc, unsigned long bcx) {
-  if (!fp)
-    return;
-
-  DESCRIBE_FP_OFFSET(return_addr);
-  DESCRIBE_FP_OFFSET(link);
-  DESCRIBE_FP_OFFSET(interpreter_frame_cache);
-  DESCRIBE_FP_OFFSET(interpreter_frame_locals);
-  DESCRIBE_FP_OFFSET(interpreter_frame_initial_sp);
-  unsigned long *p = (unsigned long *)fp;
-
-  // We want to see all frames, native and Java.  For compiled and
-  // interpreted frames we have special information that allows us to
-  // unwind them; for everything else we assume that the native frame
-  // pointer chain is intact.
-  frame this_frame((intptr_t*)sp, (intptr_t*)fp, (address)pc);
-  if (this_frame.is_compiled_frame()) {
-    frame sender = this_frame.sender(reg_map);
-    nextfp = (unsigned long)sender.fp();
-    nextpc = (unsigned long)sender.pc();
-    nextsp = (unsigned long)sender.unextended_sp();
-  } else {
-    nextfp = p[frame::link_offset];
-    nextpc = p[frame::return_addr_offset];
-    nextsp = (unsigned long)&p[frame::sender_sp_offset];
-  }
-
-  if (bcx == -1ul)
-    bcx = p[frame::NULL];
-
-  {
-    CodeBlob *cb = CodeCache::find_blob((address)pc);
-    if (cb != NULL) {
-      if (cb->is_nmethod()) {
-        ResourceMark rm;
-        nmethod* nm = (nmethod*)cb;
-        printf("nmethod %s\n", nm->method()->name_and_sig_as_C_string());
-      } else if (cb->name()) {
-        printf("CodeBlob %s\n", cb->name());
-      }
-    }
-  }
-}
-
-extern "C" void npf() {
-  CodeBlob *cb = CodeCache::find_blob((address)nextpc);
-  // C2 does not always chain the frame pointers when it can, instead
-  // preferring to use fixed offsets from SP, so a simple leave() does
-  // not work.  Instead, it adds the frame size to SP then pops FP and
-  // LR.  We have to do the same thing to get a good call chain.
-  if (cb && cb->frame_size())
-    nextfp = nextsp + wordSize * (cb->frame_size() - 2);
-  internal_pf (nextsp, nextfp, nextpc, -1);
-}
-
-extern "C" void pf(unsigned long sp, unsigned long fp, unsigned long pc, unsigned long bcx, unsigned long thread) {
-  RegisterMap map((JavaThread*)thread, false);
-  if (!reg_map) {
-    reg_map = (RegisterMap*)os::malloc(sizeof map, mtNone);
-  }
-  memcpy(reg_map, &map, sizeof map);
-  {
-    CodeBlob *cb = CodeCache::find_blob((address)pc);
-    if (cb && cb->frame_size())
-      fp = sp + wordSize * (cb->frame_size() - 2);
-  }
-  internal_pf(sp, fp, pc, bcx);
-}
-
 void JavaFrameAnchor::make_walkable(JavaThread* thread) {
   // last frame set?
   if (last_Java_sp() == NULL) return;
   // already walkable?
   if (walkable()) return;
-  vmassert(Thread::current() == (Thread*)thread, "not current thread");
-  vmassert(last_Java_sp() != NULL, "not called from Java code?");
-  vmassert(last_Java_pc() == NULL, "already walkable");
   capture_last_Java_pc();
-  vmassert(walkable(), "something went wrong");
 }
 
 void JavaFrameAnchor::capture_last_Java_pc() {
-  vmassert(_last_Java_sp != NULL, "no last frame set");
-  vmassert(_last_Java_pc == NULL, "already walkable");
   _last_Java_pc = (address)_last_Java_sp[-1];
 }

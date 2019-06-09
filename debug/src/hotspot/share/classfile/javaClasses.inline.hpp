@@ -91,53 +91,8 @@ bool java_lang_ref_Reference::is_phantom(oop ref) {
   return InstanceKlass::cast(ref->klass())->reference_type() == REF_PHANTOM;
 }
 
-inline void java_lang_invoke_CallSite::set_target_volatile(oop site, oop target) {
-  site->obj_field_put_volatile(_target_offset, target);
-}
-
-inline oop java_lang_invoke_CallSite::target(oop site) {
-  return site->obj_field(_target_offset);
-}
-
-inline void java_lang_invoke_CallSite::set_target(oop site, oop target) {
-  site->obj_field_put(_target_offset, target);
-}
-
-inline bool java_lang_invoke_CallSite::is_instance(oop obj) {
-  return obj != NULL && is_subclass(obj->klass());
-}
-
-inline bool java_lang_invoke_MethodHandleNatives_CallSiteContext::is_instance(oop obj) {
-  return obj != NULL && is_subclass(obj->klass());
-}
-
-inline bool java_lang_invoke_MemberName::is_instance(oop obj) {
-  return obj != NULL && obj->klass() == SystemDictionary::MemberName_klass();
-}
-
-inline bool java_lang_invoke_ResolvedMethodName::is_instance(oop obj) {
-  return obj != NULL && obj->klass() == SystemDictionary::ResolvedMethodName_klass();
-}
-
-inline bool java_lang_invoke_MethodType::is_instance(oop obj) {
-  return obj != NULL && obj->klass() == SystemDictionary::MethodType_klass();
-}
-
-inline bool java_lang_invoke_MethodHandle::is_instance(oop obj) {
-  return obj != NULL && is_subclass(obj->klass());
-}
-
-inline bool java_lang_Class::is_instance(oop obj) {
-  return obj != NULL && obj->klass() == SystemDictionary::Class_klass();
-}
-
-inline bool java_lang_invoke_DirectMethodHandle::is_instance(oop obj) {
-  return obj != NULL && is_subclass(obj->klass());
-}
-
-inline bool java_lang_Module::is_instance(oop obj) {
-  return obj != NULL && obj->klass() == SystemDictionary::Module_klass();
-}
+inline bool java_lang_Class::is_instance(oop obj)  { return obj != NULL && obj->klass() == SystemDictionary::Class_klass(); }
+inline bool java_lang_Module::is_instance(oop obj) { return obj != NULL && obj->klass() == SystemDictionary::Module_klass(); }
 
 inline int Backtrace::merge_bci_and_version(int bci, int version) {
   // only store u2 for version, checking for overflow.

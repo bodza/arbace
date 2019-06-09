@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "jvm.h"
-#include "aot/aotLoader.hpp"
 #include "classfile/classFileParser.hpp"
 #include "classfile/classFileStream.hpp"
 #include "classfile/classLoader.hpp"
@@ -36,8 +35,6 @@
 #include "oops/oop.inline.hpp"
 #include "oops/symbol.hpp"
 #include "oops/typeArrayKlass.hpp"
-#include "prims/resolvedMethodTable.hpp"
-#include "prims/methodHandles.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/arguments_ext.hpp"
 #include "runtime/biasedLocking.hpp"
@@ -1186,11 +1183,6 @@ void SystemDictionary::add_to_hierarchy(InstanceKlass* k, TRAPS) {
   k->append_to_sibling_list();                    // add to superklass/sibling list
   k->process_interfaces(THREAD);                  // handle all "implements" declarations
   k->set_init_state(InstanceKlass::loaded);
-  // Now flush all code that depended on old class hierarchy.
-  // Note: must be done *after* linking k into the hierarchy (was bug 12/9/97)
-  // Also, first reinitialize vtable because it may have gotten out of synch
-  // while the new class wasn't connected to the class hierarchy.
-  CodeCache::flush_dependents_on(k);
 }
 
 // ----------------------------------------------------------------------------
@@ -1212,10 +1204,6 @@ bool SystemDictionary::do_unloading(GCTimer* gc_timer, bool do_cleaning) {
     // of the class loader (eg. cached protection domain oops). So we need to
     // explicitly unlink them here.
     _pd_cache_table->unlink();
-  }
-
-  if (do_cleaning) {
-    ResolvedMethodTable::unlink();
   }
 
   return unloading_occurred;
@@ -1371,10 +1359,8 @@ void SystemDictionary::initialize_preloaded_classes(TRAPS) {
   InstanceKlass::cast(WK_KLASS(PhantomReference_klass))->set_reference_type(REF_PHANTOM);
 
   // JSR 292 classes
-  WKID jsr292_group_start = WK_KLASS_ENUM_NAME(MethodHandle_klass);
-  WKID jsr292_group_end   = WK_KLASS_ENUM_NAME(VolatileCallSite_klass);
-  initialize_wk_klasses_until(jsr292_group_start, scan, CHECK);
-  initialize_wk_klasses_through(jsr292_group_end, scan, CHECK);
+  initialize_wk_klasses_until(NULL, scan, CHECK);
+  initialize_wk_klasses_through(NULL, scan, CHECK);
   initialize_wk_klasses_until(FIRST_JVMCI_WKID, scan, CHECK);
 
   _box_klasses[T_BOOLEAN] = WK_KLASS(Boolean_klass);
@@ -1397,7 +1383,7 @@ void SystemDictionary::initialize_preloaded_classes(TRAPS) {
 // Tells if a given klass is a box (wrapper class, such as java.lang.Integer).
 // If so, returns the basic type it holds.  If not, returns T_OBJECT.
 BasicType SystemDictionary::box_klass_type(Klass* k) {
-  for (int i = T_BOOLEAN; i < T_VOID+1; i++) {
+  for (int i = T_BOOLEAN; i < T_VOID + 1; i++) {
     if (_box_klasses[i] == k)
       return (BasicType)i;
   }
@@ -1674,89 +1660,6 @@ Symbol* SystemDictionary::check_signature_loaders(Symbol* signature, Handle load
   return NULL;
 }
 
-methodHandle SystemDictionary::find_method_handle_intrinsic(vmIntrinsics::ID iid, Symbol* signature, TRAPS) {
-  methodHandle empty;
-
-  unsigned int hash  = invoke_method_table()->compute_hash(signature, iid);
-  int          index = invoke_method_table()->hash_to_index(hash);
-  SymbolPropertyEntry* spe = invoke_method_table()->find_entry(index, hash, signature, iid);
-  methodHandle m;
-  if (spe == NULL || spe->method() == NULL) {
-    spe = NULL;
-    // Must create lots of stuff here, but outside of the SystemDictionary lock.
-    m = Method::make_method_handle_intrinsic(iid, signature, CHECK_(empty));
-    {
-      // Generate a compiled form of the MH intrinsic.
-      AdapterHandlerLibrary::create_native_wrapper(m);
-      // Check if have the compiled code.
-      if (!m->has_compiled_code()) {
-        THROW_MSG_(vmSymbols::java_lang_VirtualMachineError(), "Out of space in CodeCache for method handle intrinsic", empty);
-      }
-    }
-    // Now grab the lock.  We might have to throw away the new method,
-    // if a racing thread has managed to install one at the same time.
-    {
-      MutexLocker ml(SystemDictionary_lock, THREAD);
-      spe = invoke_method_table()->find_entry(index, hash, signature, iid);
-      if (spe == NULL)
-        spe = invoke_method_table()->add_entry(index, hash, signature, iid);
-      if (spe->method() == NULL)
-        spe->set_method(m());
-    }
-  }
-
-  return spe->method();
-}
-
-// Helper for unpacking the return value from linkMethod and linkCallSite.
-static methodHandle unpack_method_and_appendix(Handle mname, Klass* accessing_klass, objArrayHandle appendix_box, Handle* appendix_result, TRAPS) {
-  methodHandle empty;
-  if (mname.not_null()) {
-    Method* m = java_lang_invoke_MemberName::vmtarget(mname());
-    if (m != NULL) {
-      oop appendix = appendix_box->obj_at(0);
-      (*appendix_result) = Handle(THREAD, appendix);
-      // the target is stored in the cpCache and if a reference to this
-      // MemberName is dropped we need a way to make sure the
-      // class_loader containing this method is kept alive.
-      ClassLoaderData* this_key = accessing_klass->class_loader_data();
-      this_key->record_dependency(m->method_holder());
-      return methodHandle(THREAD, m);
-    }
-  }
-  THROW_MSG_(vmSymbols::java_lang_LinkageError(), "bad value from MethodHandleNatives", empty);
-  return empty;
-}
-
-methodHandle SystemDictionary::find_method_handle_invoker(Klass* klass, Symbol* name, Symbol* signature, Klass* accessing_klass, Handle *appendix_result, Handle *method_type_result, TRAPS) {
-  methodHandle empty;
-  Handle method_type = SystemDictionary::find_method_handle_type(signature, accessing_klass, CHECK_(empty));
-
-  int ref_kind = JVM_REF_invokeVirtual;
-  oop name_oop = StringTable::intern(name, CHECK_(empty));
-  Handle name_str (THREAD, name_oop);
-  objArrayHandle appendix_box = oopFactory::new_objArray_handle(SystemDictionary::Object_klass(), 1, CHECK_(empty));
-
-  // This should not happen.  JDK code should take care of that.
-  if (accessing_klass == NULL || method_type.is_null()) {
-    THROW_MSG_(vmSymbols::java_lang_InternalError(), "bad invokehandle", empty);
-  }
-
-  // call java.lang.invoke.MethodHandleNatives::linkMethod(... String, MethodType) -> MemberName
-  JavaCallArguments args;
-  args.push_oop(Handle(THREAD, accessing_klass->java_mirror()));
-  args.push_int(ref_kind);
-  args.push_oop(Handle(THREAD, klass->java_mirror()));
-  args.push_oop(name_str);
-  args.push_oop(method_type);
-  args.push_oop(appendix_box);
-  JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result, SystemDictionary::MethodHandleNatives_klass(), vmSymbols::linkMethod_name(), vmSymbols::linkMethod_signature(), &args, CHECK_(empty));
-  Handle mname(THREAD, (oop) result.get_jobject());
-  (*method_type_result) = method_type;
-  return unpack_method_and_appendix(mname, accessing_klass, appendix_box, appendix_result, THREAD);
-}
-
 // Decide if we can globally cache a lookup of this class, to be returned to any client that asks.
 // We must ensure that all class loaders everywhere will reach this class, for any client.
 // This is a safe bet for public classes in java.lang, such as Object and String.
@@ -1770,9 +1673,7 @@ static bool is_always_visible_class(oop mirror) {
   if (klass->is_typeArray_klass()) {
     return true; // primitive array
   }
-  return klass->is_public() &&
-         (InstanceKlass::cast(klass)->is_same_class_package(SystemDictionary::Object_klass()) ||       // java.lang
-          InstanceKlass::cast(klass)->is_same_class_package(SystemDictionary::MethodHandle_klass()));  // java.lang.invoke
+  return klass->is_public() && (InstanceKlass::cast(klass)->is_same_class_package(SystemDictionary::Object_klass())); // java.lang
 }
 
 // Return the Java mirror (java.lang.Class instance) for a single-character
@@ -1893,7 +1794,7 @@ Handle SystemDictionary::find_method_handle_type(Symbol* signature, Klass* acces
   JavaCallArguments args(Handle(THREAD, rt()));
   args.push_oop(pts);
   JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result, SystemDictionary::MethodHandleNatives_klass(), vmSymbols::findMethodHandleType_name(), vmSymbols::findMethodHandleType_signature(), &args, CHECK_(empty));
+  JavaCalls::call_static(&result, SystemDictionary::NULL(), vmSymbols::NULL(), vmSymbols::NULL(), &args, CHECK_(empty));
   Handle method_type(THREAD, (oop) result.get_jobject());
 
   if (can_be_cached) {
@@ -1930,131 +1831,6 @@ Handle SystemDictionary::find_field_handle_type(Symbol* signature, Klass* access
   return empty;
 }
 
-// Ask Java code to find or construct a method handle constant.
-Handle SystemDictionary::link_method_handle_constant(Klass* caller, int ref_kind, Klass* callee, Symbol* name, Symbol* signature, TRAPS) {
-  Handle empty;
-  if (caller == NULL) {
-    THROW_MSG_(vmSymbols::java_lang_InternalError(), "bad MH constant", empty);
-  }
-  Handle name_str      = java_lang_String::create_from_symbol(name,      CHECK_(empty));
-  Handle signature_str = java_lang_String::create_from_symbol(signature, CHECK_(empty));
-
-  // Put symbolic info from the MH constant into freshly created MemberName and resolve it.
-  Handle mname = MemberName_klass()->allocate_instance_handle(CHECK_(empty));
-  java_lang_invoke_MemberName::set_clazz(mname(), callee->java_mirror());
-  java_lang_invoke_MemberName::set_name (mname(), name_str());
-  java_lang_invoke_MemberName::set_type (mname(), signature_str());
-  java_lang_invoke_MemberName::set_flags(mname(), MethodHandles::ref_kind_to_flags(ref_kind));
-
-  if (ref_kind == JVM_REF_invokeVirtual && MethodHandles::is_signature_polymorphic_public_name(callee, name)) {
-    // Skip resolution for public signature polymorphic methods such as
-    // j.l.i.MethodHandle.invoke()/invokeExact() and those on VarHandle
-    // They require appendix argument which MemberName resolution doesn't handle.
-    // There's special logic on JDK side to handle them
-    // (see MethodHandles.linkMethodHandleConstant() and MethodHandles.findVirtualForMH()).
-  } else {
-    MethodHandles::resolve_MemberName(mname, caller, /*speculative_resolve*/false, CHECK_(empty));
-  }
-
-  // After method/field resolution succeeded, it's safe to resolve MH signature as well.
-  Handle type = MethodHandles::resolve_MemberName_type(mname, caller, CHECK_(empty));
-
-  // call java.lang.invoke.MethodHandleNatives::linkMethodHandleConstant(Class caller, int refKind, Class callee, String name, Object type) -> MethodHandle
-  JavaCallArguments args;
-  args.push_oop(Handle(THREAD, caller->java_mirror()));  // the referring class
-  args.push_int(ref_kind);
-  args.push_oop(Handle(THREAD, callee->java_mirror()));  // the target class
-  args.push_oop(name_str);
-  args.push_oop(type);
-  JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result, SystemDictionary::MethodHandleNatives_klass(), vmSymbols::linkMethodHandleConstant_name(), vmSymbols::linkMethodHandleConstant_signature(), &args, CHECK_(empty));
-  return Handle(THREAD, (oop) result.get_jobject());
-}
-
-// Ask Java to compute a constant by invoking a BSM given a Dynamic_info CP entry
-Handle SystemDictionary::link_dynamic_constant(Klass* caller, int condy_index, Handle bootstrap_specifier, Symbol* name, Symbol* type, TRAPS) {
-  Handle empty;
-  Handle bsm, info;
-  if (java_lang_invoke_MethodHandle::is_instance(bootstrap_specifier())) {
-    bsm = bootstrap_specifier;
-  } else {
-    objArrayOop args = (objArrayOop) bootstrap_specifier();
-    bsm  = Handle(THREAD, args->obj_at(0));
-    info = Handle(THREAD, args->obj_at(1));
-  }
-  guarantee(java_lang_invoke_MethodHandle::is_instance(bsm()), "caller must supply a valid BSM");
-
-  // This should not happen.  JDK code should take care of that.
-  if (caller == NULL) {
-    THROW_MSG_(vmSymbols::java_lang_InternalError(), "bad dynamic constant", empty);
-  }
-
-  Handle constant_name = java_lang_String::create_from_symbol(name, CHECK_(empty));
-
-  // Resolve the constant type in the context of the caller class
-  Handle type_mirror = find_java_mirror_for_type(type, caller, SignatureStream::NCDFError, CHECK_(empty));
-
-  // call java.lang.invoke.MethodHandleNatives::linkConstantDyanmic(caller, condy_index, bsm, type, info)
-  JavaCallArguments args;
-  args.push_oop(Handle(THREAD, caller->java_mirror()));
-  args.push_int(condy_index);
-  args.push_oop(bsm);
-  args.push_oop(constant_name);
-  args.push_oop(type_mirror);
-  args.push_oop(info);
-  JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result, SystemDictionary::MethodHandleNatives_klass(), vmSymbols::linkDynamicConstant_name(), vmSymbols::linkDynamicConstant_signature(), &args, CHECK_(empty));
-
-  return Handle(THREAD, (oop) result.get_jobject());
-}
-
-// Ask Java code to find or construct a java.lang.invoke.CallSite for the given
-// name and signature, as interpreted relative to the given class loader.
-methodHandle SystemDictionary::find_dynamic_call_site_invoker(Klass* caller,
-                                                              int indy_index,
-                                                              Handle bootstrap_specifier,
-                                                              Symbol* name,
-                                                              Symbol* type,
-                                                              Handle *appendix_result,
-                                                              Handle *method_type_result,
-                                                              TRAPS) {
-  methodHandle empty;
-  Handle bsm, info;
-  if (java_lang_invoke_MethodHandle::is_instance(bootstrap_specifier())) {
-    bsm = bootstrap_specifier;
-  } else {
-    objArrayOop args = (objArrayOop) bootstrap_specifier();
-    bsm  = Handle(THREAD, args->obj_at(0));
-    info = Handle(THREAD, args->obj_at(1));
-  }
-  guarantee(java_lang_invoke_MethodHandle::is_instance(bsm()), "caller must supply a valid BSM");
-
-  Handle method_name = java_lang_String::create_from_symbol(name, CHECK_(empty));
-  Handle method_type = find_method_handle_type(type, caller, CHECK_(empty));
-
-  // This should not happen.  JDK code should take care of that.
-  if (caller == NULL || method_type.is_null()) {
-    THROW_MSG_(vmSymbols::java_lang_InternalError(), "bad invokedynamic", empty);
-  }
-
-  objArrayHandle appendix_box = oopFactory::new_objArray_handle(SystemDictionary::Object_klass(), 1, CHECK_(empty));
-
-  // call java.lang.invoke.MethodHandleNatives::linkCallSite(caller, indy_index, bsm, name, mtype, info, &appendix)
-  JavaCallArguments args;
-  args.push_oop(Handle(THREAD, caller->java_mirror()));
-  args.push_int(indy_index);
-  args.push_oop(bsm);
-  args.push_oop(method_name);
-  args.push_oop(method_type);
-  args.push_oop(info);
-  args.push_oop(appendix_box);
-  JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result, SystemDictionary::MethodHandleNatives_klass(), vmSymbols::linkCallSite_name(), vmSymbols::linkCallSite_signature(), &args, CHECK_(empty));
-  Handle mname(THREAD, (oop) result.get_jobject());
-  (*method_type_result) = method_type;
-  return unpack_method_and_appendix(mname, caller, appendix_box, appendix_result, THREAD);
-}
-
 // Protection domain cache table handling
 
 ProtectionDomainCacheEntry* SystemDictionary::cache_get(Handle protection_domain) {
@@ -2077,7 +1853,7 @@ void SystemDictionary::copy_table(char* top, char* end) {
   ClassLoaderData::the_null_class_loader_data()->dictionary()->copy_table(top, end);
 }
 
-void SystemDictionary::print_on(outputStream *st) {
+void SystemDictionary::print_on(outputStream* st) {
   GCMutexLocker mu(SystemDictionary_lock);
 
   ClassLoaderDataGraph::print_dictionary(st);
@@ -2094,7 +1870,7 @@ void SystemDictionary::print_on(outputStream *st) {
   st->cr();
 }
 
-void SystemDictionary::dump(outputStream *st, bool verbose) {
+void SystemDictionary::dump(outputStream* st, bool verbose) {
   if (verbose) {
     print_on(st);
   } else {

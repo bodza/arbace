@@ -38,16 +38,16 @@ class vframeArrayElement {
 
   int bci(void) const;
 
-  int raw_bci(void) const                       { return _bci; }
-  bool should_reexecute(void) const             { return _reexecute; }
+  int raw_bci(void)                       const { return _bci; }
+  bool should_reexecute(void)             const { return _reexecute; }
 
-  Method* method(void) const                    { return _method; }
+  Method* method(void)                    const { return _method; }
 
-  MonitorChunk* monitors(void) const            { return _monitors; }
+  MonitorChunk* monitors(void)            const { return _monitors; }
 
   void free_monitors(JavaThread* jt);
 
-  StackValueCollection* locals(void) const      { return _locals; }
+  StackValueCollection* locals(void)      const { return _locals; }
   StackValueCollection* expressions(void) const { return _expressions; }
 
   void fill_in(compiledVFrame* vf, bool realloc_failures);
@@ -91,15 +91,15 @@ class vframeArray: public CHeapObj<mtCompiler> {
 
   void fill_in_element(int index, compiledVFrame* vf);
 
-  bool is_location_valid(int i) const        { return _valid[i] != 0; }
+  bool is_location_valid(int i)        const { return _valid[i] != 0; }
   void set_location_valid(int i, bool valid) { _valid[i] = valid; }
 
  public:
   // Tells whether index is within bounds.
-  bool is_within_bounds(int index) const     { return 0 <= index && index < frames(); }
+  bool is_within_bounds(int index)     const { return 0 <= index && index < frames(); }
 
   // Accessories for instance variable
-  int frames() const                         { return _frames; }
+  int frames()                         const { return _frames; }
 
   static vframeArray* allocate(JavaThread* thread, int frame_size, GrowableArray<compiledVFrame*>* chunk, RegisterMap* reg_map, frame sender, frame caller, frame self, bool realloc_failures);
 
@@ -109,24 +109,23 @@ class vframeArray: public CHeapObj<mtCompiler> {
   void fill_in(JavaThread* thread, int frame_size, GrowableArray<compiledVFrame*>* chunk, const RegisterMap *reg_map, bool realloc_failures);
 
   // Returns the owner of this vframeArray
-  JavaThread* owner_thread() const           { return _owner_thread; }
+  JavaThread* owner_thread()           const { return _owner_thread; }
 
   // Accessors for next
-  vframeArray* next() const                  { return _next; }
+  vframeArray* next()                  const { return _next; }
   void set_next(vframeArray* value)          { _next = value; }
 
   // Accessors for sp
-  intptr_t* sp() const                       { return _original.sp(); }
+  intptr_t* sp()                       const { return _original.sp(); }
 
   intptr_t* unextended_sp() const;
 
-  address original_pc() const                { return _original.pc(); }
-  frame original() const                     { return _original; }
-  frame caller() const                       { return _caller; }
-  frame sender() const                       { return _sender; }
+  frame original()                     const { return _original; }
+  frame caller()                       const { return _caller; }
+  frame sender()                       const { return _sender; }
 
   // Returns the size of the frame that got deoptimized
-  int frame_size() const                     { return _frame_size; }
+  int frame_size()                     const { return _frame_size; }
 
   // Deallocates monitor chunks allocated during deoptimization.
   // This should be called when the array is not used anymore.

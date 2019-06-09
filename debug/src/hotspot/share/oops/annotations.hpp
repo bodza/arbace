@@ -48,10 +48,10 @@ class Annotations: public MetaspaceObj {
                   _class_type_annotations(NULL),
                   _fields_type_annotations(NULL) { }
 
-  AnnotationArray* class_annotations() const                       { return _class_annotations; }
-  Array<AnnotationArray*>* fields_annotations() const              { return _fields_annotations; }
-  AnnotationArray* class_type_annotations() const                  { return _class_type_annotations; }
-  Array<AnnotationArray*>* fields_type_annotations() const         { return _fields_type_annotations; }
+  AnnotationArray* class_annotations()                       const { return _class_annotations; }
+  Array<AnnotationArray*>* fields_annotations()              const { return _fields_annotations; }
+  AnnotationArray* class_type_annotations()                  const { return _class_type_annotations; }
+  Array<AnnotationArray*>* fields_type_annotations()         const { return _fields_type_annotations; }
 
   void set_class_annotations(AnnotationArray* md)                     { _class_annotations = md; }
   void set_fields_annotations(Array<AnnotationArray*>* md)            { _fields_annotations = md; }

@@ -73,30 +73,8 @@ void VM_ClearICs::doit() {
   }
 }
 
-void NULL::doit() {
-  // We do not want any GCs to happen while we are in the middle of this VM operation
-  ResourceMark rm;
-  NULL dm;
-
-  // Deoptimize all activations depending on marked nmethods
-  NULL::deoptimize_dependents();
-
-  // Make the dependent methods not entrant
-  CodeCache::make_marked_nmethods_not_entrant();
-}
-
 void VM_MarkActiveNMethods::doit() {
   NMethodSweeper::mark_active_nmethods();
-}
-
-NULL::NULL(JavaThread* thread, intptr_t* id, int reason) {
-  _thread = thread;
-  _id     = id;
-  _reason = reason;
-}
-
-void NULL::doit() {
-  NULL::NULL(_thread, _id, (NULL::NULL)_reason);
 }
 
 void VM_UnlinkSymbols::doit() {
@@ -127,10 +105,6 @@ void VM_PrintThreads::doit_epilogue() {
 
 void VM_PrintJNI::doit() {
   JNIHandles::print_on(_out);
-}
-
-void VM_PrintMetadata::doit() {
-  MetaspaceUtils::print_report(_out, _scale, _flags);
 }
 
 VM_FindDeadlocks::~VM_FindDeadlocks() {

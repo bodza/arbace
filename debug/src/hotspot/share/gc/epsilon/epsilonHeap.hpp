@@ -92,7 +92,7 @@ public:
   }
 
   // Object pinning support: every object is implicitly pinned
-  virtual bool supports_object_pinning() const           { return true; }
+  virtual bool supports_object_pinning()           const { return true; }
   virtual oop pin_object(JavaThread* thread, oop obj)    { return obj; }
   virtual void unpin_object(JavaThread* thread, oop obj) { }
 

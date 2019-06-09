@@ -321,18 +321,6 @@
   diagnostic(ccstrlist, DisableIntrinsic, "", \
          "do not expand intrinsics whose (internal) names appear here") \
  \
-  develop(bool, DeoptimizeALot, false, \
-          "Deoptimize at every exit from the runtime system") \
- \
-  notproduct(ccstrlist, DeoptimizeOnlyAt, "", \
-          "A comma separated list of bcis to deoptimize at") \
- \
-  product(bool, DeoptimizeRandom, false, \
-          "Deoptimize random frames on random exit from the runtime system") \
- \
-  notproduct(bool, ZombieALot, false, \
-          "Create zombies (non-entrant) at exit from the runtime system") \
- \
   notproduct(bool, WalkStackALot, false, \
           "Trace stack (no print) at every exit from the runtime system") \
  \
@@ -436,9 +424,6 @@
  \
   diagnostic(ccstr, PrintAssemblyOptions, NULL, \
           "Print options string passed to disassembler.so") \
- \
-  diagnostic(bool, PrintNativeNMethods, false, \
-          "Print assembly code for native nmethods when generated") \
  \
   develop(bool, InterceptOSException, false, \
           "Start debugger when an implicit OS (e.g. NULL) exception happens") \
@@ -667,17 +652,8 @@
   develop(bool, CITimeEach, false, \
           "display timing information after each successful compilation") \
  \
-  develop(bool, CICountOSR, false, \
-          "use a separate counter when assigning ids to osr compilations") \
- \
   develop(bool, CICompileNatives, true, \
           "compile native methods if supported by the compiler") \
- \
-  develop_pd(bool, CICompileOSR, \
-          "compile on stack replacement methods if supported by the compiler") \
- \
-  develop(intx, OSROnlyBCI, -1, \
-          "OSR only at this bci.  Negative values mean exclude that bci") \
  \
   /* compiler */ \
  \
@@ -731,9 +707,6 @@
  \
   product(bool, ClipInlining, true, \
           "Clip inlining if aggregate method exceeds DesiredMethodLimit") \
- \
-  develop(bool, UseCHA, true, \
-          "Enable CHA") \
  \
   product(bool, UseTypeProfile, true, \
           "Check interpreter profile for historically monomorphic calls") \
@@ -798,9 +771,6 @@
   diagnostic(ccstr, AbortVMOnExceptionMessage, NULL, \
           "Call fatal if the exception pointed by AbortVMOnException has this message") \
  \
-  notproduct(bool, IgnoreLockingAssertions, false, \
-          "disable locking assertions (for speed)") \
- \
   product(bool, RangeCheckElimination, true, \
           "Eliminate range checks") \
  \
@@ -821,15 +791,6 @@
  \
   notproduct(intx, CompileTheWorldSafepointInterval, 100, \
           "Force a safepoint every n compiles so sweeper can keep up") \
- \
-  develop(bool, FillDelaySlots, true, \
-          "Fill delay slots (on SPARC only)") \
- \
-  develop(bool, TimeLivenessAnalysis, false, \
-          "Time computation of bytecode liveness analysis") \
- \
-  notproduct(bool, CollectIndexSetStatistics, false, \
-          "Collect information about IndexSets") \
  \
   develop(bool, UseLoopSafepoints, true, \
           "Generate Safepoint nodes in every loop") \
@@ -856,65 +817,7 @@
           "max number of incoming parameters to consider for type profiling, -1 for all") \
           range(-1, 64) \
  \
-  /* statistics */ \
-  develop(bool, CountCompiledCalls, false, \
-          "Count method invocations") \
- \
-  notproduct(bool, CountRuntimeCalls, false, \
-          "Count VM runtime calls") \
- \
-  develop(bool, CountJNICalls, false, \
-          "Count jni method invocations") \
- \
-  notproduct(bool, CountJVMCalls, false, \
-          "Count jvm method invocations") \
- \
-  notproduct(bool, CountRemovableExceptions, false, \
-          "Count exceptions that could be replaced by branches due to inlining") \
- \
   /* interpreter */ \
-  product_pd(bool, RewriteBytecodes, \
-          "Allow rewriting of bytecodes (bytecodes are not immutable)") \
- \
-  product_pd(bool, RewriteFrequentPairs, \
-          "Rewrite frequently used bytecode pairs into a single bytecode") \
- \
-  develop(bool, UseFastSignatureHandlers, true, \
-          "Use fast signature handlers for native calls") \
- \
-  product(bool, UseLoopCounter, true, \
-          "Increment invocation counter on backward branch") \
- \
-  product_pd(bool, UseOnStackReplacement, \
-          "Use on stack replacement, calls runtime if invoc. counter overflows in loop") \
- \
-  product_pd(bool, PreferInterpreterNativeStubs, \
-          "Use always interpreter stubs for native methods invoked via interpreter") \
- \
-  develop(bool, CountBytecodes, false, \
-          "Count number of bytecodes executed") \
- \
-  develop(bool, VerifyOops, false, \
-          "Do plausibility checks for oops") \
- \
-  develop(bool, CheckUnhandledOops, false, \
-          "Check for unhandled oops in VM code") \
- \
-  develop(bool, VerifyJNIFields, false, \
-          "Verify jfieldIDs for instance fields") \
- \
-  notproduct(bool, VerifyJNIEnvThread, false, \
-          "Verify JNIEnv.thread == Thread::current() when entering VM from JNI") \
- \
-  develop(bool, VerifyFPU, false, \
-          "Verify FPU state (check for NaN's, etc.)") \
- \
-  develop(bool, VerifyThread, false, \
-          "Watch the thread register for corruption (SPARC only)") \
- \
-  develop(bool, VerifyActivationFrameSize, false, \
-          "Verify that activation frame didn't become smaller than its minimal size") \
- \
   develop_pd(bool, InlineIntrinsics, \
           "Inline intrinsics that can be statically resolved") \
  \
@@ -922,9 +825,6 @@
           "number of method invocations/branches (expressed as % of " \
           "CompileThreshold) before using the method's profile") \
           range(0, 100) \
- \
-  develop(bool, VerifyDataPointer, false, \
-          "Verify the method data pointer during interpreter profiling") \
  \
   /* compilation */ \
   product(bool, UseCompiler, true, \
@@ -1054,12 +954,6 @@
  \
   develop(intx, DontYieldALotInterval, 10, \
           "Interval between which yields will be dropped (milliseconds)") \
- \
-  notproduct(intx, DeoptimizeALotInterval, 5, \
-          "Number of exits until DeoptimizeALot kicks in") \
- \
-  notproduct(intx, ZombieALotInterval, 5, \
-          "Number of exits until ZombieALot kicks in") \
  \
   diagnostic(uintx, MallocMaxTestWords, 0, \
           "If non-zero, maximum number of words that malloc/realloc can allocate (for testing only)") \
@@ -1277,15 +1171,6 @@
   develop(intx, CIStop, max_jint, \
           "The id of the last compilation to permit") \
  \
-  develop(intx, CIStartOSR, 0, \
-          "The id of the first osr compilation to permit (CICountOSR must be on)") \
- \
-  develop(intx, CIStopOSR, max_jint, \
-          "The id of the last osr compilation to permit (CICountOSR must be on)") \
- \
-  develop(intx, CIBreakAtOSR, -1, \
-          "The id of osr compilation to break at") \
- \
   develop(intx, CIBreakAt, -1, \
           "The id of compilation to break at") \
  \
@@ -1295,22 +1180,8 @@
   product(ccstr, CompileCommandFile, NULL, \
           "Read compiler commands from this file [.hotspot_compiler]") \
  \
-  diagnostic(ccstr, CompilerDirectivesFile, NULL, \
-          "Read compiler directives from this file") \
- \
   product(ccstrlist, CompileCommand, "", \
           "Prepend to .hotspot_compiler; e.g. log,java/lang/String.<init>") \
- \
-  develop(bool, ReplayCompiles, false, \
-          "Enable replay of compilations from ReplayDataFile") \
- \
-  product(ccstr, ReplayDataFile, NULL, \
-          "File containing compilation replay information" \
-          "[default: ./replay_pid%p.log] (%p replaced with pid)") \
- \
-   product(ccstr, InlineDataFile, NULL, \
-          "File containing inlining replay information" \
-          "[default: ./inline_pid%p.log] (%p replaced with pid)") \
  \
   develop(intx, ReplaySuppressInitializers, 2, \
           "Control handling of class initialization during replay: " \
@@ -1324,9 +1195,6 @@
   develop(bool, ReplayIgnoreInitErrors, false, \
           "Ignore exceptions thrown during initialization for replay") \
  \
-  product(bool, DumpReplayDataOnError, true, \
-          "Record replay data for crashing compiler threads") \
- \
   product(bool, CICompilerCountPerCPU, false, \
           "1 compiler thread for log(N CPUs)") \
  \
@@ -1338,9 +1206,6 @@
           "the purpose of testing, e.g. generation of replay data") \
   notproduct(bool, CIObjectFactoryVerify, false, \
           "enable potentially expensive verification in ciObjectFactory") \
- \
-  diagnostic(bool, AbortVMOnCompilationFailure, false, \
-          "Abort VM when method had failed to compile.") \
  \
   /* Priorities */ \
   product_pd(bool, UseThreadPriorities,  "Use native thread priorities") \
@@ -1517,7 +1382,7 @@
           range(0, max_jint) \
  \
   product(intx, Tier3BackEdgeThreshold, 60000, \
-          "Back edge threshold at which tier 3 OSR compilation is invoked") \
+          "Back edge threshold at which tier 3 OSR compilation is invoked") \
           range(0, max_jint) \
  \
   product(intx, Tier3AOTInvocationThreshold, 10000, \
@@ -1533,7 +1398,7 @@
           range(0, max_jint) \
  \
   product(intx, Tier3AOTBackEdgeThreshold, 120000, \
-          "Back edge threshold at which tier 3 OSR compilation is invoked if coming from AOT") \
+          "Back edge threshold at which tier 3 OSR compilation is invoked if coming from AOT") \
           range(0, max_jint) \
  \
   product(intx, Tier4InvocationThreshold, 5000, \
@@ -1549,7 +1414,7 @@
           range(0, max_jint) \
  \
   product(intx, Tier4BackEdgeThreshold, 40000, \
-          "Back edge threshold at which tier 4 OSR compilation is invoked") \
+          "Back edge threshold at which tier 4 OSR compilation is invoked") \
           range(0, max_jint) \
  \
   product(intx, Tier3DelayOn, 5, \
@@ -1600,7 +1465,7 @@
  \
   product_pd(intx, OnStackReplacePercentage, \
           "NON_TIERED number of method invocations/branches (expressed as " \
-          "% of CompileThreshold) before (re-)compiling OSR code") \
+          "% of CompileThreshold) before (re-)compiling OSR code") \
           constraint(OnStackReplacePercentageConstraintFunc, AfterErgo) \
  \
   product(intx, InterpreterProfilePercentage, 33, \
@@ -1655,14 +1520,6 @@
  \
   diagnostic(bool, FoldStableValues, true, \
           "Optimize loads from stable fields (marked w/ @Stable)") \
- \
-  diagnostic(int, UseBootstrapCallInfo, 1, \
-          "0: when resolving InDy or ConDy, force all BSM arguments to be " \
-          "resolved before the bootstrap method is called; 1: when a BSM " \
-          "that may accept a BootstrapCallInfo is detected, use that API " \
-          "to pass BSM arguments, which allows the BSM to delay their " \
-          "resolution; 2+: stress test the BCI API by calling more BSMs " \
-          "via that API, instead of with the eagerly-resolved array.") \
  \
   diagnostic(bool, PauseAtStartup, false, \
           "Causes the VM to pause at startup time and wait for the pause " \

@@ -344,7 +344,7 @@ class markOopDesc: public oopDesc {
     return is_neutral() && (cms_encoding() & cms_free_chunk_pattern) == cms_free_chunk_pattern;
   }
 
-  size_t get_size() const       { return (size_t)(value() >> size_shift); }
+  size_t get_size()       const { return (size_t)(value() >> size_shift); }
   static markOop set_size_and_free(size_t size) {
     return markOop(((intptr_t)cms_free_prototype() & ~size_mask_in_place) |
                    (((intptr_t)size & size_mask) << size_shift));

@@ -96,8 +96,6 @@ void BarrierSetAssembler::try_resolve_jobject_in_native(MacroAssembler* masm, Re
 void BarrierSetAssembler::tlab_allocate(MacroAssembler* masm, Register obj, Register var_size_in_bytes, int con_size_in_bytes, Register t1, Register t2, Label& slow_case) {
   Register end = t2;
 
-  // verify_tlab();
-
   __ ldr(obj, Address(rthread, JavaThread::tlab_top_offset()));
   if (var_size_in_bytes == noreg) {
     __ lea(end, Address(obj, con_size_in_bytes));
@@ -115,7 +113,6 @@ void BarrierSetAssembler::tlab_allocate(MacroAssembler* masm, Register obj, Regi
   if (var_size_in_bytes == end) {
     __ sub(var_size_in_bytes, var_size_in_bytes, obj);
   }
-  // verify_tlab();
 }
 
 // Defines obj, preserves var_size_in_bytes

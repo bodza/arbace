@@ -1298,12 +1298,12 @@ void* os::dll_lookup(void* handle, const char* name) {
 }
 
 int _print_dll_info_cb(const char * name, address base_address, address top_address, void * param) {
-  outputStream * out = (outputStream *) param;
+  outputStream* out = (outputStream*) param;
   out->print_cr(INTPTR_FORMAT " \t%s", (intptr_t)base_address, name);
   return 0;
 }
 
-void os::print_dll_info(outputStream *st) {
+void os::print_dll_info(outputStream* st) {
   st->print_cr("Dynamic libraries:");
   if (get_loaded_modules_info(_print_dll_info_cb, (void *)st)) {
     st->print_cr("Error: Cannot print dynamic libraries.");

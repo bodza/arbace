@@ -51,17 +51,17 @@ class NativeInstruction {
   bool is_sigill_zombie_not_entrant();
 
  protected:
-  address addr_at(int offset) const    { return address(this) + offset; }
+  address addr_at(int offset)    const { return address(this) + offset; }
 
-  s_char sbyte_at(int offset) const    { return *(s_char*) addr_at(offset); }
-  u_char ubyte_at(int offset) const    { return *(u_char*) addr_at(offset); }
+  s_char sbyte_at(int offset)    const { return *(s_char*) addr_at(offset); }
+  u_char ubyte_at(int offset)    const { return *(u_char*) addr_at(offset); }
 
-  jint int_at(int offset) const        { return *(jint*) addr_at(offset); }
-  juint uint_at(int offset) const      { return *(juint*) addr_at(offset); }
+  jint int_at(int offset)        const { return *(jint*) addr_at(offset); }
+  juint uint_at(int offset)      const { return *(juint*) addr_at(offset); }
 
-  address ptr_at(int offset) const     { return *(address*) addr_at(offset); }
+  address ptr_at(int offset)     const { return *(address*) addr_at(offset); }
 
-  oop  oop_at (int offset) const       { return *(oop*) addr_at(offset); }
+  oop  oop_at (int offset)       const { return *(oop*) addr_at(offset); }
 
   void set_char_at(int offset, char c)        { *addr_at(offset) = (u_char)c; }
   void set_int_at(int offset, jint  i)        { *(jint*)addr_at(offset) = i; }
@@ -169,11 +169,11 @@ class NativeCall: public NativeInstruction {
     return_address_offset       =    4
   };
 
-  address instruction_address() const       { return addr_at(instruction_offset); }
-  address next_instruction_address() const  { return addr_at(return_address_offset); }
-  int   displacement() const                { return (int_at(displacement_offset) << 6) >> 4; }
-  address displacement_address() const      { return addr_at(displacement_offset); }
-  address return_address() const            { return addr_at(return_address_offset); }
+  address instruction_address()       const { return addr_at(instruction_offset); }
+  address next_instruction_address()  const { return addr_at(return_address_offset); }
+  int   displacement()                const { return (int_at(displacement_offset) << 6) >> 4; }
+  address displacement_address()      const { return addr_at(displacement_offset); }
+  address return_address()            const { return addr_at(return_address_offset); }
   address destination() const;
 
   void set_destination(address dest) {
@@ -239,7 +239,7 @@ class NativeMovConstReg: public NativeInstruction {
     displacement_offset         =    0,
   };
 
-  address instruction_address() const      { return addr_at(instruction_offset); }
+  address instruction_address()      const { return addr_at(instruction_offset); }
   address next_instruction_address() const {
     if (nativeInstruction_at(instruction_address())->is_movz())
       // Assume movz, movk, movk
@@ -401,8 +401,8 @@ class NativeJump: public NativeInstruction {
     next_instruction_offset     =    4
   };
 
-  address instruction_address() const       { return addr_at(instruction_offset); }
-  address next_instruction_address() const  { return addr_at(instruction_size); }
+  address instruction_address()       const { return addr_at(instruction_offset); }
+  address next_instruction_address()  const { return addr_at(instruction_size); }
   address jump_destination() const;
   void set_jump_destination(address dest);
 

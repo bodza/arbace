@@ -60,8 +60,7 @@ reg_def FPR0H( SOC, SOC, Op_RegF, 0, VMRegImpl::Bad());
 // the stack will not have this element so FPR1 == st(0) from the
 // oopMap viewpoint. This same weirdness with numbering causes
 // instruction encoding to have to play games with the register
-// encode to correct for this 0/1 issue. See MachSpillCopyNode::implementation
-// where it does flt->flt moves to see an example
+// encode to correct for this 0/1 issue.
 //
 reg_def FPR1L( SOC, SOC, Op_RegF, 1, as_FloatRegister(0)->as_VMReg());
 reg_def FPR1H( SOC, SOC, Op_RegF, 1, as_FloatRegister(0)->as_VMReg()->next());
@@ -733,274 +732,6 @@ static int impl_fp_store_helper(CodeBuffer *cbuf, bool do_size, int src_lo, int 
   return impl_helper(cbuf,do_size,false,offset,st_op,op,op_str,size, st);
 }
 
-// Next two methods are shared by 32- and 64-bit VM. They are defined in x86.ad.
-static int vec_mov_helper(CodeBuffer *cbuf, bool do_size, int src_lo, int dst_lo, int src_hi, int dst_hi, uint ireg, outputStream* st);
-
-static int vec_spill_helper(CodeBuffer *cbuf, bool do_size, bool is_load, int stack_offset, int reg, uint ireg, outputStream* st);
-
-static int vec_stack_to_stack_helper(CodeBuffer *cbuf, bool do_size, int src_offset, int dst_offset, uint ireg, outputStream* st) {
-  int calc_size = 0;
-  int src_offset_size = (src_offset == 0) ? 0 : ((src_offset < 0x80) ? 1 : 4);
-  int dst_offset_size = (dst_offset == 0) ? 0 : ((dst_offset < 0x80) ? 1 : 4);
-  switch (ireg) {
-  case Op_VecS:
-    calc_size = 3+src_offset_size + 3+dst_offset_size;
-    break;
-  case Op_VecD: {
-    calc_size = 3+src_offset_size + 3+dst_offset_size;
-    int tmp_src_offset = src_offset + 4;
-    int tmp_dst_offset = dst_offset + 4;
-    src_offset_size = (tmp_src_offset == 0) ? 0 : ((tmp_src_offset < 0x80) ? 1 : 4);
-    dst_offset_size = (tmp_dst_offset == 0) ? 0 : ((tmp_dst_offset < 0x80) ? 1 : 4);
-    calc_size += 3+src_offset_size + 3+dst_offset_size;
-    break;
-  }
-  case Op_VecX:
-  case Op_VecY:
-  case Op_VecZ:
-    calc_size = 6 + 6 + 5+src_offset_size + 5+dst_offset_size;
-    break;
-  default:
-    ShouldNotReachHere();
-  }
-  if (cbuf) {
-    MacroAssembler _masm(cbuf);
-    int offset = __ offset();
-    switch (ireg) {
-    case Op_VecS:
-      __ pushl(Address(rsp, src_offset));
-      __ popl (Address(rsp, dst_offset));
-      break;
-    case Op_VecD:
-      __ pushl(Address(rsp, src_offset));
-      __ popl (Address(rsp, dst_offset));
-      __ pushl(Address(rsp, src_offset + 4));
-      __ popl (Address(rsp, dst_offset + 4));
-      break;
-    case Op_VecX:
-      __ movdqu(Address(rsp, -16), xmm0);
-      __ movdqu(xmm0, Address(rsp, src_offset));
-      __ movdqu(Address(rsp, dst_offset), xmm0);
-      __ movdqu(xmm0, Address(rsp, -16));
-      break;
-    case Op_VecY:
-      __ vmovdqu(Address(rsp, -32), xmm0);
-      __ vmovdqu(xmm0, Address(rsp, src_offset));
-      __ vmovdqu(Address(rsp, dst_offset), xmm0);
-      __ vmovdqu(xmm0, Address(rsp, -32));
-      break;
-    case Op_VecZ:
-      __ evmovdquq(Address(rsp, -64), xmm0, 2);
-      __ evmovdquq(xmm0, Address(rsp, src_offset), 2);
-      __ evmovdquq(Address(rsp, dst_offset), xmm0, 2);
-      __ evmovdquq(xmm0, Address(rsp, -64), 2);
-      break;
-    default:
-      ShouldNotReachHere();
-    }
-    int size = __ offset() - offset;
-    return size;
-  }
-  return calc_size;
-}
-
-uint MachSpillCopyNode::implementation( CodeBuffer *cbuf, PhaseRegAlloc *ra_, bool do_size, outputStream* st ) const {
-  // Get registers to move
-  OptoReg::Name src_second = ra_->get_reg_second(in(1));
-  OptoReg::Name src_first = ra_->get_reg_first(in(1));
-  OptoReg::Name dst_second = ra_->get_reg_second(this );
-  OptoReg::Name dst_first = ra_->get_reg_first(this );
-
-  enum RC src_second_rc = rc_class(src_second);
-  enum RC src_first_rc = rc_class(src_first);
-  enum RC dst_second_rc = rc_class(dst_second);
-  enum RC dst_first_rc = rc_class(dst_first);
-
-  // Generate spill code!
-  int size = 0;
-
-  if (src_first == dst_first && src_second == dst_second )
-    return size;            // Self copy, no move
-
-  if (bottom_type()->isa_vect() != NULL) {
-    uint ireg = ideal_reg();
-    if (src_first_rc == rc_stack && dst_first_rc == rc_stack) {
-      // mem -> mem
-      int src_offset = ra_->reg2offset(src_first);
-      int dst_offset = ra_->reg2offset(dst_first);
-      return vec_stack_to_stack_helper(cbuf, do_size, src_offset, dst_offset, ireg, st);
-    } else if (src_first_rc == rc_xmm && dst_first_rc == rc_xmm) {
-      return vec_mov_helper(cbuf, do_size, src_first, dst_first, src_second, dst_second, ireg, st);
-    } else if (src_first_rc == rc_xmm && dst_first_rc == rc_stack) {
-      int stack_offset = ra_->reg2offset(dst_first);
-      return vec_spill_helper(cbuf, do_size, false, stack_offset, src_first, ireg, st);
-    } else if (src_first_rc == rc_stack && dst_first_rc == rc_xmm) {
-      int stack_offset = ra_->reg2offset(src_first);
-      return vec_spill_helper(cbuf, do_size, true,  stack_offset, dst_first, ireg, st);
-    } else {
-      ShouldNotReachHere();
-    }
-  }
-
-  // --------------------------------------
-  // Check for mem-mem move.  push/pop to move.
-  if (src_first_rc == rc_stack && dst_first_rc == rc_stack) {
-    if (src_second == dst_first ) { // overlapping stack copy ranges
-      size = impl_helper(cbuf,do_size,true ,ra_->reg2offset(src_second),ESI_num,0xFF,"PUSH  ",size, st);
-      size = impl_helper(cbuf,do_size,false,ra_->reg2offset(dst_second),EAX_num,0x8F,"POP   ",size, st);
-      src_second_rc = dst_second_rc = rc_bad;  // flag as already moved the second bits
-    }
-    // move low bits
-    size = impl_helper(cbuf,do_size,true ,ra_->reg2offset(src_first),ESI_num,0xFF,"PUSH  ",size, st);
-    size = impl_helper(cbuf,do_size,false,ra_->reg2offset(dst_first),EAX_num,0x8F,"POP   ",size, st);
-    if (src_second_rc == rc_stack && dst_second_rc == rc_stack ) { // mov second bits
-      size = impl_helper(cbuf,do_size,true ,ra_->reg2offset(src_second),ESI_num,0xFF,"PUSH  ",size, st);
-      size = impl_helper(cbuf,do_size,false,ra_->reg2offset(dst_second),EAX_num,0x8F,"POP   ",size, st);
-    }
-    return size;
-  }
-
-  // --------------------------------------
-  // Check for integer reg-reg copy
-  if (src_first_rc == rc_int && dst_first_rc == rc_int)
-    size = impl_mov_helper(cbuf,do_size,src_first,dst_first,size, st);
-
-  // Check for integer store
-  if (src_first_rc == rc_int && dst_first_rc == rc_stack)
-    size = impl_helper(cbuf,do_size,false,ra_->reg2offset(dst_first),src_first,0x89,"MOV ",size, st);
-
-  // Check for integer load
-  if (dst_first_rc == rc_int && src_first_rc == rc_stack)
-    size = impl_helper(cbuf,do_size,true ,ra_->reg2offset(src_first),dst_first,0x8B,"MOV ",size, st);
-
-  // Check for integer reg-xmm reg copy
-  if (src_first_rc == rc_int && dst_first_rc == rc_xmm) {
-    return impl_movgpr2x_helper(cbuf,do_size,src_first,dst_first,src_second, dst_second, size, st);
-  }
-  // --------------------------------------
-  // Check for float reg-reg copy
-  if (src_first_rc == rc_float && dst_first_rc == rc_float) {
-    if (cbuf) {
-      // Note the mucking with the register encode to compensate for the 0/1
-      // indexing issue mentioned in a comment in the reg_def sections
-      // for FPR registers many lines above here.
-
-      if (src_first != FPR1L_num) {
-        emit_opcode  (*cbuf, 0xD9);           // FLD    ST(i)
-        emit_d8      (*cbuf, 0xC0 + Matcher::_regEncode[src_first] - 1);
-        emit_opcode  (*cbuf, 0xDD);           // FSTP   ST(i)
-        emit_d8      (*cbuf, 0xD8 + Matcher::_regEncode[dst_first]);
-     } else {
-        emit_opcode  (*cbuf, 0xDD);           // FST    ST(i)
-        emit_d8      (*cbuf, 0xD0 + Matcher::_regEncode[dst_first] - 1);
-     }
-    }
-    return size + ((src_first != FPR1L_num) ? 2+2 : 2);
-  }
-
-  // Check for float store
-  if (src_first_rc == rc_float && dst_first_rc == rc_stack) {
-    return impl_fp_store_helper(cbuf,do_size,src_first,src_second,dst_first,dst_second,ra_->reg2offset(dst_first),size, st);
-  }
-
-  // Check for float load
-  if (dst_first_rc == rc_float && src_first_rc == rc_stack) {
-    int offset = ra_->reg2offset(src_first);
-    const char *op_str;
-    int op;
-    if (src_first + 1 == src_second && dst_first + 1 == dst_second ) { // double load?
-      op_str = "FLD_D";
-      op = 0xDD;
-    } else {                   // 32-bit load
-      op_str = "FLD_S";
-      op = 0xD9;
-    }
-    if (cbuf) {
-      emit_opcode  (*cbuf, op);
-      encode_RegMem(*cbuf, 0x0, ESP_enc, 0x4, 0, offset, relocInfo::none);
-      emit_opcode  (*cbuf, 0xDD);           // FSTP   ST(i)
-      emit_d8      (*cbuf, 0xD8+Matcher::_regEncode[dst_first] );
-    }
-    int offset_size = (offset == 0) ? 0 : ((offset <= 127) ? 1 : 4);
-    return size + 3 + offset_size + 2;
-  }
-
-  // Check for xmm reg-reg copy
-  if (src_first_rc == rc_xmm && dst_first_rc == rc_xmm) {
-    return impl_movx_helper(cbuf,do_size,src_first,dst_first,src_second, dst_second, size, st);
-  }
-
-  // Check for xmm reg-integer reg copy
-  if (src_first_rc == rc_xmm && dst_first_rc == rc_int) {
-    return impl_movx2gpr_helper(cbuf,do_size,src_first,dst_first,src_second, dst_second, size, st);
-  }
-
-  // Check for xmm store
-  if (src_first_rc == rc_xmm && dst_first_rc == rc_stack) {
-    return impl_x_helper(cbuf,do_size,false,ra_->reg2offset(dst_first),src_first, src_second, size, st);
-  }
-
-  // Check for float xmm load
-  if (dst_first_rc == rc_xmm && src_first_rc == rc_stack) {
-    return impl_x_helper(cbuf,do_size,true ,ra_->reg2offset(src_first),dst_first, dst_second, size, st);
-  }
-
-  // Copy from float reg to xmm reg
-  if (dst_first_rc == rc_xmm && src_first_rc == rc_float) {
-    // copy to the top of stack from floating point reg
-    // and use LEA to preserve flags
-    if (cbuf) {
-      emit_opcode(*cbuf,0x8D);  // LEA  ESP,[ESP-8]
-      emit_rm(*cbuf, 0x1, ESP_enc, 0x04);
-      emit_rm(*cbuf, 0x0, 0x04, ESP_enc);
-      emit_d8(*cbuf,0xF8);
-    }
-    size += 4;
-
-    size = impl_fp_store_helper(cbuf,do_size,src_first,src_second,dst_first,dst_second,0,size, st);
-
-    // Copy from the temp memory to the xmm reg.
-    size = impl_x_helper(cbuf,do_size,true ,0,dst_first, dst_second, size, st);
-
-    if (cbuf) {
-      emit_opcode(*cbuf,0x8D);  // LEA  ESP,[ESP+8]
-      emit_rm(*cbuf, 0x1, ESP_enc, 0x04);
-      emit_rm(*cbuf, 0x0, 0x04, ESP_enc);
-      emit_d8(*cbuf,0x08);
-    }
-    size += 4;
-    return size;
-  }
-
-  // --------------------------------------------------------------------
-  // Check for second bits still needing moving.
-  if (src_second == dst_second )
-    return size;               // Self copy; no move
-
-  // Check for second word int-int move
-  if (src_second_rc == rc_int && dst_second_rc == rc_int )
-    return impl_mov_helper(cbuf,do_size,src_second,dst_second,size, st);
-
-  // Check for second word integer store
-  if (src_second_rc == rc_int && dst_second_rc == rc_stack )
-    return impl_helper(cbuf,do_size,false,ra_->reg2offset(dst_second),src_second,0x89,"MOV ",size, st);
-
-  // Check for second word integer load
-  if (dst_second_rc == rc_int && src_second_rc == rc_stack )
-    return impl_helper(cbuf,do_size,true ,ra_->reg2offset(src_second),dst_second,0x8B,"MOV ",size, st);
-
-  Unimplemented();
-  return 0; // Mute compiler
-}
-
-void MachSpillCopyNode::emit(CodeBuffer &cbuf, PhaseRegAlloc *ra_) const {
-  implementation( &cbuf, ra_, false, NULL );
-}
-
-uint MachSpillCopyNode::size(PhaseRegAlloc *ra_) const {
-  return implementation( NULL, ra_, true, NULL );
-}
-
 //=============================================================================
 
 void BoxLockNode::emit(CodeBuffer &cbuf, PhaseRegAlloc *ra_) const {
@@ -1170,7 +901,7 @@ void Matcher::pd_implicit_null_fixup(MachNode *node, uint idx) {
     // Does not use EBP as address register, use { EDX, EBX, EDI, ESI}
     return;
   default:
-    assert(false, "unexpected memory operand in pd_implicit_null_fixup()");
+    ShouldNotReachHere();
     return;
   }
   node->_opnds[opcnt] = new_memory;
@@ -1475,9 +1206,6 @@ encode %{
     MacroAssembler masm(&cbuf);
     int start = masm.offset();
     if (UseSSE >= 2) {
-      if (VerifyFPU) {
-        masm.verify_FPU(0, "must be empty in SSE2+ mode");
-      }
     } else {
       // External c_calling_convention expects the FPU stack to be 'clean'.
       // Compiled code leaves it dirty.  Do cleanup now.
@@ -1488,11 +1216,7 @@ encode %{
     }
   %}
 
-  enc_class Verify_FPU_For_Leaf %{
-    if (VerifyFPU) {
-      MacroAssembler masm(&cbuf);
-      masm.verify_FPU( -3, "Returning from Runtime Leaf call");
-    }
+  enc_class Verify_FPU_For_Leaf %{
   %}
 
   enc_class Java_To_Runtime (method meth) %{    // CALL Java_To_Runtime, Java_To_Runtime_Leaf

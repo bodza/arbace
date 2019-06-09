@@ -14,7 +14,6 @@ inline frame::frame() {
   _unextended_sp = NULL;
   _fp = NULL;
   _cb = NULL;
-  _deopt_state = unknown;
 }
 
 inline void frame::init(intptr_t* sp, intptr_t* fp, address pc) {
@@ -23,15 +22,6 @@ inline void frame::init(intptr_t* sp, intptr_t* fp, address pc) {
   _fp = fp;
   _pc = pc;
   _cb = CodeCache::find_blob(pc);
-  adjust_unextended_sp();
-
-  address original_pc = CompiledMethod::get_deopt_original_pc(this);
-  if (original_pc != NULL) {
-    _pc = original_pc;
-    _deopt_state = is_deoptimized;
-  } else {
-    _deopt_state = not_deoptimized;
-  }
 }
 
 inline frame::frame(intptr_t* sp, intptr_t* fp, address pc) {
@@ -44,19 +34,6 @@ inline frame::frame(intptr_t* sp, intptr_t* unextended_sp, intptr_t* fp, address
   _fp = fp;
   _pc = pc;
   _cb = CodeCache::find_blob(pc);
-  adjust_unextended_sp();
-
-  address original_pc = CompiledMethod::get_deopt_original_pc(this);
-  if (original_pc != NULL) {
-    _pc = original_pc;
-    _deopt_state = is_deoptimized;
-  } else {
-    if (_cb->is_deoptimization_stub()) {
-      _deopt_state = is_deoptimized;
-    } else {
-      _deopt_state = not_deoptimized;
-    }
-  }
 }
 
 inline frame::frame(intptr_t* sp, intptr_t* fp) {
@@ -72,20 +49,8 @@ inline frame::frame(intptr_t* sp, intptr_t* fp) {
   // of the pc we find here. AsyncGetCallTrace -> pd_get_top_frame_for_signal_handler
   // -> pd_last_frame should use a specialized version of pd_last_frame which could
   // call a specialized frame constructor instead of this one.
-  // Then we could use the assert below. However this assert is of somewhat dubious
-  // value.
-  // UPDATE: this constructor is only used by trace_method_handle_stub() now.
 
   _cb = CodeCache::find_blob(_pc);
-  adjust_unextended_sp();
-
-  address original_pc = CompiledMethod::get_deopt_original_pc(this);
-  if (original_pc != NULL) {
-    _pc = original_pc;
-    _deopt_state = is_deoptimized;
-  } else {
-    _deopt_state = not_deoptimized;
-  }
 }
 
 // Accessors

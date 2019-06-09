@@ -129,43 +129,43 @@ class LinearScan : public CompilationResourceObj {
   static ConstantIntValue*    _int_2_scope_value;
 
   // accessors
-  IR*           ir() const                       { return _ir; }
-  Compilation*  compilation() const              { return _compilation; }
-  LIRGenerator* gen() const                      { return _gen; }
-  FrameMap*     frame_map() const                { return _frame_map; }
+  IR*           ir()                       const { return _ir; }
+  Compilation*  compilation()              const { return _compilation; }
+  LIRGenerator* gen()                      const { return _gen; }
+  FrameMap*     frame_map()                const { return _frame_map; }
 
   // unified bailout support
-  void          bailout(const char* msg) const   { compilation()->bailout(msg); }
-  bool          bailed_out() const               { return compilation()->bailed_out(); }
+  void          bailout(const char* msg)   const { compilation()->bailout(msg); }
+  bool          bailed_out()               const { return compilation()->bailed_out(); }
 
   // access to block list (sorted in linear scan order)
-  int           block_count() const              { return _cached_blocks.length(); }
-  BlockBegin*   block_at(int idx) const          { return _cached_blocks.at(idx); }
+  int           block_count()              const { return _cached_blocks.length(); }
+  BlockBegin*   block_at(int idx)          const { return _cached_blocks.at(idx); }
 
-  int           num_virtual_regs() const         { return _num_virtual_regs; }
+  int           num_virtual_regs()         const { return _num_virtual_regs; }
   // size of live_in and live_out sets of BasicBlocks (BitMap needs rounded size for iteration)
-  int           live_set_size() const            { return align_up(_num_virtual_regs, BitsPerWord); }
-  bool          has_fpu_registers() const        { return _has_fpu_registers; }
-  int           num_loops() const                { return ir()->num_loops(); }
+  int           live_set_size()            const { return align_up(_num_virtual_regs, BitsPerWord); }
+  bool          has_fpu_registers()        const { return _has_fpu_registers; }
+  int           num_loops()                const { return ir()->num_loops(); }
   bool          is_interval_in_loop(int interval, int loop) const { return _interval_in_loop.at(interval, loop); }
 
   // handling of fpu stack allocation (platform dependent, needed for debug information generation)
 #ifdef X86
   FpuStackAllocator* _fpu_stack_allocator;
-  bool use_fpu_stack_allocation() const          { return UseSSE < 2 && has_fpu_registers(); }
+  bool use_fpu_stack_allocation()          const { return UseSSE < 2 && has_fpu_registers(); }
 #else
-  bool use_fpu_stack_allocation() const          { return false; }
+  bool use_fpu_stack_allocation()          const { return false; }
 #endif
 
   // access to interval list
-  int           interval_count() const           { return _intervals.length(); }
-  Interval*     interval_at(int reg_num) const   { return _intervals.at(reg_num); }
+  int           interval_count()           const { return _intervals.length(); }
+  Interval*     interval_at(int reg_num)   const { return _intervals.at(reg_num); }
 
   IntervalList* new_intervals_from_allocation() const { return _new_intervals_from_allocation; }
 
   // access to LIR_Ops and Blocks indexed by op_id
-  int          max_lir_op_id() const                { return (_lir_ops.length() - 1) << 1; }
-  LIR_Op*      lir_op_with_id(int op_id) const      { return _lir_ops.at(op_id >> 1); }
+  int          max_lir_op_id()                const { return (_lir_ops.length() - 1) << 1; }
+  LIR_Op*      lir_op_with_id(int op_id)      const { return _lir_ops.at(op_id >> 1); }
   BlockBegin*  block_of_op_with_id(int op_id) const { return _block_of_op.at(op_id >> 1); }
 
   bool is_block_begin(int op_id)                    { return op_id == 0 || block_of_op_with_id(op_id) != block_of_op_with_id(op_id - 1); }
@@ -299,7 +299,7 @@ class LinearScan : public CompilationResourceObj {
 
   // methods used for oop map computation
   IntervalWalker* init_compute_oop_maps();
-  OopMap*         compute_oop_map(IntervalWalker* iw, LIR_Op* op, CodeEmitInfo* info, bool is_call_site);
+  OopMap*         compute_oop_map(IntervalWalker* iw, LIR_Op* op, CodeEmitInfo* info);
   void            compute_oop_map(IntervalWalker* iw, const LIR_OpVisitState &visitor, LIR_Op* op);
 
   // methods used for debug information computation
@@ -336,11 +336,11 @@ class LinearScan : public CompilationResourceObj {
   LinearScan(IR* ir, LIRGenerator* gen, FrameMap* frame_map);
 
   // main entry function: perform linear scan register allocation
-  void             do_linear_scan();
+  void do_linear_scan();
 
   // accessors used by Compilation
-  int         max_spills()  const { return _max_spills; }
-  int         num_calls() const   { return _num_calls; }
+  int  max_spills() const { return _max_spills; }
+  int  num_calls()  const { return _num_calls; }
 
   // entry functions for printing
 };
@@ -404,7 +404,7 @@ class Range : public CompilationResourceObj {
   Range*           _next;      // linear list of Ranges
 
   // used only by class Interval, so hide them
-  bool             intersects(Range* r) const    { return intersects_at(r) != -1; }
+  bool             intersects(Range* r)    const { return intersects_at(r) != -1; }
   int              intersects_at(Range* r) const;
 
  public:
@@ -413,9 +413,9 @@ class Range : public CompilationResourceObj {
   static void      initialize(Arena* arena);
   static Range*    end()                         { return _end; }
 
-  int              from() const                  { return _from; }
-  int              to()   const                  { return _to; }
-  Range*           next() const                  { return _next; }
+  int              from()                  const { return _from; }
+  int              to()                    const { return _to; }
+  Range*           next()                  const { return _next; }
   void             set_from(int from)            { _from = from; }
   void             set_to(int to)                { _to = to; }
   void             set_next(Range* next)         { _next = next; }
@@ -479,60 +479,60 @@ class Interval : public CompilationResourceObj {
   static Interval* end()                         { return _end; }
 
   // accessors
-  int              reg_num() const               { return _reg_num; }
+  int              reg_num()               const { return _reg_num; }
   void             set_reg_num(int r)            { _reg_num = r; }
-  BasicType        type() const                  { return _type; }
+  BasicType        type()                  const { return _type; }
   void             set_type(BasicType type)      { _type = type; }
 
-  Range*           first() const                 { return _first; }
-  int              from() const                  { return _first->from(); }
+  Range*           first()                 const { return _first; }
+  int              from()                  const { return _first->from(); }
   int              to()                          { if (_cached_to == -1) _cached_to = calc_to();
   return _cached_to; }
-  int              num_use_positions() const     { return _use_pos_and_kinds.length() / 2; }
+  int              num_use_positions()     const { return _use_pos_and_kinds.length() / 2; }
 
-  Interval*        next() const                  { return _next; }
+  Interval*        next()                  const { return _next; }
   Interval**       next_addr()                   { return &_next; }
   void             set_next(Interval* next)      { _next = next; }
 
-  int              assigned_reg() const          { return _assigned_reg; }
-  int              assigned_regHi() const        { return _assigned_regHi; }
+  int              assigned_reg()          const { return _assigned_reg; }
+  int              assigned_regHi()        const { return _assigned_regHi; }
   void             assign_reg(int reg)           { _assigned_reg = reg; _assigned_regHi = LinearScan::any_reg; }
   void             assign_reg(int reg,int regHi) { _assigned_reg = reg; _assigned_regHi = regHi; }
 
   Interval*        register_hint(bool search_split_child = true) const; // calculation needed
   void             set_register_hint(Interval* i) { _register_hint = i; }
 
-  int              state() const                 { return _state; }
+  int              state()                 const { return _state; }
   void             set_state(IntervalState s)    { _state = s; }
 
   // access to split parent and split children
-  bool             is_split_parent() const       { return _split_parent == this; }
-  bool             is_split_child() const        { return _split_parent != this; }
-  Interval*        split_parent() const          { return _split_parent; }
+  bool             is_split_parent()       const { return _split_parent == this; }
+  bool             is_split_child()        const { return _split_parent != this; }
+  Interval*        split_parent()          const { return _split_parent; }
   Interval*        split_child_at_op_id(int op_id, LIR_OpVisitState::OprMode mode);
   Interval*        split_child_before_op_id(int op_id);
   bool             split_child_covers(int op_id, LIR_OpVisitState::OprMode mode);
 
   // information stored in split parent, but available for all children
-  int              canonical_spill_slot() const            { return split_parent()->_canonical_spill_slot; }
+  int              canonical_spill_slot()            const { return split_parent()->_canonical_spill_slot; }
   void             set_canonical_spill_slot(int slot)      { split_parent()->_canonical_spill_slot = slot; }
-  Interval*        current_split_child() const             { return split_parent()->_current_split_child; }
+  Interval*        current_split_child()             const { return split_parent()->_current_split_child; }
   void             make_current_split_child()              { split_parent()->_current_split_child = this; }
 
-  bool             insert_move_when_activated() const      { return _insert_move_when_activated; }
+  bool             insert_move_when_activated()      const { return _insert_move_when_activated; }
   void             set_insert_move_when_activated(bool b)  { _insert_move_when_activated = b; }
 
   // for spill optimization
-  IntervalSpillState spill_state() const         { return split_parent()->_spill_state; }
-  int              spill_definition_pos() const  { return split_parent()->_spill_definition_pos; }
+  IntervalSpillState spill_state()         const { return split_parent()->_spill_state; }
+  int              spill_definition_pos()  const { return split_parent()->_spill_definition_pos; }
   void             set_spill_state(IntervalSpillState state) { split_parent()->_spill_state = state; }
   void             set_spill_definition_pos(int pos) { split_parent()->_spill_definition_pos = pos; }
   // returns true if this interval has a shadow copy on the stack that is always correct
-  bool             always_in_memory() const      { return split_parent()->_spill_state == storeAtDefinition || split_parent()->_spill_state == startInMemory; }
+  bool             always_in_memory()      const { return split_parent()->_spill_state == storeAtDefinition || split_parent()->_spill_state == startInMemory; }
 
   // caching of values that take time to compute and are used multiple times
-  LIR_Opr          cached_opr() const            { return _cached_opr; }
-  VMReg            cached_vm_reg() const         { return _cached_vm_reg; }
+  LIR_Opr          cached_opr()            const { return _cached_opr; }
+  VMReg            cached_vm_reg()         const { return _cached_vm_reg; }
   void             set_cached_opr(LIR_Opr opr)   { _cached_opr = opr; }
   void             set_cached_vm_reg(VMReg reg)  { _cached_vm_reg = reg; }
 
@@ -552,20 +552,20 @@ class Interval : public CompilationResourceObj {
   // test intersection
   bool   covers(int op_id, LIR_OpVisitState::OprMode mode) const;
   bool   has_hole_between(int from, int to);
-  bool   intersects(Interval* i) const           { return _first->intersects(i->_first); }
-  int    intersects_at(Interval* i) const        { return _first->intersects_at(i->_first); }
+  bool   intersects(Interval* i)           const { return _first->intersects(i->_first); }
+  int    intersects_at(Interval* i)        const { return _first->intersects_at(i->_first); }
 
   // range iteration
   void   rewind_range()                          { _current = _first; }
   void   next_range()                            { _current = _current->next(); }
-  int    current_from() const                    { return _current->from(); }
-  int    current_to() const                      { return _current->to(); }
-  bool   current_at_end() const                  { return _current == Range::end(); }
+  int    current_from()                    const { return _current->from(); }
+  int    current_to()                      const { return _current->to(); }
+  bool   current_at_end()                  const { return _current == Range::end(); }
   bool   current_intersects(Interval* it)        { return _current->intersects(it->_current); };
   int    current_intersects_at(Interval* it)     { return _current->intersects_at(it->_current); };
 
   // printing
-  void print(outputStream* out = tty) const      { };
+  void print(outputStream* out = tty)      const { };
 };
 
 class IntervalWalker : public CompilationResourceObj {
@@ -581,12 +581,12 @@ class IntervalWalker : public CompilationResourceObj {
   int              _current_position;            // the current position (intercept point through the intervals)
   IntervalKind     _current_kind;                // and whether it is fixed_kind or any_kind.
 
-  Compilation*     compilation() const               { return _compilation; }
-  LinearScan*      allocator() const                 { return _allocator; }
+  Compilation*     compilation()               const { return _compilation; }
+  LinearScan*      allocator()                 const { return _allocator; }
 
   // unified bailout support
-  void             bailout(const char* msg) const    { compilation()->bailout(msg); }
-  bool             bailed_out() const                { return compilation()->bailed_out(); }
+  void             bailout(const char* msg)    const { compilation()->bailout(msg); }
+  bool             bailed_out()                const { return compilation()->bailed_out(); }
 
   void check_bounds(IntervalKind kind) { }
 
@@ -602,8 +602,8 @@ class IntervalWalker : public CompilationResourceObj {
   void remove_from_list(Interval* i);
 
   void next_interval();
-  Interval*        current() const               { return _current; }
-  IntervalKind     current_kind() const          { return _current_kind; }
+  Interval*        current()               const { return _current; }
+  IntervalKind     current_kind()          const { return _current_kind; }
 
   void walk_to(IntervalState state, int from);
 
@@ -652,8 +652,8 @@ class LinearScanWalker : public IntervalWalker {
   MoveResolver     _move_resolver;   // for ordering spill moves
 
   // accessors mapped to same functions in class LinearScan
-  int         block_count() const      { return allocator()->block_count(); }
-  BlockBegin* block_at(int idx) const  { return allocator()->block_at(idx); }
+  int         block_count()      const { return allocator()->block_count(); }
+  BlockBegin* block_at(int idx)  const { return allocator()->block_at(idx); }
   BlockBegin* block_of_op_with_id(int op_id) const { return allocator()->block_of_op_with_id(op_id); }
 
   void init_use_lists(bool only_process_use_pos);

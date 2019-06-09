@@ -362,11 +362,11 @@ class DumpWriter : public StackObj {
   char* _error;   // error message when I/O fails
 
   void set_file_descriptor(int fd)              { _fd = fd; }
-  int file_descriptor() const                   { return _fd; }
+  int file_descriptor()                   const { return _fd; }
 
-  char* buffer() const                          { return _buffer; }
-  size_t buffer_size() const                    { return _size; }
-  size_t position() const                       { return _pos; }
+  char* buffer()                          const { return _buffer; }
+  size_t buffer_size()                    const { return _size; }
+  size_t position()                       const { return _pos; }
   void set_position(size_t pos)                 { _pos = pos; }
 
   void set_error(const char* error)             { _error = (char*)os::strdup(error); }
@@ -379,24 +379,24 @@ class DumpWriter : public StackObj {
   ~DumpWriter();
 
   void close();
-  bool is_open() const                  { return file_descriptor() >= 0; }
+  bool is_open()                  const { return file_descriptor() >= 0; }
   void flush();
 
-  jlong dump_start() const                      { return _dump_start; }
+  jlong dump_start()                      const { return _dump_start; }
   void set_dump_start(jlong pos);
   julong current_record_length();
 
   // total number of bytes written to the disk
-  julong bytes_written() const          { return _bytes_written; }
+  julong bytes_written()          const { return _bytes_written; }
 
   // adjust the number of bytes written to disk (used to keep the count
   // of the number of bytes written in case of rewrites)
   void adjust_bytes_written(jlong n)    { _bytes_written += n; }
 
   // number of (buffered) bytes as yet unwritten to the dump file
-  size_t bytes_unwritten() const        { return position(); }
+  size_t bytes_unwritten()        const { return position(); }
 
-  char* error() const                   { return _error; }
+  char* error()                   const { return _error; }
 
   jlong current_offset();
   void seek_to_offset(jlong pos);
@@ -1204,7 +1204,7 @@ void DumperSupport::dump_stack_frame(DumpWriter* writer, int frame_serial_num, i
 class SymbolTableDumper : public SymbolClosure {
  private:
   DumpWriter* _writer;
-  DumpWriter* writer() const                { return _writer; }
+  DumpWriter* writer()                const { return _writer; }
  public:
   SymbolTableDumper(DumpWriter* writer)     { _writer = writer; }
   void do_symbol(Symbol** p);
@@ -1229,7 +1229,7 @@ class JNILocalsDumper : public OopClosure {
   DumpWriter* _writer;
   u4 _thread_serial_num;
   int _frame_num;
-  DumpWriter* writer() const                { return _writer; }
+  DumpWriter* writer()                const { return _writer; }
  public:
   JNILocalsDumper(DumpWriter* writer, u4 thread_serial_num) {
     _writer = writer;
@@ -1257,7 +1257,7 @@ void JNILocalsDumper::do_oop(oop* obj_p) {
 class JNIGlobalsDumper : public OopClosure {
  private:
   DumpWriter* _writer;
-  DumpWriter* writer() const                { return _writer; }
+  DumpWriter* writer()                const { return _writer; }
 
  public:
   JNIGlobalsDumper(DumpWriter* writer) {
@@ -1286,7 +1286,7 @@ void JNIGlobalsDumper::do_oop(oop* obj_p) {
 class MonitorUsedDumper : public OopClosure {
  private:
   DumpWriter* _writer;
-  DumpWriter* writer() const                { return _writer; }
+  DumpWriter* writer()                const { return _writer; }
  public:
   MonitorUsedDumper(DumpWriter* writer) {
     _writer = writer;
@@ -1303,7 +1303,7 @@ class MonitorUsedDumper : public OopClosure {
 class StickyClassDumper : public KlassClosure {
  private:
   DumpWriter* _writer;
-  DumpWriter* writer() const                { return _writer; }
+  DumpWriter* writer()                const { return _writer; }
  public:
   StickyClassDumper(DumpWriter* writer) {
     _writer = writer;
@@ -1424,8 +1424,7 @@ class VM_HeapDumper : public VM_GC_Operation {
     if (oome) {
       // get OutOfMemoryError zero-parameter constructor
       InstanceKlass* oome_ik = SystemDictionary::OutOfMemoryError_klass();
-      _oome_constructor = oome_ik->find_method(vmSymbols::object_initializer_name(),
-                                                          vmSymbols::void_method_signature());
+      _oome_constructor = oome_ik->find_method(vmSymbols::object_initializer_name(), vmSymbols::void_method_signature());
       // get thread throwing OOME when generating the heap dump at OOME
       _oome_thread = JavaThread::current();
     } else {

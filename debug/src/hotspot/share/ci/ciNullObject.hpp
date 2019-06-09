@@ -24,7 +24,7 @@ public:
 
   // What kind of ciObject is this?
   bool is_null_object() const { return true; }
-  bool is_classless() const   { return true; }
+  bool is_classless()   const { return true; }
 
   // Get the distinguished instance of this klass.
   static ciNullObject* make();

@@ -339,7 +339,7 @@ address NativeMovRegMem::next_instruction_address() const {
   return ret;
 }
 
-int NativeMovRegMem::offset() const{
+int NativeMovRegMem::offset() const {
   int off = data_offset + instruction_start();
   u_char mod_rm = *(u_char*)(instruction_address() + 1);
   // nnnn(r12|rsp) isn't coded as simple mod/rm since that is

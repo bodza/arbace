@@ -265,325 +265,6 @@ int SharedRuntime::java_calling_convention(const BasicType *sig_bt, VMRegPair *r
   return align_up(stk_args, 2);
 }
 
-// Patch the callers callsite with entry to compiled code if it exists.
-static void patch_callers_callsite(MacroAssembler *masm) {
-  Label L;
-  __ ldr(rscratch1, Address(rmethod, in_bytes(Method::code_offset())));
-  __ cbz(rscratch1, L);
-
-  __ enter();
-  __ push_CPU_state();
-
-  // VM needs caller's callsite
-  // VM needs target method
-  // This needs to be a long call since we will relocate this adapter to
-  // the codeBuffer and it may not reach
-
-  __ mov(c_rarg0, rmethod);
-  __ mov(c_rarg1, lr);
-  __ lea(rscratch1, RuntimeAddress(CAST_FROM_FN_PTR(address, SharedRuntime::fixup_callers_callsite)));
-  __ blrt(rscratch1, 2, 0, 0);
-  __ maybe_isb();
-
-  __ pop_CPU_state();
-  // restore sp
-  __ leave();
-  __ bind(L);
-}
-
-static void gen_c2i_adapter(MacroAssembler *masm, int total_args_passed, int comp_args_on_stack, const BasicType *sig_bt, const VMRegPair *regs, Label& skip_fixup) {
-  // Before we get into the guts of the C2I adapter, see if we should be here
-  // at all.  We've come from compiled code and are attempting to jump to the
-  // interpreter, which means the caller made a static call to get here
-  // (vcalls always get a compiled target if there is one).  Check for a
-  // compiled target.  If there is one, we need to patch the caller's call.
-  patch_callers_callsite(masm);
-
-  __ bind(skip_fixup);
-
-  int words_pushed = 0;
-
-  // Since all args are passed on the stack, total_args_passed *
-  // NULL::stackElementSize is the space we need.
-
-  int extraspace = total_args_passed * NULL::stackElementSize;
-
-  __ mov(r13, sp);
-
-  // stack is aligned, keep it that way
-  extraspace = align_up(extraspace, 2*wordSize);
-
-  if (extraspace)
-    __ sub(sp, sp, extraspace);
-
-  // Now write the args into the outgoing interpreter space
-  for (int i = 0; i < total_args_passed; i++) {
-    if (sig_bt[i] == T_VOID) {
-      continue;
-    }
-
-    // offset to start parameters
-    int st_off   = (total_args_passed - i - 1) * NULL::stackElementSize;
-    int next_off = st_off - NULL::stackElementSize;
-
-    // Say 4 args:
-    // i   st_off
-    // 0   32 T_LONG
-    // 1   24 T_VOID
-    // 2   16 T_OBJECT
-    // 3    8 T_BOOL
-    // -    0 return address
-    //
-    // However to make thing extra confusing. Because we can fit a long/double in
-    // a single slot on a 64 bt vm and it would be silly to break them up, the interpreter
-    // leaves one slot empty and only stores to a single slot. In this case the
-    // slot that is occupied is the T_VOID slot. See I said it was confusing.
-
-    VMReg r_1 = regs[i].first();
-    VMReg r_2 = regs[i].second();
-    if (!r_1->is_valid()) {
-      continue;
-    }
-    if (r_1->is_stack()) {
-      // memory to memory use rscratch1
-      int ld_off = (r_1->reg2stack() * VMRegImpl::stack_slot_size
-                    + extraspace
-                    + words_pushed * wordSize);
-      if (!r_2->is_valid()) {
-        // sign extend??
-        __ ldrw(rscratch1, Address(sp, ld_off));
-        __ str(rscratch1, Address(sp, st_off));
-      } else {
-        __ ldr(rscratch1, Address(sp, ld_off));
-
-        // Two VMREgs|OptoRegs can be T_OBJECT, T_ADDRESS, T_DOUBLE, T_LONG
-        // T_DOUBLE and T_LONG use two slots in the interpreter
-        if (sig_bt[i] == T_LONG || sig_bt[i] == T_DOUBLE) {
-          // ld_off == LSW, ld_off+wordSize == MSW
-          // st_off == MSW, next_off == LSW
-          __ str(rscratch1, Address(sp, next_off));
-        } else {
-          __ str(rscratch1, Address(sp, st_off));
-        }
-      }
-    } else if (r_1->is_Register()) {
-      Register r = r_1->as_Register();
-      if (!r_2->is_valid()) {
-        // must be only an int (or less ) so move only 32bits to slot
-        // why not sign extend??
-        __ str(r, Address(sp, st_off));
-      } else {
-        // Two VMREgs|OptoRegs can be T_OBJECT, T_ADDRESS, T_DOUBLE, T_LONG
-        // T_DOUBLE and T_LONG use two slots in the interpreter
-        if (sig_bt[i] == T_LONG || sig_bt[i] == T_DOUBLE) {
-          // long/double in gpr
-          __ str(r, Address(sp, next_off));
-        } else {
-          __ str(r, Address(sp, st_off));
-        }
-      }
-    } else {
-      if (!r_2->is_valid()) {
-        // only a float use just part of the slot
-        __ strs(r_1->as_FloatRegister(), Address(sp, st_off));
-      } else {
-        __ strd(r_1->as_FloatRegister(), Address(sp, next_off));
-      }
-    }
-  }
-
-  __ mov(esp, sp); // Interp expects args on caller's expression stack
-
-  __ ldr(rscratch1, Address(rmethod, in_bytes(Method::interpreter_entry_offset())));
-  __ br(rscratch1);
-}
-
-void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm, int total_args_passed, int comp_args_on_stack, const BasicType *sig_bt, const VMRegPair *regs) {
-  // Note: r13 contains the senderSP on entry. We must preserve it since
-  // we may do a i2c -> c2i transition if we lose a race where compiled
-  // code goes non-entrant while we get args ready.
-
-  // In addition we use r13 to locate all the interpreter args because
-  // we must align the stack to 16 bytes.
-
-  // Adapters are frameless.
-
-  // An i2c adapter is frameless because the *caller* frame, which is
-  // interpreted, routinely repairs its own esp, even if a callee has
-  // modified the stack pointer.  It also recalculates and aligns sp.
-
-  // A c2i adapter is frameless because the *callee* frame, which is
-  // interpreted, routinely repairs its caller's sp (from sender_sp,
-  // which is set up via the senderSP register).
-
-  // In other words, if *either* the caller or callee is interpreted, we can
-  // get the stack pointer repaired after a call.
-
-  // This is why c2i and i2c adapters cannot be indefinitely composed.
-  // In particular, if a c2i adapter were to somehow call an i2c adapter,
-  // both caller and callee would be compiled methods, and neither would
-  // clean up the stack pointer changes performed by the two adapters.
-  // If this happens, control eventually transfers back to the compiled
-  // caller, but with an uncorrected stack, causing delayed havoc.
-
-  // Cut-out for having no stack args.
-  int comp_words_on_stack = align_up(comp_args_on_stack*VMRegImpl::stack_slot_size, wordSize)>>LogBytesPerWord;
-  if (comp_args_on_stack) {
-    __ sub(rscratch1, sp, comp_words_on_stack * wordSize);
-    __ andr(sp, rscratch1, -16);
-  }
-
-  // Will jump to the compiled code just as if compiled code was doing it.
-  // Pre-load the register-jump target early, to schedule it better.
-  __ ldr(rscratch1, Address(rmethod, in_bytes(Method::from_compiled_offset())));
-
-  if (EnableJVMCI || false) {
-    // check if this call should be routed towards a specific entry point
-    __ ldr(rscratch2, Address(rthread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())));
-    Label no_alternative_target;
-    __ cbz(rscratch2, no_alternative_target);
-    __ mov(rscratch1, rscratch2);
-    __ str(zr, Address(rthread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())));
-    __ bind(no_alternative_target);
-  }
-
-  // Now generate the shuffle code.
-  for (int i = 0; i < total_args_passed; i++) {
-    if (sig_bt[i] == T_VOID) {
-      continue;
-    }
-
-    // Pick up 0, 1 or 2 words from SP+offset.
-
-    // Load in argument order going down.
-    int ld_off = (total_args_passed - i - 1) * NULL::stackElementSize;
-    // Point to interpreter value (vs. tag)
-    int next_off = ld_off - NULL::stackElementSize;
-    //
-    //
-    //
-    VMReg r_1 = regs[i].first();
-    VMReg r_2 = regs[i].second();
-    if (!r_1->is_valid()) {
-      continue;
-    }
-
-    if (r_1->is_stack()) {
-      // Convert stack slot to an SP offset (+ wordSize to account for return address )
-      int st_off = regs[i].first()->reg2stack()*VMRegImpl::stack_slot_size;
-      if (!r_2->is_valid()) {
-        // sign extend???
-        __ ldrsw(rscratch2, Address(esp, ld_off));
-        __ str(rscratch2, Address(sp, st_off));
-      } else {
-        //
-        // We are using two optoregs. This can be either T_OBJECT,
-        // T_ADDRESS, T_LONG, or T_DOUBLE the interpreter allocates
-        // two slots but only uses one for thr T_LONG or T_DOUBLE case
-        // So we must adjust where to pick up the data to match the
-        // interpreter.
-        //
-        // ... local[n] == MSW, local[n+1] == LSW however locals
-        // are accessed as negative so LSW is at LOW address
-
-        // ld_off is MSW so get LSW
-        const int offset = (sig_bt[i] == T_LONG || sig_bt[i] == T_DOUBLE) ? next_off : ld_off;
-        __ ldr(rscratch2, Address(esp, offset));
-        // st_off is LSW (i.e. reg.first())
-        __ str(rscratch2, Address(sp, st_off));
-      }
-    } else if (r_1->is_Register()) {  // Register argument
-      Register r = r_1->as_Register();
-      if (r_2->is_valid()) {
-        //
-        // We are using two VMRegs. This can be either T_OBJECT,
-        // T_ADDRESS, T_LONG, or T_DOUBLE the interpreter allocates
-        // two slots but only uses one for thr T_LONG or T_DOUBLE case
-        // So we must adjust where to pick up the data to match the
-        // interpreter.
-
-        const int offset = (sig_bt[i] == T_LONG || sig_bt[i] == T_DOUBLE) ? next_off : ld_off;
-
-        // this can be a misaligned move
-        __ ldr(r, Address(esp, offset));
-      } else {
-        // sign extend and use a full word?
-        __ ldrw(r, Address(esp, ld_off));
-      }
-    } else {
-      if (!r_2->is_valid()) {
-        __ ldrs(r_1->as_FloatRegister(), Address(esp, ld_off));
-      } else {
-        __ ldrd(r_1->as_FloatRegister(), Address(esp, next_off));
-      }
-    }
-  }
-
-  // 6243940 We might end up in handle_wrong_method if
-  // the callee is deoptimized as we race thru here. If that
-  // happens we don't want to take a safepoint because the
-  // caller frame will look interpreted and arguments are now
-  // "compiled" so it is much better to make this transition
-  // invisible to the stack walking code. Unfortunately if
-  // we try and find the callee by normal means a safepoint
-  // is possible. So we stash the desired callee in the thread
-  // and the vm will find there should this case occur.
-
-  __ str(rmethod, Address(rthread, JavaThread::callee_target_offset()));
-
-  __ br(rscratch1);
-}
-
-// ---------------------------------------------------------------
-AdapterHandlerEntry* SharedRuntime::generate_i2c2i_adapters(MacroAssembler *masm, int total_args_passed, int comp_args_on_stack, const BasicType *sig_bt, const VMRegPair *regs, AdapterFingerPrint* fingerprint) {
-  address i2c_entry = __ pc();
-  gen_i2c_adapter(masm, total_args_passed, comp_args_on_stack, sig_bt, regs);
-
-  address c2i_unverified_entry = __ pc();
-  Label skip_fixup;
-
-  Label ok;
-
-  Register holder = rscratch2;
-  Register receiver = j_rarg0;
-  Register tmp = r10;  // A call-clobbered register not used for arg passing
-
-  // -------------------------------------------------------------------------
-  // Generate a C2I adapter.  On entry we know rmethod holds the Method* during calls
-  // to the interpreter.  The args start out packed in the compiled layout.  They
-  // need to be unpacked into the interpreter layout.  This will almost always
-  // require some stack space.  We grow the current (compiled) stack, then repack
-  // the args.  We  finally end in a jump to the generic interpreter entry point.
-  // On exit from the interpreter, the interpreter will restore our SP (lest the
-  // compiled code, which relys solely on SP and not FP, get sick).
-
-  {
-    __ block_comment("c2i_unverified_entry {");
-    __ load_klass(rscratch1, receiver);
-    __ ldr(tmp, Address(holder, CompiledICHolder::holder_klass_offset()));
-    __ cmp(rscratch1, tmp);
-    __ ldr(rmethod, Address(holder, CompiledICHolder::holder_metadata_offset()));
-    __ br(Assembler::EQ, ok);
-    __ far_jump(RuntimeAddress(SharedRuntime::get_ic_miss_stub()));
-
-    __ bind(ok);
-    // Method might have been compiled since the call site was patched to
-    // interpreted; if that is the case treat it as a miss so we can get
-    // the call site corrected.
-    __ ldr(rscratch1, Address(rmethod, in_bytes(Method::code_offset())));
-    __ cbz(rscratch1, skip_fixup);
-    __ far_jump(RuntimeAddress(SharedRuntime::get_ic_miss_stub()));
-    __ block_comment("} c2i_unverified_entry");
-  }
-
-  address c2i_entry = __ pc();
-
-  gen_c2i_adapter(masm, total_args_passed, comp_args_on_stack, sig_bt, regs, skip_fixup);
-
-  __ flush();
-  return AdapterHandlerLibrary::new_entry(fingerprint, i2c_entry, c2i_entry, c2i_unverified_entry);
-}
-
 int SharedRuntime::c_calling_convention(const BasicType *sig_bt, VMRegPair *regs, VMRegPair *regs2, int total_args_passed) {
 // We return the amount of VMRegImpl stack slots we need to reserve for all
 // the arguments NOT counting out_preserve_stack_slots.
@@ -907,17 +588,17 @@ class ComputeMoveOrder: public StackObj {
     , _prev(NULL)
     , _processed(false) { Unimplemented(); }
 
-    VMRegPair src() const              { Unimplemented(); return _src; }
-    int src_id() const                 { Unimplemented(); return 0; }
-    int src_index() const              { Unimplemented(); return 0; }
-    VMRegPair dst() const              { Unimplemented(); return _src; }
+    VMRegPair src()              const { Unimplemented(); return _src; }
+    int src_id()                 const { Unimplemented(); return 0; }
+    int src_index()              const { Unimplemented(); return 0; }
+    VMRegPair dst()              const { Unimplemented(); return _src; }
     void set_dst(int i, VMRegPair dst) { Unimplemented(); }
-    int dst_index() const              { Unimplemented(); return 0; }
-    int dst_id() const                 { Unimplemented(); return 0; }
-    MoveOperation* next() const        { Unimplemented(); return 0; }
-    MoveOperation* prev() const        { Unimplemented(); return 0; }
+    int dst_index()              const { Unimplemented(); return 0; }
+    int dst_id()                 const { Unimplemented(); return 0; }
+    MoveOperation* next()        const { Unimplemented(); return 0; }
+    MoveOperation* prev()        const { Unimplemented(); return 0; }
     void set_processed()               { Unimplemented(); }
-    bool is_processed() const          { Unimplemented(); return 0; }
+    bool is_processed()          const { Unimplemented(); return 0; }
 
     // insert
     void break_cycle(VMRegPair temp_register) { Unimplemented(); }
@@ -951,75 +632,6 @@ static void rt_call(MacroAssembler* masm, address dest, int gpargs, int fpargs, 
   }
 }
 
-static void verify_oop_args(MacroAssembler* masm, const methodHandle& method, const BasicType* sig_bt, const VMRegPair* regs) {
-  Register temp_reg = r19;  // not part of any compiled calling seq
-  if (VerifyOops) {
-    for (int i = 0; i < method->size_of_parameters(); i++) {
-      if (sig_bt[i] == T_OBJECT || sig_bt[i] == T_ARRAY) {
-        VMReg r = regs[i].first();
-        if (r->is_stack()) {
-          __ ldr(temp_reg, Address(sp, r->reg2stack() * VMRegImpl::stack_slot_size));
-          __ verify_oop(temp_reg);
-        } else {
-          __ verify_oop(r->as_Register());
-        }
-      }
-    }
-  }
-}
-
-static void gen_special_dispatch(MacroAssembler* masm, const methodHandle& method, const BasicType* sig_bt, const VMRegPair* regs) {
-  verify_oop_args(masm, method, sig_bt, regs);
-  vmIntrinsics::ID iid = method->intrinsic_id();
-
-  // Now write the args into the outgoing interpreter space
-  bool     has_receiver   = false;
-  Register receiver_reg   = noreg;
-  int      member_arg_pos = -1;
-  Register member_reg     = noreg;
-  int      ref_kind       = MethodHandles::signature_polymorphic_intrinsic_ref_kind(iid);
-  if (ref_kind != 0) {
-    member_arg_pos = method->size_of_parameters() - 1;  // trailing MemberName argument
-    member_reg = r19;  // known to be free at this point
-    has_receiver = MethodHandles::ref_kind_has_receiver(ref_kind);
-  } else if (iid == vmIntrinsics::_invokeBasic) {
-    has_receiver = true;
-  } else {
-    fatal("unexpected intrinsic id %d", iid);
-  }
-
-  if (member_reg != noreg) {
-    // Load the member_arg into register, if necessary.
-    SharedRuntime::check_member_name_argument_is_last_argument(method, sig_bt, regs);
-    VMReg r = regs[member_arg_pos].first();
-    if (r->is_stack()) {
-      __ ldr(member_reg, Address(sp, r->reg2stack() * VMRegImpl::stack_slot_size));
-    } else {
-      // no data motion is needed
-      member_reg = r->as_Register();
-    }
-  }
-
-  if (has_receiver) {
-    VMReg r = regs[0].first();
-    if (r->is_stack()) {
-      // Porting note:  This assumes that compiled calling conventions always
-      // pass the receiver oop in a register.  If this is not true on some
-      // platform, pick a temp and load the receiver from stack.
-      fatal("receiver always in a register");
-      receiver_reg = r2;  // known to be free at this point
-      __ ldr(receiver_reg, Address(sp, r->reg2stack() * VMRegImpl::stack_slot_size));
-    } else {
-      // no data motion is needed
-      receiver_reg = r->as_Register();
-    }
-  }
-
-  // Figure out which address we are really jumping to:
-  MethodHandles::generate_method_handle_dispatch(masm, iid,
-                                                 receiver_reg, member_reg, /*for_compiler_entry:*/ true);
-}
-
 // ---------------------------------------------------------------------------
 // Generate a native wrapper for a given method.  The method takes arguments
 // in the Java compiled code convention, marshals them to the native
@@ -1050,27 +662,6 @@ static void gen_special_dispatch(MacroAssembler* masm, const methodHandle& metho
 //    return to caller
 //
 nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const methodHandle& method, int compile_id, BasicType* in_sig_bt, VMRegPair* in_regs, BasicType ret_type) {
-  if (method->is_method_handle_intrinsic()) {
-    vmIntrinsics::ID iid = method->intrinsic_id();
-    intptr_t start = (intptr_t)__ pc();
-    int vep_offset = ((intptr_t)__ pc()) - start;
-
-    // First instruction must be a nop as it may need to be patched on deoptimisation
-    __ nop();
-    gen_special_dispatch(masm, method, in_sig_bt, in_regs);
-    int frame_complete = ((intptr_t)__ pc()) - start;  // not complete, period
-    __ flush();
-    int stack_slots = SharedRuntime::out_preserve_stack_slots();  // no out slots at all, actually
-    return nmethod::new_native_nmethod(method,
-                                       compile_id,
-                                       masm->code(),
-                                       vep_offset,
-                                       frame_complete,
-                                       stack_slots / VMRegImpl::slots_per_word,
-                                       in_ByteSize(-1),
-                                       in_ByteSize(-1),
-                                       (OopMapSet*)NULL);
-  }
   bool is_critical_native = true;
   address native_func = method->critical_native_function();
   if (native_func == NULL) {
@@ -1263,7 +854,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
   Label hit;
   Label exception_pending;
 
-  __ verify_oop(receiver);
   __ cmp_klass(receiver, ic_reg, rscratch1);
   __ br(Assembler::EQ, hit);
 
@@ -1808,16 +1398,6 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm, const meth
   }
 
   return nm;
-}
-
-// this function returns the adjust size (in number of words) to a c2i adapter
-// activation for use during deoptimization
-int NULL::last_frame_adjust(int callee_parameters, int callee_locals) {
-  if (callee_locals < callee_parameters)
-    return 0;                   // No adjustment for negative locals
-  int diff = (callee_locals - callee_parameters) * NULL::stackElementWords;
-  // diff is counted in stack words
-  return align_up(diff, 2);
 }
 
 uint SharedRuntime::out_preserve_stack_slots() {

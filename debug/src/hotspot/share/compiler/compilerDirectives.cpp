@@ -61,7 +61,6 @@ void CompilerDirectives::print(outputStream* st) {
     st->print_cr(" c2 directives:");
     _c2_store->print(st);
   }
-  //---
 }
 
 void CompilerDirectives::finalize(outputStream* st) {

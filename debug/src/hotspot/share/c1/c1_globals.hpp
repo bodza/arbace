@@ -21,46 +21,6 @@
                  constraint, \
                  writeable) \
  \
-  /* Printing */ \
-  notproduct(bool, PrintC1Statistics, false, \
-          "Print Compiler1 statistics" ) \
- \
-  notproduct(bool, PrintInitialBlockList, false, \
-          "Print block list of BlockListBuilder") \
- \
-  notproduct(bool, PrintCFG, false, \
-          "Print control flow graph after each change") \
- \
-  notproduct(bool, PrintCFG0, false, \
-          "Print control flow graph after construction") \
- \
-  notproduct(bool, PrintCFG1, false, \
-          "Print control flow graph after optimizations") \
- \
-  notproduct(bool, PrintCFG2, false, \
-          "Print control flow graph before code generation") \
- \
-  notproduct(bool, PrintIRDuringConstruction, false, \
-          "Print IR as it's being constructed (helpful for debugging frontend)") \
- \
-  notproduct(bool, PrintPhiFunctions, false, \
-          "Print phi functions when they are created and simplified") \
- \
-  notproduct(bool, PrintIR, false, \
-          "Print full intermediate representation after each change") \
- \
-  notproduct(bool, PrintIR0, false, \
-          "Print full intermediate representation after construction") \
- \
-  notproduct(bool, PrintIR1, false, \
-          "Print full intermediate representation after optimizations") \
- \
-  notproduct(bool, PrintIR2, false, \
-          "Print full intermediate representation before code generation") \
- \
-  notproduct(bool, PrintSimpleStubs, false, \
-          "Print SimpleStubs") \
- \
   /* C1 optimizations */ \
  \
   develop(bool, UseC1Optimizations, true, \
@@ -75,26 +35,11 @@
   develop(bool, DoCEE, true, \
           "Do Conditional Expression Elimination to simplify CFG") \
  \
-  develop(bool, PrintCEE, false, \
-          "Print Conditional Expression Elimination") \
- \
   develop(bool, UseLocalValueNumbering, true, \
           "Use Local Value Numbering (embedded in GraphBuilder)") \
  \
-  develop(bool, UseGlobalValueNumbering, true, \
-          "Use Global Value Numbering (separate phase)") \
- \
   product(bool, UseLoopInvariantCodeMotion, true, \
           "Simple loop invariant code motion for short loops during GVN") \
- \
-  develop(bool, false, false, \
-          "trace runtime traps caused by predicate failure") \
- \
-  develop(bool, StressLoopInvariantCodeMotion, false, \
-          "stress loop invariant code motion") \
- \
-  develop(bool, PrintValueNumbering, false, \
-          "Print Value Numbering") \
  \
   product(intx, ValueMapInitialSize, 11, \
           "Initial size of a value map") \
@@ -107,14 +52,8 @@
   develop(bool, EliminateBlocks, true, \
           "Eliminate unneccessary basic blocks") \
  \
-  develop(bool, PrintBlockElimination, false, \
-          "Print basic block elimination") \
- \
   develop(bool, EliminateNullChecks, true, \
           "Eliminate unneccessary null checks") \
- \
-  develop(bool, PrintNullCheckElimination, false, \
-          "Print null check elimination") \
  \
   develop(bool, EliminateFieldAccess, true, \
           "Optimize field loads and stores") \
@@ -131,9 +70,6 @@
   develop(bool, CanonicalizeNodes, true, \
           "Canonicalize graph nodes") \
  \
-  develop(bool, PrintCanonicalization, false, \
-          "Print graph node canonicalization") \
- \
   develop(bool, UseTableRanges, true, \
           "Faster versions of lookup table using ranges") \
  \
@@ -144,18 +80,6 @@
           "Percentage of prev. allowed inline size in recursive inlining") \
           range(0, 100) \
  \
-  notproduct(bool, PrintIRWithLIR, false, \
-          "Print IR instructions with generated LIR") \
- \
-  notproduct(bool, PrintLIRWithAssembly, false, \
-          "Show LIR instruction with generated assembly") \
- \
-  develop(bool, LIRTracePeephole, false, \
-          "Trace peephole optimizer") \
- \
-  develop(bool, LIRTraceExecution, false, \
-          "add LIR code which logs the execution of blocks") \
- \
   product_pd(bool, LIRFillDelaySlots, \
              "fill delays on on SPARC with LIR") \
  \
@@ -164,22 +88,6 @@
  \
   develop_pd(bool, TwoOperandLIRForm, \
           "true if LIR requires src1 and dst to match in binary LIR ops") \
- \
-  develop(intx, TraceLinearScanLevel, 0, \
-          "Debug levels for the linear scan allocator") \
-          range(0, 4) \
- \
-  develop(bool, StressLinearScan, false, \
-          "scramble block order used by LinearScan (stress test)") \
- \
-  product(bool, TimeLinearScan, false, \
-          "detailed timing of LinearScan phases") \
- \
-  develop(bool, TimeEachLinearScan, false, \
-          "print detailed timing of each LinearScan run") \
- \
-  develop(bool, CountLinearScan, false, \
-          "collect statistic counters during LinearScan") \
  \
   /* C1 variable */ \
  \
@@ -204,26 +112,8 @@
   develop(bool, UseFastLocking, true, \
           "Use fast inlined locking code") \
  \
-  develop(bool, UseSlowPath, false, \
-          "For debugging: test slow cases by always using them") \
- \
   develop(bool, GenerateArrayStoreCheck, true, \
           "Generates code for array store checks") \
- \
-  develop(bool, DeoptC1, true, \
-          "Use deoptimization in C1") \
- \
-  develop(bool, PrintBailouts, false, \
-          "Print bailout and its reason") \
- \
-  develop(bool, PatchALot, false, \
-          "Marks all fields as having unloaded classes") \
- \
-  develop(bool, PrintNotLoaded, false, \
-          "Prints where classes are not loaded during code generation") \
- \
-  develop(bool, PrintLIR, false, \
-          "print low-level IR") \
  \
   develop(bool, BailoutAfterHIR, false, \
           "bailout of compilation after building of HIR") \
@@ -241,17 +131,8 @@
           "Maximum size of a compiled method.") \
           range(0, max_jint) \
  \
-  develop(bool, TraceFPUStack, false, \
-          "Trace emulation of the FPU stack (intel only)") \
- \
-  develop(bool, TraceFPURegisterUsage, false, \
-          "Trace usage of FPU registers at start of blocks (intel only)") \
- \
   develop(bool, OptimizeUnsafes, true, \
           "Optimize raw unsafe ops") \
- \
-  develop(bool, PrintUnsafeOptimization, false, \
-          "Print optimization of raw unsafe ops") \
  \
   develop(intx, InstructionCountCutoff, 37000, \
           "If GraphBuilder adds this many instructions, bails out") \
@@ -279,10 +160,7 @@
           "Use CHA and exact type results at call sites when updating MDOs") \
  \
   product(bool, C1UpdateMethodData, false, \
-          "Update MethodData*s in Tier1-generated code") \
- \
-  develop(bool, PrintCFGToFile, false, \
-          "print control flow graph to a separate file during compilation")
+          "Update MethodData*s in Tier1-generated code")
 
 // Read default values for c1 globals
 

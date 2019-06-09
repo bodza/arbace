@@ -76,24 +76,15 @@ inline int g_isfinite(jdouble f) { return _finite(f); }
 
 // Miscellaneous
 
-#pragma warning( disable : 4100 ) // unreferenced formal parameter
-#pragma warning( disable : 4127 ) // conditional expression is constant
-#pragma warning( disable : 4514 ) // unreferenced inline function has been removed
-#pragma warning( disable : 4244 ) // possible loss of data
-#pragma warning( disable : 4512 ) // assignment operator could not be generated
-#pragma warning( disable : 4201 ) // nonstandard extension used : nameless struct/union (needed in windows.h)
-#pragma warning( disable : 4511 ) // copy constructor could not be generated
-#pragma warning( disable : 4291 ) // no matching operator delete found; memory will not be freed if initialization thows an exception
-#pragma warning( disable : 4351 ) // new behavior: elements of array ... will be default initialized
-#ifdef CHECK_UNHANDLED_OOPS
-#pragma warning( disable : 4521 ) // class has multiple copy ctors of a single type
-#pragma warning( disable : 4522 ) // class has multiple assignment operators of a single type
-#endif
-
-// Portability macros
-#define PRAGMA_INTERFACE
-#define PRAGMA_IMPLEMENTATION
-#define PRAGMA_IMPLEMENTATION_(arg)
+#pragma warning(disable : 4100) // unreferenced formal parameter
+#pragma warning(disable : 4127) // conditional expression is constant
+#pragma warning(disable : 4514) // unreferenced inline function has been removed
+#pragma warning(disable : 4244) // possible loss of data
+#pragma warning(disable : 4512) // assignment operator could not be generated
+#pragma warning(disable : 4201) // nonstandard extension used : nameless struct/union (needed in windows.h)
+#pragma warning(disable : 4511) // copy constructor could not be generated
+#pragma warning(disable : 4291) // no matching operator delete found; memory will not be freed if initialization thows an exception
+#pragma warning(disable : 4351) // new behavior: elements of array ... will be default initialized
 
 // Formatting.
 #define FORMAT64_MODIFIER "I64"

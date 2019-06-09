@@ -45,12 +45,11 @@ void CompileTask::free(CompileTask* task) {
  }
 }
 
-void CompileTask::initialize(int compile_id, const methodHandle& method, int osr_bci, int comp_level, const methodHandle& hot_method, int hot_count, CompileTask::CompileReason compile_reason, bool is_blocking) {
+void CompileTask::initialize(int compile_id, const methodHandle& method, int comp_level, const methodHandle& hot_method, int hot_count, CompileTask::CompileReason compile_reason, bool is_blocking) {
   Thread* thread = Thread::current();
   _compile_id = compile_id;
   _method = method();
   _method_holder = JNIHandles::make_global(Handle(thread, method->method_holder()->klass_holder()));
-  _osr_bci = osr_bci;
   _is_blocking = is_blocking;
   _has_waiter = CompileBroker::compiler(comp_level)->is_jvmci();
   _jvmci_compiler_thread = NULL;
@@ -78,9 +77,6 @@ AbstractCompiler* CompileTask::compiler() {
   return CompileBroker::compiler(_comp_level);
 }
 
-// ------------------------------------------------------------------
-// CompileTask::code/set_code
-//
 nmethod* CompileTask::code() const {
   if (_code_handle == NULL)  return NULL;
   CodeBlob *blob = _code_handle->code();
@@ -129,16 +125,12 @@ void CompileTask::print_line_on_error(outputStream* st, char* buf, int buflen) {
   print(st);
 }
 
-// ------------------------------------------------------------------
-// CompileTask::print_tty
 void CompileTask::print_tty() {
   ttyLocker ttyl;  // keep the following output all in one block
   print(tty);
 }
 
-// ------------------------------------------------------------------
-// CompileTask::print_impl
-void CompileTask::print_impl(outputStream* st, Method* method, int compile_id, int comp_level, bool is_osr_method, int osr_bci, bool is_blocking, const char* msg, bool short_form, bool cr) {
+void CompileTask::print_impl(outputStream* st, Method* method, int compile_id, int comp_level, bool is_blocking, const char* msg, bool short_form, bool cr) {
   if (!short_form) {
     st->print("%7d ", (int) st->time_stamp().milliseconds());  // print timestamp
   }
@@ -156,23 +148,19 @@ void CompileTask::print_impl(outputStream* st, Method* method, int compile_id, i
     is_native             = method->is_native();
   }
   // method attributes
-  const char compile_type   = is_osr_method                   ? '%' : ' ';
   const char sync_char      = is_synchronized                 ? 's' : ' ';
   const char exception_char = has_exception_handler           ? '!' : ' ';
   const char blocking_char  = is_blocking                     ? 'b' : ' ';
   const char native_char    = is_native                       ? 'n' : ' ';
 
   // print method attributes
-  st->print("%c%c%c%c%c ", compile_type, sync_char, exception_char, blocking_char, native_char);
+  st->print(" %c%c%c%c ", sync_char, exception_char, blocking_char, native_char);
   st->print("     ");  // more indent
 
   if (method == NULL) {
     st->print("(method)");
   } else {
     method->print_short_name(st);
-    if (is_osr_method) {
-      st->print(" @ %d", osr_bci);
-    }
     if (method->is_native())
       st->print(" (native)");
     else
@@ -200,28 +188,19 @@ void CompileTask::print_inline_indent(int inline_level, outputStream* st) {
     st->print("  ");
 }
 
-// ------------------------------------------------------------------
-// CompileTask::print_compilation
 void CompileTask::print(outputStream* st, const char* msg, bool short_form, bool cr) {
-  bool is_osr_method = osr_bci() != InvocationEntryBci;
-  print_impl(st, method(), compile_id(), comp_level(), is_osr_method, osr_bci(), is_blocking(), msg, short_form, cr);
+  print_impl(st, method(), compile_id(), comp_level(), is_blocking(), msg, short_form, cr);
 }
 
-// ------------------------------------------------------------------
-// CompileTask::log_task
 void CompileTask::log_task(xmlStream* log) {
   Thread* thread = Thread::current();
   methodHandle method(thread, this->method());
   ResourceMark rm(thread);
 
-  // <task id='9' method='M' osr_bci='X' level='1' blocking='1' stamp='1.234'>
+  // <task id='9' method='M' level='1' blocking='1' stamp='1.234'>
   log->print(" compile_id='%d'", _compile_id);
-  if (_osr_bci != CompileBroker::standard_entry_bci) {
-    log->print(" compile_kind='osr'");  // same as nmethod::compile_kind
-  }
-  if (!method.is_null())  log->method(method);
-  if (_osr_bci != CompileBroker::standard_entry_bci) {
-    log->print(" osr_bci='%d'", _osr_bci);
+  if (!method.is_null()) {
+    log->method(method);
   }
   if (_comp_level != CompLevel_highest_tier) {
     log->print(" level='%d'", _comp_level);
@@ -232,8 +211,6 @@ void CompileTask::log_task(xmlStream* log) {
   log->stamp();
 }
 
-// ------------------------------------------------------------------
-// CompileTask::log_task_queued
 void CompileTask::log_task_queued() {
   Thread* thread = Thread::current();
   ttyLocker ttyl;
@@ -256,21 +233,12 @@ void CompileTask::log_task_queued() {
   xtty->end_elem();
 }
 
-// ------------------------------------------------------------------
-// CompileTask::check_break_at_flags
 bool CompileTask::check_break_at_flags() {
   int compile_id = this->_compile_id;
-  bool is_osr = (_osr_bci != CompileBroker::standard_entry_bci);
 
-  if (CICountOSR && is_osr && (compile_id == CIBreakAtOSR)) {
-    return true;
-  } else {
-    return (compile_id == CIBreakAt);
-  }
+  return (compile_id == CIBreakAt);
 }
 
-// ------------------------------------------------------------------
-// CompileTask::print_inlining
 void CompileTask::print_inlining_inner(outputStream* st, ciMethod* method, int inline_level, int bci, const char* msg) {
   //         1234567
   st->print("        ");     // print timestamp

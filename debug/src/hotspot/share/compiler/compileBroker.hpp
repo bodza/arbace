@@ -68,7 +68,7 @@ class CompileQueue : public CHeapObj<mtCompiler> {
     _first_stale = NULL;
   }
 
-  const char*  name() const                      { return _name; }
+  const char*  name()                      const { return _name; }
 
   void         add(CompileTask* task);
   void         remove(CompileTask* task);
@@ -78,8 +78,8 @@ class CompileQueue : public CHeapObj<mtCompiler> {
 
   CompileTask* get();
 
-  bool         is_empty() const                  { return _first == NULL; }
-  int          size()     const                  { return _size; }
+  bool         is_empty()                  const { return _first == NULL; }
+  int          size()                      const { return _size; }
 
   // Redefine Classes support
   void mark_on_stack();
@@ -112,9 +112,9 @@ class CompileBroker: AllStatic {
     name_buffer_length = 100
   };
 
-  // Compile type Information for print_last_compile() and CompilerCounters
-  enum { no_compile, normal_compile, osr_compile, native_compile };
-  static int assign_compile_id (const methodHandle& method, int osr_bci);
+  // Compile type Information for CompilerCounters
+  enum { no_compile, normal_compile, native_compile };
+  static int assign_compile_id(const methodHandle& method);
 
  private:
   static bool _initialized;
@@ -134,18 +134,12 @@ class CompileBroker: AllStatic {
 
   // These counters are used for assigning id's to each compilation
   static volatile jint _compilation_id;
-  static volatile jint _osr_compilation_id;
-
-  static int  _last_compile_type;
-  static int  _last_compile_level;
-  static char _last_method_compiled[name_buffer_length];
 
   static CompileQueue* _c2_compile_queue;
   static CompileQueue* _c1_compile_queue;
 
   // Timers and counters for generating statistics
   static elapsedTimer _t_total_compilation;
-  static elapsedTimer _t_osr_compilation;
   static elapsedTimer _t_standard_compilation;
   static elapsedTimer _t_invalidated_compilation;
   static elapsedTimer _t_bailedout_compilation;
@@ -154,11 +148,9 @@ class CompileBroker: AllStatic {
   static int _total_bailout_count;
   static int _total_invalidated_count;
   static int _total_native_compile_count;
-  static int _total_osr_compile_count;
   static int _total_standard_compile_count;
   static int _total_compiler_stopped_count;
   static int _total_compiler_restarted_count;
-  static int _sum_osr_bytes_compiled;
   static int _sum_standard_bytes_compiled;
   static int _sum_nmethod_size;
   static int _sum_nmethod_code_size;
@@ -170,30 +162,27 @@ class CompileBroker: AllStatic {
   static JavaThread* make_thread(jobject thread_oop, CompileQueue* queue, AbstractCompiler* comp, bool compiler_thread, TRAPS);
   static void init_compiler_sweeper_threads();
   static void possibly_add_compiler_threads();
-  static bool compilation_is_complete  (const methodHandle& method, int osr_bci, int comp_level);
-  static bool compilation_is_prohibited(const methodHandle& method, int osr_bci, int comp_level, bool excluded);
+  static bool compilation_is_complete  (const methodHandle& method, int comp_level);
+  static bool compilation_is_prohibited(const methodHandle& method, int comp_level, bool excluded);
 
-  static CompileTask* create_compile_task(CompileQueue*       queue,
-                                          int                 compile_id,
+  static CompileTask* create_compile_task(CompileQueue* queue,
+                                          int compile_id,
                                           const methodHandle& method,
-                                          int                 osr_bci,
-                                          int                 comp_level,
+                                          int comp_level,
                                           const methodHandle& hot_method,
-                                          int                 hot_count,
+                                          int hot_count,
                                           CompileTask::CompileReason compile_reason,
-                                          bool                blocking);
+                                          bool blocking);
   static void wait_for_completion(CompileTask* task);
   static bool wait_for_jvmci_completion(JVMCICompiler* comp, CompileTask* task, JavaThread* thread);
 
   static void invoke_compiler_on_method(CompileTask* task);
   static void post_compile(CompilerThread* thread, CompileTask* task, bool success, ciEnv* ci_env, int compilable, const char* failure_reason);
-  static void set_last_compile(CompilerThread *thread, const methodHandle& method, bool is_osr, int comp_level);
   static void push_jni_handle_block();
   static void pop_jni_handle_block();
   static void collect_statistics(CompilerThread* thread, elapsedTimer time, CompileTask* task);
 
   static void compile_method_base(const methodHandle& method,
-                                  int osr_bci,
                                   int comp_level,
                                   const methodHandle& hot_method,
                                   int hot_count,
@@ -208,11 +197,6 @@ class CompileBroker: AllStatic {
 public:
   static DirectivesStack* dirstack();
   static void set_dirstack(DirectivesStack* stack);
-
-  enum {
-    // The entry bci used for non-OSR compilations.
-    standard_entry_bci = InvocationEntryBci
-  };
 
   static AbstractCompiler* compiler(int comp_level) {
     if (is_c2_compile(comp_level)) return _compilers[1]; // C2
@@ -230,7 +214,6 @@ public:
   static void compilation_init_phase1(TRAPS);
   static void compilation_init_phase2();
   static nmethod* compile_method(const methodHandle& method,
-                                 int osr_bci,
                                  int comp_level,
                                  const methodHandle& hot_method,
                                  int hot_count,
@@ -238,16 +221,15 @@ public:
                                  Thread* thread);
 
   static nmethod* compile_method(const methodHandle& method,
-                                   int osr_bci,
-                                   int comp_level,
-                                   const methodHandle& hot_method,
-                                   int hot_count,
-                                   CompileTask::CompileReason compile_reason,
-                                   DirectiveSet* directive,
-                                   Thread* thread);
+                                 int comp_level,
+                                 const methodHandle& hot_method,
+                                 int hot_count,
+                                 CompileTask::CompileReason compile_reason,
+                                 DirectiveSet* directive,
+                                 Thread* thread);
 
   // Acquire any needed locks and assign a compile id
-  static uint assign_compile_id_unlocked(Thread* thread, const methodHandle& method, int osr_bci);
+  static uint assign_compile_id_unlocked(Thread* thread, const methodHandle& method);
 
   static void compiler_thread_loop();
   static uint get_compilation_id() { return _compilation_id; }
@@ -303,15 +285,6 @@ public:
   // Redefine Classes support
   static void mark_on_stack();
 
-  // Print curent compilation time stats for a given compiler
-  static void print_times(AbstractCompiler* comp);
-
-  // Print a detailed accounting of compilation time
-  static void print_times(bool per_compiler = true, bool aggregate = true);
-
-  // Debugging output for failure
-  static void print_last_compile();
-
   // compiler name for debugging
   static const char* compiler_name(int comp_level);
 
@@ -323,11 +296,9 @@ public:
   static int get_total_bailout_count()            { return _total_bailout_count; }
   static int get_total_invalidated_count()        { return _total_invalidated_count; }
   static int get_total_native_compile_count()     { return _total_native_compile_count; }
-  static int get_total_osr_compile_count()        { return _total_osr_compile_count; }
   static int get_total_standard_compile_count()   { return _total_standard_compile_count; }
   static int get_total_compiler_stopped_count()   { return _total_compiler_stopped_count; }
   static int get_total_compiler_restarted_count() { return _total_compiler_restarted_count; }
-  static int get_sum_osr_bytes_compiled()         { return _sum_osr_bytes_compiled; }
   static int get_sum_standard_bytes_compiled()    { return _sum_standard_bytes_compiled; }
   static int get_sum_nmethod_size()               { return _sum_nmethod_size; }
   static int get_sum_nmethod_code_size()          { return _sum_nmethod_code_size; }
@@ -335,8 +306,8 @@ public:
   static long get_total_compilation_time()        { return _t_total_compilation.milliseconds(); }
 
   // CodeHeap State Analytics.
-  static void print_info(outputStream *out);
-  static void print_heapinfo(outputStream *out, const char* function, const char* granularity );
+  static void print_info(outputStream* out);
+  static void print_heapinfo(outputStream* out, const char* function, const char* granularity );
 };
 
 #endif

@@ -5,7 +5,6 @@
 #include "oops/access.inline.hpp"
 #include "oops/oop.inline.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
-#include "runtime/timerTrace.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "utilities/align.hpp"
@@ -31,7 +30,6 @@ address StubRoutines::_throw_NullPointerException_at_call_entry = NULL;
 address StubRoutines::_throw_StackOverflowError_entry           = NULL;
 address StubRoutines::_throw_delayed_StackOverflowError_entry   = NULL;
 jint    StubRoutines::_verify_oop_count                         = 0;
-address StubRoutines::_verify_oop_subroutine_entry              = NULL;
 address StubRoutines::_atomic_xchg_entry                        = NULL;
 address StubRoutines::_atomic_xchg_long_entry                   = NULL;
 address StubRoutines::_atomic_store_entry                       = NULL;

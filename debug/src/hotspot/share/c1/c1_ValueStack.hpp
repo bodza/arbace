@@ -52,16 +52,16 @@ class ValueStack: public CompilationResourceObj {
   bool is_same(ValueStack* s);                   // returns true if this & s's types match (w/o checking locals)
 
   // accessors
-  IRScope* scope() const                         { return _scope; }
-  ValueStack* caller_state() const               { return _caller_state; }
-  int bci() const                                { return _bci; }
-  Kind kind() const                              { return _kind; }
+  IRScope* scope()                         const { return _scope; }
+  ValueStack* caller_state()               const { return _caller_state; }
+  int bci()                                const { return _bci; }
+  Kind kind()                              const { return _kind; }
 
-  int locals_size() const                        { return _locals.length(); }
-  int stack_size() const                         { return _stack.length(); }
-  int locks_size() const                         { return _locks.length(); }
-  bool stack_is_empty() const                    { return _stack.is_empty(); }
-  bool no_active_locks() const                   { return _locks.is_empty(); }
+  int locals_size()                        const { return _locals.length(); }
+  int stack_size()                         const { return _stack.length(); }
+  int locks_size()                         const { return _locks.length(); }
+  bool stack_is_empty()                    const { return _stack.is_empty(); }
+  bool no_active_locks()                   const { return _locks.is_empty(); }
   int total_locks_size() const;
 
   // locals access

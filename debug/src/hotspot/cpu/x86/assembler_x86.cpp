@@ -5,7 +5,6 @@
 #include "gc/shared/cardTableBarrierSet.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "memory/resourceArea.hpp"
-#include "prims/methodHandles.hpp"
 #include "runtime/biasedLocking.hpp"
 #include "runtime/objectMonitor.hpp"
 #include "runtime/os.hpp"

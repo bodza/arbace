@@ -25,10 +25,7 @@
 // reflected in the interface and instead the Klass hierarchy
 // is directly modeled as the subclasses of ciKlass.
 
-// ------------------------------------------------------------------
-// ciObject::ciObject
 ciObject::ciObject(oop o) {
-  ASSERT_IN_VM;
   if (ciObjectFactory::is_initialized()) {
     _handle = JNIHandles::make_local(o);
   } else {
@@ -39,11 +36,7 @@ ciObject::ciObject(oop o) {
   init_flags_from(o);
 }
 
-// ------------------------------------------------------------------
-// ciObject::ciObject
-//
 ciObject::ciObject(Handle h) {
-  ASSERT_IN_VM;
   if (ciObjectFactory::is_initialized()) {
     _handle = JNIHandles::make_local(h());
   } else {
@@ -53,38 +46,24 @@ ciObject::ciObject(Handle h) {
   init_flags_from(h());
 }
 
-// ------------------------------------------------------------------
-// ciObject::ciObject
-//
 // Unloaded klass/method variant.  `klass' is the klass of the unloaded
 // klass/method, if that makes sense.
 ciObject::ciObject(ciKlass* klass) {
-  ASSERT_IN_VM;
   _handle = NULL;
   _klass = klass;
 }
 
-// ------------------------------------------------------------------
-// ciObject::ciObject
-//
 // NULL variant.  Used only by ciNullObject.
 ciObject::ciObject() {
-  ASSERT_IN_VM;
   _handle = NULL;
   _klass = NULL;
 }
 
-// ------------------------------------------------------------------
-// ciObject::get_oop
-//
 // Get the oop of this ciObject.
 oop ciObject::get_oop() const {
   return JNIHandles::resolve_non_null(_handle);
 }
 
-// ------------------------------------------------------------------
-// ciObject::klass
-//
 // Get the ciKlass of this ciObject.
 ciKlass* ciObject::klass() {
   if (_klass == NULL) {
@@ -98,23 +77,17 @@ ciKlass* ciObject::klass() {
 
     GUARDED_VM_ENTRY(
       oop o = get_oop();
-      _klass = CURRENT_ENV->get_klass(o->klass());
+      _klass = ciEnv::current()->get_klass(o->klass());
     );
   }
   return _klass;
 }
 
-// ------------------------------------------------------------------
-// ciObject::equals
-//
 // Are two ciObjects equal?
 bool ciObject::equals(ciObject* obj) {
   return (this == obj);
 }
 
-// ------------------------------------------------------------------
-// ciObject::hash
-//
 // A hash value for the convenience of compilers.
 //
 // Implementation note: we use the address of the ciObject as the
@@ -123,9 +96,6 @@ int ciObject::hash() {
   return ident() * 31;
 }
 
-// ------------------------------------------------------------------
-// ciObject::constant_encoding
-//
 // The address which the compiler should embed into the
 // generated code to represent this oop.  This address
 // is not the true address of the oop -- it will get patched
@@ -142,38 +112,28 @@ jobject ciObject::constant_encoding() {
   return handle();
 }
 
-// ------------------------------------------------------------------
-// ciObject::can_be_constant
 bool ciObject::can_be_constant() {
   if (ScavengeRootsInCode >= 1)  return true;  // now everybody can encode as a constant
   return handle() == NULL;
 }
 
-// ------------------------------------------------------------------
-// ciObject::should_be_constant()
 bool ciObject::should_be_constant() {
   if (ScavengeRootsInCode >= 2)  return true;  // force everybody to be a constant
   if (is_null_object()) return true;
 
-  ciEnv* env = CURRENT_ENV;
+  ciEnv* env = ciEnv::current();
 
-    // We want Strings and Classes to be embeddable by default since
-    // they used to be in the perm world.  Not all Strings used to be
-    // embeddable but there's no easy way to distinguish the interned
-    // from the regulars ones so just treat them all that way.
-    if (klass() == env->String_klass() || klass() == env->Class_klass()) {
-      return true;
-    }
-  if (klass()->is_subclass_of(env->MethodHandle_klass()) || klass()->is_subclass_of(env->CallSite_klass())) {
-    // We want to treat these aggressively.
+  // We want Strings and Classes to be embeddable by default since
+  // they used to be in the perm world.  Not all Strings used to be
+  // embeddable but there's no easy way to distinguish the interned
+  // from the regulars ones so just treat them all that way.
+  if (klass() == env->String_klass() || klass() == env->Class_klass()) {
     return true;
   }
 
   return handle() == NULL;
 }
 
-// ------------------------------------------------------------------
-// ciObject::should_be_constant()
 void ciObject::init_flags_from(oop x) {
   int flags = 0;
   if (x != NULL) {
@@ -183,9 +143,6 @@ void ciObject::init_flags_from(oop x) {
   _ident |= flags;
 }
 
-// ------------------------------------------------------------------
-// ciObject::print
-//
 // Print debugging output about this ciObject.
 //
 // Implementation note: dispatch to the virtual print_impl behavior
@@ -193,14 +150,9 @@ void ciObject::init_flags_from(oop x) {
 void ciObject::print(outputStream* st) {
   st->print("<%s", type_string());
   GUARDED_VM_ENTRY(print_impl(st);)
-  st->print(" ident=%d %s address=" INTPTR_FORMAT ">", ident(),
-        is_scavengable() ? "SCAVENGABLE" : "",
-        p2i((address)this));
+  st->print(" ident=%d %s address=" INTPTR_FORMAT ">", ident(), is_scavengable() ? "SCAVENGABLE" : "", p2i((address)this));
 }
 
-// ------------------------------------------------------------------
-// ciObject::print_oop
-//
 // Print debugging output about the oop this ciObject represents.
 void ciObject::print_oop(outputStream* st) {
   if (is_null_object()) {

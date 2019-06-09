@@ -58,26 +58,26 @@ public:
   };
 
   ciBlock(ciMethod *method, int index, int start_bci);
-  int start_bci() const         { return _start_bci; }
-  int limit_bci() const         { return _limit_bci; }
-  int control_bci() const       { return _control_bci; }
-  int index() const             { return _idx; }
+  int start_bci()         const { return _start_bci; }
+  int limit_bci()         const { return _limit_bci; }
+  int control_bci()       const { return _control_bci; }
+  int index()             const { return _idx; }
   void set_start_bci(int bci)   { _start_bci = bci; }
   void set_limit_bci(int bci)   { _limit_bci = bci; }
   void set_control_bci(int bci) { _control_bci = bci; }
   void set_exception_range(int start_bci, int limit_bci);
-  int ex_start_bci() const      { return _ex_start_bci; }
-  int ex_limit_bci() const      { return _ex_limit_bci; }
+  int ex_start_bci()      const { return _ex_start_bci; }
+  int ex_limit_bci()      const { return _ex_limit_bci; }
   bool contains(int bci) const { return start_bci() <= bci && bci < limit_bci(); }
 
   // flag handling
-  bool  processed() const           { return (_flags & Processed) != 0; }
-  bool  is_handler() const          { return (_flags & Handler) != 0; }
-  bool  may_throw() const           { return (_flags & MayThrow) != 0; }
-  bool  does_jsr() const            { return (_flags & DoesJsr) != 0; }
-  bool  does_ret() const            { return (_flags & DoesRet) != 0; }
-  bool  has_handler() const         { return (_flags & HasHandler) != 0; }
-  bool  is_ret_target() const       { return (_flags & RetTarget) != 0; }
+  bool  processed()           const { return (_flags & Processed) != 0; }
+  bool  is_handler()          const { return (_flags & Handler) != 0; }
+  bool  may_throw()           const { return (_flags & MayThrow) != 0; }
+  bool  does_jsr()            const { return (_flags & DoesJsr) != 0; }
+  bool  does_ret()            const { return (_flags & DoesRet) != 0; }
+  bool  has_handler()         const { return (_flags & HasHandler) != 0; }
+  bool  is_ret_target()       const { return (_flags & RetTarget) != 0; }
   void  set_processed()             { _flags |= Processed; }
   void  clear_processed()           { _flags &= ~Processed; }
   void  set_handler()               { _flags |= Handler; }

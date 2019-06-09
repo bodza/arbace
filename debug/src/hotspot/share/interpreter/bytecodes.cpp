@@ -14,28 +14,6 @@ u_char          Bytecodes::_lengths       [Bytecodes::number_of_codes];
 Bytecodes::Code Bytecodes::_java_code     [Bytecodes::number_of_codes];
 unsigned short  Bytecodes::_flags         [(1<<BitsPerByte)*2];
 
-bool Bytecodes::check_must_rewrite(Bytecodes::Code code) {
-  // Some codes are conditionally rewriting.  Look closely at them.
-  switch (code) {
-  case Bytecodes::_aload_0:
-    // Even if RewriteFrequentPairs is turned on,
-    // the _aload_0 code might delay its rewrite until
-    // a following _getfield rewrites itself.
-    return false;
-
-  case Bytecodes::_lookupswitch:
-    return false;  // the rewrite is not done by the interpreter
-
-  case Bytecodes::_new:
-    // (Could actually look at the class here, but the profit would be small.)
-    return false;  // the rewrite is not always done
-
-  default:
-    // No other special cases.
-    return true;
-  }
-}
-
 Bytecodes::Code Bytecodes::code_at(Method* method, int bci) {
   return code_at(method, method->bcp_from(bci));
 }
@@ -413,7 +391,6 @@ void Bytecodes::initialize() {
   def(_invokespecial       , "invokespecial"       , "bJJ"  , NULL    , T_ILLEGAL, -1, true);
   def(_invokestatic        , "invokestatic"        , "bJJ"  , NULL    , T_ILLEGAL,  0, true);
   def(_invokeinterface     , "invokeinterface"     , "bJJ__", NULL    , T_ILLEGAL, -1, true);
-  def(_invokedynamic       , "invokedynamic"       , "bJJJJ", NULL    , T_ILLEGAL,  0, true );
   def(_new                 , "new"                 , "bkk"  , NULL    , T_OBJECT ,  1, true );
   def(_newarray            , "newarray"            , "bc"   , NULL    , T_OBJECT ,  0, true );
   def(_anewarray           , "anewarray"           , "bkk"  , NULL    , T_OBJECT ,  0, true );
@@ -470,22 +447,13 @@ void Bytecodes::initialize() {
 
   def(_return_register_finalizer , "return_register_finalizer" , "b"    , NULL    , T_VOID   ,  0, true, _return);
 
-  def(_invokehandle        , "invokehandle"        , "bJJ"  , NULL    , T_ILLEGAL, -1, true, _invokevirtual   );
-
   def(_fast_aldc           , "fast_aldc"           , "bj"   , NULL    , T_OBJECT,   1, true,  _ldc   );
   def(_fast_aldc_w         , "fast_aldc_w"         , "bJJ"  , NULL    , T_OBJECT,   1, true,  _ldc_w );
-
-  def(_nofast_getfield     , "nofast_getfield"     , "bJJ"  , NULL    , T_ILLEGAL,  0, true,  _getfield       );
-  def(_nofast_putfield     , "nofast_putfield"     , "bJJ"  , NULL    , T_ILLEGAL, -2, true , _putfield       );
-
-  def(_nofast_aload_0      , "nofast_aload_0"      , "b"    , NULL    , T_ILLEGAL,  1, true , _aload_0        );
-  def(_nofast_iload        , "nofast_iload"        , "bi"   , NULL    , T_ILLEGAL,  1, false, _iload          );
 
   def(_shouldnotreachhere  , "_shouldnotreachhere" , "b"    , NULL    , T_VOID   ,  0, false);
 
   // compare can_trap information for each bytecode with the
   // can_trap information for the corresponding base bytecode
-  // (if a rewritten bytecode can trap, so must the base bytecode)
 
   // initialization successful
   _is_initialized = true;

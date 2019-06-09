@@ -202,7 +202,7 @@ class java_lang_Class : AllStatic {
   static void set_klass(oop java_class, Klass* klass);
   static BasicType as_BasicType(oop java_class, Klass** reference_klass = NULL);
   static Symbol* as_signature(oop java_class, bool intern_if_not_found, TRAPS);
-  static void print_signature(oop java_class, outputStream *st);
+  static void print_signature(oop java_class, outputStream* st);
   static const char* as_external_name(oop java_class);
   // Testing
   static bool is_instance(oop obj);
@@ -473,7 +473,7 @@ class java_lang_Throwable: AllStatic {
   static oop message(oop throwable);
   static void set_message(oop throwable, oop value);
   static Symbol* detail_message(oop throwable);
-  static void print_stack_element(outputStream *st, const methodHandle& method, int bci);
+  static void print_stack_element(outputStream* st, const methodHandle& method, int bci);
   static void print_stack_usage(Handle stream);
 
   static void compute_offsets();
@@ -916,290 +916,6 @@ class java_lang_ref_SoftReference: public java_lang_ref_Reference {
   static void serialize(SerializeClosure* f) { };
 };
 
-// Interface to java.lang.invoke.MethodHandle objects
-
-class MethodHandleEntry;
-
-class java_lang_invoke_MethodHandle: AllStatic {
-  friend class JavaClasses;
-
- private:
-  static int _type_offset;               // the MethodType of this MH
-  static int _form_offset;               // the LambdaForm of this MH
-
-  static void compute_offsets();
-
- public:
-  static void serialize(SerializeClosure* f) { };
-
-  // Accessors
-  static oop            type(oop mh);
-  static void       set_type(oop mh, oop mtype);
-
-  static oop            form(oop mh);
-  static void       set_form(oop mh, oop lform);
-
-  // Testers
-  static bool is_subclass(Klass* klass) {
-    return klass->is_subclass_of(SystemDictionary::MethodHandle_klass());
-  }
-  static bool is_instance(oop obj);
-
-  // Accessors for code generation:
-  static int type_offset_in_bytes()             { return _type_offset; }
-  static int form_offset_in_bytes()             { return _form_offset; }
-};
-
-// Interface to java.lang.invoke.DirectMethodHandle objects
-
-class java_lang_invoke_DirectMethodHandle: AllStatic {
-  friend class JavaClasses;
-
- private:
-  static int _member_offset;               // the MemberName of this DMH
-
-  static void compute_offsets();
-
- public:
-  static void serialize(SerializeClosure* f) { };
-
-  // Accessors
-  static oop  member(oop mh);
-
-  // Testers
-  static bool is_subclass(Klass* klass) {
-    return klass->is_subclass_of(SystemDictionary::DirectMethodHandle_klass());
-  }
-  static bool is_instance(oop obj);
-
-  // Accessors for code generation:
-  static int member_offset_in_bytes()           { return _member_offset; }
-};
-
-// Interface to java.lang.invoke.LambdaForm objects
-// (These are a private interface for managing adapter code generation.)
-
-class java_lang_invoke_LambdaForm: AllStatic {
-  friend class JavaClasses;
-
- private:
-  static int _vmentry_offset;  // type is MemberName
-
-  static void compute_offsets();
-
- public:
-  static void serialize(SerializeClosure* f) { };
-
-  // Accessors
-  static oop            vmentry(oop lform);
-  static void       set_vmentry(oop lform, oop invoker);
-
-  // Testers
-  static bool is_subclass(Klass* klass) {
-    return SystemDictionary::LambdaForm_klass() != NULL && klass->is_subclass_of(SystemDictionary::LambdaForm_klass());
-  }
-  static bool is_instance(oop obj);
-
-  // Accessors for code generation:
-  static int vmentry_offset_in_bytes()          { return _vmentry_offset; }
-};
-
-// Interface to java.lang.invoke.MemberName objects
-// (These are a private interface for Java code to query the class hierarchy.)
-
-#define RESOLVEDMETHOD_INJECTED_FIELDS(macro) \
-  macro(java_lang_invoke_ResolvedMethodName, vmholder, object_signature, false) \
-  macro(java_lang_invoke_ResolvedMethodName, vmtarget, intptr_signature, false)
-
-class java_lang_invoke_ResolvedMethodName : AllStatic {
-  friend class JavaClasses;
-
-  static int _vmtarget_offset;
-  static int _vmholder_offset;
-
-  static void compute_offsets();
- public:
-  static void serialize(SerializeClosure* f) { };
-
-  static int vmtarget_offset_in_bytes() { return _vmtarget_offset; }
-
-  static Method* vmtarget(oop resolved_method);
-  static void set_vmtarget(oop resolved_method, Method* method);
-
-  // find or create resolved member name
-  static oop find_resolved_method(const methodHandle& m, TRAPS);
-
-  static bool is_instance(oop resolved_method);
-};
-
-#define MEMBERNAME_INJECTED_FIELDS(macro) \
-  macro(java_lang_invoke_MemberName, vmindex,  intptr_signature, false)
-
-class java_lang_invoke_MemberName: AllStatic {
-  friend class JavaClasses;
-
- private:
-  // From java.lang.invoke.MemberName:
-  //    private Class<?>   clazz;       // class in which the method is defined
-  //    private String     name;        // may be null if not yet materialized
-  //    private Object     type;        // may be null if not yet materialized
-  //    private int        flags;       // modifier bits; see reflect.Modifier
-  //    private ResolvedMethodName method;    // holds VM-specific target value
-  //    private intptr_t   vmindex;     // member index within class or interface
-  static int _clazz_offset;
-  static int _name_offset;
-  static int _type_offset;
-  static int _flags_offset;
-  static int _method_offset;
-  static int _vmindex_offset;
-
-  static void compute_offsets();
-
- public:
-  static void serialize(SerializeClosure* f) { };
-  // Accessors
-  static oop            clazz(oop mname);
-  static void       set_clazz(oop mname, oop clazz);
-
-  static oop            type(oop mname);
-  static void       set_type(oop mname, oop type);
-
-  static oop            name(oop mname);
-  static void       set_name(oop mname, oop name);
-
-  static int            flags(oop mname);
-  static void       set_flags(oop mname, int flags);
-
-  // Link through ResolvedMethodName field to get Method*
-  static Method*        vmtarget(oop mname);
-  static void       set_method(oop mname, oop method);
-
-  static intptr_t       vmindex(oop mname);
-  static void       set_vmindex(oop mname, intptr_t index);
-
-  // Testers
-  static bool is_subclass(Klass* klass) {
-    return klass->is_subclass_of(SystemDictionary::MemberName_klass());
-  }
-  static bool is_instance(oop obj);
-
-  static bool is_method(oop obj);
-
-  // Relevant integer codes (keep these in synch. with MethodHandleNatives.Constants):
-  enum {
-    MN_IS_METHOD            = 0x00010000, // method (not constructor)
-    MN_IS_CONSTRUCTOR       = 0x00020000, // constructor
-    MN_IS_FIELD             = 0x00040000, // field
-    MN_IS_TYPE              = 0x00080000, // nested type
-    MN_CALLER_SENSITIVE     = 0x00100000, // @CallerSensitive annotation detected
-    MN_REFERENCE_KIND_SHIFT = 24, // refKind
-    MN_REFERENCE_KIND_MASK  = 0x0F000000 >> MN_REFERENCE_KIND_SHIFT,
-    // The SEARCH_* bits are not for MN.flags but for the matchFlags argument of MHN.getMembers:
-    MN_SEARCH_SUPERCLASSES  = 0x00100000, // walk super classes
-    MN_SEARCH_INTERFACES    = 0x00200000  // walk implemented interfaces
-  };
-
-  // Accessors for code generation:
-  static int clazz_offset_in_bytes()            { return _clazz_offset; }
-  static int type_offset_in_bytes()             { return _type_offset; }
-  static int name_offset_in_bytes()             { return _name_offset; }
-  static int flags_offset_in_bytes()            { return _flags_offset; }
-  static int method_offset_in_bytes()           { return _method_offset; }
-  static int vmindex_offset_in_bytes()          { return _vmindex_offset; }
-};
-
-// Interface to java.lang.invoke.MethodType objects
-
-class java_lang_invoke_MethodType: AllStatic {
-  friend class JavaClasses;
-
- private:
-  static int _rtype_offset;
-  static int _ptypes_offset;
-
-  static void compute_offsets();
-
- public:
-  static void serialize(SerializeClosure* f) { };
-  // Accessors
-  static oop            rtype(oop mt);
-  static objArrayOop    ptypes(oop mt);
-
-  static oop            ptype(oop mt, int index);
-  static int            ptype_count(oop mt);
-
-  static int            ptype_slot_count(oop mt);  // extra counts for long/double
-  static int            rtype_slot_count(oop mt);  // extra counts for long/double
-
-  static Symbol*        as_signature(oop mt, bool intern_if_not_found, TRAPS);
-  static void           print_signature(oop mt, outputStream* st);
-
-  static bool is_instance(oop obj);
-
-  static bool equals(oop mt1, oop mt2);
-
-  // Accessors for code generation:
-  static int rtype_offset_in_bytes()            { return _rtype_offset; }
-  static int ptypes_offset_in_bytes()           { return _ptypes_offset; }
-};
-
-// Interface to java.lang.invoke.CallSite objects
-
-class java_lang_invoke_CallSite: AllStatic {
-  friend class JavaClasses;
-
-private:
-  static int _target_offset;
-  static int _context_offset;
-
-  static void compute_offsets();
-
-public:
-  static void serialize(SerializeClosure* f) { };
-  // Accessors
-  static oop              target(          oop site);
-  static void         set_target(          oop site, oop target);
-  static void         set_target_volatile( oop site, oop target);
-
-  static oop              context(oop site);
-
-  // Testers
-  static bool is_subclass(Klass* klass) {
-    return klass->is_subclass_of(SystemDictionary::CallSite_klass());
-  }
-  static bool is_instance(oop obj);
-
-  // Accessors for code generation:
-  static int target_offset_in_bytes()           { return _target_offset; }
-};
-
-// Interface to java.lang.invoke.MethodHandleNatives$CallSiteContext objects
-
-#define CALLSITECONTEXT_INJECTED_FIELDS(macro) \
-  macro(java_lang_invoke_MethodHandleNatives_CallSiteContext, vmdependencies, intptr_signature, false)
-
-class DependencyContext;
-
-class java_lang_invoke_MethodHandleNatives_CallSiteContext : AllStatic {
-  friend class JavaClasses;
-
-private:
-  static int _vmdependencies_offset;
-
-  static void compute_offsets();
-
-public:
-  static void serialize(SerializeClosure* f) { };
-  // Accessors
-  static DependencyContext vmdependencies(oop context);
-
-  // Testers
-  static bool is_subclass(Klass* klass) {
-    return klass->is_subclass_of(SystemDictionary::Context_klass());
-  }
-  static bool is_instance(oop obj);
-};
-
 // Interface to java.security.AccessControlContext objects
 
 class java_security_AccessControlContext: AllStatic {
@@ -1464,8 +1180,8 @@ class InjectedField {
   const vmSymbols::SID signature_index;
   const bool           may_be_java;
 
-  Klass* klass() const    { return SystemDictionary::well_known_klass(klass_id); }
-  Symbol* name() const      { return lookup_symbol(name_index); }
+  Klass* klass()    const { return SystemDictionary::well_known_klass(klass_id); }
+  Symbol* name()      const { return lookup_symbol(name_index); }
   Symbol* signature() const { return lookup_symbol(signature_index); }
 
   int compute_offset();
@@ -1482,9 +1198,6 @@ class InjectedField {
 #define ALL_INJECTED_FIELDS(macro) \
   CLASS_INJECTED_FIELDS(macro) \
   CLASSLOADER_INJECTED_FIELDS(macro) \
-  RESOLVEDMETHOD_INJECTED_FIELDS(macro) \
-  MEMBERNAME_INJECTED_FIELDS(macro) \
-  CALLSITECONTEXT_INJECTED_FIELDS(macro) \
   STACKFRAMEINFO_INJECTED_FIELDS(macro) \
   MODULE_INJECTED_FIELDS(macro)
 

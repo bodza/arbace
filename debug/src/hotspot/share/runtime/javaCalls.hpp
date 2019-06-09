@@ -33,18 +33,18 @@ class JavaCallWrapper: StackObj {
   ~JavaCallWrapper();
 
   // Accessors
-  JavaThread*      thread() const           { return _thread; }
-  JNIHandleBlock*  handles() const          { return _handles; }
+  JavaThread*      thread()           const { return _thread; }
+  JNIHandleBlock*  handles()          const { return _handles; }
 
   JavaFrameAnchor* anchor(void)             { return &_anchor; }
 
-  JavaValue*       result() const           { return _result; }
+  JavaValue*       result()           const { return _result; }
   // GC support
   Method*          callee_method()          { return _callee_method; }
   oop              receiver()               { return _receiver; }
   void             oops_do(OopClosure* f);
 
-  bool             is_first_frame() const   { return _anchor.last_Java_sp() == NULL; }
+  bool             is_first_frame()   const { return _anchor.last_Java_sp() == NULL; }
 };
 
 // Encapsulates arguments to a JavaCall (faster, safer, and more convenient than using var-args)
@@ -85,9 +85,7 @@ class JavaCallArguments : public StackObj {
     // JNITypes::put_obj expects an oop value, so we play fast and
     // loose with the type system.  The cast from handle type to oop
     // *must* use a C-style cast.  In a product build it performs a
-    // reinterpret_cast. In a debug build (more accurately, in a
-    // CHECK_UNHANDLED_OOPS build) it performs a static_cast, invoking
-    // the debug-only oop class's conversion from void* constructor.
+    // reinterpret_cast.
     JNITypes::put_obj((oop)handle, _value, size); // Updates size.
     return size;                // Return the updated size.
   }

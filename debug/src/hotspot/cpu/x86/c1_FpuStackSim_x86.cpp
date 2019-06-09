@@ -38,25 +38,21 @@ FpuStackSim::FpuStackSim(Compilation* compilation) : _compilation(compilation) {
 }
 
 void FpuStackSim::pop() {
-  if (TraceFPUStack) { tty->print("FPU-pop "); print(); tty->cr(); }
   set_regs_at(tos_index(), EMPTY);
   dec_stack_size();
 }
 
 void FpuStackSim::pop(int rnr) {
-  if (TraceFPUStack) { tty->print("FPU-pop %d", rnr); print(); tty->cr(); }
   set_regs_at(tos_index(), EMPTY);
   dec_stack_size();
 }
 
 void FpuStackSim::push(int rnr) {
-  if (TraceFPUStack) { tty->print("FPU-push %d", rnr); print(); tty->cr(); }
   set_regs_at(stack_size(), rnr);
   inc_stack_size();
 }
 
 void FpuStackSim::swap(int offset) {
-  if (TraceFPUStack) { tty->print("FPU-swap %d", offset); print(); tty->cr(); }
   int t = regs_at(tos_index() - offset);
   set_regs_at(tos_index() - offset, regs_at(tos_index()));
   set_regs_at(tos_index(), t);
@@ -81,7 +77,6 @@ void FpuStackSim::set_slot(int tos_offset, int rnr) {
 }
 
 void FpuStackSim::rename(int old_rnr, int new_rnr) {
-  if (TraceFPUStack) { tty->print("FPU-rename %d %d", old_rnr, new_rnr); print(); tty->cr(); }
   if (old_rnr == new_rnr)
     return;
   bool found = false;
@@ -111,7 +106,6 @@ bool FpuStackSim::slot_is_empty(int tos_offset) {
 }
 
 void FpuStackSim::clear() {
-  if (TraceFPUStack) { tty->print("FPU-clear"); print(); tty->cr(); }
   for (int i = tos_index(); i >= 0; i--) {
     set_regs_at(i, EMPTY);
   }

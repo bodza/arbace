@@ -4,7 +4,6 @@
 #include "oops/markOop.hpp"
 #include "oops/method.hpp"
 #include "oops/oop.inline.hpp"
-#include "prims/methodHandles.hpp"
 #include "runtime/frame.inline.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/javaCalls.hpp"
@@ -20,9 +19,9 @@
 // Profiling/safepoint support
 
 bool frame::safe_for_sender(JavaThread *thread) {
-  address   sp = (address)_sp;
-  address   fp = (address)_fp;
-  address   unextended_sp = (address)_unextended_sp;
+  address sp = (address)_sp;
+  address fp = (address)_fp;
+  address unextended_sp = (address)_unextended_sp;
 
   // consider stack guards when trying to determine "safe" stack pointers
   static size_t stack_guard_size = os::uses_stack_guard_pages() ? JavaThread::stack_red_zone_size() + JavaThread::stack_yellow_zone_size() : 0;
@@ -142,13 +141,6 @@ bool frame::safe_for_sender(JavaThread *thread) {
       return jcw_safe;
     }
 
-    CompiledMethod* nm = sender_blob->as_compiled_method_or_null();
-    if (nm != NULL) {
-        if (nm->is_deopt_mh_entry(sender_pc) || nm->is_deopt_entry(sender_pc) || nm->method()->is_method_handle_intrinsic()) {
-            return false;
-        }
-    }
-
     // If the frame size is 0 something (or less) is bad because every nmethod has a non-zero frame size
     // because the return address counts against the callee's frame.
 
@@ -196,14 +188,7 @@ void frame::patch_pc(Thread* thread, address pc) {
   // patch in the same address that's already there.
   *pc_addr = pc;
   _cb = CodeCache::find_blob(pc);
-  address original_pc = CompiledMethod::get_deopt_original_pc(this);
-  if (original_pc != NULL) {
-    _deopt_state = is_deoptimized;
-    // leave _pc as is
-  } else {
-    _deopt_state = not_deoptimized;
-    _pc = pc;
-  }
+  _pc = pc;
 }
 
 int frame::frame_size(RegisterMap* map) const {
@@ -229,22 +214,10 @@ frame frame::sender_for_entry_frame(RegisterMap* map) const {
     jfa->capture_last_Java_pc();
   }
   map->clear();
-  vmassert(jfa->last_Java_pc() != NULL, "not walkable");
   frame fr(jfa->last_Java_sp(), jfa->last_Java_fp(), jfa->last_Java_pc());
   return fr;
 }
 
-//------------------------------------------------------------------------------
-// frame::verify_deopt_original_pc
-//
-// Verifies the calculated original PC of a deoptimization PC for the
-// given unextended SP.
-
-//------------------------------------------------------------------------------
-// frame::adjust_unextended_sp
-
-//------------------------------------------------------------------------------
-// frame::update_map_with_saved_link
 void frame::update_map_with_saved_link(RegisterMap* map, intptr_t** link_addr) {
   // The interpreter and compiler(s) always save EBP/RBP in a known
   // location on entry. We must record where that location is
@@ -266,8 +239,6 @@ void frame::update_map_with_saved_link(RegisterMap* map, intptr_t** link_addr) {
 #endif
 }
 
-//------------------------------------------------------------------------------
-// frame::sender_for_compiled_frame
 frame frame::sender_for_compiled_frame(RegisterMap* map) const {
   intptr_t* sender_sp = unextended_sp() + _cb->frame_size();
   intptr_t* unextended_sp = sender_sp;
@@ -297,8 +268,6 @@ frame frame::sender_for_compiled_frame(RegisterMap* map) const {
   return frame(sender_sp, unextended_sp, *saved_fp_addr, sender_pc);
 }
 
-//------------------------------------------------------------------------------
-// frame::sender
 frame frame::sender(RegisterMap* map) const {
   // Default is we done have to follow them. The sender_for_xxx will
   // update it accordingly
@@ -314,11 +283,6 @@ frame frame::sender(RegisterMap* map) const {
   // Must be native-compiled frame, i.e. the marshaling code for native
   // methods that exists in the core system.
   return frame(sender_sp(), link(), sender_pc());
-}
-
-intptr_t *frame::initial_deoptimization_info() {
-  // used to reset the saved FP
-  return fp();
 }
 
 intptr_t* frame::real_fp() const {
@@ -337,15 +301,9 @@ void JavaFrameAnchor::make_walkable(JavaThread* thread) {
   if (last_Java_sp() == NULL) return;
   // already walkable?
   if (walkable()) return;
-  vmassert(Thread::current() == (Thread*)thread, "not current thread");
-  vmassert(last_Java_sp() != NULL, "not called from Java code?");
-  vmassert(last_Java_pc() == NULL, "already walkable");
   capture_last_Java_pc();
-  vmassert(walkable(), "something went wrong");
 }
 
 void JavaFrameAnchor::capture_last_Java_pc() {
-  vmassert(_last_Java_sp != NULL, "no last frame set");
-  vmassert(_last_Java_pc == NULL, "already walkable");
   _last_Java_pc = (address)_last_Java_sp[-1];
 }

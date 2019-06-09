@@ -863,7 +863,7 @@ size_t os::current_stack_size() {
 /////////////////////////////////////////////////////////////////////////////
 // helper functions for fatal error handler
 
-void os::print_context(outputStream *st, const void *context) {
+void os::print_context(outputStream* st, const void *context) {
   if (context == NULL) return;
 
   const ucontext_t *uc = (const ucontext_t*)context;
@@ -924,7 +924,7 @@ void os::print_context(outputStream *st, const void *context) {
   print_hex_dump(st, pc - 32, pc + 32, sizeof(char));
 }
 
-void os::print_register_info(outputStream *st, const void *context) {
+void os::print_register_info(outputStream* st, const void *context) {
   if (context == NULL) return;
 
   const ucontext_t *uc = (const ucontext_t*)context;

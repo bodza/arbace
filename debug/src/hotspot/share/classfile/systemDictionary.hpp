@@ -133,20 +133,7 @@ class OopStorage;
   do_klass(reflect_CallerSensitive_klass,               reflect_CallerSensitive,                   Opt                 ) \
  \
   /* support for dynamic typing; it's OK if these are NULL in earlier JDKs */ \
-  do_klass(DirectMethodHandle_klass,                    java_lang_invoke_DirectMethodHandle,       Opt                 ) \
-  do_klass(MethodHandle_klass,                          java_lang_invoke_MethodHandle,             Pre                 ) \
-  do_klass(VarHandle_klass,                             java_lang_invoke_VarHandle,                Pre                 ) \
-  do_klass(MemberName_klass,                            java_lang_invoke_MemberName,               Pre                 ) \
-  do_klass(ResolvedMethodName_klass,                    java_lang_invoke_ResolvedMethodName,       Pre                 ) \
-  do_klass(MethodHandleNatives_klass,                   java_lang_invoke_MethodHandleNatives,      Pre                 ) \
-  do_klass(LambdaForm_klass,                            java_lang_invoke_LambdaForm,               Opt                 ) \
-  do_klass(MethodType_klass,                            java_lang_invoke_MethodType,               Pre                 ) \
   do_klass(BootstrapMethodError_klass,                  java_lang_BootstrapMethodError,            Pre                 ) \
-  do_klass(CallSite_klass,                              java_lang_invoke_CallSite,                 Pre                 ) \
-  do_klass(Context_klass,                               java_lang_invoke_MethodHandleNatives_CallSiteContext, Pre      ) \
-  do_klass(ConstantCallSite_klass,                      java_lang_invoke_ConstantCallSite,         Pre                 ) \
-  do_klass(MutableCallSite_klass,                       java_lang_invoke_MutableCallSite,          Pre                 ) \
-  do_klass(VolatileCallSite_klass,                      java_lang_invoke_VolatileCallSite,         Pre                 ) \
   /* Note: MethodHandle must be first, and VolatileCallSite last in group */ \
  \
   do_klass(AssertionStatusDirectives_klass,             java_lang_AssertionStatusDirectives,       Pre                 ) \
@@ -431,20 +418,6 @@ public:
   static bool add_loader_constraint(Symbol* name, Handle loader1, Handle loader2, TRAPS);
   static Symbol* check_signature_loaders(Symbol* signature, Handle loader1, Handle loader2, bool is_method, TRAPS);
 
-  // JSR 292
-  // find a java.lang.invoke.MethodHandle.invoke* method for a given signature
-  // (asks Java to compute it if necessary, except in a compiler thread)
-  static methodHandle find_method_handle_invoker(Klass* klass,
-                                                 Symbol* name,
-                                                 Symbol* signature,
-                                                 Klass* accessing_klass,
-                                                 Handle *appendix_result,
-                                                 Handle *method_type_result,
-                                                 TRAPS);
-  // for a given signature, find the internal MethodHandle method (linkTo* or invokeBasic)
-  // (does not ask Java, since this is a low-level intrinsic defined by the JVM)
-  static methodHandle find_method_handle_intrinsic(vmIntrinsics::ID iid, Symbol* signature, TRAPS);
-
   // compute java_mirror (java.lang.Class instance) for a type ("I", "[[B", "LFoo;", etc.)
   // Either the accessing_klass or the CL/PD can be non-null, but not both.
   static Handle    find_java_mirror_for_type(Symbol* signature,
@@ -470,32 +443,6 @@ public:
 
   // find a java.lang.Class object for a given signature
   static Handle    find_field_handle_type(Symbol* signature, Klass* accessing_klass, TRAPS);
-
-  // ask Java to compute a java.lang.invoke.MethodHandle object for a given CP entry
-  static Handle    link_method_handle_constant(Klass* caller,
-                                               int ref_kind, //e.g., JVM_REF_invokeVirtual
-                                               Klass* callee,
-                                               Symbol* name,
-                                               Symbol* signature,
-                                               TRAPS);
-
-  // ask Java to compute a constant by invoking a BSM given a Dynamic_info CP entry
-  static Handle    link_dynamic_constant(Klass* caller,
-                                         int condy_index,
-                                         Handle bootstrap_specifier,
-                                         Symbol* name,
-                                         Symbol* type,
-                                         TRAPS);
-
-  // ask Java to create a dynamic call site, while linking an invokedynamic op
-  static methodHandle find_dynamic_call_site_invoker(Klass* caller,
-                                                     int indy_index,
-                                                     Handle bootstrap_method,
-                                                     Symbol* name,
-                                                     Symbol* type,
-                                                     Handle *appendix_result,
-                                                     Handle *method_type_result,
-                                                     TRAPS);
 
   // Record the error when the first attempt to resolve a reference from a constant
   // pool entry to a class fails.

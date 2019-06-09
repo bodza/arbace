@@ -9,7 +9,6 @@
 #include "oops/method.hpp"
 #include "oops/objArrayKlass.hpp"
 #include "oops/oop.inline.hpp"
-#include "prims/methodHandles.hpp"
 #include "runtime/frame.inline.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
@@ -318,9 +317,6 @@ class StubGenerator: public StubCodeGenerator {
     const Address sp_after_call(rfp, sp_after_call_off * wordSize);
     const Address thread        (rfp, thread_off         * wordSize);
 
-    // set pending exception
-    __ verify_oop(r0);
-
     __ str(r0, Address(rthread, Thread::pending_exception_offset()));
     __ mov(rscratch1, (address)__FILE__);
     __ str(rscratch1, Address(rthread, Thread::exception_file_offset()));
@@ -390,76 +386,7 @@ class StubGenerator: public StubCodeGenerator {
     // r0: exception
     // r3: throwing pc
     // r19: exception handler
-    __ verify_oop(r0);
     __ br(r19);
-
-    return start;
-  }
-
-  // Non-destructive plausibility checks for oops
-  //
-  // Arguments:
-  //    r0: oop to verify
-  //    rscratch1: error message
-  //
-  // Stack after saving c_rarg3:
-  //    [tos + 0]: saved c_rarg3
-  //    [tos + 1]: saved c_rarg2
-  //    [tos + 2]: saved lr
-  //    [tos + 3]: saved rscratch2
-  //    [tos + 4]: saved r0
-  //    [tos + 5]: saved rscratch1
-  address generate_verify_oop() {
-    StubCodeMark mark(this, "StubRoutines", "verify_oop");
-    address start = __ pc();
-
-    Label exit, error;
-
-    // save c_rarg2 and c_rarg3
-    __ stp(c_rarg3, c_rarg2, Address(__ pre(sp, -16)));
-
-    // __ incrementl(ExternalAddress((address) StubRoutines::verify_oop_count_addr()));
-    __ lea(c_rarg2, ExternalAddress((address) StubRoutines::verify_oop_count_addr()));
-    __ ldr(c_rarg3, Address(c_rarg2));
-    __ add(c_rarg3, c_rarg3, 1);
-    __ str(c_rarg3, Address(c_rarg2));
-
-    // object is in r0
-    // make sure object is 'reasonable'
-    __ cbz(r0, exit); // if obj is NULL it is OK
-
-    // Check if the oop is in the right area of memory
-    __ mov(c_rarg3, (intptr_t) Universe::verify_oop_mask());
-    __ andr(c_rarg2, r0, c_rarg3);
-    __ mov(c_rarg3, (intptr_t) Universe::verify_oop_bits());
-
-    // Compare c_rarg2 and c_rarg3.  We don't use a compare
-    // instruction here because the flags register is live.
-    __ eor(c_rarg2, c_rarg2, c_rarg3);
-    __ cbnz(c_rarg2, error);
-
-    // make sure klass is 'reasonable', which is not zero.
-    __ load_klass(r0, r0);  // get klass
-    __ cbz(r0, error);      // if klass is NULL it is broken
-
-    // return if everything seems ok
-    __ bind(exit);
-
-    __ ldp(c_rarg3, c_rarg2, Address(__ post(sp, 16)));
-    __ ret(lr);
-
-    // handle errors
-    __ bind(error);
-    __ ldp(c_rarg3, c_rarg2, Address(__ post(sp, 16)));
-
-    __ push(RegSet::range(r0, r29), sp);
-    // debug(char* msg, int64_t pc, int64_t regs[])
-    __ mov(c_rarg0, rscratch1);      // pass address of error message
-    __ mov(c_rarg1, lr);             // pass return address
-    __ mov(c_rarg2, sp);             // pass address of regs on stack
-    BLOCK_COMMENT("call MacroAssembler::debug");
-    __ mov(rscratch1, CAST_FROM_FN_PTR(address, MacroAssembler::debug64));
-    __ blrt(rscratch1, 3, 0, 1);
 
     return start;
   }
@@ -1100,10 +1027,9 @@ class StubGenerator: public StubCodeGenerator {
     __ br(Assembler::HS, end);
     if (size == (size_t)wordSize) {
       __ ldr(temp, Address(a, rscratch2, Address::lsl(exact_log2(size))));
-      __ verify_oop(temp);
     } else {
       __ ldrw(r16, Address(a, rscratch2, Address::lsl(exact_log2(size))));
-      __ decode_heap_oop(temp); // calls verify_oop
+      __ decode_heap_oop(temp);
     }
     __ add(rscratch2, rscratch2, size);
     __ b(loop);
@@ -1162,8 +1088,6 @@ class StubGenerator: public StubCodeGenerator {
 
     if (is_oop) {
       __ pop(RegSet::of(d, count), sp);
-      if (VerifyOops)
-        verify_oop_array(size, d, count, r16);
       __ sub(count, count, 1); // make an inclusive end pointer
       __ lea(count, Address(d, count, Address::lsl(exact_log2(size))));
     }
@@ -1227,8 +1151,6 @@ class StubGenerator: public StubCodeGenerator {
     copy_memory(aligned, s, d, count, rscratch1, -size);
     if (is_oop) {
       __ pop(RegSet::of(d, count), sp);
-      if (VerifyOops)
-        verify_oop_array(size, d, count, r16);
       __ sub(count, count, 1); // make an inclusive end pointer
       __ lea(count, Address(d, count, Address::lsl(exact_log2(size))));
     }
@@ -5107,8 +5029,6 @@ class StubGenerator: public StubCodeGenerator {
   }
 
   void generate_all() {
-    // support for verify_oop (must happen after universe_init)
-    StubRoutines::_verify_oop_subroutine_entry     = generate_verify_oop();
     StubRoutines::_throw_AbstractMethodError_entry = generate_throw_exception("AbstractMethodError throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime::throw_AbstractMethodError));
 
     StubRoutines::_throw_IncompatibleClassChangeError_entry = generate_throw_exception("IncompatibleClassChangeError throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime::throw_IncompatibleClassChangeError));

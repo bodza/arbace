@@ -142,9 +142,6 @@ void G1BarrierSetAssembler::g1_write_barrier_pre(MacroAssembler* masm, Register 
   if (pre_val != rax)
     __ push(pre_val);
 
-  // Calling the runtime using the regular call_VM_leaf mechanism generates
-  // code, that checks that the *(ebp+frame::NULL) == NULL.
-  //
   // If we care generating the pre-barrier without a frame (e.g. in the
   // intrinsified Reference.get() routine) then ebp might be pointing to
   // the caller frame and so this check will most likely fail at runtime.

@@ -142,10 +142,10 @@ public:
 
   void clear();
 
-  size_t capacity() const      { return _capacity; }
+  size_t capacity()      const { return _capacity; }
   size_t capacity_mask() const { return _capacity_mask; }
   size_t occupied_entries() const { return _occupied_entries; }
-  size_t occupied_cards() const   { return _occupied_cards; }
+  size_t occupied_cards()   const { return _occupied_cards; }
   size_t mem_size() const;
   // The number of SparsePRTEntry instances available.
   size_t num_entries() const { return _num_entries; }

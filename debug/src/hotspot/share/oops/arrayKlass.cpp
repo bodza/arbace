@@ -15,7 +15,6 @@
 #include "runtime/handles.inline.hpp"
 
 int ArrayKlass::static_size(int header_size) {
-  // If this assert fails, see comments in base_create_array_klass.
   header_size = InstanceKlass::header_size();
   int vtable_len = Universe::base_vtable_size();
   int size = header_size + vtable_len;
@@ -181,16 +180,4 @@ void ArrayKlass::print_value_on(outputStream* st) const {
 void ArrayKlass::oop_print_on(oop obj, outputStream* st) {
   Klass::oop_print_on(obj, st);
   st->print_cr(" - length: %d", arrayOop(obj)->length());
-}
-
-// Verification
-
-void ArrayKlass::verify_on(outputStream* st) {
-  Klass::verify_on(st);
-}
-
-void ArrayKlass::oop_verify_on(oop obj, outputStream* st) {
-  guarantee(obj->is_array(), "must be array");
-  arrayOop a = arrayOop(obj);
-  guarantee(a->length() >= 0, "array with negative length?");
 }

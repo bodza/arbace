@@ -3,7 +3,6 @@
 
 #include "asm/assembler.hpp"
 #include "utilities/macros.hpp"
-#include "runtime/rtmLocking.hpp"
 
 // MacroAssembler extends Assembler by frequently used macros.
 //
@@ -473,28 +472,9 @@ class MacroAssembler: public Assembler {
   // Falls through on failure.
   void check_klass_subtype(Register sub_klass, Register super_klass, Register temp_reg, Label& L_success);
 
-  // method handles (JSR 292)
-  Address argument_address(RegisterOrConstant arg_slot, int extra_slot_offset = 0);
-
-  //----
   void set_word_if_not_zero(Register reg); // sets reg to 1 if not zero, otherwise 0
 
   // Debugging
-
-  // only if +VerifyOops
-  // TODO: Make these macros with file and line like sparc version!
-  void verify_oop(Register reg, const char* s = "broken oop");
-  void verify_oop_addr(Address addr, const char * s = "broken oop addr");
-
-  // TODO: verify method and klass metadata (compare against vptr?)
-  void _verify_method_ptr(Register reg, const char * msg, const char * file, int line) { }
-  void _verify_klass_ptr(Register reg, const char * msg, const char * file, int line) { }
-
-#define verify_method_ptr(reg) _verify_method_ptr(reg, "broken method " #reg, __FILE__, __LINE__)
-#define verify_klass_ptr(reg) _verify_klass_ptr(reg, "broken klass " #reg, __FILE__, __LINE__)
-
-  // only if +VerifyFPU
-  void verify_FPU(int stack_depth, const char* s = "illegal FPU state");
 
   // Verify or restore cpu control state after JNI call
   void restore_cpu_control_state_after_jni();
@@ -511,9 +491,7 @@ class MacroAssembler: public Assembler {
   void os_breakpoint();
 
   void untested()                                { stop("untested"); }
-
   void unimplemented(const char* what = "");
-
   void should_not_reach_here()                   { stop("should not reach here"); }
 
   void print_CPU_state();
@@ -538,8 +516,6 @@ class MacroAssembler: public Assembler {
   // If thread_reg is != noreg the code assumes the register passed contains
   // the thread (required on 64 bit).
   void safepoint_poll(Label& slow_path, Register thread_reg, Register temp_reg);
-
-  void verify_tlab();
 
   // Biased locking support
   // lock_reg and obj_reg must be loaded up with the appropriate values.

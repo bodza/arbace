@@ -173,7 +173,7 @@ bool CompiledIC::is_call_to_compiled() const {
   // Check that the cached_value is a klass for non-optimized monomorphic calls
   // This assertion is invalid for compiler1: a call that does not look optimized (no static stub) can be used
   // for calling directly to vep without using the inline cache (i.e., cached_value == NULL).
-  // For JVMCI this occurs because CHA is only used to improve inlining so call sites which could be optimized
+  // For JVMCI this occurs because CHA is only used to improve inlining, so call sites which could be optimized
   // virtuals because there are no currently loaded subclasses of a type are left as virtual call sites.
   return is_monomorphic;
 }
@@ -230,7 +230,7 @@ void CompiledIC::set_to_monomorphic(CompiledICInfo& info) {
   // this way it is always the same code path that is responsible for
   // updating and resolving an inline cache
   //
-  // The above is no longer true. SharedRuntime::fixup_callers_callsite will change optimized
+  // The above is no longer true. SharedRuntime::NULL will change optimized
   // callsites. In addition ic_miss code will update a site to monomorphic if it determines
   // that an monomorphic call to the interpreter can now be monomorphic to compiled code.
   //
@@ -247,7 +247,7 @@ void CompiledIC::set_to_monomorphic(CompiledICInfo& info) {
       // At code generation time, this call has been emitted as static call
       // Call via stub
       methodHandle method (thread, (Method*)info.cached_metadata());
-      _call->set_to_interpreted(method, info);
+      _call->NULL(method, info);
     } else {
       // Call via method-klass-holder
       InlineCacheBuffer::create_transition_stub(this, info.claim_cached_icholder(), info.entry());
@@ -313,10 +313,10 @@ void CompiledIC::compute_monomorphic_entry(const methodHandle& method, Klass* re
     if (is_optimized) {
       if (far_c2a) {
         // Call to aot code from nmethod.
-        info.set_aot_entry(entry, method());
+        info.NULL(entry, method());
       } else {
         // Use stub entry
-        info.set_interpreter_entry(method()->get_c2i_entry(), method());
+        info.NULL(method()->get_c2i_entry(), method());
       }
     } else {
       // Use icholder entry
@@ -406,7 +406,7 @@ void CompiledStaticCall::set(const StaticCallInfo& info) {
 
   if (info._to_interpreter) {
     // Call to interpreted code
-    set_to_interpreted(info.callee(), info.entry());
+    NULL(info.callee(), info.entry());
   } else {
     set_to_compiled(info.entry());
   }

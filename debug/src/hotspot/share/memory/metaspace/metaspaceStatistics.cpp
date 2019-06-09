@@ -112,7 +112,7 @@ void UsedChunksStatistics::print_on(outputStream* st, size_t scale) const {
 SpaceManagerStatistics::SpaceManagerStatistics() { reset(); }
 
 void SpaceManagerStatistics::reset() {
-  for (int i = 0; i < NumberOfInUseLists; i ++) {
+  for (int i = 0; i < NumberOfInUseLists; i++) {
     _chunk_stats[i].reset();
     _free_blocks_num = 0; _free_blocks_cap_words = 0;
   }

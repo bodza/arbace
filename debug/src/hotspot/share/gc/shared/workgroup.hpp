@@ -156,7 +156,7 @@ class AbstractWorkGang : public CHeapObj<mtInternal> {
   const char* name() const { return _name; }
 
   // Printing
-  void print_worker_threads_on(outputStream *st) const;
+  void print_worker_threads_on(outputStream* st) const;
   void print_worker_threads() const {
     print_worker_threads_on(tty);
   }

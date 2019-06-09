@@ -29,8 +29,8 @@ class HeapBlock {
   void initialize(size_t length)                 { _header._length = length; set_used(); }
 
   // Accessors
-  void* allocated_space() const                  { return (void*)(this + 1); }
-  size_t length() const                          { return _header._length; }
+  void* allocated_space()                  const { return (void*)(this + 1); }
+  size_t length()                          const { return _header._length; }
 
   // Used/free
   void set_used()                                { _header._used = true; }
@@ -51,7 +51,7 @@ class FreeBlock: public HeapBlock {
   void set_length(size_t l)                  { _header._length = l; }
 
   // Accessors
-  FreeBlock* link() const                    { return _link; }
+  FreeBlock* link()                    const { return _link; }
   void set_link(FreeBlock* link)             { _link = link; }
 };
 
@@ -86,9 +86,9 @@ class CodeHeap : public CHeapObj<mtCode> {
   size_t   size_to_segments(size_t size) const { return (size + _segment_size - 1) >> _log2_segment_size; }
   size_t   segments_to_size(size_t number_of_segments) const { return number_of_segments << _log2_segment_size; }
 
-  size_t   segment_for(void* p) const            { return ((char*)p - _memory.low()) >> _log2_segment_size; }
-  bool     is_segment_unused(int val) const      { return val == free_sentinel; }
-  HeapBlock* block_at(size_t i) const            { return (HeapBlock*)(_memory.low() + (i << _log2_segment_size)); }
+  size_t   segment_for(void* p)            const { return ((char*)p - _memory.low()) >> _log2_segment_size; }
+  bool     is_segment_unused(int val)      const { return val == free_sentinel; }
+  HeapBlock* block_at(size_t i)            const { return (HeapBlock*)(_memory.low() + (i << _log2_segment_size)); }
 
   void  mark_segmap_as_free(size_t beg, size_t end);
   void  mark_segmap_as_used(size_t beg, size_t end);
@@ -128,19 +128,16 @@ class CodeHeap : public CHeapObj<mtCode> {
   void  deallocate_tail(void* p, size_t used_size);
 
   // Attributes
-  char* low_boundary() const                     { return _memory.low_boundary(); }
-  char* high() const                             { return _memory.high(); }
-  char* high_boundary() const                    { return _memory.high_boundary(); }
+  char* low_boundary()                     const { return _memory.low_boundary(); }
+  char* high()                             const { return _memory.high(); }
+  char* high_boundary()                    const { return _memory.high_boundary(); }
 
-  bool contains(const void* p) const             { return low_boundary() <= p && p < high(); }
+  bool contains(const void* p)             const { return low_boundary() <= p && p < high(); }
   bool contains_blob(const CodeBlob* blob) const {
-    // AOT CodeBlobs (i.e. AOTCompiledMethod) objects aren't allocated in the AOTCodeHeap but on the C-Heap.
-    // Only the code they are pointing to is located in the AOTCodeHeap. All other CodeBlobs are allocated
+    // CodeBlobs are allocated
     // directly in their corresponding CodeHeap with their code appended to the actual C++ object.
-    // So all CodeBlobs except AOTCompiledMethod are continuous in memory with their data and code while
-    // AOTCompiledMethod and their code/data is distributed in the C-Heap. This means we can use the
-    // address of a CodeBlob object in order to locate it in its heap while we have to use the address
-    // of the actual code an AOTCompiledMethod object is pointing to in order to locate it.
+    // So all CodeBlobs are continuous in memory with their data and code. This means we can use the
+    // address of a CodeBlob object in order to locate it in its heap.
     // Notice that for an ordinary CodeBlob with code size zero, code_begin() may point beyond the object!
     const void* start = (void*)blob;
     return contains(start);
@@ -158,28 +155,28 @@ class CodeHeap : public CHeapObj<mtCode> {
 
   FreeBlock* freelist()         const { return _freelist; }      // for CodeHeapState
 
-  size_t allocated_in_freelist() const           { return _freelist_segments * CodeCacheSegmentSize; }
-  int    freelist_length()       const           { return _freelist_length; } // number of elements in the freelist
+  size_t allocated_in_freelist()           const { return _freelist_segments * CodeCacheSegmentSize; }
+  int    freelist_length()                 const { return _freelist_length; } // number of elements in the freelist
 
   // returns the first block or NULL
-  virtual void* first() const                    { return next_used(first_block()); }
+  virtual void* first()                    const { return next_used(first_block()); }
   // returns the next block given a block p or NULL
-  virtual void* next(void* p) const              { return next_used(next_block(block_start(p))); }
+  virtual void* next(void* p)              const { return next_used(next_block(block_start(p))); }
 
   // Statistics
   size_t capacity() const;
   size_t max_capacity() const;
   int    allocated_segments() const;
   size_t allocated_capacity() const;
-  size_t max_allocated_capacity() const          { return _max_allocated_capacity; }
-  size_t unallocated_capacity() const            { return max_capacity() - allocated_capacity(); }
+  size_t max_allocated_capacity()          const { return _max_allocated_capacity; }
+  size_t unallocated_capacity()            const { return max_capacity() - allocated_capacity(); }
 
   // Returns true if the CodeHeap contains CodeBlobs of the given type
-  bool accepts(int code_blob_type) const         { return (_code_blob_type == CodeBlobType::All) || (_code_blob_type == code_blob_type); }
-  int code_blob_type() const                     { return _code_blob_type; }
+  bool accepts(int code_blob_type)         const { return (_code_blob_type == CodeBlobType::All) || (_code_blob_type == code_blob_type); }
+  int code_blob_type()                     const { return _code_blob_type; }
 
   // Debugging / Profiling
-  const char* name() const                       { return _name; }
+  const char* name()                       const { return _name; }
   int         blob_count()                       { return _blob_count; }
   int         nmethod_count()                    { return _nmethod_count; }
   void    set_nmethod_count(int count)           {        _nmethod_count = count; }

@@ -2,7 +2,6 @@
 
 #include "jni.h"
 #include "jvm.h"
-#include "ci/ciReplay.hpp"
 #include "classfile/altHashing.hpp"
 #include "classfile/classFileStream.hpp"
 #include "classfile/classLoader.hpp"
@@ -109,13 +108,7 @@ bool jfieldIDWorkaround::klass_hash_ok(Klass* k, jfieldID id) {
 
 void jfieldIDWorkaround::verify_instance_jfieldID(Klass* k, jfieldID id) {
   guarantee(jfieldIDWorkaround::is_instance_jfieldID(k, id), "must be an instance field" );
-  uintptr_t as_uint = (uintptr_t) id;
   intptr_t offset = raw_instance_offset(id);
-  if (VerifyJNIFields) {
-    if (is_checked_jfieldID(id)) {
-      guarantee(klass_hash_ok(k, id), "Bug in native code: jfieldID class must match object");
-    }
-  }
   guarantee(InstanceKlass::cast(k)->contains_field_offset(offset), "Bug in native code: jfieldID offset must address interior of object");
 }
 
@@ -238,7 +231,7 @@ JNI_ENTRY(jfieldID, jni_FromReflectedField(JNIEnv *env, jobject field))
 
   // First check if this is a static field
   if (modifiers & JVM_ACC_STATIC) {
-    intptr_t offset = InstanceKlass::cast(k1)->field_offset( slot );
+    intptr_t offset = InstanceKlass::cast(k1)->field_offset(slot);
     JNIid* id = InstanceKlass::cast(k1)->jni_id_for(offset);
     // A jfieldID for a static field is a JNIid specifying the field holder and the offset within the Klass*
     return jfieldIDWorkaround::to_static_jfieldID(id);
@@ -246,8 +239,7 @@ JNI_ENTRY(jfieldID, jni_FromReflectedField(JNIEnv *env, jobject field))
 
   // The slot is the index of the field description in the field-array
   // The jfieldID is the offset of the field within the object
-  // It may also have hash bits for k, if VerifyJNIFields is turned on.
-  intptr_t offset = InstanceKlass::cast(k1)->field_offset( slot );
+  intptr_t offset = InstanceKlass::cast(k1)->field_offset(slot);
   return jfieldIDWorkaround::to_instance_jfieldID(k1, offset);
 JNI_END
 
@@ -1102,7 +1094,6 @@ JNI_ENTRY(jfieldID, jni_GetFieldID(JNIEnv *env, jclass clazz, const char *name, 
   }
 
   // A jfieldID for a non-static field is simply the offset of the field within the instanceOop
-  // It may also have hash bits for k, if VerifyJNIFields is turned on.
   return jfieldIDWorkaround::to_instance_jfieldID(k, fd.offset());
 JNI_END
 
@@ -2262,7 +2253,7 @@ void copy_jni_function_table(const struct JNINativeInterface_ *new_jni_NativeInt
 
 void quicken_jni_functions() {
   // Replace Get<Primitive>Field with fast versions
-  if (UseFastJNIAccessors && !VerifyJNIFields && !CountJNICalls) {
+  if (UseFastJNIAccessors) {
     address func;
     func = JNI_FastGetField::generate_fast_get_boolean_field();
     if (func != (address)-1) {

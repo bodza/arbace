@@ -42,8 +42,6 @@ class StubAssembler;
   stub(load_mirror_patching) \
   stub(load_appendix_patching) \
   stub(fpu2long_stub) \
-  stub(counter_overflow) \
-  stub(predicate_failed_trap) \
   last_entry(number_of_ids)
 
 #define DECLARE_STUB_ID(x)       x ## _id ,
@@ -90,9 +88,7 @@ class Runtime1: public AllStatic {
   static void new_object_array(JavaThread* thread, Klass* klass, jint length);
   static void new_multi_array (JavaThread* thread, Klass* klass, int rank, jint* dims);
 
-  static address counter_overflow(JavaThread* thread, int bci, Method* method);
-
-  static void unimplemented_entry   (JavaThread* thread, StubID id);
+  static void unimplemented_entry(JavaThread* thread, StubID id);
 
   static address exception_handler_for_pc(JavaThread* thread);
 
@@ -107,12 +103,9 @@ class Runtime1: public AllStatic {
   static void monitorenter(JavaThread* thread, oopDesc* obj, BasicObjectLock* lock);
   static void monitorexit (JavaThread* thread, BasicObjectLock* lock);
 
-  static void deoptimize(JavaThread* thread, jint trap_request);
-
   static int access_field_patching(JavaThread* thread);
   static int move_klass_patching(JavaThread* thread);
   static int move_mirror_patching(JavaThread* thread);
-  static int move_appendix_patching(JavaThread* thread);
 
   static void patch_code(JavaThread* thread, StubID stub_id);
 
@@ -135,8 +128,6 @@ class Runtime1: public AllStatic {
 
   // directly accessible leaf routine
   static int  is_instance_of(oopDesc* mirror, oopDesc* obj);
-
-  static void predicate_failed_trap(JavaThread* thread);
 };
 
 #endif

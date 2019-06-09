@@ -37,16 +37,16 @@ struct InCSetState {
 
   InCSetState(in_cset_state_t value = NotInCSet) : _value(value) { }
 
-  in_cset_state_t value() const        { return _value; }
+  in_cset_state_t value()        const { return _value; }
 
   void set_old()                       { _value = Old; }
 
   bool is_in_cset_or_humongous() const { return is_in_cset() || is_humongous(); }
-  bool is_in_cset() const              { return _value > NotInCSet; }
+  bool is_in_cset()              const { return _value > NotInCSet; }
 
-  bool is_humongous() const            { return _value == Humongous; }
-  bool is_young() const                { return _value == Young; }
-  bool is_old() const                  { return _value == Old; }
+  bool is_humongous()            const { return _value == Humongous; }
+  bool is_young()                const { return _value == Young; }
+  bool is_old()                  const { return _value == Old; }
 };
 
 // Instances of this class are used for quick tests on whether a reference points

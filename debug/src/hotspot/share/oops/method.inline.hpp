@@ -8,10 +8,6 @@ inline address Method::from_compiled_entry() const {
   return OrderAccess::load_acquire(&_from_compiled_entry);
 }
 
-inline address Method::from_interpreted_entry() const {
-  return OrderAccess::load_acquire(&_from_interpreted_entry);
-}
-
 inline void Method::set_method_data(MethodData* data) {
   // The store into method must be released. On platforms without
   // total store order (TSO) the reference may become visible before

@@ -13,7 +13,6 @@
 #include "oops/cpCache.inline.hpp"
 #include "oops/objArrayOop.inline.hpp"
 #include "oops/oop.inline.hpp"
-#include "prims/methodHandles.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/orderAccess.hpp"
@@ -116,10 +115,10 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
         set_f1(holder); // interface klass*
         break;
       } else {
-        // We get here from NULL::resolve_invoke when an invokeinterface
-        // instruction links to a non-interface method (in Object). This can happen when
-        // an interface redeclares an Object method (like CharSequence declaring toString())
-        // or when invokeinterface is used explicitly.
+        // We get here from NULL::resolve_invoke when an invokeinterface instruction
+        // links to a non-interface method (in Object). This can happen when an interface
+        // redeclares an Object method (like CharSequence declaring toString()) or when
+        // invokeinterface is used explicitly.
         // In that case, the method has no itable index and must be invoked as a virtual.
         // Set a flag to keep track of this corner case.
         change_to_virtual = true;
@@ -231,102 +230,6 @@ void ConstantPoolCacheEntry::set_itable_call(Bytecodes::Code invoke_code, Klass*
   set_bytecode_1(Bytecodes::_invokeinterface);
 }
 
-void ConstantPoolCacheEntry::set_method_handle(const constantPoolHandle& cpool, const CallInfo &call_info) {
-  set_method_handle_common(cpool, Bytecodes::_invokehandle, call_info);
-}
-
-void ConstantPoolCacheEntry::set_dynamic_call(const constantPoolHandle& cpool, const CallInfo &call_info) {
-  set_method_handle_common(cpool, Bytecodes::_invokedynamic, call_info);
-}
-
-void ConstantPoolCacheEntry::set_method_handle_common(const constantPoolHandle& cpool, Bytecodes::Code invoke_code, const CallInfo &call_info) {
-  // NOTE: This CPCE can be the subject of data races.
-  // There are three words to update: flags, refs[f2], f1 (in that order).
-  // Writers must store all other values before f1.
-  // Readers must test f1 first for non-null before reading other fields.
-  // Competing writers must acquire exclusive access via a lock.
-  // A losing writer waits on the lock until the winner writes f1 and leaves
-  // the lock, so that when the losing writer returns, he can use the linked
-  // cache entry.
-
-  objArrayHandle resolved_references(Thread::current(), cpool->resolved_references());
-  // Use the resolved_references() lock for this cpCache entry.
-  // resolved_references are created for all classes with Invokedynamic, MethodHandle
-  // or MethodType constant pool cache entries.
-  ObjectLocker ol(resolved_references, Thread::current());
-  if (!is_f1_null()) {
-    return;
-  }
-
-  if (indy_resolution_failed()) {
-    // Before we got here, another thread got a LinkageError exception during
-    // resolution.  Ignore our success and throw their exception.
-    ConstantPoolCache* cpCache = cpool->cache();
-    int index = -1;
-    for (int i = 0; i < cpCache->length(); i++) {
-      if (cpCache->entry_at(i) == this) {
-        index = i;
-        break;
-      }
-    }
-    guarantee(index >= 0, "Didn't find cpCache entry!");
-    int encoded_index = ResolutionErrorTable::encode_cpcache_index(ConstantPool::encode_invokedynamic_index(index));
-    Thread* THREAD = Thread::current();
-    ConstantPool::throw_resolution_error(cpool, encoded_index, THREAD);
-    return;
-  }
-
-  const methodHandle adapter = call_info.resolved_method();
-  const Handle appendix      = call_info.resolved_appendix();
-  const Handle method_type   = call_info.resolved_method_type();
-  const bool has_appendix    = appendix.not_null();
-  const bool has_method_type = method_type.not_null();
-
-  // Write the flags.
-  set_method_flags(as_TosState(adapter->result_type()),
-                   ((has_appendix    ? 1 : 0) << has_appendix_shift   ) |
-                   ((has_method_type ? 1 : 0) << has_method_type_shift) |
-                   (                   1      << is_final_shift       ),
-                   adapter->size_of_parameters());
-
-  // Method handle invokes and invokedynamic sites use both cp cache words.
-  // refs[f2], if not null, contains a value passed as a trailing argument to the adapter.
-  // In the general case, this could be the call site's MethodType,
-  // for use with java.lang.Invokers.checkExactType, or else a CallSite object.
-  // f1 contains the adapter method which manages the actual call.
-  // In the general case, this is a compiled LambdaForm.
-  // (The Java code is free to optimize these calls by binding other
-  // sorts of methods and appendices to call sites.)
-  // JVM-level linking is via f1, as if for invokespecial, and signatures are erased.
-  // The appendix argument (if any) is added to the signature, and is counted in the parameter_size bits.
-  // Even with the appendix, the method will never take more than 255 parameter slots.
-  //
-  // This means that given a call site like (List)mh.invoke("foo"),
-  // the f1 method has signature '(Ljl/Object;Ljl/invoke/MethodType;)Ljl/Object;',
-  // not '(Ljava/lang/String;)Ljava/util/List;'.
-  // The fact that String and List are involved is encoded in the MethodType in refs[f2].
-  // This allows us to create fewer Methods, while keeping type safety.
-  //
-
-  // Store appendix, if any.
-  if (has_appendix) {
-    const int appendix_index = f2_as_index() + _indy_resolved_references_appendix_offset;
-    resolved_references->obj_at_put(appendix_index, appendix());
-  }
-
-  // Store MethodType, if any.
-  if (has_method_type) {
-    const int method_type_index = f2_as_index() + _indy_resolved_references_method_type_offset;
-    resolved_references->obj_at_put(method_type_index, method_type());
-  }
-
-  release_set_f1(adapter());  // This must be the last one to set (see NOTE above)!
-
-  // The interpreter assembly code does not check byte_2,
-  // but it is used by is_resolved, method_if_resolved, etc.
-  set_bytecode_1(invoke_code);
-}
-
 bool ConstantPoolCacheEntry::save_and_throw_indy_exc(const constantPoolHandle& cpool, int cpool_index, int index, constantTag tag, TRAPS) {
   // Use the resolved_references() lock for this cpCache entry.
   // resolved_references are created for all classes with Invokedynamic, MethodHandle
@@ -363,8 +266,6 @@ Method* ConstantPoolCacheEntry::method_if_resolved(const constantPoolHandle& cpo
         return klassItable::method_for_itable_index((Klass*)f1, f2_as_index());
       case Bytecodes::_invokestatic:
       case Bytecodes::_invokespecial:
-      case Bytecodes::_invokehandle:
-      case Bytecodes::_invokedynamic:
         return (Method*)f1;
       default:
         break;
@@ -398,14 +299,6 @@ oop ConstantPoolCacheEntry::appendix_if_resolved(const constantPoolHandle& cpool
   if (!has_appendix())
     return NULL;
   const int ref_index = f2_as_index() + _indy_resolved_references_appendix_offset;
-  objArrayOop resolved_references = cpool->resolved_references();
-  return resolved_references->obj_at(ref_index);
-}
-
-oop ConstantPoolCacheEntry::method_type_if_resolved(const constantPoolHandle& cpool) {
-  if (!has_method_type())
-    return NULL;
-  const int ref_index = f2_as_index() + _indy_resolved_references_method_type_offset;
   objArrayOop resolved_references = cpool->resolved_references();
   return resolved_references->obj_at(ref_index);
 }
@@ -473,37 +366,11 @@ void ConstantPoolCache::walk_entries_for_initialization(bool check_only) {
   // - All other bits in the entries are cleared to zero.
   ResourceMark rm;
 
-  InstanceKlass* ik = constant_pool()->pool_holder();
   bool* f2_used = NEW_RESOURCE_ARRAY(bool, length());
   memset(f2_used, 0, sizeof(bool) * length());
 
-  // Find all the slots that we need to preserve f2
-  for (int i = 0; i < ik->methods()->length(); i++) {
-    Method* m = ik->methods()->at(i);
-    RawBytecodeStream bcs(m);
-    while (!bcs.is_last_bytecode()) {
-      Bytecodes::Code opcode = bcs.raw_next();
-      switch (opcode) {
-      case Bytecodes::_invokedynamic: {
-          int index = Bytes::get_native_u4(bcs.bcp() + 1);
-          int cp_cache_index = constant_pool()->invokedynamic_cp_cache_index(index);
-          f2_used[cp_cache_index] = 1;
-        }
-        break;
-      case Bytecodes::_invokehandle: {
-          int cp_cache_index = Bytes::get_native_u2(bcs.bcp() + 1);
-          f2_used[cp_cache_index] = 1;
-        }
-        break;
-      default:
-        break;
-      }
-    }
-  }
-
-  if (check_only) {
-  } else {
-    for (int i = 0; i<length(); i++) {
+  if (!check_only) {
+    for (int i = 0; i < length(); i++) {
       entry_at(i)->reinitialize(f2_used[i]);
     }
   }
@@ -534,10 +401,4 @@ void ConstantPoolCache::print_value_on(outputStream* st) const {
   print_address_on(st);
   st->print(" for ");
   constant_pool()->print_value_on(st);
-}
-
-// Verification
-
-void ConstantPoolCache::verify_on(outputStream* st) {
-  guarantee(is_constantPoolCache(), "obj must be constant pool cache");
 }

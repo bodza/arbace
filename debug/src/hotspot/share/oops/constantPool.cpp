@@ -380,20 +380,6 @@ oop ConstantPool::appendix_at_if_loaded(const constantPoolHandle& cpool, int whi
   return e->appendix_if_resolved(cpool);
 }
 
-bool ConstantPool::has_method_type_at_if_loaded(const constantPoolHandle& cpool, int which) {
-  if (cpool->cache() == NULL)  return false;  // nothing to load yet
-  int cache_index = decode_cpcache_index(which, true);
-  ConstantPoolCacheEntry* e = cpool->cache()->entry_at(cache_index);
-  return e->has_method_type();
-}
-
-oop ConstantPool::method_type_at_if_loaded(const constantPoolHandle& cpool, int which) {
-  if (cpool->cache() == NULL)  return NULL;  // nothing to load yet
-  int cache_index = decode_cpcache_index(which, true);
-  ConstantPoolCacheEntry* e = cpool->cache()->entry_at(cache_index);
-  return e->method_type_if_resolved(cpool);
-}
-
 Symbol* ConstantPool::impl_name_ref_at(int which, bool uncached) {
   int name_index = name_ref_index_at(impl_name_and_type_ref_index_at(which, uncached));
   return symbol_at(name_index);
@@ -415,11 +401,6 @@ int ConstantPool::impl_name_and_type_ref_index_at(int which, bool uncached) {
     }
     // change byte-ordering and go via cache
     i = remap_instruction_operand_from_cache(which);
-  } else {
-    if (tag_at(which).is_invoke_dynamic() || tag_at(which).is_dynamic_constant() || tag_at(which).is_dynamic_constant_in_error()) {
-      int pool_index = invoke_dynamic_name_and_type_ref_index_at(which);
-      return pool_index;
-    }
   }
   jint ref_index = *int_at_addr(i);
   return extract_high_short_from_int(ref_index);
@@ -522,14 +503,6 @@ Symbol* ConstantPool::exception_message(const constantPoolHandle& this_cp, int w
     // return the class name in the error message
     message = this_cp->klass_name_at(which);
     break;
-  case JVM_CONSTANT_MethodHandle:
-    // return the method handle name in the error message
-    message = this_cp->method_handle_name_ref_at(which);
-    break;
-  case JVM_CONSTANT_MethodType:
-    // return the method type signature in the error message
-    message = this_cp->method_type_signature_at(which);
-    break;
   default:
     ShouldNotReachHere();
   }
@@ -569,7 +542,7 @@ void ConstantPool::save_and_throw_exception(const constantPoolHandle& this_cp, i
     // this error, so it needs to get the same error if the error is first.
     jbyte old_tag = Atomic::cmpxchg((jbyte)error_tag, (jbyte*)this_cp->tag_addr_at(which), (jbyte)tag.value());
     if (old_tag != error_tag && old_tag != tag.value()) {
-      // MethodHandles and MethodType doesn't change to resolved version.
+      // MethodType doesn't change to resolved version.
       // Forget the exception and use the resolved class.
       CLEAR_PENDING_EXCEPTION;
     }
@@ -580,23 +553,11 @@ void ConstantPool::save_and_throw_exception(const constantPoolHandle& this_cp, i
 }
 
 constantTag ConstantPool::constant_tag_at(int which) {
-  constantTag tag = tag_at(which);
-  if (tag.is_dynamic_constant() || tag.is_dynamic_constant_in_error()) {
-    // have to look at the signature for this one
-    Symbol* constant_type = uncached_signature_ref_at(which);
-    return constantTag::ofBasicType(FieldType::basic_type(constant_type));
-  }
-  return tag;
+  return tag_at(which);
 }
 
 BasicType ConstantPool::basic_type_for_constant_at(int which) {
-  constantTag tag = tag_at(which);
-  if (tag.is_dynamic_constant() || tag.is_dynamic_constant_in_error()) {
-    // have to look at the signature for this one
-    Symbol* constant_type = uncached_signature_ref_at(which);
-    return FieldType::basic_type(constant_type);
-  }
-  return tag.basic_type();
+  return tag_at(which).basic_type();
 }
 
 // Called to resolve constants in the constant pool and return an oop.
@@ -671,57 +632,6 @@ oop ConstantPool::resolve_constant_at_impl(const constantPoolHandle& this_cp, in
       break;
     }
 
-  case JVM_CONSTANT_Dynamic:
-    {
-      Klass* current_klass  = this_cp->pool_holder();
-      Symbol* constant_name = this_cp->uncached_name_ref_at(index);
-      Symbol* constant_type = this_cp->uncached_signature_ref_at(index);
-
-      // The initial step in resolving an unresolved symbolic reference to a
-      // dynamically-computed constant is to resolve the symbolic reference to a
-      // method handle which will be the bootstrap method for the dynamically-computed
-      // constant. If resolution of the java.lang.invoke.MethodHandle for the bootstrap
-      // method fails, then a MethodHandleInError is stored at the corresponding
-      // bootstrap method's CP index for the CONSTANT_MethodHandle_info. No need to
-      // set a DynamicConstantInError here since any subsequent use of this
-      // bootstrap method will encounter the resolution of MethodHandleInError.
-      oop bsm_info = this_cp->resolve_bootstrap_specifier_at(index, THREAD);
-      Exceptions::wrap_dynamic_exception(CHECK_NULL);
-      // FIXME: Cache this once per BootstrapMethods entry, not once per CONSTANT_Dynamic.
-      Handle bootstrap_specifier = Handle(THREAD, bsm_info);
-
-      // Resolve the Dynamically-Computed constant to invoke the BSM in order to obtain the resulting oop.
-      Handle value = SystemDictionary::link_dynamic_constant(current_klass, index, bootstrap_specifier, constant_name, constant_type, THREAD);
-      result_oop = value();
-      Exceptions::wrap_dynamic_exception(THREAD);
-      if (HAS_PENDING_EXCEPTION) {
-        // Resolution failure of the dynamically-computed constant, save_and_throw_exception
-        // will check for a LinkageError and store a DynamicConstantInError.
-        save_and_throw_exception(this_cp, index, tag, CHECK_NULL);
-      }
-      BasicType type = FieldType::basic_type(constant_type);
-      if (!is_reference_type(type)) {
-        // Make sure the primitive value is properly boxed.
-        // This is a JDK responsibility.
-        const char* fail = NULL;
-        if (result_oop == NULL) {
-          fail = "null result instead of box";
-        } else if (!is_java_primitive(type)) {
-          // FIXME: support value types via unboxing
-          fail = "can only handle references and primitives";
-        } else if (!java_lang_boxing_object::is_instance(result_oop, type)) {
-          fail = "primitive is not properly boxed";
-        }
-        if (fail != NULL) {
-          // Since this exception is not a LinkageError, throw exception
-          // but do not save a DynamicInError resolution result.
-          // See section 5.4.3 of the VM spec.
-          THROW_MSG_NULL(vmSymbols::java_lang_InternalError(), fail);
-        }
-      }
-      break;
-    }
-
   case JVM_CONSTANT_String:
     if (this_cp->is_pseudo_string_at(index)) {
       result_oop = this_cp->pseudo_string_at(index, cache_index);
@@ -729,60 +639,6 @@ oop ConstantPool::resolve_constant_at_impl(const constantPoolHandle& this_cp, in
     }
     result_oop = string_at_impl(this_cp, index, cache_index, CHECK_NULL);
     break;
-
-  case JVM_CONSTANT_DynamicInError:
-  case JVM_CONSTANT_MethodHandleInError:
-  case JVM_CONSTANT_MethodTypeInError:
-    {
-      throw_resolution_error(this_cp, index, CHECK_NULL);
-      break;
-    }
-
-  case JVM_CONSTANT_MethodHandle:
-    {
-      int ref_kind                 = this_cp->method_handle_ref_kind_at(index);
-      int callee_index             = this_cp->method_handle_klass_index_at(index);
-      Symbol*  name =      this_cp->method_handle_name_ref_at(index);
-      Symbol*  signature = this_cp->method_handle_signature_ref_at(index);
-      constantTag m_tag  = this_cp->tag_at(this_cp->method_handle_index_at(index));
-      { ResourceMark rm(THREAD);
-      }
-
-      Klass* callee = klass_at_impl(this_cp, callee_index, true, CHECK_NULL);
-
-      // Check constant pool method consistency
-      if ((callee->is_interface() && m_tag.is_method()) || ((!callee->is_interface() && m_tag.is_interface_method()))) {
-        ResourceMark rm(THREAD);
-        char buf[400];
-        jio_snprintf(buf, sizeof(buf), "Inconsistent constant pool data in classfile for class %s. Method %s%s at index %d is %s and should be %s",
-          callee->name()->as_C_string(), name->as_C_string(), signature->as_C_string(), index,
-          callee->is_interface() ? "CONSTANT_MethodRef" : "CONSTANT_InterfaceMethodRef",
-          callee->is_interface() ? "CONSTANT_InterfaceMethodRef" : "CONSTANT_MethodRef");
-        THROW_MSG_NULL(vmSymbols::java_lang_IncompatibleClassChangeError(), buf);
-      }
-
-      Klass* klass = this_cp->pool_holder();
-      Handle value = SystemDictionary::link_method_handle_constant(klass, ref_kind, callee, name, signature, THREAD);
-      result_oop = value();
-      if (HAS_PENDING_EXCEPTION) {
-        save_and_throw_exception(this_cp, index, tag, CHECK_NULL);
-      }
-      break;
-    }
-
-  case JVM_CONSTANT_MethodType:
-    {
-      Symbol*  signature = this_cp->method_type_signature_at(index);
-      { ResourceMark rm(THREAD);
-      }
-      Klass* klass = this_cp->pool_holder();
-      Handle value = SystemDictionary::find_method_handle_type(signature, klass, THREAD);
-      result_oop = value();
-      if (HAS_PENDING_EXCEPTION) {
-        save_and_throw_exception(this_cp, index, tag, CHECK_NULL);
-      }
-      break;
-    }
 
   case JVM_CONSTANT_Integer:
     prim_value.i = this_cp->int_at(index);
@@ -815,13 +671,11 @@ oop ConstantPool::resolve_constant_at_impl(const constantPoolHandle& this_cp, in
     // It doesn't matter which racing thread wins, as long as only one
     // result is used by all threads, and all future queries.
     oop new_result = (result_oop == NULL ? Universe::the_null_sentinel() : result_oop);
-    oop old_result = this_cp->resolved_references()
-      ->atomic_compare_exchange_oop(cache_index, new_result, NULL);
+    oop old_result = this_cp->resolved_references()->atomic_compare_exchange_oop(cache_index, new_result, NULL);
     if (old_result == NULL) {
       return result_oop;  // was installed
     } else {
-      // Return the winning thread's result.  This can be different than
-      // the result here for MethodHandles.
+      // Return the winning thread's result.
       if (oopDesc::equals(old_result, Universe::the_null_sentinel()))
         old_result = NULL;
       return old_result;
@@ -835,150 +689,6 @@ oop ConstantPool::uncached_string_at(int which, TRAPS) {
   Symbol* sym = unresolved_string_at(which);
   oop str = StringTable::intern(sym, CHECK_(NULL));
   return str;
-}
-
-oop ConstantPool::resolve_bootstrap_specifier_at_impl(const constantPoolHandle& this_cp, int index, TRAPS) {
-  Handle bsm;
-  int argc;
-  {
-    // JVM_CONSTANT_InvokeDynamic is an ordered pair of [bootm, name&mtype], plus optional arguments
-    // JVM_CONSTANT_Dynamic is an ordered pair of [bootm, name&ftype], plus optional arguments
-    // In both cases, the bootm, being a JVM_CONSTANT_MethodHandle, has its own cache entry.
-    // It is accompanied by the optional arguments.
-    int bsm_index = this_cp->invoke_dynamic_bootstrap_method_ref_index_at(index);
-    oop bsm_oop = this_cp->resolve_possibly_cached_constant_at(bsm_index, CHECK_NULL);
-    if (!java_lang_invoke_MethodHandle::is_instance(bsm_oop)) {
-      THROW_MSG_NULL(vmSymbols::java_lang_LinkageError(), "BSM not an MethodHandle");
-    }
-
-    // Extract the optional static arguments.
-    argc = this_cp->invoke_dynamic_argument_count_at(index);
-
-    // if there are no static arguments, return the bsm by itself:
-    if (argc == 0 && UseBootstrapCallInfo < 2)  return bsm_oop;
-
-    bsm = Handle(THREAD, bsm_oop);
-  }
-
-  // We are going to return an ordered pair of {bsm, info}, using a 2-array.
-  objArrayHandle info;
-  {
-    objArrayOop info_oop = oopFactory::new_objArray(SystemDictionary::Object_klass(), 2, CHECK_NULL);
-    info = objArrayHandle(THREAD, info_oop);
-  }
-
-  info->obj_at_put(0, bsm());
-
-  bool use_BSCI;
-  switch (UseBootstrapCallInfo) {
-  default: use_BSCI = true;  break;  // stress mode
-  case 0:  use_BSCI = false; break;  // stress mode
-  case 1:                            // normal mode
-    // If we were to support an alternative mode of BSM invocation,
-    // we'd convert to pull mode here if the BSM could be a candidate
-    // for that alternative mode.  We can't easily test for things
-    // like varargs here, but we can get away with approximate testing,
-    // since the JDK runtime will make up the difference either way.
-    // For now, exercise the pull-mode path if the BSM is of arity 2,
-    // or if there is a potential condy loop (see below).
-    oop mt_oop = java_lang_invoke_MethodHandle::type(bsm());
-    use_BSCI = (java_lang_invoke_MethodType::ptype_count(mt_oop) == 2);
-    break;
-  }
-
-  // Here's a reason to use BSCI even if it wasn't requested:
-  // If a condy uses a condy argument, we want to avoid infinite
-  // recursion (condy loops) in the C code.  It's OK in Java,
-  // because Java has stack overflow checking, so we punt
-  // potentially cyclic cases from C to Java.
-  if (!use_BSCI && this_cp->tag_at(index).is_dynamic_constant()) {
-    bool found_unresolved_condy = false;
-    for (int i = 0; i < argc; i++) {
-      int arg_index = this_cp->invoke_dynamic_argument_index_at(index, i);
-      if (this_cp->tag_at(arg_index).is_dynamic_constant()) {
-        // potential recursion point condy -> condy
-        bool found_it = false;
-        this_cp->find_cached_constant_at(arg_index, found_it, CHECK_NULL);
-        if (!found_it) { found_unresolved_condy = true; break; }
-      }
-    }
-    if (found_unresolved_condy)
-      use_BSCI = true;
-  }
-
-  const int SMALL_ARITY = 5;
-  if (use_BSCI && argc <= SMALL_ARITY && UseBootstrapCallInfo <= 2) {
-    // If there are only a few arguments, and none of them need linking,
-    // push them, instead of asking the JDK runtime to turn around and
-    // pull them, saving a JVM/JDK transition in some simple cases.
-    bool all_resolved = true;
-    for (int i = 0; i < argc; i++) {
-      bool found_it = false;
-      int arg_index = this_cp->invoke_dynamic_argument_index_at(index, i);
-      this_cp->find_cached_constant_at(arg_index, found_it, CHECK_NULL);
-      if (!found_it) { all_resolved = false; break; }
-    }
-    if (all_resolved)
-      use_BSCI = false;
-  }
-
-  if (!use_BSCI) {
-    // return {bsm, {arg...}}; resolution of arguments is done immediately, before JDK code is called
-    objArrayOop args_oop = oopFactory::new_objArray(SystemDictionary::Object_klass(), argc, CHECK_NULL);
-    info->obj_at_put(1, args_oop);   // may overwrite with args[0] below
-    objArrayHandle args(THREAD, args_oop);
-    copy_bootstrap_arguments_at_impl(this_cp, index, 0, argc, args, 0, true, Handle(), CHECK_NULL);
-    if (argc == 1) {
-      // try to discard the singleton array
-      oop arg_oop = args->obj_at(0);
-      if (arg_oop != NULL && !arg_oop->is_array()) {
-        // JVM treats arrays and nulls specially in this position,
-        // but other things are just single arguments
-        info->obj_at_put(1, arg_oop);
-      }
-    }
-  } else {
-    // return {bsm, {arg_count, pool_index}}; JDK code must pull the arguments as needed
-    typeArrayOop ints_oop = oopFactory::new_typeArray(T_INT, 2, CHECK_NULL);
-    ints_oop->int_at_put(0, argc);
-    ints_oop->int_at_put(1, index);
-    info->obj_at_put(1, ints_oop);
-  }
-  return info();
-}
-
-void ConstantPool::copy_bootstrap_arguments_at_impl(const constantPoolHandle& this_cp, int index, int start_arg, int end_arg, objArrayHandle info, int pos, bool must_resolve, Handle if_not_available, TRAPS) {
-  int argc;
-  int limit = pos + end_arg - start_arg;
-  // checks: index in range [0..this_cp->length),
-  // tag at index, start..end in range [0..argc],
-  // info array non-null, pos..limit in [0..info.length]
-  if ((0 >= index    || index >= this_cp->length())  ||
-      !(this_cp->tag_at(index).is_invoke_dynamic()    ||
-        this_cp->tag_at(index).is_dynamic_constant()) ||
-      (0 > start_arg || start_arg > end_arg) ||
-      (end_arg > (argc = this_cp->invoke_dynamic_argument_count_at(index))) ||
-      (0 > pos       || pos > limit)         ||
-      (info.is_null() || limit > info->length())) {
-    // An index or something else went wrong; throw an error.
-    // Since this is an internal API, we don't expect this,
-    // so we don't bother to craft a nice message.
-    THROW_MSG(vmSymbols::java_lang_LinkageError(), "bad BSM argument access");
-  }
-  // now we can loop safely
-  int info_i = pos;
-  for (int i = start_arg; i < end_arg; i++) {
-    int arg_index = this_cp->invoke_dynamic_argument_index_at(index, i);
-    oop arg_oop;
-    if (must_resolve) {
-      arg_oop = this_cp->resolve_possibly_cached_constant_at(arg_index, CHECK);
-    } else {
-      bool found_it = false;
-      arg_oop = this_cp->find_cached_constant_at(arg_index, found_it, CHECK);
-      if (!found_it)  arg_oop = if_not_available();
-    }
-    info->obj_at_put(info_i++, arg_oop);
-  }
 }
 
 oop ConstantPool::string_at_impl(const constantPoolHandle& this_cp, int which, int obj_index, TRAPS) {
@@ -1132,54 +842,6 @@ bool ConstantPool::compare_entry_to(int index1, const constantPoolHandle& cp2, i
     if (k1 == k2) {
       return true;
     }
-  } break;
-
-  case JVM_CONSTANT_MethodType:
-  {
-    int k1 = method_type_index_at(index1);
-    int k2 = cp2->method_type_index_at(index2);
-    bool match = compare_entry_to(k1, cp2, k2, CHECK_false);
-    if (match) {
-      return true;
-    }
-  } break;
-
-  case JVM_CONSTANT_MethodHandle:
-  {
-    int k1 = method_handle_ref_kind_at(index1);
-    int k2 = cp2->method_handle_ref_kind_at(index2);
-    if (k1 == k2) {
-      int i1 = method_handle_index_at(index1);
-      int i2 = cp2->method_handle_index_at(index2);
-      bool match = compare_entry_to(i1, cp2, i2, CHECK_false);
-      if (match) {
-        return true;
-      }
-    }
-  } break;
-
-  case JVM_CONSTANT_Dynamic:
-  {
-    int k1 = invoke_dynamic_name_and_type_ref_index_at(index1);
-    int k2 = cp2->invoke_dynamic_name_and_type_ref_index_at(index2);
-    int i1 = invoke_dynamic_bootstrap_specifier_index(index1);
-    int i2 = cp2->invoke_dynamic_bootstrap_specifier_index(index2);
-    // separate statements and variables because CHECK_false is used
-    bool match_entry = compare_entry_to(k1, cp2, k2, CHECK_false);
-    bool match_operand = compare_operand_to(i1, cp2, i2, CHECK_false);
-    return (match_entry && match_operand);
-  } break;
-
-  case JVM_CONSTANT_InvokeDynamic:
-  {
-    int k1 = invoke_dynamic_name_and_type_ref_index_at(index1);
-    int k2 = cp2->invoke_dynamic_name_and_type_ref_index_at(index2);
-    int i1 = invoke_dynamic_bootstrap_specifier_index(index1);
-    int i2 = cp2->invoke_dynamic_bootstrap_specifier_index(index2);
-    // separate statements and variables because CHECK_false is used
-    bool match_entry = compare_entry_to(k1, cp2, k2, CHECK_false);
-    bool match_operand = compare_operand_to(i1, cp2, i2, CHECK_false);
-    return (match_entry && match_operand);
   } break;
 
   case JVM_CONSTANT_String:
@@ -1456,38 +1118,6 @@ void ConstantPool::copy_entry_to(const constantPoolHandle& from_cp, int from_i, 
     to_cp->symbol_at_put(to_i, s);
   } break;
 
-  case JVM_CONSTANT_MethodType:
-  case JVM_CONSTANT_MethodTypeInError:
-  {
-    jint k = from_cp->method_type_index_at(from_i);
-    to_cp->method_type_index_at_put(to_i, k);
-  } break;
-
-  case JVM_CONSTANT_MethodHandle:
-  case JVM_CONSTANT_MethodHandleInError:
-  {
-    int k1 = from_cp->method_handle_ref_kind_at(from_i);
-    int k2 = from_cp->method_handle_index_at(from_i);
-    to_cp->method_handle_index_at_put(to_i, k1, k2);
-  } break;
-
-  case JVM_CONSTANT_Dynamic:
-  case JVM_CONSTANT_DynamicInError:
-  {
-    int k1 = from_cp->invoke_dynamic_bootstrap_specifier_index(from_i);
-    int k2 = from_cp->invoke_dynamic_name_and_type_ref_index_at(from_i);
-    k1 += operand_array_length(to_cp->operands());  // to_cp might already have operands
-    to_cp->dynamic_constant_at_put(to_i, k1, k2);
-  } break;
-
-  case JVM_CONSTANT_InvokeDynamic:
-  {
-    int k1 = from_cp->invoke_dynamic_bootstrap_specifier_index(from_i);
-    int k2 = from_cp->invoke_dynamic_name_and_type_ref_index_at(from_i);
-    k1 += operand_array_length(to_cp->operands());  // to_cp might already have operands
-    to_cp->invoke_dynamic_at_put(to_i, k1, k2);
-  } break;
-
   // Invalid is used as the tag for the second constant pool entry
   // occupied by JVM_CONSTANT_Double or JVM_CONSTANT_Long. It should
   // not be seen by itself.
@@ -1569,13 +1199,7 @@ jint ConstantPool::cpool_entry_size(jint idx) {
     case JVM_CONSTANT_UnresolvedClass:
     case JVM_CONSTANT_UnresolvedClassInError:
     case JVM_CONSTANT_StringIndex:
-    case JVM_CONSTANT_MethodType:
-    case JVM_CONSTANT_MethodTypeInError:
       return 3;
-
-    case JVM_CONSTANT_MethodHandle:
-    case JVM_CONSTANT_MethodHandleInError:
-      return 4; //tag, ref_kind, ref_index
 
     case JVM_CONSTANT_Integer:
     case JVM_CONSTANT_Float:
@@ -1583,12 +1207,6 @@ jint ConstantPool::cpool_entry_size(jint idx) {
     case JVM_CONSTANT_Methodref:
     case JVM_CONSTANT_InterfaceMethodref:
     case JVM_CONSTANT_NameAndType:
-      return 5;
-
-    case JVM_CONSTANT_Dynamic:
-    case JVM_CONSTANT_DynamicInError:
-    case JVM_CONSTANT_InvokeDynamic:
-      // u1 tag, u2 bsm, u2 nt
       return 5;
 
     case JVM_CONSTANT_Long:
@@ -1733,39 +1351,6 @@ int ConstantPool::copy_cpool_bytes(int cpool_size, SymbolHashMap* tbl, unsigned 
         Bytes::put_Java_u2((address) (bytes + 1), idx1);
         break;
       }
-      case JVM_CONSTANT_MethodHandle:
-      case JVM_CONSTANT_MethodHandleInError: {
-        *bytes = JVM_CONSTANT_MethodHandle;
-        int kind = method_handle_ref_kind_at(idx);
-        idx1 = method_handle_index_at(idx);
-        *(bytes + 1) = (unsigned char) kind;
-        Bytes::put_Java_u2((address) (bytes + 2), idx1);
-        break;
-      }
-      case JVM_CONSTANT_MethodType:
-      case JVM_CONSTANT_MethodTypeInError: {
-        *bytes = JVM_CONSTANT_MethodType;
-        idx1 = method_type_index_at(idx);
-        Bytes::put_Java_u2((address) (bytes + 1), idx1);
-        break;
-      }
-      case JVM_CONSTANT_Dynamic:
-      case JVM_CONSTANT_DynamicInError: {
-        *bytes = tag;
-        idx1 = extract_low_short_from_int(*int_at_addr(idx));
-        idx2 = extract_high_short_from_int(*int_at_addr(idx));
-        Bytes::put_Java_u2((address) (bytes + 1), idx1);
-        Bytes::put_Java_u2((address) (bytes + 3), idx2);
-        break;
-      }
-      case JVM_CONSTANT_InvokeDynamic: {
-        *bytes = tag;
-        idx1 = extract_low_short_from_int(*int_at_addr(idx));
-        idx2 = extract_high_short_from_int(*int_at_addr(idx));
-        Bytes::put_Java_u2((address) (bytes + 1), idx1);
-        Bytes::put_Java_u2((address) (bytes + 3), idx2);
-        break;
-      }
     }
     bytes += ent_size;
     size  += ent_size;
@@ -1907,44 +1492,6 @@ void ConstantPool::print_entry_on(const int index, outputStream* st) {
         }
       }
       break;
-    case JVM_CONSTANT_MethodHandle :
-    case JVM_CONSTANT_MethodHandleInError :
-      st->print("ref_kind=%d", method_handle_ref_kind_at(index));
-      st->print(" ref_index=%d", method_handle_index_at(index));
-      break;
-    case JVM_CONSTANT_MethodType :
-    case JVM_CONSTANT_MethodTypeInError :
-      st->print("signature_index=%d", method_type_index_at(index));
-      break;
-    case JVM_CONSTANT_Dynamic :
-    case JVM_CONSTANT_DynamicInError :
-      {
-        st->print("bootstrap_method_index=%d", invoke_dynamic_bootstrap_method_ref_index_at(index));
-        st->print(" type_index=%d", invoke_dynamic_name_and_type_ref_index_at(index));
-        int argc = invoke_dynamic_argument_count_at(index);
-        if (argc > 0) {
-          for (int arg_i = 0; arg_i < argc; arg_i++) {
-            int arg = invoke_dynamic_argument_index_at(index, arg_i);
-            st->print((arg_i == 0 ? " arguments={%d" : ", %d"), arg);
-          }
-          st->print("}");
-        }
-      }
-      break;
-    case JVM_CONSTANT_InvokeDynamic :
-      {
-        st->print("bootstrap_method_index=%d", invoke_dynamic_bootstrap_method_ref_index_at(index));
-        st->print(" name_and_type_index=%d", invoke_dynamic_name_and_type_ref_index_at(index));
-        int argc = invoke_dynamic_argument_count_at(index);
-        if (argc > 0) {
-          for (int arg_i = 0; arg_i < argc; arg_i++) {
-            int arg = invoke_dynamic_argument_index_at(index, arg_i);
-            st->print((arg_i == 0 ? " arguments={%d" : ", %d"), arg);
-          }
-          st->print("}");
-        }
-      }
-      break;
     default:
       ShouldNotReachHere();
       break;
@@ -1965,34 +1512,6 @@ void ConstantPool::print_value_on(outputStream* st) const {
   }
   if (cache() != NULL) {
     st->print(" cache=" PTR_FORMAT, p2i(cache()));
-  }
-}
-
-// Verification
-
-void ConstantPool::verify_on(outputStream* st) {
-  guarantee(is_constantPool(), "object must be constant pool");
-  for (int i = 0; i< length(); i++) {
-    constantTag tag = tag_at(i);
-    if (tag.is_klass() || tag.is_unresolved_klass()) {
-      guarantee(klass_name_at(i)->refcount() != 0, "should have nonzero reference count");
-    } else if (tag.is_symbol()) {
-      CPSlot entry = slot_at(i);
-      guarantee(entry.get_symbol()->refcount() != 0, "should have nonzero reference count");
-    } else if (tag.is_string()) {
-      CPSlot entry = slot_at(i);
-      guarantee(entry.get_symbol()->refcount() != 0, "should have nonzero reference count");
-    }
-  }
-  if (cache() != NULL) {
-    // Note: cache() can be NULL before a class is completely setup or
-    // in temporary constant pools used during constant pool merging
-    guarantee(cache()->is_constantPoolCache(), "should be constant pool cache");
-  }
-  if (pool_holder() != NULL) {
-    // Note: pool_holder() can be NULL in temporary constant pools
-    // used during constant pool merging
-    guarantee(pool_holder()->is_klass(),    "should be klass");
   }
 }
 

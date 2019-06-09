@@ -92,9 +92,9 @@ class Label {
   int loc_pos()  const { return CodeBuffer::locator_pos(loc()); }
   int loc_sect() const { return CodeBuffer::locator_sect(loc()); }
 
-  bool is_bound() const    { return _loc >=  0; }
-  bool is_unbound() const  { return _loc == -1 && _patch_index > 0; }
-  bool is_unused() const   { return _loc == -1 && _patch_index == 0; }
+  bool is_bound()    const { return _loc >=  0; }
+  bool is_unbound()  const { return _loc == -1 && _patch_index > 0; }
+  bool is_unused()   const { return _loc == -1 && _patch_index == 0; }
 
   // The label will be bound to a location near its users. Users can
   // optimize on this information, e.g. generate short branches.
@@ -157,7 +157,7 @@ class RegisterOrConstant {
   intptr_t as_constant() const { return _c; }
 
   Register register_or_noreg() const { return _r; }
-  intptr_t constant_or_zero() const  { return _c; }
+  intptr_t constant_or_zero()  const { return _c; }
 
   bool is_register() const { return _r != noreg; }
   bool is_constant() const { return _r == noreg; }
@@ -182,9 +182,9 @@ class AbstractAssembler : public ResourceObj {
   // Labels and displacements truck in offsets, but target must return a PC.
   address target(Label& L)             { return code_section()->target(L, pc()); }
 
-  bool is8bit(int x) const             { return -0x80 <= x && x < 0x80; }
-  bool isByte(int x) const             { return 0 <= x && x < 0x100; }
-  bool isShiftCount(int x) const       { return 0 <= x && x < 32; }
+  bool is8bit(int x)             const { return -0x80 <= x && x < 0x80; }
+  bool isByte(int x)             const { return 0 <= x && x < 0x100; }
+  bool isShiftCount(int x)       const { return 0 <= x && x < 32; }
 
   // Instruction boundaries (required when emitting relocatable values).
   class InstructionMark: public StackObj {
@@ -246,14 +246,14 @@ class AbstractAssembler : public ResourceObj {
   static bool is_simm32(intptr_t x) { return is_simm(x, 32); }
 
   // Accessors
-  CodeSection*  code_section() const   { return _code_section; }
-  CodeBuffer*   code()         const   { return code_section()->outer(); }
-  int           sect()         const   { return code_section()->index(); }
-  address       pc()           const   { return code_section()->end(); }
-  int           offset()       const   { return code_section()->size(); }
-  int           locator()      const   { return CodeBuffer::locator(offset(), sect()); }
+  CodeSection*  code_section()   const { return _code_section; }
+  CodeBuffer*   code()           const { return code_section()->outer(); }
+  int           sect()           const { return code_section()->index(); }
+  address       pc()             const { return code_section()->end(); }
+  int           offset()         const { return code_section()->size(); }
+  int           locator()        const { return CodeBuffer::locator(offset(), sect()); }
 
-  OopRecorder*  oop_recorder() const   { return _oop_recorder; }
+  OopRecorder*  oop_recorder()   const { return _oop_recorder; }
   void      set_oop_recorder(OopRecorder* r) { _oop_recorder = r; }
 
   address       inst_mark() const { return code_section()->mark(); }

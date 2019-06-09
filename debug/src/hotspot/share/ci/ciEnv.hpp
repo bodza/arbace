@@ -5,7 +5,6 @@
 #include "ci/ciObjectFactory.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "code/debugInfoRec.hpp"
-#include "code/dependencies.hpp"
 #include "code/exceptionHandlerTable.hpp"
 #include "compiler/oopMap.hpp"
 #include "oops/methodData.hpp"
@@ -13,24 +12,19 @@
 
 class CompileTask;
 
-// ciEnv
-//
-// This class is the top level broker for requests from the compiler
-// to the VM.
+// This class is the top level broker for requests from the compiler to the VM.
 class ciEnv : StackObj {
   CI_PACKAGE_ACCESS_TO
 
   friend class CompileBroker;
-  friend class Dependencies;  // for get_object, during logging
 
 private:
-  Arena*           _arena;       // Alias for _ciEnv_arena except in init_shared_objects()
+  Arena*           _arena;       // alias for _ciEnv_arena except in init_shared_objects()
   Arena            _ciEnv_arena;
   int              _system_dictionary_modification_counter;
   ciObjectFactory* _factory;
   OopRecorder*     _oop_recorder;
   DebugInformationRecorder* _debug_info;
-  Dependencies*    _dependencies;
   const char*      _failure_reason;
   bool             _inc_decompile_count_on_failure;
   int              _compilable;
@@ -39,11 +33,11 @@ private:
   CompileTask*     _task;           // faster access to CompilerThread::task
   void*            _compiler_data;  // compiler-specific stuff, if any
 
-  char* _name_buffer;
-  int   _name_buffer_len;
+  char*            _name_buffer;
+  int              _name_buffer_len;
 
   // Distinguished instances of certain ciObjects..
-  static ciObject*              _null_object_instance;
+  static ciObject* _null_object_instance;
 
 #define WK_KLASS_DECL(name, ignore_s, ignore_o) static ciInstanceKlass* _##name;
   WK_KLASSES_DO(WK_KLASS_DECL)
@@ -212,10 +206,6 @@ private:
   // Is this thread currently in the VM state?
   static bool is_in_vm();
 
-  // Helper routine for determining the validity of a compilation with
-  // respect to method dependencies (e.g. concurrent class loading).
-  void validate_compile_task_dependencies(ciMethod* target);
-
 public:
   enum {
     MethodCompilable,
@@ -233,9 +223,6 @@ public:
 
   DebugInformationRecorder* debug_info() { return _debug_info; }
   void set_debug_info(DebugInformationRecorder* i) { _debug_info = i; }
-
-  Dependencies* dependencies() { return _dependencies; }
-  void set_dependencies(Dependencies* d) { _dependencies = d; }
 
   // This is true if the compilation is not going to produce code.
   // (It is reasonable to retry failed compilations.)
@@ -284,8 +271,7 @@ public:
                        ImplicitExceptionTable*   inc_table,
                        AbstractCompiler*         compiler,
                        bool                      has_unsafe_access,
-                       bool                      has_wide_vectors,
-                       RTMState                  rtm_state = NoRTM);
+                       bool                      has_wide_vectors);
 
   // Access to certain well known ciObjects.
 #define WK_KLASS_FUNC(name, ignore_s, ignore_o) \
@@ -364,13 +350,6 @@ public:
 
   // RedefineClasses support
   void metadata_do(void f(Metadata*)) { _factory->metadata_do(f); }
-
-  // Dump the compilation replay data for the ciEnv to the stream.
-  void dump_replay_data(int compile_id);
-  void dump_inline_data(int compile_id);
-  void dump_replay_data(outputStream* out);
-  void dump_replay_data_unsafe(outputStream* out);
-  void dump_compile_data(outputStream* out);
 };
 
 #endif

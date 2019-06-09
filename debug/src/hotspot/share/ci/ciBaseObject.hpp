@@ -46,9 +46,9 @@ public:
   uint ident();
 
   // What kind of ciBaseObject is this?
-  virtual bool is_symbol() const       { return false; }
-  virtual bool is_object() const       { return false; }
-  virtual bool is_metadata() const     { return false; }
+  virtual bool is_symbol()       const { return false; }
+  virtual bool is_object()       const { return false; }
+  virtual bool is_metadata()     const { return false; }
 
   ciSymbol* as_symbol() {
     return (ciSymbol*)this;

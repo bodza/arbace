@@ -31,8 +31,6 @@
 
 // forward declaration for class -- see below for definition
 class ClassFileParser;
-class KlassDepChange;
-class DependencyContext;
 class fieldDescriptor;
 class jniIdMapBase;
 class JNIid;
@@ -48,11 +46,11 @@ public:
 class OopMapBlock {
  public:
   // Byte offset of the first oop mapped by this block.
-  int offset() const          { return _offset; }
+  int offset()          const { return _offset; }
   void set_offset(int offset) { _offset = offset; }
 
   // Number of oops in this block.
-  uint count() const         { return _count; }
+  uint count()         const { return _count; }
   void set_count(uint count) { _count = count; }
 
   // sizeof(OopMapBlock) in words.
@@ -176,7 +174,6 @@ class InstanceKlass: public Klass {
 
   // Start after _misc_kind field.
   enum {
-    _misc_rewritten                           = 1 << 2,  // methods rewritten.
     _misc_has_nonstatic_fields                = 1 << 3,  // for sizing with UseCompressedOops
     _misc_should_verify_class                 = 1 << 4,  // allow caching of preverification
     _misc_is_anonymous                        = 1 << 5,  // has embedded _host_klass field
@@ -201,8 +198,6 @@ class InstanceKlass: public Klass {
   Thread*         _init_thread;          // Pointer to current thread doing initialization (to handle recusive initialization)
   JNIid*          _jni_ids;              // First JNI identifier for static fields in this class
   jmethodID*      volatile _methods_jmethod_ids;  // jmethodIDs corresponding to method_idnum, or NULL if none
-  intptr_t        _dep_context;          // packed DependencyContext structure
-  nmethod*        _osr_nmethods_head;    // Head of list of on-stack replacement nmethods for this class
 
   volatile u2     _idnum_allocated_count;         // JNI/JVMTI: increments with the addition of methods, old ids don't change
 
@@ -301,7 +296,7 @@ class InstanceKlass: public Klass {
     }
   }
 
-  bool has_nonstatic_fields() const        {
+  bool has_nonstatic_fields()        const {
     return (_misc_flags & _misc_has_nonstatic_fields) != 0;
   }
   void set_has_nonstatic_fields(bool b)    {
@@ -313,39 +308,39 @@ class InstanceKlass: public Klass {
   }
 
   // field sizes
-  int nonstatic_field_size() const         { return _nonstatic_field_size; }
+  int nonstatic_field_size()         const { return _nonstatic_field_size; }
   void set_nonstatic_field_size(int size)  { _nonstatic_field_size = size; }
 
-  int static_field_size() const            { return _static_field_size; }
+  int static_field_size()            const { return _static_field_size; }
   void set_static_field_size(int size)     { _static_field_size = size; }
 
-  int static_oop_field_count() const       { return (int)_static_oop_field_count; }
+  int static_oop_field_count()       const { return (int)_static_oop_field_count; }
   void set_static_oop_field_count(u2 size) { _static_oop_field_count = size; }
 
   // Java itable
-  int  itable_length() const               { return _itable_len; }
+  int  itable_length()               const { return _itable_len; }
   void set_itable_length(int len)          { _itable_len = len; }
 
   // array klasses
-  Klass* array_klasses() const             { return _array_klasses; }
+  Klass* array_klasses()             const { return _array_klasses; }
   inline Klass* array_klasses_acquire() const; // load with acquire semantics
   void set_array_klasses(Klass* k)         { _array_klasses = k; }
   inline void release_set_array_klasses(Klass* k); // store with release semantics
 
   // methods
-  Array<Method*>* methods() const          { return _methods; }
+  Array<Method*>* methods()          const { return _methods; }
   void set_methods(Array<Method*>* a)      { _methods = a; }
   Method* method_with_idnum(int idnum);
   Method* method_with_orig_idnum(int idnum);
   Method* method_with_orig_idnum(int idnum, int version);
 
   // method ordering
-  Array<int>* method_ordering() const     { return _method_ordering; }
+  Array<int>* method_ordering()     const { return _method_ordering; }
   void set_method_ordering(Array<int>* m) { _method_ordering = m; }
   void copy_method_ordering(const intArray* m, TRAPS);
 
   // default_methods
-  Array<Method*>* default_methods() const  { return _default_methods; }
+  Array<Method*>* default_methods()  const { return _default_methods; }
   void set_default_methods(Array<Method*>* a) { _default_methods = a; }
 
   // default method vtable_indices
@@ -354,12 +349,12 @@ class InstanceKlass: public Klass {
   Array<int>* create_new_default_vtable_indices(int len, TRAPS);
 
   // interfaces
-  Array<Klass*>* local_interfaces() const          { return _local_interfaces; }
+  Array<Klass*>* local_interfaces()          const { return _local_interfaces; }
   void set_local_interfaces(Array<Klass*>* a)      {
     guarantee(_local_interfaces == NULL || a == NULL, "Just checking");
     _local_interfaces = a; }
 
-  Array<Klass*>* transitive_interfaces() const     { return _transitive_interfaces; }
+  Array<Klass*>* transitive_interfaces()     const { return _transitive_interfaces; }
   void set_transitive_interfaces(Array<Klass*>* a) {
     guarantee(_transitive_interfaces == NULL || a == NULL, "Just checking");
     _transitive_interfaces = a;
@@ -376,9 +371,9 @@ class InstanceKlass: public Klass {
   Symbol* field_signature   (int index) const { return field(index)->signature(constants()); }
 
   // Number of Java declared fields
-  int java_fields_count() const           { return (int)_java_fields_count; }
+  int java_fields_count()           const { return (int)_java_fields_count; }
 
-  Array<u2>* fields() const            { return _fields; }
+  Array<u2>* fields()            const { return _fields; }
   void set_fields(Array<u2>* f, u2 java_fields_count) {
     guarantee(_fields == NULL || f == NULL, "Just checking");
     _fields = f;
@@ -386,11 +381,11 @@ class InstanceKlass: public Klass {
   }
 
   // inner classes
-  Array<u2>* inner_classes() const       { return _inner_classes; }
+  Array<u2>* inner_classes()       const { return _inner_classes; }
   void set_inner_classes(Array<u2>* f)   { _inner_classes = f; }
 
   // nest members
-  Array<u2>* nest_members() const     { return _nest_members; }
+  Array<u2>* nest_members()     const { return _nest_members; }
   void set_nest_members(Array<u2>* m) { _nest_members = m; }
 
   // nest-host index
@@ -426,9 +421,9 @@ public:
   bool is_override(const methodHandle& super_method, Handle targetclassloader, Symbol* targetclassname, TRAPS);
 
   // package
-  PackageEntry* package() const     { return _package_entry; }
+  PackageEntry* package()     const { return _package_entry; }
   ModuleEntry* module() const;
-  bool in_unnamed_package() const   { return (_package_entry == NULL); }
+  bool in_unnamed_package()   const { return (_package_entry == NULL); }
   void set_package(PackageEntry* p) { _package_entry = p; }
   void set_package(ClassLoaderData* loader_data, TRAPS);
   bool is_same_class_package(const Klass* class2) const;
@@ -448,18 +443,17 @@ public:
   bool is_same_package_member(const Klass* class2, TRAPS) const;
 
   // initialization state
-  bool is_loaded() const                   { return _init_state >= loaded; }
-  bool is_linked() const                   { return _init_state >= linked; }
-  bool is_initialized() const              { return _init_state == fully_initialized; }
-  bool is_not_initialized() const          { return _init_state <  being_initialized; }
-  bool is_being_initialized() const        { return _init_state == being_initialized; }
-  bool is_in_error_state() const           { return _init_state == initialization_error; }
-  bool is_reentrant_initialization(Thread *thread)  { return thread == _init_thread; }
-  ClassState  init_state()                 { return (ClassState)_init_state; }
-  bool is_rewritten() const                { return (_misc_flags & _misc_rewritten) != 0; }
+  bool is_loaded()                   const { return _init_state >= loaded; }
+  bool is_linked()                   const { return _init_state >= linked; }
+  bool is_initialized()              const { return _init_state == fully_initialized; }
+  bool is_not_initialized()          const { return _init_state <  being_initialized; }
+  bool is_being_initialized()        const { return _init_state == being_initialized; }
+  bool is_in_error_state()           const { return _init_state == initialization_error; }
+  bool is_reentrant_initialization(Thread *thread) { return thread == _init_thread; }
+  ClassState init_state()                  { return (ClassState)_init_state; }
 
   // marking
-  bool is_marked_dependent() const         { return _is_marked_dependent; }
+  bool is_marked_dependent()         const { return _is_marked_dependent; }
   void set_is_marked_dependent(bool value) { _is_marked_dependent = value; }
 
   // initialization (virtuals from Klass)
@@ -468,7 +462,6 @@ public:
   void link_class(TRAPS);
   bool link_class_or_fail(TRAPS); // returns false on failure
   void unlink_class();
-  void rewrite_class(TRAPS);
   void link_methods(TRAPS);
   Method* class_initializer() const;
 
@@ -476,13 +469,13 @@ public:
   void eager_initialize(Thread *thread);
 
   // reference type
-  ReferenceType reference_type() const     { return (ReferenceType)_reference_type; }
+  ReferenceType reference_type()     const { return (ReferenceType)_reference_type; }
   void set_reference_type(ReferenceType t) {
     _reference_type = (u1)t;
   }
 
   // this class cp index
-  u2 this_class_index() const             { return _this_class_index; }
+  u2 this_class_index()             const { return _this_class_index; }
   void set_this_class_index(u2 index)     { _this_class_index = index; }
 
   static ByteSize reference_type_offset() { return in_ByteSize(offset_of(InstanceKlass, _reference_type)); }
@@ -540,7 +533,7 @@ public:
   static int find_method_by_name(const Array<Method*>* methods, const Symbol* name, int* end);
 
   // constant pool
-  ConstantPool* constants() const     { return _constants; }
+  ConstantPool* constants()     const { return _constants; }
   void set_constants(ConstantPool* c) { _constants = c; }
 
   // protection domain
@@ -550,7 +543,7 @@ public:
   objArrayOop signers() const;
 
   // host class
-  InstanceKlass* host_klass() const   {
+  InstanceKlass* host_klass()   const {
     InstanceKlass** hk = adr_host_klass();
     if (hk == NULL) {
       return NULL;
@@ -564,10 +557,10 @@ public:
       *addr = host;
     }
   }
-  bool has_host_klass() const         {
+  bool has_host_klass()         const {
     return adr_host_klass() != NULL;
   }
-  bool is_anonymous() const           {
+  bool is_anonymous()           const {
     return (_misc_flags & _misc_is_anonymous) != 0;
   }
   void set_is_anonymous(bool value)   {
@@ -584,7 +577,7 @@ public:
     return is_anonymous() ? java_mirror() : class_loader();
   }
 
-  bool is_contended() const           {
+  bool is_contended()           const {
     return (_misc_flags & _misc_is_contended) != 0;
   }
   void set_is_contended(bool value)   {
@@ -596,10 +589,10 @@ public:
   }
 
   // source file name
-  Symbol* source_file_name() const    {
+  Symbol* source_file_name()    const {
     return (_source_file_name_index == 0) ? (Symbol*)NULL : _constants->symbol_at(_source_file_name_index);
   }
-  u2 source_file_name_index() const   {
+  u2 source_file_name_index()   const {
     return _source_file_name_index;
   }
   void set_source_file_name_index(u2 sourcefile_index) {
@@ -607,9 +600,9 @@ public:
   }
 
   // minor and major version numbers of class file
-  u2 minor_version() const                 { return _minor_version; }
+  u2 minor_version()                 const { return _minor_version; }
   void set_minor_version(u2 minor_version) { _minor_version = minor_version; }
-  u2 major_version() const                 { return _major_version; }
+  u2 major_version()                 const { return _major_version; }
   void set_major_version(u2 major_version) { _major_version = major_version; }
 
   // source debug extension
@@ -697,9 +690,9 @@ private:
 
 public:
   // Other is anything that is not one of the more specialized kinds of InstanceKlass.
-  bool is_other_instance_klass() const        { return is_kind(_misc_kind_other); }
-  bool is_reference_instance_klass() const    { return is_kind(_misc_kind_reference); }
-  bool is_mirror_instance_klass() const       { return is_kind(_misc_kind_mirror); }
+  bool is_other_instance_klass()        const { return is_kind(_misc_kind_other); }
+  bool is_reference_instance_klass()    const { return is_kind(_misc_kind_reference); }
+  bool is_mirror_instance_klass()       const { return is_kind(_misc_kind_mirror); }
   bool is_class_loader_instance_klass() const { return is_kind(_misc_kind_class_loader); }
 
   static void purge_previous_versions(InstanceKlass* ik) { return; };
@@ -732,10 +725,10 @@ public:
   void set_initial_method_idnum(u2 value)        { _idnum_allocated_count = value; }
 
   // generics support
-  Symbol* generic_signature() const              {
+  Symbol* generic_signature()              const {
     return (_generic_signature_index == 0) ? (Symbol*)NULL : _constants->symbol_at(_generic_signature_index);
   }
-  u2 generic_signature_index() const             {
+  u2 generic_signature_index()             const {
     return _generic_signature_index;
   }
   void set_generic_signature_index(u2 sig_index) {
@@ -759,7 +752,7 @@ public:
   jmethodID jmethod_id_or_null(Method* method);
 
   // annotations support
-  Annotations* annotations() const          { return _annotations; }
+  Annotations* annotations()          const { return _annotations; }
   void set_annotations(Annotations* anno)   { _annotations = anno; }
 
   AnnotationArray* class_annotations() const {
@@ -797,20 +790,6 @@ public:
   void set_jni_ids(JNIid* ids) { _jni_ids = ids; }
   JNIid* jni_id_for(int offset);
 
-  // maintenance of deoptimization dependencies
-  inline DependencyContext dependencies();
-  int  mark_dependent_nmethods(KlassDepChange& changes);
-  void add_dependent_nmethod(nmethod* nm);
-  void remove_dependent_nmethod(nmethod* nm, bool delete_immediately);
-
-  // On-stack replacement support
-  nmethod* osr_nmethods_head() const     { return _osr_nmethods_head; };
-  void set_osr_nmethods_head(nmethod* h) { _osr_nmethods_head = h; };
-  void add_osr_nmethod(nmethod* n);
-  bool remove_osr_nmethod(nmethod* n);
-  int mark_osr_nmethods(const Method* m);
-  nmethod* lookup_osr_nmethod(const Method* m, int bci, int level, bool match_level) const;
-
   // support for stub routines
   static ByteSize init_state_offset()  { return in_ByteSize(offset_of(InstanceKlass, _init_state)); }
   static ByteSize init_thread_offset() { return in_ByteSize(offset_of(InstanceKlass, _init_thread)); }
@@ -830,11 +809,11 @@ public:
   void process_interfaces(Thread *thread);
 
   // virtual operations from Klass
-  bool is_leaf_class() const               { return _subklass == NULL; }
+  bool is_leaf_class()               const { return _subklass == NULL; }
   GrowableArray<Klass*>* compute_secondary_supers(int num_extra_slots, Array<Klass*>* transitive_interfaces);
   bool compute_is_subtype_of(Klass* k);
   bool can_be_primary_super_slow() const;
-  int oop_size(oop obj)  const             { return size_helper(); }
+  int oop_size(oop obj)              const { return size_helper(); }
 
   // Iterators
   void do_local_static_fields(FieldClosure* cl);
@@ -1020,7 +999,7 @@ public:
   inline void oop_oop_iterate_oop_map_bounded(OopMapBlock* map, oop obj, OopClosureType* closure, MemRegion mr);
 
  public:
-  u2 idnum_allocated_count() const      { return _idnum_allocated_count; }
+  u2 idnum_allocated_count()      const { return _idnum_allocated_count; }
 
 public:
   void set_in_error_state() {
@@ -1031,14 +1010,13 @@ public:
 private:
   // initialization state
   void set_init_state(ClassState state) { _init_state = (u1)state; }
-  void set_rewritten()                  { _misc_flags |= _misc_rewritten; }
   void set_init_thread(Thread *thread)  { _init_thread = thread; }
 
   // The RedefineClasses() API can cause new method idnums to be needed
   // which will cause the caches to grow. Safety requires different
   // cache management logic if the caches can grow instead of just
   // going from NULL to non-NULL.
-  bool idnum_can_increment() const      { return has_been_redefined(); }
+  bool idnum_can_increment()      const { return has_been_redefined(); }
   inline jmethodID* methods_jmethod_ids_acquire() const;
   inline void release_set_methods_jmethod_ids(jmethodID* jmeths);
 
@@ -1091,10 +1069,6 @@ public:
   void print_value_on(outputStream* st) const;
   void oop_print_value_on(oop obj, outputStream* st);
   const char* internal_name() const;
-
-  // Verification
-  void verify_on(outputStream* st);
-  void oop_verify_on(oop obj, outputStream* st);
 };
 
 // for adding methods
@@ -1117,8 +1091,8 @@ class JNIid: public CHeapObj<mtClass> {
 
  public:
   // Accessors
-  Klass* holder() const           { return _holder; }
-  int offset() const              { return _offset; }
+  Klass* holder()           const { return _holder; }
+  int offset()              const { return _offset; }
   JNIid* next()                   { return _next; }
   // Constructor
   JNIid(Klass* holder, int offset, JNIid* next);

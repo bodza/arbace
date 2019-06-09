@@ -59,7 +59,7 @@
 
  private:
   // an additional field beyond _sp and _pc:
-  intptr_t*   _fp; // frame pointer
+  intptr_t* _fp; // frame pointer
   // The interpreter and adapters will extend the frame of the caller.
   // Since oopMaps are based on the sp of the caller before extension
   // we need to know that value. However in order to compute the address
@@ -67,8 +67,7 @@
   // uses sp() to mean "raw" sp and unextended_sp() to mean the caller's
   // original sp we use that convention.
 
-  intptr_t*     _unextended_sp;
-  void adjust_unextended_sp() { };
+  intptr_t* _unextended_sp;
 
   intptr_t* ptr_at_addr(int offset) const {
     return (intptr_t*) addr_at(offset);

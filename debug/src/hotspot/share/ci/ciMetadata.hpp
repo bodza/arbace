@@ -20,23 +20,22 @@ class ciMetadata: public ciBaseObject {
   ciMetadata(): _metadata(NULL) { }
   ciMetadata(Metadata* o): _metadata(o) { }
 
-  virtual bool is_classless() const         { return false; }
+  virtual bool is_classless()         const { return false; }
  public:
   bool is_loaded() const { return _metadata != NULL || is_classless(); }
 
-  virtual bool is_metadata() const          { return true; }
+  virtual bool is_metadata()          const { return true; }
 
-  virtual bool is_type() const              { return false; }
-  virtual bool is_cpcache() const           { return false; }
-  virtual bool is_return_address() const    { return false; }
-  virtual bool is_method() const            { return false; }
-  virtual bool is_method_data() const       { return false; }
-  virtual bool is_klass() const             { return false; }
-  virtual bool is_instance_klass() const    { return false; }
-  virtual bool is_array_klass() const       { return false; }
-  virtual bool is_obj_array_klass() const   { return false; }
-  virtual bool is_type_array_klass() const  { return false; }
-  virtual void dump_replay_data(outputStream* st) { /* do nothing */ }
+  virtual bool is_type()              const { return false; }
+  virtual bool is_cpcache()           const { return false; }
+  virtual bool is_return_address()    const { return false; }
+  virtual bool is_method()            const { return false; }
+  virtual bool is_method_data()       const { return false; }
+  virtual bool is_klass()             const { return false; }
+  virtual bool is_instance_klass()    const { return false; }
+  virtual bool is_array_klass()       const { return false; }
+  virtual bool is_obj_array_klass()   const { return false; }
+  virtual bool is_type_array_klass()  const { return false; }
 
   ciMethod*         as_method()           { return (ciMethod*)this; }
   ciMethodData*     as_method_data()      { return (ciMethodData*)this; }

@@ -93,8 +93,6 @@ class MethodCounters : public Metadata {
 
   int highest_comp_level() const;
   void set_highest_comp_level(int level);
-  int highest_osr_comp_level() const;
-  void set_highest_osr_comp_level(int level);
 
   // invocation counter
   InvocationCounter* invocation_counter() { return &_invocation_counter; }

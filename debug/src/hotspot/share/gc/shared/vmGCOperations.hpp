@@ -71,7 +71,7 @@ class VM_GC_Operation: public VM_Operation {
     // collection started so that _all_soft_refs_clear can be true
     // when this collection is started.  Don't assert that
     // _all_soft_refs_clear have to be false here even though
-    // mutators have run.  Soft refs will be cleared again in this
+    // mutators have run. Soft refs will be cleared again in this
     // collection.
   }
   ~VM_GC_Operation();
@@ -81,11 +81,11 @@ class VM_GC_Operation: public VM_Operation {
   // Do notifyAll (if needed) and release held lock
   virtual void doit_epilogue();
 
-  virtual bool allow_nested_vm_operations() const  { return true; }
+  virtual bool allow_nested_vm_operations()  const { return true; }
   bool prologue_succeeded() const { return _prologue_succeeded; }
 
   void set_gc_locked() { _gc_locked = true; }
-  bool gc_locked() const  { return _gc_locked; }
+  bool gc_locked()  const { return _gc_locked; }
 
   static void notify_gc_begin(bool full = false);
   static void notify_gc_end();
@@ -181,7 +181,7 @@ class VM_CollectForMetadataAllocation: public VM_GC_Operation {
 
   virtual VMOp_Type type() const { return VMOp_CollectForMetadataAllocation; }
   virtual void doit();
-  MetaWord* result() const       { return _result; }
+  MetaWord* result()       const { return _result; }
 
   bool initiate_concurrent_GC();
 };

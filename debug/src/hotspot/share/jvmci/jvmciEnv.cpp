@@ -237,19 +237,6 @@ methodHandle JVMCIEnv::lookup_method(InstanceKlass* accessor, Klass* holder, Sym
 
 // ------------------------------------------------------------------
 methodHandle JVMCIEnv::get_method_by_index_impl(const constantPoolHandle& cpool, int index, Bytecodes::Code bc, InstanceKlass* accessor) {
-  if (bc == Bytecodes::_invokedynamic) {
-    ConstantPoolCacheEntry* cpce = cpool->invokedynamic_cp_cache_entry_at(index);
-    bool is_resolved = !cpce->is_f1_null();
-    if (is_resolved) {
-      // Get the invoker Method* from the constant pool.
-      // (The appendix argument, if any, will be noted in the method's signature.)
-      Method* adapter = cpce->f1_as_method();
-      return methodHandle(adapter);
-    }
-
-    return NULL;
-  }
-
   int holder_index = cpool->klass_ref_index_at(index);
   bool holder_is_accessible;
   Klass* holder = get_klass_by_index_impl(cpool, holder_index, holder_is_accessible, accessor);
@@ -258,7 +245,7 @@ methodHandle JVMCIEnv::get_method_by_index_impl(const constantPoolHandle& cpool,
   Symbol* name_sym = cpool->name_ref_at(index);
   Symbol* sig_sym  = cpool->signature_ref_at(index);
 
-  if (cpool->has_preresolution() || ((holder == SystemDictionary::MethodHandle_klass() || holder == SystemDictionary::VarHandle_klass()) && MethodHandles::is_signature_polymorphic_name(holder, name_sym))) {
+  if (cpool->has_preresolution()) {
     // Short-circuit lookups for JSR 292-related call sites.
     // That is, do not rely only on name-based lookups, because they may fail
     // if the names are not resolvable in the boot class loader (7056328).
@@ -317,28 +304,6 @@ methodHandle JVMCIEnv::get_method_by_index(const constantPoolHandle& cpool, int 
 }
 
 // ------------------------------------------------------------------
-// Check for changes to the system dictionary during compilation
-// class loads, evolution, breakpoints
-JVMCIEnv::CodeInstallResult JVMCIEnv::validate_compile_task_dependencies(Dependencies* dependencies, Handle compiled_code, JVMCIEnv* env, char** failure_detail) {
-  // Dependencies must be checked when the system dictionary changes
-  // or if we don't know whether it has changed (i.e., env == NULL).
-  bool counter_changed = env == NULL || env->_system_dictionary_modification_counter != SystemDictionary::number_of_modifications();
-  CompileTask* task = env == NULL ? NULL : env->task();
-  Dependencies::DepType result = dependencies->validate_dependencies(task, counter_changed, failure_detail);
-  if (result == Dependencies::end_marker) {
-    return JVMCIEnv::ok;
-  }
-
-  if (!Dependencies::is_klass_type(result) || counter_changed) {
-    return JVMCIEnv::dependencies_failed;
-  }
-  // The dependencies were invalid at the time of installation
-  // without any intervening modification of the system
-  // dictionary.  That means they were invalidly constructed.
-  return JVMCIEnv::dependencies_invalid;
-}
-
-// ------------------------------------------------------------------
 JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
                                 const methodHandle& method,
                                 nmethod*& nm,
@@ -351,7 +316,6 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
                                 ExceptionHandlerTable* handler_table,
                                 AbstractCompiler* compiler,
                                 DebugInformationRecorder* debug_info,
-                                Dependencies* dependencies,
                                 JVMCIEnv* env,
                                 int compile_id,
                                 bool has_unsafe_access,
@@ -363,7 +327,7 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
   nm = NULL;
   int comp_level = CompLevel_full_optimization;
   char* failure_detail = NULL;
-  JVMCIEnv::CodeInstallResult result;
+  JVMCIEnv::CodeInstallResult result = JVMCIEnv::ok;
   {
     // To prevent compile queue updates.
     MutexLocker locker(MethodCompileQueue_lock, THREAD);
@@ -372,38 +336,19 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
     // and invalidating our dependencies until we install this method.
     MutexLocker ml(Compile_lock);
 
-    // Encode the dependencies now, so we can check them right away.
-    dependencies->encode_content_bytes();
-
-    // Check for {class loads, evolution, breakpoints} during compilation
-    result = validate_compile_task_dependencies(dependencies, compiled_code, env, &failure_detail);
-    if (result != JVMCIEnv::ok) {
-      // While not a true deoptimization, it is a preemptive decompile.
-      MethodData* mdp = method()->method_data();
-      if (mdp != NULL) {
-        mdp->inc_decompile_count();
-      }
-
-      // All buffers in the CodeBuffer are allocated in the CodeCache.
-      // If the code buffer is created on each compile attempt
-      // as in C2, then it must be freed.
-      //code_buffer->free_blob();
-    } else {
+    {
       ImplicitExceptionTable implicit_tbl;
-      nm =  nmethod::new_nmethod(method,
-                                 compile_id,
-                                 entry_bci,
-                                 offsets,
-                                 orig_pc_offset,
-                                 debug_info, dependencies, code_buffer,
-                                 frame_words, oop_map_set,
-                                 handler_table, &implicit_tbl,
-                                 compiler, comp_level,
-                                 JNIHandles::make_weak_global(installed_code),
-                                 JNIHandles::make_weak_global(speculation_log));
-
-      // Free codeBlobs
-      //code_buffer->free_blob();
+      nm = nmethod::new_nmethod(method,
+                                compile_id,
+                                entry_bci,
+                                offsets,
+                                orig_pc_offset,
+                                debug_info, code_buffer,
+                                frame_words, oop_map_set,
+                                handler_table, &implicit_tbl,
+                                compiler, comp_level,
+                                JNIHandles::make_weak_global(installed_code),
+                                JNIHandles::make_weak_global(speculation_log));
       if (nm == NULL) {
         // The CodeCache is full.  Print out warning and disable compilation.
         {
@@ -417,7 +362,7 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
 
         // Record successful registration.
         // (Put nm into the task handle *before* publishing to the Java heap.)
-        CompileTask* task = env == NULL ? NULL : env->task();
+        CompileTask* task = (env == NULL) ? NULL : env->task();
         if (task != NULL) {
           task->set_code(nm);
         }
@@ -427,12 +372,12 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
             // Allow the code to be executed
             method->set_code(method, nm);
           } else {
-            InstanceKlass::cast(method->method_holder())->add_osr_nmethod(nm);
+            ShouldNotReachHere();
           }
         }
         nm->make_in_use();
       }
-      result = nm != NULL ? JVMCIEnv::ok :JVMCIEnv::cache_full;
+      result = (nm != NULL) ? JVMCIEnv::ok : JVMCIEnv::cache_full;
     }
   }
 

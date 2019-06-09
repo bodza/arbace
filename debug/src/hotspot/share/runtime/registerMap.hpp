@@ -77,7 +77,7 @@ class RegisterMap : public StackObj {
   // Called by an entry frame.
   void clear();
 
-  bool include_argument_oops() const      { return _include_argument_oops; }
+  bool include_argument_oops()      const { return _include_argument_oops; }
   void set_include_argument_oops(bool f)  { _include_argument_oops = f; }
 
   JavaThread *thread() const { return _thread; }

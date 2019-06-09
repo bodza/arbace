@@ -591,9 +591,6 @@ void CodeHeapState::aggregate(outputStream* out, CodeHeap* heap, const char* gra
       compType     cType      = noComp;
       blobType     cbType     = noType;
 
-      //---<  some sanity checks  >---
-      // Do not assert here, just check, print error message and return.
-      // This is a diagnostic function. It is not supposed to tear down the VM.
       if ((char*)h < low_bound) {
         insane = true; ast->print_cr("Sanity check: HeapBlock @%p below low bound (%p)", (char*)h, low_bound);
       }
@@ -2307,7 +2304,6 @@ void CodeHeapState::print_line_delim(outputStream* out, bufferedStream* ast, cha
 CodeHeapState::blobType CodeHeapState::get_cbType(CodeBlob* cb) {
   if ((cb != NULL) && os::is_readable_pointer(cb)) {
     if (cb->is_runtime_stub())                return runtimeStub;
-    if (cb->is_deoptimization_stub())         return deoptimizationStub;
     if (cb->is_uncommon_trap_stub())          return uncommonTrapStub;
     if (cb->is_exception_stub())              return exceptionStub;
     if (cb->is_safepoint_stub())              return safepointStub;

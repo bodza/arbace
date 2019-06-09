@@ -65,7 +65,7 @@ class VirtualSpaceNode : public CHeapObj<mtClass> {
 
   bool contains(const void* ptr) { return ptr >= low() && ptr < high(); }
 
-  size_t reserved_words() const  { return _virtual_space.reserved_size() / BytesPerWord; }
+  size_t reserved_words()  const { return _virtual_space.reserved_size() / BytesPerWord; }
   size_t committed_words() const { return _virtual_space.actual_committed_size() / BytesPerWord; }
 
   bool is_pre_committed() const { return _virtual_space.special(); }
@@ -116,7 +116,7 @@ class VirtualSpaceNode : public CHeapObj<mtClass> {
   // the smallest chunk size.
   void retire(ChunkManager* chunk_manager);
 
-  void print_on(outputStream* st) const                 { print_on(st, K); }
+  void print_on(outputStream* st)                 const { print_on(st, K); }
   void print_on(outputStream* st, size_t scale) const;
   void print_map(outputStream* st, bool is_class) const;
 };

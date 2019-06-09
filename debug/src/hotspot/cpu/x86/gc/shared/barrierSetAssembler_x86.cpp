@@ -136,8 +136,6 @@ void BarrierSetAssembler::tlab_allocate(MacroAssembler* masm, Register thread, R
     thread = r15_thread;
   }
 
-  __ verify_tlab();
-
   __ movptr(obj, Address(thread, JavaThread::tlab_top_offset()));
   if (var_size_in_bytes == noreg) {
     __ lea(end, Address(obj, con_size_in_bytes));
@@ -154,7 +152,6 @@ void BarrierSetAssembler::tlab_allocate(MacroAssembler* masm, Register thread, R
   if (var_size_in_bytes == end) {
     __ subptr(var_size_in_bytes, obj);
   }
-  __ verify_tlab();
 }
 
 // Defines obj, preserves var_size_in_bytes

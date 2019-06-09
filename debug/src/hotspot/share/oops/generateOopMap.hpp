@@ -35,14 +35,14 @@ class RetTableEntry : public ResourceObj {
    RetTableEntry(int target, RetTableEntry *next);
 
   // Query
-  int target_bci() const                      { return _target_bci; }
-  int nof_jsrs() const                        { return _jsrs->length(); }
-  int jsrs(int i) const                       { return _jsrs->at(i); }
+  int target_bci()                      const { return _target_bci; }
+  int nof_jsrs()                        const { return _jsrs->length(); }
+  int jsrs(int i)                       const { return _jsrs->at(i); }
 
   // Update entry
   void add_jsr    (int return_bci)            { _jsrs->append(return_bci); }
   void add_delta  (int bci, int delta);
-  RetTableEntry * next()  const               { return _next; }
+  RetTableEntry * next()                const { return _next; }
 };
 
 class RetTable {
@@ -141,8 +141,8 @@ class CellTypeState {
   }
 
   // Query methods:
-  bool is_bottom() const                { return _state == 0; }
-  bool is_live() const                  { return ((_state & live_bits_mask) != 0); }
+  bool is_bottom()                const { return _state == 0; }
+  bool is_live()                  const { return ((_state & live_bits_mask) != 0); }
   bool is_valid_state() const {
     // Uninitialized and value cells must contain no data in their info field:
     if ((can_be_uninit() || can_be_value()) && !is_info_top()) {
@@ -159,23 +159,23 @@ class CellTypeState {
     return true;
   }
 
-  bool is_address() const               { return ((_state & bits_mask) == addr_bit); }
-  bool is_reference() const             { return ((_state & bits_mask) == ref_bit); }
-  bool is_value() const                 { return ((_state & bits_mask) == val_bit); }
-  bool is_uninit() const                { return ((_state & bits_mask) == (uint)uninit_bit); }
+  bool is_address()               const { return ((_state & bits_mask) == addr_bit); }
+  bool is_reference()             const { return ((_state & bits_mask) == ref_bit); }
+  bool is_value()                 const { return ((_state & bits_mask) == val_bit); }
+  bool is_uninit()                const { return ((_state & bits_mask) == (uint)uninit_bit); }
 
-  bool can_be_address() const           { return ((_state & addr_bit) != 0); }
-  bool can_be_reference() const         { return ((_state & ref_bit) != 0); }
-  bool can_be_value() const             { return ((_state & val_bit) != 0); }
-  bool can_be_uninit() const            { return ((_state & uninit_bit) != 0); }
+  bool can_be_address()           const { return ((_state & addr_bit) != 0); }
+  bool can_be_reference()         const { return ((_state & ref_bit) != 0); }
+  bool can_be_value()             const { return ((_state & val_bit) != 0); }
+  bool can_be_uninit()            const { return ((_state & uninit_bit) != 0); }
 
-  bool is_info_bottom() const           { return ((_state & not_bottom_info_bit) == 0); }
-  bool is_info_top() const              { return ((_state & top_info_bit) != 0); }
+  bool is_info_bottom()           const { return ((_state & not_bottom_info_bit) == 0); }
+  bool is_info_top()              const { return ((_state & top_info_bit) != 0); }
   int  get_info() const {
     return (_state & info_data_mask);
   }
 
-  bool is_good_address() const          { return is_address() && !is_info_top(); }
+  bool is_good_address()          const { return is_address() && !is_info_top(); }
   bool is_lock_reference() const {
     return ((_state & (bits_mask | top_info_bit | ref_not_lock_bit)) == ref_bit);
   }
@@ -183,7 +183,7 @@ class CellTypeState {
     return ((_state & (bits_mask | top_info_bit | ref_not_lock_bit)) == (ref_bit | ref_not_lock_bit));
   }
 
-  bool equal(CellTypeState a) const     { return _state == a._state; }
+  bool equal(CellTypeState a)     const { return _state == a._state; }
   bool equal_kind(CellTypeState a) const {
     return (_state & bits_mask) == (a._state & bits_mask);
   }
@@ -194,7 +194,7 @@ class CellTypeState {
   CellTypeState merge (CellTypeState cts, int slot) const;
 
   // Debugging output
-  void print(outputStream *os);
+  void print(outputStream* os);
 
   // Default values of common values
   static CellTypeState bottom;
@@ -234,12 +234,12 @@ class BasicBlock: ResourceObj {
   bool changed()                            { return _changed; }
   void set_changed(bool s)                  { _changed = s; }
 
-  bool is_reachable() const                 { return _stack_top >= 0; }  // Analysis has reached this basicblock
+  bool is_reachable()                 const { return _stack_top >= 0; }  // Analysis has reached this basicblock
 
   // All basicblocks that are unreachable are going to have a _stack_top == _dead_basic_block.
   // This info. is setup in a pre-parse before the real abstract interpretation starts.
-  bool is_dead() const                      { return _stack_top == _dead_basic_block; }
-  bool is_alive() const                     { return _stack_top != _dead_basic_block; }
+  bool is_dead()                      const { return _stack_top == _dead_basic_block; }
+  bool is_alive()                     const { return _stack_top != _dead_basic_block; }
   void mark_as_alive()                      { _stack_top = _unreached; }
 };
 
@@ -299,8 +299,8 @@ class GenerateOopMap {
   CellTypeState * monitors                   () { return _state+_max_locals+_max_stack; }
 
   void            replace_all_CTS_matches    (CellTypeState match, CellTypeState replace);
-  void            print_states               (outputStream *os, CellTypeState *vector, int num);
-  void            print_current_state        (outputStream *os, BytecodeStream *itr, bool detailed);
+  void            print_states               (outputStream* os, CellTypeState *vector, int num);
+  void            print_current_state        (outputStream* os, BytecodeStream *itr, bool detailed);
   void            report_monitor_mismatch    (const char *msg);
 
   // Basicblock info
@@ -313,8 +313,8 @@ class GenerateOopMap {
   void          initialize_bb               ();
   void          mark_bbheaders_and_count_gc_points();
   bool          is_bb_header                (int bci) const { return _bb_hdr_bits.at(bci); }
-  int           gc_points                   () const        { return _gc_points; }
-  int           bb_count                    () const        { return _bb_count; }
+  int           gc_points                   ()        const { return _gc_points; }
+  int           bb_count                    ()        const { return _bb_count; }
   void          set_bbmark_bit              (int bci);
   BasicBlock *  get_basic_block_at          (int bci) const;
   BasicBlock *  get_basic_block_containing  (int bci) const;
@@ -419,9 +419,9 @@ class GenerateOopMap {
   void result_for_basicblock(int bci);    // Do a callback on fill_stackmap_for_opcodes for basicblock containing bci
 
   // Query
-  int max_locals() const                           { return _max_locals; }
-  Method* method() const                           { return _method(); }
-  methodHandle method_as_handle() const            { return _method; }
+  int max_locals()                           const { return _max_locals; }
+  Method* method()                           const { return _method(); }
+  methodHandle method_as_handle()            const { return _method; }
 
   bool did_rewriting()                             { return _did_rewriting; }
   bool did_relocation()                            { return _did_relocation; }
@@ -445,9 +445,9 @@ class GenerateOopMap {
   // after compute_map returns, since all values are allocated as resource objects.
   //
   // All virtual method must be implemented in subclasses
-  virtual bool allow_rewrites             () const                        { return false; }
-  virtual bool report_results             () const                        { return true; }
-  virtual bool report_init_vars           () const                        { return true; }
+  virtual bool allow_rewrites             ()                        const { return false; }
+  virtual bool report_results             ()                        const { return true; }
+  virtual bool report_init_vars           ()                        const { return true; }
   virtual bool possible_gc_point          (BytecodeStream *bcs)           { ShouldNotReachHere(); return false; }
   virtual void fill_stackmap_prolog       (int nof_gc_points)             { ShouldNotReachHere(); }
   virtual void fill_stackmap_epilog       ()                              { ShouldNotReachHere(); }
@@ -466,9 +466,9 @@ class ResolveOopMapConflicts: public GenerateOopMap {
  private:
   bool _must_clear_locals;
 
-  virtual bool report_results() const                 { return false; }
-  virtual bool report_init_vars() const               { return true; }
-  virtual bool allow_rewrites() const                 { return true; }
+  virtual bool report_results()                 const { return false; }
+  virtual bool report_init_vars()               const { return true; }
+  virtual bool allow_rewrites()                 const { return true; }
   virtual bool possible_gc_point(BytecodeStream *bcs) { return false; }
 
   virtual void fill_stackmap_prolog(int nof_gc_points) { }
@@ -488,9 +488,9 @@ class ResolveOopMapConflicts: public GenerateOopMap {
 //
 class GeneratePairingInfo: public GenerateOopMap {
  private:
-  virtual bool report_results() const                 { return false; }
-  virtual bool report_init_vars() const               { return false; }
-  virtual bool allow_rewrites() const                 { return false; }
+  virtual bool report_results()                 const { return false; }
+  virtual bool report_init_vars()               const { return false; }
+  virtual bool allow_rewrites()                 const { return false; }
   virtual bool possible_gc_point(BytecodeStream *bcs) { return false; }
 
   virtual void fill_stackmap_prolog(int nof_gc_points) { }

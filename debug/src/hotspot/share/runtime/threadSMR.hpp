@@ -114,7 +114,7 @@ class ThreadsList : public CHeapObj<mtThread> {
   template <class T>
   void threads_do_dispatch(T *cl, JavaThread *const thread) const;
 
-  ThreadsList *next_list() const        { return _next_list; }
+  ThreadsList *next_list()        const { return _next_list; }
   void set_next_list(ThreadsList *list) { _next_list = list; }
 
   void inc_nested_handle_cnt();
@@ -130,11 +130,11 @@ public:
   template <class T>
   void threads_do(T *cl) const;
 
-  uint length() const                       { return _length; }
+  uint length()                       const { return _length; }
 
   JavaThread *const thread_at(uint i) const { return _threads[i]; }
 
-  JavaThread *const *threads() const        { return _threads; }
+  JavaThread *const *threads()        const { return _threads; }
 
   // Returns -1 if target is not found.
   int find_index_of_JavaThread(JavaThread* target);

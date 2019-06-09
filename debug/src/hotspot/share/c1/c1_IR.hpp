@@ -40,20 +40,20 @@ class XHandler: public CompilationResourceObj {
   { }
 
   // accessors for data of ciExceptionHandler
-  int  beg_bci() const                           { return _desc->start(); }
-  int  end_bci() const                           { return _desc->limit(); }
-  int  handler_bci() const                       { return _desc->handler_bci(); }
-  bool is_catch_all() const                      { return _desc->is_catch_all(); }
-  int  catch_type() const                        { return _desc->catch_klass_index(); }
-  ciInstanceKlass* catch_klass() const           { return _desc->catch_klass(); }
-  bool covers(int bci) const                     { return beg_bci() <= bci && bci < end_bci(); }
+  int  beg_bci()                           const { return _desc->start(); }
+  int  end_bci()                           const { return _desc->limit(); }
+  int  handler_bci()                       const { return _desc->handler_bci(); }
+  bool is_catch_all()                      const { return _desc->is_catch_all(); }
+  int  catch_type()                        const { return _desc->catch_klass_index(); }
+  ciInstanceKlass* catch_klass()           const { return _desc->catch_klass(); }
+  bool covers(int bci)                     const { return beg_bci() <= bci && bci < end_bci(); }
 
   // accessors for additional fields
-  BlockBegin* entry_block() const                { return _entry_block; }
-  LIR_List*   entry_code() const                 { return _entry_code; }
-  int         entry_pco() const                  { return _entry_pco; }
-  int         phi_operand() const                { return _phi_operand; }
-  int         scope_count() const                { return _scope_count; }
+  BlockBegin* entry_block()                const { return _entry_block; }
+  LIR_List*   entry_code()                 const { return _entry_code; }
+  int         entry_pco()                  const { return _entry_pco; }
+  int         phi_operand()                const { return _phi_operand; }
+  int         scope_count()                const { return _scope_count; }
 
   void set_entry_block(BlockBegin* entry_block) {
     _entry_block = entry_block;
@@ -80,9 +80,9 @@ class XHandlers: public CompilationResourceObj {
   XHandlers(XHandlers* other);
 
   // accessors
-  int       length() const                       { return _list.length(); }
-  XHandler* handler_at(int i) const              { return _list.at(i); }
-  bool      has_handlers() const                 { return _list.length() > 0; }
+  int       length()                       const { return _list.length(); }
+  XHandler* handler_at(int i)              const { return _list.at(i); }
+  bool      has_handlers()                 const { return _list.length() > 0; }
   void      append(XHandler* h)                  { _list.append(h); }
   XHandler* remove_last()                        { return _list.pop(); }
 
@@ -115,39 +115,39 @@ class IRScope: public CompilationResourceObj {
   ResourceBitMap _requires_phi_function;         // bit is set if phi functions at loop headers are necessary for a local variable
 
   // helper functions
-  BlockBegin* build_graph(Compilation* compilation, int osr_bci);
+  BlockBegin* build_graph(Compilation* compilation);
 
  public:
   // creation
-  IRScope(Compilation* compilation, IRScope* caller, int caller_bci, ciMethod* method, int osr_bci, bool create_graph = false);
+  IRScope(Compilation* compilation, IRScope* caller, int caller_bci, ciMethod* method, bool create_graph = false);
 
   // accessors
-  Compilation*  compilation() const              { return _compilation; }
-  IRScope*      caller() const                   { return _caller; }
-  int           level() const                    { return _level; }
-  ciMethod*     method() const                   { return _method; }
+  Compilation*  compilation()              const { return _compilation; }
+  IRScope*      caller()                   const { return _caller; }
+  int           level()                    const { return _level; }
+  ciMethod*     method()                   const { return _method; }
   int           max_stack() const;               // NOTE: expensive
   BitMap&       requires_phi_function()          { return _requires_phi_function; }
 
   // hierarchy
-  bool          is_top_scope() const             { return _caller == NULL; }
+  bool          is_top_scope()             const { return _caller == NULL; }
   void          add_callee(IRScope* callee)      { _callees.append(callee); }
-  int           number_of_callees() const        { return _callees.length(); }
-  IRScope*      callee_no(int i) const           { return _callees.at(i); }
+  int           number_of_callees()        const { return _callees.length(); }
+  IRScope*      callee_no(int i)           const { return _callees.at(i); }
 
   // accessors, graph
-  bool          is_valid() const                 { return start() != NULL; }
-  XHandlers*    xhandlers() const                { return _xhandlers; }
-  int           number_of_locks() const          { return _number_of_locks; }
+  bool          is_valid()                 const { return start() != NULL; }
+  XHandlers*    xhandlers()                const { return _xhandlers; }
+  int           number_of_locks()          const { return _number_of_locks; }
   void          set_min_number_of_locks(int n)   { if (n > _number_of_locks) _number_of_locks = n; }
-  bool          monitor_pairing_ok() const       { return _monitor_pairing_ok; }
-  BlockBegin*   start() const                    { return _start; }
+  bool          monitor_pairing_ok()       const { return _monitor_pairing_ok; }
+  BlockBegin*   start()                    const { return _start; }
   void          set_wrote_final()                { _wrote_final = true; }
-  bool          wrote_final    () const          { return _wrote_final; }
+  bool          wrote_final    ()          const { return _wrote_final; }
   void          set_wrote_fields()               { _wrote_fields = true; }
-  bool          wrote_fields    () const         { return _wrote_fields; }
+  bool          wrote_fields    ()         const { return _wrote_fields; }
   void          set_wrote_volatile()             { _wrote_volatile = true; }
-  bool          wrote_volatile    () const       { return _wrote_volatile; }
+  bool          wrote_volatile    ()       const { return _wrote_volatile; }
 };
 
 //
@@ -188,13 +188,13 @@ class IRScopeDebugInfo: public CompilationResourceObj {
   GrowableArray<MonitorValue*>* monitors()    { return _monitors;    }
   IRScopeDebugInfo*             caller()      { return _caller;      }
 
-  //Whether we should reexecute this bytecode for deopt
+  // Whether we should reexecute this bytecode for deopt
   bool should_reexecute();
 
-  void record_debug_info(DebugInformationRecorder* recorder, int pc_offset, bool topmost, bool is_method_handle_invoke = false) {
+  void record_debug_info(DebugInformationRecorder* recorder, int pc_offset, bool topmost) {
     if (caller() != NULL) {
       // Order is significant:  Must record caller first.
-      caller()->record_debug_info(recorder, pc_offset, false/*topmost*/);
+      caller()->record_debug_info(recorder, pc_offset, /*topmost*/ false);
     }
     DebugToken* locvals = recorder->create_scope_values(locals());
     DebugToken* expvals = recorder->create_scope_values(expressions());
@@ -203,7 +203,7 @@ class IRScopeDebugInfo: public CompilationResourceObj {
     bool reexecute = topmost ? should_reexecute() : false;
     bool return_oop = false; // This flag will be ignored since it used only for C2 with escape analysis.
     bool rethrow_exception = false;
-    recorder->describe_scope(pc_offset, methodHandle(), scope()->method(), bci(), reexecute, rethrow_exception, is_method_handle_invoke, return_oop, locvals, expvals, monvals);
+    recorder->describe_scope(pc_offset, methodHandle(), scope()->method(), bci(), reexecute, rethrow_exception, return_oop, locvals, expvals, monvals);
   }
 };
 
@@ -215,34 +215,26 @@ class CodeEmitInfo: public CompilationResourceObj {
   XHandlers*        _exception_handlers;
   OopMap*           _oop_map;
   ValueStack*       _stack;                      // used by deoptimization (contains also monitors
-  bool              _is_method_handle_invoke;    // true if the associated call site is a MethodHandle call site.
-  bool              _deoptimize_on_exception;
 
-  FrameMap*     frame_map() const                { return scope()->compilation()->frame_map(); }
-  Compilation*  compilation() const              { return scope()->compilation(); }
+  FrameMap*     frame_map()          const { return scope()->compilation()->frame_map(); }
+  Compilation*  compilation()        const { return scope()->compilation(); }
 
  public:
   // use scope from ValueStack
-  CodeEmitInfo(ValueStack* stack, XHandlers* exception_handlers, bool deoptimize_on_exception = false);
+  CodeEmitInfo(ValueStack* stack, XHandlers* exception_handlers);
 
   // make a copy
   CodeEmitInfo(CodeEmitInfo* info, ValueStack* stack = NULL);
 
   // accessors
-  OopMap* oop_map()                              { return _oop_map; }
-  ciMethod* method() const                       { return _scope->method(); }
-  IRScope* scope() const                         { return _scope; }
-  XHandlers* exception_handlers() const          { return _exception_handlers; }
-  ValueStack* stack() const                      { return _stack; }
-  bool deoptimize_on_exception() const           { return _deoptimize_on_exception; }
+  OopMap* oop_map()                        { return _oop_map; }
+  ciMethod* method()                 const { return _scope->method(); }
+  IRScope* scope()                   const { return _scope; }
+  XHandlers* exception_handlers()    const { return _exception_handlers; }
+  ValueStack* stack()                const { return _stack; }
 
   void add_register_oop(LIR_Opr opr);
   void record_debug_info(DebugInformationRecorder* recorder, int pc_offset);
-
-  bool     is_method_handle_invoke() const { return _is_method_handle_invoke;     }
-  void set_is_method_handle_invoke(bool x) {        _is_method_handle_invoke = x; }
-
-  int interpreter_frame_size() const;
 };
 
 class IR: public CompilationResourceObj {
@@ -254,20 +246,19 @@ class IR: public CompilationResourceObj {
 
  public:
   // creation
-  IR(Compilation* compilation, ciMethod* method, int osr_bci);
+  IR(Compilation* compilation, ciMethod* method);
 
   // accessors
-  bool             is_valid() const              { return top_scope()->is_valid(); }
-  Compilation*     compilation() const           { return _compilation; }
-  IRScope*         top_scope() const             { return _top_scope; }
-  int              number_of_locks() const       { return top_scope()->number_of_locks(); }
-  ciMethod*        method() const                { return top_scope()->method(); }
-  BlockBegin*      start() const                 { return top_scope()->start(); }
-  BlockBegin*      std_entry() const             { return start()->end()->as_Base()->std_entry(); }
-  BlockBegin*      osr_entry() const             { return start()->end()->as_Base()->osr_entry(); }
-  BlockList*       code() const                  { return _code; }
-  int              num_loops() const             { return _num_loops; }
-  int              max_stack() const             { return top_scope()->max_stack(); } // expensive
+  bool             is_valid()        const { return top_scope()->is_valid(); }
+  Compilation*     compilation()     const { return _compilation; }
+  IRScope*         top_scope()       const { return _top_scope; }
+  int              number_of_locks() const { return top_scope()->number_of_locks(); }
+  ciMethod*        method()          const { return top_scope()->method(); }
+  BlockBegin*      start()           const { return top_scope()->start(); }
+  BlockBegin*      std_entry()       const { return start()->end()->as_Base()->std_entry(); }
+  BlockList*       code()            const { return _code; }
+  int              num_loops()       const { return _num_loops; }
+  int              max_stack()       const { return top_scope()->max_stack(); } // expensive
 
   // ir manipulation
   void optimize_blocks();

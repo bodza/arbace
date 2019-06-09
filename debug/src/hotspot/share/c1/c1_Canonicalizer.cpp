@@ -16,15 +16,6 @@ void Canonicalizer::set_canonical(Value x) {
   // the instruction stream (because the instruction list is embedded
   // in the instructions).
   if (canonical() != x) {
-    if (PrintCanonicalization) {
-      PrintValueVisitor do_print_value;
-      canonical()->input_values_do(&do_print_value);
-      canonical()->print_line();
-      tty->print_cr("canonicalized to:");
-      x->input_values_do(&do_print_value);
-      x->print_line();
-      tty->cr();
-    }
     _canonical = x;
   }
 }
@@ -218,7 +209,7 @@ void Canonicalizer::do_ArrayLength(ArrayLength* x) {
     ciField* field = lf->field();
     if (field->is_static_constant()) {
       // Constant field loads are usually folded during parsing.
-      // But it doesn't happen with PatchALot, ScavengeRootsInCode < 2, or when
+      // But it doesn't happen with ScavengeRootsInCode < 2, or when
       // holder class is being initialized during parsing (for static fields).
       ciObject* c = field->constant_value().as_object();
       if (!c->is_null_object()) {
@@ -422,77 +413,6 @@ void Canonicalizer::do_IfOp(IfOp* x) {
   move_const_to_right(x);
 }
 
-void Canonicalizer::do_Intrinsic(Intrinsic* x) {
-  switch (x->id()) {
-  case vmIntrinsics::_floatToRawIntBits: {
-    FloatConstant* c = x->argument_at(0)->type()->as_FloatConstant();
-    if (c != NULL) {
-      JavaValue v;
-      v.set_jfloat(c->value());
-      set_constant(v.get_jint());
-    }
-    break;
-  }
-  case vmIntrinsics::_intBitsToFloat: {
-    IntConstant* c = x->argument_at(0)->type()->as_IntConstant();
-    if (c != NULL) {
-      JavaValue v;
-      v.set_jint(c->value());
-      set_constant(v.get_jfloat());
-    }
-    break;
-  }
-  case vmIntrinsics::_doubleToRawLongBits : {
-    DoubleConstant* c = x->argument_at(0)->type()->as_DoubleConstant();
-    if (c != NULL) {
-      JavaValue v;
-      v.set_jdouble(c->value());
-      set_constant(v.get_jlong());
-    }
-    break;
-  }
-  case vmIntrinsics::_longBitsToDouble: {
-    LongConstant* c = x->argument_at(0)->type()->as_LongConstant();
-    if (c != NULL) {
-      JavaValue v;
-      v.set_jlong(c->value());
-      set_constant(v.get_jdouble());
-    }
-    break;
-  }
-  case vmIntrinsics::_isInstance: {
-    InstanceConstant* c = x->argument_at(0)->type()->as_InstanceConstant();
-    if (c != NULL && !c->value()->is_null_object()) {
-      // ciInstance::java_mirror_type() returns non-NULL only for Java mirrors
-      ciType* t = c->value()->java_mirror_type();
-      if (t->is_klass()) {
-        // substitute cls.isInstance(obj) of a constant Class into
-        // an InstantOf instruction
-        InstanceOf* i = new InstanceOf(t->as_klass(), x->argument_at(1), x->state_before());
-        set_canonical(i);
-        // and try to canonicalize even further
-        do_InstanceOf(i);
-      } else {
-        // cls.isInstance(obj) always returns false for primitive classes
-        set_constant(0);
-      }
-    }
-    break;
-  }
-  case vmIntrinsics::_isPrimitive: {
-    // Class.isPrimitive is known on constant classes:
-    InstanceConstant* c = x->argument_at(0)->type()->as_InstanceConstant();
-    if (c != NULL && !c->value()->is_null_object()) {
-      ciType* t = c->value()->java_mirror_type();
-      set_constant(t->is_primitive_type());
-    }
-    break;
-  }
-  default:
-    break;
-  }
-}
-
 void Canonicalizer::do_Convert(Convert* x) {
   if (x->value()->type()->is_constant()) {
     switch (x->op()) {
@@ -583,32 +503,6 @@ void Canonicalizer::do_NullCheck(NullCheck* x) {
 
 void Canonicalizer::do_TypeCast (TypeCast* x) { }
 void Canonicalizer::do_Invoke (Invoke* x) { }
-void Canonicalizer::do_NewInstance (NewInstance* x) { }
-void Canonicalizer::do_NewTypeArray (NewTypeArray* x) { }
-void Canonicalizer::do_NewObjectArray (NewObjectArray* x) { }
-void Canonicalizer::do_NewMultiArray (NewMultiArray* x) { }
-void Canonicalizer::do_CheckCast(CheckCast* x) {
-  if (x->klass()->is_loaded()) {
-    Value obj = x->obj();
-    ciType* klass = obj->exact_type();
-    if (klass == NULL) {
-      klass = obj->declared_type();
-    }
-    if (klass != NULL && klass->is_loaded()) {
-      bool is_interface = klass->is_instance_klass() && klass->as_instance_klass()->is_interface();
-      // Interface casts can't be statically optimized away since verifier doesn't
-      // enforce interface types in bytecode.
-      if (!is_interface && klass->is_subtype_of(x->klass())) {
-        set_canonical(obj);
-        return;
-      }
-    }
-    // checkcast of null returns null
-    if (obj->as_Constant() && obj->type()->as_ObjectType()->constant_value()->is_null_object()) {
-      set_canonical(obj);
-    }
-  }
-}
 void Canonicalizer::do_InstanceOf(InstanceOf* x) {
   if (x->klass()->is_loaded()) {
     Value obj = x->obj();
@@ -623,8 +517,6 @@ void Canonicalizer::do_InstanceOf(InstanceOf* x) {
     }
   }
 }
-void Canonicalizer::do_MonitorEnter (MonitorEnter* x) { }
-void Canonicalizer::do_MonitorExit (MonitorExit* x) { }
 void Canonicalizer::do_BlockBegin (BlockBegin* x) { }
 void Canonicalizer::do_Goto (Goto* x) { }
 
@@ -820,8 +712,6 @@ void Canonicalizer::do_LookupSwitch(LookupSwitch* x) {
 void Canonicalizer::do_Return (Return* x) { }
 void Canonicalizer::do_Throw (Throw* x) { }
 void Canonicalizer::do_Base (Base* x) { }
-void Canonicalizer::do_OsrEntry (OsrEntry* x) { }
-void Canonicalizer::do_ExceptionObject(ExceptionObject* x) { }
 
 static bool match_index_and_scale(Instruction* instr, Instruction** index, int* log2_scale) {
   ShiftOp* shift = instr->as_ShiftOp();
@@ -926,21 +816,5 @@ void Canonicalizer::do_UnsafeRawOp(UnsafeRawOp* x) {
     x->set_base(base);
     x->set_index(index);
     x->set_log2_scale(log2_scale);
-    if (PrintUnsafeOptimization) {
-      tty->print_cr("Canonicalizer: UnsafeRawOp id %d: base = id %d, index = id %d, log2_scale = %d", x->id(), x->base()->id(), x->index()->id(), x->log2_scale());
-    }
   }
 }
-
-void Canonicalizer::do_RoundFP(RoundFP* x) { }
-void Canonicalizer::do_UnsafeGetRaw(UnsafeGetRaw* x) { if (OptimizeUnsafes) do_UnsafeRawOp(x); }
-void Canonicalizer::do_UnsafePutRaw(UnsafePutRaw* x) { if (OptimizeUnsafes) do_UnsafeRawOp(x); }
-void Canonicalizer::do_UnsafeGetObject(UnsafeGetObject* x) { }
-void Canonicalizer::do_UnsafePutObject(UnsafePutObject* x) { }
-void Canonicalizer::do_UnsafeGetAndSetObject(UnsafeGetAndSetObject* x) { }
-void Canonicalizer::do_ProfileCall(ProfileCall* x) { }
-void Canonicalizer::do_ProfileReturnType(ProfileReturnType* x) { }
-void Canonicalizer::do_ProfileInvoke(ProfileInvoke* x) { }
-void Canonicalizer::do_RuntimeCall(RuntimeCall* x) { }
-void Canonicalizer::do_RangeCheckPredicate(RangeCheckPredicate* x) { }
-void Canonicalizer::do_MemBar(MemBar* x) { }

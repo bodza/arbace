@@ -52,7 +52,7 @@ bool ElfSymbolTable::lookup(address addr, int* stringtableIndex, int* posIndex, 
   Elf_Sym* symbols = (Elf_Sym*)_section.section_data();
 
   if (symbols != NULL) {
-    for (int index = 0; index < count; index ++) {
+    for (int index = 0; index < count; index++) {
       if (compare(&symbols[index], addr, stringtableIndex, posIndex, offset, funcDescTable)) {
         return true;
       }
@@ -66,7 +66,7 @@ bool ElfSymbolTable::lookup(address addr, int* stringtableIndex, int* posIndex, 
     }
 
     Elf_Sym sym;
-    for (int index = 0; index < count; index ++) {
+    for (int index = 0; index < count; index++) {
       if (!mfd.read((void*)&sym, sizeof(sym))) {
         _status = NullDecoder::file_invalid;
         return false;

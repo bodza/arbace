@@ -45,13 +45,13 @@ class Chunk: CHeapObj<mtChunk> {
   static size_t aligned_overhead_size(void) { return ARENA_ALIGN(sizeof(Chunk)); }
   static size_t aligned_overhead_size(size_t byte_size) { return ARENA_ALIGN(byte_size); }
 
-  size_t length() const         { return _len; }
-  Chunk* next() const           { return _next; }
+  size_t length()         const { return _len; }
+  Chunk* next()           const { return _next; }
   void set_next(Chunk* n)       { _next = n; }
   // Boundaries of data area (possibly unused)
-  char* bottom() const          { return ((char*) this) + aligned_overhead_size(); }
-  char* top()    const          { return bottom() + _len; }
-  bool contains(char* p) const  { return bottom() <= p && p <= top(); }
+  char* bottom()          const { return ((char*) this) + aligned_overhead_size(); }
+  char* top()             const { return bottom() + _len; }
+  bool contains(char* p)  const { return bottom() <= p && p <= top(); }
 
   // Start the chunk_pool cleaner task
   static void start_chunk_pool_cleaner_task();
@@ -97,7 +97,7 @@ protected:
   Arena(MEMFLAGS memflag, size_t init_size);
   ~Arena();
   void  destruct_contents();
-  char* hwm() const             { return _hwm; }
+  char* hwm()             const { return _hwm; }
 
   // new operators
   void* operator new (size_t size) throw();
@@ -165,7 +165,7 @@ protected:
   size_t used() const;
 
   // Total # of bytes used
-  size_t size_in_bytes() const         {  return _size_in_bytes; };
+  size_t size_in_bytes()         const {  return _size_in_bytes; };
   void set_size_in_bytes(size_t size);
 
   static void free_malloced_objects(Chunk* chunk, char* hwm, char* max, char* hwm2)  { };

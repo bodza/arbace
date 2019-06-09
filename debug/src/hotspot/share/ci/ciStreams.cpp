@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "ci/ciCallSite.hpp"
 #include "ci/ciConstant.hpp"
 #include "ci/ciField.hpp"
 #include "ci/ciStreams.hpp"
@@ -11,9 +10,6 @@
 //
 // Walk over some selected set of a methods exception handlers.
 
-// ------------------------------------------------------------------
-// ciExceptionHandlerStream::count
-//
 // How many exception handlers are there in this stream?
 //
 // Implementation note: Compiler2 needs this functionality, so I had
@@ -61,9 +57,6 @@ int ciExceptionHandlerStream::count_remaining() {
 // It hides the details of constant pool structure/access by
 // providing accessors for constant pool items.
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::next_wide_or_table
-//
 // Special handling for switch ops
 Bytecodes::Code ciBytecodeStream::next_wide_or_table(Bytecodes::Code bc) {
   switch (bc) {                // Check for special bytecode handling
@@ -103,15 +96,11 @@ Bytecodes::Code ciBytecodeStream::next_wide_or_table(Bytecodes::Code bc) {
   return bc;
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::reset_to_bci
 void ciBytecodeStream::reset_to_bci(int bci) {
   _bc_start=_was_wide=0;
   _pc = _start+bci;
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::force_bci
 void ciBytecodeStream::force_bci(int bci) {
   if (bci < 0) {
     reset_to_bci(0);
@@ -127,9 +116,6 @@ void ciBytecodeStream::force_bci(int bci) {
 // Constant pool access
 // ------------------------------------------------------------------
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_klass_index
-//
 // If this bytecodes references a klass, return the index of the
 // referenced klass.
 int ciBytecodeStream::get_klass_index() const {
@@ -151,20 +137,14 @@ int ciBytecodeStream::get_klass_index() const {
   }
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_klass
-//
 // If this bytecode is a new, newarray, multianewarray, instanceof,
 // or checkcast, get the referenced klass.
 ciKlass* ciBytecodeStream::get_klass(bool& will_link) {
   VM_ENTRY_MARK;
   constantPoolHandle cpool(_method->get_Method()->constants());
-  return CURRENT_ENV->get_klass_by_index(cpool, get_klass_index(), will_link, _holder);
+  return ciEnv::current()->get_klass_by_index(cpool, get_klass_index(), will_link, _holder);
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_constant_raw_index
-//
 // If this bytecode is one of the ldc variants, get the index of the
 // referenced constant.
 int ciBytecodeStream::get_constant_raw_index() const {
@@ -181,8 +161,6 @@ int ciBytecodeStream::get_constant_raw_index() const {
   }
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_constant_pool_index
 // Decode any reference index into a regular pool index.
 int ciBytecodeStream::get_constant_pool_index() const {
   // work-alike for Bytecode_loadconstant::pool_index()
@@ -195,17 +173,12 @@ int ciBytecodeStream::get_constant_pool_index() const {
   return index;
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_constant_cache_index
 // Return the CP cache index, or -1 if there isn't any.
 int ciBytecodeStream::get_constant_cache_index() const {
   // work-alike for Bytecode_loadconstant::cache_index()
   return has_cache_index() ? get_constant_raw_index() : -1;
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_constant
-//
 // If this bytecode is one of the ldc variants, get the referenced
 // constant.
 ciConstant ciBytecodeStream::get_constant() {
@@ -217,12 +190,9 @@ ciConstant ciBytecodeStream::get_constant() {
   }
   VM_ENTRY_MARK;
   constantPoolHandle cpool(_method->get_Method()->constants());
-  return CURRENT_ENV->get_constant_by_index(cpool, pool_index, cache_index, _holder);
+  return ciEnv::current()->get_constant_by_index(cpool, pool_index, cache_index, _holder);
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_constant_pool_tag
-//
 // If this bytecode is one of the ldc variants, get the referenced
 // constant.
 constantTag ciBytecodeStream::get_constant_pool_tag(int index) const {
@@ -230,29 +200,20 @@ constantTag ciBytecodeStream::get_constant_pool_tag(int index) const {
   return _method->get_Method()->constants()->constant_tag_at(index);
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_field_index
-//
 // If this is a field access bytecode, get the constant pool
 // index of the referenced field.
 int ciBytecodeStream::get_field_index() {
   return get_index_u2_cpcache();
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_field
-//
 // If this bytecode is one of get_field, get_static, put_field,
 // or put_static, get the referenced field.
 ciField* ciBytecodeStream::get_field(bool& will_link) {
-  ciField* f = CURRENT_ENV->get_field_by_index(_holder, get_field_index());
+  ciField* f = ciEnv::current()->get_field_by_index(_holder, get_field_index());
   will_link = f->will_link(_method, _bc);
   return f;
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_declared_field_holder
-//
 // Get the declared holder of the currently referenced field.
 //
 // Usage note: the holder() of a ciField class returns the canonical
@@ -266,13 +227,9 @@ ciInstanceKlass* ciBytecodeStream::get_declared_field_holder() {
   constantPoolHandle cpool(_method->get_Method()->constants());
   int holder_index = get_field_holder_index();
   bool ignore;
-  return CURRENT_ENV->get_klass_by_index(cpool, holder_index, ignore, _holder)
-      ->as_instance_klass();
+  return ciEnv::current()->get_klass_by_index(cpool, holder_index, ignore, _holder)->as_instance_klass();
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_field_holder_index
-//
 // Get the constant pool index of the declared holder of the field
 // referenced by the current bytecode.  Used for generating
 // deoptimization information.
@@ -283,9 +240,6 @@ int ciBytecodeStream::get_field_holder_index() {
   )
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_field_signature_index
-//
 // Get the constant pool index of the signature of the field
 // referenced by the current bytecode.  Used for generating
 // deoptimization information.
@@ -296,9 +250,6 @@ int ciBytecodeStream::get_field_signature_index() {
   return cpool->signature_ref_index_at(nt_index);
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_method_index
-//
 // If this is a method invocation bytecode, get the constant pool
 // index of the invoked method.
 int ciBytecodeStream::get_method_index() {
@@ -307,36 +258,20 @@ int ciBytecodeStream::get_method_index() {
   return get_index_u2_cpcache();
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_method
-//
 // If this is a method invocation bytecode, get the invoked method.
 // Additionally return the declared signature to get more concrete
 // type information if required (Cf. invokedynamic and invokehandle).
 ciMethod* ciBytecodeStream::get_method(bool& will_link, ciSignature* *declared_signature_result) {
   VM_ENTRY_MARK;
-  ciEnv* env = CURRENT_ENV;
+  ciEnv* env = ciEnv::current();
   constantPoolHandle cpool(THREAD, _method->get_Method()->constants());
   ciMethod* m = env->get_method_by_index(cpool, get_method_index(), cur_bc(), _holder);
   will_link = m->is_loaded();
 
-  // Use the MethodType stored in the CP cache to create a signature
-  // with correct types (in respect to class loaders).
-  if (has_method_type()) {
-    ciSymbol*     sig_sym     = env->get_symbol(cpool->symbol_at(get_method_signature_index(cpool)));
-    ciKlass*      pool_holder = env->get_klass(cpool->pool_holder());
-    ciMethodType* method_type = get_method_type();
-    ciSignature* declared_signature = new (env->arena()) ciSignature(pool_holder, sig_sym, method_type);
-    (*declared_signature_result) = declared_signature;
-  } else {
-    (*declared_signature_result) = m->signature();
-  }
+  (*declared_signature_result) = m->signature();
   return m;
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::has_appendix
-//
 // Returns true if there is an appendix argument stored in the
 // constant pool cache at the current bci.
 bool ciBytecodeStream::has_appendix() {
@@ -345,46 +280,15 @@ bool ciBytecodeStream::has_appendix() {
   return ConstantPool::has_appendix_at_if_loaded(cpool, get_method_index());
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_appendix
-//
 // Return the appendix argument stored in the constant pool cache at
 // the current bci.
 ciObject* ciBytecodeStream::get_appendix() {
   VM_ENTRY_MARK;
   constantPoolHandle cpool(_method->get_Method()->constants());
   oop appendix_oop = ConstantPool::appendix_at_if_loaded(cpool, get_method_index());
-  return CURRENT_ENV->get_object(appendix_oop);
+  return ciEnv::current()->get_object(appendix_oop);
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::has_method_type
-//
-// Returns true if there is a MethodType argument stored in the
-// constant pool cache at the current bci.
-bool ciBytecodeStream::has_method_type() {
-  GUARDED_VM_ENTRY(
-    constantPoolHandle cpool(_method->get_Method()->constants());
-    return ConstantPool::has_method_type_at_if_loaded(cpool, get_method_index());
-  )
-}
-
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_method_type
-//
-// Return the MethodType stored in the constant pool cache at
-// the current bci.
-ciMethodType* ciBytecodeStream::get_method_type() {
-  GUARDED_VM_ENTRY(
-    constantPoolHandle cpool(_method->get_Method()->constants());
-    oop method_type_oop = ConstantPool::method_type_at_if_loaded(cpool, get_method_index());
-    return CURRENT_ENV->get_object(method_type_oop)->as_method_type();
-  )
-}
-
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_declared_method_holder
-//
 // Get the declared holder of the currently referenced method.
 //
 // Usage note: the holder() of a ciMethod class returns the canonical
@@ -397,15 +301,9 @@ ciKlass* ciBytecodeStream::get_declared_method_holder() {
   VM_ENTRY_MARK;
   constantPoolHandle cpool(_method->get_Method()->constants());
   bool ignore;
-  // report as MethodHandle for invokedynamic, which is syntactically classless
-  if (cur_bc() == Bytecodes::_invokedynamic)
-    return CURRENT_ENV->get_klass_by_name(_holder, ciSymbol::java_lang_invoke_MethodHandle(), false);
-  return CURRENT_ENV->get_klass_by_index(cpool, get_method_holder_index(), ignore, _holder);
+  return ciEnv::current()->get_klass_by_index(cpool, get_method_holder_index(), ignore, _holder);
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_method_holder_index
-//
 // Get the constant pool index of the declared holder of the method
 // referenced by the current bytecode.  Used for generating
 // deoptimization information.
@@ -414,9 +312,6 @@ int ciBytecodeStream::get_method_holder_index() {
   return cpool->klass_ref_index_at(get_method_index());
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_method_signature_index
-//
 // Get the constant pool index of the signature of the method
 // referenced by the current bytecode.  Used for generating
 // deoptimization information.
@@ -428,13 +323,11 @@ int ciBytecodeStream::get_method_signature_index(const constantPoolHandle& cpool
   )
 }
 
-// ------------------------------------------------------------------
-// ciBytecodeStream::get_resolved_references
 ciObjArray* ciBytecodeStream::get_resolved_references() {
-    VM_ENTRY_MARK;
+  VM_ENTRY_MARK;
     // Get the constant pool.
-  ConstantPool*        cpool   = _holder->get_instanceKlass()->constants();
+  ConstantPool* cpool = _holder->get_instanceKlass()->constants();
 
   // Create a resolved references array and return it.
-  return CURRENT_ENV->get_object(cpool->resolved_references())->as_obj_array();
-  }
+  return ciEnv::current()->get_object(cpool->resolved_references())->as_obj_array();
+}

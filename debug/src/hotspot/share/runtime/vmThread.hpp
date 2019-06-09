@@ -88,8 +88,8 @@ class VMThread: public NamedThread {
   }
 
   // Tester
-  bool is_VM_thread() const                      { return true; }
-  bool is_GC_thread() const                      { return true; }
+  bool is_VM_thread()                      const { return true; }
+  bool is_GC_thread()                      const { return true; }
 
   // The ever running loop for the VMThread
   void loop();

@@ -83,11 +83,11 @@ class FpuStackAllocator {
   bool _debug_information_computed;
 
   LinearScan*   allocator()                      { return _allocator; }
-  Compilation*  compilation() const              { return _compilation; }
+  Compilation*  compilation()              const { return _compilation; }
 
   // unified bailout support
-  void          bailout(const char* msg) const   { compilation()->bailout(msg); }
-  bool          bailed_out() const               { return compilation()->bailed_out(); }
+  void          bailout(const char* msg)   const { compilation()->bailout(msg); }
+  bool          bailed_out()               const { return compilation()->bailed_out(); }
 
   int pos() { return _pos; }
   void set_pos(int pos) { _pos = pos; }

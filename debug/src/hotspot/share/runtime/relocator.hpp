@@ -40,44 +40,44 @@ class Relocator : public ResourceObj {
 
   GrowableArray<ChangeItem*>* _changes;
 
-  unsigned char* code_array() const         { return _code_array; }
+  unsigned char* code_array()         const { return _code_array; }
   void set_code_array(unsigned char* array) { _code_array = array; }
 
-  int code_length() const                   { return _code_length; }
+  int code_length()                   const { return _code_length; }
   void set_code_length(int length)          { _code_length = length; }
 
-  int code_array_length() const             { return _code_array_length; }
+  int code_array_length()             const { return _code_array_length; }
   void set_code_array_length(int length)    { _code_array_length = length; }
 
-  unsigned char* compressed_line_number_table() const         { return _compressed_line_number_table; }
+  unsigned char* compressed_line_number_table()         const { return _compressed_line_number_table; }
   void set_compressed_line_number_table(unsigned char* table) { _compressed_line_number_table = table; }
 
-  int compressed_line_number_table_size() const               { return _compressed_line_number_table_size; }
+  int compressed_line_number_table_size()               const { return _compressed_line_number_table_size; }
   void set_compressed_line_number_table_size(int size)        { _compressed_line_number_table_size = size; }
 
-  methodHandle method() const               { return _method; }
+  methodHandle method()               const { return _method; }
   void set_method(const methodHandle& method)      { _method = method; }
 
   // This will return a raw bytecode, which is possibly rewritten.
-  Bytecodes::Code code_at(int bci) const          { return (Bytecodes::Code) code_array()[bci]; }
+  Bytecodes::Code code_at(int bci)          const { return (Bytecodes::Code) code_array()[bci]; }
   void code_at_put(int bci, Bytecodes::Code code) { code_array()[bci] = (char) code; }
 
   // get and set signed integers in the code_array
-  inline int   int_at(int bci) const               { return Bytes::get_Java_u4(&code_array()[bci]); }
+  inline int   int_at(int bci)               const { return Bytes::get_Java_u4(&code_array()[bci]); }
   inline void  int_at_put(int bci, int value)      { Bytes::put_Java_u4(&code_array()[bci], value); }
 
   // get and set signed shorts in the code_array
-  inline short short_at(int bci) const            { return (short)Bytes::get_Java_u2(&code_array()[bci]); }
+  inline short short_at(int bci)            const { return (short)Bytes::get_Java_u2(&code_array()[bci]); }
   inline void  short_at_put(int bci, short value) { Bytes::put_Java_u2((address) &code_array()[bci], value); }
 
   // get the address of in the code_array
-  inline char* addr_at(int bci) const             { return (char*) &code_array()[bci]; }
+  inline char* addr_at(int bci)             const { return (char*) &code_array()[bci]; }
 
   int  instruction_length_at(int bci)             { return Bytecodes::length_at(NULL, code_array() + bci); }
 
   // Helper methods
-  int  align(int n) const                          { return (n + 3) & ~3; }
-  int  code_slop_pct() const                       { return 25; }
+  int  align(int n)                          const { return (n + 3) & ~3; }
+  int  code_slop_pct()                       const { return 25; }
   bool is_opcode_lookupswitch(Bytecodes::Code bc);
 
   // basic relocation methods

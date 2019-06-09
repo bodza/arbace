@@ -44,7 +44,6 @@
 // and CodeCache::next_blob(..) and providing the corresponding CodeBlobType.
 
 class OopClosure;
-class KlassDepChange;
 
 class CodeCache : AllStatic {
   friend class VMStructs;
@@ -60,7 +59,6 @@ class CodeCache : AllStatic {
 
   static address _low_bound;                            // Lower bound of CodeHeap addresses
   static address _high_bound;                           // Upper bound of CodeHeap addresses
-  static int _number_of_nmethods_with_dependencies;     // Total number of nmethods with dependencies
   static bool _needs_cache_clean;                       // True if inline caches of the nmethods needs to be flushed
   static nmethod* _scavenge_root_nmethods;              // linked via nm->scavenge_root_link()
 
@@ -232,23 +230,7 @@ class CodeCache : AllStatic {
     return 0;
   }
 
-  // NULL
- private:
-  static int  mark_for_deoptimization(KlassDepChange& changes);
-
  public:
-  static void mark_all_nmethods_for_deoptimization();
-  static int  mark_for_deoptimization(Method* dependee);
-  static void make_marked_nmethods_not_entrant();
-
-  // Flushing and deoptimization
-  static void flush_dependents_on(InstanceKlass* dependee);
-  // Support for fullspeed debugging
-  static void flush_dependents_on_method(const methodHandle& dependee);
-
-  // tells how many nmethods have dependencies
-  static int number_of_nmethods_with_dependencies();
-
   static int get_codemem_full_count(int code_blob_type) {
     CodeHeap* heap = get_code_heap(code_blob_type);
     return (heap != NULL) ? heap->full_count() : 0;
@@ -256,14 +238,14 @@ class CodeCache : AllStatic {
 
   // CodeHeap State Analytics.
   // interface methods for CodeHeap printing, called by CompileBroker
-  static void aggregate(outputStream *out, const char* granularity);
-  static void discard(outputStream *out);
-  static void print_usedSpace(outputStream *out);
-  static void print_freeSpace(outputStream *out);
-  static void print_count(outputStream *out);
-  static void print_space(outputStream *out);
-  static void print_age(outputStream *out);
-  static void print_names(outputStream *out);
+  static void aggregate(outputStream* out, const char* granularity);
+  static void discard(outputStream* out);
+  static void print_usedSpace(outputStream* out);
+  static void print_freeSpace(outputStream* out);
+  static void print_count(outputStream* out);
+  static void print_space(outputStream* out);
+  static void print_age(outputStream* out);
+  static void print_names(outputStream* out);
 };
 
 // Iterator to iterate over nmethods in the CodeCache.
@@ -312,8 +294,8 @@ template <class T, class Filter> class CodeBlobIterator : public StackObj {
     return result;
   }
 
-  bool end()        const   { return _code_blob == NULL; }
-  T* method() const   { return (T*)_code_blob; }
+  bool end()          const { return _code_blob == NULL; }
+  T* method()   const { return (T*)_code_blob; }
 
 private:
   // Advance iterator to the next blob in the current code heap

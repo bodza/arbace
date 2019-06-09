@@ -17,9 +17,6 @@ bool ciMethodBlocks::is_block_start(int bci) {
   return b->start_bci() == bci;
 }
 
-// ------------------------------------------------------------------
-// ciMethodBlocks::split_block_at
-//
 // Split the block spanning bci into two separate ranges.  The former
 // block becomes the second half and a new range is created for the
 // first half.  Returns the range beginning at bci.

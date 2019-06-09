@@ -9,7 +9,6 @@ class VerifyOopClosure: public OopClosure {
  public:
   virtual void do_oop(oop* p);
   virtual void do_oop(narrowOop* p);
-  static VerifyOopClosure verify_oop;
 };
 
 #endif

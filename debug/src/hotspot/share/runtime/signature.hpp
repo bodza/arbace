@@ -70,9 +70,9 @@ class SignatureIterator: public ResourceObj {
   void iterate_returntype();           // iterates over returntype only
   void iterate();                      // iterates over whole signature
   // Returns the word index of the current parameter;
-  int  parameter_index() const         { return _parameter_index; }
-  bool is_return_type() const          { return parameter_index() < 0; }
-  BasicType get_ret_type() const       { return _return_type; }
+  int  parameter_index()         const { return _parameter_index; }
+  bool is_return_type()          const { return parameter_index() < 0; }
+  BasicType get_ret_type()       const { return _return_type; }
 
   // Basic types
   virtual void do_bool  ()             = 0;
@@ -257,11 +257,11 @@ class NativeSignatureIterator: public SignatureIterator {
   void do_array (int begin, int end)   { pass_object(); _jni_offset++; _offset++; }
 
  public:
-  methodHandle method() const          { return _method; }
-  int          offset() const          { return _offset; }
-  int      jni_offset() const          { return _jni_offset + _prepended; }
-//  int     java_offset() const          { return method()->size_of_parameters() - _offset - 1; }
-  bool      is_static() const          { return method()->is_static(); }
+  methodHandle method()          const { return _method; }
+  int          offset()          const { return _offset; }
+  int      jni_offset()          const { return _jni_offset + _prepended; }
+//  int     java_offset()          const { return method()->size_of_parameters() - _offset - 1; }
+  bool      is_static()          const { return method()->is_static(); }
   virtual void pass_int()              = 0;
   virtual void pass_long()             = 0;
   virtual void pass_object()           = 0;
@@ -313,7 +313,7 @@ class SignatureStream : public StackObj {
   GrowableArray<Symbol*>* _names;  // symbols created while parsing signature
 
  public:
-  bool at_return_type() const                    { return _at_return_type; }
+  bool at_return_type()                    const { return _at_return_type; }
   bool is_done() const;
   void next_non_primitive(int t);
   void next() {
@@ -347,7 +347,7 @@ class SignatureStream : public StackObj {
 
   bool is_object() const;                        // True if this argument is an object
   bool is_array() const;                         // True if this argument is an array
-  BasicType type() const                         { return _type; }
+  BasicType type()                         const { return _type; }
   Symbol* as_symbol(TRAPS);
   enum FailureMode { ReturnNull, CNFException, NCDFError };
   Klass* as_klass(Handle class_loader, Handle protection_domain, FailureMode failure_mode, TRAPS);

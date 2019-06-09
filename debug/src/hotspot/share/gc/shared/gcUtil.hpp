@@ -67,11 +67,11 @@ class AdaptiveWeightedAverage : public CHeapObj<mtGC> {
   }
 
   // Accessors
-  float    average() const       { return _average; }
-  unsigned weight()  const       { return _weight; }
-  unsigned count()   const       { return _sample_count; }
-  float    last_sample() const   { return _last_sample; }
-  bool     is_old()  const       { return _is_old; }
+  float    average()       const { return _average; }
+  unsigned weight()        const { return _weight; }
+  unsigned count()         const { return _sample_count; }
+  float    last_sample()   const { return _last_sample; }
+  bool     is_old()        const { return _is_old; }
 
   // Update data with a new sample.
   void sample(float new_sample);
@@ -120,9 +120,9 @@ class AdaptivePaddedAverage : public AdaptiveWeightedAverage {
   void* operator new(size_t size) throw();
 
   // Accessor
-  float padded_average() const         { return _padded_avg; }
-  float deviation()      const         { return _deviation; }
-  unsigned padding()     const         { return _padding; }
+  float padded_average()         const { return _padded_avg; }
+  float deviation()              const { return _deviation; }
+  unsigned padding()             const { return _padding; }
 
   void clear() {
     AdaptiveWeightedAverage::clear();

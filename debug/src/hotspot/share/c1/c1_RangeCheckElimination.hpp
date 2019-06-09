@@ -13,7 +13,6 @@ public:
 class RangeCheckEliminator {
 private:
   int _number_of_instructions;
-  bool _optimistic; // Insert predicates and deoptimize when they fail
   IR *_ir;
 
   typedef GrowableArray<BlockBegin*> BlockBeginList;
@@ -98,12 +97,7 @@ public:
 
     void do_StoreField     (StoreField*      x) { /* nothing to do */ };
     void do_StoreIndexed   (StoreIndexed*    x) { /* nothing to do */ };
-    void do_MonitorEnter   (MonitorEnter*    x) { /* nothing to do */ };
-    void do_MonitorExit    (MonitorExit*     x) { /* nothing to do */ };
     void do_Invoke         (Invoke*          x) { /* nothing to do */ };
-    void do_UnsafePutRaw   (UnsafePutRaw*    x) { /* nothing to do */ };
-    void do_UnsafePutObject(UnsafePutObject* x) { /* nothing to do */ };
-    void do_Intrinsic      (Intrinsic*       x) { /* nothing to do */ };
     void do_Local          (Local*           x) { /* nothing to do */ };
     void do_LoadField      (LoadField*       x) { /* nothing to do */ };
     void do_ArrayLength    (ArrayLength*     x) { /* nothing to do */ };
@@ -114,11 +108,6 @@ public:
     void do_Convert        (Convert*         x) { /* nothing to do */ };
     void do_NullCheck      (NullCheck*       x) { /* nothing to do */ };
     void do_TypeCast       (TypeCast*        x) { /* nothing to do */ };
-    void do_NewInstance    (NewInstance*     x) { /* nothing to do */ };
-    void do_NewTypeArray   (NewTypeArray*    x) { /* nothing to do */ };
-    void do_NewObjectArray (NewObjectArray*  x) { /* nothing to do */ };
-    void do_NewMultiArray  (NewMultiArray*   x) { /* nothing to do */ };
-    void do_CheckCast      (CheckCast*       x) { /* nothing to do */ };
     void do_InstanceOf     (InstanceOf*      x) { /* nothing to do */ };
     void do_BlockBegin     (BlockBegin*      x) { /* nothing to do */ };
     void do_Goto           (Goto*            x) { /* nothing to do */ };
@@ -129,18 +118,6 @@ public:
     void do_Return         (Return*          x) { /* nothing to do */ };
     void do_Throw          (Throw*           x) { /* nothing to do */ };
     void do_Base           (Base*            x) { /* nothing to do */ };
-    void do_OsrEntry       (OsrEntry*        x) { /* nothing to do */ };
-    void do_ExceptionObject(ExceptionObject* x) { /* nothing to do */ };
-    void do_RoundFP        (RoundFP*         x) { /* nothing to do */ };
-    void do_UnsafeGetRaw   (UnsafeGetRaw*    x) { /* nothing to do */ };
-    void do_UnsafeGetObject(UnsafeGetObject* x) { /* nothing to do */ };
-    void do_UnsafeGetAndSetObject(UnsafeGetAndSetObject* x) { /* nothing to do */ };
-    void do_ProfileCall    (ProfileCall*     x) { /* nothing to do */ };
-    void do_ProfileReturnType (ProfileReturnType*  x) { /* nothing to do */ };
-    void do_ProfileInvoke  (ProfileInvoke*   x) { /* nothing to do */ };
-    void do_RuntimeCall    (RuntimeCall*     x) { /* nothing to do */ };
-    void do_MemBar         (MemBar*          x) { /* nothing to do */ };
-    void do_RangeCheckPredicate(RangeCheckPredicate* x) { /* nothing to do */ };
   };
 
   typedef GrowableArray<Bound*> BoundStack;

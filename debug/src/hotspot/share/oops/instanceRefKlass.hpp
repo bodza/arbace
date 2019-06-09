@@ -108,10 +108,6 @@ class InstanceRefKlass: public InstanceKlass {
   // Update non-static oop maps so 'referent', 'nextPending' and
   // 'discovered' will look like non-oops
   static void update_nonstatic_oop_maps(Klass* k);
-
- public:
-  // Verification
-  void oop_verify_on(oop obj, outputStream* st);
 };
 
 #endif

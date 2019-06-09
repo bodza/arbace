@@ -81,12 +81,10 @@ public:
     _symbol->print();
   }
 
-  virtual bool is_symbol() const       { return true; }
+  virtual bool is_symbol() const { return true; }
 
   // Are two ciSymbols equal?
-  bool equals(ciSymbol* obj) { return this->_symbol == obj->get_symbol(); }
-
-  bool is_signature_polymorphic_name() const;
+  bool equals(ciSymbol* obj)     { return this->_symbol == obj->get_symbol(); }
 };
 
 #endif

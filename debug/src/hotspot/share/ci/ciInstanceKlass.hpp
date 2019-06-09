@@ -154,7 +154,6 @@ public:
   }
 
   ciInstanceKlass* unique_concrete_subklass();
-  bool has_finalizable_subclass();
 
   bool contains_field_offset(int offset) {
     return instanceOopDesc::contains_field_offset(offset, nonstatic_field_size());
@@ -196,7 +195,7 @@ public:
 
   // What kind of ciObject is this?
   bool is_instance_klass() const { return true; }
-  bool is_java_klass() const     { return true; }
+  bool is_java_klass()     const { return true; }
 
   virtual ciKlass* exact_klass() {
     if (is_loaded() && is_final() && !is_interface()) {
@@ -210,9 +209,6 @@ public:
   bool can_be_instantiated() {
     return !is_interface() && !is_abstract();
   }
-
-  // Dump the current state of this klass for compilation replay.
-  virtual void dump_replay_data(outputStream* out);
 };
 
 #endif

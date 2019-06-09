@@ -3,7 +3,6 @@
 
 #include "classfile/systemDictionary.hpp"
 #include "code/debugInfoRec.hpp"
-#include "code/dependencies.hpp"
 #include "code/exceptionHandlerTable.hpp"
 #include "compiler/oopMap.hpp"
 #include "runtime/thread.hpp"
@@ -30,7 +29,6 @@ class JVMCIEnv : StackObj {
 
   friend class JVMCIVMStructs;
   friend class CompileBroker;
-  friend class Dependencies;  // for get_object, during logging
 
 public:
   enum CodeInstallResult {
@@ -56,42 +54,33 @@ public:
   static Klass* get_klass_by_name(Klass* accessing_klass, Symbol* klass_name, bool require_local);
 
   // Constant pool access.
-  static Klass* get_klass_by_index(const constantPoolHandle& cpool, int klass_index, bool& is_accessible, Klass* loading_klass);
-  static void   get_field_by_index(InstanceKlass* loading_klass, fieldDescriptor& fd, int field_index);
-  static methodHandle  get_method_by_index(const constantPoolHandle& cpool, int method_index, Bytecodes::Code bc, InstanceKlass* loading_klass);
+  static Klass*       get_klass_by_index(const constantPoolHandle& cpool, int klass_index, bool& is_accessible, Klass* loading_klass);
+  static void         get_field_by_index(InstanceKlass* loading_klass, fieldDescriptor& fd, int field_index);
+  static methodHandle get_method_by_index(const constantPoolHandle& cpool, int method_index, Bytecodes::Code bc, InstanceKlass* loading_klass);
 
   JVMCIEnv(CompileTask* task, int system_dictionary_modification_counter);
 
 private:
-  CompileTask*     _task;
-  int              _system_dictionary_modification_counter;
+  CompileTask* _task;
+  int          _system_dictionary_modification_counter;
 
   // Compilation result values
-  const char*      _failure_reason;
-  bool             _retryable;
+  const char*  _failure_reason;
+  bool         _retryable;
 
   // Implementation methods for loading and constant pool access.
-  static Klass* get_klass_by_name_impl(Klass* accessing_klass, const constantPoolHandle& cpool, Symbol* klass_name, bool require_local);
-  static Klass* get_klass_by_index_impl(const constantPoolHandle& cpool, int klass_index, bool& is_accessible, Klass* loading_klass);
-  static void   get_field_by_index_impl(InstanceKlass* loading_klass, fieldDescriptor& fd, int field_index);
-  static methodHandle  get_method_by_index_impl(const constantPoolHandle& cpool, int method_index, Bytecodes::Code bc, InstanceKlass* loading_klass);
+  static Klass*       get_klass_by_name_impl(Klass* accessing_klass, const constantPoolHandle& cpool, Symbol* klass_name, bool require_local);
+  static Klass*       get_klass_by_index_impl(const constantPoolHandle& cpool, int klass_index, bool& is_accessible, Klass* loading_klass);
+  static void         get_field_by_index_impl(InstanceKlass* loading_klass, fieldDescriptor& fd, int field_index);
+  static methodHandle get_method_by_index_impl(const constantPoolHandle& cpool, int method_index, Bytecodes::Code bc, InstanceKlass* loading_klass);
 
   // Helper methods
-  static bool       check_klass_accessibility(Klass* accessing_klass, Klass* resolved_klass);
-  static methodHandle  lookup_method(InstanceKlass*  accessor,
-                           Klass*         holder,
-                           Symbol*        name,
-                           Symbol*        sig,
-                           Bytecodes::Code bc,
-                           constantTag     tag);
+  static bool         check_klass_accessibility(Klass* accessing_klass, Klass* resolved_klass);
+  static methodHandle lookup_method(InstanceKlass* accessor, Klass* holder, Symbol* name, Symbol* sig, Bytecodes::Code bc, constantTag tag);
 
   private:
   // Is this thread currently in the VM state?
   static bool is_in_vm();
-
-  // Helper routine for determining the validity of a compilation
-  // with respect to concurrent class loading.
-  static JVMCIEnv::CodeInstallResult validate_compile_task_dependencies(Dependencies* target, Handle compiled_code, JVMCIEnv* env, char** failure_detail);
 
 public:
   CompileTask* task() { return _task; }
@@ -117,7 +106,6 @@ public:
                        ExceptionHandlerTable*    handler_table,
                        AbstractCompiler*         compiler,
                        DebugInformationRecorder* debug_info,
-                       Dependencies*             dependencies,
                        JVMCIEnv*                 env,
                        int                       compile_id,
                        bool                      has_unsafe_access,

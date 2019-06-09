@@ -18,8 +18,6 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   Label done;
   int null_check_offset = -1;
 
-  verify_oop(obj);
-
   // save object being locked into the BasicObjectLock
   movptr(Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()), obj);
 
@@ -92,7 +90,6 @@ void C1_MacroAssembler::unlock_object(Register hdr, Register obj, Register disp_
     // load object
     movptr(obj, Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()));
   }
-  verify_oop(obj);
   // test if object header is pointing to the displaced header, and if so, restore
   // the displaced header in the object - if the object header is not pointing to
   // the displaced header, get the object header instead
@@ -192,8 +189,6 @@ void C1_MacroAssembler::initialize_object(Register obj, Register klass, Register
       }
     }
   }
-
-  verify_oop(obj);
 }
 
 void C1_MacroAssembler::allocate_array(Register obj, Register len, Register t1, Register t2, int header_size, Address::ScaleFactor f, Register klass, Label& slow_case) {
@@ -214,12 +209,9 @@ void C1_MacroAssembler::allocate_array(Register obj, Register len, Register t1, 
   // clear rest of allocated space
   const Register len_zero = len;
   initialize_body(obj, arr_size, header_size * BytesPerWord, len_zero);
-
-  verify_oop(obj);
 }
 
 void C1_MacroAssembler::inline_cache_check(Register receiver, Register iCache) {
-  verify_oop(receiver);
   int start_offset = offset();
 
   if (UseCompressedClassPointers) {
@@ -255,11 +247,11 @@ void C1_MacroAssembler::remove_frame(int frame_size_in_bytes) {
 }
 
 void C1_MacroAssembler::verified_entry() {
-  if (C1Breakpoint || VerifyFPU || !UseStackBanging) {
+  if (C1Breakpoint || !UseStackBanging) {
     // Verified Entry first instruction should be 5 bytes long for correct
     // patching by patch_verified_entry().
     //
-    // C1Breakpoint and VerifyFPU have one byte first instruction.
+    // C1Breakpoint have one byte first instruction.
     // Also first instruction will be one byte "push(rbp)" if stack banging
     // code is not generated (see build_frame() above).
     // For all these cases generate long instruction first.
@@ -267,8 +259,6 @@ void C1_MacroAssembler::verified_entry() {
   }
   if (C1Breakpoint)
     int3();
-  // build frame
-  verify_FPU(0, "method_entry");
 }
 
 void C1_MacroAssembler::load_parameter(int offset_in_words, Register reg) {

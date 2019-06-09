@@ -44,7 +44,7 @@ protected:
   static intptr_t translate_klass(intptr_t k) {
     Klass* v = TypeEntries::valid_klass(k);
     if (v != NULL) {
-      ciKlass* klass = CURRENT_ENV->get_klass(v);
+      ciKlass* klass = ciEnv::current()->get_klass(v);
       return with_status(klass, k);
     }
     return with_status(NULL, k);
@@ -305,7 +305,6 @@ public:
 
 class ciMethodData : public ciMetadata {
   CI_PACKAGE_ACCESS
-  friend class ciReplay;
 
 private:
   // Size in bytes
@@ -375,7 +374,7 @@ private:
   }
 
   // hint accessors
-  int      hint_di() const  { return _hint_di; }
+  int      hint_di()  const { return _hint_di; }
   void set_hint_di(int di)  { _hint_di = di; }
   ciProfileData* data_before(int bci) {
     // avoid SEGV on this edge case
@@ -416,17 +415,6 @@ public:
   int invocation_count() { return _invocation_counter; }
   int backedge_count()   { return _backedge_counter; }
 
-#if INCLUDE_RTM_OPT
-  // return cached value
-  int rtm_state() {
-    if (is_empty()) {
-      return NoRTM;
-    } else {
-      return get_MethodData()->rtm_state();
-    }
-  }
-#endif
-
   // Transfer information about the method to MethodData*.
   // would_profile means we would like to profile this method,
   // meaning it's not trivial.
@@ -455,36 +443,18 @@ public:
   ciProfileData* next_data(ciProfileData* current);
   bool is_valid(ciProfileData* current) { return current != NULL; }
 
-  DataLayout* extra_data_base() const  { return data_layout_at(data_size()); }
-  DataLayout* args_data_limit() const  { return data_layout_at(data_size() + extra_data_size() - parameters_size()); }
+  DataLayout* extra_data_base()  const { return data_layout_at(data_size()); }
+  DataLayout* args_data_limit()  const { return data_layout_at(data_size() + extra_data_size() - parameters_size()); }
 
   // Get the data at an arbitrary bci, or NULL if there is none. If m
   // is not NULL look for a SpeculativeTrapData if any first.
   ciProfileData* bci_to_data(int bci, ciMethod* m = NULL);
 
-  uint overflow_trap_count() const {
-    return _orig.overflow_trap_count();
-  }
   uint overflow_recompile_count() const {
     return _orig.overflow_recompile_count();
   }
   uint decompile_count() const {
     return _orig.decompile_count();
-  }
-  uint trap_count(int reason) const {
-    return _orig.trap_count(reason);
-  }
-  uint trap_reason_limit() const { return _orig.trap_reason_limit(); }
-  uint trap_count_limit()  const { return _orig.trap_count_limit(); }
-
-  // Helpful query functions that decode trap_state.
-  int has_trap_at(ciProfileData* data, int reason);
-  int has_trap_at(int bci, ciMethod* m, int reason) {
-    return has_trap_at(bci_to_data(bci, m), reason);
-  }
-  int trap_recompiled_at(ciProfileData* data);
-  int trap_recompiled_at(int bci, ciMethod* m) {
-    return trap_recompiled_at(bci_to_data(bci, m));
   }
 
   void clear_escape_info();
@@ -512,8 +482,6 @@ public:
   // Code generation helper
   ByteSize offset_of_slot(ciProfileData* data, ByteSize slot_offset_in_data);
   int      byte_offset_of_slot(ciProfileData* data, ByteSize slot_offset_in_data) { return in_bytes(offset_of_slot(data, slot_offset_in_data)); }
-
-  void dump_replay_data(outputStream* out);
 };
 
 #endif

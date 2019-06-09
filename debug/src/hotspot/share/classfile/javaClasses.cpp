@@ -7,7 +7,6 @@
 #include "classfile/stringTable.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "code/debugInfo.hpp"
-#include "code/dependencyContext.hpp"
 #include "code/pcDesc.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "memory/oopFactory.hpp"
@@ -22,7 +21,6 @@
 #include "oops/oop.inline.hpp"
 #include "oops/symbol.hpp"
 #include "oops/typeArrayOop.inline.hpp"
-#include "prims/resolvedMethodTable.hpp"
 #include "runtime/fieldDescriptor.hpp"
 #include "runtime/frame.inline.hpp"
 #include "runtime/handles.inline.hpp"
@@ -1635,7 +1633,7 @@ static void print_stack_element_to_stream(outputStream* st, Handle mirror, int m
   st->print_cr("%s", buf);
 }
 
-void java_lang_Throwable::print_stack_element(outputStream *st, const methodHandle& method, int bci) {
+void java_lang_Throwable::print_stack_element(outputStream* st, const methodHandle& method, int bci) {
   Handle mirror (Thread::current(),  method->method_holder()->java_mirror());
   int method_id = method->orig_method_idnum();
   int version = method->constants()->version();
@@ -1981,18 +1979,10 @@ void java_lang_StackTraceElement::fill_in(Handle element, InstanceKlass* holder,
 
 Method* java_lang_StackFrameInfo::get_method(Handle stackFrame, InstanceKlass* holder, TRAPS) {
   Handle mname(THREAD, stackFrame->obj_field(_memberName_offset));
-  Method* method = (Method*)java_lang_invoke_MemberName::vmtarget(mname());
-  // we should expand MemberName::name when Throwable uses StackTrace
-  // MethodHandles::expand_MemberName(mname, MethodHandles::_suppress_defc|MethodHandles::_suppress_type, CHECK_NULL);
-  return method;
+  return (Method*)NULL::vmtarget(mname());
 }
 
 void java_lang_StackFrameInfo::set_method_and_bci(Handle stackFrame, const methodHandle& method, int bci, TRAPS) {
-  // set Method* or mid/cpref
-  Handle mname(Thread::current(), stackFrame->obj_field(_memberName_offset));
-  InstanceKlass* ik = method->method_holder();
-  CallInfo info(method(), ik, CHECK);
-  MethodHandles::init_method_MemberName(mname, info);
   // set bci
   java_lang_StackFrameInfo::set_bci(stackFrame(), bci);
   // method may be redefined; store the version
@@ -2003,7 +1993,7 @@ void java_lang_StackFrameInfo::set_method_and_bci(Handle stackFrame, const metho
 void java_lang_StackFrameInfo::to_stack_trace_element(Handle stackFrame, Handle stack_trace_element, TRAPS) {
   ResourceMark rm(THREAD);
   Handle mname(THREAD, stackFrame->obj_field(java_lang_StackFrameInfo::_memberName_offset));
-  Klass* clazz = java_lang_Class::as_Klass(java_lang_invoke_MemberName::clazz(mname()));
+  Klass* clazz = java_lang_Class::as_Klass(NULL::clazz(mname()));
   InstanceKlass* holder = InstanceKlass::cast(clazz);
   Method* method = java_lang_StackFrameInfo::get_method(stackFrame, holder, CHECK);
 
@@ -2740,303 +2730,6 @@ void java_lang_ref_SoftReference::set_clock(jlong value) {
   base->long_field_put(static_clock_offset, value);
 }
 
-// Support for java_lang_invoke_DirectMethodHandle
-
-int java_lang_invoke_DirectMethodHandle::_member_offset;
-
-oop java_lang_invoke_DirectMethodHandle::member(oop dmh) {
-  oop member_name = NULL;
-  return dmh->obj_field(member_offset_in_bytes());
-}
-
-#define DIRECTMETHODHANDLE_FIELDS_DO(macro) \
-  macro(_member_offset, k, "member", java_lang_invoke_MemberName_signature, false)
-
-void java_lang_invoke_DirectMethodHandle::compute_offsets() {
-  InstanceKlass* k = SystemDictionary::DirectMethodHandle_klass();
-  DIRECTMETHODHANDLE_FIELDS_DO(FIELD_COMPUTE_OFFSET);
-}
-
-// Support for java_lang_invoke_MethodHandle
-
-int java_lang_invoke_MethodHandle::_type_offset;
-int java_lang_invoke_MethodHandle::_form_offset;
-
-int java_lang_invoke_MemberName::_clazz_offset;
-int java_lang_invoke_MemberName::_name_offset;
-int java_lang_invoke_MemberName::_type_offset;
-int java_lang_invoke_MemberName::_flags_offset;
-int java_lang_invoke_MemberName::_method_offset;
-int java_lang_invoke_MemberName::_vmindex_offset;
-
-int java_lang_invoke_ResolvedMethodName::_vmtarget_offset;
-int java_lang_invoke_ResolvedMethodName::_vmholder_offset;
-
-int java_lang_invoke_LambdaForm::_vmentry_offset;
-
-#define METHODHANDLE_FIELDS_DO(macro) \
-  macro(_type_offset, k, vmSymbols::type_name(), java_lang_invoke_MethodType_signature, false); \
-  macro(_form_offset, k, "form",                 java_lang_invoke_LambdaForm_signature, false)
-
-void java_lang_invoke_MethodHandle::compute_offsets() {
-  InstanceKlass* k = SystemDictionary::MethodHandle_klass();
-  METHODHANDLE_FIELDS_DO(FIELD_COMPUTE_OFFSET);
-}
-
-#define MEMBERNAME_FIELDS_DO(macro) \
-  macro(_clazz_offset,   k, vmSymbols::clazz_name(),   class_signature,  false); \
-  macro(_name_offset,    k, vmSymbols::name_name(),    string_signature, false); \
-  macro(_type_offset,    k, vmSymbols::type_name(),    object_signature, false); \
-  macro(_flags_offset,   k, vmSymbols::flags_name(),   int_signature,    false); \
-  macro(_method_offset,  k, vmSymbols::method_name(),  java_lang_invoke_ResolvedMethodName_signature, false)
-
-void java_lang_invoke_MemberName::compute_offsets() {
-  InstanceKlass* k = SystemDictionary::MemberName_klass();
-  MEMBERNAME_FIELDS_DO(FIELD_COMPUTE_OFFSET);
-  MEMBERNAME_INJECTED_FIELDS(INJECTED_FIELD_COMPUTE_OFFSET);
-}
-
-void java_lang_invoke_ResolvedMethodName::compute_offsets() {
-  InstanceKlass* k = SystemDictionary::ResolvedMethodName_klass();
-  RESOLVEDMETHOD_INJECTED_FIELDS(INJECTED_FIELD_COMPUTE_OFFSET);
-}
-
-#define LAMBDAFORM_FIELDS_DO(macro) \
-  macro(_vmentry_offset, k, "vmentry", java_lang_invoke_MemberName_signature, false)
-
-void java_lang_invoke_LambdaForm::compute_offsets() {
-  InstanceKlass* k = SystemDictionary::LambdaForm_klass();
-  LAMBDAFORM_FIELDS_DO(FIELD_COMPUTE_OFFSET);
-}
-
-bool java_lang_invoke_LambdaForm::is_instance(oop obj) {
-  return obj != NULL && is_subclass(obj->klass());
-}
-
-oop java_lang_invoke_MethodHandle::type(oop mh) {
-  return mh->obj_field(_type_offset);
-}
-
-void java_lang_invoke_MethodHandle::set_type(oop mh, oop mtype) {
-  mh->obj_field_put(_type_offset, mtype);
-}
-
-oop java_lang_invoke_MethodHandle::form(oop mh) {
-  return mh->obj_field(_form_offset);
-}
-
-void java_lang_invoke_MethodHandle::set_form(oop mh, oop lform) {
-  mh->obj_field_put(_form_offset, lform);
-}
-
-/// MemberName accessors
-
-oop java_lang_invoke_MemberName::clazz(oop mname) {
-  return mname->obj_field(_clazz_offset);
-}
-
-void java_lang_invoke_MemberName::set_clazz(oop mname, oop clazz) {
-  mname->obj_field_put(_clazz_offset, clazz);
-}
-
-oop java_lang_invoke_MemberName::name(oop mname) {
-  return mname->obj_field(_name_offset);
-}
-
-void java_lang_invoke_MemberName::set_name(oop mname, oop name) {
-  mname->obj_field_put(_name_offset, name);
-}
-
-oop java_lang_invoke_MemberName::type(oop mname) {
-  return mname->obj_field(_type_offset);
-}
-
-void java_lang_invoke_MemberName::set_type(oop mname, oop type) {
-  mname->obj_field_put(_type_offset, type);
-}
-
-int java_lang_invoke_MemberName::flags(oop mname) {
-  return mname->int_field(_flags_offset);
-}
-
-void java_lang_invoke_MemberName::set_flags(oop mname, int flags) {
-  mname->int_field_put(_flags_offset, flags);
-}
-
-// Return vmtarget from ResolvedMethodName method field through indirection
-Method* java_lang_invoke_MemberName::vmtarget(oop mname) {
-  oop method = mname->obj_field(_method_offset);
-  return method == NULL ? NULL : java_lang_invoke_ResolvedMethodName::vmtarget(method);
-}
-
-bool java_lang_invoke_MemberName::is_method(oop mname) {
-  return (flags(mname) & (MN_IS_METHOD | MN_IS_CONSTRUCTOR)) > 0;
-}
-
-void java_lang_invoke_MemberName::set_method(oop mname, oop resolved_method) {
-  mname->obj_field_put(_method_offset, resolved_method);
-}
-
-intptr_t java_lang_invoke_MemberName::vmindex(oop mname) {
-  return (intptr_t) mname->address_field(_vmindex_offset);
-}
-
-void java_lang_invoke_MemberName::set_vmindex(oop mname, intptr_t index) {
-  mname->address_field_put(_vmindex_offset, (address) index);
-}
-
-Method* java_lang_invoke_ResolvedMethodName::vmtarget(oop resolved_method) {
-  Method* m = (Method*)resolved_method->address_field(_vmtarget_offset);
-  return m;
-}
-
-// Used by redefinition to change Method* to new Method* with same hash (name, signature)
-void java_lang_invoke_ResolvedMethodName::set_vmtarget(oop resolved_method, Method* m) {
-  resolved_method->address_field_put(_vmtarget_offset, (address)m);
-}
-
-oop java_lang_invoke_ResolvedMethodName::find_resolved_method(const methodHandle& m, TRAPS) {
-  // lookup ResolvedMethod oop in the table, or create a new one and intern it
-  oop resolved_method = ResolvedMethodTable::find_method(m());
-  if (resolved_method == NULL) {
-    InstanceKlass* k = SystemDictionary::ResolvedMethodName_klass();
-    if (!k->is_initialized()) {
-      k->initialize(CHECK_NULL);
-    }
-    oop new_resolved_method = k->allocate_instance(CHECK_NULL);
-    new_resolved_method->address_field_put(_vmtarget_offset, (address)m());
-    // Add a reference to the loader (actually mirror because anonymous classes will not have
-    // distinct loaders) to ensure the metadata is kept alive.
-    // This mirror may be different than the one in clazz field.
-    new_resolved_method->obj_field_put(_vmholder_offset, m->method_holder()->java_mirror());
-    resolved_method = ResolvedMethodTable::add_method(Handle(THREAD, new_resolved_method));
-  }
-  return resolved_method;
-}
-
-oop java_lang_invoke_LambdaForm::vmentry(oop lform) {
-  return lform->obj_field(_vmentry_offset);
-}
-
-// Support for java_lang_invoke_MethodType
-
-int java_lang_invoke_MethodType::_rtype_offset;
-int java_lang_invoke_MethodType::_ptypes_offset;
-
-#define METHODTYPE_FIELDS_DO(macro) \
-  macro(_rtype_offset,  k, "rtype",  class_signature,       false); \
-  macro(_ptypes_offset, k, "ptypes", class_array_signature, false)
-
-void java_lang_invoke_MethodType::compute_offsets() {
-  InstanceKlass* k = SystemDictionary::MethodType_klass();
-  METHODTYPE_FIELDS_DO(FIELD_COMPUTE_OFFSET);
-}
-
-void java_lang_invoke_MethodType::print_signature(oop mt, outputStream* st) {
-  st->print("(");
-  objArrayOop pts = ptypes(mt);
-  for (int i = 0, limit = pts->length(); i < limit; i++) {
-    java_lang_Class::print_signature(pts->obj_at(i), st);
-  }
-  st->print(")");
-  java_lang_Class::print_signature(rtype(mt), st);
-}
-
-Symbol* java_lang_invoke_MethodType::as_signature(oop mt, bool intern_if_not_found, TRAPS) {
-  ResourceMark rm;
-  stringStream buffer(128);
-  print_signature(mt, &buffer);
-  const char* sigstr =       buffer.base();
-  int         siglen = (int) buffer.size();
-  Symbol *name;
-  if (!intern_if_not_found) {
-    name = SymbolTable::probe(sigstr, siglen);
-  } else {
-    name = SymbolTable::new_symbol(sigstr, siglen, THREAD);
-  }
-  return name;
-}
-
-bool java_lang_invoke_MethodType::equals(oop mt1, oop mt2) {
-  if (oopDesc::equals(mt1, mt2))
-    return true;
-  if (!oopDesc::equals(rtype(mt1), rtype(mt2)))
-    return false;
-  if (ptype_count(mt1) != ptype_count(mt2))
-    return false;
-  for (int i = ptype_count(mt1) - 1; i >= 0; i--) {
-    if (!oopDesc::equals(ptype(mt1, i), ptype(mt2, i)))
-      return false;
-  }
-  return true;
-}
-
-oop java_lang_invoke_MethodType::rtype(oop mt) {
-  return mt->obj_field(_rtype_offset);
-}
-
-objArrayOop java_lang_invoke_MethodType::ptypes(oop mt) {
-  return (objArrayOop) mt->obj_field(_ptypes_offset);
-}
-
-oop java_lang_invoke_MethodType::ptype(oop mt, int idx) {
-  return ptypes(mt)->obj_at(idx);
-}
-
-int java_lang_invoke_MethodType::ptype_count(oop mt) {
-  return ptypes(mt)->length();
-}
-
-int java_lang_invoke_MethodType::ptype_slot_count(oop mt) {
-  objArrayOop pts = ptypes(mt);
-  int count = pts->length();
-  int slots = 0;
-  for (int i = 0; i < count; i++) {
-    BasicType bt = java_lang_Class::as_BasicType(pts->obj_at(i));
-    slots += type2size[bt];
-  }
-  return slots;
-}
-
-int java_lang_invoke_MethodType::rtype_slot_count(oop mt) {
-  BasicType bt = java_lang_Class::as_BasicType(rtype(mt));
-  return type2size[bt];
-}
-
-// Support for java_lang_invoke_CallSite
-
-int java_lang_invoke_CallSite::_target_offset;
-int java_lang_invoke_CallSite::_context_offset;
-
-#define CALLSITE_FIELDS_DO(macro) \
-  macro(_target_offset,  k, "target", java_lang_invoke_MethodHandle_signature, false); \
-  macro(_context_offset, k, "context", java_lang_invoke_MethodHandleNatives_CallSiteContext_signature, false)
-
-void java_lang_invoke_CallSite::compute_offsets() {
-  InstanceKlass* k = SystemDictionary::CallSite_klass();
-  CALLSITE_FIELDS_DO(FIELD_COMPUTE_OFFSET);
-}
-
-oop java_lang_invoke_CallSite::context(oop call_site) {
-  oop dep_oop = call_site->obj_field(_context_offset);
-  return dep_oop;
-}
-
-// Support for java_lang_invoke_MethodHandleNatives_CallSiteContext
-
-int java_lang_invoke_MethodHandleNatives_CallSiteContext::_vmdependencies_offset;
-
-void java_lang_invoke_MethodHandleNatives_CallSiteContext::compute_offsets() {
-  InstanceKlass* k = SystemDictionary::Context_klass();
-  CALLSITECONTEXT_INJECTED_FIELDS(INJECTED_FIELD_COMPUTE_OFFSET);
-}
-
-DependencyContext java_lang_invoke_MethodHandleNatives_CallSiteContext::vmdependencies(oop call_site) {
-  intptr_t* vmdeps_addr = (intptr_t*)call_site->field_addr(_vmdependencies_offset);
-  DependencyContext dep_ctx(vmdeps_addr);
-  return dep_ctx;
-}
-
 // Support for java_security_AccessControlContext
 
 int java_security_AccessControlContext::_context_offset = 0;
@@ -3507,14 +3200,6 @@ void JavaClasses::compute_offsets() {
   java_lang_ThreadGroup::compute_offsets();
   java_lang_AssertionStatusDirectives::compute_offsets();
   java_lang_ref_SoftReference::compute_offsets();
-  java_lang_invoke_MethodHandle::compute_offsets();
-  java_lang_invoke_DirectMethodHandle::compute_offsets();
-  java_lang_invoke_MemberName::compute_offsets();
-  java_lang_invoke_ResolvedMethodName::compute_offsets();
-  java_lang_invoke_LambdaForm::compute_offsets();
-  java_lang_invoke_MethodType::compute_offsets();
-  java_lang_invoke_CallSite::compute_offsets();
-  java_lang_invoke_MethodHandleNatives_CallSiteContext::compute_offsets();
   java_security_AccessControlContext::compute_offsets();
 
   // Initialize reflection classes. The layouts of these classes

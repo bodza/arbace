@@ -10,7 +10,6 @@
 #include "oops/method.hpp"
 #include "oops/objArrayKlass.hpp"
 #include "oops/oop.inline.hpp"
-#include "prims/methodHandles.hpp"
 #include "runtime/frame.inline.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
@@ -294,9 +293,6 @@ class StubGenerator: public StubCodeGenerator {
     const Address rsp_after_call(rbp, rsp_after_call_off * wordSize);
     const Address thread        (rbp, thread_off         * wordSize);
 
-    // set pending exception
-    __ verify_oop(rax);
-
     __ movptr(Address(r15_thread, Thread::pending_exception_offset()), rax);
     __ lea(rscratch1, ExternalAddress((address)__FILE__));
     __ movptr(Address(r15_thread, Thread::exception_file_offset()), rscratch1);
@@ -347,7 +343,6 @@ class StubGenerator: public StubCodeGenerator {
     // rax: exception
     // rbx: exception handler
     // rdx: throwing pc
-    __ verify_oop(rax);
     __ jmp(rbx);
 
     return start;
@@ -757,120 +752,6 @@ class StubGenerator: public StubCodeGenerator {
 
     __ emit_data64( mask, relocInfo::none );
     __ emit_data64( mask, relocInfo::none );
-
-    return start;
-  }
-
-  // Non-destructive plausibility checks for oops
-  //
-  // Arguments:
-  //    all args on stack!
-  //
-  // Stack after saving c_rarg3:
-  //    [tos + 0]: saved c_rarg3
-  //    [tos + 1]: saved c_rarg2
-  //    [tos + 2]: saved r12
-  //    [tos + 3]: saved flags
-  //    [tos + 4]: return address
-  //  * [tos + 5]: error message (char*)
-  //  * [tos + 6]: object to verify (oop)
-  //  * [tos + 7]: saved rax - saved by caller and bashed
-  //  * [tos + 8]: saved r10 (rscratch1) - saved by caller
-  //  * = popped on exit
-  address generate_verify_oop() {
-    StubCodeMark mark(this, "StubRoutines", "verify_oop");
-    address start = __ pc();
-
-    Label exit, error;
-
-    __ pushf();
-    __ incrementl(ExternalAddress((address) StubRoutines::verify_oop_count_addr()));
-
-    __ push(r12);
-
-    // save c_rarg2 and c_rarg3
-    __ push(c_rarg2);
-    __ push(c_rarg3);
-
-    enum {
-           // After previous pushes.
-           oop_to_verify = 6 * wordSize,
-           saved_rax     = 7 * wordSize,
-           saved_r10     = 8 * wordSize,
-
-           // Before the call to MacroAssembler::debug(), see below.
-           return_addr   = 16 * wordSize,
-           error_msg     = 17 * wordSize
-    };
-
-    // get object
-    __ movptr(rax, Address(rsp, oop_to_verify));
-
-    // make sure object is 'reasonable'
-    __ testptr(rax, rax);
-    __ jcc(Assembler::zero, exit); // if obj is NULL it is OK
-
-    // Check if the oop is in the right area of memory
-    __ movptr(c_rarg2, rax);
-    __ movptr(c_rarg3, (intptr_t) Universe::verify_oop_mask());
-    __ andptr(c_rarg2, c_rarg3);
-    __ movptr(c_rarg3, (intptr_t) Universe::verify_oop_bits());
-    __ cmpptr(c_rarg2, c_rarg3);
-    __ jcc(Assembler::notZero, error);
-
-    // set r12 to heapbase for load_klass()
-    __ reinit_heapbase();
-
-    // make sure klass is 'reasonable', which is not zero.
-    __ load_klass(rax, rax);  // get klass
-    __ testptr(rax, rax);
-    __ jcc(Assembler::zero, error); // if klass is NULL it is broken
-
-    // return if everything seems ok
-    __ bind(exit);
-    __ movptr(rax, Address(rsp, saved_rax));     // get saved rax back
-    __ movptr(rscratch1, Address(rsp, saved_r10)); // get saved r10 back
-    __ pop(c_rarg3);                             // restore c_rarg3
-    __ pop(c_rarg2);                             // restore c_rarg2
-    __ pop(r12);                                 // restore r12
-    __ popf();                                   // restore flags
-    __ ret(4 * wordSize);                        // pop caller saved stuff
-
-    // handle errors
-    __ bind(error);
-    __ movptr(rax, Address(rsp, saved_rax));     // get saved rax back
-    __ movptr(rscratch1, Address(rsp, saved_r10)); // get saved r10 back
-    __ pop(c_rarg3);                             // get saved c_rarg3 back
-    __ pop(c_rarg2);                             // get saved c_rarg2 back
-    __ pop(r12);                                 // get saved r12 back
-    __ popf();                                   // get saved flags off stack --
-                                                 // will be ignored
-
-    __ pusha();                                  // push registers
-                                                 // (rip is already
-                                                 // already pushed)
-    // debug(char* msg, int64_t pc, int64_t regs[])
-    // We've popped the registers we'd saved (c_rarg3, c_rarg2 and flags), and
-    // pushed all the registers, so now the stack looks like:
-    //     [tos +  0] 16 saved registers
-    //     [tos + 16] return address
-    //   * [tos + 17] error message (char*)
-    //   * [tos + 18] object to verify (oop)
-    //   * [tos + 19] saved rax - saved by caller and bashed
-    //   * [tos + 20] saved r10 (rscratch1) - saved by caller
-    //   * = popped on exit
-
-    __ movptr(c_rarg0, Address(rsp, error_msg));    // pass address of error message
-    __ movptr(c_rarg1, Address(rsp, return_addr));  // pass return address
-    __ movq(c_rarg2, rsp);                          // pass address of regs on stack
-    __ mov(r12, rsp);                               // remember rsp
-    __ subptr(rsp, frame::arg_reg_save_area_bytes); // windows
-    __ andptr(rsp, -16);                            // align stack as required by ABI
-    BLOCK_COMMENT("call MacroAssembler::debug");
-    __ call(RuntimeAddress(CAST_FROM_FN_PTR(address, MacroAssembler::debug64)));
-    __ mov(rsp, r12);                               // restore rsp
-    __ popa();                                      // pop registers (includes r12)
-    __ ret(4 * wordSize);                           // pop caller saved stuff
 
     return start;
   }
@@ -5081,9 +4962,6 @@ address generate_cipherBlockChaining_decryptVectorAESCrypt() {
     StubRoutines::x86::_float_sign_flip  = generate_fp_mask("float_sign_flip",  0x8000000080000000);
     StubRoutines::x86::_double_sign_mask = generate_fp_mask("double_sign_mask", 0x7FFFFFFFFFFFFFFF);
     StubRoutines::x86::_double_sign_flip = generate_fp_mask("double_sign_flip", 0x8000000000000000);
-
-    // support for verify_oop (must happen after universe_init)
-    StubRoutines::_verify_oop_subroutine_entry = generate_verify_oop();
 
     // arraycopy stubs used by compilers
     generate_arraycopy_stubs();

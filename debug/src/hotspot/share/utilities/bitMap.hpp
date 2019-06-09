@@ -58,7 +58,7 @@ class BitMap {
 
   // Return the array of bitmap words, or a specific word from it.
   bm_word_t* map()                 { return _map; }
-  const bm_word_t* map() const     { return _map; }
+  const bm_word_t* map()     const { return _map; }
   bm_word_t  map(idx_t word) const { return _map[word]; }
 
   // Return a pointer to the word containing the specified bit.
@@ -160,7 +160,7 @@ class BitMap {
     return calc_size_in_words(size_in_bits) * BytesPerWord;
   }
 
-  idx_t size() const          { return _size; }
+  idx_t size()          const { return _size; }
   idx_t size_in_words() const { return calc_size_in_words(size()); }
   idx_t size_in_bytes() const { return calc_size_in_bytes(size()); }
 

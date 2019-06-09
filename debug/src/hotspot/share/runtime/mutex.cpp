@@ -808,14 +808,6 @@ int Monitor::IWait(Thread * Self, jlong timo) {
 // of Mutex-Monitor and instead directly address the underlying design flaw.
 
 void Monitor::lock(Thread * Self) {
-#ifdef CHECK_UNHANDLED_OOPS
-  // Clear unhandled oops so we get a crash right away.  Only clear for non-vm
-  // or GC threads.
-  if (Self->is_Java_thread()) {
-    Self->clear_unhandled_oops();
-  }
-#endif
-
   if (TryFast()) {
  Exeunt:
     set_owner(Self);

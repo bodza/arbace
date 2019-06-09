@@ -7,18 +7,6 @@
 // The following routines and definitions are used internally in the
 // compiler interface.
 
-#define CURRENT_ENV \
-  ciEnv::current()
-
-// where current thread is THREAD
-#define CURRENT_THREAD_ENV \
-  ciEnv::current(thread)
-
-#define IS_IN_VM \
-  ciEnv::is_in_vm()
-
-#define ASSERT_IN_VM
-
 inline const char* bool_to_str(bool b) {
   return ((b) ? "true" : "false");
 }

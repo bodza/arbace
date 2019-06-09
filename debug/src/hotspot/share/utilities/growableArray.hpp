@@ -152,12 +152,12 @@ template<class E> class GrowableArray : public GenericGrowableArray {
   ~GrowableArray()              { if (on_C_heap()) clear_and_deallocate(); }
 
   void  clear()                 { _len = 0; }
-  int   length() const          { return _len; }
-  int   max_length() const      { return _max; }
+  int   length()          const { return _len; }
+  int   max_length()      const { return _max; }
   void  trunc_to(int l)         { _len = l; }
-  bool  is_empty() const        { return _len == 0; }
-  bool  is_nonempty() const     { return _len != 0; }
-  bool  is_full() const         { return _len == _max; }
+  bool  is_empty()        const { return _len == 0; }
+  bool  is_nonempty()     const { return _len != 0; }
+  bool  is_full()         const { return _len == _max; }
 
   void print();
 

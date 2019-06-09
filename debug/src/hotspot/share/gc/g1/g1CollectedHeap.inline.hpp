@@ -62,8 +62,7 @@ inline void G1CollectedHeap::old_set_remove(HeapRegion* hr) {
 
 // It dirties the cards that cover the block so that the post
 // write barrier never queues anything when updating objects on this
-// block. It is assumed (and in fact we assert) that the block
-// belongs to a young region.
+// block. It is assumed, that the block belongs to a young region.
 inline void
 G1CollectedHeap::dirty_young_block(HeapWord* start, size_t word_size) {
   HeapWord* end = start + word_size;

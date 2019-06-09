@@ -56,9 +56,7 @@ CollectionSetChooser::CollectionSetChooser() :
   //
   // Note: containing object is allocated on C heap since it is CHeapObj.
   //
-  _regions((ResourceObj::set_allocation_type((address) &_regions,
-                                             ResourceObj::C_HEAP),
-                  100), true /* C_Heap */),
+  _regions((ResourceObj::set_allocation_type((address) &_regions, ResourceObj::C_HEAP), 100), true /* C_Heap */),
     _front(0), _end(0), _first_par_unreserved_idx(0),
     _region_live_threshold_bytes(0), _remaining_reclaimable_bytes(0) {
   _region_live_threshold_bytes = mixed_gc_live_threshold_bytes();

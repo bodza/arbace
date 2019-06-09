@@ -22,7 +22,7 @@ template <class E> class LinkedListNode : public ResourceObj {
   LinkedListNode(const E& e): _data(e), _next(NULL) { }
 
   inline void set_next(LinkedListNode<E>* node) { _next = node; }
-  inline LinkedListNode<E> * next() const       { return _next; }
+  inline LinkedListNode<E> * next()       const { return _next; }
 
   E*  data() { return &_data; }
   const E* peek() const { return &_data; }
@@ -39,8 +39,8 @@ template <class E> class LinkedList : public ResourceObj {
   LinkedList() : _head(NULL) { }
 
   inline void set_head(LinkedListNode<E>* h) { _head = h; }
-  inline LinkedListNode<E>* head() const     { return _head; }
-  inline bool is_empty()           const     { return head() == NULL; }
+  inline LinkedListNode<E>* head()     const { return _head; }
+  inline bool is_empty()               const { return head() == NULL; }
 
   inline size_t size() const {
     LinkedListNode<E>* p;

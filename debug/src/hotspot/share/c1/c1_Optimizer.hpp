@@ -10,7 +10,7 @@ class Optimizer {
 
  public:
   Optimizer(IR* ir);
-  IR* ir() const                                 { return _ir; }
+  IR* ir() const { return _ir; }
 
   // optimizations
   void eliminate_conditional_expressions();

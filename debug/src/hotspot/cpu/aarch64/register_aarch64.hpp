@@ -23,7 +23,7 @@ class RegisterImpl: public AbstractRegisterImpl {
   };
 
   // derived registers, offsets, and addresses
-  Register successor() const                          { return as_Register(encoding() + 1); }
+  Register successor()                          const { return as_Register(encoding() + 1); }
 
   // construction
   inline friend Register as_Register(int encoding);
@@ -31,11 +31,11 @@ class RegisterImpl: public AbstractRegisterImpl {
   VMReg as_VMReg();
 
   // accessors
-  int   encoding() const                         { return (intptr_t)this; }
-  bool  is_valid() const                         { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
-  bool  has_byte_register() const                { return 0 <= (intptr_t)this && (intptr_t)this < number_of_byte_registers; }
+  int   encoding()                         const { return (intptr_t)this; }
+  bool  is_valid()                         const { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
+  bool  has_byte_register()                const { return 0 <= (intptr_t)this && (intptr_t)this < number_of_byte_registers; }
   const char* name() const;
-  int   encoding_nocheck() const                 { return (intptr_t)this; }
+  int   encoding_nocheck()                 const { return (intptr_t)this; }
 
   // Return the bit which represents this register.  This is intended
   // to be ORed into a bitmask: for usage see class RegSet below.
@@ -109,12 +109,12 @@ class FloatRegisterImpl: public AbstractRegisterImpl {
   VMReg as_VMReg();
 
   // derived registers, offsets, and addresses
-  FloatRegister successor() const                          { return as_FloatRegister(encoding() + 1); }
+  FloatRegister successor()                          const { return as_FloatRegister(encoding() + 1); }
 
   // accessors
-  int   encoding() const                          { return (intptr_t)this; }
-  int   encoding_nocheck() const                         { return (intptr_t)this; }
-  bool  is_valid() const                          { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
+  int   encoding()                          const { return (intptr_t)this; }
+  int   encoding_nocheck()                         const { return (intptr_t)this; }
+  bool  is_valid()                          const { return 0 <= (intptr_t)this && (intptr_t)this < number_of_registers; }
   const char* name() const;
 };
 

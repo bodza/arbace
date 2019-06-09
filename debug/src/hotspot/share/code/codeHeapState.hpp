@@ -31,7 +31,6 @@ class CodeHeapState : public CHeapObj<mtCode> {
     nMethod_dead  = nMethod_zombie,     // Combined state: nmethod does not have any activations.
     runtimeStub   = nMethod_unloaded + 1,
     ricochetStub,
-    deoptimizationStub,
     uncommonTrapStub,
     exceptionStub,
     safepointStub,
@@ -62,12 +61,12 @@ class CodeHeapState : public CHeapObj<mtCode> {
   static void print_blobType_legend(outputStream* out);
   static void print_space_legend(outputStream* out);
   static void print_age_legend(outputStream* out);
-  static void print_blobType_single(outputStream *ast, u2 /* blobType */ type);
-  static void print_count_single(outputStream *ast, unsigned short count);
-  static void print_space_single(outputStream *ast, unsigned short space);
-  static void print_age_single(outputStream *ast, unsigned int age);
+  static void print_blobType_single(outputStream* ast, u2 /* blobType */ type);
+  static void print_count_single(outputStream* ast, unsigned short count);
+  static void print_space_single(outputStream* ast, unsigned short space);
+  static void print_age_single(outputStream* ast, unsigned int age);
   static void print_line_delim(outputStream* out, bufferedStream *sst, char* low_bound, unsigned int ix, unsigned int gpl);
-  static void print_line_delim(outputStream* out, outputStream *sst, char* low_bound, unsigned int ix, unsigned int gpl);
+  static void print_line_delim(outputStream* out, outputStream* sst, char* low_bound, unsigned int ix, unsigned int gpl);
   static blobType get_cbType(CodeBlob* cb);
 
  public:

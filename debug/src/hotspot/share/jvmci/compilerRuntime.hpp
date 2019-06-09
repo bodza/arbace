@@ -15,7 +15,6 @@ class CompilerRuntime : AllStatic {
   static Method* resolve_method_helper(Klass* klass, const char* method_name, int method_name_len, const char* signature_name, int signature_name_len);
   // Resolution methods for aot compiled code.
   static void resolve_string_by_symbol(JavaThread *thread, void* string_result, const char* name);
-  static void resolve_dynamic_invoke(JavaThread *thread, oop* appendix_result);
 
   static Klass* resolve_klass_by_symbol(JavaThread *thread, Klass** klass_result, const char* name);
   static Klass* initialize_klass_by_symbol(JavaThread *thread, Klass** klass_result, const char* name);

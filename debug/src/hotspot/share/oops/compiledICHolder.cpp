@@ -21,10 +21,3 @@ void CompiledICHolder::print_on(outputStream* st) const {
 void CompiledICHolder::print_value_on(outputStream* st) const {
   st->print("%s", internal_name());
 }
-
-// Verification
-
-void CompiledICHolder::verify_on(outputStream* st) {
-  guarantee(holder_metadata()->is_method() || holder_metadata()->is_klass(), "should be method or klass");
-  guarantee(holder_klass()->is_klass(),   "should be klass");
-}

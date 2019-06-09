@@ -11,7 +11,6 @@
 #include "memory/universe.hpp"
 #include "oops/accessDecorators.hpp"
 #include "oops/klass.inline.hpp"
-#include "prims/methodHandles.hpp"
 #include "runtime/biasedLocking.hpp"
 #include "runtime/flags/flagSetting.hpp"
 #include "runtime/interfaceSupport.inline.hpp"
@@ -941,7 +940,6 @@ void MacroAssembler::super_call_VM_leaf(address entry_point, Register arg_0, Reg
 void MacroAssembler::get_vm_result(Register oop_result, Register java_thread) {
   movptr(oop_result, Address(java_thread, JavaThread::vm_result_offset()));
   movptr(Address(java_thread, JavaThread::vm_result_offset()), NULL_WORD);
-  verify_oop(oop_result, "broken oop in call_VM_base");
 }
 
 void MacroAssembler::get_vm_result_2(Register metadata_result, Register java_thread) {
@@ -2370,12 +2368,10 @@ void MacroAssembler::resolve_jobject(Register value, Register thread, Register t
   jcc(Assembler::zero, not_weak);
   // Resolve jweak.
   access_load_at(T_OBJECT, IN_NATIVE | ON_PHANTOM_OOP_REF, value, Address(value, -JNIHandles::weak_tag_value), tmp, thread);
-  verify_oop(value);
   jmp(done);
   bind(not_weak);
   // Resolve (untagged) jobject.
   access_load_at(T_OBJECT, IN_NATIVE, value, Address(value, 0), tmp, thread);
-  verify_oop(value);
   bind(done);
 }
 
@@ -2701,33 +2697,6 @@ void MacroAssembler::cmov32(Condition cc, Register dst, Register src) {
   }
 }
 
-void MacroAssembler::verify_oop(Register reg, const char* s) {
-  if (!VerifyOops) return;
-
-  // Pass register number to verify_oop_subroutine
-  const char* b = NULL;
-  {
-    ResourceMark rm;
-    stringStream ss;
-    ss.print("verify_oop: %s: %s", reg->name(), s);
-    b = code_string(ss.as_string());
-  }
-  BLOCK_COMMENT("verify_oop {");
-  push(rscratch1);                    // save r10, trashed by movptr()
-  push(rax);                          // save rax,
-  push(reg);                          // pass register argument
-  ExternalAddress buffer((address) b);
-  // avoid using pushptr, as it modifies scratch registers
-  // and our contract is not to modify anything
-  movptr(rax, buffer.addr());
-  push(rax);
-  // call indirectly to solve generation ordering problem
-  movptr(rax, ExternalAddress(StubRoutines::verify_oop_subroutine_entry_address()));
-  call(rax);
-  // Caller pops the arguments (oop, message) and restores rax, r10
-  BLOCK_COMMENT("} verify_oop");
-}
-
 RegisterOrConstant MacroAssembler::delayed_value_impl(intptr_t* delayed_value_addr, Register tmp, int offset) {
   intptr_t value = *delayed_value_addr;
   if (value != 0)
@@ -2742,73 +2711,18 @@ RegisterOrConstant MacroAssembler::delayed_value_impl(intptr_t* delayed_value_ad
   return RegisterOrConstant(tmp);
 }
 
-Address MacroAssembler::argument_address(RegisterOrConstant arg_slot, int extra_slot_offset) {
-  int stackElementSize = NULL::stackElementSize;
-  int offset = NULL::expr_offset_in_bytes(extra_slot_offset+0);
-  Register             scale_reg    = noreg;
-  Address::ScaleFactor scale_factor = Address::no_scale;
-  if (arg_slot.is_constant()) {
-    offset += arg_slot.as_constant() * stackElementSize;
-  } else {
-    scale_reg    = arg_slot.as_register();
-    scale_factor = Address::times(stackElementSize);
-  }
-  offset += wordSize;           // return PC is on stack
-  return Address(rsp, scale_reg, scale_factor, offset);
-}
-
-void MacroAssembler::verify_oop_addr(Address addr, const char* s) {
-  if (!VerifyOops) return;
-
-  // Address adjust(addr.base(), addr.index(), addr.scale(), addr.disp() + BytesPerWord);
-  // Pass register number to verify_oop_subroutine
-  const char* b = NULL;
-  {
-    ResourceMark rm;
-    stringStream ss;
-    ss.print("verify_oop_addr: %s", s);
-    b = code_string(ss.as_string());
-  }
-  push(rscratch1);                    // save r10, trashed by movptr()
-  push(rax);                          // save rax,
-  // addr may contain rsp so we will have to adjust it based on the push
-  // we just did (and on 64 bit we do two pushes)
-  // NOTE: 64bit seemed to have had a bug in that it did movq(addr, rax); which
-  // stores rax into addr which is backwards of what was intended.
-  if (addr.uses(rsp)) {
-    lea(rax, addr);
-    pushptr(Address(rax, 2 * BytesPerWord));
-  } else {
-    pushptr(addr);
-  }
-
-  ExternalAddress buffer((address) b);
-  // pass msg argument
-  // avoid using pushptr, as it modifies scratch registers
-  // and our contract is not to modify anything
-  movptr(rax, buffer.addr());
-  push(rax);
-
-  // call indirectly to solve generation ordering problem
-  movptr(rax, ExternalAddress(StubRoutines::verify_oop_subroutine_entry_address()));
-  call(rax);
-  // Caller pops the arguments (addr, message) and restores rax, r10.
-}
-
-void MacroAssembler::verify_tlab() { }
-
 class ControlWord {
  public:
   int32_t _value;
 
-  int  rounding_control() const        { return  (_value >> 10) & 3      ; }
-  int  precision_control() const       { return  (_value >>  8) & 3      ; }
-  bool precision() const               { return ((_value >>  5) & 1) != 0; }
-  bool underflow() const               { return ((_value >>  4) & 1) != 0; }
-  bool overflow() const                { return ((_value >>  3) & 1) != 0; }
-  bool zero_divide() const             { return ((_value >>  2) & 1) != 0; }
-  bool denormalized() const            { return ((_value >>  1) & 1) != 0; }
-  bool invalid() const                 { return ((_value >>  0) & 1) != 0; }
+  int  rounding_control()        const { return  (_value >> 10) & 3      ; }
+  int  precision_control()       const { return  (_value >>  8) & 3      ; }
+  bool precision()               const { return ((_value >>  5) & 1) != 0; }
+  bool underflow()               const { return ((_value >>  4) & 1) != 0; }
+  bool overflow()                const { return ((_value >>  3) & 1) != 0; }
+  bool zero_divide()             const { return ((_value >>  2) & 1) != 0; }
+  bool denormalized()            const { return ((_value >>  1) & 1) != 0; }
+  bool invalid()                 const { return ((_value >>  0) & 1) != 0; }
 
   void print() const {
     // rounding control
@@ -2847,20 +2761,20 @@ class StatusWord {
  public:
   int32_t _value;
 
-  bool busy() const                    { return ((_value >> 15) & 1) != 0; }
-  bool C3() const                      { return ((_value >> 14) & 1) != 0; }
-  bool C2() const                      { return ((_value >> 10) & 1) != 0; }
-  bool C1() const                      { return ((_value >>  9) & 1) != 0; }
-  bool C0() const                      { return ((_value >>  8) & 1) != 0; }
-  int  top() const                     { return  (_value >> 11) & 7      ; }
-  bool error_status() const            { return ((_value >>  7) & 1) != 0; }
-  bool stack_fault() const             { return ((_value >>  6) & 1) != 0; }
-  bool precision() const               { return ((_value >>  5) & 1) != 0; }
-  bool underflow() const               { return ((_value >>  4) & 1) != 0; }
-  bool overflow() const                { return ((_value >>  3) & 1) != 0; }
-  bool zero_divide() const             { return ((_value >>  2) & 1) != 0; }
-  bool denormalized() const            { return ((_value >>  1) & 1) != 0; }
-  bool invalid() const                 { return ((_value >>  0) & 1) != 0; }
+  bool busy()                    const { return ((_value >> 15) & 1) != 0; }
+  bool C3()                      const { return ((_value >> 14) & 1) != 0; }
+  bool C2()                      const { return ((_value >> 10) & 1) != 0; }
+  bool C1()                      const { return ((_value >>  9) & 1) != 0; }
+  bool C0()                      const { return ((_value >>  8) & 1) != 0; }
+  int  top()                     const { return  (_value >> 11) & 7      ; }
+  bool error_status()            const { return ((_value >>  7) & 1) != 0; }
+  bool stack_fault()             const { return ((_value >>  6) & 1) != 0; }
+  bool precision()               const { return ((_value >>  5) & 1) != 0; }
+  bool underflow()               const { return ((_value >>  4) & 1) != 0; }
+  bool overflow()                const { return ((_value >>  3) & 1) != 0; }
+  bool zero_divide()             const { return ((_value >>  2) & 1) != 0; }
+  bool denormalized()            const { return ((_value >>  1) & 1) != 0; }
+  bool invalid()                 const { return ((_value >>  0) & 1) != 0; }
 
   void print() const {
     // condition codes
@@ -2890,7 +2804,7 @@ class TagWord {
  public:
   int32_t _value;
 
-  int tag_at(int i) const              { return (_value >> (i*2)) & 3; }
+  int tag_at(int i)              const { return (_value >> (i*2)) & 3; }
 
   void print() const {
     printf("%04x", _value & 0xFFFF);
@@ -2931,8 +2845,8 @@ class FPU_State {
   int32_t      _data_selector;
   int8_t       _register[register_size * number_of_registers];
 
-  int tag_for_st(int i) const          { return _tag_word.tag_at((_status_word.top() + i) & register_mask); }
-  FPU_Register* st(int i) const        { return (FPU_Register*)&_register[register_size * i]; }
+  int tag_for_st(int i)          const { return _tag_word.tag_at((_status_word.top() + i) & register_mask); }
+  FPU_Register* st(int i)        const { return (FPU_Register*)&_register[register_size * i]; }
 
   const char* tag_as_string(int tag) const {
     switch (tag) {
@@ -2967,13 +2881,13 @@ class Flag_Register {
  public:
   int32_t _value;
 
-  bool overflow() const                { return ((_value >> 11) & 1) != 0; }
-  bool direction() const               { return ((_value >> 10) & 1) != 0; }
-  bool sign() const                    { return ((_value >>  7) & 1) != 0; }
-  bool zero() const                    { return ((_value >>  6) & 1) != 0; }
-  bool auxiliary_carry() const         { return ((_value >>  4) & 1) != 0; }
-  bool parity() const                  { return ((_value >>  2) & 1) != 0; }
-  bool carry() const                   { return ((_value >>  0) & 1) != 0; }
+  bool overflow()                const { return ((_value >> 11) & 1) != 0; }
+  bool direction()               const { return ((_value >> 10) & 1) != 0; }
+  bool sign()                    const { return ((_value >>  7) & 1) != 0; }
+  bool zero()                    const { return ((_value >>  6) & 1) != 0; }
+  bool auxiliary_carry()         const { return ((_value >>  4) & 1) != 0; }
+  bool parity()                  const { return ((_value >>  2) & 1) != 0; }
+  bool carry()                   const { return ((_value >>  0) & 1) != 0; }
 
   void print() const {
     // flags
@@ -3107,26 +3021,6 @@ static bool _verify_FPU(int stack_depth, char* s, CPU_State* state) {
   return true;
 }
 
-void MacroAssembler::verify_FPU(int stack_depth, const char* s) {
-  if (!VerifyFPU) return;
-  push_CPU_state();
-  push(rsp);                // pass CPU state
-  ExternalAddress msg((address) s);
-  // pass message string s
-  pushptr(msg.addr());
-  push(stack_depth);        // pass stack depth
-  call(RuntimeAddress(CAST_FROM_FN_PTR(address, _verify_FPU)));
-  addptr(rsp, 3 * wordSize);   // discard arguments
-  // check for error
-  { Label L;
-    testl(rax, rax);
-    jcc(Assembler::notZero, L);
-    int3();                  // break if error condition
-    bind(L);
-  }
-  pop_CPU_state();
-}
-
 void MacroAssembler::restore_cpu_control_state_after_jni() {
   // Either restore the MXCSR register after returning from the JNI Call
   // or verify that it wasn't changed (with -Xcheck:jni flag).
@@ -3228,7 +3122,6 @@ void MacroAssembler::store_klass_gap(Register dst, Register src) {
 
 // Algorithm must match oop.inline.hpp encode_heap_oop.
 void MacroAssembler::encode_heap_oop(Register r) {
-  verify_oop(r, "broken oop in encode_heap_oop");
   if (Universe::narrow_oop_base() == NULL) {
     if (Universe::narrow_oop_shift() != 0) {
       shrq(r, LogMinObjAlignmentInBytes);
@@ -3242,7 +3135,6 @@ void MacroAssembler::encode_heap_oop(Register r) {
 }
 
 void MacroAssembler::encode_heap_oop_not_null(Register r) {
-  verify_oop(r, "broken oop in encode_heap_oop_not_null");
   if (Universe::narrow_oop_base() != NULL) {
     subq(r, r12_heapbase);
   }
@@ -3252,7 +3144,6 @@ void MacroAssembler::encode_heap_oop_not_null(Register r) {
 }
 
 void MacroAssembler::encode_heap_oop_not_null(Register dst, Register src) {
-  verify_oop(src, "broken oop in encode_heap_oop_not_null2");
   if (dst != src) {
     movq(dst, src);
   }
@@ -3276,13 +3167,11 @@ void MacroAssembler::decode_heap_oop(Register r) {
     addq(r, r12_heapbase);
     bind(done);
   }
-  verify_oop(r, "broken oop in decode_heap_oop");
 }
 
 void MacroAssembler::decode_heap_oop_not_null(Register r) {
   // Cannot assert, unverified entry point counts instructions (see .ad file)
   // vtableStubs also counts instructions in pd_code_size_limit.
-  // Also do not verify_oop as this is called by verify_oop.
   if (Universe::narrow_oop_shift() != 0) {
     shlq(r, LogMinObjAlignmentInBytes);
     if (Universe::narrow_oop_base() != NULL) {
@@ -3294,7 +3183,6 @@ void MacroAssembler::decode_heap_oop_not_null(Register r) {
 void MacroAssembler::decode_heap_oop_not_null(Register dst, Register src) {
   // Cannot assert, unverified entry point counts instructions (see .ad file)
   // vtableStubs also counts instructions in pd_code_size_limit.
-  // Also do not verify_oop as this is called by verify_oop.
   if (Universe::narrow_oop_shift() != 0) {
     if (LogMinObjAlignmentInBytes == Address::times_8) {
       leaq(dst, Address(r12_heapbase, src, Address::times_8, 0));
@@ -3364,7 +3252,6 @@ int MacroAssembler::instr_size_for_decode_klass_not_null() {
 void MacroAssembler::decode_klass_not_null(Register r) {
   // Cannot assert, unverified entry point counts instructions (see .ad file)
   // vtableStubs also counts instructions in pd_code_size_limit.
-  // Also do not verify_oop as this is called by verify_oop.
   if (Universe::narrow_klass_shift() != 0) {
     shlq(r, LogKlassAlignmentInBytes);
   }
@@ -3382,7 +3269,6 @@ void MacroAssembler::decode_klass_not_null(Register dst, Register src) {
   } else {
     // Cannot assert, unverified entry point counts instructions (see .ad file)
     // vtableStubs also counts instructions in pd_code_size_limit.
-    // Also do not verify_oop as this is called by verify_oop.
     mov64(dst, (int64_t)Universe::narrow_klass_base());
     if (Universe::narrow_klass_shift() != 0) {
       leaq(dst, Address(dst, src, Address::times_8, 0));

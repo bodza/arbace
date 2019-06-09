@@ -35,7 +35,7 @@ ciConstant ciArray::element_value_impl(BasicType elembt, arrayOop ary, int index
     {
       objArrayOop objary = (objArrayOop) ary;
       oop elem = objary->obj_at(index);
-      ciEnv* env = CURRENT_ENV;
+      ciEnv* env = ciEnv::current();
       ciObject* box = env->get_object(elem);
       return ciConstant(T_OBJECT, box);
     }
@@ -58,9 +58,6 @@ ciConstant ciArray::element_value_impl(BasicType elembt, arrayOop ary, int index
   return ciConstant(elembt, value);
 }
 
-// ------------------------------------------------------------------
-// ciArray::element_value
-//
 // Current value of an element.
 // Returns T_ILLEGAL if there is no element at the given index.
 ciConstant ciArray::element_value(int index) {
@@ -70,9 +67,6 @@ ciConstant ciArray::element_value(int index) {
   )
 }
 
-// ------------------------------------------------------------------
-// ciArray::element_value_by_offset
-//
 // Current value of an element at the specified offset.
 // Returns T_ILLEGAL if there is no element at the given offset.
 ciConstant ciArray::element_value_by_offset(intptr_t element_offset) {
@@ -87,9 +81,6 @@ ciConstant ciArray::element_value_by_offset(intptr_t element_offset) {
   return element_value((jint) index);
 }
 
-// ------------------------------------------------------------------
-// ciArray::print_impl
-//
 // Implementation of the print method.
 void ciArray::print_impl(outputStream* st) {
   st->print(" length=%d type=", length());

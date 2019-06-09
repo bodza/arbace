@@ -20,7 +20,6 @@
 #include "runtime/threadHeapSampler.hpp"
 #include "runtime/threadLocalStorage.hpp"
 #include "runtime/threadStatisticalInfo.hpp"
-#include "runtime/unhandledOops.hpp"
 #include "utilities/align.hpp"
 #include "utilities/exceptions.hpp"
 #include "utilities/macros.hpp"
@@ -41,8 +40,6 @@ class CompileTask;
 class CompileQueue;
 class CompilerCounters;
 class vframeArray;
-
-class DeoptResourceMark;
 
 class GCTaskQueue;
 class ThreadClosure;
@@ -211,7 +208,6 @@ class Thread: public ThreadShadow {
 
     _external_suspend       = 0x20000000U, // thread is asked to self suspend
     _ext_suspended          = 0x40000000U, // thread has self-suspended
-    _deopt_suspend          = 0x10000000U, // thread needs to self suspend for deopt
 
     _has_async_exception    = 0x00000001U, // there is a pending async exception
     _critical_native_unlock = 0x00000002U, // Must call back to unlock JNI critical lock
@@ -255,7 +251,7 @@ class Thread: public ThreadShadow {
 
  public:
   void set_last_handle_mark(HandleMark* mark)   { _last_handle_mark = mark; }
-  HandleMark* last_handle_mark() const          { return _last_handle_mark; }
+  HandleMark* last_handle_mark()          const { return _last_handle_mark; }
  private:
   friend class NoAllocVerifier;
   friend class NoSafepointVerifier;
@@ -311,26 +307,26 @@ class Thread: public ThreadShadow {
   void call_run();
 
   // Testers
-  virtual bool is_VM_thread()       const            { return false; }
-  virtual bool is_Java_thread()     const            { return false; }
-  virtual bool is_Compiler_thread() const            { return false; }
-  virtual bool is_Code_cache_sweeper_thread() const  { return false; }
-  virtual bool is_hidden_from_external_view() const  { return false; }
-  virtual bool is_jvmti_agent_thread() const         { return false; }
+  virtual bool is_VM_thread()                  const { return false; }
+  virtual bool is_Java_thread()                const { return false; }
+  virtual bool is_Compiler_thread()            const { return false; }
+  virtual bool is_Code_cache_sweeper_thread()  const { return false; }
+  virtual bool is_hidden_from_external_view()  const { return false; }
+  virtual bool is_jvmti_agent_thread()         const { return false; }
   // True iff the thread can perform GC operations at a safepoint.
   // Generally will be true only of VM thread and parallel GC WorkGang
   // threads.
-  virtual bool is_GC_task_thread() const             { return false; }
-  virtual bool is_Watcher_thread() const             { return false; }
-  virtual bool is_ConcurrentGC_thread() const        { return false; }
-  virtual bool is_Named_thread() const               { return false; }
-  virtual bool is_Worker_thread() const              { return false; }
+  virtual bool is_GC_task_thread()             const { return false; }
+  virtual bool is_Watcher_thread()             const { return false; }
+  virtual bool is_ConcurrentGC_thread()        const { return false; }
+  virtual bool is_Named_thread()               const { return false; }
+  virtual bool is_Worker_thread()              const { return false; }
 
   // Can this thread make Java upcalls
-  virtual bool can_call_java() const                 { return false; }
+  virtual bool can_call_java()                 const { return false; }
 
   // Casts
-  virtual WorkerThread* as_Worker_thread() const     { return NULL; }
+  virtual WorkerThread* as_Worker_thread()     const { return NULL; }
 
   virtual char* name() const { return (char*)"Unknown thread"; }
 
@@ -354,7 +350,7 @@ class Thread: public ThreadShadow {
   }
 
   ObjectMonitor** omInUseList_addr()             { return (ObjectMonitor **)&omInUseList; }
-  Monitor* SR_lock() const                       { return _SR_lock; }
+  Monitor* SR_lock()                       const { return _SR_lock; }
 
   bool has_async_exception() const { return (_suspend_flags & _has_async_exception) != 0; }
 
@@ -372,49 +368,28 @@ class Thread: public ThreadShadow {
   inline void set_trace_flag();
   inline void clear_trace_flag();
 
-  // Support for Unhandled Oop detection
-  // Add the field for both, fastdebug and debug, builds to keep
-  // Thread's fields layout the same.
-  // Note: CHECK_UNHANDLED_OOPS is defined only for fastdebug build.
-#ifdef CHECK_UNHANDLED_OOPS
- private:
-  UnhandledOops* _unhandled_oops;
-#endif
-#ifdef CHECK_UNHANDLED_OOPS
- public:
-  UnhandledOops* unhandled_oops() { return _unhandled_oops; }
-  // Mark oop safe for gc.  It may be stack allocated but won't move.
-  void allow_unhandled_oop(oop *op) {
-    if (CheckUnhandledOops) unhandled_oops()->allow_unhandled_oop(op);
-  }
-  // Clear oops at safepoint so crashes point to unhandled oop violator
-  void clear_unhandled_oops() {
-    if (CheckUnhandledOops) unhandled_oops()->clear_unhandled_oops();
-  }
-#endif
-
  public:
   // Installs a pending exception to be inserted later
   static void send_async_exception(oop thread_oop, oop java_throwable);
 
   // Resource area
-  ResourceArea* resource_area() const            { return _resource_area; }
+  ResourceArea* resource_area()            const { return _resource_area; }
   void set_resource_area(ResourceArea* area)     { _resource_area = area; }
 
-  OSThread* osthread() const                     { return _osthread; }
+  OSThread* osthread()                     const { return _osthread; }
   void set_osthread(OSThread* thread)            { _osthread = thread; }
 
   // JNI handle support
-  JNIHandleBlock* active_handles() const         { return _active_handles; }
+  JNIHandleBlock* active_handles()         const { return _active_handles; }
   void set_active_handles(JNIHandleBlock* block) { _active_handles = block; }
-  JNIHandleBlock* free_handle_block() const      { return _free_handle_block; }
+  JNIHandleBlock* free_handle_block()      const { return _free_handle_block; }
   void set_free_handle_block(JNIHandleBlock* block) { _free_handle_block = block; }
 
   // Internal handle support
-  HandleArea* handle_area() const                { return _handle_area; }
+  HandleArea* handle_area()                const { return _handle_area; }
   void set_handle_area(HandleArea* area)         { _handle_area = area; }
 
-  GrowableArray<Metadata*>* metadata_handles() const          { return _metadata_handles; }
+  GrowableArray<Metadata*>* metadata_handles()          const { return _metadata_handles; }
   void set_metadata_handles(GrowableArray<Metadata*>* handles) { _metadata_handles = handles; }
 
   // Thread-Local Allocation Buffer (TLAB) support
@@ -528,11 +503,11 @@ protected:
 
  public:
   // Stack overflow support
-  address stack_base() const           { return _stack_base; }
+  address stack_base()           const { return _stack_base; }
   void    set_stack_base(address base) { _stack_base = base; }
-  size_t  stack_size() const           { return _stack_size; }
+  size_t  stack_size()           const { return _stack_size; }
   void    set_stack_size(size_t size)  { _stack_size = size; }
-  address stack_end()  const           { return stack_base() - stack_size(); }
+  address stack_end()            const { return stack_base() - stack_size(); }
   void    record_stack_base_and_size();
   void    register_thread_stack_with_NMT() { };
 
@@ -544,7 +519,7 @@ protected:
   uintptr_t self_raw_id()                    { return _self_raw_id; }
   void      set_self_raw_id(uintptr_t value) { _self_raw_id = value; }
 
-  int     lgrp_id() const        { return _lgrp_id; }
+  int     lgrp_id()        const { return _lgrp_id; }
   void    set_lgrp_id(int value) { _lgrp_id = value; }
 
   // Printing
@@ -680,7 +655,7 @@ class WorkerThread: public NamedThread {
   }
 
   void set_id(uint work_id)             { _id = work_id; }
-  uint id() const                       { return _id; }
+  uint id()                       const { return _id; }
 };
 
 // A single WatcherThread is used for simulating timer interrupts.
@@ -709,7 +684,7 @@ class WatcherThread: public Thread {
   }
 
   // Tester
-  bool is_Watcher_thread() const                 { return true; }
+  bool is_Watcher_thread()                 const { return true; }
 
   // Printing
   char* name() const { return (char*)"VM Periodic Task Thread"; }
@@ -747,14 +722,10 @@ class JavaThread: public Thread {
 
   JNIEnv        _jni_environment;
 
-  // Deopt support
-  DeoptResourceMark*  _deopt_mark;               // Holds special ResourceMark for deoptimization
-
   intptr_t*      _must_deopt_id;                 // id of frame that needs to be deopted once we
                                                  // transition out of native
   CompiledMethod*       _deopt_nmethod;         // CompiledMethod that is currently being deoptimized
   vframeArray*  _vframe_array_head;              // Holds the heap of the active vframeArrays
-  vframeArray*  _vframe_array_last;              // Holds last vFrameArray we popped
 
   // Handshake value for fixing 6243940. We need a place for the i2c
   // adapter to store the callee Method*. This value is NEVER live
@@ -844,18 +815,9 @@ class JavaThread: public Thread {
   // The _pending_* fields below are used to communicate extra information
   // from an uncommon trap in JVMCI compiled code to the uncommon trap handler.
 
-  // Communicates the NULL and NULL of the uncommon trap
-  int       _pending_deoptimization;
-
   // Specifies whether the uncommon trap is to bci 0 of a synchronized method
   // before the monitor has been acquired.
   bool      _pending_monitorenter;
-
-  // Specifies if the NULL for the last uncommon trap was Reason_transfer_to_interpreter
-  bool      _pending_transfer_to_interpreter;
-
-  // Guard for re-entrant call to JVMCIRuntime::adjust_comp_level
-  bool      _adjusting_comp_level;
 
   // An id of a speculation that JVMCI compiled code can use to further describe and
   // uniquely identify the  speculative optimization guarded by the uncommon trap
@@ -891,7 +853,6 @@ class JavaThread: public Thread {
   volatile oop     _exception_oop;               // Exception thrown in compiled code
   volatile address _exception_pc;                // PC where exception happened
   volatile address _exception_handler_pc;        // PC for handler of exception
-  volatile int     _is_method_handle_return;     // true (== 1) if the current exception PC is a MethodHandle call site.
 
  private:
   // support for JNI critical regions
@@ -950,16 +911,16 @@ class JavaThread: public Thread {
   void cleanup_failed_attach_current_thread();
 
   // Testers
-  virtual bool is_Java_thread() const            { return true; }
-  virtual bool can_call_java() const             { return true; }
+  virtual bool is_Java_thread()            const { return true; }
+  virtual bool can_call_java()             const { return true; }
 
   // Thread chain operations
-  JavaThread* next() const                       { return _next; }
+  JavaThread* next()                       const { return _next; }
   void set_next(JavaThread* p)                   { _next = p; }
 
   // Thread oop. threadObj() can be NULL for initial JavaThread
   // (or for threads attached via JNI)
-  oop threadObj() const                          { return _threadObj; }
+  oop threadObj()                          const { return _threadObj; }
   void set_threadObj(oop p)                      { _threadObj = p; }
 
   ThreadPriority java_priority() const;          // Read from threadObj()
@@ -972,7 +933,7 @@ class JavaThread: public Thread {
   void set_saved_exception_pc(address pc)        { _saved_exception_pc = pc; }
   address saved_exception_pc()                   { return _saved_exception_pc; }
 
-  ThreadFunction entry_point() const             { return _entry_point; }
+  ThreadFunction entry_point()             const { return _entry_point; }
 
   // Allocates a new Java level thread object for this thread. thread_name may be NULL.
   void allocate_threadObj(Handle thread_group, const char* thread_name, bool daemon, TRAPS);
@@ -982,8 +943,8 @@ class JavaThread: public Thread {
   JavaFrameAnchor* frame_anchor(void)            { return &_anchor; }
 
   // last_Java_sp
-  bool has_last_Java_frame() const               { return _anchor.has_last_Java_frame(); }
-  intptr_t* last_Java_sp() const                 { return _anchor.last_Java_sp(); }
+  bool has_last_Java_frame()               const { return _anchor.has_last_Java_frame(); }
+  intptr_t* last_Java_sp()                 const { return _anchor.last_Java_sp(); }
 
   // last_Java_pc
 
@@ -991,7 +952,7 @@ class JavaThread: public Thread {
 
   // Safepoint support
 #if !defined(AARCH64)
-  JavaThreadState thread_state() const           { return _thread_state; }
+  JavaThreadState thread_state()           const { return _thread_state; }
   void set_thread_state(JavaThreadState s)       { _thread_state = s; }
 #else
   // Use membars when accessing volatile _thread_state. See
@@ -999,7 +960,7 @@ class JavaThread: public Thread {
   inline JavaThreadState thread_state() const;
   inline void set_thread_state(JavaThreadState s);
 #endif
-  ThreadSafepointState *safepoint_state() const  { return _safepoint_state; }
+  ThreadSafepointState *safepoint_state()  const { return _safepoint_state; }
   void set_safepoint_state(ThreadSafepointState *state) { _safepoint_state = state; }
   bool is_at_poll_safepoint()                    { return _safepoint_state->is_at_poll_safepoint(); }
 
@@ -1110,17 +1071,13 @@ class JavaThread: public Thread {
   inline void set_external_suspend();
   inline void clear_external_suspend();
 
-  inline void set_deopt_suspend();
-  inline void clear_deopt_suspend();
-  bool is_deopt_suspend()         { return (_suspend_flags & _deopt_suspend) != 0; }
-
   bool is_external_suspend() const {
     return (_suspend_flags & _external_suspend) != 0;
   }
   // Whenever a thread transitions from native to vm/java it must suspend
   // if external|deopt suspend is present.
   bool is_suspend_after_native() const {
-    return (_suspend_flags & (_external_suspend | _deopt_suspend)) != 0;
+    return (_suspend_flags & _external_suspend) != 0;
   }
 
   // external suspend request is completed
@@ -1157,7 +1114,7 @@ class JavaThread: public Thread {
     return is_ext_suspended() || is_external_suspend();
   }
 
-  bool is_suspend_equivalent() const  { return _suspend_equivalent; }
+  bool is_suspend_equivalent()  const { return _suspend_equivalent; }
 
   void set_suspend_equivalent()       { _suspend_equivalent = true; }
   void clear_suspend_equivalent()     { _suspend_equivalent = false; }
@@ -1204,17 +1161,7 @@ class JavaThread: public Thread {
   // The linked list of vframe arrays are sorted on sp. This means when we
   // unpack the head must contain the vframe array to unpack.
   void set_vframe_array_head(vframeArray* value) { _vframe_array_head = value; }
-  vframeArray* vframe_array_head() const         { return _vframe_array_head; }
-
-  // These only really exist to make debugging deopt problems simpler
-
-  void set_vframe_array_last(vframeArray* value) { _vframe_array_last = value; }
-  vframeArray* vframe_array_last() const         { return _vframe_array_last; }
-
-  // The special resourceMark used during deoptimization
-
-  void set_deopt_mark(DeoptResourceMark* value)  { _deopt_mark = value; }
-  DeoptResourceMark* deopt_mark(void)            { return _deopt_mark; }
+  vframeArray* vframe_array_head()         const { return _vframe_array_head; }
 
   intptr_t* must_deopt_id()                      { return _must_deopt_id; }
   void     set_must_deopt_id(intptr_t* id)       { _must_deopt_id = id; }
@@ -1223,41 +1170,34 @@ class JavaThread: public Thread {
   void set_deopt_compiled_method(CompiledMethod* nm)  { _deopt_nmethod = nm; }
   CompiledMethod* deopt_compiled_method()        { return _deopt_nmethod; }
 
-  Method*    callee_target() const               { return _callee_target; }
+  Method*    callee_target()               const { return _callee_target; }
   void set_callee_target  (Method* x)          { _callee_target   = x; }
 
   // Oop results of vm runtime calls
-  oop  vm_result() const                         { return _vm_result; }
+  oop  vm_result()                         const { return _vm_result; }
   void set_vm_result  (oop x)                    { _vm_result   = x; }
 
-  Metadata*    vm_result_2() const               { return _vm_result_2; }
+  Metadata*    vm_result_2()               const { return _vm_result_2; }
   void set_vm_result_2  (Metadata* x)          { _vm_result_2   = x; }
 
-  MemRegion deferred_card_mark() const           { return _deferred_card_mark; }
+  MemRegion deferred_card_mark()           const { return _deferred_card_mark; }
   void set_deferred_card_mark(MemRegion mr)      { _deferred_card_mark = mr; }
 
-  int  pending_deoptimization() const             { return _pending_deoptimization; }
-  long  pending_failed_speculation() const         { return _pending_failed_speculation; }
-  bool adjusting_comp_level() const               { return _adjusting_comp_level; }
-  void set_adjusting_comp_level(bool b)           { _adjusting_comp_level = b; }
-  bool has_pending_monitorenter() const           { return _pending_monitorenter; }
+  long pending_failed_speculation()         const { return _pending_failed_speculation; }
+  bool has_pending_monitorenter()           const { return _pending_monitorenter; }
   void set_pending_monitorenter(bool b)           { _pending_monitorenter = b; }
-  void set_pending_deoptimization(int reason)     { _pending_deoptimization = reason; }
   void set_pending_failed_speculation(long failed_speculation) { _pending_failed_speculation = failed_speculation; }
-  void set_pending_transfer_to_interpreter(bool b) { _pending_transfer_to_interpreter = b; }
   void set_jvmci_alternate_call_target(address a) { _jvmci._alternate_call_target = a; }
   void set_jvmci_implicit_exception_pc(address a) { _jvmci._implicit_exception_pc = a; }
 
   // Exception handling for compiled methods
-  oop      exception_oop() const                 { return _exception_oop; }
-  address  exception_pc() const                  { return _exception_pc; }
-  address  exception_handler_pc() const          { return _exception_handler_pc; }
-  bool     is_method_handle_return() const       { return _is_method_handle_return == 1; }
+  oop      exception_oop()                 const { return _exception_oop; }
+  address  exception_pc()                  const { return _exception_pc; }
+  address  exception_handler_pc()          const { return _exception_handler_pc; }
 
   void set_exception_oop(oop o)                  { (void)const_cast<oop&>(_exception_oop = o); }
   void set_exception_pc(address a)               { _exception_pc = a; }
   void set_exception_handler_pc(address a)       { _exception_handler_pc = a; }
-  void set_is_method_handle_return(bool value)   { _is_method_handle_return = value ? 1 : 0; }
 
   void clear_exception_oop_and_pc() {
     set_exception_oop(NULL);
@@ -1444,7 +1384,6 @@ class JavaThread: public Thread {
   static ByteSize thread_state_offset()          { return byte_offset_of(JavaThread, _thread_state); }
   static ByteSize saved_exception_pc_offset()    { return byte_offset_of(JavaThread, _saved_exception_pc); }
   static ByteSize osthread_offset()              { return byte_offset_of(JavaThread, _osthread); }
-  static ByteSize pending_deoptimization_offset() { return byte_offset_of(JavaThread, _pending_deoptimization); }
   static ByteSize pending_monitorenter_offset()  { return byte_offset_of(JavaThread, _pending_monitorenter); }
   static ByteSize pending_failed_speculation_offset() { return byte_offset_of(JavaThread, _pending_failed_speculation); }
   static ByteSize jvmci_alternate_call_target_offset() { return byte_offset_of(JavaThread, _jvmci._alternate_call_target); }
@@ -1454,7 +1393,6 @@ class JavaThread: public Thread {
   static ByteSize exception_pc_offset()          { return byte_offset_of(JavaThread, _exception_pc); }
   static ByteSize exception_handler_pc_offset()  { return byte_offset_of(JavaThread, _exception_handler_pc); }
   static ByteSize stack_overflow_limit_offset()  { return byte_offset_of(JavaThread, _stack_overflow_limit); }
-  static ByteSize is_method_handle_return_offset() { return byte_offset_of(JavaThread, _is_method_handle_return); }
   static ByteSize stack_guard_state_offset()     { return byte_offset_of(JavaThread, _stack_guard_state); }
   static ByteSize reserved_stack_activation_offset() { return byte_offset_of(JavaThread, _reserved_stack_activation); }
   static ByteSize suspend_flags_offset()         { return byte_offset_of(JavaThread, _suspend_flags); }
@@ -1507,10 +1445,10 @@ class JavaThread: public Thread {
   void set_monitor_chunks(MonitorChunk* monitor_chunks) { _monitor_chunks = monitor_chunks; }
 
  public:
-  MonitorChunk* monitor_chunks() const           { return _monitor_chunks; }
+  MonitorChunk* monitor_chunks()           const { return _monitor_chunks; }
   void add_monitor_chunk(MonitorChunk* chunk);
   void remove_monitor_chunk(MonitorChunk* chunk);
-  bool in_deopt_handler() const                  { return _in_deopt_handler > 0; }
+  bool in_deopt_handler()                  const { return _in_deopt_handler > 0; }
   void inc_in_deopt_handler()                    { _in_deopt_handler++; }
   void dec_in_deopt_handler() {
     if (_in_deopt_handler > 0) { // robustness
@@ -1539,8 +1477,8 @@ class JavaThread: public Thread {
   void print_on(outputStream* st, bool print_extended_info) const;
   void print_on(outputStream* st) const { print_on(st, false); }
   void print_value();
-  void print_thread_state_on(outputStream*) const      { };
-  void print_thread_state() const                      { };
+  void print_thread_state_on(outputStream*)      const { };
+  void print_thread_state()                      const { };
   void print_on_error(outputStream* st, char* buf, int buflen) const;
   void print_name_on_error(outputStream* st, char* buf, int buflen) const;
   const char* get_thread_name() const;
@@ -1581,12 +1519,6 @@ class JavaThread: public Thread {
   // Returns the number of stack frames on the stack
   int depth() const;
 
-  // Function for testing deoptimization
-  void deoptimize();
-  void make_zombies();
-
-  void deoptimized_wrt_marked_nmethods();
-
  public:
   // Returns the running thread as a JavaThread
   static inline JavaThread* current();
@@ -1609,7 +1541,7 @@ class JavaThread: public Thread {
   GrowableArray<oop>* _array_for_gc;
  public:
   // Returns the privileged_stack information.
-  PrivilegedElement* privileged_stack_top() const       { return _privileged_stack_top; }
+  PrivilegedElement* privileged_stack_top()       const { return _privileged_stack_top; }
   void set_privileged_stack_top(PrivilegedElement *e)   { _privileged_stack_top = e; }
   void register_array_for_gc(GrowableArray<oop>* array) { _array_for_gc = array; }
 
@@ -1637,7 +1569,7 @@ class JavaThread: public Thread {
   bool popframe_forcing_deopt_reexecution()           { return (popframe_condition() & popframe_force_deopt_reexecution_bit) != 0; }
   void clear_popframe_forcing_deopt_reexecution()     { _popframe_condition &= ~popframe_force_deopt_reexecution_bit; }
 
-  int frames_to_pop_failed_realloc() const            { return _frames_to_pop_failed_realloc; }
+  int frames_to_pop_failed_realloc()            const { return _frames_to_pop_failed_realloc; }
   void set_frames_to_pop_failed_realloc(int nb)       { _frames_to_pop_failed_realloc = nb; }
   void dec_frames_to_pop_failed_realloc()             { _frames_to_pop_failed_realloc--; }
 
@@ -1684,7 +1616,7 @@ class JavaThread: public Thread {
   ThreadStatistics *_thread_stat;
 
  public:
-  ThreadStatistics* get_thread_stat() const    { return _thread_stat; }
+  ThreadStatistics* get_thread_stat()    const { return _thread_stat; }
 
   // Return a blocker object for which this thread is blocked parking.
   oop current_park_blocker();
@@ -1783,24 +1715,24 @@ class CompilerThread : public JavaThread {
   CompilerThread(CompileQueue* queue, CompilerCounters* counters);
   ~CompilerThread();
 
-  bool is_Compiler_thread() const                { return true; }
+  bool is_Compiler_thread()                const { return true; }
 
   virtual bool can_call_java() const;
 
   // Hide native compiler threads from external view.
-  bool is_hidden_from_external_view() const      { return !can_call_java(); }
+  bool is_hidden_from_external_view()      const { return !can_call_java(); }
 
   void set_compiler(AbstractCompiler* c)         { _compiler = c; }
-  AbstractCompiler* compiler() const             { return _compiler; }
+  AbstractCompiler* compiler()             const { return _compiler; }
 
-  CompileQueue* queue()        const             { return _queue; }
-  CompilerCounters* counters() const             { return _counters; }
+  CompileQueue* queue()                    const { return _queue; }
+  CompilerCounters* counters()             const { return _counters; }
 
   // Get/set the thread's compilation environment.
   ciEnv*        env()                            { return _env; }
   void          set_env(ciEnv* env)              { _env = env; }
 
-  BufferBlob*   get_buffer_blob() const          { return _buffer_blob; }
+  BufferBlob*   get_buffer_blob()          const { return _buffer_blob; }
   void          set_buffer_blob(BufferBlob* b)   { _buffer_blob = b; }
 
   void start_idle_timer()                        { _idle_time.update(); }
@@ -1829,7 +1761,6 @@ class Threads: AllStatic {
   static int         _thread_claim_parity;
 
   static void initialize_java_lang_classes(JavaThread* main_thread, TRAPS);
-  static void initialize_jsr292_core_classes(TRAPS);
 
  public:
   // Thread management
@@ -1912,9 +1843,6 @@ class Threads: AllStatic {
   static int number_of_threads()                 { return _number_of_threads; }
   // Number of non-daemon threads on the active threads list
   static int number_of_non_daemon_threads()      { return _number_of_non_daemon_threads; }
-
-  // Deoptimizes all frames tied to marked nmethods
-  static void deoptimized_wrt_marked_nmethods();
 };
 
 // Thread iterator

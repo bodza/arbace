@@ -12,7 +12,6 @@
 #include "oops/methodData.hpp"
 #include "oops/oop.inline.hpp"
 #include "oops/verifyOopClosure.hpp"
-#include "prims/methodHandles.hpp"
 #include "runtime/frame.inline.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/javaCalls.hpp"
@@ -73,24 +72,12 @@ void RegisterMap::clear() {
 // hardware would want to see in the native frame. The only user (at this point)
 // is deoptimization. It likely no one else should ever use it.
 
-address frame::raw_pc() const {
-  if (is_deoptimized_frame()) {
-    CompiledMethod* cm = cb()->as_compiled_method_or_null();
-    if (cm->is_method_handle_return(pc()))
-      return cm->deopt_mh_handler_begin() - pc_return_offset;
-    else
-      return cm->deopt_handler_begin() - pc_return_offset;
-  } else {
-    return (pc() - pc_return_offset);
-  }
-}
+address frame::raw_pc() const { return pc() - pc_return_offset; }
 
 // Change the pc in a frame object. This does not change the actual pc in
 // actual frame. To do that use patch_pc.
 //
 void frame::set_pc(address newpc ) {
-  // Unsafe to use the is_deoptimzed tester after changing pc
-  _deopt_state = unknown;
   _pc = newpc;
   _cb = CodeCache::find_blob_unsafe(_pc);
 }
@@ -98,9 +85,6 @@ void frame::set_pc(address newpc ) {
 // type testers
 bool frame::is_ignored_frame() const {
   return false;  // FIXME: some LambdaForm frames should be ignored
-}
-bool frame::is_deoptimized_frame() const {
-  return _deopt_state == is_deoptimized;
 }
 
 bool frame::is_native_frame() const {
@@ -167,93 +151,11 @@ bool frame::is_entry_frame_valid(JavaThread* thread) const {
   return (jfa->last_Java_sp() > sp());
 }
 
-bool frame::should_be_deoptimized() const {
-  if (_deopt_state == is_deoptimized || !is_compiled_frame()) return false;
-  CompiledMethod* nm = (CompiledMethod *)_cb;
-
-  if (!nm->is_marked_for_deoptimization())
-    return false;
-
-  // If at the return point, then the frame has already been popped, and
-  // only the return needs to be executed. Don't deoptimize here.
-  return !nm->is_at_poll_return(pc());
-}
-
-bool frame::can_be_deoptimized() const {
-  if (!is_compiled_frame()) return false;
-  CompiledMethod* nm = (CompiledMethod*)_cb;
-
-  if (!nm->can_be_deoptimized())
-    return false;
-
-  return !nm->is_at_poll_return(pc());
-}
-
-void frame::deoptimize(JavaThread* thread) {
-  // This is a fix for register window patching race
-  if (NeedsDeoptSuspend && Thread::current() != thread) {
-    // It is possible especially with DeoptimizeALot/DeoptimizeRandom that
-    // we could see the frame again and ask for it to be deoptimized since
-    // it might move for a long time. That is harmless and we just ignore it.
-    if (id() == thread->must_deopt_id()) {
-      return;
-    }
-
-    // We are at a safepoint so the target thread can only be
-    // in 4 states:
-    //     blocked - no problem
-    //     blocked_trans - no problem (i.e. could have woken up from blocked
-    //                                 during a safepoint).
-    //     native - register window pc patching race
-    //     native_trans - momentary state
-    //
-    // We could just wait out a thread in native_trans to block.
-    // Then we'd have all the issues that the safepoint code has as to
-    // whether to spin or block. It isn't worth it. Just treat it like
-    // native and be done with it.
-    //
-    // Examine the state of the thread at the start of safepoint since
-    // threads that were in native at the start of the safepoint could
-    // come to a halt during the safepoint, changing the current value
-    // of the safepoint_state.
-    JavaThreadState state = thread->safepoint_state()->orig_thread_state();
-    if (state == _thread_in_native || state == _thread_in_native_trans) {
-      // Since we are at a safepoint the target thread will stop itself
-      // before it can return to java as long as we remain at the safepoint.
-      // Therefore we can put an additional request for the thread to stop
-      // no matter what no (like a suspend). This will cause the thread
-      // to notice it needs to do the deopt on its own once it leaves native.
-      //
-      // The only reason we must do this is because on machine with register
-      // windows we have a race with patching the return address and the
-      // window coming live as the thread returns to the Java code (but still
-      // in native mode) and then blocks. It is only this top most frame
-      // that is at risk. So in truth we could add an additional check to
-      // see if this frame is one that is at risk.
-      RegisterMap map(thread, false);
-      frame at_risk =  thread->last_frame().sender(&map);
-      if (id() == at_risk.id()) {
-        thread->set_must_deopt_id(id());
-        thread->set_deopt_suspend();
-        return;
-      }
-    }
-  }
-
-  // If the call site is a MethodHandle call site use the MH deopt
-  // handler.
-  CompiledMethod* cm = (CompiledMethod*) _cb;
-  address deopt = cm->is_method_handle_return(pc()) ? cm->deopt_mh_handler_begin() : cm->deopt_handler_begin();
-
-  // Save the original pc before we patch in the new one
-  cm->set_original_pc(this, pc());
-  patch_pc(thread, deopt);
-}
-
 frame frame::java_sender() const {
   RegisterMap map(JavaThread::current(), false);
   frame s;
-  for (s = sender(&map); !(s.is_java_frame() || s.is_first_frame()); s = s.sender(&map));
+  for (s = sender(&map); !(s.is_java_frame() || s.is_first_frame()); s = s.sender(&map))
+    ;
   guarantee(s.is_java_frame(), "tried to get caller of first java frame");
   return s;
 }
@@ -267,12 +169,9 @@ frame frame::real_sender(RegisterMap* map) const {
 }
 
 const char* frame::print_name() const {
-  if (is_native_frame())      return "Native";
-  if (is_compiled_frame()) {
-    if (is_deoptimized_frame()) return "Deoptimized";
-    return "Compiled";
-  }
-  if (sp() == NULL)            return "Empty";
+  if (is_native_frame())   return "Native";
+  if (is_compiled_frame()) return "Compiled";
+  if (sp() == NULL)        return "Empty";
   return "C";
 }
 
@@ -364,7 +263,7 @@ void frame::print_on_error(outputStream* st, char* buf, int buflen, bool verbose
           st->print("A %d ", cm->compile_id());
         } else if (cm->is_nmethod()) {
           nmethod* nm = cm->as_nmethod();
-          st->print("J %d%s", nm->compile_id(), (nm->is_osr_method() ? "%" : ""));
+          st->print("J %d", nm->compile_id());
           st->print(" %s", nm->compiler_name());
         }
         m->name_and_sig_as_C_string(buf, buflen);
@@ -391,8 +290,6 @@ void frame::print_on_error(outputStream* st, char* buf, int buflen, bool verbose
       }
     } else if (_cb->is_runtime_stub()) {
       st->print("v  ~RuntimeStub::%s", ((RuntimeStub *)_cb)->name());
-    } else if (_cb->is_deoptimization_stub()) {
-      st->print("v  ~NULL");
     } else if (_cb->is_exception_stub()) {
       st->print("v  ~ExceptionBlob");
     } else if (_cb->is_safepoint_stub()) {

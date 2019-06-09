@@ -79,7 +79,7 @@ class OccupancyMap : public CHeapObj<mtInternal> {
     } else if (pos % 64 == 0 && num_bits == 64) {
       return is_any_bit_set_in_region_3264<uint64_t>(pos, num_bits, layer);
     } else {
-      for (unsigned n = 0; n < num_bits; n ++) {
+      for (unsigned n = 0; n < num_bits; n++) {
         if (get_bit_at_position(pos + n, layer)) {
           return true;
         }
@@ -115,7 +115,7 @@ class OccupancyMap : public CHeapObj<mtInternal> {
     } else if (pos % 64 == 0 && num_bits == 64) {
       set_bits_of_region_T<uint64_t>(pos, num_bits, layer, v);
     } else {
-      for (unsigned n = 0; n < num_bits; n ++) {
+      for (unsigned n = 0; n < num_bits; n++) {
         set_bit_at_position(pos + n, layer, v);
       }
     }

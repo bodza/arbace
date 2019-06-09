@@ -179,7 +179,7 @@ public:
 
   java_lang_Thread::ThreadStatus thread_status() { return _thread_status; }
 
-  oop         threadObj() const           { return _threadObj; }
+  oop         threadObj()           const { return _threadObj; }
 
   void        set_next(ThreadSnapshot* n) { _next = n; }
 
@@ -196,7 +196,7 @@ public:
   oop         blocker_object()            { return _blocker_object; }
   oop         blocker_object_owner()      { return _blocker_object_owner; }
 
-  ThreadSnapshot*   next() const          { return _next; }
+  ThreadSnapshot*   next()          const { return _next; }
   ThreadStackTrace* get_stack_trace()     { return _stack_trace; }
   ThreadConcurrentLocks* get_concurrent_locks()     { return _concurrent_locks; }
 
@@ -253,8 +253,8 @@ class StackFrameInfo : public CHeapObj<mtInternal> {
       delete _locked_monitors;
     }
   };
-  Method*   method() const       { return _method; }
-  int       bci()    const       { return _bci; }
+  Method*   method()       const { return _method; }
+  int       bci()          const { return _bci; }
   void      oops_do(OopClosure* f);
   void      metadata_do(void f(Metadata*));
 

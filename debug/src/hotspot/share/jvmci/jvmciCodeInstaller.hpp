@@ -93,9 +93,7 @@ private:
   enum MarkId {
     VERIFIED_ENTRY                         = 1,
     UNVERIFIED_ENTRY                       = 2,
-    OSR_ENTRY                              = 3,
     EXCEPTION_HANDLER_ENTRY                = 4,
-    DEOPT_HANDLER_ENTRY                    = 5,
     INVOKEINTERFACE                        = 6,
     INVOKEVIRTUAL                          = 7,
     INVOKESTATIC                           = 8,
@@ -142,7 +140,6 @@ private:
 
   OopRecorder*              _oop_recorder;
   DebugInformationRecorder* _debug_recorder;
-  Dependencies*             _dependencies;
   ExceptionHandlerTable     _exception_handler_table;
 
   bool _immutable_pic_compilation;  // Installer is called for Immutable PIC compilation.

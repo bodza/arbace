@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "jvm.h"
-#include "aot/aotLoader.hpp"
 #include "classfile/classFileParser.hpp"
 #include "classfile/classFileStream.hpp"
 #include "classfile/classLoader.hpp"
@@ -11,7 +10,6 @@
 #include "classfile/systemDictionary.hpp"
 #include "classfile/verifier.hpp"
 #include "classfile/vmSymbols.hpp"
-#include "code/dependencyContext.hpp"
 #include "compiler/compileBroker.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "memory/allocation.inline.hpp"
@@ -564,7 +562,7 @@ bool InstanceKlass::link_class_impl(bool throw_verifyerror, TRAPS) {
     // don't verify or rewrite if already rewritten
     //
     if (!is_linked()) {
-      if (!is_rewritten()) {
+      {
         if (!verify_code(throw_verifyerror, THREAD)) {
           return false;
         }
@@ -575,9 +573,6 @@ bool InstanceKlass::link_class_impl(bool throw_verifyerror, TRAPS) {
         if (is_linked()) {
           return true;
         }
-
-        // also sets rewritten
-        rewrite_class(CHECK_false);
       }
 
       // relocate jsrs and link methods after they are all rewritten
@@ -602,19 +597,8 @@ bool InstanceKlass::link_class_impl(bool throw_verifyerror, TRAPS) {
   return true;
 }
 
-// Rewrite the byte codes of all of the methods of a class.
-// The rewriter must be called exactly once. Rewriting must happen after
-// verification but before the first method of the class is executed.
-void InstanceKlass::rewrite_class(TRAPS) {
-  if (is_rewritten()) {
-    return;
-  }
-  set_rewritten();
-}
-
-// Now relocate and link method entry points after class is rewritten.
-// This is outside is_rewritten flag. In case of an exception, it can be
-// executed more than once.
+// Now relocate and link method entry points.
+// In case of an exception, it can be executed more than once.
 void InstanceKlass::link_methods(TRAPS) {
   int len = methods()->length();
   for (int i = len - 1; i >= 0; i--) {
@@ -731,9 +715,6 @@ void InstanceKlass::initialize_impl(TRAPS) {
       THROW_OOP(e());
     }
   }
-
-  // Look for aot compiled methods for this klass, including class initializer.
-  AOTLoader::load_for_klass(this, THREAD);
 
   // Step 8
   {
@@ -1010,11 +991,6 @@ Method* InstanceKlass::class_initializer() const {
 }
 
 void InstanceKlass::call_class_initializer(TRAPS) {
-  if (ReplayCompiles && (ReplaySuppressInitializers == 1 || (ReplaySuppressInitializers >= 2 && class_loader() != NULL))) {
-    // Hide the existence of the initializer for the purpose of replaying the compile
-    return;
-  }
-
   methodHandle h_method(THREAD, class_initializer());
   if (h_method() != NULL) {
     JavaCallArguments args; // No arguments
@@ -1618,39 +1594,18 @@ void InstanceKlass::get_jmethod_id_length_value(jmethodID* cache, size_t idnum, 
 jmethodID InstanceKlass::jmethod_id_or_null(Method* method) {
   size_t idnum = (size_t)method->method_idnum();
   jmethodID* jmeths = methods_jmethod_ids_acquire();
-  size_t length;                                // length assigned as debugging crumb
+  size_t length;
   jmethodID id = NULL;
-  if (jmeths != NULL &&                         // If there is a cache
-      (length = (size_t)jmeths[0]) > idnum) {   // and if it is long enough,
-    id = jmeths[idnum + 1];                       // Look up the id (may be NULL)
+  // If there is a cache and if it is long enough, look up the id (may be NULL)
+  if (jmeths != NULL && (length = (size_t)jmeths[0]) > idnum) {
+    id = jmeths[idnum + 1];
   }
   return id;
-}
-
-inline DependencyContext InstanceKlass::dependencies() {
-  DependencyContext dep_context(&_dep_context);
-  return dep_context;
-}
-
-int InstanceKlass::mark_dependent_nmethods(KlassDepChange& changes) {
-  return dependencies().mark_dependent_nmethods(changes);
-}
-
-void InstanceKlass::add_dependent_nmethod(nmethod* nm) {
-  dependencies().add_dependent_nmethod(nm);
-}
-
-void InstanceKlass::remove_dependent_nmethod(nmethod* nm, bool delete_immediately) {
-  dependencies().remove_dependent_nmethod(nm, delete_immediately);
 }
 
 void InstanceKlass::clean_weak_instanceklass_links() {
   clean_implementors_list();
   clean_method_data();
-
-  // Since GC iterates InstanceKlasses sequentially, it is safe to remove stale entries here.
-  DependencyContext dep_context(&_dep_context);
-  dep_context.expunge_stale_entries();
 }
 
 void InstanceKlass::clean_implementors_list() {
@@ -1749,12 +1704,12 @@ void InstanceKlass::metaspace_pointers_do(MetaspaceClosure* it) {
     int nof_interfaces = (method_table_offset_in_words - itable_offset_in_words())
                          / itableOffsetEntry::size();
 
-    for (int i = 0; i < nof_interfaces; i ++, ioe ++) {
+    for (int i = 0; i < nof_interfaces; i++, ioe++) {
       if (ioe->interface_klass() != NULL) {
         it->push(ioe->interface_klass_addr());
         itableMethodEntry* ime = ioe->first_method_entry(this);
         int n = klassItable::method_count_for_interface(ioe->interface_klass());
-        for (int index = 0; index < n; index ++) {
+        for (int index = 0; index < n; index++) {
           it->push(ime[index].method_addr());
         }
       }
@@ -1800,8 +1755,6 @@ void InstanceKlass::remove_unshareable_info() {
   // These are not allocated from metaspace, but they should should all be empty
   // during dump time, so we don't need to worry about them in InstanceKlass::iterate().
   guarantee(_source_debug_extension == NULL, "must be");
-  guarantee(_dep_context == DependencyContext::EMPTY, "must be");
-  guarantee(_osr_nmethods_head == NULL, "must be");
 
   _init_thread = NULL;
   _methods_jmethod_ids = NULL;
@@ -1893,17 +1846,6 @@ void InstanceKlass::release_C_heap_structures() {
     release_set_methods_jmethod_ids(NULL);
     FreeHeap(jmeths);
   }
-
-  // Release dependencies.
-  // It is desirable to use DC::remove_all_dependents() here, but, unfortunately,
-  // it is not safe (see JDK-8143408). The problem is that the klass dependency
-  // context can contain live dependencies, since there's a race between nmethod &
-  // klass unloading. If the klass is dead when nmethod unloading happens, relevant
-  // dependencies aren't removed from the context associated with the class (see
-  // nmethod::flush_dependencies). It ends up during klass unloading as seemingly
-  // live dependencies pointing to unloaded nmethods and causes a crash in
-  // DC::remove_all_dependents() when it touches unloaded nmethod.
-  dependencies().wipe();
 
   // Decrement symbol reference counts associated with the unloaded class.
   if (_name != NULL) _name->decrement_refcount();
@@ -2246,10 +2188,9 @@ jint InstanceKlass::compute_modifier_flags(TRAPS) const {
 Method* InstanceKlass::method_at_itable(Klass* holder, int index, TRAPS) {
   itableOffsetEntry* ioe = (itableOffsetEntry*)start_of_itable();
   int method_table_offset_in_words = ioe->offset()/wordSize;
-  int nof_interfaces = (method_table_offset_in_words - itable_offset_in_words())
-                       / itableOffsetEntry::size();
+  int nof_interfaces = (method_table_offset_in_words - itable_offset_in_words()) / itableOffsetEntry::size();
 
-  for (int cnt = 0; ; cnt ++, ioe ++) {
+  for (int cnt = 0; ; cnt++, ioe++) {
     // If the interface isn't implemented by the receiver class,
     // the VM should throw IncompatibleClassChangeError.
     if (cnt >= nof_interfaces) {
@@ -2274,97 +2215,6 @@ Method* InstanceKlass::method_at_itable(Klass* holder, int index, TRAPS) {
     THROW_NULL(vmSymbols::java_lang_AbstractMethodError());
   }
   return m;
-}
-
-// On-stack replacement stuff
-void InstanceKlass::add_osr_nmethod(nmethod* n) {
-  // only one compilation can be active
-  {
-    // This is a short non-blocking critical region, so the no safepoint check is ok.
-    MutexLockerEx ml(OsrList_lock, Mutex::_no_safepoint_check_flag);
-    n->set_osr_link(osr_nmethods_head());
-    set_osr_nmethods_head(n);
-  }
-}
-
-// Remove osr nmethod from the list. Return true if found and removed.
-bool InstanceKlass::remove_osr_nmethod(nmethod* n) {
-  // This is a short non-blocking critical region, so the no safepoint check is ok.
-  MutexLockerEx ml(OsrList_lock, Mutex::_no_safepoint_check_flag);
-  nmethod* last = NULL;
-  nmethod* cur  = osr_nmethods_head();
-  int max_level = CompLevel_none;  // Find the max comp level excluding n
-  Method* m = n->method();
-  // Search for match
-  bool found = false;
-  while (cur != NULL && cur != n) {
-    last = cur;
-    cur = cur->osr_link();
-  }
-  nmethod* next = NULL;
-  if (cur == n) {
-    found = true;
-    next = cur->osr_link();
-    if (last == NULL) {
-      // Remove first element
-      set_osr_nmethods_head(next);
-    } else {
-      last->set_osr_link(next);
-    }
-  }
-  n->set_osr_link(NULL);
-  return found;
-}
-
-int InstanceKlass::mark_osr_nmethods(const Method* m) {
-  // This is a short non-blocking critical region, so the no safepoint check is ok.
-  MutexLockerEx ml(OsrList_lock, Mutex::_no_safepoint_check_flag);
-  nmethod* osr = osr_nmethods_head();
-  int found = 0;
-  while (osr != NULL) {
-    if (osr->method() == m) {
-      osr->mark_for_deoptimization();
-      found++;
-    }
-    osr = osr->osr_link();
-  }
-  return found;
-}
-
-nmethod* InstanceKlass::lookup_osr_nmethod(const Method* m, int bci, int comp_level, bool match_level) const {
-  // This is a short non-blocking critical region, so the no safepoint check is ok.
-  MutexLockerEx ml(OsrList_lock, Mutex::_no_safepoint_check_flag);
-  nmethod* osr = osr_nmethods_head();
-  nmethod* best = NULL;
-  while (osr != NULL) {
-    // There can be a time when a c1 osr method exists but we are waiting
-    // for a c2 version. When c2 completes its osr nmethod we will trash
-    // the c1 version and only be able to find the c2 version. However
-    // while we overflow in the c1 code at back branches we don't want to
-    // try and switch to the same code as we are already running
-
-    if (osr->method() == m && (bci == InvocationEntryBci || osr->osr_entry_bci() == bci)) {
-      if (match_level) {
-        if (osr->comp_level() == comp_level) {
-          // Found a match - return it.
-          return osr;
-        }
-      } else {
-        if (best == NULL || (osr->comp_level() > best->comp_level())) {
-          if (osr->comp_level() == CompLevel_highest_tier) {
-            // Found the best possible - return it.
-            return osr;
-          }
-          best = osr;
-        }
-      }
-    }
-    osr = osr->osr_link();
-  }
-  if (best != NULL && best->comp_level() >= comp_level && match_level == false) {
-    return best;
-  }
-  return NULL;
 }
 
 void InstanceKlass::print_value_on(outputStream* st) const {
@@ -2395,147 +2245,14 @@ void InstanceKlass::oop_print_value_on(oop obj, outputStream* st) {
       const char* tname = type2name(java_lang_Class::primitive_type(obj));
       st->print("%s", tname ? tname : "type?");
     }
-  } else if (this == SystemDictionary::MethodType_klass()) {
-    st->print(" = ");
-    java_lang_invoke_MethodType::print_signature(obj, st);
   } else if (java_lang_boxing_object::is_instance(obj)) {
     st->print(" = ");
     java_lang_boxing_object::print(obj, st);
-  } else if (this == SystemDictionary::LambdaForm_klass()) {
-    oop vmentry = java_lang_invoke_LambdaForm::vmentry(obj);
-    if (vmentry != NULL) {
-      st->print(" => ");
-      vmentry->print_value_on(st);
-    }
-  } else if (this == SystemDictionary::MemberName_klass()) {
-    Metadata* vmtarget = java_lang_invoke_MemberName::vmtarget(obj);
-    if (vmtarget != NULL) {
-      st->print(" = ");
-      vmtarget->print_value_on(st);
-    } else {
-      java_lang_invoke_MemberName::clazz(obj)->print_value_on(st);
-      st->print(".");
-      java_lang_invoke_MemberName::name(obj)->print_value_on(st);
-    }
   }
 }
 
 const char* InstanceKlass::internal_name() const {
   return external_name();
-}
-
-// Verification
-
-class VerifyFieldClosure: public BasicOopIterateClosure {
- protected:
-  template <class T> void do_oop_work(T* p) {
-    oop obj = RawAccess<>::oop_load(p);
-    if (!oopDesc::is_oop_or_null(obj)) {
-      tty->print_cr("Failed: " PTR_FORMAT " -> " PTR_FORMAT, p2i(p), p2i(obj));
-      Universe::print_on(tty);
-      guarantee(false, "boom");
-    }
-  }
- public:
-  virtual void do_oop(oop* p)       { VerifyFieldClosure::do_oop_work(p); }
-  virtual void do_oop(narrowOop* p) { VerifyFieldClosure::do_oop_work(p); }
-};
-
-void InstanceKlass::verify_on(outputStream* st) {
-  // Verify Klass
-  Klass::verify_on(st);
-
-  // Verify that klass is present in ClassLoaderData
-  guarantee(class_loader_data()->contains_klass(this), "this class isn't found in class loader data");
-
-  // Verify first subklass
-  if (subklass() != NULL) {
-    guarantee(subklass()->is_klass(), "should be klass");
-  }
-
-  // Verify siblings
-  Klass* super = this->super();
-  Klass* sib = next_sibling();
-  if (sib != NULL) {
-    if (sib == this) {
-      fatal("subclass points to itself " PTR_FORMAT, p2i(sib));
-    }
-
-    guarantee(sib->is_klass(), "should be klass");
-    guarantee(sib->super() == super, "siblings should have same superklass");
-  }
-
-  // Verify implementor fields requires the Compile_lock, but this is sometimes
-  // called inside a safepoint, so don't verify.
-
-  // Verify local interfaces
-  if (local_interfaces()) {
-    Array<Klass*>* local_interfaces = this->local_interfaces();
-    for (int j = 0; j < local_interfaces->length(); j++) {
-      Klass* e = local_interfaces->at(j);
-      guarantee(e->is_klass() && e->is_interface(), "invalid local interface");
-    }
-  }
-
-  // Verify transitive interfaces
-  if (transitive_interfaces() != NULL) {
-    Array<Klass*>* transitive_interfaces = this->transitive_interfaces();
-    for (int j = 0; j < transitive_interfaces->length(); j++) {
-      Klass* e = transitive_interfaces->at(j);
-      guarantee(e->is_klass() && e->is_interface(), "invalid transitive interface");
-    }
-  }
-
-  // Verify methods
-  if (methods() != NULL) {
-    Array<Method*>* methods = this->methods();
-    for (int j = 0; j < methods->length(); j++) {
-      guarantee(methods->at(j)->is_method(), "non-method in methods array");
-    }
-    for (int j = 0; j < methods->length() - 1; j++) {
-      Method* m1 = methods->at(j);
-      Method* m2 = methods->at(j + 1);
-      guarantee(m1->name()->fast_compare(m2->name()) <= 0, "methods not sorted correctly");
-    }
-  }
-
-  // Verify method ordering
-  if (method_ordering() != NULL) {
-    Array<int>* method_ordering = this->method_ordering();
-    int length = method_ordering->length();
-    guarantee(length == 0, "invalid method ordering length");
-  }
-
-  // Verify default methods
-  if (default_methods() != NULL) {
-    Array<Method*>* methods = this->default_methods();
-    for (int j = 0; j < methods->length(); j++) {
-      guarantee(methods->at(j)->is_method(), "non-method in methods array");
-    }
-    for (int j = 0; j < methods->length() - 1; j++) {
-      Method* m1 = methods->at(j);
-      Method* m2 = methods->at(j + 1);
-      guarantee(m1->name()->fast_compare(m2->name()) <= 0, "methods not sorted correctly");
-    }
-  }
-
-  // Verify other fields
-  if (array_klasses() != NULL) {
-    guarantee(array_klasses()->is_klass(), "should be klass");
-  }
-  if (constants() != NULL) {
-    guarantee(constants()->is_constantPool(), "should be constant pool");
-  }
-  const Klass* host = host_klass();
-  if (host != NULL) {
-    guarantee(host->is_klass(), "should be klass");
-  }
-}
-
-void InstanceKlass::oop_verify_on(oop obj, outputStream* st) {
-  Klass::oop_verify_on(obj, st);
-  VerifyFieldClosure blk;
-  obj->oop_iterate(&blk);
 }
 
 // JNIid class for jfieldIDs only

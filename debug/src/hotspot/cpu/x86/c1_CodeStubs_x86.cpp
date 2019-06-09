@@ -49,16 +49,6 @@ void ConversionStub::emit_code(LIR_Assembler* ce) {
   __ jmp(_continuation);
 }
 
-void CounterOverflowStub::emit_code(LIR_Assembler* ce) {
-  __ bind(_entry);
-  Metadata *m = _method->as_constant_ptr()->as_metadata();
-  ce->store_parameter(m, 1);
-  ce->store_parameter(_bci, 0);
-  __ call(RuntimeAddress(Runtime1::entry_for(Runtime1::counter_overflow_id)));
-  ce->add_call_info_here(_info);
-  __ jmp(_continuation);
-}
-
 RangeCheckStub::RangeCheckStub(CodeEmitInfo* info, LIR_Opr index, LIR_Opr array)
   : _throw_index_out_of_bounds_exception(false), _index(index), _array(array) {
   _info = new CodeEmitInfo(info);
@@ -71,13 +61,6 @@ RangeCheckStub::RangeCheckStub(CodeEmitInfo* info, LIR_Opr index)
 
 void RangeCheckStub::emit_code(LIR_Assembler* ce) {
   __ bind(_entry);
-  if (_info->deoptimize_on_exception()) {
-    address a = Runtime1::entry_for(Runtime1::predicate_failed_trap_id);
-    __ call(RuntimeAddress(a));
-    ce->add_call_info_here(_info);
-    return;
-  }
-
   // pass the array index on stack because all registers must be preserved
   if (_index->is_cpu_register()) {
     ce->store_parameter(_index->as_register(), 0);
@@ -92,17 +75,6 @@ void RangeCheckStub::emit_code(LIR_Assembler* ce) {
     ce->store_parameter(_array->as_pointer_register(), 1);
   }
   __ call(RuntimeAddress(Runtime1::entry_for(stub_id)));
-  ce->add_call_info_here(_info);
-}
-
-PredicateFailedStub::PredicateFailedStub(CodeEmitInfo* info) {
-  _info = new CodeEmitInfo(info);
-}
-
-void PredicateFailedStub::emit_code(LIR_Assembler* ce) {
-  __ bind(_entry);
-  address a = Runtime1::entry_for(Runtime1::predicate_failed_trap_id);
-  __ call(RuntimeAddress(a));
   ce->add_call_info_here(_info);
 }
 
@@ -299,10 +271,9 @@ void PatchingStub::emit_code(LIR_Assembler* ce) {
   address target = NULL;
   relocInfo::relocType reloc_type = relocInfo::none;
   switch (_id) {
-    case access_field_id:  target = Runtime1::entry_for(Runtime1::access_field_patching_id); break;
-    case load_klass_id:    target = Runtime1::entry_for(Runtime1::load_klass_patching_id); reloc_type = relocInfo::metadata_type; break;
-    case load_mirror_id:   target = Runtime1::entry_for(Runtime1::load_mirror_patching_id); reloc_type = relocInfo::oop_type; break;
-    case load_appendix_id:      target = Runtime1::entry_for(Runtime1::load_appendix_patching_id); reloc_type = relocInfo::oop_type; break;
+    case access_field_id: target = Runtime1::entry_for(Runtime1::access_field_patching_id); break;
+    case load_klass_id:   target = Runtime1::entry_for(Runtime1::load_klass_patching_id); reloc_type = relocInfo::metadata_type; break;
+    case load_mirror_id:  target = Runtime1::entry_for(Runtime1::load_mirror_patching_id); reloc_type = relocInfo::oop_type; break;
     default: ShouldNotReachHere();
   }
   __ bind(call_patch);
@@ -317,28 +288,15 @@ void PatchingStub::emit_code(LIR_Assembler* ce) {
   for (int j = __ offset(); j < jmp_off + 5; j++) {
     __ nop();
   }
-  if (_id == load_klass_id || _id == load_mirror_id || _id == load_appendix_id) {
+  if (_id == load_klass_id || _id == load_mirror_id) {
     CodeSection* cs = __ code_section();
     RelocIterator iter(cs, (address)_pc_start, (address)(_pc_start + 1));
     relocInfo::change_reloc_info_for_address(&iter, (address) _pc_start, reloc_type, relocInfo::none);
   }
 }
 
-void NULL::emit_code(LIR_Assembler* ce) {
-  __ bind(_entry);
-  ce->store_parameter(_trap_request, 0);
-  __ call(RuntimeAddress(Runtime1::entry_for(Runtime1::deoptimize_id)));
-  ce->add_call_info_here(_info);
-}
-
 void ImplicitNullCheckStub::emit_code(LIR_Assembler* ce) {
-  address a;
-  if (_info->deoptimize_on_exception()) {
-    // Deoptimize, do not throw the exception, because it is probably wrong to do it here.
-    a = Runtime1::entry_for(Runtime1::predicate_failed_trap_id);
-  } else {
-    a = Runtime1::entry_for(Runtime1::throw_null_pointer_exception_id);
-  }
+  address a = Runtime1::entry_for(Runtime1::throw_null_pointer_exception_id);
 
   ce->compilation()->implicit_exception_table()->append(_offset, __ offset());
   __ bind(_entry);

@@ -49,31 +49,31 @@ typedef GrowableArray<ValueMapEntry*> ValueMapEntryList;
 
 class ValueMap: public CompilationResourceObj {
  private:
-  int           _nesting;
+  int      _nesting;
   ValueMapEntryArray _entries;
-  ValueSet      _killed_values;
-  int           _entry_count;
+  ValueSet _killed_values;
+  int      _entry_count;
 
-  int           nesting()                        { return _nesting; }
-  bool          is_local_value_numbering()       { return _nesting == 0; }
-  bool          is_global_value_numbering()      { return _nesting > 0; }
+  int      nesting()                     { return _nesting; }
+  bool     is_local_value_numbering()    { return _nesting == 0; }
+  bool     is_global_value_numbering()   { return _nesting > 0; }
 
-  int           entry_count()                    { return _entry_count; }
-  int           size()                           { return _entries.length(); }
-  ValueMapEntry* entry_at(int i)                 { return _entries.at(i); }
+  int      entry_count()                 { return _entry_count; }
+  int      size()                        { return _entries.length(); }
+  ValueMapEntry* entry_at(int i)         { return _entries.at(i); }
 
   // calculates the index of a hash value in a hash table of size n
-  int           entry_index(intx hash, int n)    { return (unsigned int)hash % n; }
+  int      entry_index(intx hash, int n) { return (unsigned int)hash % n; }
 
   // if entry_count > size_threshold, the size of the hash table is increased
-  int           size_threshold()                 { return size(); }
+  int      size_threshold()              { return size(); }
 
   // management of the killed-bitset for global value numbering
-  void          kill_value(Value v)              { if (is_global_value_numbering()) _killed_values.put(v); }
-  bool          is_killed(Value v)               { if (is_global_value_numbering()) return _killed_values.contains(v); else return false; }
+  void     kill_value(Value v)           { if (is_global_value_numbering()) _killed_values.put(v); }
+  bool     is_killed(Value v)            { if (is_global_value_numbering()) return _killed_values.contains(v); else return false; }
 
   // helper functions
-  void          increase_table_size();
+  void     increase_table_size();
 
  public:
   // creation
@@ -113,19 +113,7 @@ class ValueNumberingVisitor: public InstructionVisitor {
     }
   }
   void do_StoreIndexed   (StoreIndexed*    x) { kill_array(x->type()); }
-  void do_MonitorEnter   (MonitorEnter*    x) { kill_memory(); }
-  void do_MonitorExit    (MonitorExit*     x) { kill_memory(); }
   void do_Invoke         (Invoke*          x) { kill_memory(); }
-  void do_UnsafePutRaw   (UnsafePutRaw*    x) { kill_memory(); }
-  void do_UnsafePutObject(UnsafePutObject* x) { kill_memory(); }
-  void do_UnsafeGetAndSetObject(UnsafeGetAndSetObject* x) { kill_memory(); }
-  void do_UnsafeGetRaw   (UnsafeGetRaw*    x) { /* nothing to do */ }
-  void do_UnsafeGetObject(UnsafeGetObject* x) {
-    if (x->is_volatile()) { // the JMM requires this
-      kill_memory();
-    }
-  }
-  void do_Intrinsic      (Intrinsic*       x) { if (!x->preserves_state()) kill_memory(); }
 
   void do_Phi            (Phi*             x) { /* nothing to do */ }
   void do_Local          (Local*           x) { /* nothing to do */ }
@@ -147,11 +135,6 @@ class ValueNumberingVisitor: public InstructionVisitor {
   void do_Convert        (Convert*         x) { /* nothing to do */ }
   void do_NullCheck      (NullCheck*       x) { /* nothing to do */ }
   void do_TypeCast       (TypeCast*        x) { /* nothing to do */ }
-  void do_NewInstance    (NewInstance*     x) { /* nothing to do */ }
-  void do_NewTypeArray   (NewTypeArray*    x) { /* nothing to do */ }
-  void do_NewObjectArray (NewObjectArray*  x) { /* nothing to do */ }
-  void do_NewMultiArray  (NewMultiArray*   x) { /* nothing to do */ }
-  void do_CheckCast      (CheckCast*       x) { /* nothing to do */ }
   void do_InstanceOf     (InstanceOf*      x) { /* nothing to do */ }
   void do_BlockBegin     (BlockBegin*      x) { /* nothing to do */ }
   void do_Goto           (Goto*            x) { /* nothing to do */ }
@@ -162,15 +145,6 @@ class ValueNumberingVisitor: public InstructionVisitor {
   void do_Return         (Return*          x) { /* nothing to do */ }
   void do_Throw          (Throw*           x) { /* nothing to do */ }
   void do_Base           (Base*            x) { /* nothing to do */ }
-  void do_OsrEntry       (OsrEntry*        x) { /* nothing to do */ }
-  void do_ExceptionObject(ExceptionObject* x) { /* nothing to do */ }
-  void do_RoundFP        (RoundFP*         x) { /* nothing to do */ }
-  void do_ProfileCall    (ProfileCall*     x) { /* nothing to do */ }
-  void do_ProfileReturnType (ProfileReturnType*  x) { /* nothing to do */ }
-  void do_ProfileInvoke  (ProfileInvoke*   x) { /* nothing to do */ };
-  void do_RuntimeCall    (RuntimeCall*     x) { /* nothing to do */ };
-  void do_MemBar         (MemBar*          x) { /* nothing to do */ };
-  void do_RangeCheckPredicate(RangeCheckPredicate* x) { /* nothing to do */ };
 };
 
 class ValueNumberingEffects: public ValueNumberingVisitor {
@@ -179,9 +153,9 @@ class ValueNumberingEffects: public ValueNumberingVisitor {
 
  public:
   // implementation for abstract methods of ValueNumberingVisitor
-  void          kill_memory()                                 { _map->kill_memory(); }
-  void          kill_field(ciField* field, bool all_offsets)  { _map->kill_field(field, all_offsets); }
-  void          kill_array(ValueType* type)                   { _map->kill_array(type); }
+  void          kill_memory()                                { _map->kill_memory(); }
+  void          kill_field(ciField* field, bool all_offsets) { _map->kill_field(field, all_offsets); }
+  void          kill_array(ValueType* type)                  { _map->kill_array(type); }
 
   ValueNumberingEffects(ValueMap* map): _map(map) { }
 };
@@ -196,7 +170,7 @@ class GlobalValueNumbering: public ValueNumberingVisitor {
 
  public:
   // accessors
-  Compilation*  compilation() const              { return _compilation; }
+  Compilation*  compilation()              const { return _compilation; }
   ValueMap*     current_map()                    { return _current_map; }
   ValueMap*     value_map_of(BlockBegin* block)  { return _value_maps.at(block->linear_scan_number()); }
   void          set_value_map_of(BlockBegin* block, ValueMap* map)   { _value_maps.at_put(block->linear_scan_number(), map); }

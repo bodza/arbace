@@ -9,7 +9,6 @@
 #include "runtime/java.hpp"
 #include "runtime/os.hpp"
 #include "runtime/relocator.hpp"
-#include "runtime/timerTrace.hpp"
 #include "utilities/bitMap.inline.hpp"
 #include "utilities/ostream.hpp"
 
@@ -309,7 +308,7 @@ char CellTypeState::to_char() const {
 // Print a detailed CellTypeState.  Indicate all bits that are set.  If
 // the CellTypeState represents an address or a reference, print the
 // value of the additional information.
-void CellTypeState::print(outputStream *os) {
+void CellTypeState::print(outputStream* os) {
   if (can_be_address()) {
     os->print("(p");
   } else {
@@ -382,7 +381,7 @@ void GenerateOopMap::mark_bbheaders_and_count_gc_points() {
 
   // First mark all exception handlers as start of a basic-block
   ExceptionTable excps(method());
-  for (int i = 0; i < excps.length(); i ++) {
+  for (int i = 0; i < excps.length(); i++) {
     bb_mark_fct(this, excps.handler_pc(i), NULL);
   }
 
@@ -1151,14 +1150,14 @@ void GenerateOopMap::do_exception_edge(BytecodeStream* itr) {
 
 void GenerateOopMap::report_monitor_mismatch(const char *msg) { }
 
-void GenerateOopMap::print_states(outputStream *os, CellTypeState* vec, int num) {
+void GenerateOopMap::print_states(outputStream* os, CellTypeState* vec, int num) {
   for (int i = 0; i < num; i++) {
     vec[i].print(tty);
   }
 }
 
 // Print the state values at the current bytecode.
-void GenerateOopMap::print_current_state(outputStream *os, BytecodeStream *currentBC, bool detailed) {
+void GenerateOopMap::print_current_state(outputStream* os, BytecodeStream *currentBC, bool detailed) {
   if (detailed) {
     os->print("     %4d vars     = ", currentBC->bci());
     print_states(os, vars(), _max_locals);
@@ -1177,7 +1176,6 @@ void GenerateOopMap::print_current_state(outputStream *os, BytecodeStream *curre
     case Bytecodes::_invokevirtual:
     case Bytecodes::_invokespecial:
     case Bytecodes::_invokestatic:
-    case Bytecodes::_invokedynamic:
     case Bytecodes::_invokeinterface: {
       int idx = currentBC->has_index_u4() ? currentBC->get_index_u4() : currentBC->get_index_u2_cpcache();
       ConstantPool* cp      = method()->constants();
@@ -1217,7 +1215,6 @@ void GenerateOopMap::interp1(BytecodeStream *itr) {
       case Bytecodes::_invokevirtual:
       case Bytecodes::_invokespecial:
       case Bytecodes::_invokestatic:
-      case Bytecodes::_invokedynamic:
       case Bytecodes::_invokeinterface:
         _itr_send = itr;
         _report_result_for_send = true;
@@ -1462,7 +1459,6 @@ void GenerateOopMap::interp1(BytecodeStream *itr) {
     case Bytecodes::_invokevirtual:
     case Bytecodes::_invokespecial:     do_method(false, false, itr->get_index_u2_cpcache(), itr->bci()); break;
     case Bytecodes::_invokestatic:      do_method(true,  false, itr->get_index_u2_cpcache(), itr->bci()); break;
-    case Bytecodes::_invokedynamic:     do_method(true,  false, itr->get_index_u4(),         itr->bci()); break;
     case Bytecodes::_invokeinterface:   do_method(false, true,  itr->get_index_u2_cpcache(), itr->bci()); break;
     case Bytecodes::_newarray:
     case Bytecodes::_anewarray:         pp_new_ref(vCTS, itr->bci()); break;
@@ -1889,9 +1885,6 @@ GenerateOopMap::GenerateOopMap(const methodHandle& method) {
 }
 
 void GenerateOopMap::compute_map(TRAPS) {
-  TraceTime t_single("oopmap time", TimeOopMap2);
-  TraceTime t_all(NULL, &_total_oopmap_time, TimeOopMap);
-
   // Initialize values
   _got_error      = false;
   _conflict       = false;

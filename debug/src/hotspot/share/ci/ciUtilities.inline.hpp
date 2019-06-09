@@ -30,10 +30,10 @@
   Thread* THREAD = thread;
 
 #define GUARDED_VM_ENTRY(action) \
-  { if (IS_IN_VM) { action } else { VM_ENTRY_MARK; { action }}}
+  { if (ciEnv::is_in_vm()) { action } else { VM_ENTRY_MARK; { action }}}
 
 #define GUARDED_VM_QUICK_ENTRY(action) \
-  { if (IS_IN_VM) { action } else { VM_QUICK_ENTRY_MARK; { action }}}
+  { if (ciEnv::is_in_vm()) { action } else { VM_QUICK_ENTRY_MARK; { action }}}
 
 // Redefine this later.
 #define KILL_COMPILE_ON_FATAL_(result) \

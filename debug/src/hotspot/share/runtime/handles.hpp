@@ -42,8 +42,8 @@ class Handle {
   oop* _handle;
 
  protected:
-  oop     obj() const                            { return _handle == NULL ? (oop)NULL : *_handle; }
-  oop     non_null_obj() const                   { return *_handle; }
+  oop     obj()                            const { return _handle == NULL ? (oop)NULL : *_handle; }
+  oop     non_null_obj()                   const { return *_handle; }
 
  public:
   // Constructors
@@ -51,15 +51,15 @@ class Handle {
   inline Handle(Thread* thread, oop obj);
 
   // General access
-  oop     operator () () const                   { return obj(); }
-  oop     operator -> () const                   { return non_null_obj(); }
+  oop     operator () ()                   const { return obj(); }
+  oop     operator -> ()                   const { return non_null_obj(); }
 
-  bool operator == (oop o) const                 { return oopDesc::equals(obj(), o); }
-  bool operator == (const Handle& h) const       { return oopDesc::equals(obj(), h.obj()); }
+  bool operator == (oop o)                 const { return oopDesc::equals(obj(), o); }
+  bool operator == (const Handle& h)       const { return oopDesc::equals(obj(), h.obj()); }
 
   // Null checks
-  bool    is_null() const                        { return _handle == NULL; }
-  bool    not_null() const                       { return _handle != NULL; }
+  bool    is_null()                        const { return _handle == NULL; }
+  bool    not_null()                       const { return _handle != NULL; }
 
   // Debugging
   void    print()                                { obj()->print(); }
@@ -79,8 +79,8 @@ class Handle {
 #define DEF_HANDLE(type, is_a) \
   class type##Handle: public Handle { \
    protected: \
-    type##Oop    obj() const                     { return (type##Oop)Handle::obj(); } \
-    type##Oop    non_null_obj() const            { return (type##Oop)Handle::non_null_obj(); } \
+    type##Oop    obj()                     const { return (type##Oop)Handle::obj(); } \
+    type##Oop    non_null_obj()            const { return (type##Oop)Handle::non_null_obj(); } \
  \
    public: \
     /* Constructors */ \
@@ -88,8 +88,8 @@ class Handle {
     inline type##Handle (Thread* thread, type##Oop obj); \
  \
     /* Operators for ease of use */ \
-    type##Oop    operator () () const            { return obj(); } \
-    type##Oop    operator -> () const            { return non_null_obj(); } \
+    type##Oop    operator () ()            const { return obj(); } \
+    type##Oop    operator -> ()            const { return non_null_obj(); } \
   };
 
 DEF_HANDLE(instance         , is_instance_noinline         )
@@ -111,8 +111,8 @@ DEF_HANDLE(typeArray        , is_typeArray_noinline        )
     type*     _value; \
     Thread*   _thread; \
    protected: \
-    type*        obj() const                     { return _value; } \
-    type*        non_null_obj() const            { return _value; } \
+    type*        obj()                     const { return _value; } \
+    type*        non_null_obj()            const { return _value; } \
  \
    public: \
     /* Constructors */ \
@@ -128,15 +128,15 @@ DEF_HANDLE(typeArray        , is_typeArray_noinline        )
     void remove(); \
  \
     /* Operators for ease of use */ \
-    type*        operator () () const            { return obj(); } \
-    type*        operator -> () const            { return non_null_obj(); } \
+    type*        operator () ()            const { return obj(); } \
+    type*        operator -> ()            const { return non_null_obj(); } \
  \
-    bool    operator == (type* o) const          { return obj() == o; } \
-    bool    operator == (const name##Handle& h) const  { return obj() == h.obj(); } \
+    bool    operator == (type* o)          const { return obj() == o; } \
+    bool    operator == (const name##Handle& h)  const { return obj() == h.obj(); } \
  \
     /* Null checks */ \
-    bool    is_null() const                      { return _value == NULL; } \
-    bool    not_null() const                     { return _value != NULL; } \
+    bool    is_null()                      const { return _value == NULL; } \
+    bool    not_null()                     const { return _value != NULL; } \
   };
 
 DEF_METADATA_HANDLE(method, Method)
@@ -169,7 +169,7 @@ class HandleArea: public Arena {
   void oops_do(OopClosure* f);
 
   // Number of handles in use
-  size_t used() const     { return Arena::used() / oopSize; }
+  size_t used()     const { return Arena::used() / oopSize; }
 };
 
 //------------------------------------------------------------------------------------------------------------------------
@@ -206,7 +206,7 @@ class HandleMark {
 
   void initialize(Thread* thread);                // common code for constructors
   void set_previous_handle_mark(HandleMark* mark) { _previous_handle_mark = mark; }
-  HandleMark* previous_handle_mark() const        { return _previous_handle_mark; }
+  HandleMark* previous_handle_mark()        const { return _previous_handle_mark; }
 
   size_t size_in_bytes() const { return _size_in_bytes; }
  public:

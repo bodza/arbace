@@ -94,11 +94,11 @@ class LIR_Assembler: public CompilationResourceObj {
  public:
   LIR_Assembler(Compilation* c);
   ~LIR_Assembler();
-  C1_MacroAssembler* masm() const                { return _masm; }
-  Compilation* compilation() const               { return _compilation; }
-  ciMethod* method() const                       { return compilation()->method(); }
+  C1_MacroAssembler* masm()                const { return _masm; }
+  Compilation* compilation()               const { return _compilation; }
+  ciMethod* method()                       const { return compilation()->method(); }
 
-  CodeOffsets* offsets() const                   { return _compilation->offsets(); }
+  CodeOffsets* offsets()                   const { return _compilation->offsets(); }
   int code_offset() const;
   address pc() const;
 
@@ -109,19 +109,16 @@ class LIR_Assembler: public CompilationResourceObj {
   static bool is_small_constant(LIR_Opr opr);
 
   static LIR_Opr receiverOpr();
-  static LIR_Opr osrBufferPointer();
 
   // stubs
   void emit_slow_case_stubs();
   void emit_static_call_stub();
   void append_code_stub(CodeStub* op);
-  void add_call_info_here(CodeEmitInfo* info)                              { add_call_info(code_offset(), info); }
+  void add_call_info_here(CodeEmitInfo* info)    { add_call_info(code_offset(), info); }
 
   // code patterns
   int  emit_exception_handler();
-  int  emit_unwind_handler();
   void emit_exception_entries(ExceptionInfoList* info_list);
-  int  emit_deopt_handler();
 
   void emit_code(BlockList* hir);
   void emit_block(BlockBegin* block);
@@ -190,8 +187,6 @@ class LIR_Assembler: public CompilationResourceObj {
   void ic_call(     LIR_OpJavaCall* op);
   void vtable_call( LIR_OpJavaCall* op);
 
-  void osr_entry();
-
   void build_frame();
 
   void throw_op(LIR_Opr exceptionPC, LIR_Opr exceptionOop, CodeEmitInfo* info);
@@ -221,21 +216,8 @@ class LIR_Assembler: public CompilationResourceObj {
 #include CPU_HEADER(c1_LIRAssembler)
 
  public:
-  static int call_stub_size() {
-    if (false) {
-      return _call_stub_size + _call_aot_stub_size;
-    } else {
-      return _call_stub_size;
-    }
-  }
-
-  static int exception_handler_size() {
-    return _exception_handler_size;
-  }
-
-  static int deopt_handler_size() {
-    return _deopt_handler_size;
-  }
+  static int call_stub_size()         { return _call_stub_size; }
+  static int exception_handler_size() { return _exception_handler_size; }
 };
 
 #endif

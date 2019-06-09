@@ -122,11 +122,11 @@ class VM_Operation: public CHeapObj<mtInternal> {
   virtual ~VM_Operation() { }
 
   // VM operation support (used by VM thread)
-  Thread* calling_thread() const                 { return _calling_thread; }
+  Thread* calling_thread()                 const { return _calling_thread; }
   ThreadPriority priority()                      { return _priority; }
   void set_calling_thread(Thread* thread, ThreadPriority priority);
 
-  long timestamp() const              { return _timestamp; }
+  long timestamp()              const { return _timestamp; }
   void set_timestamp(long timestamp)  { _timestamp = timestamp; }
 
   // Called by VM thread - does in turn invoke doit(). Do not override this
@@ -144,19 +144,19 @@ class VM_Operation: public CHeapObj<mtInternal> {
   virtual void doit_epilogue()                   { }; // Note: Not called if mode is: _concurrent
 
   // Type test
-  virtual bool is_methodCompiler() const         { return false; }
+  virtual bool is_methodCompiler()         const { return false; }
 
   // Linking
-  VM_Operation *next() const                     { return _next; }
-  VM_Operation *prev() const                     { return _prev; }
+  VM_Operation *next()                     const { return _next; }
+  VM_Operation *prev()                     const { return _prev; }
   void set_next(VM_Operation *next)              { _next = next; }
   void set_prev(VM_Operation *prev)              { _prev = prev; }
 
   // Configuration. Override these appropriately in subclasses.
   virtual VMOp_Type type() const = 0;
-  virtual Mode evaluation_mode() const            { return _safepoint; }
+  virtual Mode evaluation_mode()            const { return _safepoint; }
   virtual bool allow_nested_vm_operations() const { return false; }
-  virtual bool is_cheap_allocated() const         { return false; }
+  virtual bool is_cheap_allocated()         const { return false; }
   virtual void oops_do(OopClosure* f)              { /* do nothing */ };
 
   // CAUTION: <don't hang yourself with following rope>
@@ -194,14 +194,14 @@ class VM_ThreadStop: public VM_Operation {
     _thread    = thread;
     _throwable = throwable;
   }
-  VMOp_Type type() const                         { return VMOp_ThreadStop; }
-  oop target_thread() const                      { return _thread; }
-  oop throwable() const                          { return _throwable; }
+  VMOp_Type type()                         const { return VMOp_ThreadStop; }
+  oop target_thread()                      const { return _thread; }
+  oop throwable()                          const { return _throwable; }
   void doit();
   // We deoptimize if top-most frame is compiled - this might require a C2I adapter to be generated
-  bool allow_nested_vm_operations() const        { return true; }
-  Mode evaluation_mode() const                   { return _async_safepoint; }
-  bool is_cheap_allocated() const                { return true; }
+  bool allow_nested_vm_operations()        const { return true; }
+  Mode evaluation_mode()                   const { return _async_safepoint; }
+  bool is_cheap_allocated()                const { return true; }
 
   // GC support
   void oops_do(OopClosure* f) {
@@ -246,9 +246,9 @@ class VM_ICBufferFull: public VM_ForceSafepoint {
 // empty asynchronous vm op, when forcing a safepoint to scavenge monitors
 class VM_ScavengeMonitors: public VM_ForceSafepoint {
  public:
-  VMOp_Type type() const                         { return VMOp_ScavengeMonitors; }
-  Mode evaluation_mode() const                   { return _async_safepoint; }
-  bool is_cheap_allocated() const                { return true; }
+  VMOp_Type type()                         const { return VMOp_ScavengeMonitors; }
+  Mode evaluation_mode()                   const { return _async_safepoint; }
+  bool is_cheap_allocated()                const { return true; }
 };
 
 // Base class for invoking parts of a gtest in a safepoint.
@@ -256,51 +256,26 @@ class VM_ScavengeMonitors: public VM_ForceSafepoint {
 // Typically also need to transition the gtest thread from native to VM.
 class VM_GTestExecuteAtSafepoint: public VM_Operation {
  public:
-  VMOp_Type type() const                         { return VMOp_GTestExecuteAtSafepoint; }
+  VMOp_Type type()                         const { return VMOp_GTestExecuteAtSafepoint; }
 
  protected:
   VM_GTestExecuteAtSafepoint() { }
 };
 
-class NULL: public VM_Operation {
- public:
-  NULL() { }
-  VMOp_Type type() const                        { return VMOp_Deoptimize; }
-  void doit();
-  bool allow_nested_vm_operations() const        { return true; }
-};
-
 class VM_MarkActiveNMethods: public VM_Operation {
  public:
   VM_MarkActiveNMethods() { }
-  VMOp_Type type() const                         { return VMOp_MarkActiveNMethods; }
+  VMOp_Type type()                         const { return VMOp_MarkActiveNMethods; }
   void doit();
-  bool allow_nested_vm_operations() const        { return true; }
-};
-
-// Deopt helper that can deoptimize frames in threads other than the
-// current thread.  Only used through NULL::NULL.
-class NULL: public VM_Operation {
-  friend class NULL;
-
- private:
-  JavaThread* _thread;
-  intptr_t*   _id;
-  int _reason;
-  NULL(JavaThread* thread, intptr_t* id, int reason);
-
- public:
-  VMOp_Type type() const                         { return VMOp_DeoptimizeFrame; }
-  void doit();
-  bool allow_nested_vm_operations() const        { return true; }
+  bool allow_nested_vm_operations()        const { return true; }
 };
 
 class VM_UnlinkSymbols: public VM_Operation {
  public:
   VM_UnlinkSymbols() { }
-  VMOp_Type type() const                         { return VMOp_UnlinkSymbols; }
+  VMOp_Type type()                         const { return VMOp_UnlinkSymbols; }
   void doit();
-  bool allow_nested_vm_operations() const        { return true; }
+  bool allow_nested_vm_operations()        const { return true; }
 };
 
 class VM_Verify: public VM_Operation {
@@ -335,22 +310,7 @@ class VM_PrintJNI: public VM_Operation {
  public:
   VM_PrintJNI()                         { _out = tty; }
   VM_PrintJNI(outputStream* out)        { _out = out; }
-  VMOp_Type type() const                { return VMOp_PrintJNI; }
-  void doit();
-};
-
-class VM_PrintMetadata : public VM_Operation {
- private:
-  outputStream* const _out;
-  const size_t        _scale;
-  const int           _flags;
-
- public:
-  VM_PrintMetadata(outputStream* out, size_t scale, int flags)
-    : _out(out), _scale(scale), _flags(flags)
-  { };
-
-  VMOp_Type type() const  { return VMOp_PrintMetadata; }
+  VMOp_Type type()                const { return VMOp_PrintJNI; }
   void doit();
 };
 
@@ -369,7 +329,7 @@ class VM_FindDeadlocks: public VM_Operation {
   ~VM_FindDeadlocks();
 
   DeadlockCycle* result()      { return _deadlocks; };
-  VMOp_Type type() const       { return VMOp_FindDeadlocks; }
+  VMOp_Type type()       const { return VMOp_FindDeadlocks; }
   void doit();
 };
 

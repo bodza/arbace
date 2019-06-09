@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "jvm.h"
-#include "aot/aotLoader.hpp"
 #include "classfile/classFileParser.hpp"
 #include "classfile/classFileStream.hpp"
 #include "classfile/classLoader.hpp"
@@ -53,8 +52,6 @@
 // allocating temporary data structures and copying the bytes twice. A
 // temporary area is only needed when parsing utf8 entries in the constant
 // pool and when parsing line number tables.
-
-// We add assert in debug mode when class format is not checked.
 
 #define JAVA_CLASSFILE_MAGIC              0xCAFEBABE
 #define JAVA_MIN_SUPPORTED_VERSION        45
@@ -141,51 +138,6 @@ void ClassFileParser::parse_constant_pool_entries(const ClassFileStream* const s
         cfs->guarantee_more(3, CHECK);  // string_index, tag/access_flags
         const u2 string_index = cfs->get_u2_fast();
         cp->string_index_at_put(index, string_index);
-        break;
-      }
-      case JVM_CONSTANT_MethodHandle :
-      case JVM_CONSTANT_MethodType: {
-        if (_major_version < Verifier::INVOKEDYNAMIC_MAJOR_VERSION) {
-          classfile_parse_error("Class file version does not support constant tag %u in class file %s", tag, CHECK);
-        }
-        if (tag == JVM_CONSTANT_MethodHandle) {
-          cfs->guarantee_more(4, CHECK);  // ref_kind, method_index, tag/access_flags
-          const u1 ref_kind = cfs->get_u1_fast();
-          const u2 method_index = cfs->get_u2_fast();
-          cp->method_handle_index_at_put(index, ref_kind, method_index);
-        } else if (tag == JVM_CONSTANT_MethodType) {
-          cfs->guarantee_more(3, CHECK);  // signature_index, tag/access_flags
-          const u2 signature_index = cfs->get_u2_fast();
-          cp->method_type_index_at_put(index, signature_index);
-        } else {
-          ShouldNotReachHere();
-        }
-        break;
-      }
-      case JVM_CONSTANT_Dynamic : {
-        if (_major_version < Verifier::DYNAMICCONSTANT_MAJOR_VERSION) {
-          classfile_parse_error("Class file version does not support constant tag %u in class file %s", tag, CHECK);
-        }
-        cfs->guarantee_more(5, CHECK);  // bsm_index, nt, tag/access_flags
-        const u2 bootstrap_specifier_index = cfs->get_u2_fast();
-        const u2 name_and_type_index = cfs->get_u2_fast();
-        if (_max_bootstrap_specifier_index < (int) bootstrap_specifier_index) {
-          _max_bootstrap_specifier_index = (int) bootstrap_specifier_index;  // collect for later
-        }
-        cp->dynamic_constant_at_put(index, bootstrap_specifier_index, name_and_type_index);
-        break;
-      }
-      case JVM_CONSTANT_InvokeDynamic : {
-        if (_major_version < Verifier::INVOKEDYNAMIC_MAJOR_VERSION) {
-          classfile_parse_error("Class file version does not support constant tag %u in class file %s", tag, CHECK);
-        }
-        cfs->guarantee_more(5, CHECK);  // bsm_index, nt, tag/access_flags
-        const u2 bootstrap_specifier_index = cfs->get_u2_fast();
-        const u2 name_and_type_index = cfs->get_u2_fast();
-        if (_max_bootstrap_specifier_index < (int) bootstrap_specifier_index) {
-          _max_bootstrap_specifier_index = (int) bootstrap_specifier_index;  // collect for later
-        }
-        cp->invoke_dynamic_at_put(index, bootstrap_specifier_index, name_and_type_index);
         break;
       }
       case JVM_CONSTANT_Integer: {
@@ -354,38 +306,6 @@ void ClassFileParser::parse_constant_pool(const ClassFileStream* const stream, C
         cp->unresolved_string_at_put(index, sym);
         break;
       }
-      case JVM_CONSTANT_MethodHandle: {
-        const int ref_index = cp->method_handle_index_at(index);
-        const constantTag tag = cp->tag_at(ref_index);
-        const int ref_kind = cp->method_handle_ref_kind_at(index);
-
-        switch (ref_kind) {
-          case JVM_REF_getField:
-          case JVM_REF_getStatic:
-          case JVM_REF_putField:
-          case JVM_REF_putStatic:
-          case JVM_REF_invokeVirtual:
-          case JVM_REF_newInvokeSpecial:
-          case JVM_REF_invokeStatic:
-          case JVM_REF_invokeSpecial:
-          case JVM_REF_invokeInterface:
-            break;
-          default: {
-            classfile_parse_error("Bad method handle kind at constant pool index %u in class file %s", index, CHECK);
-          }
-        }
-        // Keep the ref_index unchanged.  It will be indirected at link-time.
-        break;
-      }
-      case JVM_CONSTANT_MethodType:
-        break;
-      case JVM_CONSTANT_Dynamic: {
-        // Mark the constant pool as having a CONSTANT_Dynamic_info structure
-        cp->set_has_dynamic_constant();
-        break;
-      }
-      case JVM_CONSTANT_InvokeDynamic:
-        break;
       default: {
         fatal("bad constant pool tag value %u", cp->tag_at(index).value());
         ShouldNotReachHere();
@@ -550,9 +470,6 @@ public:
     _method_CallerSensitive,
     _method_ForceInline,
     _method_DontInline,
-    _method_InjectedProfile,
-    _method_LambdaForm_Compiled,
-    _method_LambdaForm_Hidden,
     _method_HotSpotIntrinsicCandidate,
     _jdk_internal_vm_annotation_Contended,
     _field_Stable,
@@ -1266,21 +1183,6 @@ AnnotationCollector::annotation_index(const ClassLoaderData* loader_data, const 
       if (!privileged)              break;  // only allow in privileged code
       return _method_DontInline;
     }
-    case vmSymbols::VM_SYMBOL_ENUM_NAME(java_lang_invoke_InjectedProfile_signature): {
-      if (_location != _in_method)  break;  // only allow for methods
-      if (!privileged)              break;  // only allow in privileged code
-      return _method_InjectedProfile;
-    }
-    case vmSymbols::VM_SYMBOL_ENUM_NAME(java_lang_invoke_LambdaForm_Compiled_signature): {
-      if (_location != _in_method)  break;  // only allow for methods
-      if (!privileged)              break;  // only allow in privileged code
-      return _method_LambdaForm_Compiled;
-    }
-    case vmSymbols::VM_SYMBOL_ENUM_NAME(java_lang_invoke_LambdaForm_Hidden_signature): {
-      if (_location != _in_method)  break;  // only allow for methods
-      if (!privileged)              break;  // only allow in privileged code
-      return _method_LambdaForm_Hidden;
-    }
     case vmSymbols::VM_SYMBOL_ENUM_NAME(jdk_internal_HotSpotIntrinsicCandidate_signature): {
       if (_location != _in_method)  break;  // only allow for methods
       if (!privileged)              break;  // only allow in privileged code
@@ -1332,12 +1234,6 @@ void MethodAnnotationCollector::apply_to(const methodHandle& m) {
     m->set_force_inline(true);
   if (has_annotation(_method_DontInline))
     m->set_dont_inline(true);
-  if (has_annotation(_method_InjectedProfile))
-    m->set_has_injected_profile(true);
-  if (has_annotation(_method_LambdaForm_Compiled) && m->intrinsic_id() == vmIntrinsics::_none)
-    m->set_intrinsic_id(vmIntrinsics::_compiledLambdaForm);
-  if (has_annotation(_method_LambdaForm_Hidden))
-    m->set_hidden(true);
   if (has_annotation(_method_HotSpotIntrinsicCandidate) && !m->is_synthetic())
     m->set_intrinsic_candidate(true);
   if (has_annotation(_jdk_internal_vm_annotation_ReservedStackAccess))
@@ -3472,15 +3368,6 @@ InstanceKlass* ClassFileParser::create_instance_klass(bool changed_by_loadhook, 
   fill_instance_klass(ik, changed_by_loadhook, CHECK_NULL);
 
   ik->set_has_passed_fingerprint_check(false);
-  if (false && ik->supers_have_passed_fingerprint_checks()) {
-    uint64_t aot_fp = AOTLoader::get_saved_fingerprint(ik);
-    if (aot_fp != 0 && aot_fp == _stream->compute_fingerprint()) {
-      // This class matches with a class saved in an AOT library
-      ik->set_has_passed_fingerprint_check(true);
-    } else {
-      ResourceMark rm;
-    }
-  }
 
   return ik;
 }

@@ -17,7 +17,7 @@ inline const char* compilertype2name(CompilerType t) { return (uint)t < compiler
 
 // Handy constants for deciding which compiler mode to use.
 enum MethodCompilation {
-  InvocationEntryBci   = -1,     // i.e., not a on-stack replacement compilation
+  InvocationEntryBci   = -1,     // i.e. not an on-stack replacement compilation
   BeforeBci            = InvocationEntryBci,
   AfterBci             = -2,
   UnwindBci            = -3,
@@ -55,22 +55,6 @@ inline bool is_c1_compile(int comp_level)           { return comp_level > CompLe
 inline bool is_c2_compile(int comp_level)           { return comp_level == CompLevel_full_optimization; }
 inline bool is_highest_tier_compile(int comp_level) { return comp_level == CompLevel_highest_tier; }
 inline bool is_compile(int comp_level)              { return is_c1_compile(comp_level) || is_c2_compile(comp_level); }
-
-// States of Restricted Transactional Memory usage.
-enum RTMState {
-  NoRTM      = 0x2, // Don't use RTM
-  UseRTM     = 0x1, // Use RTM
-  ProfileRTM = 0x0  // Use RTM with abort ratio calculation
-};
-
-#ifndef INCLUDE_RTM_OPT
-#define INCLUDE_RTM_OPT 0
-#endif
-#if INCLUDE_RTM_OPT
-#define RTM_OPT_ONLY(code) code
-#else
-#define RTM_OPT_ONLY(code)
-#endif
 
 class CompilerConfig : public AllStatic {
 public:

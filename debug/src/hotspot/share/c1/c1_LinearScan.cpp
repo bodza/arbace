@@ -8,11 +8,7 @@
 #include "c1/c1_LinearScan.hpp"
 #include "c1/c1_ValueStack.hpp"
 #include "code/vmreg.inline.hpp"
-#include "runtime/timerTrace.hpp"
 #include "utilities/bitMap.inline.hpp"
-
-#define TIME_LINEAR_SCAN(timer_name)
-#define TRACE_LINEAR_SCAN(level, code)
 
 // Map BasicType to spill size in 32-bit words, matching VMReg's notion of words
 static int type2spill_size[T_CONFLICT+1]={ -1, 0, 0, 0, 1, 1, 1, 2, 1, 1, 1, 2, 2, 2, 0, 2, 1, 2, 1, -1};
@@ -310,9 +306,6 @@ bool LinearScan::must_store_at_definition(const Interval* i) {
 
 // called once before asignment of register numbers
 void LinearScan::eliminate_spill_moves() {
-  TIME_LINEAR_SCAN(timer_eliminate_spill_moves);
-  TRACE_LINEAR_SCAN(3, tty->print_cr("***** Eliminating unnecessary spill moves"));
-
   // collect all intervals that must be stored after their definion.
   // the list is sorted by Interval::spill_definition_pos
   Interval* interval;
@@ -341,7 +334,6 @@ void LinearScan::eliminate_spill_moves() {
 
         if (interval->assigned_reg() >= LinearScan::nof_regs && interval->always_in_memory()) {
           // move target is a stack slot that is always correct, so eliminate instruction
-          TRACE_LINEAR_SCAN(4, tty->print_cr("eliminating move from interval %d to %d", op1->in_opr()->vreg_number(), op1->result_opr()->vreg_number()));
           instructions->at_put(j, NULL); // NULL-instructions are deleted by assign_reg_num
         }
       } else {
@@ -358,7 +350,6 @@ void LinearScan::eliminate_spill_moves() {
           LIR_Opr to_opr = canonical_spill_opr(interval);
 
           insertion_buffer.move(j, from_opr, to_opr);
-          TRACE_LINEAR_SCAN(4, tty->print_cr("inserting move after definition of interval %d to stack slot %d at op_id %d", interval->reg_num(), interval->canonical_spill_slot() - LinearScan::nof_regs, op_id));
 
           interval = interval->next();
         }
@@ -375,13 +366,6 @@ void LinearScan::eliminate_spill_moves() {
 // Compute depth-first and linear scan block orders, and number LIR_Op nodes for linear scan.
 
 void LinearScan::number_instructions() {
-  {
-    // dummy-timer to measure the cost of the timer itself
-    // (this time is then subtracted from all other timers to get the real value)
-    TIME_LINEAR_SCAN(timer_do_nothing);
-  }
-  TIME_LINEAR_SCAN(timer_number_instructions);
-
   // Assign IDs to LIR nodes and build a mapping, lir_ops, from ID to LIR_Op node.
   int num_blocks = block_count();
   int num_instructions = 0;
@@ -431,14 +415,11 @@ void LinearScan::set_live_gen_kill(Value value, LIR_Op* op, BitMap& live_gen, Bi
     int reg = opr->vreg_number();
     if (!live_kill.at(reg)) {
       live_gen.set_bit(reg);
-      TRACE_LINEAR_SCAN(4, tty->print_cr("  Setting live_gen for value %c%d, LIR op_id %d, register number %d", value->type()->tchar(), value->id(), op->id(), reg));
     }
   }
 }
 
 void LinearScan::compute_local_live_sets() {
-  TIME_LINEAR_SCAN(timer_compute_local_live_sets);
-
   int  num_blocks = block_count();
   int  live_size = live_set_size();
   bool local_has_fpu_registers = false;
@@ -490,7 +471,6 @@ void LinearScan::compute_local_live_sets() {
           reg = opr->vreg_number();
           if (!live_kill.at(reg)) {
             live_gen.set_bit(reg);
-            TRACE_LINEAR_SCAN(4, tty->print_cr("  Setting live_gen for register %d at instruction %d", reg, op->id()));
           }
           if (block->loop_index() >= 0) {
             local_interval_in_loop.set_bit(reg, block->loop_index());
@@ -544,9 +524,6 @@ void LinearScan::compute_local_live_sets() {
     block->set_live_kill(live_kill);
     block->set_live_in  (ResourceBitMap(live_size));
     block->set_live_out (ResourceBitMap(live_size));
-
-    TRACE_LINEAR_SCAN(4, tty->print("live_gen  B%d ", block->block_id()); print_bitmap(block->live_gen()));
-    TRACE_LINEAR_SCAN(4, tty->print("live_kill B%d ", block->block_id()); print_bitmap(block->live_kill()));
   }
 
   // propagate local calculated information into LinearScan object
@@ -561,8 +538,6 @@ void LinearScan::compute_local_live_sets() {
 // (sets live_in and live_out for each block)
 
 void LinearScan::compute_global_live_sets() {
-  TIME_LINEAR_SCAN(timer_compute_global_live_sets);
-
   int  num_blocks = block_count();
   bool change_occurred;
   bool change_occurred_in_block;
@@ -649,8 +624,6 @@ void LinearScan::add_use(Value value, int from, int to, IntervalUseKind use_kind
 }
 
 void LinearScan::add_def(LIR_Opr opr, int def_pos, IntervalUseKind use_kind) {
-  TRACE_LINEAR_SCAN(2, tty->print(" def "); opr->print(tty); tty->print_cr(" def_pos %d (%d)", def_pos, use_kind));
-
   if (opr->is_virtual_register()) {
     add_def(opr->vreg_number(), def_pos, use_kind, opr->type_register());
   } else {
@@ -666,8 +639,6 @@ void LinearScan::add_def(LIR_Opr opr, int def_pos, IntervalUseKind use_kind) {
 }
 
 void LinearScan::add_use(LIR_Opr opr, int from, int to, IntervalUseKind use_kind) {
-  TRACE_LINEAR_SCAN(2, tty->print(" use "); opr->print(tty); tty->print_cr(" from %d to %d (%d)", from, to, use_kind));
-
   if (opr->is_virtual_register()) {
     add_use(opr->vreg_number(), from, to, use_kind, opr->type_register());
   } else {
@@ -683,8 +654,6 @@ void LinearScan::add_use(LIR_Opr opr, int from, int to, IntervalUseKind use_kind
 }
 
 void LinearScan::add_temp(LIR_Opr opr, int temp_pos, IntervalUseKind use_kind) {
-  TRACE_LINEAR_SCAN(2, tty->print(" temp "); opr->print(tty); tty->print_cr(" temp_pos %d (%d)", temp_pos, use_kind));
-
   if (opr->is_virtual_register()) {
     add_temp(opr->vreg_number(), temp_pos, use_kind, opr->type_register());
   } else {
@@ -717,7 +686,6 @@ void LinearScan::add_def(int reg_num, int def_pos, IntervalUseKind use_kind, Bas
       // also add use_kind for dead intervals
       interval->add_range(def_pos, def_pos + 1);
       interval->add_use_pos(def_pos, use_kind);
-      TRACE_LINEAR_SCAN(2, tty->print_cr("Warning: def of reg %d at %d occurs without use", reg_num, def_pos));
     }
   } else {
     // Dead value - make vacuous interval
@@ -729,7 +697,6 @@ void LinearScan::add_def(int reg_num, int def_pos, IntervalUseKind use_kind, Bas
 
     interval->add_range(def_pos, def_pos + 1);
     interval->add_use_pos(def_pos, use_kind);
-    TRACE_LINEAR_SCAN(2, tty->print_cr("Warning: dead value %d at %d in live intervals", reg_num, def_pos));
   }
 
   change_spill_definition_pos(interval, def_pos);
@@ -784,13 +751,6 @@ IntervalUseKind LinearScan::use_kind_of_output_operand(LIR_Op* op, LIR_Opr opr) 
     } else if (move->in_opr()->is_stack()) {
       // method argument (condition must be equal to handle_method_arguments)
       return noUse;
-    } else if (move->in_opr()->is_register() && move->result_opr()->is_register()) {
-      // Move from register to register
-      if (block_of_op_with_id(op->id())->is_set(BlockBegin::osr_entry_flag)) {
-        // special handling of phi-function moves inside osr-entry blocks
-        // input operand must have a register instead of output operand (leads to better register allocation)
-        return shouldHaveRegister;
-      }
     }
   }
 
@@ -814,13 +774,6 @@ IntervalUseKind LinearScan::use_kind_of_input_operand(LIR_Op* op, LIR_Opr opr) {
       // To avoid moves from stack to stack (not allowed) force the input operand to a register
       return mustHaveRegister;
     } else if (move->in_opr()->is_register() && move->result_opr()->is_register()) {
-      // Move from register to register
-      if (block_of_op_with_id(op->id())->is_set(BlockBegin::osr_entry_flag)) {
-        // special handling of phi-function moves inside osr-entry blocks
-        // input operand must have a register instead of output operand (leads to better register allocation)
-        return mustHaveRegister;
-      }
-
       // The input operand is not forced to a register (moves from stack to register are allowed),
       // but it is faster if the input operand is in a register
       return shouldHaveRegister;
@@ -952,7 +905,6 @@ void LinearScan::add_register_hints(LIR_Op* op) {
         Interval* to = interval_at(reg_num(move_to));
         if (from != NULL && to != NULL) {
           to->set_register_hint(from);
-          TRACE_LINEAR_SCAN(4, tty->print_cr("operation at op_id %d: added hint from interval %d to %d", move->id(), from->reg_num(), to->reg_num()));
         }
       }
       break;
@@ -968,7 +920,6 @@ void LinearScan::add_register_hints(LIR_Op* op) {
         Interval* to = interval_at(reg_num(move_to));
         if (from != NULL && to != NULL) {
           to->set_register_hint(from);
-          TRACE_LINEAR_SCAN(4, tty->print_cr("operation at op_id %d: added hint from interval %d to %d", cmove->id(), from->reg_num(), to->reg_num()));
         }
       }
       break;
@@ -979,8 +930,6 @@ void LinearScan::add_register_hints(LIR_Op* op) {
 }
 
 void LinearScan::build_intervals() {
-  TIME_LINEAR_SCAN(timer_build_intervals);
-
   // initialize interval list with expected number of intervals
   // (32 is added to have some space for split children without having to resize the list)
   _intervals = IntervalList(num_virtual_regs() + 32);
@@ -1013,7 +962,7 @@ void LinearScan::build_intervals() {
     }
     if (UseSSE > 0) {
       int num_caller_save_xmm_regs = FrameMap::get_num_caller_save_xmms();
-      for (i = 0; i < num_caller_save_xmm_regs; i ++) {
+      for (i = 0; i < num_caller_save_xmm_regs; i++) {
         LIR_Opr opr = FrameMap::caller_save_xmm_reg_at(i);
         caller_save_registers[num_caller_save_registers++] = reg_num(opr);
       }
@@ -1034,8 +983,6 @@ void LinearScan::build_intervals() {
     ResourceBitMap live = block->live_out();
     int size = (int)live.size();
     for (int number = (int)live.get_next_one_offset(0, size); number < size; number = (int)live.get_next_one_offset(number + 1, size)) {
-      TRACE_LINEAR_SCAN(2, tty->print_cr("live in %d to %d", number, block_to + 2));
-
       add_use(number, block_from, block_to + 2, noUse, T_ILLEGAL);
 
       // add special use positions for loop-end blocks when the
@@ -1062,7 +1009,6 @@ void LinearScan::build_intervals() {
         for (int k = 0; k < num_caller_save_registers; k++) {
           add_temp(caller_save_registers[k], op_id, noUse, T_ILLEGAL);
         }
-        TRACE_LINEAR_SCAN(4, tty->print_cr("operation destroys all caller-save registers"));
       }
 
       // Add any platform dependent temps
@@ -1170,8 +1116,6 @@ void LinearScan::create_unhandled_lists(Interval** list1, Interval** list2, bool
 }
 
 void LinearScan::sort_intervals_before_allocation() {
-  TIME_LINEAR_SCAN(timer_sort_intervals_before);
-
   if (_needs_full_resort) {
     // There is no known reason why this should occur but just in case...
     ShouldNotReachHere();
@@ -1222,8 +1166,6 @@ void LinearScan::sort_intervals_before_allocation() {
 }
 
 void LinearScan::sort_intervals_after_allocation() {
-  TIME_LINEAR_SCAN(timer_sort_intervals_after);
-
   if (_needs_full_resort) {
     // Re-sort existing interval list because an Interval::from() has changed
     _sorted_intervals->sort(interval_cmp);
@@ -1263,18 +1205,14 @@ void LinearScan::sort_intervals_after_allocation() {
 }
 
 void LinearScan::allocate_registers() {
-  TIME_LINEAR_SCAN(timer_allocate_registers);
-
   Interval* precolored_cpu_intervals, *not_precolored_cpu_intervals;
   Interval* precolored_fpu_intervals, *not_precolored_fpu_intervals;
 
   // allocate cpu registers
-  create_unhandled_lists(&precolored_cpu_intervals, &not_precolored_cpu_intervals,
-                         is_precolored_cpu_interval, is_virtual_cpu_interval);
+  create_unhandled_lists(&precolored_cpu_intervals, &not_precolored_cpu_intervals, is_precolored_cpu_interval, is_virtual_cpu_interval);
 
   // allocate fpu registers
-  create_unhandled_lists(&precolored_fpu_intervals, &not_precolored_fpu_intervals,
-                         is_precolored_fpu_interval, is_virtual_fpu_interval);
+  create_unhandled_lists(&precolored_fpu_intervals, &not_precolored_fpu_intervals, is_precolored_fpu_interval, is_virtual_fpu_interval);
 
   // the fpu interval allocation cannot be moved down below with the fpu section as
   // the cpu_lsw.walk() changes interval positions.
@@ -1339,8 +1277,6 @@ void LinearScan::resolve_collect_mappings(BlockBegin* from_block, BlockBegin* to
 
 void LinearScan::resolve_find_insert_pos(BlockBegin* from_block, BlockBegin* to_block, MoveResolver &move_resolver) {
   if (from_block->number_of_sux() <= 1) {
-    TRACE_LINEAR_SCAN(4, tty->print_cr("inserting moves at end of from_block B%d", from_block->block_id()));
-
     LIR_OpList* instructions = from_block->lir()->instructions_list();
     LIR_OpBranch* branch = instructions->last()->as_OpBranch();
     if (branch != NULL) {
@@ -1350,16 +1286,12 @@ void LinearScan::resolve_find_insert_pos(BlockBegin* from_block, BlockBegin* to_
       move_resolver.set_insert_position(from_block->lir(), instructions->length() - 1);
     }
   } else {
-    TRACE_LINEAR_SCAN(4, tty->print_cr("inserting moves at beginning of to_block B%d", to_block->block_id()));
-
     move_resolver.set_insert_position(to_block->lir(), 0);
   }
 }
 
 // insert necessary moves (spilling or reloading) at edges between blocks if interval has been split
 void LinearScan::resolve_data_flow() {
-  TIME_LINEAR_SCAN(timer_resolve_data_flow);
-
   int num_blocks = block_count();
   MoveResolver move_resolver(this);
   ResourceBitMap block_completed(num_blocks);
@@ -1380,7 +1312,6 @@ void LinearScan::resolve_data_flow() {
 
         // prevent optimization of two consecutive blocks
         if (!block_completed.at(pred->linear_scan_number()) && !block_completed.at(sux->linear_scan_number())) {
-          TRACE_LINEAR_SCAN(3, tty->print_cr("**** optimizing empty block B%d (pred: B%d, sux: B%d)", block->block_id(), pred->block_id(), sux->block_id()));
           block_completed.set_bit(block->linear_scan_number());
 
           // directly resolve between pred and sux (without looking at the empty block between)
@@ -1405,7 +1336,6 @@ void LinearScan::resolve_data_flow() {
 
         // check for duplicate edges between the same blocks (can happen with switch blocks)
         if (!already_resolved.at(to_block->linear_scan_number())) {
-          TRACE_LINEAR_SCAN(3, tty->print_cr("**** processing edge between B%d and B%d", from_block->block_id(), to_block->block_id()));
           already_resolved.set_bit(to_block->linear_scan_number());
 
           // collect all intervals that have been split between from_block and to_block
@@ -1528,8 +1458,6 @@ void LinearScan::resolve_exception_edge(XHandler* handler, int throwing_op_id, i
 }
 
 void LinearScan::resolve_exception_edge(XHandler* handler, int throwing_op_id, MoveResolver &move_resolver) {
-  TRACE_LINEAR_SCAN(4, tty->print_cr("resolving exception handler B%d: throwing_op_id=%d", handler->entry_block()->block_id(), throwing_op_id));
-
   // visit all registers where the live_in bit is set
   BlockBegin* block = handler->entry_block();
   int size = live_set_size();
@@ -1746,9 +1674,7 @@ IntervalWalker* LinearScan::init_compute_oop_maps() {
   return new IntervalWalker(this, oop_intervals, non_oop_intervals);
 }
 
-OopMap* LinearScan::compute_oop_map(IntervalWalker* iw, LIR_Op* op, CodeEmitInfo* info, bool is_call_site) {
-  TRACE_LINEAR_SCAN(3, tty->print_cr("creating oop map at op_id %d", op->id()));
-
+OopMap* LinearScan::compute_oop_map(IntervalWalker* iw, LIR_Op* op, CodeEmitInfo* info) {
   // walk before the current operation -> intervals that start at
   // the operation (= output operands of the operation) are not
   // included in the oop map
@@ -1793,20 +1719,17 @@ void LinearScan::compute_oop_map(IntervalWalker* iw, const LIR_OpVisitState &vis
   // compute oop_map only for first CodeEmitInfo
   // because it is (in most cases) equal for all other infos of the same operation
   CodeEmitInfo* first_info = visitor.info_at(0);
-  OopMap* first_oop_map = compute_oop_map(iw, op, first_info, visitor.has_call());
+  OopMap* first_oop_map = compute_oop_map(iw, op, first_info);
 
   for (int i = 0; i < visitor.info_count(); i++) {
     CodeEmitInfo* info = visitor.info_at(i);
     OopMap* oop_map = first_oop_map;
 
-    // compute worst case interpreter size in case of a deoptimization
-    _compilation->update_interpreter_frame_size(info->interpreter_frame_size());
-
     if (info->stack()->locks_size() != first_info->stack()->locks_size()) {
       // this info has a different number of locks then the precomputed oop map
       // (possible for lock and unlock instructions) -> compute oop map with
       // correct lock information
-      oop_map = compute_oop_map(iw, op, info, visitor.has_call());
+      oop_map = compute_oop_map(iw, op, info);
     }
 
     if (info->_oop_map == NULL) {
@@ -2149,8 +2072,6 @@ IRScopeDebugInfo* LinearScan::compute_debug_info_for_scope(int op_id, IRScope* c
 }
 
 void LinearScan::compute_debug_info(CodeEmitInfo* info, int op_id) {
-  TRACE_LINEAR_SCAN(3, tty->print_cr("creating debug information at op_id %d", op_id));
-
   IRScope* innermost_scope = info->scope();
   ValueStack* innermost_state = info->stack();
 
@@ -2245,8 +2166,6 @@ void LinearScan::assign_reg_num(LIR_OpList* instructions, IntervalWalker* iw) {
 }
 
 void LinearScan::assign_reg_num() {
-  TIME_LINEAR_SCAN(timer_assign_reg_num);
-
   init_compute_debug_info();
   IntervalWalker* iw = init_compute_oop_maps();
 
@@ -2285,18 +2204,12 @@ void LinearScan::do_linear_scan() {
   assign_reg_num();
   CHECK_BAILOUT();
 
-  { TIME_LINEAR_SCAN(timer_allocate_fpu_stack);
-
-    if (use_fpu_stack_allocation()) {
-      allocate_fpu_stack(); // Only has effect on Intel
-    }
+  if (use_fpu_stack_allocation()) {
+    allocate_fpu_stack(); // Only has effect on Intel
   }
 
-  { TIME_LINEAR_SCAN(timer_optimize_lir);
-
-    EdgeMoveOptimizer::optimize(ir()->code());
-    ControlFlowOptimizer::optimize(ir()->code());
-  }
+  EdgeMoveOptimizer::optimize(ir()->code());
+  ControlFlowOptimizer::optimize(ir()->code());
 }
 
 // **** Implementation of MoveResolver ******************************
@@ -2389,20 +2302,14 @@ void MoveResolver::insert_move(Interval* from_interval, Interval* to_interval) {
     from_opr = from_opr->make_last_use();
   }
   _insertion_buffer.move(_insert_idx, from_opr, to_opr);
-
-  TRACE_LINEAR_SCAN(4, tty->print_cr("MoveResolver: inserted move from register %d (%d, %d) to %d (%d, %d)", from_interval->reg_num(), from_interval->assigned_reg(), from_interval->assigned_regHi(), to_interval->reg_num(), to_interval->assigned_reg(), to_interval->assigned_regHi()));
 }
 
 void MoveResolver::insert_move(LIR_Opr from_opr, Interval* to_interval) {
   LIR_Opr to_opr = LIR_OprFact::virtual_register(to_interval->reg_num(), to_interval->type());
   _insertion_buffer.move(_insert_idx, from_opr, to_opr);
-
-  TRACE_LINEAR_SCAN(4, tty->print("MoveResolver: inserted move from constant "); from_opr->print(); tty->print_cr("  to %d (%d, %d)", to_interval->reg_num(), to_interval->assigned_reg(), to_interval->assigned_regHi()));
 }
 
 void MoveResolver::resolve_mappings() {
-  TRACE_LINEAR_SCAN(4, tty->print_cr("MoveResolver: resolving mappings for Block B%d, index %d", _insert_list->block() != NULL ? _insert_list->block()->block_id() : -1, _insert_idx));
-
   // Block all registers that are used as input operands of a move.
   // When a register is blocked, no move to this register is emitted.
   // This is necessary for detecting cycles in moves.
@@ -2467,8 +2374,6 @@ void MoveResolver::resolve_mappings() {
       spill_interval->assign_reg(spill_slot);
       allocator()->append_interval(spill_interval);
 
-      TRACE_LINEAR_SCAN(4, tty->print_cr("created new Interval %d for spilling", spill_interval->reg_num()));
-
       // insert a move from register to stack and update the mapping
       insert_move(from_interval, spill_interval);
       _mapping_from.at_put(spill_candidate, spill_interval);
@@ -2481,16 +2386,12 @@ void MoveResolver::resolve_mappings() {
 }
 
 void MoveResolver::set_insert_position(LIR_List* insert_list, int insert_idx) {
-  TRACE_LINEAR_SCAN(4, tty->print_cr("MoveResolver: setting insert position to Block B%d, index %d", insert_list->block() != NULL ? insert_list->block()->block_id() : -1, insert_idx));
-
   create_insertion_buffer(insert_list);
   _insert_list = insert_list;
   _insert_idx = insert_idx;
 }
 
 void MoveResolver::move_insert_position(LIR_List* insert_list, int insert_idx) {
-  TRACE_LINEAR_SCAN(4, tty->print_cr("MoveResolver: moving insert position to Block B%d, index %d", insert_list->block() != NULL ? insert_list->block()->block_id() : -1, insert_idx));
-
   if (_insert_list != NULL && (insert_list != _insert_list || insert_idx != _insert_idx)) {
     // insert position changed -> resolve current mappings
     resolve_mappings();
@@ -2508,16 +2409,12 @@ void MoveResolver::move_insert_position(LIR_List* insert_list, int insert_idx) {
 }
 
 void MoveResolver::add_mapping(Interval* from_interval, Interval* to_interval) {
-  TRACE_LINEAR_SCAN(4, tty->print_cr("MoveResolver: adding mapping from %d (%d, %d) to %d (%d, %d)", from_interval->reg_num(), from_interval->assigned_reg(), from_interval->assigned_regHi(), to_interval->reg_num(), to_interval->assigned_reg(), to_interval->assigned_regHi()));
-
   _mapping_from.append(from_interval);
   _mapping_from_opr.append(LIR_OprFact::illegalOpr);
   _mapping_to.append(to_interval);
 }
 
 void MoveResolver::add_mapping(LIR_Opr from_opr, Interval* to_interval) {
-  TRACE_LINEAR_SCAN(4, tty->print("MoveResolver: adding mapping from "); from_opr->print(); tty->print_cr(" to %d (%d, %d)", to_interval->reg_num(), to_interval->assigned_reg(), to_interval->assigned_regHi()));
-
   _mapping_from.append(NULL);
   _mapping_from_opr.append(from_opr);
   _mapping_to.append(to_interval);
@@ -3050,8 +2947,6 @@ void IntervalWalker::walk_to(int lir_op_id) {
     bool is_active = current()->from() <= lir_op_id;
     int id = is_active ? current()->from() : lir_op_id;
 
-    TRACE_LINEAR_SCAN(2, if (_current_position < id) { tty->cr(); tty->print_cr("walk_to(%d) **************************************************************", id); })
-
     // set _current_position prior to call of walk_to
     _current_position = id;
 
@@ -3286,7 +3181,6 @@ int LinearScanWalker::find_optimal_split_pos(Interval* it, int min_split_pos, in
   int optimal_split_pos = -1;
   if (min_split_pos == max_split_pos) {
     // trivial case, no optimization of split position possible
-    TRACE_LINEAR_SCAN(4, tty->print_cr("      min-pos and max-pos are equal, no optimization possible"));
     optimal_split_pos = min_split_pos;
   } else {
     // reason for using min_split_pos - 1: when the minimal split pos is exactly at the
@@ -3302,24 +3196,19 @@ int LinearScanWalker::find_optimal_split_pos(Interval* it, int min_split_pos, in
 
     if (min_block == max_block) {
       // split position cannot be moved to block boundary, so split as late as possible
-      TRACE_LINEAR_SCAN(4, tty->print_cr("      cannot move split pos to block boundary because min_pos and max_pos are in same block"));
       optimal_split_pos = max_split_pos;
     } else if (it->has_hole_between(max_split_pos - 1, max_split_pos) && !allocator()->is_block_begin(max_split_pos)) {
       // Do not move split position if the interval has a hole before max_split_pos.
       // Intervals resulting from Phi-Functions have more than one definition (marked
       // as mustHaveRegister) with a hole before each definition. When the register is needed
       // for the second definition, an earlier reloading is unnecessary.
-      TRACE_LINEAR_SCAN(4, tty->print_cr("      interval has hole just before max_split_pos, so splitting at max_split_pos"));
       optimal_split_pos = max_split_pos;
     } else {
       // seach optimal block boundary between min_split_pos and max_split_pos
-      TRACE_LINEAR_SCAN(4, tty->print_cr("      moving split pos to optimal block boundary between block B%d and B%d", min_block->block_id(), max_block->block_id()));
-
       if (do_loop_optimization) {
         // Loop optimization: if a loop-end marker is found between min- and max-position,
         // then split before this loop
         int loop_end_pos = it->next_usage_exact(loopEndMarker, min_block->last_lir_instruction_id() + 2);
-        TRACE_LINEAR_SCAN(4, tty->print_cr("      loop optimization: loop end found at pos %d", loop_end_pos));
 
         if (loop_end_pos < max_split_pos) {
           // loop-end marker found between min- and max-position
@@ -3329,14 +3218,9 @@ int LinearScanWalker::find_optimal_split_pos(Interval* it, int min_split_pos, in
           // of the interval (normally, only mustHaveRegister causes a reloading)
           BlockBegin* loop_block = allocator()->block_of_op_with_id(loop_end_pos);
 
-          TRACE_LINEAR_SCAN(4, tty->print_cr("      interval is used in loop that ends in block B%d, so trying to move max_block back from B%d to B%d", loop_block->block_id(), max_block->block_id(), loop_block->block_id()));
-
           optimal_split_pos = find_optimal_split_pos(min_block, loop_block, loop_block->last_lir_instruction_id() + 2);
           if (optimal_split_pos == loop_block->last_lir_instruction_id() + 2) {
             optimal_split_pos = -1;
-            TRACE_LINEAR_SCAN(4, tty->print_cr("      loop optimization not necessary"));
-          } else {
-            TRACE_LINEAR_SCAN(4, tty->print_cr("      loop optimization successful"));
           }
         }
       }
@@ -3347,27 +3231,20 @@ int LinearScanWalker::find_optimal_split_pos(Interval* it, int min_split_pos, in
       }
     }
   }
-  TRACE_LINEAR_SCAN(4, tty->print_cr("      optimal split position: %d", optimal_split_pos));
 
   return optimal_split_pos;
 }
 
-/*
-  split an interval at the optimal position between min_split_pos and
-  max_split_pos in two parts:
-  1) the left part has already a location assigned
-  2) the right part is sorted into to the unhandled-list
-*/
+/* split an interval at the optimal position between min_split_pos and max_split_pos in two parts:
+ * 1) the left part has already a location assigned
+ * 2) the right part is sorted into to the unhandled-list
+ */
 void LinearScanWalker::split_before_usage(Interval* it, int min_split_pos, int max_split_pos) {
-  TRACE_LINEAR_SCAN(2, tty->print   ("----- splitting interval: "); it->print());
-  TRACE_LINEAR_SCAN(2, tty->print_cr("      between %d and %d", min_split_pos, max_split_pos));
-
   int optimal_split_pos = find_optimal_split_pos(it, min_split_pos, max_split_pos, true);
 
   if (optimal_split_pos == it->to() && it->next_usage(mustHaveRegister, min_split_pos) == max_jint) {
     // the split position would be just before the end of the interval
     // -> no split at all necessary
-    TRACE_LINEAR_SCAN(4, tty->print_cr("      no split necessary because optimal split position is at end of interval"));
     return;
   }
 
@@ -3379,38 +3256,25 @@ void LinearScanWalker::split_before_usage(Interval* it, int min_split_pos, int m
     optimal_split_pos = (optimal_split_pos - 1) | 1;
   }
 
-  TRACE_LINEAR_SCAN(4, tty->print_cr("      splitting at position %d", optimal_split_pos));
-
   Interval* split_part = it->split(optimal_split_pos);
 
   allocator()->append_interval(split_part);
   allocator()->copy_register_flags(it, split_part);
   split_part->set_insert_move_when_activated(move_necessary);
   append_to_unhandled(unhandled_first_addr(anyKind), split_part);
-
-  TRACE_LINEAR_SCAN(2, tty->print_cr("      split interval in two parts (insert_move_when_activated: %d)", move_necessary));
-  TRACE_LINEAR_SCAN(2, tty->print   ("      "); it->print());
-  TRACE_LINEAR_SCAN(2, tty->print   ("      "); split_part->print());
 }
 
-/*
-  split an interval at the optimal position between min_split_pos and
-  max_split_pos in two parts:
-  1) the left part has already a location assigned
-  2) the right part is always on the stack and therefore ignored in further processing
-*/
+/* split an interval at the optimal position between min_split_pos and max_split_pos in two parts:
+ * 1) the left part has already a location assigned
+ * 2) the right part is always on the stack and therefore ignored in further processing
+ */
 void LinearScanWalker::split_for_spilling(Interval* it) {
   // calculate allowed range of splitting position
   int max_split_pos = current_position();
   int min_split_pos = MAX2(it->previous_usage(shouldHaveRegister, max_split_pos) + 1, it->from());
 
-  TRACE_LINEAR_SCAN(2, tty->print   ("----- splitting and spilling interval: "); it->print());
-  TRACE_LINEAR_SCAN(2, tty->print_cr("      between %d and %d", min_split_pos, max_split_pos));
-
   if (min_split_pos == it->from()) {
     // the whole interval is never used, so spill it entirely to memory
-    TRACE_LINEAR_SCAN(2, tty->print_cr("      spilling entire interval because split pos is at beginning of interval"));
-
     allocator()->assign_spill_slot(it);
     allocator()->change_spill_state(it, min_split_pos);
 
@@ -3424,7 +3288,6 @@ void LinearScanWalker::split_for_spilling(Interval* it) {
       if (parent->assigned_reg() < LinearScan::nof_regs) {
         if (parent->first_usage(shouldHaveRegister) == max_jint) {
           // parent is never used, so kick it out of its assigned register
-          TRACE_LINEAR_SCAN(4, tty->print_cr("      kicking out interval %d out of its register because it is never used", parent->reg_num()));
           allocator()->assign_spill_slot(parent);
         } else {
           // do not go further back because the register is actually used by the interval
@@ -3441,24 +3304,17 @@ void LinearScanWalker::split_for_spilling(Interval* it) {
       optimal_split_pos = (optimal_split_pos - 1) | 1;
     }
 
-    TRACE_LINEAR_SCAN(4, tty->print_cr("      splitting at position %d", optimal_split_pos));
-
     Interval* spilled_part = it->split(optimal_split_pos);
     allocator()->append_interval(spilled_part);
     allocator()->assign_spill_slot(spilled_part);
     allocator()->change_spill_state(spilled_part, optimal_split_pos);
 
     if (!allocator()->is_block_begin(optimal_split_pos)) {
-      TRACE_LINEAR_SCAN(4, tty->print_cr("      inserting move from interval %d to %d", it->reg_num(), spilled_part->reg_num()));
       insert_move(optimal_split_pos, it, spilled_part);
     }
 
     // the current_split_child is needed later when moves are inserted for reloading
     spilled_part->make_current_split_child();
-
-    TRACE_LINEAR_SCAN(2, tty->print_cr("      split interval in two parts"));
-    TRACE_LINEAR_SCAN(2, tty->print   ("      "); it->print());
-    TRACE_LINEAR_SCAN(2, tty->print   ("      "); spilled_part->print());
   }
 }
 
@@ -3556,8 +3412,6 @@ int LinearScanWalker::find_free_double_reg(int reg_needed_until, int interval_to
 }
 
 bool LinearScanWalker::alloc_free_reg(Interval* cur) {
-  TRACE_LINEAR_SCAN(2, tty->print("trying to find free register for "); cur->print());
-
   init_use_lists(true);
   free_exclude_active_fixed();
   free_exclude_active_any();
@@ -3568,8 +3422,6 @@ bool LinearScanWalker::alloc_free_reg(Interval* cur) {
   // _use_pos contains the start of the next interval that has this register assigned
   // (either as a fixed register or a normal allocated register in the past)
   // only intervals overlapping with cur are processed, non-overlapping invervals can be ignored safely
-  TRACE_LINEAR_SCAN(4, tty->print_cr("      state of registers:"));
-  TRACE_LINEAR_SCAN(4, for (int i = _first_reg; i <= _last_reg; i++) tty->print_cr("      reg %d: use_pos: %d", i, _use_pos[i]));
 
   int hint_reg, hint_regHi;
   Interval* register_hint = cur->register_hint();
@@ -3580,7 +3432,6 @@ bool LinearScanWalker::alloc_free_reg(Interval* cur) {
     if (allocator()->is_precolored_cpu_interval(register_hint)) {
       hint_regHi = hint_reg + 1;  // connect e.g. eax-edx
     }
-    TRACE_LINEAR_SCAN(4, tty->print("      hint registers %d, %d from interval ", hint_reg, hint_regHi); register_hint->print());
   } else {
     hint_reg = any_reg;
     hint_regHi = any_reg;
@@ -3631,7 +3482,6 @@ bool LinearScanWalker::alloc_free_reg(Interval* cur) {
   }
 
   cur->assign_reg(reg, regHi);
-  TRACE_LINEAR_SCAN(2, tty->print_cr("selected register %d, %d", reg, regHi));
 
   if (need_split) {
     // register not available for full interval, so split it
@@ -3701,12 +3551,10 @@ void LinearScanWalker::split_and_spill_intersecting_intervals(int reg, int regHi
 
 // Split an Interval and spill it to memory so that cur can be placed in a register
 void LinearScanWalker::alloc_locked_reg(Interval* cur) {
-  TRACE_LINEAR_SCAN(2, tty->print("need to split and spill to get register for "); cur->print());
-
   // collect current usage of registers
   init_use_lists(false);
   spill_exclude_active_fixed();
-//  spill_block_unhandled_fixed(cur);
+  // spill_block_unhandled_fixed(cur);
   spill_block_inactive_fixed(cur);
   spill_collect_active_any();
   spill_collect_inactive_any(cur);
@@ -3760,8 +3608,6 @@ void LinearScanWalker::alloc_locked_reg(Interval* cur) {
 
   if (reg == any_reg || (_num_phys_regs == 2 && regHi == any_reg) || use_pos <= cur->first_usage(mustHaveRegister)) {
     // the first use of cur is later than the spilling position -> spill cur
-    TRACE_LINEAR_SCAN(4, tty->print_cr("able to spill current interval. first_usage(register): %d, use_pos: %d", cur->first_usage(mustHaveRegister), use_pos));
-
     if (cur->first_usage(mustHaveRegister) <= cur->from() + 1) {
       ShouldNotReachHere();
       // assign a reasonable register and do a bailout in product mode to avoid errors
@@ -3771,8 +3617,6 @@ void LinearScanWalker::alloc_locked_reg(Interval* cur) {
 
     split_and_spill_interval(cur);
   } else {
-    TRACE_LINEAR_SCAN(4, tty->print_cr("decided to use register %d, %d", reg, regHi));
-
     cur->assign_reg(reg, regHi);
     if (need_split) {
       // register not available for full interval, so split it
@@ -3796,7 +3640,6 @@ bool LinearScanWalker::no_allocation_possible(Interval* cur) {
   if ((pos & 1) == 1) {
     // the current instruction is a call that blocks all registers
     if (pos < allocator()->max_lir_op_id() && allocator()->has_call(pos + 1)) {
-      TRACE_LINEAR_SCAN(4, tty->print_cr("      free register cannot be available because all registers blocked by following call"));
       return true;
     }
   }
@@ -3886,20 +3729,15 @@ bool LinearScanWalker::activate_current() {
   Interval* cur = current();
   bool result = true;
 
-  TRACE_LINEAR_SCAN(2, tty->print   ("+++++ activating interval "); cur->print());
-  TRACE_LINEAR_SCAN(4, tty->print_cr("      split_parent: %d, insert_move_when_activated: %d", cur->split_parent()->reg_num(), cur->insert_move_when_activated()));
-
   if (cur->assigned_reg() >= LinearScan::nof_regs) {
     // activating an interval that has a stack slot assigned -> split it at first use position
     // used for method parameters
-    TRACE_LINEAR_SCAN(4, tty->print_cr("      interval has spill slot assigned (method parameter) -> split it before first use"));
 
     split_stack_interval(cur);
     result = false;
   } else if (allocator()->gen()->is_vreg_flag_set(cur->reg_num(), LIRGenerator::must_start_in_memory)) {
     // activating an interval that must start in a stack slot, but may get a register later
     // used for lir_roundfp: rounding is done by store to stack and reload later
-    TRACE_LINEAR_SCAN(4, tty->print_cr("      interval must start in stack slot -> split it before first use"));
 
     allocator()->assign_spill_slot(cur);
     split_stack_interval(cur);
@@ -3907,7 +3745,6 @@ bool LinearScanWalker::activate_current() {
   } else if (cur->assigned_reg() == any_reg) {
     // interval has not assigned register -> normal allocation
     // (this is the normal case for most intervals)
-    TRACE_LINEAR_SCAN(4, tty->print_cr("      normal allocation of register"));
 
     // assign same spill slot to non-intersecting intervals
     combine_spilled_intervals(cur);
@@ -3927,8 +3764,6 @@ bool LinearScanWalker::activate_current() {
 
   // load spilled values that become active from stack slot to register
   if (cur->insert_move_when_activated()) {
-    TRACE_LINEAR_SCAN(4, tty->print_cr("Inserting move from interval %d to %d because insert_move_when_activated is set", cur->current_split_child()->reg_num(), cur->reg_num()));
-
     insert_move(cur->from(), cur->current_split_child(), cur);
   }
   cur->make_current_split_child();
@@ -4021,8 +3856,6 @@ bool EdgeMoveOptimizer::operations_different(LIR_Op* op1, LIR_Op* op2) {
 }
 
 void EdgeMoveOptimizer::optimize_moves_at_block_end(BlockBegin* block) {
-  TRACE_LINEAR_SCAN(4, tty->print_cr("optimizing moves at end of block B%d", block->block_id()));
-
   if (block->is_predecessor(block)) {
     // currently we can't handle this correctly.
     return;
@@ -4063,8 +3896,6 @@ void EdgeMoveOptimizer::optimize_moves_at_block_end(BlockBegin* block) {
       }
     }
 
-    TRACE_LINEAR_SCAN(4, tty->print("found instruction that is equal in all %d predecessors: ", num_preds); op->print());
-
     // insert the instruction at the beginning of the current block
     block->lir()->insert_before(1, op);
 
@@ -4076,8 +3907,6 @@ void EdgeMoveOptimizer::optimize_moves_at_block_end(BlockBegin* block) {
 }
 
 void EdgeMoveOptimizer::optimize_moves_at_block_begin(BlockBegin* block) {
-  TRACE_LINEAR_SCAN(4, tty->print_cr("optimization moves at begin of block B%d", block->block_id()));
-
   init_instructions();
   int num_sux = block->number_of_sux();
 
@@ -4128,8 +3957,6 @@ void EdgeMoveOptimizer::optimize_moves_at_block_begin(BlockBegin* block) {
       }
     }
 
-    TRACE_LINEAR_SCAN(4, tty->print("----- found instruction that is equal in all %d successors: ", num_sux); op->print());
-
     // insert instruction at end of current block
     block->lir()->insert_before(insert_idx, op);
     insert_idx++;
@@ -4147,14 +3974,6 @@ ControlFlowOptimizer::ControlFlowOptimizer() : _original_preds(4) { }
 
 void ControlFlowOptimizer::optimize(BlockList* code) {
   ControlFlowOptimizer optimizer = ControlFlowOptimizer();
-
-  // push the OSR entry block to the end so that we're not jumping over it.
-  BlockBegin* osr_entry = code->at(0)->end()->as_Base()->osr_entry();
-  if (osr_entry) {
-    int index = osr_entry->linear_scan_number();
-    code->remove_at(index);
-    code->append(osr_entry);
-  }
 
   optimizer.reorder_short_loops(code);
   optimizer.delete_empty_blocks(code);
@@ -4176,8 +3995,6 @@ void ControlFlowOptimizer::reorder_short_loop(BlockList* code, BlockBegin* heade
     if (end_block->number_of_sux() == 1 && end_block->sux_at(0) == header_block) {
       // short loop from header_idx to end_idx found -> reorder blocks such that
       // the header_block is the last block instead of the first block of the loop
-      TRACE_LINEAR_SCAN(1, tty->print_cr("Reordering short loop: length %d, header B%d, end B%d", end_idx - header_idx + 1, header_block->block_id(), end_block->block_id()));
-
       for (int j = header_idx; j < end_idx; j++) {
         code->at_put(j, code->at(j + 1));
       }
@@ -4218,8 +4035,6 @@ bool ControlFlowOptimizer::can_delete_block(BlockBegin* block) {
 
 // substitute branch targets in all branch-instructions of this blocks
 void ControlFlowOptimizer::substitute_branch_target(BlockBegin* block, BlockBegin* target_from, BlockBegin* target_to) {
-  TRACE_LINEAR_SCAN(3, tty->print_cr("Deleting empty block: substituting from B%d to B%d inside B%d", target_from->block_id(), target_to->block_id(), block->block_id()));
-
   LIR_OpList* instructions = block->lir()->instructions_list();
 
   for (int i = instructions->length() - 1; i >= 1; i--) {
@@ -4296,8 +4111,6 @@ void ControlFlowOptimizer::delete_unnecessary_jumps(BlockList* code) {
 
       if (last_branch->info() == NULL) {
         if (last_branch->block() == code->at(i + 1)) {
-          TRACE_LINEAR_SCAN(3, tty->print_cr("Deleting unconditional branch at end of block B%d", block->block_id()));
-
           // delete last branch instruction
           instructions->trunc_to(instructions->length() - 1);
         } else {
@@ -4325,8 +4138,6 @@ void ControlFlowOptimizer::delete_unnecessary_jumps(BlockList* code) {
               // Guarantee because it is dereferenced below.
               guarantee(prev_cmp != NULL, "should have found comp instruction for branch");
               if (prev_branch->block() == code->at(i + 1) && prev_branch->info() == NULL) {
-                TRACE_LINEAR_SCAN(3, tty->print_cr("Negating conditional branch and deleting unconditional branch at end of block B%d", block->block_id()));
-
                 // eliminate a conditional branch to the immediate successor
                 prev_branch->change_block(last_branch->block());
                 prev_branch->negate_cond();

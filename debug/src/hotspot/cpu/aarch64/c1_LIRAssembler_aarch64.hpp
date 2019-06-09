@@ -43,8 +43,7 @@ friend class ArrayCopyStub;
   enum {
     _call_stub_size = 12 * NativeInstruction::instruction_size,
     _call_aot_stub_size = 0,
-    _exception_handler_size = 175,
-    _deopt_handler_size = 7 * NativeInstruction::instruction_size
+    _exception_handler_size = 175
   };
 
   void arithmetic_idiv(LIR_Op3* op, bool is_irem);

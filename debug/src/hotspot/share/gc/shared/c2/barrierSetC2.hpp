@@ -44,8 +44,8 @@ public:
     _node(node),
     _type(type) { }
 
-  Node* node() const        { return _node; }
-  const Type* type() const  { return _type; }
+  Node* node()        const { return _node; }
+  const Type* type()  const { return _type; }
 
   void set_node(Node* node) { _node = node; }
 };
@@ -59,7 +59,7 @@ public:
     C2AccessValue(node, reinterpret_cast<const Type*>(type)) { }
 
   const TypePtr* type() const { return reinterpret_cast<const TypePtr*>(_type); }
-  int alias_idx() const       { return _alias_idx; }
+  int alias_idx()       const { return _alias_idx; }
 };
 
 // This class wraps a bunch of context parameters thare are passed around in the
@@ -89,14 +89,14 @@ public:
     fixup_decorators();
   }
 
-  GraphKit* kit() const           { return _kit; }
+  GraphKit* kit()           const { return _kit; }
   DecoratorSet decorators() const { return _decorators; }
-  Node* base() const              { return _base; }
-  C2AccessValuePtr& addr() const  { return _addr; }
-  BasicType type() const          { return _type; }
-  bool is_oop() const             { return _type == T_OBJECT || _type == T_ARRAY; }
-  bool is_raw() const             { return (_decorators & AS_RAW) != 0; }
-  Node* raw_access() const        { return _raw_access; }
+  Node* base()              const { return _base; }
+  C2AccessValuePtr& addr()  const { return _addr; }
+  BasicType type()          const { return _type; }
+  bool is_oop()             const { return _type == T_OBJECT || _type == T_ARRAY; }
+  bool is_raw()             const { return (_decorators & AS_RAW) != 0; }
+  Node* raw_access()        const { return _raw_access; }
 
   void set_raw_access(Node* raw_access) { _raw_access = raw_access; }
   virtual void set_memory() { } // no-op for normal accesses, but not for atomic accesses.
@@ -128,8 +128,8 @@ public:
   // Set the memory node based on the current memory slice.
   virtual void set_memory();
 
-  Node* memory() const       { return _memory; }
-  uint alias_idx() const     { return _alias_idx; }
+  Node* memory()       const { return _memory; }
+  uint alias_idx()     const { return _alias_idx; }
   bool needs_pinning() const { return _needs_pinning; }
 
   void set_needs_pinning(bool value)    { _needs_pinning = value; }

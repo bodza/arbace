@@ -20,7 +20,7 @@ class elapsedTimer {
   void reset()               { _counter = 0; }
   double seconds() const;
   jlong milliseconds() const;
-  jlong ticks() const        { return _counter; }
+  jlong ticks()        const { return _counter; }
   jlong active_ticks() const;
   bool  is_active() const { return _active; }
 };
@@ -59,7 +59,7 @@ class TraceCPUTime: public StackObj {
   bool _error;                  // true if an error occurred, turns off output
 
  public:
-  TraceCPUTime(bool doit = true, bool print_cr = true, outputStream *logfile = NULL);
+  TraceCPUTime(bool doit = true, bool print_cr = true, outputStream* logfile = NULL);
   ~TraceCPUTime();
 };
 

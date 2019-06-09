@@ -27,32 +27,22 @@ struct CodeBlobType {
 // Subtypes are:
 //  CompiledMethod       : Compiled Java methods (include method that calls to native code)
 //   nmethod             : JIT Compiled Java methods
-//   AOTCompiledMethod   : AOT Compiled Java methods - Not in the CodeCache!
-//                         AOTCompiledMethod objects are allocated in the C-Heap, the code they
-//                         point to is allocated in the AOTCodeHeap which is in the C-Heap as
-//                         well (i.e. it's the memory where the shared library was loaded to)
 //  RuntimeBlob          : Non-compiled method code; generated glue code
 //   BufferBlob          : Used for non-relocatable code such as interpreter, stubroutines, etc.
 //    AdapterBlob        : Used to hold C2I/I2C adapters
 //    VtableBlob         : Used for holding vtable chunks
-//    MethodHandlesAdapterBlob : Used to hold MethodHandles adapters
 //   RuntimeStub         : Call to VM runtime methods
 //   SingletonBlob       : Super-class for all blobs that exist in only one instance
 //    ExceptionBlob      : Used for stack unrolling
 //    SafepointBlob      : Used to handle illegal instruction exceptions
 //
 //
-// Layout (all except AOTCompiledMethod) : continuous in the CodeCache
+// Layout                : continuous in the CodeCache
 //   - header
 //   - relocation
 //   - content space
 //     - instruction space
 //   - data space
-//
-// Layout (AOTCompiledMethod) : in the C-Heap
-//   - header -\
-//     ...     |
-//   - code  <-/
 
 class CodeBlobLayout;
 
@@ -96,21 +86,20 @@ public:
   virtual void flush();
 
   // Typing
-  virtual bool is_buffer_blob() const                 { return false; }
-  virtual bool is_nmethod() const                     { return false; }
-  virtual bool is_runtime_stub() const                { return false; }
-  virtual bool is_deoptimization_stub() const         { return false; }
-  virtual bool is_uncommon_trap_stub() const          { return false; }
-  virtual bool is_exception_stub() const              { return false; }
-  virtual bool is_safepoint_stub() const              { return false; }
-  virtual bool is_adapter_blob() const                { return false; }
-  virtual bool is_vtable_blob() const                 { return false; }
+  virtual bool is_buffer_blob()                 const { return false; }
+  virtual bool is_nmethod()                     const { return false; }
+  virtual bool is_runtime_stub()                const { return false; }
+  virtual bool is_uncommon_trap_stub()          const { return false; }
+  virtual bool is_exception_stub()              const { return false; }
+  virtual bool is_safepoint_stub()              const { return false; }
+  virtual bool is_adapter_blob()                const { return false; }
+  virtual bool is_vtable_blob()                 const { return false; }
   virtual bool is_method_handles_adapter_blob() const { return false; }
-  virtual bool is_aot() const                         { return false; }
-  virtual bool is_compiled() const                    { return false; }
+  virtual bool is_aot()                         const { return false; }
+  virtual bool is_compiled()                    const { return false; }
 
-  inline bool is_compiled_by_c1() const    { return _type == compiler_c1; };
-  inline bool is_compiled_by_c2() const    { return _type == compiler_c2; };
+  inline bool is_compiled_by_c1()    const { return _type == compiler_c1; };
+  inline bool is_compiled_by_c2()    const { return _type == compiler_c2; };
   inline bool is_compiled_by_jvmci() const { return _type == compiler_jvmci; };
   const char* compiler_name() const;
 
@@ -119,17 +108,17 @@ public:
   nmethod* as_nmethod()                        { return (nmethod*) this; }
   CompiledMethod* as_compiled_method_or_null() { return is_compiled() ? (CompiledMethod*) this : NULL; }
   CompiledMethod* as_compiled_method()         { return (CompiledMethod*) this; }
-  CodeBlob* as_codeblob_or_null() const        { return (CodeBlob*) this; }
+  CodeBlob* as_codeblob_or_null()        const { return (CodeBlob*) this; }
 
   // Boundaries
-  address header_begin() const        { return (address) this; }
+  address header_begin()        const { return (address) this; }
   relocInfo* relocation_begin() const { return (relocInfo*) _relocation_begin; };
-  relocInfo* relocation_end() const   { return (relocInfo*) _relocation_end; }
-  address content_begin() const       { return _content_begin; }
-  address content_end() const         { return _code_end; } // _code_end == _content_end is true for all types of blobs for now, it is also checked in the constructor
-  address code_begin() const          { return _code_begin; }
-  address code_end() const            { return _code_end; }
-  address data_end() const            { return _data_end; }
+  relocInfo* relocation_end()   const { return (relocInfo*) _relocation_end; }
+  address content_begin()       const { return _content_begin; }
+  address content_end()         const { return _code_end; } // _code_end == _content_end is true for all types of blobs for now, it is also checked in the constructor
+  address code_begin()          const { return _code_begin; }
+  address code_end()            const { return _code_end; }
+  address data_end()            const { return _data_end; }
 
   // This field holds the beginning of the const section in the old code buffer.
   // It is needed to fix relocations of pc-relative loads when resizing the
@@ -137,26 +126,26 @@ public:
   void set_ctable_begin(address ctable) { }
 
   // Sizes
-  int size() const            { return _size; }
-  int header_size() const     { return _header_size; }
+  int size()            const { return _size; }
+  int header_size()     const { return _header_size; }
   int relocation_size() const { return (address) relocation_end() - (address) relocation_begin(); }
-  int content_size() const    { return           content_end()    -           content_begin(); }
-  int code_size() const       { return           code_end()       -           code_begin(); }
+  int content_size()    const { return           content_end()    -           content_begin(); }
+  int code_size()       const { return           code_end()       -           code_begin(); }
 
   // Containment
-  bool blob_contains(address addr) const        { return header_begin()  <= addr && addr < data_end(); }
-  bool code_contains(address addr) const        { return code_begin()    <= addr && addr < code_end(); }
-  bool contains(address addr) const             { return content_begin() <= addr && addr < content_end(); }
+  bool blob_contains(address addr)        const { return header_begin()  <= addr && addr < data_end(); }
+  bool code_contains(address addr)        const { return code_begin()    <= addr && addr < code_end(); }
+  bool contains(address addr)             const { return content_begin() <= addr && addr < content_end(); }
   bool is_frame_complete_at(address addr) const { return _frame_complete_offset != CodeOffsets::frame_never_safe && code_contains(addr) && addr >= code_begin() + _frame_complete_offset; }
 
   // CodeCache support: really only used by the nmethods, but in order to get
   // asserts and certain bookkeeping to work in the CodeCache they are defined
   // virtual here.
-  virtual bool is_zombie() const       { return false; }
+  virtual bool is_zombie()       const { return false; }
   virtual bool is_locked_by_vm() const { return false; }
 
-  virtual bool is_unloaded() const     { return false; }
-  virtual bool is_not_entrant() const  { return false; }
+  virtual bool is_unloaded()     const { return false; }
+  virtual bool is_not_entrant()  const { return false; }
 
   // GC support
   virtual bool is_alive() const        = 0;
@@ -168,18 +157,18 @@ public:
   virtual void preserve_callee_argument_oops(frame fr, const RegisterMap* reg_map, OopClosure* f) = 0;
 
   // Frame support
-  int  frame_size() const              { return _frame_size; }
+  int  frame_size()              const { return _frame_size; }
   void set_frame_size(int size)        { _frame_size = size; }
 
   // Returns true, if the next frame is responsible for GC'ing oops passed as arguments
   bool caller_must_gc_arguments(JavaThread* thread) const { return _caller_must_gc_arguments; }
 
   // Naming
-  const char* name() const             { return _name; }
+  const char* name()             const { return _name; }
   void set_name(const char* name)      { _name = name; }
 
   // Debugging
-  virtual void print() const           { print_on(tty); };
+  virtual void print()           const { print_on(tty); };
   virtual void print_on(outputStream* st) const;
   virtual void print_value_on(outputStream* st) const;
   void dump_for_addr(address addr, outputStream* st, bool verbose) const;
@@ -320,7 +309,7 @@ class RuntimeBlob : public CodeBlob {
   virtual void preserve_callee_argument_oops(frame fr, const RegisterMap* reg_map, OopClosure* f)  { ShouldNotReachHere(); }
 
   // Debugging
-  void print() const                             { print_on(tty); }
+  void print()                             const { print_on(tty); }
   virtual void print_on(outputStream* st) const { CodeBlob::print_on(st); }
   virtual void print_value_on(outputStream* st) const { CodeBlob::print_value_on(st); }
 
@@ -335,7 +324,6 @@ class BufferBlob: public RuntimeBlob {
   friend class VMStructs;
   friend class AdapterBlob;
   friend class VtableBlob;
-  friend class MethodHandlesAdapterBlob;
 
  private:
   // Creation support
@@ -352,11 +340,11 @@ class BufferBlob: public RuntimeBlob {
   static void free(BufferBlob* buf);
 
   // Typing
-  virtual bool is_buffer_blob() const            { return true; }
+  virtual bool is_buffer_blob()            const { return true; }
 
   // GC/Verification support
   void preserve_callee_argument_oops(frame fr, const RegisterMap* reg_map, OopClosure* f)  { /* nothing to do */ }
-  bool is_alive() const                          { return true; }
+  bool is_alive()                          const { return true; }
 
   void print_on(outputStream* st) const;
   void print_value_on(outputStream* st) const;
@@ -391,21 +379,6 @@ public:
 };
 
 //----------------------------------------------------------------------------------------------------
-// MethodHandlesAdapterBlob: used to hold MethodHandles adapters
-
-class MethodHandlesAdapterBlob: public BufferBlob {
-private:
-  MethodHandlesAdapterBlob(int size)                 : BufferBlob("MethodHandles adapters", size) { }
-
-public:
-  // Creation
-  static MethodHandlesAdapterBlob* create(int buffer_size);
-
-  // Typing
-  virtual bool is_method_handles_adapter_blob() const { return true; }
-};
-
-//----------------------------------------------------------------------------------------------------
 // RuntimeStub: describes stubs used by compiled code to call a (static) C++ runtime routine
 
 class RuntimeStub: public RuntimeBlob {
@@ -436,13 +409,13 @@ class RuntimeStub: public RuntimeBlob {
   );
 
   // Typing
-  bool is_runtime_stub() const                   { return true; }
+  bool is_runtime_stub()                   const { return true; }
 
-  address entry_point() const                    { return code_begin(); }
+  address entry_point()                    const { return code_begin(); }
 
   // GC/Verification support
   void preserve_callee_argument_oops(frame fr, const RegisterMap *reg_map, OopClosure* f)  { /* nothing to do */ }
-  bool is_alive() const                          { return true; }
+  bool is_alive()                          const { return true; }
 
   void print_on(outputStream* st) const;
   void print_value_on(outputStream* st) const;

@@ -771,10 +771,6 @@ bool FpuStackAllocator::merge_fpu_stack_with_successors(BlockBegin* block) {
       }
 
       intArray* state = sim()->write_state();
-      if (TraceFPUStack) {
-        tty->print_cr("Setting FPU stack state of B%d (merge path)", sux->block_id());
-        sim()->print(); tty->cr();
-      }
       sux->set_fpu_stack_state(state);
     }
 

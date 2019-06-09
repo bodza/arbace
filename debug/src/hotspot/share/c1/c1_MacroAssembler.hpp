@@ -49,11 +49,11 @@ class StubAssembler: public C1_MacroAssembler {
   void restore_live_registers_without_return();
 
   // accessors
-  const char* name() const                       { return _name; }
-  bool  must_gc_arguments() const                { return _must_gc_arguments; }
-  int frame_size() const                         { return _frame_size; }
-  int num_rt_args() const                        { return _num_rt_args; }
-  int stub_id() const                            { return _stub_id; }
+  const char* name()                       const { return _name; }
+  bool  must_gc_arguments()                const { return _must_gc_arguments; }
+  int frame_size()                         const { return _frame_size; }
+  int num_rt_args()                        const { return _num_rt_args; }
+  int stub_id()                            const { return _stub_id; }
 
   // runtime calls (return offset of call to be used by GC map)
   int call_RT(Register oop_result1, Register metadata_result, address entry, int args_size = 0);

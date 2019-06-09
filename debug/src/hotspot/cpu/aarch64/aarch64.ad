@@ -47,8 +47,7 @@ register %{
 //   r8-r9 invisible to the allocator (so we can use them as scratch regs)
 //
 // as regards Java usage. we don't use any callee save registers
-// because this makes it difficult to de-optimise a frame (see comment
-// in x86 implementation of NULL::unwind_callee_save_values)
+// because this makes it difficult to de-optimise a frame
 //
 
 // General Registers
@@ -994,7 +993,6 @@ class CallStubImpl {
 class HandlerImpl {
  public:
   static int emit_exception_handler(CodeBuffer &cbuf);
-  static int emit_deopt_handler(CodeBuffer& cbuf);
 
   static uint size_exception_handler() {
     return MacroAssembler::far_branch_size();
@@ -2641,7 +2639,6 @@ bool unnecessary_release(const Node *n) {
 }
 
 bool unnecessary_volatile(const Node *n) {
-  // assert n->is_MemBar();
   if (UseBarriersForVolatile) {
     // we need to plant a dmb
     return false;
@@ -2665,7 +2662,6 @@ bool unnecessary_volatile(const Node *n) {
 // predicates controlling emit of str<x>/stlr<x> and associated dmbs
 
 bool needs_releasing_store(const Node *n) {
-  // assert n->is_Store();
   if (UseBarriersForVolatile) {
     // we use a normal store and dmb combination
     return false;
@@ -2946,134 +2942,6 @@ static enum RC rc_class(OptoReg::Name reg) {
   return rc_stack;
 }
 
-uint MachSpillCopyNode::implementation(CodeBuffer *cbuf, PhaseRegAlloc *ra_, bool do_size, outputStream *st) const {
-  Compile* C = ra_->C;
-
-  // Get registers to move.
-  OptoReg::Name src_hi = ra_->get_reg_second(in(1));
-  OptoReg::Name src_lo = ra_->get_reg_first(in(1));
-  OptoReg::Name dst_hi = ra_->get_reg_second(this);
-  OptoReg::Name dst_lo = ra_->get_reg_first(this);
-
-  enum RC src_hi_rc = rc_class(src_hi);
-  enum RC src_lo_rc = rc_class(src_lo);
-  enum RC dst_hi_rc = rc_class(dst_hi);
-  enum RC dst_lo_rc = rc_class(dst_lo);
-
-  if (src_lo == dst_lo && src_hi == dst_hi) {
-    return 0;            // Self copy, no move.
-  }
-
-  bool is64 = (src_lo & 1) == 0 && src_lo + 1 == src_hi &&
-              (dst_lo & 1) == 0 && dst_lo + 1 == dst_hi;
-  int src_offset = ra_->reg2offset(src_lo);
-  int dst_offset = ra_->reg2offset(dst_lo);
-
-  if (bottom_type()->isa_vect() != NULL) {
-    uint ireg = ideal_reg();
-    if (cbuf) {
-      MacroAssembler _masm(cbuf);
-      if (src_lo_rc == rc_stack && dst_lo_rc == rc_stack) {
-        // stack->stack
-        if (ireg == Op_VecD) {
-          __ unspill(rscratch1, true, src_offset);
-          __ spill(rscratch1, true, dst_offset);
-        } else {
-          __ spill_copy128(src_offset, dst_offset);
-        }
-      } else if (src_lo_rc == rc_float && dst_lo_rc == rc_float) {
-        __ mov(as_FloatRegister(Matcher::_regEncode[dst_lo]), ireg == Op_VecD ? __ T8B : __ T16B, as_FloatRegister(Matcher::_regEncode[src_lo]));
-      } else if (src_lo_rc == rc_float && dst_lo_rc == rc_stack) {
-        __ spill(as_FloatRegister(Matcher::_regEncode[src_lo]), ireg == Op_VecD ? __ D : __ Q, ra_->reg2offset(dst_lo));
-      } else if (src_lo_rc == rc_stack && dst_lo_rc == rc_float) {
-        __ unspill(as_FloatRegister(Matcher::_regEncode[dst_lo]), ireg == Op_VecD ? __ D : __ Q, ra_->reg2offset(src_lo));
-      } else {
-        ShouldNotReachHere();
-      }
-    }
-  } else if (cbuf) {
-    MacroAssembler _masm(cbuf);
-    switch (src_lo_rc) {
-    case rc_int:
-      if (dst_lo_rc == rc_int) {  // gpr --> gpr copy
-        if (is64) {
-            __ mov(as_Register(Matcher::_regEncode[dst_lo]), as_Register(Matcher::_regEncode[src_lo]));
-        } else {
-            MacroAssembler _masm(cbuf);
-            __ movw(as_Register(Matcher::_regEncode[dst_lo]), as_Register(Matcher::_regEncode[src_lo]));
-        }
-      } else if (dst_lo_rc == rc_float) { // gpr --> fpr copy
-        if (is64) {
-            __ fmovd(as_FloatRegister(Matcher::_regEncode[dst_lo]), as_Register(Matcher::_regEncode[src_lo]));
-        } else {
-            __ fmovs(as_FloatRegister(Matcher::_regEncode[dst_lo]), as_Register(Matcher::_regEncode[src_lo]));
-        }
-      } else {                    // gpr --> stack spill
-        __ spill(as_Register(Matcher::_regEncode[src_lo]), is64, dst_offset);
-      }
-      break;
-    case rc_float:
-      if (dst_lo_rc == rc_int) {  // fpr --> gpr copy
-        if (is64) {
-            __ fmovd(as_Register(Matcher::_regEncode[dst_lo]), as_FloatRegister(Matcher::_regEncode[src_lo]));
-        } else {
-            __ fmovs(as_Register(Matcher::_regEncode[dst_lo]), as_FloatRegister(Matcher::_regEncode[src_lo]));
-        }
-      } else if (dst_lo_rc == rc_float) { // fpr --> fpr copy
-          if (cbuf) {
-            __ fmovd(as_FloatRegister(Matcher::_regEncode[dst_lo]), as_FloatRegister(Matcher::_regEncode[src_lo]));
-        } else {
-            __ fmovs(as_FloatRegister(Matcher::_regEncode[dst_lo]), as_FloatRegister(Matcher::_regEncode[src_lo]));
-        }
-      } else {                    // fpr --> stack spill
-        __ spill(as_FloatRegister(Matcher::_regEncode[src_lo]), is64 ? __ D : __ S, dst_offset);
-      }
-      break;
-    case rc_stack:
-      if (dst_lo_rc == rc_int) {  // stack --> gpr load
-        __ unspill(as_Register(Matcher::_regEncode[dst_lo]), is64, src_offset);
-      } else if (dst_lo_rc == rc_float) { // stack --> fpr load
-        __ unspill(as_FloatRegister(Matcher::_regEncode[dst_lo]), is64 ? __ D : __ S, src_offset);
-      } else {                    // stack --> stack copy
-        __ unspill(rscratch1, is64, src_offset);
-        __ spill(rscratch1, is64, dst_offset);
-      }
-      break;
-    default:
-      ShouldNotReachHere();
-    }
-  }
-
-  if (st) {
-    st->print("spill ");
-    if (src_lo_rc == rc_stack) {
-      st->print("[sp, #%d] -> ", ra_->reg2offset(src_lo));
-    } else {
-      st->print("%s -> ", Matcher::regName[src_lo]);
-    }
-    if (dst_lo_rc == rc_stack) {
-      st->print("[sp, #%d]", ra_->reg2offset(dst_lo));
-    } else {
-      st->print("%s", Matcher::regName[dst_lo]);
-    }
-    if (bottom_type()->isa_vect() != NULL) {
-      st->print("\t# vector spill size = %d", ideal_reg() == Op_VecD ? 64:128);
-    } else {
-      st->print("\t# spill size = %d", is64 ? 64:32);
-    }
-  }
-
-  return 0;
-}
-
-void MachSpillCopyNode::emit(CodeBuffer &cbuf, PhaseRegAlloc *ra_) const {
-  implementation(&cbuf, ra_, false, NULL);
-}
-
-uint MachSpillCopyNode::size(PhaseRegAlloc *ra_) const {
-  return MachNode::size(ra_);
-}
-
 //=============================================================================
 
 void BoxLockNode::emit(CodeBuffer &cbuf, PhaseRegAlloc *ra_) const {
@@ -3131,25 +2999,6 @@ int HandlerImpl::emit_exception_handler(CodeBuffer& cbuf) {
   }
   int offset = __ offset();
   __ far_jump(RuntimeAddress(OptoRuntime::exception_blob()->entry_point()));
-  __ end_a_stub();
-  return offset;
-}
-
-// Emit deopt handler code.
-int HandlerImpl::emit_deopt_handler(CodeBuffer& cbuf) {
-  // Note that the code buffer's insts_mark is always relative to insts.
-  // That's why we must use the macroassembler to generate a handler.
-  MacroAssembler _masm(&cbuf);
-  address base = __ start_a_stub(size_deopt_handler());
-  if (base == NULL) {
-    ciEnv::current()->record_failure("CodeCache is full");
-    return 0;  // CodeBuffer::expand failed
-  }
-  int offset = __ offset();
-
-  __ adr(lr, __ pc());
-  __ far_jump(RuntimeAddress(SharedRuntime::NULL()->unpack()));
-
   __ end_a_stub();
   return offset;
 }
@@ -4355,12 +4204,11 @@ encode %{
     address addr = (address)$meth$$method;
     address call;
     if (!_method) {
-      // A call to a runtime wrapper, e.g. new, new_typeArray_Java, NULL.
+      // A call to a runtime wrapper, e.g. new, new_typeArray_Java
       call = __ trampoline_call(Address(addr, relocInfo::runtime_call_type), &cbuf);
     } else {
       int method_index = resolved_method_index(cbuf);
-      RelocationHolder rspec = _optimized_virtual ? opt_virtual_call_Relocation::spec(method_index)
-                                                  : static_call_Relocation::spec(method_index);
+      RelocationHolder rspec = _optimized_virtual ? opt_virtual_call_Relocation::spec(method_index) : static_call_Relocation::spec(method_index);
       call = __ trampoline_call(Address(addr, rspec), &cbuf);
 
       // Emit stub for static call

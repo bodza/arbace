@@ -175,8 +175,6 @@ Klass* TypeArrayKlass::array_klass_impl(bool or_null, int n, TRAPS) {
         release_set_higher_dimension(h_ak);
       }
     }
-  } else {
-    CHECK_UNHANDLED_OOPS_ONLY(Thread::current()->clear_unhandled_oops());
   }
   ObjArrayKlass* h_ak = ObjArrayKlass::cast(higher_dimension());
   if (or_null) {

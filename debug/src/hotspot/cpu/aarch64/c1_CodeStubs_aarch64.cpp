@@ -12,17 +12,6 @@
 
 #define __ ce->masm()->
 
-void CounterOverflowStub::emit_code(LIR_Assembler* ce) {
-  __ bind(_entry);
-  Metadata *m = _method->as_constant_ptr()->as_metadata();
-  __ mov_metadata(rscratch1, m);
-  ce->store_parameter(rscratch1, 1);
-  ce->store_parameter(_bci, 0);
-  __ far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::counter_overflow_id)));
-  ce->add_call_info_here(_info);
-  __ b(_continuation);
-}
-
 RangeCheckStub::RangeCheckStub(CodeEmitInfo* info, LIR_Opr index, LIR_Opr array)
   : _throw_index_out_of_bounds_exception(false), _index(index), _array(array) {
   _info = new CodeEmitInfo(info);
@@ -35,13 +24,6 @@ RangeCheckStub::RangeCheckStub(CodeEmitInfo* info, LIR_Opr index)
 
 void RangeCheckStub::emit_code(LIR_Assembler* ce) {
   __ bind(_entry);
-  if (_info->deoptimize_on_exception()) {
-    address a = Runtime1::entry_for(Runtime1::predicate_failed_trap_id);
-    __ far_call(RuntimeAddress(a));
-    ce->add_call_info_here(_info);
-    return;
-  }
-
   if (_index->is_cpu_register()) {
     __ mov(rscratch1, _index->as_register());
   } else {
@@ -56,17 +38,6 @@ void RangeCheckStub::emit_code(LIR_Assembler* ce) {
   }
   __ lea(lr, RuntimeAddress(Runtime1::entry_for(stub_id)));
   __ blr(lr);
-  ce->add_call_info_here(_info);
-}
-
-PredicateFailedStub::PredicateFailedStub(CodeEmitInfo* info) {
-  _info = new CodeEmitInfo(info);
-}
-
-void PredicateFailedStub::emit_code(LIR_Assembler* ce) {
-  __ bind(_entry);
-  address a = Runtime1::entry_for(Runtime1::predicate_failed_trap_id);
-  __ far_call(RuntimeAddress(a));
   ce->add_call_info_here(_info);
 }
 
@@ -185,21 +156,8 @@ void PatchingStub::emit_code(LIR_Assembler* ce) {
   ShouldNotReachHere();
 }
 
-void NULL::emit_code(LIR_Assembler* ce) {
-  __ bind(_entry);
-  ce->store_parameter(_trap_request, 0);
-  __ far_call(RuntimeAddress(Runtime1::entry_for(Runtime1::deoptimize_id)));
-  ce->add_call_info_here(_info);
-}
-
 void ImplicitNullCheckStub::emit_code(LIR_Assembler* ce) {
-  address a;
-  if (_info->deoptimize_on_exception()) {
-    // Deoptimize, do not throw the exception, because it is probably wrong to do it here.
-    a = Runtime1::entry_for(Runtime1::predicate_failed_trap_id);
-  } else {
-    a = Runtime1::entry_for(Runtime1::throw_null_pointer_exception_id);
-  }
+  address a = Runtime1::entry_for(Runtime1::throw_null_pointer_exception_id);
 
   ce->compilation()->implicit_exception_table()->append(_offset, __ offset());
   __ bind(_entry);

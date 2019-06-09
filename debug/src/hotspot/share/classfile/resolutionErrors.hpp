@@ -66,15 +66,15 @@ class ResolutionErrorEntry : public HashtableEntry<ConstantPool*, mtClass> {
   Symbol*           _message;
 
  public:
-  ConstantPool*      pool() const               { return literal(); }
+  ConstantPool*      pool()               const { return literal(); }
 
-  int                cp_index() const           { return _cp_index; }
+  int                cp_index()           const { return _cp_index; }
   void               set_cp_index(int cp_index) { _cp_index = cp_index; }
 
-  Symbol*            error() const              { return _error; }
+  Symbol*            error()              const { return _error; }
   void               set_error(Symbol* e);
 
-  Symbol*            message() const            { return _message; }
+  Symbol*            message()            const { return _message; }
   void               set_message(Symbol* c);
 
   ResolutionErrorEntry* next() const {

@@ -7,15 +7,9 @@
 #include "c1/c1_ValueMap.hpp"
 #include "ci/ciMethodData.hpp"
 
-// Macros for the Trace and the Assertion flag
-#define TRACE_RANGE_CHECK_ELIMINATION(code)
-#define ASSERT_RANGE_CHECK_ELIMINATION(code)
-#define TRACE_OR_ASSERT_RANGE_CHECK_ELIMINATION(code)
-
 // Entry point for the optimization
 void RangeCheckElimination::eliminate(IR *ir) {
   bool do_elimination = ir->compilation()->has_access_indexed();
-  ASSERT_RANGE_CHECK_ELIMINATION(do_elimination = true);
   if (do_elimination) {
     RangeCheckEliminator rce(ir);
   }
@@ -29,18 +23,6 @@ RangeCheckEliminator::RangeCheckEliminator(IR *ir) :
   _visitor.set_range_check_eliminator(this);
   _ir = ir;
   _number_of_instructions = Instruction::number_of_instructions();
-  _optimistic = ir->compilation()->is_optimistic();
-
-  TRACE_RANGE_CHECK_ELIMINATION(
-    tty->cr();
-    tty->print_cr("Range check elimination");
-    ir->method()->print_name(tty);
-    tty->cr();
-  );
-
-  TRACE_RANGE_CHECK_ELIMINATION(
-    tty->print_cr("optimistic=%d", (int)_optimistic);
-  );
 
   // Set process block flags
   // Optimization so a blocks is only processed if it contains an access indexed instruction or if
@@ -48,14 +30,7 @@ RangeCheckEliminator::RangeCheckEliminator(IR *ir) :
   set_process_block_flags(ir->start());
 
   // Pass over instructions in the dominator tree
-  TRACE_RANGE_CHECK_ELIMINATION(
-    tty->print_cr("Starting pass over dominator tree . . .")
-  );
   calc_bounds(ir->start(), NULL);
-
-  TRACE_RANGE_CHECK_ELIMINATION(
-    tty->print_cr("Finished!")
-  );
 }
 
 // Instruction specific work for some instructions
@@ -408,103 +383,6 @@ void RangeCheckEliminator::in_block_motion(BlockBegin *block, AccessIndexedList 
       }
     }
 
-    // Iterate over all different indices
-    if (_optimistic) {
-      for (int i = 0; i < indices.length(); i++) {
-        Instruction *index_instruction = indices.at(i);
-        AccessIndexedInfo *info = _access_indexed_info.at(index_instruction->id());
-
-        // if idx < 0, max > 0, max + idx may fall between 0 and
-        // length-1 and if min < 0, min + idx may overflow and be >=
-        // 0. The predicate wouldn't trigger but some accesses could
-        // be with a negative index. This test guarantees that for the
-        // min and max value that are kept the predicate can't let
-        // some incorrect accesses happen.
-        bool range_cond = (info->_max < 0 || info->_max + min_jint <= info->_min);
-
-        // Generate code only if more than 2 range checks can be eliminated because of that.
-        // 2 because at least 2 comparisons are done
-        if (info->_list->length() > 2 && range_cond) {
-          AccessIndexed *first = info->_list->at(0);
-          Instruction *insert_position = first->prev();
-          ValueStack *state = first->state_before();
-
-          // Load min Constant
-          Constant *min_constant = NULL;
-          if (info->_min != 0) {
-            min_constant = new Constant(new IntConstant(info->_min));
-            insert_position = insert_position->insert_after(min_constant);
-          }
-
-          // Load max Constant
-          Constant *max_constant = NULL;
-          if (info->_max != 0) {
-            max_constant = new Constant(new IntConstant(info->_max));
-            insert_position = insert_position->insert_after(max_constant);
-          }
-
-          // Load array length
-          Value length_instr = first->length();
-          if (!length_instr) {
-            ArrayLength *length = new ArrayLength(array, first->state_before()->copy());
-            length->set_exception_state(length->state_before());
-            length->set_flag(Instruction::DeoptimizeOnException, true);
-            insert_position = insert_position->insert_after_same_bci(length);
-            length_instr = length;
-          }
-
-          // Calculate lower bound
-          Instruction *lower_compare = index_instruction;
-          if (min_constant) {
-            ArithmeticOp *ao = new ArithmeticOp(Bytecodes::_iadd, min_constant, lower_compare, false, NULL);
-            insert_position = insert_position->insert_after_same_bci(ao);
-            lower_compare = ao;
-          }
-
-          // Calculate upper bound
-          Instruction *upper_compare = index_instruction;
-          if (max_constant) {
-            ArithmeticOp *ao = new ArithmeticOp(Bytecodes::_iadd, max_constant, upper_compare, false, NULL);
-            insert_position = insert_position->insert_after_same_bci(ao);
-            upper_compare = ao;
-          }
-
-          // Trick with unsigned compare is done
-          int bci = -1;
-          insert_position = predicate(upper_compare, Instruction::aeq, length_instr, state, insert_position, bci);
-          insert_position = predicate_cmp_with_const(lower_compare, Instruction::leq, -1, state, insert_position);
-          for (int j = 0; j<info->_list->length(); j++) {
-            AccessIndexed *ai = info->_list->at(j);
-            remove_range_check(ai);
-          }
-        }
-      }
-
-      if (list_constant.length() > 1) {
-        AccessIndexed *first = list_constant.at(0);
-        Instruction *insert_position = first->prev();
-        ValueStack *state = first->state_before();
-        // Load max Constant
-        Constant *constant = new Constant(new IntConstant(max_constant));
-        insert_position = insert_position->insert_after(constant);
-        Instruction *compare_instr = constant;
-        Value length_instr = first->length();
-        if (!length_instr) {
-          ArrayLength *length = new ArrayLength(array, state->copy());
-          length->set_exception_state(length->state_before());
-          length->set_flag(Instruction::DeoptimizeOnException, true);
-          insert_position = insert_position->insert_after_same_bci(length);
-          length_instr = length;
-        }
-        // Compare for greater or equal to array length
-        insert_position = predicate(compare_instr, Instruction::geq, length_instr, state, insert_position);
-        for (int j = 0; j<list_constant.length(); j++) {
-          AccessIndexed *ai = list_constant.at(j);
-          remove_range_check(ai);
-        }
-      }
-    }
-
     // Clear data structures for next array
     for (int i = 0; i < indices.length(); i++) {
       Instruction *index_instruction = indices.at(i);
@@ -705,20 +583,9 @@ void RangeCheckEliminator::process_if(IntegerStack &pushed, BlockBegin *block, I
 
 // Process access indexed
 void RangeCheckEliminator::process_access_indexed(BlockBegin *loop_header, BlockBegin *block, AccessIndexed *ai) {
-  TRACE_RANGE_CHECK_ELIMINATION(
-    tty->fill_to(block->dominator_depth()*2)
-  );
-  TRACE_RANGE_CHECK_ELIMINATION(
-    tty->print_cr("Access indexed: index=%d length=%d", ai->index()->id(), (ai->length() != NULL ? ai->length()->id() :-1 ))
-  );
-
   if (ai->check_flag(Instruction::NeedsRangeCheckFlag)) {
     Bound *index_bound = get_bound(ai->index());
     if (!index_bound->has_lower() || !index_bound->has_upper()) {
-      TRACE_RANGE_CHECK_ELIMINATION(
-        tty->fill_to(block->dominator_depth()*2);
-        tty->print_cr("Index instruction %d has no lower and/or no upper bound!", ai->index()->id())
-      );
       return;
     }
 
@@ -730,87 +597,7 @@ void RangeCheckEliminator::process_access_indexed(BlockBegin *loop_header, Block
     }
 
     if (in_array_bound(index_bound, ai->array()) || (index_bound && array_bound && index_bound->is_smaller(array_bound) && !index_bound->lower_instr() && index_bound->lower() >= 0)) {
-        TRACE_RANGE_CHECK_ELIMINATION(
-          tty->fill_to(block->dominator_depth()*2);
-          tty->print_cr("Bounds check for instruction %d in block B%d can be fully eliminated!", ai->id(), ai->block()->block_id())
-        );
-
         remove_range_check(ai);
-    } else if (_optimistic && loop_header) {
-      // Array instruction
-      Instruction *array_instr = ai->array();
-      if (!loop_invariant(loop_header, array_instr)) {
-        TRACE_RANGE_CHECK_ELIMINATION(
-          tty->fill_to(block->dominator_depth()*2);
-          tty->print_cr("Array %d is not loop invariant to header B%d", ai->array()->id(), loop_header->block_id())
-        );
-        return;
-      }
-
-      // Lower instruction
-      Value index_instr = ai->index();
-      Value lower_instr = index_bound->lower_instr();
-      if (!loop_invariant(loop_header, lower_instr)) {
-        TRACE_RANGE_CHECK_ELIMINATION(
-          tty->fill_to(block->dominator_depth()*2);
-          tty->print_cr("Lower instruction %d not loop invariant!", lower_instr->id())
-        );
-        return;
-      }
-      if (!lower_instr && index_bound->lower() < 0) {
-        TRACE_RANGE_CHECK_ELIMINATION(
-          tty->fill_to(block->dominator_depth()*2);
-          tty->print_cr("Lower bound smaller than 0 (%d)!", index_bound->lower())
-        );
-        return;
-      }
-
-      // Upper instruction
-      Value upper_instr = index_bound->upper_instr();
-      if (!loop_invariant(loop_header, upper_instr)) {
-        TRACE_RANGE_CHECK_ELIMINATION(
-          tty->fill_to(block->dominator_depth()*2);
-          tty->print_cr("Upper instruction %d not loop invariant!", upper_instr->id())
-        );
-        return;
-      }
-
-      // Length instruction
-      Value length_instr = ai->length();
-      if (!loop_invariant(loop_header, length_instr)) {
-        // Generate length instruction yourself!
-        length_instr = NULL;
-      }
-
-      TRACE_RANGE_CHECK_ELIMINATION(
-        tty->fill_to(block->dominator_depth()*2);
-        tty->print_cr("LOOP INVARIANT access indexed %d found in block B%d!", ai->id(), ai->block()->block_id())
-      );
-
-      BlockBegin *pred_block = loop_header->dominator();
-      BlockEnd *pred_block_end = pred_block->end();
-      Instruction *insert_position = pred_block_end->prev();
-      ValueStack *state = pred_block_end->state_before();
-      if (pred_block_end->as_Goto() && state == NULL) state = pred_block_end->state();
-
-      // Add deoptimization to dominator of loop header
-      TRACE_RANGE_CHECK_ELIMINATION(
-        tty->fill_to(block->dominator_depth()*2);
-        tty->print_cr("Inserting deopt at bci %d in block B%d!", state->bci(), insert_position->block()->block_id())
-      );
-
-      if (!is_ok_for_deoptimization(insert_position, array_instr, length_instr, lower_instr, index_bound->lower(), upper_instr, index_bound->upper())) {
-        TRACE_RANGE_CHECK_ELIMINATION(
-          tty->fill_to(block->dominator_depth()*2);
-          tty->print_cr("Could not eliminate because of static analysis!")
-        );
-        return;
-      }
-
-      insert_deoptimization(state, insert_position, array_instr, length_instr, lower_instr, index_bound->lower(), upper_instr, index_bound->upper(), ai);
-
-      // Finally remove the range check!
-      remove_range_check(ai);
     }
   }
 }
@@ -819,36 +606,10 @@ void RangeCheckEliminator::remove_range_check(AccessIndexed *ai) {
   ai->set_flag(Instruction::NeedsRangeCheckFlag, false);
   // no range check, no need for the length instruction anymore
   ai->clear_length();
-
-  TRACE_RANGE_CHECK_ELIMINATION(
-    tty->fill_to(ai->dominator_depth()*2);
-    tty->print_cr("Range check for instruction %d eliminated!", ai->id());
-  );
-
-  ASSERT_RANGE_CHECK_ELIMINATION(
-    Value array_length = ai->length();
-    if (!array_length) {
-      array_length = ai->array();
-    }
-    int cur_constant = -1;
-    Value cur_value = array_length;
-    if (cur_value->type()->as_IntConstant()) {
-      cur_constant += cur_value->type()->as_IntConstant()->value();
-      cur_value = NULL;
-    }
-    Bound *new_index_bound = new Bound(0, NULL, cur_constant, cur_value);
-    add_assertions(new_index_bound, ai->index(), ai);
-  );
 }
 
 // Calculate bounds for instruction in this block and children blocks in the dominator tree
 void RangeCheckEliminator::calc_bounds(BlockBegin *block, BlockBegin *loop_header) {
-  // Tracing output
-  TRACE_RANGE_CHECK_ELIMINATION(
-    tty->fill_to(block->dominator_depth()*2);
-    tty->print_cr("Block B%d", block->block_id());
-  );
-
   // Pushed stack for conditions
   IntegerStack pushed;
   // Process If
@@ -896,9 +657,6 @@ void RangeCheckEliminator::calc_bounds(BlockBegin *block, BlockBegin *loop_heade
     }
     cur = cur->next();
   }
-
-  // Output current condition stack
-  TRACE_RANGE_CHECK_ELIMINATION(dump_condition_stack(block));
 
   // Do in block motion of range checks
   in_block_motion(block, accessIndexed, arrays);

@@ -52,10 +52,6 @@ LIR_Opr LIR_Assembler::receiverOpr() {
   return FrameMap::receiver_opr;
 }
 
-LIR_Opr LIR_Assembler::osrBufferPointer() {
-  return FrameMap::as_pointer_opr(receiverOpr()->as_register());
-}
-
 //--------------fpu register translations-----------------------
 
 address LIR_Assembler::float_constant(float f) {
@@ -172,59 +168,6 @@ Address LIR_Assembler::as_Address_lo(LIR_Address* addr) {
   // FIXME: This needs to be much more clever.  See x86.
 }
 
-void LIR_Assembler::osr_entry() {
-  offsets()->set_value(CodeOffsets::OSR_Entry, code_offset());
-  BlockBegin* osr_entry = compilation()->hir()->osr_entry();
-  ValueStack* entry_state = osr_entry->state();
-  int number_of_locks = entry_state->locks_size();
-
-  // we jump here if osr happens with the interpreter
-  // state set up to continue at the beginning of the
-  // loop that triggered osr - in particular, we have
-  // the following registers setup:
-  //
-  // r2: osr buffer
-  //
-
-  // build frame
-  ciMethod* m = compilation()->method();
-  __ build_frame(initial_frame_size_in_bytes(), bang_size_in_bytes());
-
-  // OSR buffer is
-  //
-  // locals[nlocals-1..0]
-  // monitors[0..number_of_locks]
-  //
-  // locals is a direct copy of the interpreter frame so in the osr buffer
-  // so first slot in the local array is the last local from the interpreter
-  // and last slot is local[0] (receiver) from the interpreter
-  //
-  // Similarly with locks. The first lock slot in the osr buffer is the nth lock
-  // from the interpreter frame, the nth lock slot in the osr buffer is 0th lock
-  // in the interpreter frame (the method lock if a sync method)
-
-  // Initialize monitors in the compiled activation.
-  //   r2: pointer to osr buffer
-  //
-  // All other registers are dead at this point and the locals will be
-  // copied into place by code emitted in the IR.
-
-  Register OSR_buf = osrBufferPointer()->as_pointer_register();
-  {
-    int monitor_offset = BytesPerWord * method()->max_locals() + (2 * BytesPerWord) * (number_of_locks - 1);
-    // SharedRuntime::NULL() packs BasicObjectLocks in
-    // the OSR buffer using 2 word entries: first the lock and then
-    // the oop.
-    for (int i = 0; i < number_of_locks; i++) {
-      int slot_offset = monitor_offset - ((i * 2) * BytesPerWord);
-      __ ldr(r19, Address(OSR_buf, slot_offset + 0));
-      __ str(r19, frame_map()->address_for_monitor_lock(i));
-      __ ldr(r19, Address(OSR_buf, slot_offset + 1*BytesPerWord));
-      __ str(r19, frame_map()->address_for_monitor_object(i));
-    }
-  }
-}
-
 // inline cache check; done before the frame is built.
 int LIR_Assembler::check_icache() {
   Register receiver = FrameMap::receiver_opr->as_register();
@@ -275,10 +218,6 @@ void LIR_Assembler::deoptimize_trap(CodeEmitInfo *info) {
     target = Runtime1::entry_for(Runtime1::load_mirror_patching_id);
     reloc_type = relocInfo::oop_type;
     break;
-  case PatchingStub::load_appendix_id:
-    target = Runtime1::entry_for(Runtime1::load_appendix_patching_id);
-    reloc_type = relocInfo::oop_type;
-    break;
   default: ShouldNotReachHere();
   }
 
@@ -297,7 +236,7 @@ int LIR_Assembler::initial_frame_size_in_bytes() const {
   // The frame_map records size in slots (32bit word)
 
   // subtract two words to account for return address and link
-  return (frame_map()->framesize() - (2*VMRegImpl::slots_per_word))  * VMRegImpl::stack_slot_size;
+  return (frame_map()->framesize() - (2 * VMRegImpl::slots_per_word)) * VMRegImpl::stack_slot_size;
 }
 
 int LIR_Assembler::emit_exception_handler() {
@@ -333,74 +272,6 @@ int LIR_Assembler::emit_exception_handler() {
   return offset;
 }
 
-// Emit the code to remove the frame from the stack in the exception
-// unwind path.
-int LIR_Assembler::emit_unwind_handler() {
-  int offset = code_offset();
-
-  // Fetch the exception from TLS and clear out exception related thread state
-  __ ldr(r0, Address(rthread, JavaThread::exception_oop_offset()));
-  __ str(zr, Address(rthread, JavaThread::exception_oop_offset()));
-  __ str(zr, Address(rthread, JavaThread::exception_pc_offset()));
-
-  __ bind(_unwind_handler_entry);
-  __ verify_not_null_oop(r0);
-  if (method()->is_synchronized()) {
-    __ mov(r19, r0);  // Preserve the exception
-  }
-
-  // Preform needed unlocking
-  MonitorExitStub* stub = NULL;
-  if (method()->is_synchronized()) {
-    monitor_address(0, FrameMap::r0_opr);
-    stub = new MonitorExitStub(FrameMap::r0_opr, true, 0);
-    __ unlock_object(r5, r4, r0, *stub->entry());
-    __ bind(*stub->continuation());
-  }
-
-  if (method()->is_synchronized()) {
-    __ mov(r0, r19);  // Restore the exception
-  }
-
-  // remove the activation and dispatch to the unwind handler
-  __ block_comment("remove_frame and dispatch to the unwind handler");
-  __ remove_frame(initial_frame_size_in_bytes());
-  __ far_jump(RuntimeAddress(Runtime1::entry_for(Runtime1::unwind_exception_id)));
-
-  // Emit the slow path assembly
-  if (stub != NULL) {
-    stub->emit_code(this);
-  }
-
-  return offset;
-}
-
-int LIR_Assembler::emit_deopt_handler() {
-  // if the last instruction is a call (typically to do a throw which
-  // is coming at the end after block reordering) the return address
-  // must still point into the code area in order to avoid assertion
-  // failures when searching for the corresponding bci => add a nop
-  // (was bug 5/14/1999 - gri)
-  __ nop();
-
-  // generate code for exception handler
-  address handler_base = __ start_a_stub(deopt_handler_size());
-  if (handler_base == NULL) {
-    // not enough space left for the handler
-    bailout("deopt handler overflow");
-    return -1;
-  }
-
-  int offset = code_offset();
-
-  __ adr(lr, pc());
-  __ far_jump(RuntimeAddress(SharedRuntime::NULL()->unpack()));
-  guarantee(code_offset() - offset <= deopt_handler_size(), "overflow");
-  __ end_a_stub();
-
-  return offset;
-}
-
 void LIR_Assembler::add_debug_info_for_branch(address adr, CodeEmitInfo* info) {
   _masm->code_section()->relocate(adr, relocInfo::poll_type);
   int pc_offset = code_offset();
@@ -428,8 +299,7 @@ int LIR_Assembler::safepoint_poll(LIR_Opr tmp, CodeEmitInfo* info) {
   address polling_page(os::get_polling_page());
   guarantee(info != NULL, "Shouldn't be NULL");
   __ get_polling_page(rscratch1, polling_page, relocInfo::poll_type);
-  add_debug_info_for_branch(info);  // This isn't just debug info:
-                                    // it's the oop map
+  add_debug_info_for_branch(info);  // This isn't just debug info: it's the oop map
   __ read_polling_page(rscratch1, relocInfo::poll_type);
   return __ offset();
 }
@@ -602,14 +472,9 @@ void LIR_Assembler::reg2reg(LIR_Opr src, LIR_Opr dest) {
       move_regs(src->as_register_lo(), dest->as_register());
       return;
     }
-    if (src->type() == T_OBJECT) {
-      __ verify_oop(src->as_register());
-    }
     move_regs(src->as_register(), dest->as_register());
   } else if (dest->is_double_cpu()) {
     if (src->type() == T_OBJECT || src->type() == T_ARRAY) {
-      // Surprising to me but we can see move of a long to t_object
-      __ verify_oop(src->as_register());
       move_regs(src->as_register(), dest->as_register_lo());
       return;
     }
@@ -631,7 +496,6 @@ void LIR_Assembler::reg2stack(LIR_Opr src, LIR_Opr dest, BasicType type, bool po
   if (src->is_single_cpu()) {
     if (type == T_ARRAY || type == T_OBJECT) {
       __ str(src->as_register(), frame_map()->address_for_slot(dest->single_stack_ix()));
-      __ verify_oop(src->as_register());
     } else if (type == T_METADATA || type == T_DOUBLE) {
       __ str(src->as_register(), frame_map()->address_for_slot(dest->single_stack_ix()));
     } else {
@@ -662,8 +526,6 @@ void LIR_Assembler::reg2mem(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
   }
 
   if (type == T_ARRAY || type == T_OBJECT) {
-    __ verify_oop(src->as_register());
-
     if (UseCompressedOops && !wide) {
       __ encode_heap_oop(compressed_src, src->as_register());
     } else {
@@ -734,7 +596,6 @@ void LIR_Assembler::stack2reg(LIR_Opr src, LIR_Opr dest, BasicType type) {
   if (dest->is_single_cpu()) {
     if (type == T_ARRAY || type == T_OBJECT) {
       __ ldr(dest->as_register(), frame_map()->address_for_slot(src->single_stack_ix()));
-      __ verify_oop(dest->as_register());
     } else if (type == T_METADATA) {
       __ ldr(dest->as_register(), frame_map()->address_for_slot(src->single_stack_ix()));
     } else {
@@ -771,10 +632,6 @@ void LIR_Assembler::klass2reg_with_patching(Register reg, CodeEmitInfo* info) {
     target = Runtime1::entry_for(Runtime1::load_mirror_patching_id);
     reloc_type = relocInfo::oop_type;
     break;
-  case PatchingStub::load_appendix_id:
-    target = Runtime1::entry_for(Runtime1::load_appendix_patching_id);
-    reloc_type = relocInfo::oop_type;
-    break;
   default: ShouldNotReachHere();
   }
 
@@ -796,10 +653,6 @@ void LIR_Assembler::stack2stack(LIR_Opr src, LIR_Opr dest, BasicType type) {
 void LIR_Assembler::mem2reg(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_PatchCode patch_code, CodeEmitInfo* info, bool wide, bool /* unaligned */) {
   LIR_Address* addr = src->as_address_ptr();
   LIR_Address* from_addr = src->as_address_ptr();
-
-  if (addr->base()->type() == T_OBJECT) {
-    __ verify_oop(addr->base()->as_pointer_register());
-  }
 
   if (patch_code != lir_patch_none) {
     deoptimize_trap(info);
@@ -879,7 +732,6 @@ void LIR_Assembler::mem2reg(LIR_Opr src, LIR_Opr dest, BasicType type, LIR_Patch
     if (UseCompressedOops && !wide) {
       __ decode_heap_oop(dest->as_register());
     }
-    __ verify_oop(dest->as_register());
   } else if (type == T_ADDRESS && addr->disp() == oopDesc::klass_offset_in_bytes()) {
     if (UseCompressedClassPointers) {
       __ decode_klass_not_null(dest->as_register());
@@ -1079,8 +931,7 @@ void LIR_Assembler::emit_alloc_array(LIR_OpAllocArray* op) {
   Register len =  op->len()->as_register();
   __ uxtw(len, len);
 
-  if (UseSlowPath ||
-      (!UseFastNewObjectArray && (op->type() == T_OBJECT || op->type() == T_ARRAY)) ||
+  if ((!UseFastNewObjectArray && (op->type() == T_OBJECT || op->type() == T_ARRAY)) ||
       (!UseFastNewTypeArray   && (op->type() != T_OBJECT && op->type() != T_ARRAY))) {
     __ b(*op->stub()->entry());
   } else {
@@ -1190,7 +1041,6 @@ void LIR_Assembler::emit_typecheck_helper(LIR_OpTypeCheck *op, Label* success, L
   } else {
     __ mov_metadata(k_RInfo, k->constant_encoding());
   }
-  __ verify_oop(obj);
 
   if (op->fast_check()) {
     // get object class
@@ -2286,8 +2136,6 @@ void LIR_Assembler::emit_profile_type(LIR_OpProfileType* op) {
   bool do_null = !not_null;
   bool exact_klass_set = exact_klass != NULL && ciTypeEntries::valid_ciklass(current_klass) == exact_klass;
   bool do_update = !TypeEntries::is_type_unknown(current_klass) && !exact_klass_set;
-
-  __ verify_oop(obj);
 
   if (tmp != obj) {
     __ mov(tmp, obj);

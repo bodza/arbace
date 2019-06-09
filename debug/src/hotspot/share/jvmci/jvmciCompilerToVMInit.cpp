@@ -14,32 +14,28 @@
 int CompilerToVM::Data::Klass_vtable_start_offset;
 int CompilerToVM::Data::Klass_vtable_length_offset;
 
-int CompilerToVM::Data::Method_extra_stack_entries;
-
 address CompilerToVM::Data::SharedRuntime_ic_miss_stub;
 address CompilerToVM::Data::SharedRuntime_handle_wrong_method_stub;
-address CompilerToVM::Data::SharedRuntime_deopt_blob_unpack;
-address CompilerToVM::Data::SharedRuntime_deopt_blob_uncommon_trap;
 
 size_t CompilerToVM::Data::ThreadLocalAllocBuffer_alignment_reserve;
 
 CollectedHeap* CompilerToVM::Data::Universe_collectedHeap;
-int CompilerToVM::Data::Universe_base_vtable_size;
-address CompilerToVM::Data::Universe_narrow_oop_base;
-int CompilerToVM::Data::Universe_narrow_oop_shift;
-address CompilerToVM::Data::Universe_narrow_klass_base;
-int CompilerToVM::Data::Universe_narrow_klass_shift;
-void* CompilerToVM::Data::Universe_non_oop_bits;
-uintptr_t CompilerToVM::Data::Universe_verify_oop_mask;
-uintptr_t CompilerToVM::Data::Universe_verify_oop_bits;
+int            CompilerToVM::Data::Universe_base_vtable_size;
+address        CompilerToVM::Data::Universe_narrow_oop_base;
+int            CompilerToVM::Data::Universe_narrow_oop_shift;
+address        CompilerToVM::Data::Universe_narrow_klass_base;
+int            CompilerToVM::Data::Universe_narrow_klass_shift;
+void*          CompilerToVM::Data::Universe_non_oop_bits;
+uintptr_t      CompilerToVM::Data::Universe_verify_oop_mask;
+uintptr_t      CompilerToVM::Data::Universe_verify_oop_bits;
 
-bool       CompilerToVM::Data::_supports_inline_contig_alloc;
-HeapWord** CompilerToVM::Data::_heap_end_addr;
+bool           CompilerToVM::Data::_supports_inline_contig_alloc;
+HeapWord**     CompilerToVM::Data::_heap_end_addr;
 HeapWord* volatile* CompilerToVM::Data::_heap_top_addr;
-int CompilerToVM::Data::_max_oop_map_stack_offset;
+int            CompilerToVM::Data::_max_oop_map_stack_offset;
 
-jbyte* CompilerToVM::Data::cardtable_start_address;
-int CompilerToVM::Data::cardtable_shift;
+jbyte*         CompilerToVM::Data::cardtable_start_address;
+int            CompilerToVM::Data::cardtable_shift;
 
 int CompilerToVM::Data::vm_page_size;
 
@@ -67,12 +63,8 @@ void CompilerToVM::Data::initialize(TRAPS) {
   Klass_vtable_start_offset = in_bytes(Klass::vtable_start_offset());
   Klass_vtable_length_offset = in_bytes(Klass::vtable_length_offset());
 
-  Method_extra_stack_entries = Method::extra_stack_entries();
-
   SharedRuntime_ic_miss_stub = SharedRuntime::get_ic_miss_stub();
   SharedRuntime_handle_wrong_method_stub = SharedRuntime::get_handle_wrong_method_stub();
-  SharedRuntime_deopt_blob_unpack = SharedRuntime::NULL()->unpack();
-  SharedRuntime_deopt_blob_uncommon_trap = SharedRuntime::NULL()->NULL();
 
   ThreadLocalAllocBuffer_alignment_reserve = ThreadLocalAllocBuffer::alignment_reserve();
 
@@ -213,8 +205,7 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
   do_bool_flag(UseSHA512Intrinsics) \
   do_intx_flag(UseSSE) \
   do_bool_flag(UseStackBanging) \
-  do_bool_flag(UseTLAB) \
-  do_bool_flag(VerifyOops)
+  do_bool_flag(UseTLAB)
 
 #define BOXED_BOOLEAN(name, value) oop name = ((jboolean)(value) ? boxedTrue() : boxedFalse())
 #define BOXED_DOUBLE(name, value) oop name; do { jvalue p; p.d = (jdouble) (value); name = java_lang_boxing_object::create(T_DOUBLE, &p, CHECK_NULL); } while (false)

@@ -211,8 +211,8 @@ class LoopInvariantCodeMotion : public StackObj {
   ValueStack *          _state;
   bool                  _insert_is_pred;
 
-  void set_invariant(Value v) const    { _gvn->set_processed(v); }
-  bool is_invariant(Value v) const     { return _gvn->is_processed(v); }
+  void set_invariant(Value v)    const { _gvn->set_processed(v); }
+  bool is_invariant(Value v)     const { return _gvn->is_processed(v); }
 
   void process_block(BlockBegin* block);
 
@@ -325,10 +325,6 @@ bool ShortLoopOptimizer::process(BlockBegin* loop_header) {
     for (int j = block->number_of_preds() - 1; j >= 0; j--) {
       BlockBegin* pred = block->pred_at(j);
 
-      if (pred->is_set(BlockBegin::osr_entry_flag)) {
-        return false;
-      }
-
       ValueMap* pred_map = value_map_of(pred);
       if (pred_map != NULL) {
         current_map()->kill_map(pred_map);
@@ -347,12 +343,6 @@ bool ShortLoopOptimizer::process(BlockBegin* loop_header) {
         return false;
       }
     }
-  }
-
-  bool optimistic = this->_gvn->compilation()->is_optimistic();
-
-  if (UseLoopInvariantCodeMotion && optimistic) {
-    LoopInvariantCodeMotion code_motion(this, _gvn, loop_header, &_loop_blocks);
   }
 
   return true;
@@ -408,7 +398,7 @@ GlobalValueNumbering::GlobalValueNumbering(IR* ir)
           current_map()->kill_map(value_map_of(pred));
         } else {
           // kill all memory loads because predecessor not yet processed
-          // (this can happen with non-natural loops and OSR-compiles)
+          // (this can happen with non-natural loops)
           current_map()->kill_memory();
         }
       }

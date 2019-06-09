@@ -431,12 +431,6 @@ void Runtime1::generate_unwind_exception(StubAssembler *sasm) {
 }
 
 OopMapSet* Runtime1::generate_patching(StubAssembler* sasm, address target) {
-  // use the maximum number of runtime-arguments here because it is difficult to
-  // distinguish each RT-Call.
-  // Note: This number affects also the RT-Call in generate_handle_exception because
-  //       the oop-map is shared for all calls.
-  NULL* NULL = SharedRuntime::NULL();
-
   OopMap* oop_map = save_live_registers(sasm);
 
   __ mov(c_rarg0, rthread);
@@ -590,7 +584,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
           __ eden_allocate(obj, obj_size, 0, t1, slow_path);
 
           __ initialize_object(obj, klass, obj_size, 0, t1, t2, /* is_tlab_allocated */ false);
-          __ verify_oop(obj);
           __ ldp(r19, zr, Address(__ post(sp, 2 * wordSize)));
           __ ret(lr);
 
@@ -604,7 +597,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         oop_maps = new OopMapSet();
         oop_maps->add_gc_map(call_offset, map);
         restore_live_registers_except_r0(sasm);
-        __ verify_oop(obj);
         __ leave();
         __ ret(lr);
 
@@ -613,30 +605,12 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
 
       break;
 
-    case counter_overflow_id:
-      {
-        Register bci = r0, method = r1;
-        __ enter();
-        OopMap* map = save_live_registers(sasm);
-        // Retrieve bci
-        __ ldrw(bci, Address(rfp, 2*BytesPerWord));
-        // And a pointer to the Method*
-        __ ldr(method, Address(rfp, 3*BytesPerWord));
-        int call_offset = __ call_RT(noreg, noreg, CAST_FROM_FN_PTR(address, counter_overflow), bci, method);
-        oop_maps = new OopMapSet();
-        oop_maps->add_gc_map(call_offset, map);
-        restore_live_registers(sasm);
-        __ leave();
-        __ ret(lr);
-      }
-      break;
-
     case new_type_array_id:
     case new_object_array_id:
       {
-        Register length   = r19; // Incoming
-        Register klass    = r3; // Incoming
-        Register obj      = r0; // Result
+        Register length = r19; // Incoming
+        Register klass  = r3; // Incoming
+        Register obj    = r0; // Result
 
         if (id == new_type_array_id) {
           __ set_info("new_type_array", dont_gc_arguments);
@@ -677,7 +651,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
           __ sub(arr_size, arr_size, t1);  // body length
           __ add(t1, t1, obj);       // body start
           __ initialize_body(t1, arr_size, 0, t2);
-          __ verify_oop(obj);
 
           __ ret(lr);
 
@@ -697,7 +670,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         oop_maps->add_gc_map(call_offset, map);
         restore_live_registers_except_r0(sasm);
 
-        __ verify_oop(obj);
         __ leave();
         __ ret(lr);
 
@@ -721,7 +693,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         restore_live_registers_except_r0(sasm);
 
         // r0,: new multi array
-        __ verify_oop(r0);
       }
       break;
 
@@ -731,8 +702,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
 
         // This is called via call_runtime so the arguments
         // will be place in C abi locations
-
-        __ verify_oop(c_rarg0);
 
         // load the klass and check the has finalizer flag
         Label register_finalizer;
@@ -856,22 +825,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
       }
       break;
 
-    case deoptimize_id:
-      {
-        StubFrame f(sasm, "deoptimize", dont_gc_arguments);
-        OopMap* oop_map = save_live_registers(sasm);
-        f.load_argument(0, c_rarg1);
-        int call_offset = __ call_RT(noreg, noreg, CAST_FROM_FN_PTR(address, deoptimize), c_rarg1);
-
-        oop_maps = new OopMapSet();
-        oop_maps->add_gc_map(call_offset, oop_map);
-        restore_live_registers(sasm);
-        NULL* NULL = SharedRuntime::NULL();
-        __ leave();
-        __ far_jump(RuntimeAddress(NULL->unpack_with_reexecution()));
-      }
-      break;
-
     case throw_range_check_failed_id:
       { StubFrame f(sasm, "range_check_failed", dont_gc_arguments);
         oop_maps = generate_exception_throw(sasm, CAST_FROM_FN_PTR(address, throw_range_check_exception), true);
@@ -907,13 +860,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
       }
       break;
 
-    case load_appendix_patching_id:
-      { StubFrame f(sasm, "load_appendix_patching", dont_gc_arguments);
-        // we should set up register map
-        oop_maps = generate_patching(sasm, CAST_FROM_FN_PTR(address, move_appendix_patching));
-      }
-      break;
-
     case handle_exception_nofpu_id:
     case handle_exception_id:
       { StubFrame f(sasm, "handle_exception", dont_gc_arguments);
@@ -938,23 +884,6 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         // tos + 0: link
         //     + 1: return address
         oop_maps = generate_exception_throw(sasm, CAST_FROM_FN_PTR(address, throw_array_store_exception), true);
-      }
-      break;
-
-    case predicate_failed_trap_id:
-      {
-        StubFrame f(sasm, "predicate_failed_trap", dont_gc_arguments);
-
-        OopMap* map = save_live_registers(sasm);
-
-        int call_offset = __ call_RT(noreg, noreg, CAST_FROM_FN_PTR(address, predicate_failed_trap));
-        oop_maps = new OopMapSet();
-        oop_maps->add_gc_map(call_offset, map);
-        restore_live_registers(sasm);
-        __ leave();
-        NULL* NULL = SharedRuntime::NULL();
-
-        __ far_jump(RuntimeAddress(NULL->unpack_with_reexecution()));
       }
       break;
 

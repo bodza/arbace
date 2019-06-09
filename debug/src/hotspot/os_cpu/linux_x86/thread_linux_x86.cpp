@@ -4,7 +4,6 @@
 #include "runtime/thread.inline.hpp"
 
 frame JavaThread::pd_last_frame() {
-  vmassert(_anchor.last_Java_pc() != NULL, "not walkable");
   return frame(_anchor.last_Java_sp(), _anchor.last_Java_fp(), _anchor.last_Java_pc());
 }
 

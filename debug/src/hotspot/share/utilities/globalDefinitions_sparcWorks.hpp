@@ -95,11 +95,6 @@ inline int g_isfinite(jdouble f) { return finite(f); }
 
 inline int wcslen(const jchar* x) { return wcslen((const wchar_t*)x); }
 
-// Portability macros
-#define PRAGMA_INTERFACE
-#define PRAGMA_IMPLEMENTATION
-#define PRAGMA_IMPLEMENTATION_(arg)
-
 // Formatting.
 #define FORMAT64_MODIFIER "l"
 

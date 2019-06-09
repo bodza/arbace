@@ -18,9 +18,6 @@ G1PageBasedVirtualSpace::G1PageBasedVirtualSpace(ReservedSpace rs, size_t used_s
 void G1PageBasedVirtualSpace::initialize_with_page_size(ReservedSpace rs, size_t used_size, size_t page_size) {
   guarantee(rs.is_reserved(), "Given reserved space must have been reserved already.");
 
-  vmassert(_low_boundary == NULL, "VirtualSpace already initialized");
-  vmassert(page_size > 0, "Page size must be non-zero.");
-
   guarantee(is_aligned(rs.base(), page_size), "Reserved space base " PTR_FORMAT " is not aligned to requested page size " SIZE_FORMAT, p2i(rs.base()), page_size);
   guarantee(is_aligned(used_size, os::vm_page_size()), "Given used reserved space size needs to be OS page size aligned (%d bytes) but is " SIZE_FORMAT, os::vm_page_size(), used_size);
   guarantee(used_size <= rs.size(), "Used size of reserved space " SIZE_FORMAT " bytes is smaller than reservation at " SIZE_FORMAT " bytes", used_size, rs.size());
@@ -34,7 +31,6 @@ void G1PageBasedVirtualSpace::initialize_with_page_size(ReservedSpace rs, size_t
 
   _page_size = page_size;
 
-  vmassert(_committed.size() == 0, "virtual space initialized more than once");
   BitMap::idx_t size_in_pages = rs.size() / page_size;
   _committed.initialize(size_in_pages);
   if (_special) {
@@ -96,11 +92,6 @@ bool G1PageBasedVirtualSpace::is_after_last_page(size_t index) const {
 }
 
 void G1PageBasedVirtualSpace::commit_preferred_pages(size_t start, size_t num_pages) {
-  vmassert(num_pages > 0, "No full pages to commit");
-  vmassert(start + num_pages <= _committed.size(),
-           "Tried to commit area from page " SIZE_FORMAT " to page " SIZE_FORMAT " that is outside of managed space of " SIZE_FORMAT " pages",
-           start, start + num_pages, _committed.size());
-
   char* start_addr = page_start(start);
   size_t size = num_pages * _page_size;
 
@@ -110,8 +101,6 @@ void G1PageBasedVirtualSpace::commit_preferred_pages(size_t start, size_t num_pa
 }
 
 void G1PageBasedVirtualSpace::commit_tail() {
-  vmassert(_tail_size > 0, "The size of the tail area must be > 0 when reaching here");
-
   char* const aligned_end_address = align_down(_high_boundary, _page_size);
   os::commit_memory_or_exit(aligned_end_address, _tail_size, os::vm_page_size(), _executable,
                             err_msg("Failed to commit tail area from " PTR_FORMAT " to " PTR_FORMAT " of length " SIZE_FORMAT ".",

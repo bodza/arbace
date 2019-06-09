@@ -91,7 +91,7 @@ class TypeArrayKlass : public ArrayKlass {
 
   // Sizing
   static int header_size()  { return sizeof(TypeArrayKlass)/wordSize; }
-  int size() const          { return ArrayKlass::static_size(header_size()); }
+  int size()          const { return ArrayKlass::static_size(header_size()); }
 
   // Initialization (virtual from Klass)
   void initialize(TRAPS);

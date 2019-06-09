@@ -1684,7 +1684,7 @@ static bool _print_ascii_file(const char* filename, outputStream* st, const char
   return true;
 }
 
-void os::print_dll_info(outputStream *st) {
+void os::print_dll_info(outputStream* st) {
   st->print_cr("Dynamic libraries:");
 
   char fname[32];
@@ -2877,7 +2877,7 @@ bool os::committed_in_range(address start, size_t size, address& committed_start
   address loop_base = start;
   bool found_range = false;
 
-  for (int index = 0; index < loops && !found_range; index ++) {
+  for (int index = 0; index < loops && !found_range; index++) {
     int pages_to_query = (pages >= stripe) ? stripe : pages;
     pages -= pages_to_query;
 
@@ -2892,7 +2892,7 @@ bool os::committed_in_range(address start, size_t size, address& committed_start
     }
 
     // Process this stripe
-    for (int vecIdx = 0; vecIdx < pages_to_query; vecIdx ++) {
+    for (int vecIdx = 0; vecIdx < pages_to_query; vecIdx++) {
       if ((vec[vecIdx] & 0x01) == 0) { // not committed
         // End of current contiguous region
         if (committed_start != NULL) {

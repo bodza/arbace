@@ -751,7 +751,6 @@ void MacroAssembler::call_VM(Register oop_result, Register last_java_sp, address
 void MacroAssembler::get_vm_result(Register oop_result, Register java_thread) {
   ldr(oop_result, Address(java_thread, JavaThread::vm_result_offset()));
   str(zr, Address(java_thread, JavaThread::vm_result_offset()));
-  verify_oop(oop_result, "broken oop in call_VM_base");
 }
 
 void MacroAssembler::get_vm_result_2(Register metadata_result, Register java_thread) {
@@ -1043,83 +1042,6 @@ void MacroAssembler::check_klass_subtype_slow_path(Register sub_klass, Register 
 #undef IS_A_TEMP
 
   bind(L_fallthrough);
-}
-
-void MacroAssembler::verify_oop(Register reg, const char* s) {
-  if (!VerifyOops) return;
-
-  // Pass register number to verify_oop_subroutine
-  const char* b = NULL;
-  {
-    ResourceMark rm;
-    stringStream ss;
-    ss.print("verify_oop: %s: %s", reg->name(), s);
-    b = code_string(ss.as_string());
-  }
-  BLOCK_COMMENT("verify_oop {");
-
-  stp(r0, rscratch1, Address(pre(sp, -2 * wordSize)));
-  stp(rscratch2, lr, Address(pre(sp, -2 * wordSize)));
-
-  mov(r0, reg);
-  mov(rscratch1, (address)b);
-
-  // call indirectly to solve generation ordering problem
-  lea(rscratch2, ExternalAddress(StubRoutines::verify_oop_subroutine_entry_address()));
-  ldr(rscratch2, Address(rscratch2));
-  blr(rscratch2);
-
-  ldp(rscratch2, lr, Address(post(sp, 2 * wordSize)));
-  ldp(r0, rscratch1, Address(post(sp, 2 * wordSize)));
-
-  BLOCK_COMMENT("} verify_oop");
-}
-
-void MacroAssembler::verify_oop_addr(Address addr, const char* s) {
-  if (!VerifyOops) return;
-
-  const char* b = NULL;
-  {
-    ResourceMark rm;
-    stringStream ss;
-    ss.print("verify_oop_addr: %s", s);
-    b = code_string(ss.as_string());
-  }
-  BLOCK_COMMENT("verify_oop_addr {");
-
-  stp(r0, rscratch1, Address(pre(sp, -2 * wordSize)));
-  stp(rscratch2, lr, Address(pre(sp, -2 * wordSize)));
-
-  // addr may contain sp so we will have to adjust it based on the
-  // pushes that we just did.
-  if (addr.uses(sp)) {
-    lea(r0, addr);
-    ldr(r0, Address(r0, 4 * wordSize));
-  } else {
-    ldr(r0, addr);
-  }
-  mov(rscratch1, (address)b);
-
-  // call indirectly to solve generation ordering problem
-  lea(rscratch2, ExternalAddress(StubRoutines::verify_oop_subroutine_entry_address()));
-  ldr(rscratch2, Address(rscratch2));
-  blr(rscratch2);
-
-  ldp(rscratch2, lr, Address(post(sp, 2 * wordSize)));
-  ldp(r0, rscratch1, Address(post(sp, 2 * wordSize)));
-
-  BLOCK_COMMENT("} verify_oop_addr");
-}
-
-Address MacroAssembler::argument_address(RegisterOrConstant arg_slot, int extra_slot_offset) {
-  int stackElementSize = NULL::stackElementSize;
-  int offset = NULL::expr_offset_in_bytes(extra_slot_offset + 0);
-  if (arg_slot.is_constant()) {
-    return Address(esp, arg_slot.as_constant() * stackElementSize + offset);
-  } else {
-    add(rscratch1, esp, arg_slot.as_register(), ext::uxtx, exact_log2(stackElementSize));
-    return Address(rscratch1, offset);
-  }
 }
 
 void MacroAssembler::call_VM_leaf_base(address entry_point, int number_of_arguments, Label *retaddr) {
@@ -1779,13 +1701,11 @@ void MacroAssembler::resolve_jobject(Register value, Register thread, Register t
 
   // Resolve jweak.
   access_load_at(T_OBJECT, IN_NATIVE | ON_PHANTOM_OOP_REF, value, Address(value, -JNIHandles::weak_tag_value), tmp, thread);
-  verify_oop(value);
   b(done);
 
   bind(not_weak);
   // Resolve (untagged) jobject.
   access_load_at(T_OBJECT, IN_NATIVE, value, Address(value, 0), tmp, thread);
-  verify_oop(value);
   bind(done);
 }
 
@@ -3117,7 +3037,6 @@ void MacroAssembler::store_klass_gap(Register dst, Register src) {
 
 // Algorithm must match CompressedOops::encode.
 void MacroAssembler::encode_heap_oop(Register d, Register s) {
-  verify_oop(s, "broken oop in encode_heap_oop");
   if (Universe::narrow_oop_base() == NULL) {
     if (Universe::narrow_oop_shift() != 0) {
       lsr(d, s, LogMinObjAlignmentInBytes);
@@ -3140,7 +3059,6 @@ void MacroAssembler::encode_heap_oop(Register d, Register s) {
 }
 
 void MacroAssembler::encode_heap_oop_not_null(Register r) {
-  verify_oop(r, "broken oop in encode_heap_oop_not_null");
   if (Universe::narrow_oop_base() != NULL) {
     sub(r, r, rheapbase);
   }
@@ -3150,8 +3068,6 @@ void MacroAssembler::encode_heap_oop_not_null(Register r) {
 }
 
 void MacroAssembler::encode_heap_oop_not_null(Register dst, Register src) {
-  verify_oop(src, "broken oop in encode_heap_oop_not_null2");
-
   Register data = src;
   if (Universe::narrow_oop_base() != NULL) {
     sub(dst, src, rheapbase);
@@ -3178,13 +3094,11 @@ void MacroAssembler::decode_heap_oop(Register d, Register s) {
     add(d, rheapbase, s, Assembler::LSL, LogMinObjAlignmentInBytes);
     bind(done);
   }
-  verify_oop(d, "broken oop in decode_heap_oop");
 }
 
 void MacroAssembler::decode_heap_oop_not_null(Register r) {
   // Cannot assert, unverified entry point counts instructions (see .ad file)
   // vtableStubs also counts instructions in pd_code_size_limit.
-  // Also do not verify_oop as this is called by verify_oop.
   if (Universe::narrow_oop_shift() != 0) {
     if (Universe::narrow_oop_base() != NULL) {
       add(r, rheapbase, r, Assembler::LSL, LogMinObjAlignmentInBytes);
@@ -3197,7 +3111,6 @@ void MacroAssembler::decode_heap_oop_not_null(Register r) {
 void MacroAssembler::decode_heap_oop_not_null(Register dst, Register src) {
   // Cannot assert, unverified entry point counts instructions (see .ad file)
   // vtableStubs also counts instructions in pd_code_size_limit.
-  // Also do not verify_oop as this is called by verify_oop.
   if (Universe::narrow_oop_shift() != 0) {
     if (Universe::narrow_oop_base() != NULL) {
       add(dst, rheapbase, src, Assembler::LSL, LogMinObjAlignmentInBytes);
@@ -3281,8 +3194,8 @@ void MacroAssembler::decode_klass_not_null(Register dst, Register src) {
 
   // Cannot assert, unverified entry point counts instructions (see .ad file)
   // vtableStubs also counts instructions in pd_code_size_limit.
-  // Also do not verify_oop as this is called by verify_oop.
-  if (dst == src) rbase = rheapbase;
+  if (dst == src)
+    rbase = rheapbase;
   mov(rbase, (uint64_t)Universe::narrow_klass_base());
   if (Universe::narrow_klass_shift() != 0) {
     add(dst, rbase, src, Assembler::LSL, LogKlassAlignmentInBytes);
@@ -3428,14 +3341,13 @@ void MacroAssembler::zero_memory(Register addr, Register len, Register t1) {
   br(rscratch2);
   bind(loop);
   sub(len, len, unroll);
-  for (int i = -unroll; i < 0; i++)
+  for (int i = -unroll; i < 0; i++) {
     Assembler::str(zr, Address(t1, i * wordSize));
+  }
   bind(entry);
   add(t1, t1, unroll * wordSize);
   cbnz(len, loop);
 }
-
-void MacroAssembler::verify_tlab() { }
 
 // Writes to stack successive pages until offset reached to check for
 // stack overflow + shadow pages.  This clobbers tmp.

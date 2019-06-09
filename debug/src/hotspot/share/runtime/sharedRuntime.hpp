@@ -147,7 +147,6 @@ class SharedRuntime: AllStatic {
   static void    throw_delayed_StackOverflowError(JavaThread* thread);
   static void    throw_StackOverflowError_common(JavaThread* thread, bool delayed);
   static address continuation_for_implicit_exception(JavaThread* thread, address faulting_pc, ImplicitExceptionKind exception_kind);
-  static address deoptimize_for_implicit_exception(JavaThread* thread, address pc, CompiledMethod* nm, int deopt_reason);
 
   // Post-slow-path-allocation, pre-initializing-stores step for
   // implementing e.g. ReduceInitialCardMarks
@@ -163,27 +162,15 @@ class SharedRuntime: AllStatic {
     return _ic_miss_blob->entry_point();
   }
 
-  static address get_handle_wrong_method_stub() {
-    return _wrong_method_blob->entry_point();
-  }
+  static address get_handle_wrong_method_stub()          { return _wrong_method_blob->entry_point(); }
+  static address get_handle_wrong_method_abstract_stub() { return _wrong_method_abstract_blob->entry_point(); }
+  static address get_resolve_opt_virtual_call_stub()     { return _resolve_opt_virtual_call_blob->entry_point(); }
+  static address get_resolve_virtual_call_stub()         { return _resolve_virtual_call_blob->entry_point(); }
+  static address get_resolve_static_call_stub()          { return _resolve_static_call_blob->entry_point(); }
 
-  static address get_handle_wrong_method_abstract_stub() {
-    return _wrong_method_abstract_blob->entry_point();
-  }
-
-  static address get_resolve_opt_virtual_call_stub() {
-    return _resolve_opt_virtual_call_blob->entry_point();
-  }
-  static address get_resolve_virtual_call_stub() {
-    return _resolve_virtual_call_blob->entry_point();
-  }
-  static address get_resolve_static_call_stub() {
-    return _resolve_static_call_blob->entry_point();
-  }
-
-  static SafepointBlob* polling_page_return_handler_blob()     { return _polling_page_return_handler_blob; }
-  static SafepointBlob* polling_page_safepoint_handler_blob()  { return _polling_page_safepoint_handler_blob; }
-  static SafepointBlob* polling_page_vectors_safepoint_handler_blob()  { return _polling_page_vectors_safepoint_handler_blob; }
+  static SafepointBlob* polling_page_return_handler_blob()            { return _polling_page_return_handler_blob; }
+  static SafepointBlob* polling_page_safepoint_handler_blob()         { return _polling_page_safepoint_handler_blob; }
+  static SafepointBlob* polling_page_vectors_safepoint_handler_blob() { return _polling_page_vectors_safepoint_handler_blob; }
 
   // Helper routine for full-speed JVMTI exception throwing support
   static void throw_and_post_jvmti_exception(JavaThread *thread, Handle h_exception);
@@ -195,8 +182,6 @@ class SharedRuntime: AllStatic {
   // To be used as the entry point for unresolved native methods.
   static address native_method_throw_unsatisfied_link_error_entry();
   static address native_method_throw_unsupported_operation_exception_entry();
-
-  static oop retrieve_receiver(Symbol* sig, frame caller);
 
   static void register_finalizer(JavaThread* thread, oopDesc* obj);
 
@@ -294,37 +279,6 @@ class SharedRuntime: AllStatic {
 
   static void generate_trampoline(MacroAssembler *masm, address destination);
 
-  // Generate I2C and C2I adapters. These adapters are simple argument marshalling
-  // blobs. Unlike adapters in the tiger and earlier releases the code in these
-  // blobs does not create a new frame and are therefore virtually invisible
-  // to the stack walking code. In general these blobs extend the callers stack
-  // as needed for the conversion of argument locations.
-
-  // When calling a c2i blob the code will always call the interpreter even if
-  // by the time we reach the blob there is compiled code available. This allows
-  // the blob to pass the incoming stack pointer (the sender sp) in a known
-  // location for the interpreter to record. This is used by the frame code
-  // to correct the sender code to match up with the stack pointer when the
-  // thread left the compiled code. In addition it allows the interpreter
-  // to remove the space the c2i adapter allocated to do its argument conversion.
-
-  // Although a c2i blob will always run interpreted even if compiled code is
-  // present if we see that compiled code is present the compiled call site
-  // will be patched/re-resolved so that later calls will run compiled.
-
-  // Additionally a c2i blob need to have a unverified entry because it can be reached
-  // in situations where the call site is an inlined cache site and may go megamorphic.
-
-  // A i2c adapter is simpler than the c2i adapter. This is because it is assumed
-  // that the interpreter before it does any call dispatch will record the current
-  // stack pointer in the interpreter frame. On return it will restore the stack
-  // pointer as needed. This means the i2c adapter code doesn't need any special
-  // handshaking path with compiled code to keep the stack walking correct.
-
-  static AdapterHandlerEntry* generate_i2c2i_adapters(MacroAssembler *_masm, int total_args_passed, int max_arg, const BasicType *sig_bt, const VMRegPair *regs, AdapterFingerPrint* fingerprint);
-
-  static void gen_i2c_adapter(MacroAssembler *_masm, int total_args_passed, int comp_args_on_stack, const BasicType *sig_bt, const VMRegPair *regs);
-
   // Convert a sig into a calling convention register layout
   // and find interesting things about it.
   static VMRegPair* find_callee_arguments(Symbol* sig, bool has_receiver, bool has_appendix, int *arg_size);
@@ -352,17 +306,11 @@ class SharedRuntime: AllStatic {
   // returns.
   //
   // The wrapper may contain special-case code if the given method
-  // is a JNI critical method, or a compiled method handle adapter,
-  // such as _invokeBasic, _linkToVirtual, etc.
+  // is a JNI critical method, or a compiled method handle adapter.
   static nmethod* generate_native_wrapper(MacroAssembler* masm, const methodHandle& method, int compile_id, BasicType* sig_bt, VMRegPair* regs, BasicType ret_type);
 
   // Block before entering a JNI critical method
   static void block_for_jni_critical(JavaThread* thread);
-
-  // A compiled caller has just called the interpreter, but compiled code
-  // exists.  Patch the caller so he no longer calls into the interpreter.
-  static void fixup_callers_callsite(Method* moop, address ret_pc);
-  static bool should_fixup_call_destination(address destination, address entry_point, address caller_pc, Method* moop, CodeBlob* cb);
 
   // Slow-path Locking and Unlocking
   static void complete_monitor_locking_C(oopDesc* obj, BasicLock* lock, JavaThread* thread);
@@ -405,7 +353,7 @@ class SharedRuntime: AllStatic {
 //
 // The C2I flavor takes a stock compiled call setup plus the target method in
 // Rmethod, marshals the arguments for an interpreted call and jumps to
-// Rmethod->_i2i_entry.  On entry, the interpreted frame has not yet been
+// Rmethod->NULL.  On entry, the interpreted frame has not yet been
 // setup.  Compiled frames are fixed-size and the args are likely not in the
 // right place.  Hence all the args will likely be copied into the
 // interpreter's frame, forcing that frame to grow.  The compiled frame's

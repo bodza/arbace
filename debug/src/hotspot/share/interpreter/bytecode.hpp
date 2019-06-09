@@ -19,16 +19,16 @@ class Bytecode: public StackObj {
   const Bytecodes::Code _code;
 
   // Address computation
-  address addr_at            (int offset)        const     { return (address)_bcp + offset; }
-  u_char byte_at(int offset) const               { return *addr_at(offset); }
-  address aligned_addr_at    (int offset)        const     { return align_up(addr_at(offset), jintSize); }
+  address addr_at(int offset)            const { return (address)_bcp + offset; }
+  u_char byte_at(int offset)             const { return *addr_at(offset); }
+  address aligned_addr_at(int offset)    const { return align_up(addr_at(offset), jintSize); }
 
   // Word access:
-  int     get_Java_u2_at     (int offset)        const     { return Bytes::get_Java_u2(addr_at(offset)); }
-  int     get_Java_u4_at     (int offset)        const     { return Bytes::get_Java_u4(addr_at(offset)); }
-  int     get_aligned_Java_u4_at(int offset)     const     { return Bytes::get_Java_u4(aligned_addr_at(offset)); }
-  int     get_native_u2_at   (int offset)        const     { return Bytes::get_native_u2(addr_at(offset)); }
-  int     get_native_u4_at   (int offset)        const     { return Bytes::get_native_u4(addr_at(offset)); }
+  int get_Java_u2_at(int offset)         const { return Bytes::get_Java_u2(addr_at(offset)); }
+  int get_Java_u4_at(int offset)         const { return Bytes::get_Java_u4(addr_at(offset)); }
+  int get_aligned_Java_u4_at(int offset) const { return Bytes::get_Java_u4(aligned_addr_at(offset)); }
+  int get_native_u2_at(int offset)       const { return Bytes::get_native_u2(addr_at(offset)); }
+  int get_native_u4_at(int offset)       const { return Bytes::get_native_u4(addr_at(offset)); }
 
  public:
   Bytecode(Method* method, address bcp): _bcp(bcp), _code(Bytecodes::code_at(method, addr_at(0))) { }
@@ -36,12 +36,12 @@ class Bytecode: public StackObj {
   inline Bytecode(const ciBytecodeStream* stream, address bcp = NULL);
 
   // Attributes
-  address bcp() const                            { return _bcp; }
-  int instruction_size() const                   { return Bytecodes::length_for_code_at(_code, bcp()); }
+  address bcp()                          const { return _bcp; }
+  int instruction_size()                 const { return Bytecodes::length_for_code_at(_code, bcp()); }
 
-  Bytecodes::Code code() const                   { return _code; }
-  Bytecodes::Code java_code() const              { return Bytecodes::java_code(code()); }
-  Bytecodes::Code invoke_code() const            { return (code() == Bytecodes::_invokehandle) ? code() : java_code(); }
+  Bytecodes::Code code()                 const { return _code; }
+  Bytecodes::Code java_code()            const { return Bytecodes::java_code(code()); }
+  Bytecodes::Code invoke_code()          const { return java_code(); }
 
   // Static functions for parsing bytecodes in place.
   int get_index_u1(Bytecodes::Code bc) const {
@@ -68,7 +68,7 @@ class Bytecode: public StackObj {
     return Bytes::get_native_u4(addr_at(1));
   }
   bool has_index_u4(Bytecodes::Code bc) const {
-    return bc == Bytecodes::_invokedynamic;
+    return false;
   }
 
   int get_offset_s2(Bytecodes::Code bc) const {
@@ -105,13 +105,13 @@ class LookupswitchPair {
  private:
   const address _bcp;
 
-  address addr_at            (int offset)        const     { return _bcp + offset; }
-  int     get_Java_u4_at     (int offset)        const     { return Bytes::get_Java_u4(addr_at(offset)); }
+  address addr_at            (int offset)            const { return _bcp + offset; }
+  int     get_Java_u4_at     (int offset)            const { return Bytes::get_Java_u4(addr_at(offset)); }
 
  public:
   LookupswitchPair(address bcp): _bcp(bcp) { }
-  int  match() const                             { return get_Java_u4_at(0 * jintSize); }
-  int  offset() const                            { return get_Java_u4_at(1 * jintSize); }
+  int  match()                             const { return get_Java_u4_at(0 * jintSize); }
+  int  offset()                            const { return get_Java_u4_at(1 * jintSize); }
 };
 
 class Bytecode_lookupswitch: public Bytecode {
@@ -121,9 +121,9 @@ class Bytecode_lookupswitch: public Bytecode {
   inline Bytecode_lookupswitch(const ciBytecodeStream* stream);
 
   // Attributes
-  int  default_offset() const                    { return get_aligned_Java_u4_at(1 + 0*jintSize); }
-  int  number_of_pairs() const                   { return get_aligned_Java_u4_at(1 + 1*jintSize); }
-  LookupswitchPair pair_at(int i) const          {
+  int  default_offset()                    const { return get_aligned_Java_u4_at(1 + 0*jintSize); }
+  int  number_of_pairs()                   const { return get_aligned_Java_u4_at(1 + 1*jintSize); }
+  LookupswitchPair pair_at(int i)          const {
     return LookupswitchPair(aligned_addr_at(1 + (1 + i)*2*jintSize));
   }
 };
@@ -135,9 +135,9 @@ class Bytecode_tableswitch: public Bytecode {
   inline Bytecode_tableswitch(const ciBytecodeStream* stream);
 
   // Attributes
-  int  default_offset() const                    { return get_aligned_Java_u4_at(1 + 0*jintSize); }
-  int  low_key() const                           { return get_aligned_Java_u4_at(1 + 1*jintSize); }
-  int  high_key() const                          { return get_aligned_Java_u4_at(1 + 2*jintSize); }
+  int  default_offset()                    const { return get_aligned_Java_u4_at(1 + 0*jintSize); }
+  int  low_key()                           const { return get_aligned_Java_u4_at(1 + 1*jintSize); }
+  int  high_key()                          const { return get_aligned_Java_u4_at(1 + 2*jintSize); }
   int  dest_offset_at(int i) const;
   int  length()                                  { return high_key()-low_key()+1; }
 };
@@ -150,9 +150,9 @@ class Bytecode_member_ref: public Bytecode {
 
   Bytecode_member_ref(const methodHandle& method, int bci)  : Bytecode(method(), method()->bcp_from(bci)), _method(method()) { }
 
-  const Method* method() const                 { return _method; }
-  ConstantPool* constants() const              { return _method->constants(); }
-  ConstantPoolCache* cpcache() const           { return _method->constants()->cache(); }
+  const Method* method()                 const { return _method; }
+  ConstantPool* constants()              const { return _method->constants(); }
+  ConstantPoolCache* cpcache()           const { return _method->constants()->cache(); }
   ConstantPoolCacheEntry* cpcache_entry() const;
 
  public:
@@ -176,25 +176,17 @@ class Bytecode_invoke: public Bytecode_member_ref {
   Bytecode_invoke(const methodHandle& method, int bci)  : Bytecode_member_ref(method, bci) { }
 
   // Attributes
-  methodHandle static_target(TRAPS);             // "specified" method   (from constant pool)
-  Handle       appendix(TRAPS);                  // if CPCE::has_appendix (from constant pool)
+  methodHandle static_target(TRAPS); // "specified" method   (from constant pool)
+  Handle       appendix(TRAPS);      // if CPCE::has_appendix (from constant pool)
 
   // Testers
-  bool is_invokeinterface() const                { return invoke_code() == Bytecodes::_invokeinterface; }
-  bool is_invokevirtual() const                  { return invoke_code() == Bytecodes::_invokevirtual; }
-  bool is_invokestatic() const                   { return invoke_code() == Bytecodes::_invokestatic; }
-  bool is_invokespecial() const                  { return invoke_code() == Bytecodes::_invokespecial; }
-  bool is_invokedynamic() const                  { return invoke_code() == Bytecodes::_invokedynamic; }
-  bool is_invokehandle() const                   { return invoke_code() == Bytecodes::_invokehandle; }
+  bool is_invokeinterface()    const { return invoke_code() == Bytecodes::_invokeinterface; }
+  bool is_invokevirtual()      const { return invoke_code() == Bytecodes::_invokevirtual; }
+  bool is_invokestatic()       const { return invoke_code() == Bytecodes::_invokestatic; }
+  bool is_invokespecial()      const { return invoke_code() == Bytecodes::_invokespecial; }
 
-  bool has_receiver() const                      { return !is_invokestatic() && !is_invokedynamic(); }
-
-  bool is_valid() const                          { return is_invokeinterface() ||
-                                                          is_invokevirtual()   ||
-                                                          is_invokestatic()    ||
-                                                          is_invokespecial()   ||
-                                                          is_invokedynamic()   ||
-                                                          is_invokehandle(); }
+  bool has_receiver()          const { return !is_invokestatic(); }
+  bool is_valid()              const { return is_invokeinterface() || is_invokevirtual() || is_invokestatic() || is_invokespecial(); }
 
   bool has_appendix();
 
@@ -215,15 +207,15 @@ class Bytecode_field: public Bytecode_member_ref {
   Bytecode_field(const methodHandle& method, int bci)  : Bytecode_member_ref(method, bci) { }
 
   // Testers
-  bool is_getfield() const                       { return java_code() == Bytecodes::_getfield; }
-  bool is_putfield() const                       { return java_code() == Bytecodes::_putfield; }
-  bool is_getstatic() const                      { return java_code() == Bytecodes::_getstatic; }
-  bool is_putstatic() const                      { return java_code() == Bytecodes::_putstatic; }
+  bool is_getfield()           const { return java_code() == Bytecodes::_getfield; }
+  bool is_putfield()           const { return java_code() == Bytecodes::_putfield; }
+  bool is_getstatic()          const { return java_code() == Bytecodes::_getstatic; }
+  bool is_putstatic()          const { return java_code() == Bytecodes::_putstatic; }
 
-  bool is_getter() const                         { return is_getfield() || is_getstatic(); }
-  bool is_static() const                         { return is_getstatic() || is_putstatic(); }
+  bool is_getter()             const { return is_getfield() || is_getstatic(); }
+  bool is_static()             const { return is_getstatic() || is_putstatic(); }
 
-  bool is_valid() const                          { return is_getfield() || is_putfield() || is_getstatic() || is_putstatic(); }
+  bool is_valid()              const { return is_getfield() || is_putfield() || is_getstatic() || is_putstatic(); }
 };
 
 // Abstraction for checkcast
@@ -232,7 +224,7 @@ class Bytecode_checkcast: public Bytecode {
   Bytecode_checkcast(Method* method, address bcp): Bytecode(method, bcp) { }
 
   // Returns index
-  long index() const   { return get_index_u2(Bytecodes::_checkcast); };
+  long index()   const { return get_index_u2(Bytecodes::_checkcast); };
 };
 
 // Abstraction for instanceof
@@ -241,7 +233,7 @@ class Bytecode_instanceof: public Bytecode {
   Bytecode_instanceof(Method* method, address bcp): Bytecode(method, bcp) { }
 
   // Returns index
-  long index() const   { return get_index_u2(Bytecodes::_instanceof); };
+  long index()   const { return get_index_u2(Bytecodes::_instanceof); };
 };
 
 class Bytecode_new: public Bytecode {
@@ -249,7 +241,7 @@ class Bytecode_new: public Bytecode {
   Bytecode_new(Method* method, address bcp): Bytecode(method, bcp) { }
 
   // Returns index
-  long index() const   { return get_index_u2(Bytecodes::_new); };
+  long index()   const { return get_index_u2(Bytecodes::_new); };
 };
 
 class Bytecode_multianewarray: public Bytecode {
@@ -257,7 +249,7 @@ class Bytecode_multianewarray: public Bytecode {
   Bytecode_multianewarray(Method* method, address bcp): Bytecode(method, bcp) { }
 
   // Returns index
-  long index() const   { return get_index_u2(Bytecodes::_multianewarray); };
+  long index()   const { return get_index_u2(Bytecodes::_multianewarray); };
 };
 
 class Bytecode_anewarray: public Bytecode {
@@ -265,7 +257,7 @@ class Bytecode_anewarray: public Bytecode {
   Bytecode_anewarray(Method* method, address bcp): Bytecode(method, bcp) { }
 
   // Returns index
-  long index() const   { return get_index_u2(Bytecodes::_anewarray); };
+  long index()   const { return get_index_u2(Bytecodes::_anewarray); };
 };
 
 // Abstraction for ldc, ldc_w and ldc2_w

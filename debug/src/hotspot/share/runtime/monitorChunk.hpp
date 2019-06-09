@@ -18,11 +18,11 @@ class MonitorChunk: public CHeapObj<mtInternal> {
   ~MonitorChunk();
 
   // link operations
-  MonitorChunk* next() const                { return _next; }
+  MonitorChunk* next()                const { return _next; }
   void set_next(MonitorChunk* next)         { _next = next; }
 
   // Tells whether the monitor chunk is linked into the JavaThread
-  bool is_linked() const                    { return next() != NULL; }
+  bool is_linked()                    const { return next() != NULL; }
 
   // Returns the number of monitors
   int number_of_monitors() const { return _number_of_monitors; }
@@ -34,7 +34,7 @@ class MonitorChunk: public CHeapObj<mtInternal> {
   void oops_do(OopClosure* f);
 
   // Tells whether the addr point into the monitors.
-  bool contains(void* addr) const           { return (addr >= (void*) monitors()) && (addr <  (void*) (monitors() + number_of_monitors())); }
+  bool contains(void* addr)           const { return (addr >= (void*) monitors()) && (addr <  (void*) (monitors() + number_of_monitors())); }
 };
 
 #endif

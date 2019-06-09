@@ -52,17 +52,17 @@ class OSThread: public CHeapObj<mtThread> {
   ~OSThread();
 
   // Accessors
-  OSThreadStartFunc start_proc() const              { return _start_proc; }
+  OSThreadStartFunc start_proc()              const { return _start_proc; }
   void set_start_proc(OSThreadStartFunc start_proc) { _start_proc = start_proc; }
-  void* start_parm() const                          { return _start_parm; }
+  void* start_parm()                          const { return _start_parm; }
   void set_start_parm(void* start_parm)             { _start_parm = start_parm; }
 
-  volatile bool interrupted() const                 { return _interrupted != 0; }
+  volatile bool interrupted()                 const { return _interrupted != 0; }
   void set_interrupted(bool z)                      { _interrupted = z ? 1 : 0; }
 
   // Printing
   void print_on(outputStream* st) const;
-  void print() const                                { print_on(tty); }
+  void print()                                const { print_on(tty); }
 
   // For java intrinsics:
   static ByteSize interrupted_offset()            { return byte_offset_of(OSThread, _interrupted); }
@@ -74,7 +74,7 @@ class OSThread: public CHeapObj<mtThread> {
   static ByteSize thread_id_offset()              { return byte_offset_of(OSThread, _thread_id); }
   static size_t thread_id_size()                  { return sizeof(thread_id_t); }
 
-  thread_id_t thread_id() const                   { return _thread_id; }
+  thread_id_t thread_id()                   const { return _thread_id; }
 
   void set_thread_id(thread_id_t id)              { _thread_id = id; }
 

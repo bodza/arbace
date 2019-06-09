@@ -149,7 +149,6 @@ class ConstantPoolCacheEntry {
     tos_state_shift            = BitsPerInt - tos_state_bits,  // see verify_tos_state_shift below
     // misc. option bits; can be any bit position in [16..27]
     is_field_entry_shift       = 26,  // (F) is it a field or a method?
-    has_method_type_shift      = 25,  // (M) does the call site have a MethodType?
     has_appendix_shift         = 24,  // (A) does the call site have an appendix argument?
     is_forced_virtual_shift    = 23,  // (I) is the interface reference forced to virtual mode?
     is_final_shift             = 22,  // (f) is the field or method final?
@@ -220,37 +219,6 @@ class ConstantPoolCacheEntry {
     int itable_index                             // index into itable for the method
   );
 
-  void set_method_handle(
-    const constantPoolHandle& cpool,             // holding constant pool (required for locking)
-    const CallInfo &call_info                    // Call link information
-  );
-
-  void set_dynamic_call(
-    const constantPoolHandle& cpool,             // holding constant pool (required for locking)
-    const CallInfo &call_info                    // Call link information
-  );
-
-  // Common code for invokedynamic and MH invocations.
-
-  // The "appendix" is an optional call-site-specific parameter which is
-  // pushed by the JVM at the end of the argument list.  This argument may
-  // be a MethodType for the MH.invokes and a CallSite for an invokedynamic
-  // instruction.  However, its exact type and use depends on the Java upcall,
-  // which simply returns a compiled LambdaForm along with any reference
-  // that LambdaForm needs to complete the call.  If the upcall returns a
-  // null appendix, the argument is not passed at all.
-  //
-  // The appendix is *not* represented in the signature of the symbolic
-  // reference for the call site, but (if present) it *is* represented in
-  // the Method* bound to the site.  This means that static and dynamic
-  // resolution logic needs to make slightly different assessments about the
-  // number and types of arguments.
-  void set_method_handle_common(
-    const constantPoolHandle& cpool, // holding constant pool (required for locking)
-    Bytecodes::Code invoke_code,     // _invokehandle or _invokedynamic
-    const CallInfo &call_info        // Call link information
-  );
-
   // Return TRUE if resolution failed and this thread got to record the failure
   // status.  Return FALSE if another thread succeeded or failed in resolving
   // the method and recorded the success or failure before this thread had a
@@ -269,7 +237,6 @@ class ConstantPoolCacheEntry {
 
   Method*      method_if_resolved(const constantPoolHandle& cpool);
   oop        appendix_if_resolved(const constantPoolHandle& cpool);
-  oop     method_type_if_resolved(const constantPoolHandle& cpool);
 
   void set_parameter_size(int value);
 
@@ -281,8 +248,6 @@ class ConstantPoolCacheEntry {
       case Bytecodes::_getfield        :    // fall through
       case Bytecodes::_invokespecial   :    // fall through
       case Bytecodes::_invokestatic    :    // fall through
-      case Bytecodes::_invokehandle    :    // fall through
-      case Bytecodes::_invokedynamic   :    // fall through
       case Bytecodes::_invokeinterface : return 1;
       case Bytecodes::_putstatic       :    // fall through
       case Bytecodes::_putfield        :    // fall through
@@ -296,38 +261,37 @@ class ConstantPoolCacheEntry {
   bool is_resolved(Bytecodes::Code code) const;
 
   // Accessors
-  int indices() const                            { return _indices; }
+  int indices()                            const { return _indices; }
   int indices_ord() const;
-  int constant_pool_index() const                { return (indices() & cp_index_mask); }
+  int constant_pool_index()                const { return (indices() & cp_index_mask); }
   Bytecodes::Code bytecode_1() const;
   Bytecodes::Code bytecode_2() const;
   Metadata* f1_ord() const;
   Method*   f1_as_method() const;
   Klass*    f1_as_klass() const;
   // Use the accessor f1() to acquire _f1's value. This is needed for
-  // example in NULL::run(), where is_f1_null() is
+  // example in ...::run(), where is_f1_null() is
   // called to check if an invokedynamic call is resolved. This load
   // of _f1 must be ordered with the loads performed by
   // cache->main_entry_index().
   bool      is_f1_null() const;  // classifies a CPC entry as unbound
-  int       f2_as_index() const                  { return (int) _f2; }
-  Method*   f2_as_vfinal_method() const          { return (Method*)_f2; }
+  int       f2_as_index()                  const { return (int) _f2; }
+  Method*   f2_as_vfinal_method()          const { return (Method*)_f2; }
   Method*   f2_as_interface_method() const;
   intx flags_ord() const;
-  int  field_index() const                       { return (_flags & field_index_mask); }
-  int  parameter_size() const                    { return (_flags & parameter_size_mask); }
-  bool is_volatile() const                       { return (_flags & (1 << is_volatile_shift))       != 0; }
-  bool is_final() const                          { return (_flags & (1 << is_final_shift))          != 0; }
-  bool is_forced_virtual() const                 { return (_flags & (1 << is_forced_virtual_shift)) != 0; }
-  bool is_vfinal() const                         { return (_flags & (1 << is_vfinal_shift))         != 0; }
+  int  field_index()                       const { return (_flags & field_index_mask); }
+  int  parameter_size()                    const { return (_flags & parameter_size_mask); }
+  bool is_volatile()                       const { return (_flags & (1 << is_volatile_shift))       != 0; }
+  bool is_final()                          const { return (_flags & (1 << is_final_shift))          != 0; }
+  bool is_forced_virtual()                 const { return (_flags & (1 << is_forced_virtual_shift)) != 0; }
+  bool is_vfinal()                         const { return (_flags & (1 << is_vfinal_shift))         != 0; }
   bool indy_resolution_failed() const;
   bool has_appendix() const;
-  bool has_method_type() const;
-  bool is_method_entry() const                   { return (_flags & (1 << is_field_entry_shift))    == 0; }
-  bool is_field_entry() const                    { return (_flags & (1 << is_field_entry_shift))    != 0; }
-  bool is_long() const                           { return flag_state() == ltos; }
-  bool is_double() const                         { return flag_state() == dtos; }
-  TosState flag_state() const                    { return (TosState)((_flags >> tos_state_shift) & tos_state_mask); }
+  bool is_method_entry()                   const { return (_flags & (1 << is_field_entry_shift))    == 0; }
+  bool is_field_entry()                    const { return (_flags & (1 << is_field_entry_shift))    != 0; }
+  bool is_long()                           const { return flag_state() == ltos; }
+  bool is_double()                         const { return flag_state() == dtos; }
+  TosState flag_state()                    const { return (TosState)((_flags >> tos_state_shift) & tos_state_mask); }
   void set_indy_resolution_failed();
 
   // Code generation support
@@ -381,16 +345,16 @@ class ConstantPoolCache: public MetaspaceObj {
   static ConstantPoolCache* allocate(ClassLoaderData* loader_data, const intStack& cp_cache_map, const intStack& invokedynamic_cp_cache_map, const intStack& invokedynamic_references_map, TRAPS);
   bool is_constantPoolCache() const { return true; }
 
-  int length() const                      { return _length; }
+  int length()                      const { return _length; }
   void metaspace_pointers_do(MetaspaceClosure* it);
-  MetaspaceObj::Type type() const         { return ConstantPoolCacheType; }
+  MetaspaceObj::Type type()         const { return ConstantPoolCacheType; }
 
   oop  archived_references() { return NULL; };
   void set_archived_references(oop o) { };
 
   inline oop resolved_references();
   void set_resolved_references(OopHandle s) { _resolved_references = s; }
-  Array<u2>* reference_map() const        { return _reference_map; }
+  Array<u2>* reference_map()        const { return _reference_map; }
   void set_reference_map(Array<u2>* o)    { _reference_map = o; }
 
   // Assembly code support
@@ -406,11 +370,11 @@ class ConstantPoolCache: public MetaspaceObj {
   static int header_size()                       { return sizeof(ConstantPoolCache) / wordSize; }
   static int size(int length)                    { return align_metadata_size(header_size() + length * in_words(ConstantPoolCacheEntry::size())); }
  public:
-  int size() const                               { return size(length()); }
+  int size()                               const { return size(length()); }
  private:
   // Helpers
   ConstantPool**        constant_pool_addr()     { return &_constant_pool; }
-  ConstantPoolCacheEntry* base() const           { return (ConstantPoolCacheEntry*)((address)this + in_bytes(base_offset())); }
+  ConstantPoolCacheEntry* base()           const { return (ConstantPoolCacheEntry*)((address)this + in_bytes(base_offset())); }
 
   friend class constantPoolCacheKlass;
   friend class ConstantPoolCacheEntry;
@@ -418,7 +382,7 @@ class ConstantPoolCache: public MetaspaceObj {
  public:
   // Accessors
   void set_constant_pool(ConstantPool* pool)   { _constant_pool = pool; }
-  ConstantPool* constant_pool() const          { return _constant_pool; }
+  ConstantPool* constant_pool()          const { return _constant_pool; }
   // Fetches the entry at the given index.
   // In either case the index must not be encoded or byte-swapped in any way.
   ConstantPoolCacheEntry* entry_at(int i) const {
@@ -441,9 +405,6 @@ class ConstantPoolCache: public MetaspaceObj {
   void print_value_on(outputStream* st) const;
 
   const char* internal_name() const { return "{constant pool cache}"; }
-
-  // Verify
-  void verify_on(outputStream* st);
 };
 
 #endif

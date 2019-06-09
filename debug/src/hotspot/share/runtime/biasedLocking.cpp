@@ -29,8 +29,8 @@ class VM_EnableBiasedLocking: public VM_Operation {
   bool _is_cheap_allocated;
  public:
   VM_EnableBiasedLocking(bool is_cheap_allocated) { _is_cheap_allocated = is_cheap_allocated; }
-  VMOp_Type type() const          { return VMOp_EnableBiasedLocking; }
-  Mode evaluation_mode() const    { return _is_cheap_allocated ? _async_safepoint : _safepoint; }
+  VMOp_Type type()          const { return VMOp_EnableBiasedLocking; }
+  Mode evaluation_mode()    const { return _is_cheap_allocated ? _async_safepoint : _safepoint; }
   bool is_cheap_allocated() const { return _is_cheap_allocated; }
 
   void doit() {
@@ -41,7 +41,7 @@ class VM_EnableBiasedLocking: public VM_Operation {
     _biased_locking_enabled = true;
   }
 
-  bool allow_nested_vm_operations() const        { return false; }
+  bool allow_nested_vm_operations()        const { return false; }
 };
 
 // One-shot PeriodicTask subclass for enabling biased locking

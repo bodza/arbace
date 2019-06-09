@@ -742,7 +742,7 @@ void os::print_summary_info(outputStream* st, char* buf, size_t buflen) {
   st->cr();
 }
 
-void os::print_date_and_time(outputStream *st, char* buf, size_t buflen) {
+void os::print_date_and_time(outputStream* st, char* buf, size_t buflen) {
   const int secs_per_day  = 86400;
   const int secs_per_hour = 3600;
   const int secs_per_min  = 60;

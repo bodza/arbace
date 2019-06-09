@@ -116,30 +116,30 @@ class xmlStream : public outputStream {
   void          object_text(Handle x);
 
   /*  Example uses:
-
-      // Empty element, simple case.
-      elem("X Y='Z'");          <X Y='Z'/> \n
-
-      // Empty element, general case.
-      begin_elem("X Y='Z'");    <X Y='Z'
-      ...attrs...               ...attrs...
-      end_elem();               />
-
-      // Compound element, simple case.
-      head("X Y='Z'");          <X Y='Z'> \n
-      ...body...                ...body...
-      tail("X");                </X> \n
-
-      // Compound element, general case.
-      begin_head("X Y='Z'");    <X Y='Z'
-      ...attrs...               ...attrs...
-      end_head();               > \n
-      ...body...                ...body...
-      tail("X");                </X> \n
-
-      // Printf-style formatting:
-      elem("X Y='%s'", "Z");    <X Y='Z'/> \n
-
+   *
+   *  // Empty element, simple case.
+   *  elem("X Y='Z'");          <X Y='Z'/> \n
+   *
+   *  // Empty element, general case.
+   *  begin_elem("X Y='Z'");    <X Y='Z'
+   *  ...attrs...               ...attrs...
+   *  end_elem();               />
+   *
+   *  // Compound element, simple case.
+   *  head("X Y='Z'");          <X Y='Z'> \n
+   *  ...body...                ...body...
+   *  tail("X");                </X> \n
+   *
+   *  // Compound element, general case.
+   *  begin_head("X Y='Z'");    <X Y='Z'
+   *  ...attrs...               ...attrs...
+   *  end_head();               > \n
+   *  ...body...                ...body...
+   *  tail("X");                </X> \n
+   *
+   *  // Printf-style formatting:
+   *  elem("X Y='%s'", "Z");    <X Y='Z'/> \n
+   *
    */
 };
 

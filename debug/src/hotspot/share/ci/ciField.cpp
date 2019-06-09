@@ -42,11 +42,7 @@
 // This adds at most one step to the binary search, an amount which
 // decreases for complex compilation tasks.
 
-// ------------------------------------------------------------------
-// ciField::ciField
-ciField::ciField(ciInstanceKlass* klass, int index) :
-    _known_to_link_with_put(NULL), _known_to_link_with_get(NULL) {
-  ASSERT_IN_VM;
+ciField::ciField(ciInstanceKlass* klass, int index) : _known_to_link_with_put(NULL), _known_to_link_with_get(NULL) {
   CompilerThread *THREAD = CompilerThread::current();
 
   constantPoolHandle cpool(THREAD, klass->get_instanceKlass()->constants());
@@ -154,12 +150,9 @@ ciField::ciField(ciInstanceKlass* klass, int index) :
   initialize_from(&field_desc);
 }
 
-ciField::ciField(fieldDescriptor *fd) :
-    _known_to_link_with_put(NULL), _known_to_link_with_get(NULL) {
-  ASSERT_IN_VM;
-
+ciField::ciField(fieldDescriptor *fd) : _known_to_link_with_put(NULL), _known_to_link_with_get(NULL) {
   // Get the field's name, signature, and type.
-  ciEnv* env = CURRENT_ENV;
+  ciEnv* env = ciEnv::current();
   _name = env->get_symbol(fd->name());
   _signature = env->get_symbol(fd->signature());
 
@@ -211,7 +204,7 @@ void ciField::initialize_from(fieldDescriptor* fd) {
   _flags = ciFlags(fd->access_flags());
   _offset = fd->offset();
   Klass* field_holder = fd->field_holder();
-  _holder = CURRENT_ENV->get_instance_klass(field_holder);
+  _holder = ciEnv::current()->get_instance_klass(field_holder);
 
   // Check to see if the field is constant.
   Klass* k = _holder->get_Klass();
@@ -237,18 +230,11 @@ void ciField::initialize_from(fieldDescriptor* fd) {
       _is_constant = is_stable_field || trust_final_non_static_fields(_holder);
     }
   } else {
-    // For CallSite objects treat the target field as a compile time constant.
-    if (k == SystemDictionary::CallSite_klass() && _offset == java_lang_invoke_CallSite::target_offset_in_bytes()) {
-      _is_constant = true;
-    } else {
-      // Non-final & non-stable fields are not constants.
-      _is_constant = false;
-    }
+    // Non-final & non-stable fields are not constants.
+    _is_constant = false;
   }
 }
 
-// ------------------------------------------------------------------
-// ciField::constant_value
 // Get the constant value of a this static field.
 ciConstant ciField::constant_value() {
   if (!_holder->is_initialized()) {
@@ -257,7 +243,7 @@ ciConstant ciField::constant_value() {
   if (_constant_value.basic_type() == T_ILLEGAL) {
     // Static fields are placed in mirror objects.
     VM_ENTRY_MARK;
-    ciInstance* mirror = CURRENT_ENV->get_instance(_holder->get_Klass()->java_mirror());
+    ciInstance* mirror = ciEnv::current()->get_instance(_holder->get_Klass()->java_mirror());
     _constant_value = mirror->field_value_impl(type()->basic_type(), offset());
   }
   if (FoldStableValues && is_stable() && _constant_value.is_null_or_zero()) {
@@ -266,8 +252,6 @@ ciConstant ciField::constant_value() {
   return _constant_value;
 }
 
-// ------------------------------------------------------------------
-// ciField::constant_value_of
 // Get the constant value of non-static final field in the given object.
 ciConstant ciField::constant_value_of(ciObject* object) {
   ciConstant field_value = object->as_instance()->field_value(this);
@@ -277,16 +261,13 @@ ciConstant ciField::constant_value_of(ciObject* object) {
   return field_value;
 }
 
-// ------------------------------------------------------------------
-// ciField::compute_type
-//
 // Lazily compute the type, if it is an instance klass.
 ciType* ciField::compute_type() {
   GUARDED_VM_ENTRY(return compute_type_impl();)
 }
 
 ciType* ciField::compute_type_impl() {
-  ciKlass* type = CURRENT_ENV->get_klass_by_name_impl(_holder, constantPoolHandle(), _signature, false);
+  ciKlass* type = ciEnv::current()->get_klass_by_name_impl(_holder, constantPoolHandle(), _signature, false);
   if (!type->is_primitive_type() && is_shared()) {
     // We must not cache a pointer to an unshared type, in a shared field.
     bool type_is_also_shared = false;
@@ -305,9 +286,6 @@ ciType* ciField::compute_type_impl() {
   return type;
 }
 
-// ------------------------------------------------------------------
-// ciField::will_link
-//
 // Can a specific access to this field be made without causing
 // link errors?
 bool ciField::will_link(ciMethod* accessing_method, Bytecodes::Code bc) {
@@ -354,8 +332,6 @@ bool ciField::will_link(ciMethod* accessing_method, Bytecodes::Code bc) {
   return true;
 }
 
-// ------------------------------------------------------------------
-// ciField::print
 void ciField::print() {
   tty->print("<ciField name=");
   _holder->print_name();
@@ -377,9 +353,6 @@ void ciField::print() {
   tty->print(">");
 }
 
-// ------------------------------------------------------------------
-// ciField::print_name_on
-//
 // Print the name of this field
 void ciField::print_name_on(outputStream* st) {
   name()->print_symbol_on(st);

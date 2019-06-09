@@ -7,17 +7,17 @@
 // Sets the default values for platform dependent flags used by the runtime system.
 // (see globals.hpp)
 
-define_pd_global(bool, ShareVtableStubs,    true);
+define_pd_global(bool, ShareVtableStubs,     true);
 define_pd_global(bool, NeedsDeoptSuspend,   false); // only register window machines need this
 
-define_pd_global(bool, ImplicitNullChecks,  true);  // Generate code for implicit null checks
+define_pd_global(bool, ImplicitNullChecks,   true); // Generate code for implicit null checks
 define_pd_global(bool, TrapBasedNullChecks, false);
-define_pd_global(bool, UncommonNullCast,    true);  // Uncommon-trap NULLs past to check cast
+define_pd_global(bool, UncommonNullCast,     true); // Uncommon-trap NULLs past to check cast
 
-define_pd_global(uintx, CodeCacheSegmentSize, 64); // Tiered compilation has large code-entry alignment.
-define_pd_global(intx, CodeEntryAlignment,    64);
-define_pd_global(intx, OptoLoopAlignment,     16);
-define_pd_global(intx, InlineFrequencyCount, 100);
+define_pd_global(uintx, CodeCacheSegmentSize,  64); // Tiered compilation has large code-entry alignment.
+define_pd_global(intx, CodeEntryAlignment,     64);
+define_pd_global(intx, OptoLoopAlignment,      16);
+define_pd_global(intx, InlineFrequencyCount,  100);
 
 #define DEFAULT_STACK_YELLOW_PAGES (2)
 #define DEFAULT_STACK_RED_PAGES (1)
@@ -37,25 +37,15 @@ define_pd_global(intx, StackRedPages, DEFAULT_STACK_RED_PAGES);
 define_pd_global(intx, StackShadowPages, DEFAULT_STACK_SHADOW_PAGES);
 define_pd_global(intx, StackReservedPages, DEFAULT_STACK_RESERVED_PAGES);
 
-define_pd_global(bool, RewriteBytecodes,     true);
-define_pd_global(bool, RewriteFrequentPairs, true);
-
-define_pd_global(bool, UseMembar,            true);
-
+define_pd_global(bool, UseMembar,             true);
 define_pd_global(bool, PreserveFramePointer, false);
-
-// GC Ergo Flags
-define_pd_global(uintx, CMSYoungGenPerWorker, 64*M);  // default max size of CMS young gen, per GC worker thread
-
-define_pd_global(uintx, TypeProfileLevel, 111);
-
-define_pd_global(bool, CompactStrings, true);
+define_pd_global(uintx, TypeProfileLevel,      111);
+define_pd_global(bool, CompactStrings,        true);
 
 // Clear short arrays bigger than one word in an arch-specific way
 define_pd_global(intx, InitArrayShortSize, BytesPerLong);
 
 define_pd_global(bool, ThreadLocalHandshakes, true);
-
 define_pd_global(intx, InlineSmallCode,       1000);
 
 #define ARCH_FLAGS(develop, \

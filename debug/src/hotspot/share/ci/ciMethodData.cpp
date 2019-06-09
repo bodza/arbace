@@ -2,7 +2,6 @@
 
 #include "ci/ciMetadata.hpp"
 #include "ci/ciMethodData.hpp"
-#include "ci/ciReplay.hpp"
 #include "ci/ciUtilities.inline.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
@@ -10,9 +9,6 @@
 
 // ciMethodData
 
-// ------------------------------------------------------------------
-// ciMethodData::ciMethodData
-//
 ciMethodData::ciMethodData(MethodData* md) : ciMetadata(md) {
   Copy::zero_to_words((HeapWord*) &_orig, sizeof(_orig) / sizeof(HeapWord));
   _data = NULL;
@@ -31,9 +27,6 @@ ciMethodData::ciMethodData(MethodData* md) : ciMetadata(md) {
   _parameters = NULL;
 }
 
-// ------------------------------------------------------------------
-// ciMethodData::ciMethodData
-//
 // No MethodData*.
 ciMethodData::ciMethodData() : ciMetadata(NULL) {
   Copy::zero_to_words((HeapWord*) &_orig, sizeof(_orig) / sizeof(HeapWord));
@@ -113,7 +106,7 @@ void ciMethodData::load_data() {
   Copy::disjoint_words((HeapWord*) mdo,
                        (HeapWord*) &_orig,
                        sizeof(_orig) / HeapWordSize);
-  Arena* arena = CURRENT_ENV->arena();
+  Arena* arena = ciEnv::current()->arena();
   _data_size = mdo->data_size();
   _extra_data_size = mdo->extra_data_size();
   int total_size = _data_size + _extra_data_size;
@@ -154,7 +147,7 @@ void ciReceiverTypeData::translate_receiver_data_from(const ProfileData* data) {
   for (uint row = 0; row < row_limit(); row++) {
     Klass* k = data->as_ReceiverTypeData()->receiver(row);
     if (k != NULL) {
-      ciKlass* klass = CURRENT_ENV->get_klass(k);
+      ciKlass* klass = ciEnv::current()->get_klass(k);
       set_receiver(row, klass);
     }
   }
@@ -174,7 +167,7 @@ void ciReturnTypeEntry::translate_type_data_from(const ReturnTypeEntry* ret) {
 
 void ciSpeculativeTrapData::translate_from(const ProfileData* data) {
   Method* m = data->as_SpeculativeTrapData()->method();
-  ciMethod* ci_m = CURRENT_ENV->get_method(m);
+  ciMethod* ci_m = ciEnv::current()->get_method(m);
   set_method(ci_m);
 }
 
@@ -284,39 +277,6 @@ ciProfileData* ciMethodData::bci_to_data(int bci, ciMethod* m) {
     return bci_to_data(bci, NULL);
   }
   return NULL;
-}
-
-// Conservatively decode the trap_state of a ciProfileData.
-int ciMethodData::has_trap_at(ciProfileData* data, int reason) {
-  typedef NULL::NULL DR_t;
-  int per_bc_reason = NULL::reason_recorded_per_bytecode_if_any((DR_t) reason);
-  if (trap_count(reason) == 0) {
-    // Impossible for this trap to have occurred, regardless of trap_state.
-    // Note:  This happens if the MDO is empty.
-    return 0;
-  } else if (per_bc_reason == NULL::Reason_none) {
-    // We cannot conclude anything; a trap happened somewhere, maybe here.
-    return -1;
-  } else if (data == NULL) {
-    // No profile here, not even an extra_data record allocated on the fly.
-    // If there are empty extra_data records, and there had been a trap,
-    // there would have been a non-null data pointer.  If there are no
-    // free extra_data records, we must return a conservative -1.
-    if (_saw_free_extra_data)
-      return 0;                 // Q.E.D.
-    else
-      return -1;                // bail with a conservative answer
-  } else {
-    return NULL::trap_state_has_reason(data->trap_state(), per_bc_reason);
-  }
-}
-
-int ciMethodData::trap_recompiled_at(ciProfileData* data) {
-  if (data == NULL) {
-    return (_saw_free_extra_data? 0: -1);  // (see previous method)
-  } else {
-    return NULL::trap_state_is_recompiled(data->trap_state()) ? 1 : 0;
-  }
 }
 
 void ciMethodData::clear_escape_info() {
@@ -542,71 +502,4 @@ void ciMethodData::dump_replay_data_extra_data_helper(outputStream* out, int rou
       fatal("bad tag = %d", dp->tag());
     }
   }
-}
-
-void ciMethodData::dump_replay_data(outputStream* out) {
-  ResourceMark rm;
-  MethodData* mdo = get_MethodData();
-  Method* method = mdo->method();
-  Klass* holder = method->method_holder();
-  out->print("ciMethodData %s %s %s %d %d",
-             holder->name()->as_quoted_ascii(),
-             method->name()->as_quoted_ascii(),
-             method->signature()->as_quoted_ascii(),
-             _state,
-             current_mileage());
-
-  // dump the contents of the MDO header as raw data
-  unsigned char* orig = (unsigned char*)&_orig;
-  int length = sizeof(_orig);
-  out->print(" orig %d", length);
-  for (int i = 0; i < length; i++) {
-    out->print(" %d", orig[i]);
-  }
-
-  // dump the MDO data as raw data
-  int elements = (data_size() + extra_data_size()) / sizeof(intptr_t);
-  out->print(" data %d", elements);
-  for (int i = 0; i < elements; i++) {
-    // We could use INTPTR_FORMAT here but that's zero justified
-    // which makes comparing it with the SA version of this output
-    // harder. data()'s element type is intptr_t.
-    out->print(" " INTPTRNZ_FORMAT, data()[i]);
-  }
-
-  // The MDO contained oop references as ciObjects, so scan for those
-  // and emit pairs of offset and klass name so that they can be
-  // reconstructed at runtime.  The first round counts the number of
-  // oop references and the second actually emits them.
-  ciParametersTypeData* parameters = parameters_type_data();
-  for (int count = 0, round = 0; round < 2; round++) {
-    if (round == 1) out->print(" oops %d", count);
-    ProfileData* pdata = first_data();
-    for ( ; is_valid(pdata); pdata = next_data(pdata)) {
-      if (pdata->is_VirtualCallData()) {
-        ciVirtualCallData* vdata = (ciVirtualCallData*)pdata;
-        dump_replay_data_receiver_type_helper<ciVirtualCallData>(out, round, count, vdata);
-        if (pdata->is_VirtualCallTypeData()) {
-          ciVirtualCallTypeData* call_type_data = (ciVirtualCallTypeData*)pdata;
-          dump_replay_data_call_type_helper<ciVirtualCallTypeData>(out, round, count, call_type_data);
-        }
-      } else if (pdata->is_ReceiverTypeData()) {
-        ciReceiverTypeData* vdata = (ciReceiverTypeData*)pdata;
-        dump_replay_data_receiver_type_helper<ciReceiverTypeData>(out, round, count, vdata);
-      } else if (pdata->is_CallTypeData()) {
-          ciCallTypeData* call_type_data = (ciCallTypeData*)pdata;
-          dump_replay_data_call_type_helper<ciCallTypeData>(out, round, count, call_type_data);
-      }
-    }
-    if (parameters != NULL) {
-      for (int i = 0; i < parameters->number_of_parameters(); i++) {
-        dump_replay_data_type_helper(out, round, count, parameters, ParametersTypeData::type_offset(i), parameters->valid_parameter_type(i));
-      }
-    }
-  }
-  for (int count = 0, round = 0; round < 2; round++) {
-    if (round == 1) out->print(" methods %d", count);
-    dump_replay_data_extra_data_helper(out, round, count);
-  }
-  out->cr();
 }

@@ -48,7 +48,7 @@ inline bool G1CMBitMap::par_mark(oop obj) {
   return par_mark((HeapWord*) obj);
 }
 
-inline bool G1CMBitMap::is_marked(oop obj) const{
+inline bool G1CMBitMap::is_marked(oop obj) const {
   return is_marked((HeapWord*) obj);
 }
 

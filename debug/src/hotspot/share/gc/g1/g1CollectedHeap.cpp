@@ -56,7 +56,6 @@
 #include "oops/access.inline.hpp"
 #include "oops/compressedOops.inline.hpp"
 #include "oops/oop.inline.hpp"
-#include "prims/resolvedMethodTable.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/flags/flagSetting.hpp"
 #include "runtime/handles.inline.hpp"
@@ -1537,9 +1536,7 @@ void G1CollectedHeap::increment_old_marking_cycles_completed(bool concurrent) {
   MonitorLockerEx x(FullGCCount_lock, Mutex::_no_safepoint_check_flag);
 
   // We assume that if concurrent == true, then the caller is a
-  // concurrent thread that was joined the Suspendible Thread
-  // Set. If there's ever a cheap way to check this, we should add an
-  // assert here.
+  // concurrent thread that was joined the Suspendible Thread Set.
 
   // Given that this method is called at the end of a Full GC or of a
   // concurrent cycle, and those can be nested (i.e., a Full GC can
@@ -2785,7 +2782,7 @@ public:
   // These aren't big, one thread can do it all.
   void work() {
     if (claim_resolved_method_task()) {
-      ResolvedMethodTable::unlink();
+      NULL::unlink();
     }
   }
 };
@@ -2821,7 +2818,7 @@ public:
     // Clean the Strings and Symbols.
     _string_symbol_task.work(worker_id);
 
-    // Clean unreferenced things in the ResolvedMethodTable
+    // Clean unreferenced things in the NULL
     _resolved_method_cleaning_task.work();
 
     // Wait for all workers to finish the first code cache cleaning pass.

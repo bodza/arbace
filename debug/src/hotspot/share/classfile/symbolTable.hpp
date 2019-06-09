@@ -67,8 +67,8 @@ class TempNewSymbol : public StackObj {
   }
 
   // Symbol* conversion operators
-  Symbol* operator -> () const                   { return _temp; }
-  bool    operator == (Symbol* o) const          { return _temp == o; }
+  Symbol* operator -> ()                   const { return _temp; }
+  bool    operator == (Symbol* o)          const { return _temp == o; }
   operator Symbol*()                             { return _temp; }
 };
 

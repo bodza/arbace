@@ -56,13 +56,11 @@ class StubRoutines: AllStatic {
     max_size_of_parameters = 256                           // max. parameter size supported by megamorphic lookups
   };
 
-  // Dependencies
   friend class StubGenerator;
 
 #include CPU_HEADER(stubRoutines)
 
   static jint    _verify_oop_count;
-  static address _verify_oop_subroutine_entry;
 
   static address _call_stub_return_address;                // the return PC, when returning to a call stub
   static address _call_stub_entry;
@@ -218,8 +216,6 @@ class StubRoutines: AllStatic {
   // Debugging
   static jint    verify_oop_count()                        { return _verify_oop_count; }
   static jint*   verify_oop_count_addr()                   { return &_verify_oop_count; }
-  // a subroutine for debugging the GC
-  static address verify_oop_subroutine_entry_address()     { return (address)&_verify_oop_subroutine_entry; }
 
   static address catch_exception_entry()                   { return _catch_exception_entry; }
 

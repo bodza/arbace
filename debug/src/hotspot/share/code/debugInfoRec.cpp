@@ -180,7 +180,7 @@ int DebugInformationRecorder::find_sharable_decode_offset(int stream_offset) {
 
 // must call add_safepoint before: it sets PcDesc and this routine uses
 // the last PcDesc set
-void DebugInformationRecorder::describe_scope(int pc_offset, const methodHandle& methodH, ciMethod* method, int bci, bool reexecute, bool rethrow_exception, bool is_method_handle_invoke, bool return_oop, DebugToken* locals, DebugToken* expressions, DebugToken* monitors) {
+void DebugInformationRecorder::describe_scope(int pc_offset, const methodHandle& methodH, ciMethod* method, int bci, bool reexecute, bool rethrow_exception, bool return_oop, DebugToken* locals, DebugToken* expressions, DebugToken* monitors) {
   PcDesc* last_pd = last_pc();
   int sender_stream_offset = last_pd->scope_decode_offset();
   // update the stream offset of current pc desc
@@ -190,7 +190,6 @@ void DebugInformationRecorder::describe_scope(int pc_offset, const methodHandle&
   // Record flags into pcDesc.
   last_pd->set_should_reexecute(reexecute);
   last_pd->set_rethrow_exception(rethrow_exception);
-  last_pd->set_is_method_handle_invoke(is_method_handle_invoke);
   last_pd->set_return_oop(return_oop);
 
   // serialize sender stream offest

@@ -22,10 +22,6 @@ class ciBaseObject;
 class ciObject;
 class   ciNullObject;
 class   ciInstance;
-class     ciCallSite;
-class     ciMemberName;
-class     ciMethodHandle;
-class     ciMethodType;
 class     ciArray;
 class       ciObjArray;
 class       ciTypeArray;
@@ -58,7 +54,6 @@ friend class VMStructs;
 #define CI_PACKAGE_ACCESS_TO \
 friend class ciObjectFactory; \
 friend class VMStructs; \
-friend class ciCallSite; \
 friend class ciConstantPoolCache; \
 friend class ciField; \
 friend class ciConstant; \
@@ -72,11 +67,8 @@ friend class ciExceptionHandlerStream; \
 friend class ciObject; \
 friend class ciNullObject; \
 friend class ciInstance; \
-friend class ciMemberName; \
 friend class ciMethod; \
 friend class ciMethodData; \
-friend class ciMethodHandle; \
-friend class ciMethodType; \
 friend class ciReceiverTypeData; \
 friend class ciTypeEntries; \
 friend class ciSpeculativeTrapData; \
@@ -84,7 +76,6 @@ friend class ciSymbol; \
 friend class ciArray; \
 friend class ciObjArray; \
 friend class ciMetadata; \
-friend class ciReplay; \
 friend class ciTypeArray; \
 friend class ciType; \
 friend class ciReturnAddress; \

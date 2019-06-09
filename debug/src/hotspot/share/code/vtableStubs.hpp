@@ -106,21 +106,21 @@ class VtableStub {
   VtableStub(bool is_vtable_stub, int index)
         : _next(NULL), _is_vtable_stub(is_vtable_stub),
           _index(index), _ame_offset(-1), _npe_offset(-1) { }
-  VtableStub* next() const                       { return _next; }
-  int index() const                              { return _index; }
+  VtableStub* next()                       const { return _next; }
+  int index()                              const { return _index; }
   static VMReg receiver_location()               { return _receiver_location; }
   void set_next(VtableStub* n)                   { _next = n; }
 
  public:
-  address code_begin() const                     { return (address)(this + 1); }
-  address code_end() const                       { return code_begin() + VtableStubs::code_size_limit(_is_vtable_stub); }
-  address entry_point() const                    { return code_begin(); }
+  address code_begin()                     const { return (address)(this + 1); }
+  address code_end()                       const { return code_begin() + VtableStubs::code_size_limit(_is_vtable_stub); }
+  address entry_point()                    const { return code_begin(); }
   static int entry_offset()                      { return sizeof(class VtableStub); }
 
   bool matches(bool is_vtable_stub, int index) const {
     return _index == index && _is_vtable_stub == is_vtable_stub;
   }
-  bool contains(address pc) const                { return code_begin() <= pc && pc < code_end(); }
+  bool contains(address pc)                const { return code_begin() <= pc && pc < code_end(); }
 
  private:
   void set_exception_points(address npe_addr, address ame_addr) {
@@ -146,7 +146,7 @@ class VtableStub {
   bool is_null_pointer_exception(address epc)    { return epc == code_begin()+_npe_offset; }
 
   void print_on(outputStream* st) const;
-  void print() const                             { print_on(tty); }
+  void print()                             const { print_on(tty); }
 };
 
 #endif

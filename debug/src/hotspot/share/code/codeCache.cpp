@@ -1,11 +1,9 @@
 #include "precompiled.hpp"
 
-#include "aot/aotLoader.hpp"
 #include "code/codeBlob.hpp"
 #include "code/codeCache.hpp"
 #include "code/codeHeapState.hpp"
 #include "code/compiledIC.hpp"
-#include "code/dependencies.hpp"
 #include "code/icBuffer.hpp"
 #include "code/nmethod.hpp"
 #include "code/pcDesc.hpp"
@@ -109,7 +107,6 @@ class CodeBlob_sizes {
 
 address CodeCache::_low_bound = 0;
 address CodeCache::_high_bound = 0;
-int CodeCache::_number_of_nmethods_with_dependencies = 0;
 bool CodeCache::_needs_cache_clean = false;
 nmethod* CodeCache::_scavenge_root_nmethods = NULL;
 
@@ -470,9 +467,6 @@ void CodeCache::free(CodeBlob* cb) {
   print_trace("free", cb);
   if (cb->is_nmethod()) {
     heap->set_nmethod_count(heap->nmethod_count() - 1);
-    if (((nmethod *)cb)->has_dependencies()) {
-      _number_of_nmethods_with_dependencies--;
-    }
   }
   if (cb->is_adapter_blob()) {
     heap->set_adapter_count(heap->adapter_count() - 1);
@@ -486,9 +480,6 @@ void CodeCache::commit(CodeBlob* cb) {
   CodeHeap* heap = get_code_heap(cb);
   if (cb->is_nmethod()) {
     heap->set_nmethod_count(heap->nmethod_count() + 1);
-    if (((nmethod *)cb)->has_dependencies()) {
-      _number_of_nmethods_with_dependencies++;
-    }
   }
   if (cb->is_adapter_blob()) {
     heap->set_adapter_count(heap->adapter_count() + 1);
@@ -560,7 +551,6 @@ void CodeCache::metadata_do(void f(Metadata* m)) {
   while (iter.next_alive()) {
     iter.method()->metadata_do(f);
   }
-  AOTLoader::metadata_do(f);
 }
 
 int CodeCache::alignment_unit() {
@@ -867,15 +857,9 @@ void CodeCache::initialize() {
 
 void codeCache_init() {
   CodeCache::initialize();
-  // Load AOT libraries and add AOT code heaps.
-  AOTLoader::initialize();
 }
 
 //------------------------------------------------------------------------------------------------
-
-int CodeCache::number_of_nmethods_with_dependencies() {
-  return _number_of_nmethods_with_dependencies;
-}
 
 void CodeCache::clear_inline_caches() {
   CompiledMethodIterator iter;
@@ -891,26 +875,6 @@ void CodeCache::cleanup_inline_caches() {
   }
 }
 
-int CodeCache::mark_for_deoptimization(KlassDepChange& changes) {
-  MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-  int number_of_marked_CodeBlobs = 0;
-
-  // search the hierarchy looking for nmethods which are affected by the loading of this class
-
-  // then search the interfaces this class implements looking for nmethods
-  // which might be dependent of the fact that an interface only had one
-  // implementor.
-  // nmethod::check_all_dependencies works only correctly, if no safepoint
-  // can happen
-  NoSafepointVerifier nsv;
-  for (DepChange::ContextStream str(changes, nsv); str.next(); ) {
-    Klass* d = str.klass();
-    number_of_marked_CodeBlobs += InstanceKlass::cast(d)->mark_dependent_nmethods(changes);
-  }
-
-  return number_of_marked_CodeBlobs;
-}
-
 CompiledMethod* CodeCache::find_compiled(void* start) {
   CodeBlob *cb = find_blob(start);
   return (CompiledMethod*)cb;
@@ -918,88 +882,6 @@ CompiledMethod* CodeCache::find_compiled(void* start) {
 
 bool CodeCache::is_far_target(address target) {
   return false;
-}
-
-// Deoptimize all methods
-void CodeCache::mark_all_nmethods_for_deoptimization() {
-  MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-  CompiledMethodIterator iter;
-  while (iter.next_alive()) {
-    CompiledMethod* nm = iter.method();
-    if (!nm->method()->is_method_handle_intrinsic()) {
-      nm->mark_for_deoptimization();
-    }
-  }
-}
-
-int CodeCache::mark_for_deoptimization(Method* dependee) {
-  MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-  int number_of_marked_CodeBlobs = 0;
-
-  CompiledMethodIterator iter;
-  while (iter.next_alive()) {
-    CompiledMethod* nm = iter.method();
-    if (nm->is_dependent_on_method(dependee)) {
-      ResourceMark rm;
-      nm->mark_for_deoptimization();
-      number_of_marked_CodeBlobs++;
-    }
-  }
-
-  return number_of_marked_CodeBlobs;
-}
-
-void CodeCache::make_marked_nmethods_not_entrant() {
-  CompiledMethodIterator iter;
-  while (iter.next_alive()) {
-    CompiledMethod* nm = iter.method();
-    if (nm->is_marked_for_deoptimization() && !nm->is_not_entrant()) {
-      nm->make_not_entrant();
-    }
-  }
-}
-
-// Flushes compiled methods dependent on dependee.
-void CodeCache::flush_dependents_on(InstanceKlass* dependee) {
-  if (number_of_nmethods_with_dependencies() == 0) return;
-
-  // CodeCache can only be updated by a thread_in_VM and they will all be
-  // stopped during the safepoint so CodeCache will be safe to update without
-  // holding the CodeCache_lock.
-
-  KlassDepChange changes(dependee);
-
-  // Compute the dependent nmethods
-  if (mark_for_deoptimization(changes) > 0) {
-    // At least one nmethod has been marked for deoptimization
-    NULL op;
-    VMThread::execute(&op);
-  }
-}
-
-// Flushes compiled methods dependent on dependee
-void CodeCache::flush_dependents_on_method(const methodHandle& m_h) {
-  // CodeCache can only be updated by a thread_in_VM and they will all be
-  // stopped dring the safepoint so CodeCache will be safe to update without
-  // holding the CodeCache_lock.
-
-  // Compute the dependent nmethods
-  if (mark_for_deoptimization(m_h()) > 0) {
-    // At least one nmethod has been marked for deoptimization
-
-    // All this already happens inside a VM_Operation, so we'll do all the work here.
-    // Stuff copied from NULL and modified slightly.
-
-    // We do not want any GCs to happen while we are in the middle of this VM operation
-    ResourceMark rm;
-    NULL dm;
-
-    // Deoptimize all activations depending on marked nmethods
-    NULL::deoptimize_dependents();
-
-    // Make the dependent methods not entrant
-    make_marked_nmethods_not_entrant();
-  }
 }
 
 // A CodeHeap is full. Print out warning and report event.
@@ -1119,49 +1001,49 @@ void CodeCache::log_state(outputStream* st) {
 
 //---<  BEGIN  >--- CodeHeap State Analytics.
 
-void CodeCache::aggregate(outputStream *out, const char* granularity) {
+void CodeCache::aggregate(outputStream* out, const char* granularity) {
   FOR_ALL_ALLOCABLE_HEAPS(heap) {
     CodeHeapState::aggregate(out, (*heap), granularity);
   }
 }
 
-void CodeCache::discard(outputStream *out) {
+void CodeCache::discard(outputStream* out) {
   FOR_ALL_ALLOCABLE_HEAPS(heap) {
     CodeHeapState::discard(out, (*heap));
   }
 }
 
-void CodeCache::print_usedSpace(outputStream *out) {
+void CodeCache::print_usedSpace(outputStream* out) {
   FOR_ALL_ALLOCABLE_HEAPS(heap) {
     CodeHeapState::print_usedSpace(out, (*heap));
   }
 }
 
-void CodeCache::print_freeSpace(outputStream *out) {
+void CodeCache::print_freeSpace(outputStream* out) {
   FOR_ALL_ALLOCABLE_HEAPS(heap) {
     CodeHeapState::print_freeSpace(out, (*heap));
   }
 }
 
-void CodeCache::print_count(outputStream *out) {
+void CodeCache::print_count(outputStream* out) {
   FOR_ALL_ALLOCABLE_HEAPS(heap) {
     CodeHeapState::print_count(out, (*heap));
   }
 }
 
-void CodeCache::print_space(outputStream *out) {
+void CodeCache::print_space(outputStream* out) {
   FOR_ALL_ALLOCABLE_HEAPS(heap) {
     CodeHeapState::print_space(out, (*heap));
   }
 }
 
-void CodeCache::print_age(outputStream *out) {
+void CodeCache::print_age(outputStream* out) {
   FOR_ALL_ALLOCABLE_HEAPS(heap) {
     CodeHeapState::print_age(out, (*heap));
   }
 }
 
-void CodeCache::print_names(outputStream *out) {
+void CodeCache::print_names(outputStream* out) {
   FOR_ALL_ALLOCABLE_HEAPS(heap) {
     CodeHeapState::print_names(out, (*heap));
   }

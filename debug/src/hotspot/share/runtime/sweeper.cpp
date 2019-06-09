@@ -303,7 +303,6 @@ void NMethodSweeper::sweep_code_cache() {
         // Only flushing nmethods so size only matters for them.
         int size = nm->is_nmethod() ? ((nmethod*)nm)->total_size() : 0;
         bool is_c2_method = nm->is_compiled_by_c2();
-        bool is_osr = nm->is_osr_method();
         int compile_id = nm->compile_id();
         intptr_t address = p2i(nm);
         const char* state_before = nm->state();
@@ -466,16 +465,7 @@ NMethodSweeper::MethodStateChange NMethodSweeper::process_compiled_method(Compil
       // Code cache state change is tracked in make_zombie()
       cm->make_zombie();
       SWEEP(cm);
-      // The nmethod may have been locked by JVMTI after being made zombie (see
-      // JvmtiDeferredEvent::compiled_method_unload_event()). If so, we cannot
-      // flush the osr nmethod directly but have to wait for a later sweeper cycle.
-      if (cm->is_osr_method() && !cm->is_locked_by_vm()) {
-        // No inline caches will ever point to osr methods, so we can just remove it.
-        // Make sure that we unregistered the nmethod with the heap and flushed all
-        // dependencies before removing the nmethod (done in make_zombie()).
-        release_compiled_method(cm);
-        result = Flushed;
-      } else {
+      {
         result = MadeZombie;
       }
     } else {
@@ -493,12 +483,7 @@ NMethodSweeper::MethodStateChange NMethodSweeper::process_compiled_method(Compil
       MutexLocker cl(CompiledIC_lock);
       cm->cleanup_inline_caches();
     }
-    if (cm->is_osr_method()) {
-      SWEEP(cm);
-      // No inline caches will ever point to osr methods, so we can just remove it
-      release_compiled_method(cm);
-      result = Flushed;
-    } else {
+    {
       // Code cache state change is tracked in make_zombie()
       cm->make_zombie();
       SWEEP(cm);

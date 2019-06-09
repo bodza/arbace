@@ -42,16 +42,15 @@ public:
     return _instance;
   }
 
-  virtual const char* name() { return "JVMCI"; }
+  virtual const char* name()     { return "JVMCI"; }
 
-  virtual bool supports_native()                 { return true; }
-  virtual bool supports_osr   ()                 { return true; }
+  virtual bool supports_native() { return true; }
 
-  bool is_jvmci()                                { return true; }
-  bool is_c1   ()                                { return false; }
-  bool is_c2   ()                                { return false; }
+  bool is_jvmci()                { return true; }
+  bool is_c1()                   { return false; }
+  bool is_c2()                   { return false; }
 
-  bool needs_stubs            () { return false; }
+  bool needs_stubs()             { return false; }
 
   // Initialization
   virtual void initialize();
@@ -69,17 +68,11 @@ public:
 
   void compile_method(const methodHandle& target, int entry_bci, JVMCIEnv* env);
 
-  // Print compilation timers and statistics
-  virtual void print_timers();
-
   /**
    * Gets the number of methods that have been successfully compiled by
    * a call to JVMCICompiler::compile_method().
    */
   int methods_compiled() { return _methods_compiled; }
-
-  // Print compilation timers and statistics
-  static void print_compilation_timers();
 
   static elapsedTimer* codeInstallTimer() { return &_codeInstallTimer; }
 };

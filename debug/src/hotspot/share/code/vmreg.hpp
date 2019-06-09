@@ -73,7 +73,7 @@ public:
     return (VMReg)(intptr_t)(value() - 1);
   }
 
-  intptr_t value() const         { return (intptr_t) this; }
+  intptr_t value()         const { return (intptr_t) this; }
 
   void print_on(outputStream* st) const;
   void print() const { print_on(tty); }

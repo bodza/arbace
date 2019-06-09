@@ -39,7 +39,7 @@ protected:
   ~BasicHashtableEntry() { ShouldNotReachHere(); }
 
 public:
-  unsigned int hash() const             { return _hash; }
+  unsigned int hash()             const { return _hash; }
   void set_hash(unsigned int hash)      { _hash = hash; }
   unsigned int* hash_addr()             { return &_hash; }
 
@@ -75,7 +75,7 @@ private:
 
 public:
   // Literal
-  T literal() const                   { return _literal; }
+  T literal()                   const { return _literal; }
   T* literal_addr()                   { return &_literal; }
   void set_literal(T s)               { _literal = s; }
 

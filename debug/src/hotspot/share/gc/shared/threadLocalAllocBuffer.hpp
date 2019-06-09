@@ -81,8 +81,8 @@ private:
   int number_of_refills() const { return _number_of_refills; }
   int fast_refill_waste() const { return _fast_refill_waste; }
   int slow_refill_waste() const { return _slow_refill_waste; }
-  int gc_waste() const          { return _gc_waste; }
-  int slow_allocations() const  { return _slow_allocations; }
+  int gc_waste()          const { return _gc_waste; }
+  int slow_allocations()  const { return _slow_allocations; }
 
   static GlobalTLABStats* _global_stats;
   static GlobalTLABStats* global_stats() { return _global_stats; }
@@ -97,18 +97,18 @@ public:
   static size_t max_size_in_bytes()              { return max_size() * BytesPerWord; }
   static void set_max_size(size_t max_size)      { _max_size = max_size; }
 
-  HeapWord* start() const                        { return _start; }
-  HeapWord* end() const                          { return _end; }
-  HeapWord* top() const                          { return _top; }
+  HeapWord* start()                        const { return _start; }
+  HeapWord* end()                          const { return _end; }
+  HeapWord* top()                          const { return _top; }
   HeapWord* hard_end();
-  HeapWord* pf_top() const                       { return _pf_top; }
-  size_t desired_size() const                    { return _desired_size; }
-  size_t used() const                            { return pointer_delta(top(), start()); }
-  size_t used_bytes() const                      { return pointer_delta(top(), start(), 1); }
-  size_t free() const                            { return pointer_delta(end(), top()); }
+  HeapWord* pf_top()                       const { return _pf_top; }
+  size_t desired_size()                    const { return _desired_size; }
+  size_t used()                            const { return pointer_delta(top(), start()); }
+  size_t used_bytes()                      const { return pointer_delta(top(), start(), 1); }
+  size_t free()                            const { return pointer_delta(end(), top()); }
   // Don't discard tlab if remaining space is larger than this.
-  size_t refill_waste_limit() const              { return _refill_waste_limit; }
-  size_t bytes_since_last_sample_point() const   { return _bytes_since_last_sample_point; }
+  size_t refill_waste_limit()              const { return _refill_waste_limit; }
+  size_t bytes_since_last_sample_point()   const { return _bytes_since_last_sample_point; }
 
   // Allocate size HeapWords. The memory is NOT initialized to zero.
   inline HeapWord* allocate(size_t size);

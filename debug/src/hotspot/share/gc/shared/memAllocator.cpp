@@ -100,19 +100,10 @@ bool MemAllocator::Allocation::check_out_of_memory() {
   }
 }
 
-void MemAllocator::Allocation::verify_before() {
-  // Clear unhandled oops for memory allocation.  Memory allocation might
-  // not take out a lock if from tlab, so clear here.
-  Thread* THREAD = _thread;
-  CHECK_UNHANDLED_OOPS_ONLY(THREAD->clear_unhandled_oops();)
-}
-
+void MemAllocator::Allocation::verify_before() { }
 void MemAllocator::Allocation::verify_after() { }
-
 void MemAllocator::Allocation::check_for_bad_heap_word_value() const { }
-
 void MemAllocator::Allocation::notify_allocation_low_memory_detector() { }
-
 void MemAllocator::Allocation::notify_allocation() {
   notify_allocation_low_memory_detector();
 }

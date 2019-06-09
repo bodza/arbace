@@ -12,7 +12,7 @@ class FpuStackSim {
   int          _stack_size;
   int          _regs[FrameMap::nof_fpu_regs];
 
-  int tos_index() const                        { return _stack_size - 1; }
+  int tos_index()                        const { return _stack_size - 1; }
 
   int regs_at(int i) const;
   void set_regs_at(int i, int val);
@@ -20,9 +20,9 @@ class FpuStackSim {
   void inc_stack_size();
 
   // unified bailout support
-  Compilation*  compilation() const              { return _compilation; }
-  void          bailout(const char* msg) const   { compilation()->bailout(msg); }
-  bool          bailed_out() const               { return compilation()->bailed_out(); }
+  Compilation*  compilation()              const { return _compilation; }
+  void          bailout(const char* msg)   const { compilation()->bailout(msg); }
+  bool          bailed_out()               const { return compilation()->bailed_out(); }
 
  public:
   FpuStackSim(Compilation* compilation);
@@ -37,7 +37,7 @@ class FpuStackSim {
   bool contains(int rnr);                      // debugging support only
   bool is_empty();
   bool slot_is_empty(int tos_offset);
-  int stack_size() const                       { return _stack_size; }
+  int stack_size()                       const { return _stack_size; }
   void clear();
   intArray* write_state();
   void read_state(intArray* fpu_stack_state);

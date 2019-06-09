@@ -126,7 +126,7 @@ class DictionaryEntry : public HashtableEntry<InstanceKlass*, mtClass> {
     return (DictionaryEntry**)HashtableEntry<InstanceKlass*, mtClass>::next_addr();
   }
 
-  ProtectionDomainEntry* pd_set() const            { return _pd_set; }
+  ProtectionDomainEntry* pd_set()            const { return _pd_set; }
   void set_pd_set(ProtectionDomainEntry* new_head) {  _pd_set = new_head; }
 
   ProtectionDomainEntry* pd_set_acquire() const;
@@ -142,7 +142,7 @@ class DictionaryEntry : public HashtableEntry<InstanceKlass*, mtClass> {
     return (klass->name() == class_name);
   }
 
-  void print_count(outputStream *st) {
+  void print_count(outputStream* st) {
     int count = 0;
     for (ProtectionDomainEntry* current = pd_set();  // accessed inside SD lock
                                 current != NULL;
@@ -163,15 +163,15 @@ class SymbolPropertyEntry : public HashtableEntry<Symbol*, mtSymbol> {
   oop       _method_type;
 
  public:
-  Symbol* symbol() const            { return literal(); }
+  Symbol* symbol()            const { return literal(); }
 
-  intptr_t symbol_mode() const      { return _symbol_mode; }
+  intptr_t symbol_mode()      const { return _symbol_mode; }
   void set_symbol_mode(intptr_t m)  { _symbol_mode = m; }
 
-  Method*        method() const     { return _method; }
+  Method*        method()     const { return _method; }
   void set_method(Method* p)        { _method = p; }
 
-  oop      method_type() const      { return _method_type; }
+  oop      method_type()      const { return _method_type; }
   oop*     method_type_addr()       { return &_method_type; }
   void set_method_type(oop p)       { _method_type = p; }
 

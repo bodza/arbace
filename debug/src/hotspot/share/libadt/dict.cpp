@@ -4,8 +4,6 @@
 
 // Dictionaries - An Abstract Data Type
 
-// %%%%% includes not needed with AVM framework - Ungar
-
 #include <assert.h>
 
 //------------------------------data-----------------------------------------

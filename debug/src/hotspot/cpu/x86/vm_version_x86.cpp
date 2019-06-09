@@ -833,63 +833,6 @@ void VM_Version::get_processor_features() {
     FLAG_SET_DEFAULT(UseAdler32Intrinsics, false);
   }
 
-  if (!supports_rtm() && UseRTMLocking) {
-    // Can't continue because UseRTMLocking affects UseBiasedLocking flag
-    // setting during arguments processing. See use_biased_locking().
-    // VM_Version_init() is executed after UseBiasedLocking is used
-    // in Thread::allocate().
-    vm_exit_during_initialization("RTM instructions are not available on this CPU");
-  }
-
-#if INCLUDE_RTM_OPT
-  if (UseRTMLocking) {
-    if (is_client_compilation_mode_vm()) {
-      // Only C2 does RTM locking optimization.
-      // Can't continue because UseRTMLocking affects UseBiasedLocking flag
-      // setting during arguments processing. See use_biased_locking().
-      vm_exit_during_initialization("RTM locking optimization is not supported in this VM");
-    }
-    if (is_intel_family_core()) {
-      if ((_model == CPU_MODEL_HASWELL_E3) ||
-          (_model == CPU_MODEL_HASWELL_E7 && _stepping < 3) ||
-          (_model == CPU_MODEL_BROADWELL  && _stepping < 4)) {
-        // currently a collision between SKL and HSW_E3
-        if (!UnlockExperimentalVMOptions && UseAVX < 3) {
-          vm_exit_during_initialization("UseRTMLocking is only available as experimental option on this "
-                                        "platform. It must be enabled via -XX:+UnlockExperimentalVMOptions flag.");
-        } else {
-          warning("UseRTMLocking is only available as experimental option on this platform.");
-        }
-      }
-    }
-    if (!FLAG_IS_CMDLINE(UseRTMLocking)) {
-      // RTM locking should be used only for applications with
-      // high lock contention. For now we do not use it by default.
-      vm_exit_during_initialization("UseRTMLocking flag should be only set on command line");
-    }
-  } else { // !UseRTMLocking
-    if (UseRTMForStackLocks) {
-      if (!FLAG_IS_DEFAULT(UseRTMForStackLocks)) {
-        warning("UseRTMForStackLocks flag should be off when UseRTMLocking flag is off");
-      }
-      FLAG_SET_DEFAULT(UseRTMForStackLocks, false);
-    }
-    if (UseRTMDeopt) {
-      FLAG_SET_DEFAULT(UseRTMDeopt, false);
-    }
-    if (PrintPreciseRTMLockingStatistics) {
-      FLAG_SET_DEFAULT(PrintPreciseRTMLockingStatistics, false);
-    }
-  }
-#else
-  if (UseRTMLocking) {
-    // Only C2 does RTM locking optimization.
-    // Can't continue because UseRTMLocking affects UseBiasedLocking flag
-    // setting during arguments processing. See use_biased_locking().
-    vm_exit_during_initialization("RTM locking optimization is not supported in this VM");
-  }
-#endif
-
   if (MaxVectorSize > 0) {
     if (!is_power_of_2(MaxVectorSize)) {
       warning("MaxVectorSize must be a power of 2");
@@ -1265,26 +1208,7 @@ void VM_Version::get_processor_features() {
   }
 }
 
-bool VM_Version::use_biased_locking() {
-#if INCLUDE_RTM_OPT
-  // RTM locking is most useful when there is high lock contention and
-  // low data contention.  With high lock contention the lock is usually
-  // inflated and biased locking is not suitable for that case.
-  // RTM locking code requires that biased locking is off.
-  // Note: we can't switch off UseBiasedLocking in get_processor_features()
-  // because it is used by Thread::allocate() which is called before
-  // VM_Version::initialize().
-  if (UseRTMLocking && UseBiasedLocking) {
-    if (FLAG_IS_DEFAULT(UseBiasedLocking)) {
-      FLAG_SET_DEFAULT(UseBiasedLocking, false);
-    } else {
-      warning("Biased locking is not supported with RTM locking; ignoring UseBiasedLocking flag." );
-      UseBiasedLocking = false;
-    }
-  }
-#endif
-  return UseBiasedLocking;
-}
+bool VM_Version::use_biased_locking() { return UseBiasedLocking; }
 
 void VM_Version::initialize() {
   ResourceMark rm;
@@ -1296,8 +1220,7 @@ void VM_Version::initialize() {
   }
   CodeBuffer c(stub_blob);
   VM_Version_StubGenerator g(&c);
-  get_cpu_info_stub = CAST_TO_FN_PTR(get_cpu_info_stub_t,
-                                     g.generate_get_cpu_info());
+  get_cpu_info_stub = CAST_TO_FN_PTR(get_cpu_info_stub_t, g.generate_get_cpu_info());
 
   get_processor_features();
 }

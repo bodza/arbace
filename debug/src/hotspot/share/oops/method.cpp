@@ -19,7 +19,6 @@
 #include "oops/objArrayOop.inline.hpp"
 #include "oops/oop.inline.hpp"
 #include "oops/symbol.hpp"
-#include "prims/methodHandles.hpp"
 #include "prims/nativeLookup.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/compilationPolicy.hpp"
@@ -50,15 +49,11 @@ Method::Method(ConstMethod* xconst, AccessFlags access_flags) {
   set_access_flags(access_flags);
   set_intrinsic_id(vmIntrinsics::_none);
   set_force_inline(false);
-  set_hidden(false);
   set_dont_inline(false);
-  set_has_injected_profile(false);
   set_method_data(NULL);
   clear_method_counters();
   set_vtable_index(Method::garbage_vtable_index);
 
-  // Fix and bury in Method*
-  set_interpreter_entry(NULL); // sets i2i entry and from_int
   set_adapter_entry(NULL);
   clear_code(false /* don't need a lock */); // from_c/from_i get set to c2i/i2i
 
@@ -139,7 +134,7 @@ int Method::fast_exception_handler_bci_for(const methodHandle& mh, Klass* ex_kla
   int length = table.length();
   // iterate through all entries sequentially
   constantPoolHandle pool(THREAD, mh->constants());
-  for (int i = 0; i < length; i ++) {
+  for (int i = 0; i < length; i++) {
     //reacquire the table in case a GC happened
     ExceptionTable table(mh());
     int beg_bci = table.start_pc(i);
@@ -339,11 +334,6 @@ MethodCounters* Method::build_method_counters(Method* m, TRAPS) {
 bool Method::init_method_counters(MethodCounters* counters) {
   // Try to install a pointer to MethodCounters, return true on success.
   return Atomic::replace_if_null(counters, &_method_counters);
-}
-
-int Method::extra_stack_words() {
-  // not an inline function, to avoid a header dependency on NULL
-  return extra_stack_entries() * NULL::stackElementSize;
 }
 
 void Method::compute_size_of_parameters(Thread *thread) {
@@ -618,14 +608,11 @@ void Method::set_native_function(address function, bool post_event_flag) {
 }
 
 bool Method::has_native_function() const {
-  if (is_method_handle_intrinsic())
-    return false;  // special-cased in SharedRuntime::generate_native_wrapper
   address func = native_function();
   return (func != NULL && func != SharedRuntime::native_method_throw_unsatisfied_link_error_entry());
 }
 
 void Method::clear_native_function() {
-  // Note: is_method_handle_intrinsic() is allowed here.
   set_native_function(SharedRuntime::native_method_throw_unsatisfied_link_error_entry(), !native_bind_event_is_interesting);
   clear_code();
 }
@@ -640,16 +627,7 @@ void Method::set_signature_handler(address handler) {
   *signature_handler = handler;
 }
 
-void Method::print_made_not_compilable(int comp_level, bool is_osr, bool report, const char* reason) { }
-
-bool Method::is_always_compilable() const {
-  // Generated adapters must be compiled
-  if (is_method_handle_intrinsic() && is_synthetic()) {
-    return true;
-  }
-
-  return false;
-}
+bool Method::is_always_compilable() const { return false; }
 
 bool Method::is_not_compilable(int comp_level) const {
   if (is_always_compilable())
@@ -669,7 +647,6 @@ void Method::set_not_compilable(int comp_level, bool report, const char* reason)
     // Don't mark a method which should be always compilable
     return;
   }
-  print_made_not_compilable(comp_level, /*is_osr*/ false, report, reason);
   if (comp_level == CompLevel_all) {
     set_not_c1_compilable();
     set_not_c2_compilable();
@@ -682,44 +659,17 @@ void Method::set_not_compilable(int comp_level, bool report, const char* reason)
   CompilationPolicy::policy()->disable_compilation(this);
 }
 
-bool Method::is_not_osr_compilable(int comp_level) const {
-  if (is_not_compilable(comp_level))
-    return true;
-  if (comp_level == CompLevel_any)
-    return is_not_c1_osr_compilable() || is_not_c2_osr_compilable();
-  if (is_c1_compile(comp_level))
-    return is_not_c1_osr_compilable();
-  if (is_c2_compile(comp_level))
-    return is_not_c2_osr_compilable();
-  return false;
-}
-
-void Method::set_not_osr_compilable(int comp_level, bool report, const char* reason) {
-  print_made_not_compilable(comp_level, /*is_osr*/ true, report, reason);
-  if (comp_level == CompLevel_all) {
-    set_not_c1_osr_compilable();
-    set_not_c2_osr_compilable();
-  } else {
-    if (is_c1_compile(comp_level))
-      set_not_c1_osr_compilable();
-    if (is_c2_compile(comp_level))
-      set_not_c2_osr_compilable();
-  }
-  CompilationPolicy::policy()->disable_compilation(this);
-}
-
 // Revert to using the interpreter and clear out the nmethod
 void Method::clear_code(bool acquire_lock /* = true */) {
   MutexLockerEx pl(acquire_lock ? Patching_lock : NULL, Mutex::_no_safepoint_check_flag);
   // this may be NULL if c2i adapters have not been made yet
   // Only should happen at allocate time.
   if (adapter() == NULL) {
-    _from_compiled_entry    = NULL;
+    _from_compiled_entry = NULL;
   } else {
-    _from_compiled_entry    = adapter()->get_c2i_entry();
+    _from_compiled_entry = adapter()->get_c2i_entry();
   }
   OrderAccess::storestore();
-  _from_interpreted_entry = _i2i_entry;
   OrderAccess::storestore();
   _code = NULL;
 }
@@ -730,18 +680,14 @@ void Method::link_method(const methodHandle& h_method, TRAPS) {
   // If the code cache is full, we may reenter this function for the
   // leftover methods that weren't linked.
   if (is_shared()) {
-    address entry = NULL::entry_for_cds_method(h_method);
     if (adapter() != NULL) {
       return;
     }
-  } else if (_i2i_entry != NULL) {
-    return;
   }
 
   if (!is_shared()) {
     address entry = NULL::entry_for_method(h_method);
-    // Sets both _i2i_entry and _from_interpreted_entry
-    set_interpreter_entry(entry);
+    NULL(entry);
   }
 
   // Don't overwrite already registered native entries.
@@ -821,7 +767,7 @@ address Method::verified_code_entry() {
 bool Method::check_code() const {
   // cached in a register or local.  There's a race on the value of the field.
   CompiledMethod *code = OrderAccess::load_acquire(&_code);
-  return code == NULL || (code->method() == NULL) || (code->method() == (Method*)this && !code->is_osr_method());
+  return code == NULL || (code->method() == NULL) || (code->method() == (Method*)this);
 }
 
 // Install compiled code.  Instantly it can execute.
@@ -831,7 +777,7 @@ void Method::set_code(const methodHandle& mh, CompiledMethod *code) {
   guarantee(mh->adapter() != NULL, "Adapter blob must already exist!");
 
   // These writes must happen in this order, because the interpreter will
-  // directly jump to from_interpreted_entry which jumps to an i2c adapter
+  // directly jump to NULL which jumps to an i2c adapter
   // which jumps to _from_compiled_entry.
   mh->_code = code;             // Assign before allowing compiled code to exec
 
@@ -846,8 +792,8 @@ void Method::set_code(const methodHandle& mh, CompiledMethod *code) {
   mh->_from_compiled_entry = code->verified_entry_point();
   OrderAccess::storestore();
   // Instantly compiled code can execute.
-  if (!mh->is_method_handle_intrinsic()) {
-    mh->_from_interpreted_entry = mh->get_i2c_entry();
+  {
+    mh->NULL = mh->get_i2c_entry();
   }
 }
 
@@ -902,95 +848,15 @@ bool Method::is_ignored_by_security_stack_walk() const {
     // This is an auxilary frame -- ignore it
     return true;
   }
-  if (is_method_handle_intrinsic() || is_compiled_lambda_form()) {
-    // This is an internal adapter frame for method handles -- ignore it
-    return true;
-  }
   return false;
 }
 
 // Constant pool structure for invoke methods:
 enum {
-  _imcp_invoke_name = 1,        // utf8: 'invokeExact', etc.
-  _imcp_invoke_signature,       // utf8: (variable Symbol*)
+  _imcp_invoke_name = 1,  // utf8: 'invokeExact', etc.
+  _imcp_invoke_signature, // utf8: (variable Symbol*)
   _imcp_limit
 };
-
-// Test if this method is an MH adapter frame generated by Java code.
-// Cf. java/lang/invoke/InvokerBytecodeGenerator
-bool Method::is_compiled_lambda_form() const {
-  return intrinsic_id() == vmIntrinsics::_compiledLambdaForm;
-}
-
-// Test if this method is an internal MH primitive method.
-bool Method::is_method_handle_intrinsic() const {
-  vmIntrinsics::ID iid = intrinsic_id();
-  return (MethodHandles::is_signature_polymorphic(iid) && MethodHandles::is_signature_polymorphic_intrinsic(iid));
-}
-
-bool Method::has_member_arg() const {
-  vmIntrinsics::ID iid = intrinsic_id();
-  return (MethodHandles::is_signature_polymorphic(iid) && MethodHandles::has_member_arg(iid));
-}
-
-// Make an instance of a signature-polymorphic internal MH primitive.
-methodHandle Method::make_method_handle_intrinsic(vmIntrinsics::ID iid, Symbol* signature, TRAPS) {
-  ResourceMark rm;
-  methodHandle empty;
-
-  InstanceKlass* holder = SystemDictionary::MethodHandle_klass();
-  Symbol* name = MethodHandles::signature_polymorphic_intrinsic_name(iid);
-
-  // invariant:   cp->symbol_at_put is preceded by a refcount increment (more usually a lookup)
-  name->increment_refcount();
-  signature->increment_refcount();
-
-  int cp_length = _imcp_limit;
-  ClassLoaderData* loader_data = holder->class_loader_data();
-  constantPoolHandle cp;
-  {
-    ConstantPool* cp_oop = ConstantPool::allocate(loader_data, cp_length, CHECK_(empty));
-    cp = constantPoolHandle(THREAD, cp_oop);
-  }
-  cp->set_pool_holder(holder);
-  cp->symbol_at_put(_imcp_invoke_name,       name);
-  cp->symbol_at_put(_imcp_invoke_signature,  signature);
-  cp->set_has_preresolution();
-
-  // decide on access bits:  public or not?
-  int flags_bits = (JVM_ACC_NATIVE | JVM_ACC_SYNTHETIC | JVM_ACC_FINAL);
-  bool must_be_static = MethodHandles::is_signature_polymorphic_static(iid);
-  if (must_be_static)  flags_bits |= JVM_ACC_STATIC;
-
-  methodHandle m;
-  {
-    InlineTableSizes sizes;
-    Method* m_oop = Method::allocate(loader_data, 0, accessFlags_from(flags_bits), &sizes, ConstMethod::NORMAL, CHECK_(empty));
-    m = methodHandle(THREAD, m_oop);
-  }
-  m->set_constants(cp());
-  m->set_name_index(_imcp_invoke_name);
-  m->set_signature_index(_imcp_invoke_signature);
-  ResultTypeFinder rtf(signature);
-  m->constMethod()->set_result_type(rtf.type());
-  m->compute_size_of_parameters(THREAD);
-  m->init_intrinsic_id();
-
-  // Finally, set up its entry points.
-  m->set_vtable_index(Method::nonvirtual_vtable_index);
-  m->link_method(m, CHECK_(empty));
-
-  return m;
-}
-
-Klass* Method::check_non_bcp_klass(Klass* klass) {
-  if (klass != NULL && klass->class_loader() != NULL) {
-    if (klass->is_objArray_klass())
-      klass = ObjArrayKlass::cast(klass)->bottom_klass();
-    return klass;
-  }
-  return NULL;
-}
 
 methodHandle Method::clone_with_new_data(const methodHandle& m, u_char* new_code, int new_code_length, u_char* new_compressed_linenumber_table, int new_compressed_linenumber_size, TRAPS) {
   // Allocate new Method*
@@ -1107,12 +973,12 @@ void Method::init_intrinsic_id() {
   vmSymbols::SID klass_id = klass_id_for_intrinsics(method_holder());
 
   // ditto for method and signature:
-  vmSymbols::SID  name_id = vmSymbols::find_sid(name());
-  if (klass_id != vmSymbols::VM_SYMBOL_ENUM_NAME(java_lang_invoke_MethodHandle) && klass_id != vmSymbols::VM_SYMBOL_ENUM_NAME(java_lang_invoke_VarHandle) && name_id == vmSymbols::NO_SID) {
+  vmSymbols::SID name_id = vmSymbols::find_sid(name());
+  if (name_id == vmSymbols::NO_SID) {
     return;
   }
-  vmSymbols::SID   sig_id = vmSymbols::find_sid(signature());
-  if (klass_id != vmSymbols::VM_SYMBOL_ENUM_NAME(java_lang_invoke_MethodHandle) && klass_id != vmSymbols::VM_SYMBOL_ENUM_NAME(java_lang_invoke_VarHandle) && sig_id == vmSymbols::NO_SID) {
+  vmSymbols::SID sig_id = vmSymbols::find_sid(signature());
+  if (sig_id == vmSymbols::NO_SID) {
     return;
   }
   jshort flags = access_flags().as_short();
@@ -1142,15 +1008,6 @@ void Method::init_intrinsic_id() {
     default:
       break;
     }
-    break;
-
-  // Signature-polymorphic methods: MethodHandle.invoke*, InvokeDynamic.*., VarHandle
-  case vmSymbols::VM_SYMBOL_ENUM_NAME(java_lang_invoke_MethodHandle):
-  case vmSymbols::VM_SYMBOL_ENUM_NAME(java_lang_invoke_VarHandle):
-    if (!is_native())  break;
-    id = MethodHandles::signature_polymorphic_name_id(method_holder(), name());
-    if (is_static() != MethodHandles::is_signature_polymorphic_static(id))
-      id = vmIntrinsics::_none;
     break;
 
   default:
@@ -1219,9 +1076,6 @@ void Method::print_short_name(outputStream* st) {
   ResourceMark rm;
   st->print(" %s::", method_holder()->external_name());
   name()->print_symbol_on(st);
-  if (MethodHandles::is_signature_polymorphic(intrinsic_id())) {
-    MethodHandles::print_as_basic_type_signature_on(st, signature(), true);
-  }
 }
 
 // Comparer for sorting an object array containing
@@ -1303,26 +1157,10 @@ int Method::highest_comp_level() const {
   }
 }
 
-int Method::highest_osr_comp_level() const {
-  const MethodCounters* mcs = method_counters();
-  if (mcs != NULL) {
-    return mcs->highest_osr_comp_level();
-  } else {
-    return CompLevel_none;
-  }
-}
-
 void Method::set_highest_comp_level(int level) {
   MethodCounters* mcs = method_counters();
   if (mcs != NULL) {
     mcs->set_highest_comp_level(level);
-  }
-}
-
-void Method::set_highest_osr_comp_level(int level) {
-  MethodCounters* mcs = method_counters();
-  if (mcs != NULL) {
-    mcs->set_highest_osr_comp_level(level);
   }
 }
 
@@ -1580,14 +1418,4 @@ void Method::print_value_on(outputStream* st) const {
   signature()->print_value_on(st);
   st->print(" in ");
   method_holder()->print_value_on(st);
-}
-
-// Verification
-
-void Method::verify_on(outputStream* st) {
-  guarantee(is_method(), "object must be method");
-  guarantee(constants()->is_constantPool(), "should be constant pool");
-  guarantee(constMethod()->is_constMethod(), "should be ConstMethod*");
-  MethodData* md = method_data();
-  guarantee(md == NULL || md->is_methodData(), "should be method data");
 }

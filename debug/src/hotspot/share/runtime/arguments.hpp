@@ -70,10 +70,10 @@ class SystemProperty : public PathString {
 
  public:
   // Accessors
-  char* value() const                 { return PathString::value(); }
-  const char* key() const             { return _key; }
-  bool internal() const               { return _internal; }
-  SystemProperty* next() const        { return _next; }
+  char* value()                 const { return PathString::value(); }
+  const char* key()             const { return _key; }
+  bool internal()               const { return _internal; }
+  SystemProperty* next()        const { return _next; }
   void set_next(SystemProperty* next) { _next = next; }
 
   bool is_readable() const {
@@ -121,14 +121,14 @@ public:
 
  public:
   // Accessors
-  const char* name() const                  { return _name; }
-  char* options() const                     { return _options; }
-  bool is_absolute_path() const             { return _is_absolute_path; }
-  void* os_lib() const                      { return _os_lib; }
+  const char* name()                  const { return _name; }
+  char* options()                     const { return _options; }
+  bool is_absolute_path()             const { return _is_absolute_path; }
+  void* os_lib()                      const { return _os_lib; }
   void set_os_lib(void* os_lib)             { _os_lib = os_lib; }
-  AgentLibrary* next() const                { return _next; }
-  bool is_static_lib() const                { return _is_static_lib; }
-  bool is_instrument_lib() const            { return _is_instrument_lib; }
+  AgentLibrary* next()                const { return _next; }
+  bool is_static_lib()                const { return _is_static_lib; }
+  bool is_instrument_lib()            const { return _is_instrument_lib; }
   void set_static_lib(bool is_static_lib)   { _is_static_lib = is_static_lib; }
   bool valid()                              { return (_state == agent_valid); }
   void set_valid()                          { _state = agent_valid; }
@@ -145,8 +145,8 @@ class AgentLibraryList {
   AgentLibrary*   _first;
   AgentLibrary*   _last;
  public:
-  bool is_empty() const                     { return _first == NULL; }
-  AgentLibrary* first() const               { return _first; }
+  bool is_empty()                     const { return _first == NULL; }
+  AgentLibrary* first()               const { return _first; }
 
   // add to the end of the list
   void add(AgentLibrary* lib) {
@@ -312,7 +312,6 @@ class Arguments : AllStatic {
 
   // Used to save default settings
   static bool _AlwaysCompileLoopMethods;
-  static bool _UseOnStackReplacement;
   static bool _BackgroundCompilation;
   static bool _ClipInlining;
   static bool _CIDynamicCompilePriority;
@@ -329,9 +328,6 @@ class Arguments : AllStatic {
   static julong limit_by_allocatable_memory(julong size);
   // Setup heap size
   static void set_heap_size();
-
-  // Bytecode rewriting
-  static void set_bytecode_flags();
 
   // Invocation API hooks
   static abort_hook_t     _abort_hook;

@@ -16,8 +16,8 @@ class Metabase {
   Metabase(size_t word_size) : _word_size(word_size), _next(NULL), _prev(NULL) { }
 
  public:
-  T* next() const         { return _next; }
-  T* prev() const         { return _prev; }
+  T* next()         const { return _next; }
+  T* prev()         const { return _prev; }
   void set_next(T* v)     { _next = v; }
   void set_prev(T* v)     { _prev = v; }
   void clear_next()       { set_next(NULL); }
@@ -33,9 +33,9 @@ class Metabase {
     if (ptr != NULL) ptr->link_prev((T*)this);
   }
 
-  uintptr_t* end() const        { return ((uintptr_t*) this) + size(); }
+  uintptr_t* end()        const { return ((uintptr_t*) this) + size(); }
 
-  bool cantCoalesce() const     { return false; }
+  bool cantCoalesce()     const { return false; }
 
   // Debug support
   bool verify_chunk_in_free_list(T* tc) const { return true; }

@@ -87,7 +87,6 @@ void CodeInstaller::pd_relocate_ForeignCall(NativeInstruction* inst, jlong forei
   address pc = (address) inst;
   if (inst->is_call()) {
     // NOTE: for call without a mov, the offset must fit a 32-bit immediate
-    //       see also CompilerToVM.getMaxCallTargetOffset()
     NativeCall* call = nativeCall_at(pc);
     call->set_destination((address) foreign_call_destination);
     _instructions->relocate(call->instruction_address(), runtime_call_Relocation::spec(), Assembler::call32_operand);

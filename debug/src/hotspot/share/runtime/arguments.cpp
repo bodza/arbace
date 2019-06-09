@@ -57,7 +57,6 @@ bool   Arguments::_sun_java_launcher_is_altjvm  = false;
 
 // These parameters are reset in method parse_vm_init_args()
 bool   Arguments::_AlwaysCompileLoopMethods     = AlwaysCompileLoopMethods;
-bool   Arguments::_UseOnStackReplacement        = UseOnStackReplacement;
 bool   Arguments::_BackgroundCompilation        = BackgroundCompilation;
 bool   Arguments::_ClipInlining                 = ClipInlining;
 intx   Arguments::_Tier3InvokeNotifyFreqLog     = Tier3InvokeNotifyFreqLog;
@@ -1114,13 +1113,11 @@ void Arguments::set_mode_flags(Mode mode) {
   PropertyList_unique_add(&_system_properties, "java.vm.info", VM_Version::vm_info_string(), AddProperty, UnwriteableProperty, ExternalProperty);
 
   UseCompiler                = true;
-  UseLoopCounter             = true;
 
   // Default values may be platform/compiler dependent -
   // use the saved values
   ClipInlining               = Arguments::_ClipInlining;
   AlwaysCompileLoopMethods   = Arguments::_AlwaysCompileLoopMethods;
-  UseOnStackReplacement      = Arguments::_UseOnStackReplacement;
   BackgroundCompilation      = Arguments::_BackgroundCompilation;
 
   // Change from defaults based on mode
@@ -1442,13 +1439,6 @@ jint Arguments::set_aggressive_heap_flags() {
   return JNI_OK;
 }
 
-// This must be called after ergonomics.
-void Arguments::set_bytecode_flags() {
-  if (!RewriteBytecodes) {
-    FLAG_SET_DEFAULT(RewriteFrequentPairs, false);
-  }
-}
-
 //===========================================================================================================
 // Parsing of java.compiler property
 
@@ -1610,7 +1600,6 @@ jint Arguments::parse_vm_init_args(const JavaVMInitArgs *java_tool_options_args,
 
   // Save default settings for some mode flags
   Arguments::_AlwaysCompileLoopMethods = AlwaysCompileLoopMethods;
-  Arguments::_UseOnStackReplacement    = UseOnStackReplacement;
   Arguments::_ClipInlining             = ClipInlining;
   Arguments::_BackgroundCompilation    = BackgroundCompilation;
 
@@ -2220,22 +2209,6 @@ jint Arguments::finalize_vm_init_args(bool patch_mod_javabase) {
     }
   }
 
-  // This must be done after all arguments have been processed.
-  // java_compiler() true means set to "NONE" or empty.
-  if (java_compiler()) {
-    // For backwards compatibility, we switch to interpreted mode if
-    // -Djava.compiler="NONE" or "" is specified AND "-Xdebug" was
-    // not specified.
-    set_mode_flags(NULL);
-  }
-
-  // CompileThresholdScaling == 0.0 is same as -Xint: Disable compilation (enable interpreter-only mode),
-  // but like -Xint, leave compilation thresholds unaffected.
-  // With tiered compilation disabled, setting CompileThreshold to 0 disables compilation as well.
-  if ((CompileThresholdScaling == 0.0) || (CompileThreshold == 0)) {
-    set_mode_flags(NULL);
-  }
-
   // eventually fix up InitialTenuringThreshold if only MaxTenuringThreshold is set
   if (FLAG_IS_DEFAULT(InitialTenuringThreshold) && (InitialTenuringThreshold > MaxTenuringThreshold)) {
     FLAG_SET_ERGO(uintx, InitialTenuringThreshold, MaxTenuringThreshold);
@@ -2748,9 +2721,6 @@ jint Arguments::apply_ergo() {
   // Set compiler flags after GC is selected and GC specific
   // flags (LoopStripMiningIter) are set.
   CompilerConfig::ergo_initialize();
-
-  // Set bytecode rewriting flags
-  set_bytecode_flags();
 
   // Turn off biased locking for locking debug mode flags,
   // which are subtly different from each other but neither works with

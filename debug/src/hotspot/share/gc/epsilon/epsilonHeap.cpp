@@ -187,7 +187,7 @@ void EpsilonHeap::safe_object_iterate(ObjectClosure *cl) {
   _space->safe_object_iterate(cl);
 }
 
-void EpsilonHeap::print_on(outputStream *st) const {
+void EpsilonHeap::print_on(outputStream* st) const {
   st->print_cr("Epsilon Heap");
 
   // Cast away constness:

@@ -37,8 +37,8 @@ class CompiledICHolder : public CHeapObj<mtCompiler> {
   static int live_not_claimed_count() { return _live_not_claimed_count; }
 
   // accessors
-  Klass*    holder_klass()  const     { return _holder_klass; }
-  Metadata* holder_metadata() const   { return _holder_metadata; }
+  Klass*    holder_klass()      const { return _holder_klass; }
+  Metadata* holder_metadata()   const { return _holder_metadata; }
 
   void set_holder_metadata(Metadata* m) { _holder_metadata = m; }
   void set_holder_klass(Klass* k)     { _holder_klass = k; }
@@ -59,9 +59,6 @@ class CompiledICHolder : public CHeapObj<mtCompiler> {
     }
     return true;
   }
-
-  // Verify
-  void verify_on(outputStream* st);
 
   // Printing
   void print_on(outputStream* st) const;

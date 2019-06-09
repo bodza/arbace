@@ -81,21 +81,21 @@ class GraphBuilder {
    public:
     ScopeData(ScopeData* parent);
 
-    ScopeData* parent() const                      { return _parent; }
+    ScopeData* parent()                       const { return _parent; }
 
-    BlockList* bci2block() const                   { return _bci2block; }
-    void       set_bci2block(BlockList* bci2block) { _bci2block = bci2block; }
+    BlockList* bci2block()                    const { return _bci2block; }
+    void       set_bci2block(BlockList* bci2block)  { _bci2block = bci2block; }
 
     // NOTE: this has a different effect when parsing jsrs
     BlockBegin* block_at(int bci);
 
-    IRScope* scope() const                         { return _scope; }
+    IRScope* scope()                          const { return _scope; }
     // Has side-effect of setting has_handler flag
     void set_scope(IRScope* scope);
 
     // Whether this or any parent scope has exception handlers
-    bool has_handler() const                       { return _has_handler; }
-    void set_has_handler()                         { _has_handler = true; }
+    bool has_handler()                        const { return _has_handler; }
+    void set_has_handler()                          { _has_handler = true; }
 
     // Exception handlers list to be used for this scope
     XHandlers* xhandlers() const;
@@ -107,41 +107,41 @@ class GraphBuilder {
     // Indicates parse is over
     bool is_work_list_empty() const;
 
-    ciBytecodeStream* stream()                     { return _stream; }
-    void set_stream(ciBytecodeStream* stream)      { _stream = stream; }
+    ciBytecodeStream* stream()                      { return _stream; }
+    void set_stream(ciBytecodeStream* stream)       { _stream = stream; }
 
-    intx max_inline_size() const                   { return _max_inline_size; }
+    intx max_inline_size()                    const { return _max_inline_size; }
 
-    BlockBegin* continuation() const               { return _continuation; }
-    void set_continuation(BlockBegin* cont)        { _continuation = cont; }
+    BlockBegin* continuation()                const { return _continuation; }
+    void set_continuation(BlockBegin* cont)         { _continuation = cont; }
 
     // Indicates whether this ScopeData was pushed only for the
     // parsing and inlining of a jsr
-    bool parsing_jsr() const                       { return _parsing_jsr; }
-    void set_parsing_jsr()                         { _parsing_jsr = true; }
-    int  jsr_entry_bci() const                     { return _jsr_entry_bci; }
-    void set_jsr_entry_bci(int bci)                { _jsr_entry_bci = bci; }
+    bool parsing_jsr()                        const { return _parsing_jsr; }
+    void set_parsing_jsr()                          { _parsing_jsr = true; }
+    int  jsr_entry_bci()                      const { return _jsr_entry_bci; }
+    void set_jsr_entry_bci(int bci)                 { _jsr_entry_bci = bci; }
     void set_jsr_return_address_local(int local_no) { _jsr_ret_addr_local = local_no; }
-    int  jsr_return_address_local() const          { return _jsr_ret_addr_local; }
+    int  jsr_return_address_local()           const { return _jsr_ret_addr_local; }
     // Must be called after scope is set up for jsr ScopeData
     void setup_jsr_xhandlers();
 
     // The jsr continuation is only used when parsing_jsr is true, and
     // is different from the "normal" continuation since we can end up
     // doing a return (rather than a ret) from within a subroutine
-    BlockBegin* jsr_continuation() const           { return _jsr_continuation; }
-    void set_jsr_continuation(BlockBegin* cont)    { _jsr_continuation = cont; }
+    BlockBegin* jsr_continuation()            const { return _jsr_continuation; }
+    void set_jsr_continuation(BlockBegin* cont)     { _jsr_continuation = cont; }
 
     int num_returns();
     void incr_num_returns();
 
     void set_inline_cleanup_info(BlockBegin* block, Instruction* return_prev, ValueStack* return_state);
-    BlockBegin*  inline_cleanup_block() const      { return _cleanup_block; }
-    Instruction* inline_cleanup_return_prev() const{ return _cleanup_return_prev; }
-    ValueStack*  inline_cleanup_state() const      { return _cleanup_state; }
+    BlockBegin*  inline_cleanup_block()       const { return _cleanup_block; }
+    Instruction* inline_cleanup_return_prev() const { return _cleanup_return_prev; }
+    ValueStack*  inline_cleanup_state()       const { return _cleanup_state; }
 
-    bool ignore_return() const                     { return _ignore_return; }
-    void set_ignore_return(bool ignore_return)     { _ignore_return = ignore_return; }
+    bool ignore_return()                      const { return _ignore_return; }
+    void set_ignore_return(bool ignore_return)      { _ignore_return = ignore_return; }
   };
 
   // for all GraphBuilders
@@ -155,7 +155,6 @@ class GraphBuilder {
   const char*       _inline_bailout_msg;         // non-null if most recent inline attempt failed
   int               _instruction_count;          // for bailing out in pathological jsr/ret cases
   BlockBegin*       _start;                      // the start block
-  BlockBegin*       _osr_entry;                  // the osr entry block block
   ValueStack*       _initial_state;              // The state for the start block
 
   // for each call to connect_to_end; can also be set by inliner
@@ -165,34 +164,34 @@ class GraphBuilder {
   bool              _skip_block;                 // skip processing of the rest of this block
 
   // accessors
-  ScopeData*        scope_data() const           { return _scope_data; }
-  Compilation*      compilation() const          { return _compilation; }
-  BlockList*        bci2block() const            { return scope_data()->bci2block(); }
-  ValueMap*         vmap() const                 { return _vmap; }
-  bool              has_handler() const          { return scope_data()->has_handler(); }
+  ScopeData*        scope_data()           const { return _scope_data; }
+  Compilation*      compilation()          const { return _compilation; }
+  BlockList*        bci2block()            const { return scope_data()->bci2block(); }
+  ValueMap*         vmap()                 const { return _vmap; }
+  bool              has_handler()          const { return scope_data()->has_handler(); }
 
-  BlockBegin*       block() const                { return _block; }
-  ValueStack*       state() const                { return _state; }
+  BlockBegin*       block()                const { return _block; }
+  ValueStack*       state()                const { return _state; }
   void              set_state(ValueStack* state) { _state = state; }
-  IRScope*          scope() const                { return scope_data()->scope(); }
-  ciMethod*         method() const               { return scope()->method(); }
-  ciBytecodeStream* stream() const               { return scope_data()->stream(); }
-  Instruction*      last() const                 { return _last; }
-  Bytecodes::Code   code() const                 { return stream()->cur_bc(); }
-  int               bci() const                  { return stream()->cur_bci(); }
-  int               next_bci() const             { return stream()->next_bci(); }
+  IRScope*          scope()                const { return scope_data()->scope(); }
+  ciMethod*         method()               const { return scope()->method(); }
+  ciBytecodeStream* stream()               const { return scope_data()->stream(); }
+  Instruction*      last()                 const { return _last; }
+  Bytecodes::Code   code()                 const { return stream()->cur_bc(); }
+  int               bci()                  const { return stream()->cur_bci(); }
+  int               next_bci()             const { return stream()->next_bci(); }
 
   // unified bailout support
-  void bailout(const char* msg) const            { compilation()->bailout(msg); }
-  bool bailed_out() const                        { return compilation()->bailed_out(); }
+  void bailout(const char* msg)            const { compilation()->bailout(msg); }
+  bool bailed_out()                        const { return compilation()->bailed_out(); }
 
   // stack manipulation helpers
-  void ipush(Value t) const                      { state()->ipush(t); }
-  void lpush(Value t) const                      { state()->lpush(t); }
-  void fpush(Value t) const                      { state()->fpush(t); }
-  void dpush(Value t) const                      { state()->dpush(t); }
-  void apush(Value t) const                      { state()->apush(t); }
-  void  push(ValueType* type, Value t) const     { state()-> push(type, t); }
+  void ipush(Value t)                      const { state()->ipush(t); }
+  void lpush(Value t)                      const { state()->lpush(t); }
+  void fpush(Value t)                      const { state()->fpush(t); }
+  void dpush(Value t)                      const { state()->dpush(t); }
+  void apush(Value t)                      const { state()->apush(t); }
+  void  push(ValueType* type, Value t)     const { state()-> push(type, t); }
 
   Value ipop()                                   { return state()->ipop(); }
   Value lpop()                                   { return state()->lpop(); }
@@ -253,7 +252,6 @@ class GraphBuilder {
   void eliminate_redundant_phis(BlockBegin* start);
   BlockEnd* iterate_bytecodes_for_block(int bci);
   void iterate_all_blocks(bool start_in_current_block_for_inlining = false);
-  Dependencies* dependency_recorder() const; // = compilation()->dependencies()
   bool direct_compare(ciKlass* k);
   Value make_constant(ciConstant value, ciField* field);
 
@@ -281,34 +279,34 @@ class GraphBuilder {
   ValueStack* copy_state_exhandling();
   ValueStack* copy_state_for_exception_with_bci(int bci);
   ValueStack* copy_state_for_exception();
-  ValueStack* copy_state_if_bb(bool is_bb) { return (is_bb || compilation()->is_optimistic()) ? copy_state_before() : NULL; }
-  ValueStack* copy_state_indexed_access() { return compilation()->is_optimistic() ? copy_state_before() : copy_state_for_exception(); }
+  ValueStack* copy_state_if_bb(bool is_bb)        { return is_bb ? copy_state_before() : NULL; }
+  ValueStack* copy_state_indexed_access()         { return copy_state_for_exception(); }
 
   //
   // Inlining support
   //
 
   // accessors
-  bool parsing_jsr() const                               { return scope_data()->parsing_jsr(); }
-  BlockBegin* continuation() const                       { return scope_data()->continuation(); }
-  BlockBegin* jsr_continuation() const                   { return scope_data()->jsr_continuation(); }
-  void set_continuation(BlockBegin* continuation)        { scope_data()->set_continuation(continuation); }
+  bool parsing_jsr()                        const { return scope_data()->parsing_jsr(); }
+  BlockBegin* continuation()                const { return scope_data()->continuation(); }
+  BlockBegin* jsr_continuation()            const { return scope_data()->jsr_continuation(); }
+  void set_continuation(BlockBegin* continuation) { scope_data()->set_continuation(continuation); }
   void set_inline_cleanup_info(BlockBegin* block, Instruction* return_prev, ValueStack* return_state) { scope_data()->set_inline_cleanup_info(block, return_prev, return_state); }
   void set_inline_cleanup_info() {
     set_inline_cleanup_info(_block, _last, _state);
   }
-  BlockBegin*  inline_cleanup_block() const              { return scope_data()->inline_cleanup_block(); }
-  Instruction* inline_cleanup_return_prev() const        { return scope_data()->inline_cleanup_return_prev(); }
-  ValueStack*  inline_cleanup_state() const              { return scope_data()->inline_cleanup_state(); }
+  BlockBegin*  inline_cleanup_block()       const { return scope_data()->inline_cleanup_block(); }
+  Instruction* inline_cleanup_return_prev() const { return scope_data()->inline_cleanup_return_prev(); }
+  ValueStack*  inline_cleanup_state()       const { return scope_data()->inline_cleanup_state(); }
   void restore_inline_cleanup_info() {
     _block = inline_cleanup_block();
     _last  = inline_cleanup_return_prev();
     _state = inline_cleanup_state();
   }
-  void incr_num_returns()                                { scope_data()->incr_num_returns(); }
-  int  num_returns() const                               { return scope_data()->num_returns(); }
-  intx max_inline_size() const                           { return scope_data()->max_inline_size(); }
-  int  inline_level() const                              { return scope()->level(); }
+  void incr_num_returns()                         { scope_data()->incr_num_returns(); }
+  int  num_returns()                        const { return scope_data()->num_returns(); }
+  intx max_inline_size()                    const { return scope_data()->max_inline_size(); }
+  int  inline_level()                       const { return scope()->level(); }
   int  recursive_inline_level(ciMethod* callee) const;
 
   // inlining of synchronized methods
@@ -326,14 +324,10 @@ class GraphBuilder {
   const char* check_can_parse(ciMethod* callee) const;
   const char* should_not_inline(ciMethod* callee) const;
 
-  // JSR 292 support
-  bool try_method_handle_inline(ciMethod* callee, bool ignore_return);
-
   // helpers
   void inline_bailout(const char* msg);
   BlockBegin* header_block(BlockBegin* entry, BlockBegin::Flag f, ValueStack* state);
-  BlockBegin* setup_start_block(int osr_bci, BlockBegin* std_entry, BlockBegin* osr_entry, ValueStack* init_state);
-  void setup_osr_entry_block();
+  BlockBegin* setup_start_block(BlockBegin* std_entry, ValueStack* init_state);
   void clear_inline_bailout();
   ValueStack* state_at_entry();
   void push_root_scope(IRScope* scope, BlockList* bci2block, BlockBegin* start);
@@ -387,7 +381,7 @@ class GraphBuilder {
   GraphBuilder(Compilation* compilation, IRScope* scope);
   static void sort_top_into_worklist(BlockList* worklist, BlockBegin* top);
 
-  BlockBegin* start() const                      { return _start; }
+  BlockBegin* start() const { return _start; }
 };
 
 #endif

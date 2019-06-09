@@ -277,8 +277,8 @@ private:
 public:
   static int number_of_subclasses_of_ref() { return (REF_PHANTOM - REF_OTHER); }
 
-  uint num_queues() const                  { return _num_queues; }
-  uint max_num_queues() const              { return _max_num_queues; }
+  uint num_queues()                  const { return _num_queues; }
+  uint max_num_queues()              const { return _max_num_queues; }
   void set_active_mt_degree(uint v);
 
   ReferencePolicy* setup_policy(bool always_clear) {

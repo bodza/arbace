@@ -55,12 +55,12 @@ class Space: public CHeapObj<mtGC> {
 
  public:
   // Accessors
-  HeapWord* bottom() const         { return _bottom; }
-  HeapWord* end() const            { return _end; }
+  HeapWord* bottom()         const { return _bottom; }
+  HeapWord* end()            const { return _end; }
   virtual void set_bottom(HeapWord* value) { _bottom = value; }
   virtual void set_end(HeapWord* value)    { _end = value; }
 
-  virtual HeapWord* saved_mark_word() const  { return _saved_mark_word; }
+  virtual HeapWord* saved_mark_word()  const { return _saved_mark_word; }
 
   void set_saved_mark_word(HeapWord* p) { _saved_mark_word = p; }
 
@@ -109,8 +109,8 @@ class Space: public CHeapObj<mtGC> {
   virtual void mangle_unused_area_complete() = 0;
 
   // Testers
-  bool is_empty() const              { return used() == 0; }
-  bool not_empty() const             { return used() > 0; }
+  bool is_empty()              const { return used() == 0; }
+  bool not_empty()             const { return used() > 0; }
 
   // Returns true iff the given the space contains the
   // given address as part of an allocated object. For
@@ -465,7 +465,7 @@ class ContiguousSpace: public CompactibleSpace {
   virtual void clear(bool mangle_space);
 
   // Accessors
-  HeapWord* top() const            { return _top; }
+  HeapWord* top()            const { return _top; }
   void set_top(HeapWord* value)    { _top = value; }
 
   void set_saved_mark()            { _saved_mark_word = top(); }
@@ -494,9 +494,9 @@ class ContiguousSpace: public CompactibleSpace {
   void check_mangled_unused_area_complete() { };
 
   // Size computations: sizes in bytes.
-  size_t capacity() const        { return byte_size(bottom(), end()); }
-  size_t used() const            { return byte_size(bottom(), top()); }
-  size_t free() const            { return byte_size(top(),    end()); }
+  size_t capacity()        const { return byte_size(bottom(), end()); }
+  size_t used()            const { return byte_size(bottom(), top()); }
+  size_t free()            const { return byte_size(top(),    end()); }
 
   virtual bool is_free_block(const HeapWord* p) const;
 

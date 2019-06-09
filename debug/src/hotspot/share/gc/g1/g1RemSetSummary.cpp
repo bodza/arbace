@@ -156,26 +156,26 @@ public:
   size_t code_root_mem_size() const { return _code_root_mem_size; }
   size_t code_root_elems() const { return _code_root_elems; }
 
-  void print_rs_mem_info_on(outputStream * out, size_t total) {
+  void print_rs_mem_info_on(outputStream* out, size_t total) {
     out->print_cr("    " SIZE_FORMAT_W(8) "%s (%5.1f%%) by " SIZE_FORMAT " %s regions",
         byte_size_in_proper_unit(rs_mem_size()),
         proper_unit_for_byte_size(rs_mem_size()),
         rs_mem_size_percent_of(total), amount(), _name);
   }
 
-  void print_cards_occupied_info_on(outputStream * out, size_t total) {
+  void print_cards_occupied_info_on(outputStream* out, size_t total) {
     out->print_cr("     " SIZE_FORMAT_W(8) " (%5.1f%%) entries by " SIZE_FORMAT " %s regions",
         cards_occupied(), cards_occupied_percent_of(total), amount(), _name);
   }
 
-  void print_code_root_mem_info_on(outputStream * out, size_t total) {
+  void print_code_root_mem_info_on(outputStream* out, size_t total) {
     out->print_cr("    " SIZE_FORMAT_W(8) "%s (%5.1f%%) by " SIZE_FORMAT " %s regions",
         byte_size_in_proper_unit(code_root_mem_size()),
         proper_unit_for_byte_size(code_root_mem_size()),
         code_root_mem_size_percent_of(total), amount(), _name);
   }
 
-  void print_code_root_elems_info_on(outputStream * out, size_t total) {
+  void print_code_root_elems_info_on(outputStream* out, size_t total) {
     out->print_cr("     " SIZE_FORMAT_W(8) " (%5.1f%%) elements by " SIZE_FORMAT " %s regions",
         code_root_elems(), code_root_elems_percent_of(total), amount(), _name);
   }
@@ -192,19 +192,19 @@ private:
   size_t _max_rs_mem_sz;
   HeapRegion* _max_rs_mem_sz_region;
 
-  size_t total_rs_mem_sz() const            { return _all.rs_mem_size(); }
-  size_t total_cards_occupied() const       { return _all.cards_occupied(); }
+  size_t total_rs_mem_sz()            const { return _all.rs_mem_size(); }
+  size_t total_cards_occupied()       const { return _all.cards_occupied(); }
 
-  size_t max_rs_mem_sz() const              { return _max_rs_mem_sz; }
-  HeapRegion* max_rs_mem_sz_region() const  { return _max_rs_mem_sz_region; }
+  size_t max_rs_mem_sz()              const { return _max_rs_mem_sz; }
+  HeapRegion* max_rs_mem_sz_region()  const { return _max_rs_mem_sz_region; }
 
   size_t _max_code_root_mem_sz;
   HeapRegion* _max_code_root_mem_sz_region;
 
-  size_t total_code_root_mem_sz() const     { return _all.code_root_mem_size(); }
-  size_t total_code_root_elems() const      { return _all.code_root_elems(); }
+  size_t total_code_root_mem_sz()     const { return _all.code_root_mem_size(); }
+  size_t total_code_root_elems()      const { return _all.code_root_elems(); }
 
-  size_t max_code_root_mem_sz() const       { return _max_code_root_mem_sz; }
+  size_t max_code_root_mem_sz()       const { return _max_code_root_mem_sz; }
   HeapRegion* max_code_root_mem_sz_region() const { return _max_code_root_mem_sz_region; }
 
 public:

@@ -8,19 +8,16 @@
 #include "memory/resourceArea.hpp"
 #include "oops/methodData.hpp"
 #include "oops/method.inline.hpp"
-#include "prims/methodHandles.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/mutexLocker.hpp"
 
 CompiledMethod::CompiledMethod(Method* method, const char* name, CompilerType type, const CodeBlobLayout& layout, int frame_complete_offset, int frame_size, ImmutableOopMapSet* oop_maps, bool caller_must_gc_arguments)
-  : CodeBlob(name, type, layout, frame_complete_offset, frame_size, oop_maps, caller_must_gc_arguments),
-  _method(method), _mark_for_deoptimization_status(not_marked) {
+  : CodeBlob(name, type, layout, frame_complete_offset, frame_size, oop_maps, caller_must_gc_arguments), _method(method) {
   init_defaults();
 }
 
 CompiledMethod::CompiledMethod(Method* method, const char* name, CompilerType type, int size, int header_size, CodeBuffer* cb, int frame_complete_offset, int frame_size, OopMapSet* oop_maps, bool caller_must_gc_arguments)
-  : CodeBlob(name, type, CodeBlobLayout((address) this, size, header_size, cb), cb, frame_complete_offset, frame_size, oop_maps, caller_must_gc_arguments),
-  _method(method), _mark_for_deoptimization_status(not_marked) {
+  : CodeBlob(name, type, CodeBlobLayout((address) this, size, header_size, cb), cb, frame_complete_offset, frame_size, oop_maps, caller_must_gc_arguments), _method(method) {
   init_defaults();
 }
 
@@ -30,14 +27,6 @@ void CompiledMethod::init_defaults() {
   _lazy_critical_native       = 0;
   _has_wide_vectors           = 0;
   _unloading_clock            = 0;
-}
-
-bool CompiledMethod::is_method_handle_return(address return_pc) {
-  if (!has_method_handle_invokes())  return false;
-  PcDesc* pd = pc_desc_at(return_pc);
-  if (pd == NULL)
-    return false;
-  return pd->is_method_handle_invoke();
 }
 
 // Returns a string version of the method state.

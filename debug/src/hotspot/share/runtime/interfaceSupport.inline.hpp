@@ -69,8 +69,6 @@ class ThreadStateTransition : public StackObj {
 
     SafepointMechanism::block_if_requested(thread);
     thread->set_thread_state(to);
-
-    CHECK_UNHANDLED_OOPS_ONLY(thread->clear_unhandled_oops();)
   }
 
   // transition_and_fence must be used on any thread state transition
@@ -87,8 +85,6 @@ class ThreadStateTransition : public StackObj {
 
     SafepointMechanism::block_if_requested(thread);
     thread->set_thread_state(to);
-
-    CHECK_UNHANDLED_OOPS_ONLY(thread->clear_unhandled_oops();)
   }
 
   // Same as above, but assumes from = _thread_in_Java. This is simpler, since we
@@ -109,9 +105,6 @@ class ThreadStateTransition : public StackObj {
     // up to handle exceptions floating around at arbitrary points.
     if (SafepointMechanism::poll(thread) || thread->is_suspend_after_native()) {
       JavaThread::check_safepoint_and_suspend_for_native_trans(thread);
-
-      // Clear unhandled oops anywhere where we could block, even if we don't.
-      CHECK_UNHANDLED_OOPS_ONLY(thread->clear_unhandled_oops();)
     }
 
     thread->set_thread_state(to);
@@ -292,15 +285,6 @@ class JRTLeafVerifier : public NoSafepointVerifier {
 #define VM_QUICK_ENTRY_BASE(result_type, header, thread) \
   Thread* THREAD = thread; \
   /* begin of body */
-
-// Definitions for IRT (NULL Runtime)
-// (thread is an argument passed in to all these routines)
-
-#define IRT_LEAF(result_type, header) \
-  result_type header { \
-    /* begin of body */
-
-#define IRT_END }
 
 #define JRT_ENTRY(result_type, header) \
   result_type header { \

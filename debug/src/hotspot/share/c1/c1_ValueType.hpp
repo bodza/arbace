@@ -90,7 +90,7 @@ class ValueType: public CompilationResourceObj {
   }
   virtual const char tchar() const               = 0; // the type 'character' for printing
   virtual const char* name() const               = 0; // the type name for printing
-  virtual bool is_constant() const               { return false; }
+  virtual bool is_constant()               const { return false; }
 
   // testers
   bool is_void()                                 { return tag() == voidTag; }
@@ -107,12 +107,12 @@ class ValueType: public CompilationResourceObj {
   bool is_address()                              { return as_AddressType()  != NULL; }
   bool is_illegal()                              { return tag() == illegalTag; }
 
-  bool is_int_kind() const                       { return tag() == intTag || tag() == longTag; }
-  bool is_float_kind() const                     { return tag() == floatTag || tag() == doubleTag; }
-  bool is_object_kind() const                    { return tag() == objectTag; }
+  bool is_int_kind()                       const { return tag() == intTag || tag() == longTag; }
+  bool is_float_kind()                     const { return tag() == floatTag || tag() == doubleTag; }
+  bool is_object_kind()                    const { return tag() == objectTag; }
 
-  bool is_single_word() const                    { return _size == 1; }
-  bool is_double_word() const                    { return _size == 2; }
+  bool is_single_word()                    const { return _size == 1; }
+  bool is_double_word()                    const { return _size == 2; }
 
   // casting
   virtual VoidType*         as_VoidType()        { return NULL; }
@@ -154,18 +154,18 @@ class ValueType: public CompilationResourceObj {
 class VoidType: public ValueType {
  public:
   VoidType(): ValueType(voidTag, 0) { }
-  virtual ValueType* base() const                { return voidType; }
-  virtual const char tchar() const               { return 'v'; }
-  virtual const char* name() const               { return "void"; }
+  virtual ValueType* base()                const { return voidType; }
+  virtual const char tchar()               const { return 'v'; }
+  virtual const char* name()               const { return "void"; }
   virtual VoidType* as_VoidType()                { return this; }
 };
 
 class IntType: public ValueType {
  public:
   IntType(): ValueType(intTag, 1) { }
-  virtual ValueType* base() const                { return intType; }
-  virtual const char tchar() const               { return 'i'; }
-  virtual const char* name() const               { return "int"; }
+  virtual ValueType* base()                const { return intType; }
+  virtual const char tchar()               const { return 'i'; }
+  virtual const char* name()               const { return "int"; }
   virtual IntType* as_IntType()                  { return this; }
 };
 
@@ -176,9 +176,9 @@ class IntConstant: public IntType {
  public:
   IntConstant(jint value)                        { _value = value; }
 
-  jint value() const                             { return _value; }
+  jint value()                             const { return _value; }
 
-  virtual bool is_constant() const               { return true; }
+  virtual bool is_constant()               const { return true; }
   virtual IntConstant* as_IntConstant()          { return this; }
 };
 
@@ -193,18 +193,18 @@ class IntInterval: public IntType {
     _end = end;
   }
 
-  jint beg() const                               { return _beg; }
-  jint end() const                               { return _end; }
+  jint beg()                               const { return _beg; }
+  jint end()                               const { return _end; }
 
-  virtual bool is_interval() const               { return true; }
+  virtual bool is_interval()               const { return true; }
 };
 
 class LongType: public ValueType {
  public:
   LongType(): ValueType(longTag, 2) { }
-  virtual ValueType* base() const                { return longType; }
-  virtual const char tchar() const               { return 'l'; }
-  virtual const char* name() const               { return "long"; }
+  virtual ValueType* base()                const { return longType; }
+  virtual const char tchar()               const { return 'l'; }
+  virtual const char* name()               const { return "long"; }
   virtual LongType* as_LongType()                { return this; }
 };
 
@@ -215,18 +215,18 @@ class LongConstant: public LongType {
  public:
   LongConstant(jlong value)                      { _value = value; }
 
-  jlong value() const                            { return _value; }
+  jlong value()                            const { return _value; }
 
-  virtual bool is_constant() const               { return true; }
+  virtual bool is_constant()               const { return true; }
   virtual LongConstant* as_LongConstant()        { return this; }
 };
 
 class FloatType: public ValueType {
  public:
   FloatType(): ValueType(floatTag, 1) { }
-  virtual ValueType* base() const                { return floatType; }
-  virtual const char tchar() const               { return 'f'; }
-  virtual const char* name() const               { return "float"; }
+  virtual ValueType* base()                const { return floatType; }
+  virtual const char tchar()               const { return 'f'; }
+  virtual const char* name()               const { return "float"; }
   virtual FloatType* as_FloatType()              { return this; }
 };
 
@@ -237,18 +237,18 @@ class FloatConstant: public FloatType {
  public:
   FloatConstant(jfloat value)                    { _value = value; }
 
-  jfloat value() const                           { return _value; }
+  jfloat value()                           const { return _value; }
 
-  virtual bool is_constant() const               { return true; }
+  virtual bool is_constant()               const { return true; }
   virtual FloatConstant* as_FloatConstant()      { return this; }
 };
 
 class DoubleType: public ValueType {
  public:
   DoubleType(): ValueType(doubleTag, 2) { }
-  virtual ValueType* base() const                { return doubleType; }
-  virtual const char tchar() const               { return 'd'; }
-  virtual const char* name() const               { return "double"; }
+  virtual ValueType* base()                const { return doubleType; }
+  virtual const char tchar()               const { return 'd'; }
+  virtual const char* name()               const { return "double"; }
   virtual DoubleType* as_DoubleType()            { return this; }
 };
 
@@ -259,21 +259,21 @@ class DoubleConstant: public DoubleType {
  public:
   DoubleConstant(jdouble value)                  { _value = value; }
 
-  jdouble value() const                          { return _value; }
+  jdouble value()                          const { return _value; }
 
-  virtual bool is_constant() const               { return true; }
+  virtual bool is_constant()               const { return true; }
   virtual DoubleConstant* as_DoubleConstant()    { return this; }
 };
 
 class ObjectType: public ValueType {
  public:
   ObjectType(): ValueType(objectTag, 1) { }
-  virtual ValueType* base() const                { return objectType; }
-  virtual const char tchar() const               { return 'a'; }
-  virtual const char* name() const               { return "object"; }
+  virtual ValueType* base()                const { return objectType; }
+  virtual const char tchar()               const { return 'a'; }
+  virtual const char* name()               const { return "object"; }
   virtual ObjectType* as_ObjectType()            { return this; }
-  virtual ciObject* constant_value() const       { ShouldNotReachHere(); return NULL; }
-  virtual ciType* exact_type() const             { return NULL; }
+  virtual ciObject* constant_value()       const { ShouldNotReachHere(); return NULL; }
+  virtual ciType* exact_type()             const { return NULL; }
   bool is_loaded() const;
   jobject encoding() const;
 };
@@ -285,9 +285,9 @@ class ObjectConstant: public ObjectType {
  public:
   ObjectConstant(ciObject* value)                { _value = value; }
 
-  ciObject* value() const                        { return _value; }
+  ciObject* value()                        const { return _value; }
 
-  virtual bool is_constant() const               { return true; }
+  virtual bool is_constant()               const { return true; }
   virtual ObjectConstant* as_ObjectConstant()    { return this; }
   virtual ciObject* constant_value() const;
   virtual ciType* exact_type() const;
@@ -305,9 +305,9 @@ class ArrayConstant: public ArrayType {
  public:
   ArrayConstant(ciArray* value)                  { _value = value; }
 
-  ciArray* value() const                         { return _value; }
+  ciArray* value()                         const { return _value; }
 
-  virtual bool is_constant() const               { return true; }
+  virtual bool is_constant()               const { return true; }
   virtual ArrayConstant* as_ArrayConstant()      { return this; }
   virtual ciObject* constant_value() const;
   virtual ciType* exact_type() const;
@@ -322,7 +322,7 @@ class StableArrayConstant: public ArrayConstant {
     _dimension = dimension;
   }
 
-  jint dimension() const                              { return _dimension; }
+  jint dimension()                              const { return _dimension; }
 
   virtual StableArrayConstant* as_StableArrayConstant() { return this; }
 };
@@ -339,9 +339,9 @@ class InstanceConstant: public InstanceType {
  public:
   InstanceConstant(ciInstance* value)            { _value = value; }
 
-  ciInstance* value() const                      { return _value; }
+  ciInstance* value()                      const { return _value; }
 
-  virtual bool is_constant() const               { return true; }
+  virtual bool is_constant()               const { return true; }
   virtual InstanceConstant* as_InstanceConstant() { return this; }
   virtual ciObject* constant_value() const;
   virtual ciType* exact_type() const;
@@ -350,13 +350,13 @@ class InstanceConstant: public InstanceType {
 class MetadataType: public ValueType {
  public:
   MetadataType(): ValueType(metaDataTag, 1) { }
-  virtual ValueType* base() const                       { return objectType; }
-  virtual const char tchar() const                      { return 'a'; }
-  virtual const char* name() const                      { return "object"; }
+  virtual ValueType* base()                       const { return objectType; }
+  virtual const char tchar()                      const { return 'a'; }
+  virtual const char* name()                      const { return "object"; }
   virtual MetadataType* as_MetadataType()               { return this; }
   bool is_loaded() const;
   jobject encoding() const;
-  virtual ciMetadata* constant_value() const            { ShouldNotReachHere(); return NULL; }
+  virtual ciMetadata* constant_value()            const { ShouldNotReachHere(); return NULL; }
 };
 
 class ClassType: public MetadataType {
@@ -371,11 +371,11 @@ class ClassConstant: public ClassType {
  public:
   ClassConstant(ciInstanceKlass* value)          { _value = value; }
 
-  ciInstanceKlass* value() const                 { return _value; }
+  ciInstanceKlass* value()                 const { return _value; }
 
-  virtual bool is_constant() const               { return true; }
+  virtual bool is_constant()               const { return true; }
   virtual ClassConstant* as_ClassConstant()      { return this; }
-  virtual ciMetadata* constant_value() const            { return _value; }
+  virtual ciMetadata* constant_value()            const { return _value; }
   virtual ciType* exact_type() const;
 };
 
@@ -391,12 +391,12 @@ class MethodConstant: public MethodType {
  public:
   MethodConstant(ciMethod* value)                       { _value = value; }
 
-  ciMethod* value() const                               { return _value; }
+  ciMethod* value()                               const { return _value; }
 
-  virtual bool is_constant() const                      { return true; }
+  virtual bool is_constant()                      const { return true; }
 
   virtual MethodConstant* as_MethodConstant()           { return this; }
-  virtual ciMetadata* constant_value() const            { return _value; }
+  virtual ciMetadata* constant_value()            const { return _value; }
 };
 
 class MethodDataType: public MetadataType {
@@ -411,20 +411,20 @@ class MethodDataConstant: public MethodDataType {
  public:
   MethodDataConstant(ciMethodData* value)               { _value = value; }
 
-  ciMethodData* value() const                           { return _value; }
+  ciMethodData* value()                           const { return _value; }
 
-  virtual bool is_constant() const                      { return true; }
+  virtual bool is_constant()                      const { return true; }
 
   virtual MethodDataConstant* as_MethodDataConstant()   { return this; }
-  virtual ciMetadata* constant_value() const            { return _value; }
+  virtual ciMetadata* constant_value()            const { return _value; }
 };
 
 class AddressType: public ValueType {
  public:
   AddressType(): ValueType(addressTag, 1) { }
-  virtual ValueType* base() const                { return addressType; }
-  virtual const char tchar() const               { return 'r'; }
-  virtual const char* name() const               { return "address"; }
+  virtual ValueType* base()                const { return addressType; }
+  virtual const char tchar()               const { return 'r'; }
+  virtual const char* name()               const { return "address"; }
   virtual AddressType* as_AddressType()          { return this; }
 };
 
@@ -435,9 +435,9 @@ class AddressConstant: public AddressType {
  public:
   AddressConstant(jint value)                    { _value = value; }
 
-  jint value() const                             { return _value; }
+  jint value()                             const { return _value; }
 
-  virtual bool is_constant() const               { return true; }
+  virtual bool is_constant()               const { return true; }
 
   virtual AddressConstant* as_AddressConstant()  { return this; }
 };
@@ -445,9 +445,9 @@ class AddressConstant: public AddressType {
 class IllegalType: public ValueType {
  public:
   IllegalType(): ValueType(illegalTag, -1) { }
-  virtual ValueType* base() const                { return illegalType; }
-  virtual const char tchar() const               { return ' '; }
-  virtual const char* name() const               { return "illegal"; }
+  virtual ValueType* base()                const { return illegalType; }
+  virtual const char tchar()               const { return ' '; }
+  virtual const char* name()               const { return "illegal"; }
   virtual IllegalType* as_IllegalType()          { return this; }
 };
 

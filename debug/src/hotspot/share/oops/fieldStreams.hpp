@@ -83,7 +83,7 @@ class FieldStreamBase : public StackObj {
   }
 
   // accessors
-  int index() const                 { return _index; }
+  int index()                 const { return _index; }
 
   void next() {
     if (access_flags().field_has_generic_signature()) {

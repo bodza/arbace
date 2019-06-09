@@ -284,31 +284,6 @@ void RetData::post_initialize(BytecodeStream* stream, MethodData* mdo) {
   OrderAccess::release();
 }
 
-// This routine needs to atomically update the RetData structure, so the
-// caller needs to hold the RetData_lock before it gets here.  Since taking
-// the lock can block (and allow GC) and since RetData is a ProfileData is a
-// wrapper around a derived oop, taking the lock in _this_ method will
-// basically cause the 'this' pointer's _data field to contain junk after the
-// lock.  We require the caller to take the lock before making the ProfileData
-// structure.
-address RetData::fixup_ret(int return_bci, MethodData* h_mdo) {
-  // First find the mdp which corresponds to the return bci.
-  address mdp = h_mdo->bci_to_dp(return_bci);
-
-  // Now check to see if any of the cache slots are open.
-  for (uint row = 0; row < row_limit(); row++) {
-    if (bci(row) == no_bci) {
-      set_bci_displacement(row, mdp - dp());
-      set_bci_count(row, DataLayout::counter_increment);
-      // Barrier to ensure displacement is written before the bci; allows
-      // the interpreter to read displacement without fear of race condition.
-      release_set_bci(row, return_bci);
-      break;
-    }
-  }
-  return mdp;
-}
-
 // ==================================================================
 // BranchData
 //
@@ -448,12 +423,6 @@ int MethodData::bytecode_cell_count(Bytecodes::Code code) {
     } else {
       return VirtualCallData::static_cell_count();
     }
-  case Bytecodes::_invokedynamic:
-    if (MethodData::profile_arguments() || MethodData::profile_return()) {
-      return variable_cell_count;
-    } else {
-      return CounterData::static_cell_count();
-    }
   case Bytecodes::_ret:
     return RetData::static_cell_count();
   case Bytecodes::_ifeq:
@@ -496,7 +465,6 @@ int MethodData::compute_data_size(BytecodeStream* stream) {
       break;
     case Bytecodes::_invokespecial:
     case Bytecodes::_invokestatic:
-    case Bytecodes::_invokedynamic:
       if (profile_arguments_for_invoke(stream->method(), stream->bci()) || profile_return_for_invoke(stream->method(), stream->bci())) {
         cell_count = CallTypeData::compute_cell_count(stream);
       } else {
@@ -538,10 +506,6 @@ bool MethodData::is_speculative_trap_bytecode(Bytecodes::Code code) {
   return false;
 }
 
-int MethodData::compute_extra_data_count(int data_size, int empty_bc_count, bool needs_speculative_traps) {
-  return 0;
-}
-
 // Compute the size of the MethodData* necessary to store
 // profiling information about a given method.  Size is in bytes.
 int MethodData::compute_allocation_size_in_bytes(const methodHandle& method) {
@@ -557,10 +521,6 @@ int MethodData::compute_allocation_size_in_bytes(const methodHandle& method) {
     needs_speculative_traps = needs_speculative_traps || is_speculative_trap_bytecode(c);
   }
   int object_size = in_bytes(data_offset()) + data_size;
-
-  // Add some extra DataLayout cells (at least one) to track stray traps.
-  int extra_data_count = compute_extra_data_count(data_size, empty_bc_count, needs_speculative_traps);
-  object_size += extra_data_count * DataLayout::compute_size_in_bytes(0);
 
   // Add a cell to record information about modified arguments.
   int arg_size = method->size_of_parameters();
@@ -639,21 +599,6 @@ int MethodData::initialize_data(BytecodeStream* stream, int data_index) {
       tag = DataLayout::virtual_call_type_data_tag;
     } else {
       tag = DataLayout::virtual_call_data_tag;
-    }
-    break;
-  }
-  case Bytecodes::_invokedynamic: {
-    // %%% should make a type profile for any invokedynamic that takes a ref argument
-    int counter_data_cell_count = CounterData::static_cell_count();
-    if (profile_arguments_for_invoke(stream->method(), stream->bci()) || profile_return_for_invoke(stream->method(), stream->bci())) {
-      cell_count = CallTypeData::compute_cell_count(stream);
-    } else {
-      cell_count = counter_data_cell_count;
-    }
-    if (cell_count > counter_data_cell_count) {
-      tag = DataLayout::call_type_data_tag;
-    } else {
-      tag = DataLayout::counter_data_tag;
     }
     break;
   }
@@ -790,29 +735,24 @@ void MethodData::initialize() {
   while ((c = stream.next()) >= 0) {
     int size_in_bytes = initialize_data(&stream, data_size);
     data_size += size_in_bytes;
-    if (size_in_bytes == 0 && Bytecodes::can_trap(c))  empty_bc_count += 1;
+    if (size_in_bytes == 0 && Bytecodes::can_trap(c)) {
+        empty_bc_count += 1;
+    }
     needs_speculative_traps = needs_speculative_traps || is_speculative_trap_bytecode(c);
   }
   _data_size = data_size;
   int object_size = in_bytes(data_offset()) + data_size;
 
-  // Add some extra DataLayout cells (at least one) to track stray traps.
-  int extra_data_count = compute_extra_data_count(data_size, empty_bc_count, needs_speculative_traps);
-  int extra_size = extra_data_count * DataLayout::compute_size_in_bytes(0);
-
-  // Let's zero the space for the extra data
-  Copy::zero_to_bytes(((address)_data) + data_size, extra_size);
-
   // Add a cell to record information about modified arguments.
   // Set up _args_modified array after traps cells so that
   // the code for traps cells works.
-  DataLayout *dp = data_layout_at(data_size + extra_size);
+  DataLayout *dp = data_layout_at(data_size);
 
   int arg_size = method()->size_of_parameters();
   dp->initialize(DataLayout::arg_info_data_tag, 0, arg_size + 1);
 
   int arg_data_size = DataLayout::compute_size_in_bytes(arg_size + 1);
-  object_size += extra_size + arg_data_size;
+  object_size += arg_data_size;
 
   int parms_cell = ParametersTypeData::compute_cell_count(method());
   // If we are profiling parameters, we reserver an area near the end
@@ -822,8 +762,8 @@ void MethodData::initialize() {
   // this area (or -1 if no parameter is profiled)
   if (parms_cell > 0) {
     object_size += DataLayout::compute_size_in_bytes(parms_cell);
-    _parameters_type_data_di = data_size + extra_size + arg_data_size;
-    DataLayout *dp = data_layout_at(data_size + extra_size + arg_data_size);
+    _parameters_type_data_di = data_size + arg_data_size;
+    DataLayout *dp = data_layout_at(data_size + arg_data_size);
     dp->initialize(DataLayout::parameters_type_data_tag, 0, parms_cell);
   } else {
     _parameters_type_data_di = no_parameters;
@@ -859,26 +799,10 @@ void MethodData::init() {
 
   _jvmci_ir_size = 0;
 
-#if INCLUDE_RTM_OPT
-  _rtm_state = NoRTM; // No RTM lock eliding by default
-  if (UseRTMLocking && !CompilerOracle::has_option_string(_method, "NoRTMLockEliding")) {
-    if (CompilerOracle::has_option_string(_method, "UseRTMLockEliding") || !UseRTMDeopt) {
-      // Generate RTM lock eliding code without abort ratio calculation code.
-      _rtm_state = UseRTM;
-    } else if (UseRTMDeopt) {
-      // Generate RTM lock eliding code and include abort ratio calculation
-      // code if UseRTMDeopt is on.
-      _rtm_state = ProfileRTM;
-    }
-  }
-#endif
-
   // Initialize flags and trap history.
   _nof_decompiles = 0;
   _nof_overflow_recompiles = 0;
-  _nof_overflow_traps = 0;
   clear_escape_info();
-  Copy::zero_to_words((HeapWord*) &_trap_hist, sizeof(_trap_hist) / sizeof(HeapWord));
 }
 
 // Get a measure of how much mileage the method has on it.
@@ -1061,28 +985,6 @@ void MethodData::print_value_on(outputStream* st) const {
   method()->print_value_on(st);
 }
 
-// Verification
-
-void MethodData::verify_on(outputStream* st) {
-  guarantee(is_methodData(), "object must be method data");
-  // guarantee(m->is_perm(), "should be in permspace");
-  this->verify_data_on(st);
-}
-
-void MethodData::verify_data_on(outputStream* st) {
-  NEEDS_CLEANUP;
-  // not yet implemented.
-}
-
-bool MethodData::profile_jsr292(const methodHandle& m, int bci) {
-  if (m->is_compiled_lambda_form()) {
-    return true;
-  }
-
-  Bytecode_invoke inv(m , bci);
-  return inv.is_invokedynamic() || inv.is_invokehandle();
-}
-
 bool MethodData::profile_unsafe(const methodHandle& m, int bci) {
   Bytecode_invoke inv(m , bci);
   if (inv.is_invokevirtual() && inv.klass() == vmSymbols::jdk_internal_misc_Unsafe()) {
@@ -1124,7 +1026,7 @@ bool MethodData::profile_arguments_for_invoke(const methodHandle& m, int bci) {
     return true;
   }
 
-  return profile_jsr292(m, bci);
+  return false;
 }
 
 int MethodData::profile_return_flag() {
@@ -1152,7 +1054,7 @@ bool MethodData::profile_return_for_invoke(const methodHandle& m, int bci) {
     return true;
   }
 
-  return profile_jsr292(m, bci);
+  return false;
 }
 
 int MethodData::profile_parameters_flag() {
@@ -1180,7 +1082,7 @@ bool MethodData::profile_parameters_for_method(const methodHandle& m) {
     return true;
   }
 
-  return m->is_compiled_lambda_form();
+  return false;
 }
 
 void MethodData::metaspace_pointers_do(MetaspaceClosure* it) {

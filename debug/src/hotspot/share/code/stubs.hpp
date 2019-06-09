@@ -38,12 +38,12 @@ class Stub {
   void    finalize()                             { ShouldNotCallThis(); }                // called before the stub is deallocated
 
   // General info/converters
-  int     size() const                           { ShouldNotCallThis(); return 0; }      // must return the size provided by initialize
+  int     size()                           const { ShouldNotCallThis(); return 0; }      // must return the size provided by initialize
   static  int code_size_to_size(int code_size)   { ShouldNotCallThis(); return 0; }      // computes the size given the code size
 
   // Code info
-  address code_begin() const                     { ShouldNotCallThis(); return NULL; }   // points to the first byte of    the code
-  address code_end() const                       { ShouldNotCallThis(); return NULL; }   // points to the first byte after the code
+  address code_begin()                     const { ShouldNotCallThis(); return NULL; }   // points to the first byte of    the code
+  address code_end()                       const { ShouldNotCallThis(); return NULL; }   // points to the first byte after the code
 
   // Debugging
   void    print()                                { ShouldNotCallThis(); }                // prints some information about the stub
@@ -95,12 +95,12 @@ class StubInterface: public CHeapObj<mtCode> {
     virtual void    finalize(Stub* self)                   { cast(self)->finalize(); } \
  \
     /* General info */ \
-    virtual int     size(Stub* self) const                 { return cast(self)->size(); } \
+    virtual int     size(Stub* self)                 const { return cast(self)->size(); } \
     virtual int     code_size_to_size(int code_size) const { return stub::code_size_to_size(code_size); } \
  \
     /* Code info */ \
-    virtual address code_begin(Stub* self) const           { return cast(self)->code_begin(); } \
-    virtual address code_end(Stub* self) const             { return cast(self)->code_end(); } \
+    virtual address code_begin(Stub* self)           const { return cast(self)->code_begin(); } \
+    virtual address code_end(Stub* self)             const { return cast(self)->code_end(); } \
  \
     /* Debugging */ \
     virtual void    print(Stub* self)                      { cast(self)->print(); } \
@@ -121,16 +121,16 @@ class StubQueue: public CHeapObj<mtCode> {
   int            _number_of_stubs;               // the number of buffered stubs
   Mutex* const   _mutex;                         // the lock used for a (request, commit) transaction
 
-  void  check_index(int i) const                 { }
-  bool  is_contiguous() const                    { return _queue_begin <= _queue_end; }
-  int   index_of(Stub* s) const                  { int i = (address)s - _stub_buffer; check_index(i); return i; }
-  Stub* stub_at(int i) const                     { check_index(i); return (Stub*)(_stub_buffer + i); }
-  Stub* current_stub() const                     { return stub_at(_queue_end); }
+  void  check_index(int i)                 const { }
+  bool  is_contiguous()                    const { return _queue_begin <= _queue_end; }
+  int   index_of(Stub* s)                  const { int i = (address)s - _stub_buffer; check_index(i); return i; }
+  Stub* stub_at(int i)                     const { check_index(i); return (Stub*)(_stub_buffer + i); }
+  Stub* current_stub()                     const { return stub_at(_queue_end); }
 
   // Stub functionality accessed via interface
   void  stub_initialize(Stub* s, int size, CodeStrings& strings) { _stub_interface->initialize(s, size, strings); }
   void  stub_finalize(Stub* s)                   { _stub_interface->finalize(s); }
-  int   stub_size(Stub* s) const                 { return _stub_interface->size(s); }
+  int   stub_size(Stub* s)                 const { return _stub_interface->size(s); }
   bool  stub_contains(Stub* s, address pc) const { return _stub_interface->code_begin(s) <= pc && pc < _stub_interface->code_end(s); }
   int   stub_code_size_to_size(int code_size) const { return _stub_interface->code_size_to_size(code_size); }
   void  stub_print(Stub* s)                      { _stub_interface->print(s); }
@@ -140,15 +140,15 @@ class StubQueue: public CHeapObj<mtCode> {
   ~StubQueue();
 
   // General queue info
-  bool  is_empty() const                         { return _queue_begin == _queue_end; }
-  int   total_space() const                      { return _buffer_size - 1; }
-  int   available_space() const                  { int d = _queue_begin - _queue_end - 1; return d < 0 ? d + _buffer_size : d; }
-  int   used_space() const                       { return total_space() - available_space(); }
-  int   number_of_stubs() const                  { return _number_of_stubs; }
-  bool  contains(address pc) const               { return _stub_buffer <= pc && pc < _stub_buffer + _buffer_limit; }
+  bool  is_empty()                         const { return _queue_begin == _queue_end; }
+  int   total_space()                      const { return _buffer_size - 1; }
+  int   available_space()                  const { int d = _queue_begin - _queue_end - 1; return d < 0 ? d + _buffer_size : d; }
+  int   used_space()                       const { return total_space() - available_space(); }
+  int   number_of_stubs()                  const { return _number_of_stubs; }
+  bool  contains(address pc)               const { return _stub_buffer <= pc && pc < _stub_buffer + _buffer_limit; }
   Stub* stub_containing(address pc) const;
-  address code_start() const                     { return _stub_buffer; }
-  address code_end() const                       { return _stub_buffer + _buffer_limit; }
+  address code_start()                     const { return _stub_buffer; }
+  address code_end()                       const { return _stub_buffer + _buffer_limit; }
 
   // Stub allocation (atomic transactions)
   Stub* request_committed(int code_size);        // request a stub that provides exactly code_size space for code
@@ -161,8 +161,8 @@ class StubQueue: public CHeapObj<mtCode> {
   void  remove_all();                            // remove all stubs in the queue
 
   // Iteration
-  Stub* first() const                            { return number_of_stubs() > 0 ? stub_at(_queue_begin) : NULL; }
-  Stub* next(Stub* s) const                      { int i = index_of(s) + stub_size(s);
+  Stub* first()                            const { return number_of_stubs() > 0 ? stub_at(_queue_begin) : NULL; }
+  Stub* next(Stub* s)                      const { int i = index_of(s) + stub_size(s);
                                                    // Only wrap around in the non-contiguous case (see stubss.cpp)
                                                    if (i == _buffer_limit && _queue_end < _buffer_limit) i = 0;
                                                    return (i == _queue_end) ? NULL : stub_at(i);

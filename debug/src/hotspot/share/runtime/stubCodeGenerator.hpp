@@ -51,14 +51,14 @@ class StubCodeDesc: public CHeapObj<mtCode> {
 
   static void freeze();
 
-  const char* group() const                      { return _group; }
-  const char* name() const                       { return _name; }
-  address     begin() const                      { return _begin; }
-  address     end() const                        { return _end; }
-  int         size_in_bytes() const              { return _end - _begin; }
-  bool        contains(address pc) const         { return _begin <= pc && pc < _end; }
+  const char* group()                      const { return _group; }
+  const char* name()                       const { return _name; }
+  address     begin()                      const { return _begin; }
+  address     end()                        const { return _end; }
+  int         size_in_bytes()              const { return _end - _begin; }
+  bool        contains(address pc)         const { return _begin <= pc && pc < _end; }
   void        print_on(outputStream* st) const;
-  void        print() const                      { print_on(tty); }
+  void        print()                      const { print_on(tty); }
 };
 
 // The base class for all stub-generating code generators.
@@ -72,7 +72,7 @@ class StubCodeGenerator: public StackObj {
   StubCodeGenerator(CodeBuffer* code);
   ~StubCodeGenerator();
 
-  MacroAssembler* assembler() const              { return _masm; }
+  MacroAssembler* assembler()              const { return _masm; }
 
   virtual void stub_prolog(StubCodeDesc* cdesc); // called by StubCodeMark constructor
   virtual void stub_epilog(StubCodeDesc* cdesc); // called by StubCodeMark destructor

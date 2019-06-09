@@ -12,7 +12,7 @@ class EpsilonBarrierSet: public BarrierSet {
 public:
   EpsilonBarrierSet();
 
-  virtual void print_on(outputStream *st) const { }
+  virtual void print_on(outputStream* st) const { }
 
   virtual void on_thread_create(Thread* thread);
   virtual void on_thread_destroy(Thread* thread);

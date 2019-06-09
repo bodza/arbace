@@ -171,7 +171,7 @@ class Monitor : public CHeapObj<mtInternal> {
   void lock(); // prints out warning if VM thread blocks
   void lock(Thread *thread); // overloaded with current thread
   void unlock();
-  bool is_locked() const                     { return _owner != NULL; }
+  bool is_locked()                     const { return _owner != NULL; }
 
   bool try_lock(); // Like lock(), but unblocking. It returns false instead
 
@@ -182,14 +182,14 @@ class Monitor : public CHeapObj<mtInternal> {
 
   // Current owner - not not MT-safe. Can only be used to guarantee that
   // the current running thread owns the lock
-  Thread* owner() const         { return _owner; }
+  Thread* owner()         const { return _owner; }
   bool owned_by_self() const;
 
   // Support for JVM_RawMonitorEnter & JVM_RawMonitorExit. These can be called by
   // non-Java thread. (We should really have a RawMonitor abstraction)
   void jvm_raw_lock();
   void jvm_raw_unlock();
-  const char *name() const                  { return _name; }
+  const char *name()                  const { return _name; }
 
   void print_on_error(outputStream* st) const;
 

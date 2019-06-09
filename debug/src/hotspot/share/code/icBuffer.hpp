@@ -30,7 +30,7 @@ class ICStub: public Stub {
   void    finalize(); // called when a method is removed
 
   // General info
-  int     size() const                           { return _size; }
+  int     size()                           const { return _size; }
   static  int code_size_to_size(int code_size)   { return align_up((int)sizeof(ICStub), CodeEntryAlignment) + code_size; }
 
  public:
@@ -38,13 +38,13 @@ class ICStub: public Stub {
   void set_stub(CompiledIC *ic, void* cached_value, address dest_addr);
 
   // Code info
-  address code_begin() const                     { return (address)this + align_up(sizeof(ICStub), CodeEntryAlignment); }
-  address code_end() const                       { return (address)this + size(); }
+  address code_begin()                     const { return (address)this + align_up(sizeof(ICStub), CodeEntryAlignment); }
+  address code_end()                       const { return (address)this + size(); }
 
   // Call site info
-  address ic_site() const                        { return _ic_site; }
+  address ic_site()                        const { return _ic_site; }
   void    clear();
-  bool    is_empty() const                       { return _ic_site == NULL; }
+  bool    is_empty()                       const { return _ic_site == NULL; }
 
   // stub info
   address destination() const;  // destination of jump instruction

@@ -62,11 +62,11 @@ public:
     _is_open = false;
   }
 
-  Symbol*          name() const                        { return literal(); }
+  Symbol*          name()                        const { return literal(); }
   void             set_name(Symbol* n)                 { set_literal(n); }
 
   oop              module() const;
-  OopHandle        module_handle() const               { return _module; }
+  OopHandle        module_handle()               const { return _module; }
   void             set_module(OopHandle j)             { _module = j; }
 
   // The shared ProtectionDomain reference is set once the VM loads a shared class
@@ -77,16 +77,16 @@ public:
   oop              shared_protection_domain();
   void             set_shared_protection_domain(ClassLoaderData *loader_data, Handle pd);
 
-  ClassLoaderData* loader_data() const                 { return _loader_data; }
+  ClassLoaderData* loader_data()                 const { return _loader_data; }
 
   void set_loader_data(ClassLoaderData* cld) {
     _loader_data = cld;
   }
 
-  Symbol*          version() const                     { return _version; }
+  Symbol*          version()                     const { return _version; }
   void             set_version(Symbol* version);
 
-  Symbol*          location() const                    { return _location; }
+  Symbol*          location()                    const { return _location; }
   void             set_location(Symbol* location);
   bool             should_show_version();
 
@@ -95,10 +95,10 @@ public:
   void             add_read(ModuleEntry* m);
   void             set_read_walk_required(ClassLoaderData* m_loader_data);
 
-  bool             is_open() const                     { return _is_open; }
+  bool             is_open()                     const { return _is_open; }
   void             set_is_open(bool is_open);
 
-  bool             is_named() const                    { return (name() != NULL); }
+  bool             is_named()                    const { return (name() != NULL); }
 
   bool can_read_all_unnamed() const {
     return _can_read_all_unnamed;
@@ -176,7 +176,7 @@ private:
   }
 
   static unsigned int compute_hash(Symbol* name) { return ((name == NULL) ? 0 : (unsigned int)(name->identity_hash())); }
-  int index_for(Symbol* name) const              { return hash_to_index(compute_hash(name)); }
+  int index_for(Symbol* name)              const { return hash_to_index(compute_hash(name)); }
 
 public:
   ModuleEntryTable(int table_size);

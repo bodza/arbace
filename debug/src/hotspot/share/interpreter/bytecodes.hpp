@@ -201,7 +201,6 @@ class Bytecodes: AllStatic {
     _invokespecial        = 183, // 0xb7
     _invokestatic         = 184, // 0xb8
     _invokeinterface      = 185, // 0xb9
-    _invokedynamic        = 186, // 0xba
     _new                  = 187, // 0xbb
     _newarray             = 188, // 0xbc
     _anewarray            = 189, // 0xbd
@@ -223,59 +222,44 @@ class Bytecodes: AllStatic {
 
     // JVM bytecodes
     _fast_agetfield       = number_of_java_codes,
-    _fast_bgetfield       ,
-    _fast_cgetfield       ,
-    _fast_dgetfield       ,
-    _fast_fgetfield       ,
-    _fast_igetfield       ,
-    _fast_lgetfield       ,
-    _fast_sgetfield       ,
+    _fast_bgetfield,
+    _fast_cgetfield,
+    _fast_dgetfield,
+    _fast_fgetfield,
+    _fast_igetfield,
+    _fast_lgetfield,
+    _fast_sgetfield,
 
-    _fast_aputfield       ,
-    _fast_bputfield       ,
-    _fast_zputfield       ,
-    _fast_cputfield       ,
-    _fast_dputfield       ,
-    _fast_fputfield       ,
-    _fast_iputfield       ,
-    _fast_lputfield       ,
-    _fast_sputfield       ,
+    _fast_aputfield,
+    _fast_bputfield,
+    _fast_zputfield,
+    _fast_cputfield,
+    _fast_dputfield,
+    _fast_fputfield,
+    _fast_iputfield,
+    _fast_lputfield,
+    _fast_sputfield,
 
-    _fast_aload_0         ,
-    _fast_iaccess_0       ,
-    _fast_aaccess_0       ,
-    _fast_faccess_0       ,
+    _fast_aload_0,
+    _fast_iaccess_0,
+    _fast_aaccess_0,
+    _fast_faccess_0,
 
-    _fast_iload           ,
-    _fast_iload2          ,
-    _fast_icaload         ,
+    _fast_iload,
+    _fast_iload2,
+    _fast_icaload,
 
-    _fast_invokevfinal    ,
-    _fast_linearswitch    ,
-    _fast_binaryswitch    ,
+    _fast_invokevfinal,
+    _fast_linearswitch,
+    _fast_binaryswitch,
 
     // special handling of oop constants:
-    _fast_aldc            ,
-    _fast_aldc_w          ,
+    _fast_aldc,
+    _fast_aldc_w,
 
-    _return_register_finalizer    ,
+    _return_register_finalizer,
 
-    // special handling of signature-polymorphic methods:
-    _invokehandle         ,
-
-    // These bytecodes are rewritten at CDS dump time, so that we can prevent them from being
-    // rewritten at run time. This way, the ConstMethods can be placed in the CDS ReadOnly
-    // section, and RewriteByteCodes/RewriteFrequentPairs can rewrite non-CDS bytecodes
-    // at run time.
-    //
-    // Rewritten at CDS dump time to | Original bytecode
-    // ------------------------------+------------------
-    _nofast_getfield      ,          //  <- _getfield
-    _nofast_putfield      ,          //  <- _putfield
-    _nofast_aload_0       ,          //  <- _aload_0
-    _nofast_iload         ,          //  <- _iload
-
-    _shouldnotreachhere   ,          // For debugging
+    _shouldnotreachhere,
 
     number_of_codes
   };
@@ -321,9 +305,6 @@ class Bytecodes: AllStatic {
   static void        def(Code code, const char* name, const char* format, const char* wide_format, BasicType result_type, int depth, bool can_trap);
   static void        def(Code code, const char* name, const char* format, const char* wide_format, BasicType result_type, int depth, bool can_trap, Code java_code);
 
-  // Verify that bcp points into method
-  static bool check_must_rewrite(Bytecodes::Code bc);
-
  public:
   // Conversion
   static void        check          (Code code)    { }
@@ -360,14 +341,13 @@ class Bytecodes: AllStatic {
   static const char* name           (Code code)    { check(code);      return _name          [code]; }
   static BasicType   result_type    (Code code)    { check(code);      return _result_type   [code]; }
   static int         depth          (Code code)    { check(code);      return _depth         [code]; }
-  // Note: Length functions must return <=0 for invalid bytecodes.
+  // Note: Length functions must return <= 0 for invalid bytecodes.
   // Calling check(code) in length functions would throw an unwanted assert.
   static int         length_for     (Code code)    { return is_valid(code) ? _lengths[code] & 0xF : -1; }
   static int         wide_length_for(Code code)    { return is_valid(code) ? _lengths[code]  >> 4 : -1; }
   static bool        can_trap       (Code code)    { check(code);      return has_all_flags(code, _bc_can_trap, false); }
   static Code        java_code      (Code code)    { check(code);      return _java_code     [code]; }
   static bool        can_rewrite    (Code code)    { check(code);      return has_all_flags(code, _bc_can_rewrite, false); }
-  static bool        must_rewrite(Bytecodes::Code code) { return can_rewrite(code) && check_must_rewrite(code); }
   static bool        native_byte_order(Code code)  { check(code);      return has_all_flags(code, _fmt_has_nbo, false); }
   static bool        uses_cp_cache  (Code code)    { check(code);      return has_all_flags(code, _fmt_has_j, false); }
   // if 'end' is provided, it indicates the end of the code buffer which
@@ -387,9 +367,8 @@ class Bytecodes: AllStatic {
   static bool        is_const       (Code code)    { return (_aconst_null <= code && code <= _ldc2_w); }
   static bool        is_zero_const  (Code code)    { return (code == _aconst_null || code == _iconst_0 || code == _fconst_0 || code == _dconst_0); }
   static bool        is_return      (Code code)    { return (_ireturn <= code && code <= _return); }
-  static bool        is_invoke      (Code code)    { return (_invokevirtual <= code && code <= _invokedynamic); }
+  static bool        is_invoke      (Code code)    { return (_invokevirtual <= code && code <= _invokeinterface); }
   static bool        has_receiver   (Code code)    { return code == _invokevirtual || code == _invokespecial || code == _invokeinterface; }
-  static bool        has_optional_appendix(Code code) { return code == _invokedynamic || code == _invokehandle; }
 
   static int         compute_flags  (const char* format, int more_flags = 0);  // compute the flags
   static int         flags          (int code, bool is_wide) {

@@ -25,7 +25,6 @@ enum {
   JVM_ACC_QUEUED                  = 0x01000000,     // Queued for compilation
   JVM_ACC_NOT_C2_COMPILABLE       = 0x02000000,
   JVM_ACC_NOT_C1_COMPILABLE       = 0x04000000,
-  JVM_ACC_NOT_C2_OSR_COMPILABLE   = 0x08000000,
   JVM_ACC_HAS_LINE_NUMBER_TABLE   = 0x00100000,
   JVM_ACC_HAS_CHECKED_EXCEPTIONS  = 0x00400000,
   JVM_ACC_HAS_JSRS                = 0x00800000,
@@ -82,22 +81,22 @@ class AccessFlags {
   explicit AccessFlags(jint flags) : _flags(flags) { }
 
   // Java access flags
-  bool is_public      () const         { return (_flags & JVM_ACC_PUBLIC      ) != 0; }
-  bool is_private     () const         { return (_flags & JVM_ACC_PRIVATE     ) != 0; }
-  bool is_protected   () const         { return (_flags & JVM_ACC_PROTECTED   ) != 0; }
-  bool is_static      () const         { return (_flags & JVM_ACC_STATIC      ) != 0; }
-  bool is_final       () const         { return (_flags & JVM_ACC_FINAL       ) != 0; }
-  bool is_synchronized() const         { return (_flags & JVM_ACC_SYNCHRONIZED) != 0; }
-  bool is_super       () const         { return (_flags & JVM_ACC_SUPER       ) != 0; }
-  bool is_volatile    () const         { return (_flags & JVM_ACC_VOLATILE    ) != 0; }
-  bool is_transient   () const         { return (_flags & JVM_ACC_TRANSIENT   ) != 0; }
-  bool is_native      () const         { return (_flags & JVM_ACC_NATIVE      ) != 0; }
-  bool is_interface   () const         { return (_flags & JVM_ACC_INTERFACE   ) != 0; }
-  bool is_abstract    () const         { return (_flags & JVM_ACC_ABSTRACT    ) != 0; }
-  bool is_strict      () const         { return (_flags & JVM_ACC_STRICT      ) != 0; }
+  bool is_public      ()         const { return (_flags & JVM_ACC_PUBLIC      ) != 0; }
+  bool is_private     ()         const { return (_flags & JVM_ACC_PRIVATE     ) != 0; }
+  bool is_protected   ()         const { return (_flags & JVM_ACC_PROTECTED   ) != 0; }
+  bool is_static      ()         const { return (_flags & JVM_ACC_STATIC      ) != 0; }
+  bool is_final       ()         const { return (_flags & JVM_ACC_FINAL       ) != 0; }
+  bool is_synchronized()         const { return (_flags & JVM_ACC_SYNCHRONIZED) != 0; }
+  bool is_super       ()         const { return (_flags & JVM_ACC_SUPER       ) != 0; }
+  bool is_volatile    ()         const { return (_flags & JVM_ACC_VOLATILE    ) != 0; }
+  bool is_transient   ()         const { return (_flags & JVM_ACC_TRANSIENT   ) != 0; }
+  bool is_native      ()         const { return (_flags & JVM_ACC_NATIVE      ) != 0; }
+  bool is_interface   ()         const { return (_flags & JVM_ACC_INTERFACE   ) != 0; }
+  bool is_abstract    ()         const { return (_flags & JVM_ACC_ABSTRACT    ) != 0; }
+  bool is_strict      ()         const { return (_flags & JVM_ACC_STRICT      ) != 0; }
 
   // Attribute flags
-  bool is_synthetic   () const         { return (_flags & JVM_ACC_SYNTHETIC   ) != 0; }
+  bool is_synthetic   ()         const { return (_flags & JVM_ACC_SYNTHETIC   ) != 0; }
 
   // Method* flags
   bool is_monitor_matching     () const { return (_flags & JVM_ACC_MONITOR_MATCH          ) != 0; }
@@ -107,7 +106,6 @@ class AccessFlags {
   bool queued_for_compilation  () const { return (_flags & JVM_ACC_QUEUED                 ) != 0; }
   bool is_not_c1_compilable    () const { return (_flags & JVM_ACC_NOT_C1_COMPILABLE      ) != 0; }
   bool is_not_c2_compilable    () const { return (_flags & JVM_ACC_NOT_C2_COMPILABLE      ) != 0; }
-  bool is_not_c2_osr_compilable() const { return (_flags & JVM_ACC_NOT_C2_OSR_COMPILABLE  ) != 0; }
   bool has_linenumber_table    () const { return (_flags & JVM_ACC_HAS_LINE_NUMBER_TABLE  ) != 0; }
   bool has_checked_exceptions  () const { return (_flags & JVM_ACC_HAS_CHECKED_EXCEPTIONS ) != 0; }
   bool has_jsrs                () const { return (_flags & JVM_ACC_HAS_JSRS               ) != 0; }
@@ -130,14 +128,14 @@ class AccessFlags {
   void clear_has_localvariable_table()  { atomic_clear_bits(JVM_ACC_HAS_LOCAL_VARIABLE_TABLE); }
 
   // field flags
-  bool is_field_access_watched() const  { return (_flags & JVM_ACC_FIELD_ACCESS_WATCHED) != 0; }
+  bool is_field_access_watched()  const { return (_flags & JVM_ACC_FIELD_ACCESS_WATCHED) != 0; }
   bool is_field_modification_watched() const
                                         { return (_flags & JVM_ACC_FIELD_MODIFICATION_WATCHED) != 0; }
   bool has_field_initialized_final_update() const
                                         { return (_flags & JVM_ACC_FIELD_INITIALIZED_FINAL_UPDATE) != 0; }
-  bool on_stack() const                 { return (_flags & JVM_ACC_ON_STACK) != 0; }
-  bool is_internal() const              { return (_flags & JVM_ACC_FIELD_INTERNAL) != 0; }
-  bool is_stable() const                { return (_flags & JVM_ACC_FIELD_STABLE) != 0; }
+  bool on_stack()                 const { return (_flags & JVM_ACC_ON_STACK) != 0; }
+  bool is_internal()              const { return (_flags & JVM_ACC_FIELD_INTERNAL) != 0; }
+  bool is_stable()                const { return (_flags & JVM_ACC_FIELD_STABLE) != 0; }
   bool field_has_generic_signature() const
                                         { return (_flags & JVM_ACC_FIELD_HAS_GENERIC_SIGNATURE) != 0; }
 
@@ -173,7 +171,6 @@ class AccessFlags {
   void set_loops_flag_init()           { atomic_set_bits(JVM_ACC_LOOPS_FLAG_INIT); }
   void set_not_c1_compilable()         { atomic_set_bits(JVM_ACC_NOT_C1_COMPILABLE); }
   void set_not_c2_compilable()         { atomic_set_bits(JVM_ACC_NOT_C2_COMPILABLE); }
-  void set_not_c2_osr_compilable()     { atomic_set_bits(JVM_ACC_NOT_C2_OSR_COMPILABLE); }
   void set_has_linenumber_table()      { atomic_set_bits(JVM_ACC_HAS_LINE_NUMBER_TABLE); }
   void set_has_checked_exceptions()    { atomic_set_bits(JVM_ACC_HAS_CHECKED_EXCEPTIONS); }
   void set_has_jsrs()                  { atomic_set_bits(JVM_ACC_HAS_JSRS); }
@@ -184,7 +181,6 @@ class AccessFlags {
 
   void clear_not_c1_compilable()       { atomic_clear_bits(JVM_ACC_NOT_C1_COMPILABLE); }
   void clear_not_c2_compilable()       { atomic_clear_bits(JVM_ACC_NOT_C2_COMPILABLE); }
-  void clear_not_c2_osr_compilable()   { atomic_clear_bits(JVM_ACC_NOT_C2_OSR_COMPILABLE); }
   // Klass* flags
   void set_has_vanilla_constructor()   { atomic_set_bits(JVM_ACC_HAS_VANILLA_CONSTRUCTOR); }
   void set_has_finalizer()             { atomic_set_bits(JVM_ACC_HAS_FINALIZER); }
@@ -234,8 +230,8 @@ class AccessFlags {
                                          }
                                        }
   // Conversion
-  jshort as_short() const              { return (jshort)_flags; }
-  jint   as_int() const                { return _flags; }
+  jshort as_short()              const { return (jshort)_flags; }
+  jint   as_int()                const { return _flags; }
 
   inline friend AccessFlags accessFlags_from(jint flags);
 

@@ -924,7 +924,7 @@ class CountInterfacesClosure : public InterfaceVisiterClosure {
  public:
    CountInterfacesClosure() { _nof_methods = 0; _nof_interfaces = 0; }
 
-   int nof_methods() const    { return _nof_methods; }
+   int nof_methods()    const { return _nof_methods; }
    int nof_interfaces() const { return _nof_interfaces; }
 
    void doit(Klass* intf, int method_count) { _nof_methods += method_count; _nof_interfaces++; }

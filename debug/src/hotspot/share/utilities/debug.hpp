@@ -7,12 +7,6 @@
 
 #include <stddef.h>
 
-// assertions
-#define vmassert(p, ...)
-
-// For backward compatibility.
-#define assert(p, ...) vmassert(p, __VA_ARGS__)
-
 // guarantee is like vmassert except it's always executed -- use it for
 // cheap tests that catch errors that would otherwise be hard to find.
 // guarantee is also used for Verify options.

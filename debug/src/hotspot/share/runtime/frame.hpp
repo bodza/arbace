@@ -22,15 +22,7 @@ class frame {
   // Instance variables:
   intptr_t* _sp; // stack pointer (from Thread::last_Java_sp)
   address   _pc; // program counter (the next instruction after the call)
-
   CodeBlob* _cb; // CodeBlob that "owns" pc
-  enum deopt_state {
-    not_deoptimized,
-    is_deoptimized,
-    unknown
-  };
-
-  deopt_state _deopt_state;
 
  public:
   // Constructors
@@ -40,7 +32,7 @@ class frame {
 
   // pc: Returns the pc at which this frame will continue normally.
   // It must point at the beginning of the next instruction to execute.
-  address pc() const             { return _pc; }
+  address pc()             const { return _pc; }
 
   // This returns the pc that if you were in the debugger you'd see. Not
   // the idealized value in the frame object. This undoes the magic conversion
@@ -51,13 +43,13 @@ class frame {
 
   void set_pc( address   newpc );
 
-  intptr_t* sp() const           { return _sp; }
+  intptr_t* sp()           const { return _sp; }
   void set_sp( intptr_t* newsp ) { _sp = newsp; }
 
-  CodeBlob* cb() const           { return _cb; }
+  CodeBlob* cb()           const { return _cb; }
 
   // patching operations
-  void   patch_pc(Thread* thread, address pc);
+  void patch_pc(Thread* thread, address pc);
 
   // Every frame needs to return a unique id which distinguishes it from all other frames.
   // For sparc and ia32 use sp. ia64 can have memory frames that are empty so multiple frames
@@ -86,17 +78,10 @@ class frame {
   bool is_runtime_frame()        const;
   bool is_compiled_frame()       const;
   bool is_safepoint_blob_frame() const;
-  bool is_deoptimized_frame()    const;
 
   // testers
-  bool is_first_frame() const; // oldest frame? (has no sender)
-  bool is_first_java_frame() const;              // same for Java frame
-
-  // tells whether this frame is marked for deoptimization
-  bool should_be_deoptimized() const;
-
-  // tells whether this frame can be deoptimized
-  bool can_be_deoptimized() const;
+  bool is_first_frame() const;      // oldest frame? (has no sender)
+  bool is_first_java_frame() const; // same for Java frame
 
   // returns the frame size in stack slots
   int frame_size(RegisterMap* map) const;
@@ -126,22 +111,22 @@ class frame {
   // A low-level interface for vframes:
 
  public:
-  intptr_t* addr_at(int index) const      { return &fp()[index]; }
-  intptr_t  at(int index) const           { return *addr_at(index); }
+  intptr_t* addr_at(int index)      const { return &fp()[index]; }
+  intptr_t  at(int index)           const { return *addr_at(index); }
 
   // accessors for locals
-  oop obj_at(int offset) const            { return *obj_at_addr(offset); }
+  oop obj_at(int offset)            const { return *obj_at_addr(offset); }
   void obj_at_put(int offset, oop value)  { *obj_at_addr(offset) = value; }
 
-  jint int_at(int offset) const           { return *int_at_addr(offset); }
+  jint int_at(int offset)           const { return *int_at_addr(offset); }
   void int_at_put(int offset, jint value) { *int_at_addr(offset) = value; }
 
-  oop* obj_at_addr(int offset) const      { return (oop*) addr_at(offset); }
+  oop* obj_at_addr(int offset)      const { return (oop*) addr_at(offset); }
 
   oop* adjusted_obj_at_addr(Method* method, int index) { return obj_at_addr(adjust_offset(method, index)); }
 
  private:
-  jint* int_at_addr(int offset) const     { return (jint*) addr_at(offset); }
+  jint* int_at_addr(int offset)     const { return (jint*) addr_at(offset); }
 
  public:
   // Link (i.e., the pointer to the previous frame)
@@ -149,9 +134,6 @@ class frame {
 
   // Return address
   address sender_pc() const;
-
-  // Support for deoptimization
-  void deoptimize(JavaThread* thread);
 
   // The frame's original SP, before any extension by an interpreted callee;
   // used for packing debug info into vframeArray objects and vframeArray lookup.
@@ -168,11 +150,6 @@ class frame {
   // On other platforms, it is defined so that the stack area used by
   // this frame goes from real_fp() to sp().
   intptr_t* real_fp() const;
-
-  // NULL info, if needed (platform dependent).
-  // Stored in the initial_info field of the unroll info, to be used by
-  // the platform dependent deoptimization blobs.
-  intptr_t *initial_deoptimization_info();
 
  public:
   // Find receiver out of caller's (compiled) argument list

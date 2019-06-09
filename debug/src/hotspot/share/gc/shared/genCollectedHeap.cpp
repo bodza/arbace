@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "aot/aotLoader.hpp"
 #include "classfile/symbolTable.hpp"
 #include "classfile/stringTable.hpp"
 #include "classfile/systemDictionary.hpp"
@@ -607,9 +606,6 @@ void GenCollectedHeap::process_roots(StrongRootsScope* scope, ScanningOption so,
   }
   if (!_process_strong_tasks->is_task_claimed(GCH_PS_Management_oops_do)) {
     Management::oops_do(strong_roots);
-  }
-  if (false && !_process_strong_tasks->is_task_claimed(GCH_PS_aot_oops_do)) {
-    AOTLoader::oops_do(strong_roots);
   }
 
   if (!_process_strong_tasks->is_task_claimed(GCH_PS_SystemDictionary_oops_do)) {

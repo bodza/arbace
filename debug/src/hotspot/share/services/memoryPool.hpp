@@ -50,10 +50,10 @@ class MemoryPool : public CHeapObj<mtInternal> {
   const char* name()                       { return _name; }
   bool        is_heap()                    { return _type == Heap; }
   bool        is_non_heap()                { return _type == NonHeap; }
-  size_t      initial_size()   const       { return _initial_size; }
-  int         num_memory_managers() const  { return _num_managers; }
+  size_t      initial_size()         const { return _initial_size; }
+  int         num_memory_managers()  const { return _num_managers; }
   // max size could be changed
-  virtual size_t max_size()    const       { return _max_size; }
+  virtual size_t max_size()          const { return _max_size; }
 
   bool is_pool(instanceHandle pool) { return oopDesc::equals(pool(), _memory_pool_obj); }
 

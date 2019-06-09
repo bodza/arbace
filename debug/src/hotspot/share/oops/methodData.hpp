@@ -107,9 +107,7 @@ public:
 
   enum {
     // The trap state breaks down as [recompile:1 | reason:31].
-    // See NULL::trap_state_reason for an assert that
-    // trap_bits is big enough to hold reasons < Reason_RECORDED_LIMIT.
-    trap_bits = 1+31,  // 31: enough to distinguish [0..Reason_RECORDED_LIMIT].
+    trap_bits = 1 + 31, // 31: enough to distinguish [0..Reason_RECORDED_LIMIT].
     trap_mask = -1,
     first_flag = 0
   };
@@ -347,7 +345,7 @@ public:
   virtual bool is_BitData()         const { return false; }
   virtual bool is_CounterData()     const { return false; }
   virtual bool is_JumpData()        const { return false; }
-  virtual bool is_ReceiverTypeData()const { return false; }
+  virtual bool is_ReceiverTypeData() const { return false; }
   virtual bool is_VirtualCallData() const { return false; }
   virtual bool is_RetData()         const { return false; }
   virtual bool is_BranchData()      const { return false; }
@@ -355,9 +353,9 @@ public:
   virtual bool is_MultiBranchData() const { return false; }
   virtual bool is_ArgInfoData()     const { return false; }
   virtual bool is_CallTypeData()    const { return false; }
-  virtual bool is_VirtualCallTypeData()const { return false; }
+  virtual bool is_VirtualCallTypeData() const { return false; }
   virtual bool is_ParametersTypeData() const { return false; }
-  virtual bool is_SpeculativeTrapData()const { return false; }
+  virtual bool is_SpeculativeTrapData() const { return false; }
 
   BitData* as_BitData() const {
     return is_BitData()         ? (BitData*)        this : NULL;
@@ -1345,9 +1343,6 @@ public:
     return int_at(bci_displacement_cell_index(row));
   }
 
-  // NULL Runtime support
-  address fixup_ret(int return_bci, MethodData* mdo);
-
   // Code generation support
   static ByteSize bci_offset(uint row) {
     return cell_offset(bci_cell_index(row));
@@ -1767,21 +1762,9 @@ public:
 
   bool is_methodData() const volatile { return true; }
   void initialize();
-
-  // Whole-method sticky bits and flags
-  enum {
-    _trap_hist_limit    = 24 +5,   // decoupled from NULL::Reason_LIMIT
-    _trap_hist_mask     = max_jubyte,
-    _extra_data_count   = 4     // extra DataLayout headers, for trap history
-  };
 private:
   uint _nof_decompiles;             // count of all nmethod removals
   uint _nof_overflow_recompiles;    // recompile count, excluding recomp. bits
-  uint _nof_overflow_traps;         // trap count, excluding _trap_hist
-  union {
-    intptr_t _align;
-    u1 _array[2 * _trap_hist_limit];
-  } _trap_hist;
 
   // Support for interprocedural escape analysis, from Thomas Kotzmann.
   intx              _eflags;          // flags on escape information
@@ -1804,11 +1787,6 @@ private:
   uint              _tenure_traps;
   int               _invoke_mask;      // per-method Tier0InvokeNotifyFreqLog
   int               _backedge_mask;    // per-method Tier0BackedgeNotifyFreqLog
-
-#if INCLUDE_RTM_OPT
-  // State of RTM code generation during compilation of the method
-  int               _rtm_state;
-#endif
 
   // Number of loops and blocks is computed when compiling the first
   // time with C1. It is used to determine if method is trivial.
@@ -1893,7 +1871,6 @@ private:
     type_profile_all = 2
   };
 
-  static bool profile_jsr292(const methodHandle& m, int bci);
   static bool profile_unsafe(const methodHandle& m, int bci);
   static int profile_arguments_flag();
   static bool profile_all_arguments();
@@ -1917,7 +1894,6 @@ public:
   // Compute the size of a MethodData* before it is created.
   static int compute_allocation_size_in_bytes(const methodHandle& method);
   static int compute_allocation_size_in_words(const methodHandle& method);
-  static int compute_extra_data_count(int data_size, int empty_bc_count, bool needs_speculative_traps);
 
   // Determine if a given bytecode can have profile information.
   static bool bytecode_has_profile(Bytecodes::Code code) {
@@ -1929,10 +1905,10 @@ public:
 
   // My size
   int size_in_bytes() const { return _size; }
-  int size() const    { return align_metadata_size(align_up(_size, BytesPerWord)/BytesPerWord); }
+  int size()          const { return align_metadata_size(align_up(_size, BytesPerWord)/BytesPerWord); }
 
-  int      creation_mileage() const  { return _creation_mileage; }
-  void set_creation_mileage(int x)   { _creation_mileage = x; }
+  int      creation_mileage() const { return _creation_mileage; }
+  void set_creation_mileage(int x)  { _creation_mileage = x; }
 
   int invocation_count() {
     if (invocation_counter()->carry()) {
@@ -1972,28 +1948,12 @@ public:
   InvocationCounter* invocation_counter()     { return &_invocation_counter; }
   InvocationCounter* backedge_counter()       { return &_backedge_counter; }
 
-#if INCLUDE_RTM_OPT
-  int rtm_state() const {
-    return _rtm_state;
-  }
-  void set_rtm_state(RTMState rstate) {
-    _rtm_state = (int)rstate;
-  }
-  void atomic_set_rtm_state(RTMState rstate) {
-    Atomic::store((int)rstate, &_rtm_state);
-  }
-
-  static int rtm_state_offset_in_bytes() {
-    return offset_of(MethodData, _rtm_state);
-  }
-#endif
-
   void set_would_profile(bool p)              { _would_profile = p ? profile : no_profile; }
-  bool would_profile() const                  { return _would_profile != no_profile; }
+  bool would_profile()                  const { return _would_profile != no_profile; }
 
-  int num_loops() const                       { return _num_loops; }
+  int num_loops()                       const { return _num_loops; }
   void set_num_loops(int n)                   { _num_loops = n; }
-  int num_blocks() const                      { return _num_blocks; }
+  int num_blocks()                      const { return _num_blocks; }
   void set_num_blocks(int n)                  { _num_blocks = n; }
 
   bool is_mature() const;  // consult mileage and ProfileMaturityPercentage
@@ -2081,33 +2041,12 @@ public:
   }
 
   // Add a handful of extra data records, for trap tracking.
-  DataLayout* extra_data_base() const  { return limit_data_position(); }
+  DataLayout* extra_data_base()  const { return limit_data_position(); }
   DataLayout* extra_data_limit() const { return (DataLayout*)((address)this + size_in_bytes()); }
-  DataLayout* args_data_limit() const  { return (DataLayout*)((address)this + size_in_bytes() - parameters_size_in_bytes()); }
-  int extra_data_size() const          { return (address)extra_data_limit() - (address)extra_data_base(); }
+  DataLayout* args_data_limit()  const { return (DataLayout*)((address)this + size_in_bytes() - parameters_size_in_bytes()); }
+  int extra_data_size()          const { return (address)extra_data_limit() - (address)extra_data_base(); }
   static DataLayout* next_extra(DataLayout* dp);
 
-  // Return (uint)-1 for overflow.
-  uint trap_count(int reason) const {
-    return (int)((_trap_hist._array[reason]+1) & _trap_hist_mask) - 1;
-  }
-  // For loops:
-  static uint trap_reason_limit() { return _trap_hist_limit; }
-  static uint trap_count_limit()  { return _trap_hist_mask; }
-  uint inc_trap_count(int reason) {
-    // Count another trap, anywhere in this method.
-    uint cnt1 = 1 + _trap_hist._array[reason];
-    if ((cnt1 & _trap_hist_mask) != 0) {  // if no counter overflow...
-      _trap_hist._array[reason] = cnt1;
-      return cnt1;
-    } else {
-      return _trap_hist_mask + (++_nof_overflow_traps);
-    }
-  }
-
-  uint overflow_trap_count() const {
-    return _nof_overflow_traps;
-  }
   uint overflow_recompile_count() const {
     return _nof_overflow_recompiles;
   }
@@ -2140,33 +2079,12 @@ public:
   }
 
   // Support for code generation
-  static ByteSize data_offset() {
-    return byte_offset_of(MethodData, _data[0]);
-  }
-
-  static ByteSize trap_history_offset() {
-    return byte_offset_of(MethodData, _trap_hist._array);
-  }
-
-  static ByteSize invocation_counter_offset() {
-    return byte_offset_of(MethodData, _invocation_counter);
-  }
-
-  static ByteSize backedge_counter_offset() {
-    return byte_offset_of(MethodData, _backedge_counter);
-  }
-
-  static ByteSize invoke_mask_offset() {
-    return byte_offset_of(MethodData, _invoke_mask);
-  }
-
-  static ByteSize backedge_mask_offset() {
-    return byte_offset_of(MethodData, _backedge_mask);
-  }
-
-  static ByteSize parameters_type_data_di_offset() {
-    return byte_offset_of(MethodData, _parameters_type_data_di);
-  }
+  static ByteSize data_offset()                    { return byte_offset_of(MethodData, _data[0]); }
+  static ByteSize invocation_counter_offset()      { return byte_offset_of(MethodData, _invocation_counter); }
+  static ByteSize backedge_counter_offset()        { return byte_offset_of(MethodData, _backedge_counter); }
+  static ByteSize invoke_mask_offset()             { return byte_offset_of(MethodData, _invoke_mask); }
+  static ByteSize backedge_mask_offset()           { return byte_offset_of(MethodData, _backedge_mask); }
+  static ByteSize parameters_type_data_di_offset() { return byte_offset_of(MethodData, _parameters_type_data_di); }
 
   virtual void metaspace_pointers_do(MetaspaceClosure* iter);
   virtual MetaspaceObj::Type type() const { return MethodDataType; }
@@ -2182,10 +2100,6 @@ public:
   void print_value_on(outputStream* st) const;
 
   const char* internal_name() const { return "{method data}"; }
-
-  // verification
-  void verify_on(outputStream* st);
-  void verify_data_on(outputStream* st);
 
   static bool profile_parameters_for_method(const methodHandle& m);
   static bool profile_arguments();

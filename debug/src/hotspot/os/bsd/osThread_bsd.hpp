@@ -32,7 +32,7 @@
 
  public:
   // Methods to save/restore caller's signal mask
-  sigset_t  caller_sigmask() const       { return _caller_sigmask; }
+  sigset_t  caller_sigmask()       const { return _caller_sigmask; }
   void    set_caller_sigmask(sigset_t sigmask)  { _caller_sigmask = sigmask; }
 
   pthread_t pthread_id() const {
@@ -76,9 +76,9 @@ private:
   address _alt_sig_stack;               /* address of base of alternate signal stack */
 
 public:
-  void* siginfo() const                   { return _siginfo; }
+  void* siginfo()                   const { return _siginfo; }
   void set_siginfo(void* ptr)             { _siginfo = ptr; }
-  ucontext_t* ucontext() const            { return _ucontext; }
+  ucontext_t* ucontext()            const { return _ucontext; }
   void set_ucontext(ucontext_t* ptr)      { _ucontext = ptr; }
   void set_expanding_stack(void)          { _expanding_stack = 1; }
   void clear_expanding_stack(void)        { _expanding_stack = 0; }

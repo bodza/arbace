@@ -22,24 +22,19 @@ void LIR_Assembler::patching_epilog(PatchingStub* patch, LIR_PatchCode patch_cod
 }
 
 PatchingStub::PatchID LIR_Assembler::patching_id(CodeEmitInfo* info) {
-  IRScope* scope = info->scope();
-  Bytecodes::Code bc_raw = scope->method()->raw_code_at_bci(info->stack()->bci());
-  if (Bytecodes::has_optional_appendix(bc_raw)) {
-    return PatchingStub::load_appendix_id;
-  }
   return PatchingStub::load_mirror_id;
 }
 
 //---------------------------------------------------------------
 
 LIR_Assembler::LIR_Assembler(Compilation* c) :
-   _compilation(c)
- , _masm(c->masm())
- , _bs(BarrierSet::barrier_set())
- , _frame_map(c->frame_map())
- , _current_block(NULL)
- , _pending_non_safepoint(NULL)
- , _pending_non_safepoint_offset(0)
+  _compilation(c),
+  _masm(c->masm()),
+  _bs(BarrierSet::barrier_set()),
+  _frame_map(c->frame_map()),
+  _current_block(NULL),
+  _pending_non_safepoint(NULL),
+  _pending_non_safepoint_offset(0)
 {
   _slow_case_stubs = new CodeStubList();
 }
@@ -88,12 +83,8 @@ address LIR_Assembler::pc() const {
   return _masm->pc();
 }
 
-// To bang the stack of this compiled method we use the stack size
-// that the interpreter would need in case of a deoptimization. This
-// removes the need to bang the stack in the deoptimization blob which
-// in turn simplifies stack overflow handling.
 int LIR_Assembler::bang_size_in_bytes() const {
-  return MAX2(initial_frame_size_in_bytes() + os::extra_bang_size_in_bytes(), _compilation->interpreter_frame_size());
+  return initial_frame_size_in_bytes() + os::extra_bang_size_in_bytes();
 }
 
 void LIR_Assembler::emit_exception_entries(ExceptionInfoList* info_list) {
@@ -117,10 +108,6 @@ void LIR_Assembler::emit_exception_entries(ExceptionInfoList* info_list) {
 }
 
 void LIR_Assembler::emit_code(BlockList* hir) {
-  if (PrintLIR) {
-    print_LIR(hir);
-  }
-
   int n = hir->length();
   for (int i = 0; i < n; i++) {
     emit_block(hir->at(i));
@@ -220,7 +207,7 @@ void LIR_Assembler::record_non_safepoint_debug_info() {
     IRScope* scope = s->scope();
     //Always pass false for reexecute since these ScopeDescs are never used for deopt
     methodHandle null_mh;
-    debug_info->describe_scope(pc_offset, null_mh, scope->method(), s->bci(), false/*reexecute*/);
+    debug_info->describe_scope(pc_offset, null_mh, scope->method(), s->bci(), /*reexecute*/ false);
   }
 
   debug_info->end_non_safepoint(pc_offset);
@@ -276,12 +263,6 @@ void LIR_Assembler::emit_call(LIR_OpJavaCall* op) {
   default:
     fatal("unexpected op code: %s", op->name());
     break;
-  }
-
-  // JSR 292
-  // Record if this method has MethodHandle invokes.
-  if (op->is_method_handle_invoke()) {
-    compilation()->set_has_method_handle_invokes(true);
   }
 }
 
@@ -392,7 +373,6 @@ void LIR_Assembler::emit_op0(LIR_Op0* op) {
 
     case lir_std_entry:
       // init offsets
-      offsets()->set_value(CodeOffsets::OSR_Entry, _masm->offset());
       _masm->align(CodeEntryAlignment);
       if (needs_icache(compilation()->method())) {
         check_icache();
@@ -401,11 +381,6 @@ void LIR_Assembler::emit_op0(LIR_Op0* op) {
       _masm->verified_entry();
       build_frame();
       offsets()->set_value(CodeOffsets::Frame_Complete, _masm->offset());
-      break;
-
-    case lir_osr_entry:
-      offsets()->set_value(CodeOffsets::OSR_Entry, _masm->offset());
-      osr_entry();
       break;
 
     case lir_24bit_FPU:

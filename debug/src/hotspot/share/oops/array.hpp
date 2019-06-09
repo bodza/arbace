@@ -46,9 +46,9 @@ protected:
 
  public:
   // standard operations
-  int  length() const                 { return _length; }
+  int  length()                 const { return _length; }
   T* data()                           { return _data; }
-  bool is_empty() const               { return length() == 0; }
+  bool is_empty()               const { return length() == 0; }
 
   int index_of(const T& x) const {
     int i = length();
@@ -58,9 +58,9 @@ protected:
   }
 
   // sort the array.
-  bool contains(const T& x) const      { return index_of(x) >= 0; }
+  bool contains(const T& x)      const { return index_of(x) >= 0; }
 
-  T    at(int i) const                 { return _data[i]; }
+  T    at(int i)                 const { return _data[i]; }
   void at_put(const int i, const T& x) { _data[i] = x; }
   T*   adr_at(const int i)             { return &_data[i]; }
   int  find(const T& x)                { return index_of(x); }

@@ -11,13 +11,10 @@
 // This class represents a Klass* in the HotSpot virtual machine
 // whose Klass part is an ObjArrayKlass.
 
-// ------------------------------------------------------------------
-// ciObjArrayKlass::ciObjArrayKlass
-//
 // Constructor for loaded object array klasses.
 ciObjArrayKlass::ciObjArrayKlass(Klass* k) : ciArrayKlass(k) {
   Klass* element_Klass = get_ObjArrayKlass()->bottom_klass();
-  _base_element_klass = CURRENT_ENV->get_klass(element_Klass);
+  _base_element_klass = ciEnv::current()->get_klass(element_Klass);
   if (dimension() == 1) {
     _element_klass = _base_element_klass;
   } else {
@@ -27,15 +24,8 @@ ciObjArrayKlass::ciObjArrayKlass(Klass* k) : ciArrayKlass(k) {
   }
 }
 
-// ------------------------------------------------------------------
-// ciObjArrayKlass::ciObjArrayKlass
-//
 // Constructor for unloaded object array klasses.
-ciObjArrayKlass::ciObjArrayKlass(ciSymbol* array_name,
-                                 ciKlass* base_element_klass,
-                                 int dimension)
-  : ciArrayKlass(array_name,
-                 dimension, T_OBJECT) {
+ciObjArrayKlass::ciObjArrayKlass(ciSymbol* array_name, ciKlass* base_element_klass, int dimension) : ciArrayKlass(array_name, dimension, T_OBJECT) {
     _base_element_klass = base_element_klass;
     if (dimension == 1) {
       _element_klass = base_element_klass;
@@ -44,9 +34,6 @@ ciObjArrayKlass::ciObjArrayKlass(ciSymbol* array_name,
     }
 }
 
-// ------------------------------------------------------------------
-// ciObjArrayKlass::element_klass
-//
 // What is the one-level element type of this array?
 ciKlass* ciObjArrayKlass::element_klass() {
   if (_element_klass == NULL) {
@@ -54,20 +41,17 @@ ciKlass* ciObjArrayKlass::element_klass() {
     if (is_loaded()) {
       VM_ENTRY_MARK;
       Klass* element_Klass = get_ObjArrayKlass()->element_klass();
-      _element_klass = CURRENT_THREAD_ENV->get_klass(element_Klass);
+      _element_klass = ciEnv::current(thread)->get_klass(element_Klass);
     } else {
       VM_ENTRY_MARK;
       // We are an unloaded array klass.  Attempt to fetch our
       // element klass by name.
-      _element_klass = CURRENT_THREAD_ENV->get_klass_by_name_impl(this, constantPoolHandle(), construct_array_name(base_element_klass()->name(), dimension() - 1), false);
+      _element_klass = ciEnv::current(thread)->get_klass_by_name_impl(this, constantPoolHandle(), construct_array_name(base_element_klass()->name(), dimension() - 1), false);
     }
   }
   return _element_klass;
 }
 
-// ------------------------------------------------------------------
-// ciObjArrayKlass::construct_array_name
-//
 // Build an array name from an element name and a dimension.
 ciSymbol* ciObjArrayKlass::construct_array_name(ciSymbol* element_name, int dimension) {
   EXCEPTION_CONTEXT;
@@ -80,7 +64,7 @@ ciSymbol* ciObjArrayKlass::construct_array_name(ciSymbol* element_name, int dime
       (base_name_sym->byte_at(0) == 'L' &&  // watch package name 'Lxx'
        base_name_sym->byte_at(element_len - 1) == ';')) {
     int new_len = element_len + dimension + 1; // for the ['s and '\0'
-    name = CURRENT_THREAD_ENV->name_buffer(new_len);
+    name = ciEnv::current(thread)->name_buffer(new_len);
 
     int pos = 0;
     for ( ; pos < dimension; pos++) {
@@ -93,7 +77,7 @@ ciSymbol* ciObjArrayKlass::construct_array_name(ciSymbol* element_name, int dime
                   + dimension               // for ['s
                   + element_len;
 
-    name = CURRENT_THREAD_ENV->name_buffer(new_len);
+    name = ciEnv::current(thread)->name_buffer(new_len);
     int pos = 0;
     for ( ; pos < dimension; pos++) {
       name[pos] = '[';
@@ -106,9 +90,6 @@ ciSymbol* ciObjArrayKlass::construct_array_name(ciSymbol* element_name, int dime
   return ciSymbol::make(name);
 }
 
-// ------------------------------------------------------------------
-// ciObjArrayKlass::make_impl
-//
 // Implementation of make.
 ciObjArrayKlass* ciObjArrayKlass::make_impl(ciKlass* element_klass) {
   if (element_klass->is_loaded()) {
@@ -117,10 +98,10 @@ ciObjArrayKlass* ciObjArrayKlass::make_impl(ciKlass* element_klass) {
     Klass* array = element_klass->get_Klass()->array_klass(THREAD);
     if (HAS_PENDING_EXCEPTION) {
       CLEAR_PENDING_EXCEPTION;
-      CURRENT_THREAD_ENV->record_out_of_memory_failure();
+      ciEnv::current(thread)->record_out_of_memory_failure();
       return ciEnv::unloaded_ciobjarrayklass();
     }
-    return CURRENT_THREAD_ENV->get_obj_array_klass(array);
+    return ciEnv::current(thread)->get_obj_array_klass(array);
   }
 
   // The array klass was unable to be made or the element klass was
@@ -130,13 +111,9 @@ ciObjArrayKlass* ciObjArrayKlass::make_impl(ciKlass* element_klass) {
     return ciEnv::unloaded_ciobjarrayklass();
   }
   return
-    CURRENT_ENV->get_unloaded_klass(element_klass, array_name)
-                        ->as_obj_array_klass();
+    ciEnv::current()->get_unloaded_klass(element_klass, array_name)->as_obj_array_klass();
 }
 
-// ------------------------------------------------------------------
-// ciObjArrayKlass::make
-//
 // Make an array klass corresponding to the specified primitive type.
 ciObjArrayKlass* ciObjArrayKlass::make(ciKlass* element_klass) {
   GUARDED_VM_ENTRY(return make_impl(element_klass);)

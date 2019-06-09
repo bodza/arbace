@@ -774,7 +774,6 @@ class CodeBlob;
 class  CompiledMethod;
 class   nmethod;
 class RuntimeBlob;
-class  OSRAdapter;
 class  I2CAdapter;
 class  C2IAdapter;
 class CompiledIC;

@@ -193,7 +193,7 @@ DelayedConstant* DelayedConstant::add(BasicType type, DelayedConstant::value_fn_
         return dcon;
     }
   }
-  // If this assert is hit (in pre-integration testing!) then re-evaluate
+  // If this assert is hit (in pre-integration testing!), then re-evaluate
   // the comment on the definition of DC_LIMIT.
   guarantee(false, "too many delayed constants");
   return NULL;

@@ -98,12 +98,12 @@ public:
 
   void set_recorded_rs_lengths(size_t rs_lengths);
 
-  uint region_length() const       { return young_region_length() + old_region_length(); }
+  uint region_length()       const { return young_region_length() + old_region_length(); }
   uint young_region_length() const { return eden_region_length() + survivor_region_length(); }
 
-  uint eden_region_length() const     { return _eden_region_length; }
+  uint eden_region_length()     const { return _eden_region_length; }
   uint survivor_region_length() const { return _survivor_region_length; }
-  uint old_region_length() const      { return _old_region_length; }
+  uint old_region_length()      const { return _old_region_length; }
 
   // Incremental collection set support
 

@@ -55,29 +55,29 @@ class BaseBytecodeStream: StackObj {
   bool is_raw() const { return _is_raw; }
 
   // Stream attributes
-  const methodHandle& method() const             { return _method; }
+  const methodHandle& method()             const { return _method; }
 
-  int             bci() const                    { return _bci; }
-  int             next_bci() const               { return _next_bci; }
-  int             end_bci() const                { return _end_bci; }
+  int             bci()                    const { return _bci; }
+  int             next_bci()               const { return _next_bci; }
+  int             end_bci()                const { return _end_bci; }
 
-  Bytecodes::Code raw_code() const               { return _raw_code; }
-  bool            is_wide() const                { return _is_wide; }
-  int             instruction_size() const       { return (_next_bci - _bci); }
-  bool            is_last_bytecode() const       { return _next_bci >= _end_bci; }
+  Bytecodes::Code raw_code()               const { return _raw_code; }
+  bool            is_wide()                const { return _is_wide; }
+  int             instruction_size()       const { return (_next_bci - _bci); }
+  bool            is_last_bytecode()       const { return _next_bci >= _end_bci; }
 
-  address         bcp() const                    { return method()->code_base() + _bci; }
-  Bytecode        bytecode() const               { return Bytecode(_method(), bcp()); }
+  address         bcp()                    const { return method()->code_base() + _bci; }
+  Bytecode        bytecode()               const { return Bytecode(_method(), bcp()); }
 
   // State changes
   void            set_next_bci(int bci)          { _next_bci = bci; }
 
   // Bytecode-specific attributes
-  int             dest() const                   { return bci() + bytecode().get_offset_s2(raw_code()); }
-  int             dest_w() const                 { return bci() + bytecode().get_offset_s4(raw_code()); }
+  int             dest()                   const { return bci() + bytecode().get_offset_s2(raw_code()); }
+  int             dest_w()                 const { return bci() + bytecode().get_offset_s4(raw_code()); }
 
   // One-byte indices.
-  int             get_index_u1() const           { assert_raw_index_size(1); return *(jubyte*)(bcp()+1); }
+  int             get_index_u1()           const { assert_raw_index_size(1); return *(jubyte*)(bcp()+1); }
 
  protected:
   void assert_raw_index_size(int size) const { };
@@ -180,16 +180,16 @@ class BytecodeStream: public BaseBytecodeStream {
   }
 
   bool is_active_breakpoint() const { return Bytecodes::is_active_breakpoint_at(bcp()); }
-  Bytecodes::Code code() const      { return _code; }
+  Bytecodes::Code code()      const { return _code; }
 
   // Unsigned indices, widening
-  int  get_index() const            { return is_wide() ? bytecode().get_index_u2(raw_code(), true) : get_index_u1(); }
+  int  get_index()            const { return is_wide() ? bytecode().get_index_u2(raw_code(), true) : get_index_u1(); }
   // Get an unsigned 2-byte index, swapping the bytes if necessary.
-  int  get_index_u2() const         { assert_raw_stream(false); return bytecode().get_index_u2(raw_code(), false); }
+  int  get_index_u2()         const { assert_raw_stream(false); return bytecode().get_index_u2(raw_code(), false); }
   // Get an unsigned 2-byte index in native order.
   int  get_index_u2_cpcache() const { assert_raw_stream(false); return bytecode().get_index_u2_cpcache(raw_code()); }
-  int  get_index_u4() const         { assert_raw_stream(false); return bytecode().get_index_u4(raw_code()); }
-  bool has_index_u4() const         { return bytecode().has_index_u4(raw_code()); }
+  int  get_index_u4()         const { assert_raw_stream(false); return bytecode().get_index_u4(raw_code()); }
+  bool has_index_u4()         const { return bytecode().has_index_u4(raw_code()); }
 };
 
 #endif

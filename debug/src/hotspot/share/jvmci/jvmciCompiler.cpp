@@ -54,7 +54,7 @@ void JVMCICompiler::bootstrap(TRAPS) {
     if (!mh->is_native() && !mh->is_static() && !mh->is_initializer()) {
       ResourceMark rm;
       int hot_count = 10; // TODO: what's the appropriate value?
-      CompileBroker::compile_method(mh, InvocationEntryBci, CompLevel_full_optimization, mh, hot_count, CompileTask::Reason_Bootstrap, THREAD);
+      CompileBroker::compile_method(mh, CompLevel_full_optimization, mh, hot_count, CompileTask::Reason_Bootstrap, THREAD);
     }
   }
 
@@ -94,13 +94,6 @@ if (HAS_PENDING_EXCEPTION) { \
 
 void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JVMCIEnv* env) {
   JVMCI_EXCEPTION_CONTEXT
-
-  bool is_osr = entry_bci != InvocationEntryBci;
-  if (_bootstrapping && is_osr) {
-      // no OSR compilations during bootstrap - the compiler is just too slow at this point,
-      // and we know that there are no endless loops
-      return;
-  }
 
   JVMCIRuntime::initialize_well_known_classes(CHECK_EXIT);
 
@@ -160,15 +153,6 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
   }
 }
 
-CompLevel JVMCIRuntime::adjust_comp_level(const methodHandle& method, bool is_osr, CompLevel level, JavaThread* thread) {
-  if (!thread->adjusting_comp_level()) {
-    thread->set_adjusting_comp_level(true);
-    level = adjust_comp_level_inner(method, is_osr, level, thread);
-    thread->set_adjusting_comp_level(false);
-  }
-  return level;
-}
-
 void JVMCICompiler::exit_on_pending_exception(oop exception, const char* message) {
   JavaThread* THREAD = JavaThread::current();
   CLEAR_PENDING_EXCEPTION;
@@ -193,15 +177,4 @@ void JVMCICompiler::exit_on_pending_exception(oop exception, const char* message
 // Compilation entry point for methods
 void JVMCICompiler::compile_method(ciEnv* env, ciMethod* target, int entry_bci, DirectiveSet* directive) {
   ShouldNotReachHere();
-}
-
-// Print compilation timers and statistics
-void JVMCICompiler::print_timers() {
-  print_compilation_timers();
-}
-
-// Print compilation timers and statistics
-void JVMCICompiler::print_compilation_timers() {
-  TRACE_jvmci_1("JVMCICompiler::print_timers");
-  tty->print_cr("       JVMCI code install time:        %6.3f s",    _codeInstallTimer.seconds());
 }

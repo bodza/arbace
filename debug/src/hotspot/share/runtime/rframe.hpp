@@ -26,21 +26,21 @@ class RFrame : public ResourceObj {
  public:
   static RFrame* new_RFrame(frame fr, JavaThread* thread, RFrame*const callee);
 
-  virtual bool is_interpreted() const     { return false; }
-  virtual bool is_compiled() const        { return false; }
-  int distance() const                    { return _distance; }
+  virtual bool is_interpreted()     const { return false; }
+  virtual bool is_compiled()        const { return false; }
+  int distance()                    const { return _distance; }
   void set_distance(int d);
-  int invocations() const                 { return _invocations; }
-  int num() const                         { return _num; }
-  frame fr() const                        { return _fr; }
-  JavaThread* thread() const              { return _thread; }
+  int invocations()                 const { return _invocations; }
+  int num()                         const { return _num; }
+  frame fr()                        const { return _fr; }
+  JavaThread* thread()              const { return _thread; }
   virtual int cost() const = 0;           // estimated inlining cost (size)
   virtual Method* top_method() const  = 0;
   virtual javaVFrame* top_vframe() const = 0;
-  virtual nmethod* nm() const             { ShouldNotCallThis(); return NULL; }
+  virtual nmethod* nm()             const { ShouldNotCallThis(); return NULL; }
 
   RFrame* caller();
-  RFrame* callee() const                  { return _callee; }
+  RFrame* callee()                  const { return _callee; }
   RFrame* parent() const;                 // rframe containing lexical scope (if any)
   virtual void print()                    = 0;
 
@@ -62,10 +62,10 @@ class CompiledRFrame : public RFrame {    // frame containing a compiled method
 
  public:
   CompiledRFrame(frame fr, JavaThread* thread); // for nmethod triggering its counter (callee == NULL)
-  bool is_compiled() const                 { return true; }
-  Method* top_method() const               { return _method; }
-  javaVFrame* top_vframe() const           { return _vf; }
-  nmethod* nm() const                      { return _nm; }
+  bool is_compiled()                 const { return true; }
+  Method* top_method()               const { return _method; }
+  javaVFrame* top_vframe()           const { return _vf; }
+  nmethod* nm()                      const { return _nm; }
   int cost() const;
   void print();
 };
@@ -81,9 +81,9 @@ class InterpretedRFrame : public RFrame {    // interpreter frame
 
  public:
   InterpretedRFrame(frame fr, JavaThread* thread, Method* m); // constructor for method triggering its invocation counter
-  bool is_interpreted() const                { return true; }
-  Method* top_method() const                 { return _method; }
-  javaVFrame* top_vframe() const             { return _vf; }
+  bool is_interpreted()                const { return true; }
+  Method* top_method()                 const { return _method; }
+  javaVFrame* top_vframe()             const { return _vf; }
   int cost() const;
   void print();
 };

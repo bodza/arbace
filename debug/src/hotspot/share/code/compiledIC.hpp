@@ -47,8 +47,8 @@ class CompiledICInfo : public StackObj {
   bool    _to_aot;             // Call it to aot code
   bool    _release_icholder;
  public:
-  address entry() const        { return _entry; }
-  Metadata*    cached_metadata() const         { return (Metadata*)_cached_value; }
+  address entry()        const { return _entry; }
+  Metadata*    cached_metadata()         const { return (Metadata*)_cached_value; }
   CompiledICHolder* claim_cached_icholder() {
     _release_icholder = false;
     CompiledICHolder* icholder = (CompiledICHolder*)_cached_value;
@@ -69,26 +69,6 @@ class CompiledICInfo : public StackObj {
     _release_icholder = false;
   }
 
-  void set_interpreter_entry(address entry, Method* method) {
-    _entry      = entry;
-    _cached_value = (void*)method;
-    _to_interpreter = true;
-    _to_aot = false;
-    _is_icholder = false;
-    _is_optimized = true;
-    _release_icholder = false;
-  }
-
-  void set_aot_entry(address entry, Method* method) {
-    _entry      = entry;
-    _cached_value = (void*)method;
-    _to_interpreter = false;
-    _to_aot = true;
-    _is_icholder = false;
-    _is_optimized = true;
-    _release_icholder = false;
-  }
-
   void set_icholder_entry(address entry, CompiledICHolder* icholder) {
     _entry      = entry;
     _cached_value = (void*)icholder;
@@ -99,9 +79,7 @@ class CompiledICInfo : public StackObj {
     _release_icholder = true;
   }
 
-  CompiledICInfo(): _entry(NULL), _cached_value(NULL), _is_icholder(false),
-                    _to_interpreter(false), _to_aot(false), _is_optimized(false), _release_icholder(false) {
-  }
+  CompiledICInfo() : _entry(NULL), _cached_value(NULL), _is_icholder(false), _to_interpreter(false), _to_aot(false), _is_optimized(false), _release_icholder(false) { }
   ~CompiledICInfo() {
     // In rare cases the info is computed but not used, so release any
     // CompiledICHolder* that was created
@@ -121,7 +99,6 @@ public:
   virtual address return_address() const = 0;
   virtual address get_resolve_call_stub(bool is_optimized) const = 0;
   virtual void set_destination_mt_safe(address dest) = 0;
-  virtual void set_to_interpreted(const methodHandle& method, CompiledICInfo& info) = 0;
 
   virtual bool is_call_to_interpreted(address dest) const = 0;
   virtual bool is_safe_for_patching() const = 0;
@@ -206,7 +183,7 @@ class CompiledIC: public ResourceObj {
 
   address ic_destination() const;
 
-  bool is_optimized() const   { return _is_optimized; }
+  bool is_optimized()   const { return _is_optimized; }
 
   // State
   bool is_clean() const;
@@ -275,10 +252,9 @@ class StaticCallInfo {
 
   friend class CompiledStaticCall;
   friend class CompiledDirectStaticCall;
-  friend class CompiledPltStaticCall;
  public:
-  address      entry() const    { return _entry; }
-  methodHandle callee() const   { return _callee; }
+  address      entry()  const { return _entry; }
+  methodHandle callee() const { return _callee; }
 };
 
 class CompiledStaticCall : public ResourceObj {
@@ -316,7 +292,6 @@ public:
 protected:
   virtual address resolve_call_stub() const = 0;
   virtual void set_destination_mt_safe(address dest) = 0;
-  virtual void set_to_interpreted(const methodHandle& callee, address entry) = 0;
   virtual const char* name() const = 0;
 
   void set_to_compiled(address entry);
@@ -328,7 +303,6 @@ private:
   friend class DirectNativeCallWrapper;
 
   // Also used by CompiledIC
-  void set_to_interpreted(const methodHandle& callee, address entry);
   address instruction_address() const { return _call->instruction_address(); }
   void set_destination_mt_safe(address dest) { _call->set_destination_mt_safe(dest); }
 

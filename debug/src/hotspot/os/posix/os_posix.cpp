@@ -33,14 +33,11 @@
   #define MAP_ANONYMOUS MAP_ANON
 #endif
 
-#define check_with_errno(check_type, cond, msg) \
+#define guarantee_with_errno(cond, msg) \
   do { \
     int err = errno; \
-    check_type(cond, "%s; error='%s' (errno=%s)", msg, os::strerror(err), os::errno_name(err)); \
+    guarantee(cond, "%s; error='%s' (errno=%s)", msg, os::strerror(err), os::errno_name(err)); \
 } while (false)
-
-#define assert_with_errno(cond, msg)    check_with_errno(assert, cond, msg)
-#define guarantee_with_errno(cond, msg) check_with_errno(guarantee, cond, msg)
 
 int os::get_native_stack(address* stack, int frames, int toSkip) {
   int frame_idx = 0;
@@ -61,7 +58,7 @@ int os::get_native_stack(address* stack, int frames, int toSkip) {
     }
   }
   num_of_frames = frame_idx;
-  for ( ; frame_idx < frames; frame_idx ++) {
+  for ( ; frame_idx < frames; frame_idx++) {
     stack[frame_idx] = NULL;
   }
 
@@ -96,7 +93,6 @@ int os::create_file_for_heap(const char* dir) {
 
   sigset_t set, oldset;
   int ret = sigfillset(&set);
-  assert_with_errno(ret == 0, "sigfillset returned error");
 
   // set the file creation mask.
   mode_t file_mode = S_IRUSR | S_IWUSR;
@@ -112,7 +108,6 @@ int os::create_file_for_heap(const char* dir) {
 
   // delete the name from the filesystem. When 'fd' is closed, the file (and space) will be deleted.
   ret = unlink(fullname);
-  assert_with_errno(ret == 0, "unlink returned error");
 
   os::free(fullname);
   return fd;
@@ -726,7 +721,7 @@ const char* os::Posix::get_signal_name(int sig, char* out, size_t outlen) {
 #endif
 
   if (sig > 0) {
-    for (int idx = 0; g_signal_info[idx].sig != -1; idx ++) {
+    for (int idx = 0; g_signal_info[idx].sig != -1; idx++) {
       if (g_signal_info[idx].sig == sig) {
         ret = g_signal_info[idx].name;
         break;
@@ -756,7 +751,7 @@ int os::Posix::get_signal_number(const char* signal_name) {
     jio_snprintf(tmp, sizeof(tmp), "SIG%s", signal_name);
     s = tmp;
   }
-  for (int idx = 0; g_signal_info[idx].sig != -1; idx ++) {
+  for (int idx = 0; g_signal_info[idx].sig != -1; idx++) {
     if (strcmp(g_signal_info[idx].name, s) == 0) {
       return g_signal_info[idx].sig;
     }
@@ -988,7 +983,7 @@ static bool get_signal_code_description(const siginfo_t* si, enum_sigcode_desc_t
   const char* s_code = NULL;
   const char* s_desc = NULL;
 
-  for (int i = 0; t1[i].sig != -1; i ++) {
+  for (int i = 0; t1[i].sig != -1; i++) {
     if (t1[i].sig == si->si_signo && t1[i].code == si->si_code) {
       s_code = t1[i].s_code;
       s_desc = t1[i].s_desc;
@@ -997,7 +992,7 @@ static bool get_signal_code_description(const siginfo_t* si, enum_sigcode_desc_t
   }
 
   if (s_code == NULL) {
-    for (int i = 0; t2[i].s_code != NULL; i ++) {
+    for (int i = 0; t2[i].s_code != NULL; i++) {
       if (t2[i].code == si->si_code) {
         s_code = t2[i].s_code;
         s_desc = t2[i].s_desc;

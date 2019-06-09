@@ -34,8 +34,6 @@ public:
 
   // m is allowed to be compiled
   static bool can_be_compiled(const methodHandle& m, int comp_level = CompLevel_all);
-  // m is allowed to be osr compiled
-  static bool can_be_osr_compiled(const methodHandle& m, int comp_level = CompLevel_all);
   static bool is_compilation_enabled();
   static void set_policy(CompilationPolicy* policy) { _policy = policy; }
   static CompilationPolicy* policy()                { return _policy; }
@@ -53,8 +51,6 @@ public:
   virtual nmethod* event(const methodHandle& method, const methodHandle& inlinee, int branch_bci, int bci, CompLevel comp_level, CompiledMethod* nm, JavaThread* thread) = 0;
   // safepoint() is called at the end of the safepoint
   virtual void do_safepoint_work() = 0;
-  // reprofile request
-  virtual void reprofile(ScopeDesc* trap_scope, bool is_osr) = 0;
   // delay_compilation(method) can be called by any component of the runtime to notify the policy
   // that it's recommended to delay the compilation of this method.
   virtual void delay_compilation(Method* method) = 0;
@@ -75,9 +71,6 @@ public:
 class NonTieredCompPolicy : public CompilationPolicy {
   int _compiler_count;
 protected:
-  static void trace_frequency_counter_overflow(const methodHandle& m, int branch_bci, int bci);
-  static void trace_osr_request(const methodHandle& method, nmethod* osr, int bci);
-  static void trace_osr_completion(nmethod* osr_nm);
   void reset_counter_for_invocation_event(const methodHandle& method);
   void reset_counter_for_back_branch_event(const methodHandle& method);
 public:
@@ -85,7 +78,6 @@ public:
   virtual CompLevel initial_compile_level() { return CompLevel_highest_tier; }
   virtual int compiler_count(CompLevel comp_level);
   virtual void do_safepoint_work();
-  virtual void reprofile(ScopeDesc* trap_scope, bool is_osr);
   virtual void delay_compilation(Method* method);
   virtual void disable_compilation(Method* method);
   virtual bool is_mature(Method* method);
@@ -93,13 +85,11 @@ public:
   virtual CompileTask* select_task(CompileQueue* compile_queue);
   virtual nmethod* event(const methodHandle& method, const methodHandle& inlinee, int branch_bci, int bci, CompLevel comp_level, CompiledMethod* nm, JavaThread* thread);
   virtual void method_invocation_event(const methodHandle& m, JavaThread* thread) = 0;
-  virtual void method_back_branch_event(const methodHandle& m, int bci, JavaThread* thread) = 0;
 };
 
 class SimpleCompPolicy : public NonTieredCompPolicy {
  public:
   virtual void method_invocation_event(const methodHandle& m, JavaThread* thread);
-  virtual void method_back_branch_event(const methodHandle& m, int bci, JavaThread* thread);
 };
 
 #endif

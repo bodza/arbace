@@ -8,7 +8,6 @@
 #include "interpreter/bytecodes.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
-#include "runtime/timerTrace.hpp"
 #include "utilities/bitMap.inline.hpp"
 
 // The MethodLiveness class performs a simple liveness analysis on a method
@@ -52,13 +51,6 @@
 // The BitCounter class is used for counting the number of bits set in
 // some BitMap.  It is only used when collecting liveness statistics.
 
-// Timers
-elapsedTimer MethodLiveness::_time_build_graph;
-elapsedTimer MethodLiveness::_time_gen_kill;
-elapsedTimer MethodLiveness::_time_flow;
-elapsedTimer MethodLiveness::_time_query;
-elapsedTimer MethodLiveness::_time_total;
-
 MethodLiveness::MethodLiveness(Arena* arena, ciMethod* method) : _bci_block_start(arena, method->code_size()) {
   _arena = arena;
   _method = method;
@@ -66,18 +58,9 @@ MethodLiveness::MethodLiveness(Arena* arena, ciMethod* method) : _bci_block_star
 }
 
 void MethodLiveness::compute_liveness() {
-  {
-    TraceTime buildGraph(NULL, &_time_build_graph, TimeLivenessAnalysis);
-    init_basic_blocks();
-  }
-  {
-    TraceTime genKill(NULL, &_time_gen_kill, TimeLivenessAnalysis);
-    init_gen_kill();
-  }
-  {
-    TraceTime flow(NULL, &_time_flow, TimeLivenessAnalysis);
-    propagate_liveness();
-  }
+  init_basic_blocks();
+  init_gen_kill();
+  propagate_liveness();
 }
 
 void MethodLiveness::init_basic_blocks() {
@@ -337,9 +320,6 @@ MethodLivenessResult MethodLiveness::get_liveness_at(int entry_bci) {
   MethodLivenessResult answer;
 
   if (_block_count > 0) {
-    if (TimeLivenessAnalysis) _time_total.start();
-    if (TimeLivenessAnalysis) _time_query.start();
-
     BasicBlock *block = _block_map->at(bci);
     // We may not be at the block start, so search backwards to find the block
     // containing bci.
@@ -552,7 +532,6 @@ void MethodLiveness::BasicBlock::compute_gen_kill_single(ciBytecodeStream *instr
     case Bytecodes::_invokespecial:
     case Bytecodes::_invokestatic:
     case Bytecodes::_invokeinterface:
-    case Bytecodes::_invokedynamic:
     case Bytecodes::_newarray:
     case Bytecodes::_anewarray:
     case Bytecodes::_checkcast:

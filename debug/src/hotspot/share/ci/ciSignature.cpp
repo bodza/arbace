@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "ci/ciMethodType.hpp"
 #include "ci/ciSignature.hpp"
 #include "ci/ciUtilities.inline.hpp"
 #include "memory/allocation.inline.hpp"
@@ -12,15 +11,12 @@
 //
 // This class represents the signature of a method.
 
-// ------------------------------------------------------------------
-// ciSignature::ciSignature
 ciSignature::ciSignature(ciKlass* accessing_klass, const constantPoolHandle& cpool, ciSymbol* symbol) {
-  ASSERT_IN_VM;
   EXCEPTION_CONTEXT;
   _accessing_klass = accessing_klass;
   _symbol = symbol;
 
-  ciEnv* env = CURRENT_ENV;
+  ciEnv* env = ciEnv::current();
   Arena* arena = env->arena();
   _types = new (arena) GrowableArray<ciType*>(arena, 8, 0, NULL);
 
@@ -58,45 +54,17 @@ ciSignature::ciSignature(ciKlass* accessing_klass, const constantPoolHandle& cpo
   _count = count;
 }
 
-// ------------------------------------------------------------------
-// ciSignature::ciSignature
-ciSignature::ciSignature(ciKlass* accessing_klass, ciSymbol* symbol, ciMethodType* method_type) :
-  _symbol(symbol),
-  _accessing_klass(accessing_klass),
-  _size( method_type->ptype_slot_count()),
-  _count(method_type->ptype_count())
-{
-  ASSERT_IN_VM;
-  EXCEPTION_CONTEXT;
-  Arena* arena = CURRENT_ENV->arena();
-  _types = new (arena) GrowableArray<ciType*>(arena, _count + 1, 0, NULL);
-  for (int i = 0; i < _count; i++) {
-    _types->append(method_type->ptype_at(i));
-  }
-  _types->append(method_type->rtype());
-}
-
-// ------------------------------------------------------------------
-// ciSignature::return_type
-//
 // What is the return type of this signature?
 ciType* ciSignature::return_type() const {
   return _types->at(_count);
 }
 
-// ------------------------------------------------------------------
-// ciSignature::type_at
-//
-// What is the type of the index'th element of this
-// signature?
+// What is the type of the index'th element of this signature?
 ciType* ciSignature::type_at(int index) const {
   // The first _klasses element holds the return klass.
   return _types->at(index);
 }
 
-// ------------------------------------------------------------------
-// ciSignature::equals
-//
 // Compare this signature to another one.  Signatures with different
 // accessing classes but with signature-types resolved to the same
 // types are defined to be equal.
@@ -112,14 +80,10 @@ bool ciSignature::equals(ciSignature* that) {
   return true;
 }
 
-// ------------------------------------------------------------------
-// ciSignature::print_signature
 void ciSignature::print_signature() {
   _symbol->print_symbol();
 }
 
-// ------------------------------------------------------------------
-// ciSignature::print
 void ciSignature::print() {
   tty->print("<ciSignature symbol=");
   print_signature();

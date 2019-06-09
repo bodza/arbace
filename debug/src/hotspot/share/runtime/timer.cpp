@@ -89,7 +89,7 @@ jlong TimeStamp::ticks_since_update() const {
   return os::elapsed_counter() - _counter;
 }
 
-TraceCPUTime::TraceCPUTime(bool doit, bool print_cr, outputStream *logfile) :
+TraceCPUTime::TraceCPUTime(bool doit, bool print_cr, outputStream* logfile) :
   _active(doit),
   _print_cr(print_cr),
   _starting_user_time(0.0),

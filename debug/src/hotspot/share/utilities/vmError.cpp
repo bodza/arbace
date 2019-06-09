@@ -83,7 +83,7 @@ static char* next_OnError_command(char* buf, int buflen, const char** ptr) {
   return buf;
 }
 
-static void print_bug_submit_message(outputStream *out, Thread *thread) {
+static void print_bug_submit_message(outputStream* out, Thread *thread) {
   if (out == NULL) return;
   out->print_raw_cr("# If you would like to submit a bug report, please visit:");
   out->print_raw   ("#   ");
@@ -714,13 +714,6 @@ void VMError::report(outputStream* st, bool _verbose) {
        st->cr();
      }
 
-  STEP("printing metaspace information")
-
-     if (_verbose && Universe::is_fully_initialized()) {
-       st->print_cr("Metaspace:");
-       MetaspaceUtils::print_basic_report(st, 0);
-     }
-
   STEP("printing code cache information")
 
      if (_verbose && Universe::is_fully_initialized()) {
@@ -887,13 +880,6 @@ void VMError::print_vm_info(outputStream* st) {
     st->cr();
     st->print_cr("Polling page: " INTPTR_FORMAT, p2i(os::get_polling_page()));
     st->cr();
-  }
-
-  // STEP("printing metaspace information")
-
-  if (Universe::is_fully_initialized()) {
-    st->print_cr("Metaspace:");
-    MetaspaceUtils::print_basic_report(st, 0);
   }
 
   // STEP("printing code cache information")
@@ -1224,28 +1210,6 @@ void VMError::report_and_die(int id, const char* message, const char* detail_fmt
     log.set_fd(-1);
   }
 
-  static bool skip_replay = ReplayCompiles; // Do not overwrite file during replay
-  if (DumpReplayDataOnError && _thread && _thread->is_Compiler_thread() && !skip_replay) {
-    skip_replay = true;
-    ciEnv* env = ciEnv::current();
-    if (env != NULL) {
-      int fd = prepare_log_file(ReplayDataFile, "replay_pid%p.log", buffer, sizeof(buffer));
-      if (fd != -1) {
-        FILE* replay_data_file = os::open(fd, "w");
-        if (replay_data_file != NULL) {
-          fileStream replay_data_stream(replay_data_file, /*need_close=*/true);
-          env->dump_replay_data_unsafe(&replay_data_stream);
-          out.print_raw("#\n# Compiler replay data is saved as:\n# ");
-          out.print_raw_cr(buffer);
-        } else {
-          int e = errno;
-          out.print_raw("#\n# Can't open file to dump replay data. Error: ");
-          out.print_raw_cr(os::strerror(e));
-        }
-      }
-    }
-  }
-
   static bool skip_bug_url = !should_report_bug(_id);
   if (!skip_bug_url) {
     skip_bug_url = true;
@@ -1309,7 +1273,7 @@ class VM_ReportJavaOutOfMemory : public VM_Operation {
   const char* _message;
  public:
   VM_ReportJavaOutOfMemory(const char* message) { _message = message; }
-  VMOp_Type type() const                        { return VMOp_ReportJavaOutOfMemory; }
+  VMOp_Type type()                        const { return VMOp_ReportJavaOutOfMemory; }
   void doit();
 };
 

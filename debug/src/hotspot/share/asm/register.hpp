@@ -17,7 +17,7 @@ typedef AbstractRegisterImpl* AbstractRegister;
 
 class AbstractRegisterImpl {
  protected:
-  int value() const                              { return (int)(intx)this; }
+  int value()                              const { return (int)(intx)this; }
 };
 
 //

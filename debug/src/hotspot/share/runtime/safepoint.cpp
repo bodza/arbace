@@ -33,7 +33,6 @@
 #include "runtime/synchronizer.hpp"
 #include "runtime/thread.inline.hpp"
 #include "runtime/threadSMR.hpp"
-#include "runtime/timerTrace.hpp"
 #include "utilities/macros.hpp"
 #include "c1/c1_globals.hpp"
 
@@ -802,7 +801,7 @@ void ThreadSafepointState::restart() {
   set_has_called_back(false);
 }
 
-void ThreadSafepointState::print_on(outputStream *st) const {
+void ThreadSafepointState::print_on(outputStream* st) const {
   const char *s = NULL;
 
   switch (_type) {
@@ -862,10 +861,7 @@ void ThreadSafepointState::handle_polling_page_exception() {
     if (return_oop) {
       caller_fr.set_saved_oop_result(&map, return_value());
     }
-  }
-
-  // This is a safepoint poll. Verify the return address and block.
-  else {
+  } else { // This is a safepoint poll. Verify the return address and block.
     set_at_poll_safepoint(true);
 
     // Block the thread
@@ -876,7 +872,7 @@ void ThreadSafepointState::handle_polling_page_exception() {
     // as otherwise we may never deliver it.
     if (thread()->has_async_condition()) {
       ThreadInVMfromJavaNoAsyncException __tiv(thread());
-      NULL::NULL(thread(), caller_fr.id());
+      NULL(thread(), caller_fr.id());
     }
 
     // If an exception has been installed we must check for a pending deoptimization
@@ -885,26 +881,6 @@ void ThreadSafepointState::handle_polling_page_exception() {
     if (thread()->has_pending_exception()) {
       RegisterMap map(thread(), true);
       frame caller_fr = stub_fr.sender(&map);
-      if (caller_fr.is_deoptimized_frame()) {
-        // The exception patch will destroy registers that are still
-        // live and will be needed during deoptimization. Defer the
-        // Async exception should have deferred the exception until the
-        // next safepoint which will be detected when we get into
-        // the interpreter so if we have an exception now things
-        // are messed up.
-
-        fatal("Exception installed and deoptimization is pending");
-      }
     }
   }
-}
-
-static jlong  cleanup_end_time = 0;
-static bool   init_done = false;
-
-// Helper method to print the header.
-static void print_header() {
-  tty->print("          vmop                            [ threads:    total initially_running wait_to_block ][ time:    spin   block    sync cleanup    vmop ] ");
-
-  tty->print_cr("page_trap_count");
 }

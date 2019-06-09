@@ -27,24 +27,24 @@ class ArrayKlass: public Klass {
 
  public:
   // Instance variables
-  int dimension() const                 { return _dimension; }
+  int dimension()                 const { return _dimension; }
   void set_dimension(int dimension)     { _dimension = dimension; }
 
-  Klass* higher_dimension() const     { return _higher_dimension; }
+  Klass* higher_dimension()     const { return _higher_dimension; }
   inline Klass* higher_dimension_acquire() const; // load with acquire semantics
   void set_higher_dimension(Klass* k) { _higher_dimension = k; }
   inline void release_set_higher_dimension(Klass* k); // store with release semantics
   Klass** adr_higher_dimension()      { return (Klass**)&this->_higher_dimension; }
 
-  Klass* lower_dimension() const      { return _lower_dimension; }
+  Klass* lower_dimension()      const { return _lower_dimension; }
   void set_lower_dimension(Klass* k)  { _lower_dimension = k; }
   Klass** adr_lower_dimension()       { return (Klass**)&this->_lower_dimension; }
 
   // offset of first element, including any padding for the sake of alignment
-  int  array_header_in_bytes() const    { return layout_helper_header_size(layout_helper()); }
-  int  log2_element_size() const        { return layout_helper_log2_element_size(layout_helper()); }
+  int  array_header_in_bytes()    const { return layout_helper_header_size(layout_helper()); }
+  int  log2_element_size()        const { return layout_helper_log2_element_size(layout_helper()); }
   // type of elements (T_OBJECT for both oop arrays and array-arrays)
-  BasicType element_type() const        { return layout_helper_element_type(layout_helper()); }
+  BasicType element_type()        const { return layout_helper_element_type(layout_helper()); }
 
   virtual Klass* java_super() const;//{ return SystemDictionary::Object_klass(); }
 
@@ -100,11 +100,6 @@ class ArrayKlass: public Klass {
   void print_value_on(outputStream* st) const;
 
   void oop_print_on(oop obj, outputStream* st);
-
-  // Verification
-  void verify_on(outputStream* st);
-
-  void oop_verify_on(oop obj, outputStream* st);
 };
 
 #endif

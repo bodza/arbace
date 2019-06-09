@@ -35,9 +35,7 @@ bool Klass::is_cloneable() const {
 }
 
 void Klass::set_is_cloneable() {
-  if (name() == vmSymbols::java_lang_invoke_MemberName()) {
-    // MemberName cloning should not be intrinsified and always happen in JVM_Clone.
-  } else if (is_instance_klass() && InstanceKlass::cast(this)->reference_type() != REF_NONE) {
+  if (is_instance_klass() && InstanceKlass::cast(this)->reference_type() != REF_NONE) {
     // Reference cloning should not be intrinsified and always happen in JVM_Clone.
   } else {
     _access_flags.set_is_cloneable_fast();
@@ -503,35 +501,6 @@ void Klass::oop_print_value_on(oop obj, outputStream* st) {
   ResourceMark rm;              // Cannot print in debug mode without this
   st->print("%s", internal_name());
   obj->print_address_on(st);
-}
-
-// Verification
-
-void Klass::verify_on(outputStream* st) {
-  guarantee(this->is_klass(),"should be klass");
-
-  if (super() != NULL) {
-    guarantee(super()->is_klass(), "should be klass");
-  }
-  if (secondary_super_cache() != NULL) {
-    Klass* ko = secondary_super_cache();
-    guarantee(ko->is_klass(), "should be klass");
-  }
-  for (uint i = 0; i < primary_super_limit(); i++) {
-    Klass* ko = _primary_supers[i];
-    if (ko != NULL) {
-      guarantee(ko->is_klass(), "should be klass");
-    }
-  }
-
-  if (java_mirror() != NULL) {
-    guarantee(oopDesc::is_oop(java_mirror()), "should be instance");
-  }
-}
-
-void Klass::oop_verify_on(oop obj, outputStream* st) {
-  guarantee(oopDesc::is_oop(obj),  "should be oop");
-  guarantee(obj->klass()->is_klass(), "klass field is not a klass");
 }
 
 Klass* Klass::decode_klass_raw(narrowKlass narrow_klass) {

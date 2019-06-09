@@ -90,13 +90,13 @@ bool XHandler::equals(XHandler* other) const {
 }
 
 // Implementation of IRScope
-BlockBegin* IRScope::build_graph(Compilation* compilation, int osr_bci) {
+BlockBegin* IRScope::build_graph(Compilation* compilation) {
   GraphBuilder gm(compilation, this);
   if (compilation->bailed_out()) return NULL;
   return gm.start();
 }
 
-IRScope::IRScope(Compilation* compilation, IRScope* caller, int caller_bci, ciMethod* method, int osr_bci, bool create_graph)
+IRScope::IRScope(Compilation* compilation, IRScope* caller, int caller_bci, ciMethod* method, bool create_graph)
 : _callees(2)
 , _compilation(compilation)
 , _requires_phi_function(method->max_locals())
@@ -112,13 +112,8 @@ IRScope::IRScope(Compilation* compilation, IRScope* caller, int caller_bci, ciMe
   _wrote_volatile     = false;
   _start              = NULL;
 
-  if (osr_bci != -1) {
-    // selective creation of phi functions is not possibel in osr-methods
-    _requires_phi_function.set_range(0, method->max_locals());
-  }
-
   // build graph if monitor pairing is ok
-  if (create_graph && monitor_pairing_ok()) _start = build_graph(compilation, osr_bci);
+  if (create_graph && monitor_pairing_ok()) _start = build_graph(compilation);
 }
 
 int IRScope::max_stack() const {
@@ -130,27 +125,17 @@ int IRScope::max_stack() const {
   return my_max + callee_max;
 }
 
-bool IRScopeDebugInfo::should_reexecute() {
-  ciMethod* cur_method = scope()->method();
-  int       cur_bci    = bci();
-  if (cur_method != NULL && cur_bci != SynchronizationEntryBCI) {
-    Bytecodes::Code code = cur_method->java_code_at_bci(cur_bci);
-    return NULL::bytecode_should_reexecute(code);
-  } else
-    return false;
-}
+bool IRScopeDebugInfo::should_reexecute() { return false; }
 
 // Implementation of CodeEmitInfo
 
 // Stack must be NON-null
-CodeEmitInfo::CodeEmitInfo(ValueStack* stack, XHandlers* exception_handlers, bool deoptimize_on_exception)
+CodeEmitInfo::CodeEmitInfo(ValueStack* stack, XHandlers* exception_handlers)
   : _scope(stack->scope())
   , _scope_debug_info(NULL)
   , _oop_map(NULL)
   , _stack(stack)
-  , _exception_handlers(exception_handlers)
-  , _is_method_handle_invoke(false)
-  , _deoptimize_on_exception(deoptimize_on_exception) {
+  , _exception_handlers(exception_handlers) {
 }
 
 CodeEmitInfo::CodeEmitInfo(CodeEmitInfo* info, ValueStack* stack)
@@ -158,9 +143,7 @@ CodeEmitInfo::CodeEmitInfo(CodeEmitInfo* info, ValueStack* stack)
   , _exception_handlers(NULL)
   , _scope_debug_info(NULL)
   , _oop_map(NULL)
-  , _stack(stack == NULL ? info->_stack : stack)
-  , _is_method_handle_invoke(info->_is_method_handle_invoke)
-  , _deoptimize_on_exception(info->_deoptimize_on_exception) {
+  , _stack(stack == NULL ? info->_stack : stack) {
   // deep copy of exception handlers
   if (info->_exception_handlers != NULL) {
     _exception_handlers = new XHandlers(info->_exception_handlers);
@@ -170,7 +153,7 @@ CodeEmitInfo::CodeEmitInfo(CodeEmitInfo* info, ValueStack* stack)
 void CodeEmitInfo::record_debug_info(DebugInformationRecorder* recorder, int pc_offset) {
   // record the safepoint before recording the debug info for enclosing scopes
   recorder->add_safepoint(pc_offset, _oop_map->deep_copy());
-  _scope_debug_info->record_debug_info(recorder, pc_offset, true/*topmost*/, _is_method_handle_invoke);
+  _scope_debug_info->record_debug_info(recorder, pc_offset, /*topmost*/ true);
   recorder->end_safepoint(pc_offset);
 }
 
@@ -179,40 +162,13 @@ void CodeEmitInfo::add_register_oop(LIR_Opr opr) {
   _oop_map->set_oop(name);
 }
 
-// Mirror the stack size calculation in the deopt code
-// How much stack space would we need at this point in the program in
-// case of deoptimization?
-int CodeEmitInfo::interpreter_frame_size() const {
-  ValueStack* state = _stack;
-  int size = 0;
-  int callee_parameters = 0;
-  int callee_locals = 0;
-  int extra_args = state->scope()->method()->max_stack() - state->stack_size();
-
-  while (state != NULL) {
-    int locks = state->locks_size();
-    int temps = state->stack_size();
-    bool is_top_frame = (state == _stack);
-    ciMethod* method = state->scope()->method();
-
-    int frame_size = BytesPerWord * NULL::size_activation(method->max_stack(), temps + callee_parameters, extra_args, locks, callee_parameters, callee_locals, is_top_frame);
-    size += frame_size;
-
-    callee_parameters = method->size_of_parameters();
-    callee_locals = method->max_locals();
-    extra_args = 0;
-    state = state->caller_state();
-  }
-  return size + NULL::last_frame_adjust(0, callee_locals) * BytesPerWord;
-}
-
 // Implementation of IR
 
-IR::IR(Compilation* compilation, ciMethod* method, int osr_bci) :
+IR::IR(Compilation* compilation, ciMethod* method) :
   _num_loops(0) {
   // setup IR fields
   _compilation = compilation;
-  _top_scope   = new IRScope(compilation, NULL, -1, method, osr_bci, true);
+  _top_scope   = new IRScope(compilation, NULL, -1, method, true);
   _code        = NULL;
 }
 
@@ -360,8 +316,6 @@ class UseCountComputer: public ValueVisitor, BlockClosure {
   }
 };
 
-#define TRACE_LINEAR_SCAN(level, code)
-
 class ComputeLinearScanOrder : public StackObj {
  private:
   int        _max_block_id;        // the highest block_id of a block
@@ -384,8 +338,8 @@ class ComputeLinearScanOrder : public StackObj {
 
   // accessors for _visited_blocks and _active_blocks
   void init_visited()                     { _active_blocks.clear(); _visited_blocks.clear(); }
-  bool is_visited(BlockBegin* b) const    { return _visited_blocks.at(b->block_id()); }
-  bool is_active(BlockBegin* b) const     { return _active_blocks.at(b->block_id()); }
+  bool is_visited(BlockBegin* b)    const { return _visited_blocks.at(b->block_id()); }
+  bool is_active(BlockBegin* b)     const { return _active_blocks.at(b->block_id()); }
   void set_visited(BlockBegin* b)         { _visited_blocks.set_bit(b->block_id()); }
   void set_active(BlockBegin* b)          { _active_blocks.set_bit(b->block_id()); }
   void clear_active(BlockBegin* b)        { _active_blocks.clear_bit(b->block_id()); }
@@ -426,8 +380,8 @@ class ComputeLinearScanOrder : public StackObj {
   ComputeLinearScanOrder(Compilation* c, BlockBegin* start_block);
 
   // accessors for final result
-  BlockList* linear_scan_order() const    { return _linear_scan_order; }
-  int        num_loops() const            { return _num_loops; }
+  BlockList* linear_scan_order()    const { return _linear_scan_order; }
+  int        num_loops()            const { return _num_loops; }
 };
 
 ComputeLinearScanOrder::ComputeLinearScanOrder(Compilation* c, BlockBegin* start_block) :
@@ -445,8 +399,6 @@ ComputeLinearScanOrder::ComputeLinearScanOrder(Compilation* c, BlockBegin* start
   _loop_map(0),             // initialized later with correct size
   _compilation(c)
 {
-  TRACE_LINEAR_SCAN(2, tty->print_cr("***** computing linear-scan block order"));
-
   count_edges(start_block, NULL);
 
   if (compilation()->is_profiling()) {
@@ -473,11 +425,7 @@ ComputeLinearScanOrder::ComputeLinearScanOrder(Compilation* c, BlockBegin* start
 // * number loop header blocks
 // * create a list with all loop end blocks
 void ComputeLinearScanOrder::count_edges(BlockBegin* cur, BlockBegin* parent) {
-  TRACE_LINEAR_SCAN(3, tty->print_cr("Enter count_edges for block B%d coming from B%d", cur->block_id(), parent != NULL ? parent->block_id() : -1));
-
   if (is_active(cur)) {
-    TRACE_LINEAR_SCAN(3, tty->print_cr("backward branch"));
-
     cur->set(BlockBegin::backward_branch_target_flag);
 
     // When a loop header is also the start of an exception handler, then the backward branch is
@@ -500,7 +448,6 @@ void ComputeLinearScanOrder::count_edges(BlockBegin* cur, BlockBegin* parent) {
   inc_forward_branches(cur);
 
   if (is_visited(cur)) {
-    TRACE_LINEAR_SCAN(3, tty->print_cr("block already visited"));
     return;
   }
 
@@ -525,19 +472,13 @@ void ComputeLinearScanOrder::count_edges(BlockBegin* cur, BlockBegin* parent) {
   // the loop number after the recursive calls for the successors above
   // have returned.
   if (cur->is_set(BlockBegin::linear_scan_loop_header_flag)) {
-    TRACE_LINEAR_SCAN(3, tty->print_cr("Block B%d is loop header of loop %d", cur->block_id(), _num_loops));
-
     cur->set_loop_index(_num_loops);
     _loop_headers.append(cur);
     _num_loops++;
   }
-
-  TRACE_LINEAR_SCAN(3, tty->print_cr("Finished count_edges for block B%d", cur->block_id()));
 }
 
 void ComputeLinearScanOrder::mark_loops() {
-  TRACE_LINEAR_SCAN(3, tty->print_cr("----- marking loops"));
-
   _loop_map = BitMap2D(_num_loops, _max_block_id);
 
   for (int i = _loop_end_blocks.length() - 1; i >= 0; i--) {
@@ -545,24 +486,19 @@ void ComputeLinearScanOrder::mark_loops() {
     BlockBegin* loop_start = loop_end->sux_at(0);
     int         loop_idx   = loop_start->loop_index();
 
-    TRACE_LINEAR_SCAN(3, tty->print_cr("Processing loop from B%d to B%d (loop %d):", loop_start->block_id(), loop_end->block_id(), loop_idx));
-
     // add the end-block of the loop to the working list
     _work_list.push(loop_end);
     set_block_in_loop(loop_idx, loop_end);
     do {
       BlockBegin* cur = _work_list.pop();
 
-      TRACE_LINEAR_SCAN(3, tty->print_cr("    processing B%d", cur->block_id()));
-
       // recursive processing of all predecessors ends when start block of loop is reached
-      if (cur != loop_start && !cur->is_set(BlockBegin::osr_entry_flag)) {
+      if (cur != loop_start) {
         for (int j = cur->number_of_preds() - 1; j >= 0; j--) {
           BlockBegin* pred = cur->pred_at(j);
 
           if (!is_block_in_loop(loop_idx, pred) /*&& !pred->is_set(BlockBeginosr_entry_flag)*/) {
             // this predecessor has not been processed yet, so add it to work list
-            TRACE_LINEAR_SCAN(3, tty->print_cr("    pushing B%d", pred->block_id()));
             _work_list.push(pred);
             set_block_in_loop(loop_idx, pred);
           }
@@ -580,8 +516,6 @@ void ComputeLinearScanOrder::clear_non_natural_loops(BlockBegin* start_block) {
     if (is_block_in_loop(i, start_block)) {
       // loop i contains the entry block of the method
       // -> this is not a natural loop, so ignore it
-      TRACE_LINEAR_SCAN(2, tty->print_cr("Loop %d is non-natural, so it is ignored", i));
-
       BlockBegin *loop_header = _loop_headers.at(i);
 
       for (int j = 0; j < loop_header->number_of_preds(); j++) {
@@ -600,7 +534,6 @@ void ComputeLinearScanOrder::clear_non_natural_loops(BlockBegin* start_block) {
 }
 
 void ComputeLinearScanOrder::assign_loop_depth(BlockBegin* start_block) {
-  TRACE_LINEAR_SCAN(3, tty->print_cr("----- computing loop-depth and weight"));
   init_visited();
 
   _work_list.append(start_block);
@@ -610,7 +543,6 @@ void ComputeLinearScanOrder::assign_loop_depth(BlockBegin* start_block) {
 
     if (!is_visited(cur)) {
       set_visited(cur);
-      TRACE_LINEAR_SCAN(4, tty->print_cr("Computing loop depth for block B%d", cur->block_id()));
 
       // compute loop-depth and loop-index for the block
       int i;
@@ -659,10 +591,8 @@ void ComputeLinearScanOrder::compute_dominator_impl(BlockBegin* cur, BlockBegin*
   set_visited(cur);
 
   if (cur->dominator() == NULL) {
-    TRACE_LINEAR_SCAN(4, tty->print_cr("DOM: initializing dominator of B%d to B%d", cur->block_id(), parent->block_id()));
     cur->set_dominator(parent);
   } else if (!(cur->is_set(BlockBegin::linear_scan_loop_header_flag) && parent->is_set(BlockBegin::linear_scan_loop_end_flag))) {
-    TRACE_LINEAR_SCAN(4, tty->print_cr("DOM: computing dominator of B%d: common dominator of B%d and B%d is B%d", cur->block_id(), parent->block_id(), cur->dominator()->block_id(), common_dominator(cur->dominator(), parent)->block_id()));
     // Does not hold for exception blocks
     cur->set_dominator(common_dominator(cur->dominator(), parent));
   }
@@ -747,14 +677,9 @@ void ComputeLinearScanOrder::sort_into_work_list(BlockBegin* cur) {
     insert_idx--;
   }
   _work_list.at_put(insert_idx, cur);
-
-  TRACE_LINEAR_SCAN(3, tty->print_cr("Sorted B%d into worklist. new worklist:", cur->block_id()));
-  TRACE_LINEAR_SCAN(3, for (int i = 0; i < _work_list.length(); i++) tty->print_cr("%8d B%2d  weight:%6x", i, _work_list.at(i)->block_id(), _work_list.at(i)->linear_scan_number()));
 }
 
 void ComputeLinearScanOrder::append_block(BlockBegin* cur) {
-  TRACE_LINEAR_SCAN(3, tty->print_cr("appending block B%d (weight 0x%6x) to linear-scan order", cur->block_id(), cur->linear_scan_number()));
-
   // currently, the linear scan order and code emit order are equal.
   // therefore the linear_scan_number and the weight of a block must also
   // be equal.
@@ -763,27 +688,12 @@ void ComputeLinearScanOrder::append_block(BlockBegin* cur) {
 }
 
 void ComputeLinearScanOrder::compute_order(BlockBegin* start_block) {
-  TRACE_LINEAR_SCAN(3, tty->print_cr("----- computing final block order"));
-
   // the start block is always the first block in the linear scan order
   _linear_scan_order = new BlockList(_num_blocks);
   append_block(start_block);
 
   BlockBegin* std_entry = ((Base*)start_block->end())->std_entry();
-  BlockBegin* osr_entry = ((Base*)start_block->end())->osr_entry();
 
-  BlockBegin* sux_of_osr_entry = NULL;
-  if (osr_entry != NULL) {
-    // special handling for osr entry:
-    // ignore the edge between the osr entry and its successor for processing
-    // the osr entry block is added manually below
-
-    sux_of_osr_entry = osr_entry->sux_at(0);
-    dec_forward_branches(sux_of_osr_entry);
-
-    compute_dominator(osr_entry, start_block);
-    _iterative_dominators = true;
-  }
   compute_dominator(std_entry, start_block);
 
   // start processing with standard entry block
@@ -797,12 +707,6 @@ void ComputeLinearScanOrder::compute_order(BlockBegin* start_block) {
   do {
     BlockBegin* cur = _work_list.pop();
 
-    if (cur == sux_of_osr_entry) {
-      // the osr entry block is ignored in normal processing, it is never added to the
-      // work list. Instead, it is added as late as possible manually here.
-      append_block(osr_entry);
-      compute_dominator(cur, osr_entry);
-    }
     append_block(cur);
 
     int i;
@@ -835,11 +739,8 @@ bool ComputeLinearScanOrder::compute_dominators_iter() {
     BlockBegin* dominator = block->pred_at(0);
     int num_preds = block->number_of_preds();
 
-    TRACE_LINEAR_SCAN(4, tty->print_cr("DOM: Processing B%d", block->block_id()));
-
     for (int j = 0; j < num_preds; j++) {
       BlockBegin *pred = block->pred_at(j);
-      TRACE_LINEAR_SCAN(4, tty->print_cr("   DOM: Subrocessing B%d", pred->block_id()));
 
       if (block->is_set(BlockBegin::exception_entry_flag)) {
         dominator = common_dominator(dominator, pred);
@@ -853,8 +754,6 @@ bool ComputeLinearScanOrder::compute_dominators_iter() {
     }
 
     if (dominator != block->dominator()) {
-      TRACE_LINEAR_SCAN(4, tty->print_cr("DOM: updating dominator of B%d from B%d to B%d", block->block_id(), block->dominator()->block_id(), dominator->block_id()));
-
       block->set_dominator(dominator);
       changed = true;
     }
@@ -863,14 +762,11 @@ bool ComputeLinearScanOrder::compute_dominators_iter() {
 }
 
 void ComputeLinearScanOrder::compute_dominators() {
-  TRACE_LINEAR_SCAN(3, tty->print_cr("----- computing dominators (iterative computation reqired: %d)", _iterative_dominators));
-
-  // iterative computation of dominators is only required for methods with non-natural loops
-  // and OSR-methods. For all other methods, the dominators computed when generating the
+  // iterative computation of dominators is only required for methods with non-natural loops.
+  // For all other methods, the dominators computed when generating the
   // linear scan block order are correct.
   if (_iterative_dominators) {
     do {
-      TRACE_LINEAR_SCAN(1, tty->print_cr("DOM: next iteration of fix-point calculation"));
     } while (compute_dominators_iter());
   }
 

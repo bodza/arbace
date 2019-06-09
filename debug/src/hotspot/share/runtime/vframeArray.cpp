@@ -66,7 +66,7 @@ void vframeArrayElement::fill_in(compiledVFrame* vf, bool realloc_failures) {
   // intptr_t (i.e. a stack slot) and we are fine. This is
   // good since we are inside a HandleMark and the oops in our
   // collection would go away between packing them here and
-  // unpacking them in NULL.
+  // unpacking them in ...
 
   // First the locals go off-stack
 

@@ -56,28 +56,6 @@ BasicType JVMCIRuntime::kindToBasicType(Handle kind, TRAPS) {
   }
 }
 
-// Simple helper to see if the caller of a runtime stub which
-// entered the VM has been deoptimized
-
-static bool caller_is_deopted() {
-  JavaThread* thread = JavaThread::current();
-  RegisterMap reg_map(thread, false);
-  frame runtime_frame = thread->last_frame();
-  frame caller_frame = runtime_frame.sender(&reg_map);
-  return caller_frame.is_deoptimized_frame();
-}
-
-// Stress deoptimization
-static void deopt_caller() {
-  if (!caller_is_deopted()) {
-    JavaThread* thread = JavaThread::current();
-    RegisterMap reg_map(thread, false);
-    frame runtime_frame = thread->last_frame();
-    frame caller_frame = runtime_frame.sender(&reg_map);
-    NULL::NULL(thread, caller_frame.id(), NULL::Reason_constraint);
-  }
-}
-
 JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_instance(JavaThread* thread, Klass* klass))
   JRT_BLOCK;
   Handle holder(THREAD, klass->klass_holder()); // keep the klass alive
@@ -107,18 +85,6 @@ JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_array(JavaThread* thread, Klass* array_k
     obj = oopFactory::new_objArray(elem_klass, length, CHECK);
   }
   thread->set_vm_result(obj);
-  // This is pretty rare but this runtime patch is stressful to deoptimization
-  // if we deoptimize here so force a deopt to stress the path.
-  if (DeoptimizeALot) {
-    static int deopts = 0;
-    // Alternate between deoptimizing and raising an error (which will also cause a deopt)
-    if (deopts++ % 2 == 0) {
-      ResourceMark rm(THREAD);
-      THROW(vmSymbols::java_lang_OutOfMemoryError());
-    } else {
-      deopt_caller();
-    }
-  }
   JRT_BLOCK_END;
   SharedRuntime::on_slowpath_allocation_exit(thread);
 JRT_END
@@ -171,18 +137,8 @@ extern void vm_exit(int code);
 // unpack_with_exception entry instead. This makes life for the exception blob easier
 // because making that same check and diverting is painful from assembly language.
 JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* thread, oopDesc* ex, address pc, CompiledMethod*& cm))
-  // Reset method handle flag.
-  thread->set_is_method_handle_return(false);
-
   Handle exception(thread, ex);
   cm = CodeCache::find_compiled(pc);
-  // Adjust the pc as needed/
-  if (cm->is_deopt_pc(pc)) {
-    RegisterMap map(thread, false);
-    frame exception_frame = thread->last_frame().sender(&map);
-    // if the frame isn't deopted then pc must not correspond to the caller of last_frame
-    pc = exception_frame.pc();
-  }
 
   // Check the stack guard pages and reenable them if necessary and there is
   // enough space on the stack to do so.  Use fast exceptions only if the guard
@@ -194,8 +150,6 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
   if (guard_pages_enabled) {
     address fast_continuation = cm->handler_for_exception_and_pc(exception, pc);
     if (fast_continuation != NULL) {
-      // Set flag if return address is a method handle call site.
-      thread->set_is_method_handle_return(cm->is_method_handle_return(pc));
       return fast_continuation;
     }
   }
@@ -225,13 +179,10 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
     // another exception during the computation of the compiled
     // exception handler. Checking for exception oop equality is not
     // sufficient because some exceptions are pre-allocated and reused.
-    if (continuation != NULL && !recursive_exception && !SharedRuntime::NULL()->contains(continuation)) {
+    if (continuation != NULL && !recursive_exception) {
       cm->add_handler_for_exception_and_pc(exception, pc, continuation);
     }
   }
-
-  // Set flag if return address is a method handle call site.
-  thread->set_is_method_handle_return(cm->is_method_handle_return(pc));
 
   return continuation;
 JRT_END
@@ -253,12 +204,6 @@ address JVMCIRuntime::exception_handler_for_pc(JavaThread* thread) {
     continuation = exception_handler_for_pc_helper(thread, exception, pc, cm);
   }
   // Back in JAVA, use no oops DON'T safepoint
-
-  // Now check to see if the compiled method we were called from is now deoptimized.
-  // If so we must return to the deopt blob and deoptimize the nmethod
-  if (cm != NULL && caller_is_deopted()) {
-    continuation = SharedRuntime::NULL()->unpack_with_exception_in_tls();
-  }
 
   return continuation;
 }
@@ -508,11 +453,6 @@ JRT_ENTRY(jboolean, JVMCIRuntime::thread_is_interrupted(JavaThread* thread, oopD
   }
 JRT_END
 
-JRT_ENTRY(int, JVMCIRuntime::test_deoptimize_call_int(JavaThread* thread, int value))
-  deopt_caller();
-  return value;
-JRT_END
-
 void JVMCIRuntime::force_initialization(TRAPS) {
   JVMCIRuntime::initialize_well_known_classes(CHECK);
 
@@ -677,71 +617,6 @@ void JVMCIRuntime::shutdown(TRAPS) {
     args.push_oop(receiver);
     JavaCalls::call_special(&result, receiver->klass(), vmSymbols::shutdown_method_name(), vmSymbols::void_method_signature(), &args, CHECK);
   }
-}
-
-CompLevel JVMCIRuntime::adjust_comp_level_inner(const methodHandle& method, bool is_osr, CompLevel level, JavaThread* thread) {
-  JVMCICompiler* compiler = JVMCICompiler::instance(false, thread);
-  if (compiler != NULL && compiler->is_bootstrapping()) {
-    return level;
-  }
-  if (!is_HotSpotJVMCIRuntime_initialized() || _comp_level_adjustment == JVMCIRuntime::none) {
-    // JVMCI cannot participate in compilation scheduling until
-    // JVMCI is initialized and indicates it wants to participate.
-    return level;
-  }
-
-#define CHECK_RETURN THREAD); \
-  if (HAS_PENDING_EXCEPTION) { \
-    Handle exception(THREAD, PENDING_EXCEPTION); \
-    CLEAR_PENDING_EXCEPTION; \
- \
-    if (exception->is_a(SystemDictionary::ThreadDeath_klass())) { \
-      /* In the special case of ThreadDeath, we need to reset the */ \
-      /* pending async exception so that it is propagated.        */ \
-      thread->set_pending_async_exception(exception()); \
-      return level; \
-    } \
-    tty->print("Uncaught exception while adjusting compilation level: "); \
-    java_lang_Throwable::print(exception(), tty); \
-    tty->cr(); \
-    java_lang_Throwable::print_stack_trace(exception, tty); \
-    if (HAS_PENDING_EXCEPTION) { \
-      CLEAR_PENDING_EXCEPTION; \
-    } \
-    return level; \
-  } \
-  (void)(0
-
-  Thread* THREAD = thread;
-  HandleMark hm;
-  Handle receiver = JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK_RETURN);
-  Handle name;
-  Handle sig;
-  if (_comp_level_adjustment == JVMCIRuntime::by_full_signature) {
-    name = java_lang_String::create_from_symbol(method->name(), CHECK_RETURN);
-    sig = java_lang_String::create_from_symbol(method->signature(), CHECK_RETURN);
-  } else {
-    name = Handle();
-    sig = Handle();
-  }
-
-  JavaValue result(T_INT);
-  JavaCallArguments args;
-  args.push_oop(receiver);
-  args.push_oop(Handle(THREAD, method->method_holder()->java_mirror()));
-  args.push_oop(name);
-  args.push_oop(sig);
-  args.push_int(is_osr);
-  args.push_int(level);
-  JavaCalls::call_special(&result, receiver->klass(), vmSymbols::adjustCompilationLevel_name(), vmSymbols::adjustCompilationLevel_signature(), &args, CHECK_RETURN);
-
-  int comp_level = result.get_jint();
-  if (comp_level < CompLevel_none || comp_level > CompLevel_full_optimization) {
-    ShouldNotReachHere();
-    return level;
-  }
-  return (CompLevel) comp_level;
-#undef CHECK_RETURN
 }
 
 void JVMCIRuntime::bootstrap_finished(TRAPS) {

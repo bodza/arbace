@@ -27,12 +27,8 @@
   static_field(CompilerToVM::Data,             Klass_vtable_start_offset,              int) \
   static_field(CompilerToVM::Data,             Klass_vtable_length_offset,             int) \
  \
-  static_field(CompilerToVM::Data,             Method_extra_stack_entries,             int) \
- \
   static_field(CompilerToVM::Data,             SharedRuntime_ic_miss_stub,             address) \
   static_field(CompilerToVM::Data,             SharedRuntime_handle_wrong_method_stub, address) \
-  static_field(CompilerToVM::Data,             SharedRuntime_deopt_blob_unpack,        address) \
-  static_field(CompilerToVM::Data,             SharedRuntime_deopt_blob_uncommon_trap, address) \
  \
   static_field(CompilerToVM::Data,             ThreadLocalAllocBuffer_alignment_reserve, size_t) \
  \
@@ -139,11 +135,8 @@
   nonstatic_field(JavaThread,                  _vm_result,                                    oop) \
   volatile_nonstatic_field(JavaThread,         _exception_oop,                                oop) \
   volatile_nonstatic_field(JavaThread,         _exception_pc,                                 address) \
-  volatile_nonstatic_field(JavaThread,         _is_method_handle_return,                      int) \
   nonstatic_field(JavaThread,                  _osthread,                                     OSThread*) \
-  nonstatic_field(JavaThread,                  _pending_deoptimization,                       int) \
   nonstatic_field(JavaThread,                  _pending_failed_speculation,                   long) \
-  nonstatic_field(JavaThread,                  _pending_transfer_to_interpreter,              bool) \
   nonstatic_field(JavaThread,                  _jvmci_counters,                               jlong*) \
   nonstatic_field(JavaThread,                  _reserved_stack_activation,                    address) \
  \
@@ -202,8 +195,6 @@
   nonstatic_field(MethodData,                  _parameters_type_data_di,                      int) \
   nonstatic_field(MethodData,                  _nof_decompiles,                               uint) \
   nonstatic_field(MethodData,                  _nof_overflow_recompiles,                      uint) \
-  nonstatic_field(MethodData,                  _nof_overflow_traps,                           uint) \
-  nonstatic_field(MethodData,                  _trap_hist._array[0],                          u1) \
   nonstatic_field(MethodData,                  _eflags,                                       intx) \
   nonstatic_field(MethodData,                  _arg_local,                                    intx) \
   nonstatic_field(MethodData,                  _arg_stack,                                    intx) \
@@ -369,9 +360,6 @@
   declare_constant(JVM_CONSTANT_Methodref) \
   declare_constant(JVM_CONSTANT_InterfaceMethodref) \
   declare_constant(JVM_CONSTANT_NameAndType) \
-  declare_constant(JVM_CONSTANT_MethodHandle) \
-  declare_constant(JVM_CONSTANT_MethodType) \
-  declare_constant(JVM_CONSTANT_InvokeDynamic) \
   declare_constant(JVM_CONSTANT_ExternalMax) \
  \
   declare_constant(JVM_CONSTANT_Invalid) \
@@ -380,9 +368,6 @@
   declare_constant(JVM_CONSTANT_ClassIndex) \
   declare_constant(JVM_CONSTANT_StringIndex) \
   declare_constant(JVM_CONSTANT_UnresolvedClassInError) \
-  declare_constant(JVM_CONSTANT_MethodHandleInError) \
-  declare_constant(JVM_CONSTANT_MethodTypeInError) \
-  declare_constant(JVM_CONSTANT_DynamicInError) \
   declare_constant(JVM_CONSTANT_InternalMax) \
  \
   declare_constant(ArrayData::array_len_off_set) \
@@ -396,9 +381,7 @@
  \
   declare_constant(CodeInstaller::VERIFIED_ENTRY) \
   declare_constant(CodeInstaller::UNVERIFIED_ENTRY) \
-  declare_constant(CodeInstaller::OSR_ENTRY) \
   declare_constant(CodeInstaller::EXCEPTION_HANDLER_ENTRY) \
-  declare_constant(CodeInstaller::DEOPT_HANDLER_ENTRY) \
   declare_constant(CodeInstaller::INVOKEINTERFACE) \
   declare_constant(CodeInstaller::INVOKEVIRTUAL) \
   declare_constant(CodeInstaller::INVOKESTATIC) \
@@ -499,12 +482,6 @@
   declare_constant(ReceiverTypeData::receiver0_offset) \
   declare_constant(ReceiverTypeData::count0_offset) \
  \
-  declare_constant(vmIntrinsics::_invokeBasic) \
-  declare_constant(vmIntrinsics::_linkToVirtual) \
-  declare_constant(vmIntrinsics::_linkToStatic) \
-  declare_constant(vmIntrinsics::_linkToSpecial) \
-  declare_constant(vmIntrinsics::_linkToInterface) \
- \
   declare_constant(vmSymbols::FIRST_SID) \
   declare_constant(vmSymbols::SID_LIMIT)
 
@@ -538,9 +515,6 @@
   declare_function(os::javaTimeMillis) \
   declare_function(os::javaTimeNanos) \
  \
-  declare_function(NULL::NULL) \
-  declare_function(NULL::NULL) \
- \
   declare_function(JVMCIRuntime::new_instance) \
   declare_function(JVMCIRuntime::new_array) \
   declare_function(JVMCIRuntime::new_multi_array) \
@@ -565,9 +539,7 @@
   declare_function(JVMCIRuntime::load_and_clear_exception) \
   declare_function(JVMCIRuntime::write_barrier_pre) \
   declare_function(JVMCIRuntime::write_barrier_post) \
-  declare_function(JVMCIRuntime::validate_object) \
- \
-  declare_function(JVMCIRuntime::test_deoptimize_call_int)
+  declare_function(JVMCIRuntime::validate_object)
 
 #define VM_STRUCTS_JVMCI_G1GC(nonstatic_field, static_field) \
   static_field(HeapRegion, LogOfHRGrainBytes, int)

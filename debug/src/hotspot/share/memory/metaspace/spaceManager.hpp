@@ -117,9 +117,9 @@ class SpaceManager : public CHeapObj<mtClass> {
 
   bool is_humongous(size_t word_size) { return word_size > medium_chunk_size(); }
 
-  size_t capacity_words() const     { return _capacity_words; }
-  size_t used_words() const         { return _used_words; }
-  size_t overhead_words() const     { return _overhead_words; }
+  size_t capacity_words()     const { return _capacity_words; }
+  size_t used_words()         const { return _used_words; }
+  size_t overhead_words()     const { return _overhead_words; }
 
   // Adjust local, global counters after a new chunk has been added.
   void account_for_new_chunk(const Metachunk* new_chunk);
@@ -140,7 +140,7 @@ class SpaceManager : public CHeapObj<mtClass> {
   size_t get_initial_chunk_size(Metaspace::MetaspaceType type) const;
 
   // Todo: remove this once we have counters by chunk type.
-  uintx num_chunks_by_type(ChunkIndex chunk_type) const       { return _num_chunks_by_type[chunk_type]; }
+  uintx num_chunks_by_type(ChunkIndex chunk_type)       const { return _num_chunks_by_type[chunk_type]; }
 
   Metachunk* get_new_chunk(size_t chunk_word_size);
 

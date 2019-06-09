@@ -189,12 +189,7 @@ class ObjectMonitor {
   volatile markOop* header_addr();
   void      set_header(markOop hdr);
 
-  intptr_t is_busy() const {
-    // TODO-FIXME: merge _count and _waiters.
-    // TODO-FIXME: assert _owner == null implies _recursions = 0
-    // TODO-FIXME: assert _WaitSet != null implies _count > 0
-    return _count|_waiters|intptr_t(_owner)|intptr_t(_cxq)|intptr_t(_EntryList);
-  }
+  intptr_t is_busy() const { return _count | _waiters | intptr_t(_owner) | intptr_t(_cxq) | intptr_t(_EntryList); }
 
   intptr_t  is_entered(Thread* current) const;
 
@@ -206,12 +201,12 @@ class ObjectMonitor {
   jint      count() const;
   void      set_count(jint count);
   jint      contentions() const;
-  intptr_t  recursions() const                                         { return _recursions; }
+  intptr_t  recursions()               const { return _recursions; }
 
   // JVM/TI GetObjectMonitorUsage() needs this:
-  ObjectWaiter* first_waiter()                                         { return _WaitSet; }
-  ObjectWaiter* next_waiter(ObjectWaiter* o)                           { return o->_next; }
-  Thread* thread_of_waiter(ObjectWaiter* o)                            { return o->_thread; }
+  ObjectWaiter* first_waiter()               { return _WaitSet; }
+  ObjectWaiter* next_waiter(ObjectWaiter* o) { return o->_next; }
+  Thread* thread_of_waiter(ObjectWaiter* o)  { return o->_thread; }
 
  protected:
   // We don't typically expect or want the ctors or dtors to run.
@@ -226,11 +221,11 @@ class ObjectMonitor {
 
  private:
   void Recycle() {
-    _succ          = NULL;
-    _EntryList     = NULL;
-    _cxq           = NULL;
-    _WaitSet       = NULL;
-    _recursions    = 0;
+    _succ       = NULL;
+    _EntryList  = NULL;
+    _cxq        = NULL;
+    _WaitSet    = NULL;
+    _recursions = 0;
   }
 
  public:

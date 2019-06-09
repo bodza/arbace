@@ -233,7 +233,7 @@ void BarrierSetC1::generate_referent_check(LIRAccess& access, LabelObj* cont) {
       }
     }
   }
-  if (gen_pre_barrier && !PatchALot) {
+  if (gen_pre_barrier) {
     // Can the klass of object be statically determined to be
     // a sub-class of Reference?
     ciType* type = base.value()->declared_type();

@@ -844,7 +844,6 @@ static void InduceScavenge(Thread * Self, const char * Whence) {
   // Ultimately, this results in a call to deflate_idle_monitors() in the near future.
   // More precisely, trigger an asynchronous STW safepoint as the number
   // of active monitors passes the specified threshold.
-  // TODO: assert thread state is reasonable
 
   if (ForceMonitorScavenge == 0 && Atomic::xchg (1, &ForceMonitorScavenge) == 0) {
     if (ObjectMonitor::Knob_Verbose) {
@@ -1249,7 +1248,6 @@ ObjectMonitor* ObjectSynchronizer::inflate(Thread * Self, oop object, const Infl
       // with CAS.  That is, we can avoid the xchg-NULL .... ST idiom.
       m->set_owner(mark->locker());
       m->set_object(object);
-      // TODO-FIXME: assert BasicLock->dhw != 0.
 
       // Must preserve store ordering. The monitor state must
       // be stable at the time of publishing the monitor address.

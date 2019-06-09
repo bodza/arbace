@@ -267,16 +267,6 @@ private:
   // translation factor.
   static G1RegionToSpaceMapper* create_aux_memory_mapper(const char* description, size_t size, size_t translation_factor);
 
-  // These are macros so that, if the assert fires, we get the correct
-  // line number, file, etc.
-
-#define heap_locking_asserts_params(_extra_message_) \
-  "%s : Heap_lock locked: %s, at safepoint: %s, is VM thread: %s", \
-  (_extra_message_), \
-  BOOL_TO_STR(Heap_lock->owned_by_self()), \
-  BOOL_TO_STR(SafepointSynchronize::is_at_safepoint()), \
-  BOOL_TO_STR(Thread::current()->is_VM_thread())
-
   // The young region list.
   G1EdenRegions _eden;
   G1SurvivorRegions _survivor;
@@ -523,8 +513,7 @@ public:
 
   // It dirties the cards that cover the block so that the post
   // write barrier never queues anything when updating objects on this
-  // block. It is assumed (and in fact we assert) that the block
-  // belongs to a young region.
+  // block. It is assumed, that the block belongs to a young region.
   inline void dirty_young_block(HeapWord* start, size_t word_size);
 
   // Frees a humongous region by collapsing it into individual regions

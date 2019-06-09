@@ -32,8 +32,8 @@ class LatestMethodCache : public CHeapObj<mtClass> {
   ~LatestMethodCache()  { _klass = NULL; _method_idnum = -1; }
 
   void   init(Klass* k, Method* m);
-  Klass* klass() const           { return _klass; }
-  int    method_idnum() const    { return _method_idnum; }
+  Klass* klass()           const { return _klass; }
+  int    method_idnum()    const { return _method_idnum; }
 
   Method* get_method();
 
@@ -448,7 +448,7 @@ class Universe: AllStatic {
   // The non-oop pattern (see compiledIC.hpp, etc)
   static void* non_oop_word();
 
-  // Oop verification (see MacroAssembler::verify_oop)
+  // Oop verification
   static uintptr_t verify_oop_mask()  { return 0; };
   static uintptr_t verify_oop_bits()  { return 0; };
   static uintptr_t verify_mark_bits() { return 0; };

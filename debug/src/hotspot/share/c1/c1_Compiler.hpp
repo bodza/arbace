@@ -17,20 +17,16 @@ class Compiler: public AbstractCompiler {
   ~Compiler();
 
   // Name of this compiler
-  virtual const char* name()                     { return "C1"; }
+  virtual const char* name()     { return "C1"; }
 
   // Missing feature tests
-  virtual bool supports_native()                 { return true; }
-  virtual bool supports_osr   ()                 { return true; }
+  virtual bool supports_native() { return true; }
 
   // Initialization
   virtual void initialize();
 
   // Compilation entry point for methods
   virtual void compile_method(ciEnv* env, ciMethod* target, int entry_bci, DirectiveSet* directive);
-
-  // Print compilation timers and statistics
-  virtual void print_timers();
 
   // Check if the C1 compiler supports an intrinsic for 'method'.
   virtual bool is_intrinsic_supported(const methodHandle& method);

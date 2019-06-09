@@ -86,11 +86,11 @@ class JDK_Version {
     return _major == 0;
   }
 
-  uint8_t major_version() const          { return _major; }
-  uint8_t minor_version() const          { return _minor; }
-  uint8_t security_version() const       { return _security; }
-  uint8_t patch_version() const          { return _patch; }
-  uint8_t build_number() const           { return _build; }
+  uint8_t major_version()          const { return _major; }
+  uint8_t minor_version()          const { return _minor; }
+  uint8_t security_version()       const { return _security; }
+  uint8_t patch_version()          const { return _patch; }
+  uint8_t build_number()           const { return _build; }
 
   bool supports_thread_park_blocker() const {
     return _thread_park_blocker;

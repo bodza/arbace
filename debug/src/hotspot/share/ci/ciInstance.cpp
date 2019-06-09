@@ -13,8 +13,6 @@
 // This class represents an instanceOop in the HotSpot virtual
 // machine.
 
-// ------------------------------------------------------------------
-// ciObject::java_mirror_type
 ciType* ciInstance::java_mirror_type() {
   VM_ENTRY_MARK;
   oop m = get_oop();
@@ -27,12 +25,10 @@ ciType* ciInstance::java_mirror_type() {
     return ciType::make(java_lang_Class::primitive_type(m));
   } else {
     Klass* k = java_lang_Class::as_Klass(m);
-    return CURRENT_THREAD_ENV->get_klass(k);
+    return ciEnv::current(thread)->get_klass(k);
   }
 }
 
-// ------------------------------------------------------------------
-// ciInstance::field_value_impl
 ciConstant ciInstance::field_value_impl(BasicType field_btype, int offset) {
   oop obj = get_oop();
   switch (field_btype) {
@@ -58,7 +54,7 @@ ciConstant ciInstance::field_value_impl(BasicType field_btype, int offset) {
       if (o == NULL) {
         return ciConstant(field_btype, ciNullObject::make());
       } else {
-        return ciConstant(field_btype, CURRENT_ENV->get_object(o));
+        return ciConstant(field_btype, ciEnv::current()->get_object(o));
       }
     }
     default:
@@ -67,17 +63,11 @@ ciConstant ciInstance::field_value_impl(BasicType field_btype, int offset) {
   }
 }
 
-// ------------------------------------------------------------------
-// ciInstance::field_value
-//
 // Constant value of a field.
 ciConstant ciInstance::field_value(ciField* field) {
   GUARDED_VM_ENTRY(return field_value_impl(field->type()->basic_type(), field->offset());)
 }
 
-// ------------------------------------------------------------------
-// ciInstance::field_value_by_offset
-//
 // Constant value of a field at the specified offset.
 ciConstant ciInstance::field_value_by_offset(int field_offset) {
   ciInstanceKlass* ik = klass()->as_instance_klass();
@@ -87,9 +77,6 @@ ciConstant ciInstance::field_value_by_offset(int field_offset) {
   return field_value(field);
 }
 
-// ------------------------------------------------------------------
-// ciInstance::print_impl
-//
 // Implementation of the print method.
 void ciInstance::print_impl(outputStream* st) {
   st->print(" type=");
@@ -98,5 +85,5 @@ void ciInstance::print_impl(outputStream* st) {
 
 ciKlass* ciInstance::java_lang_Class_klass() {
   VM_ENTRY_MARK;
-  return CURRENT_ENV->get_metadata(java_lang_Class::as_Klass(get_oop()))->as_klass();
+  return ciEnv::current()->get_metadata(java_lang_Class::as_Klass(get_oop()))->as_klass();
 }

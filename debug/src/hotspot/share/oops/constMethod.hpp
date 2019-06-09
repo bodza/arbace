@@ -243,7 +243,7 @@ public:
   }
 
   // constant pool
-  ConstantPool* constants() const        { return _constants; }
+  ConstantPool* constants()        const { return _constants; }
   void set_constants(ConstantPool* c)    { _constants = c; }
 
   Method* method() const;
@@ -294,11 +294,11 @@ public:
   }
 
   // name
-  int name_index() const              { return _name_index; }
+  int name_index()              const { return _name_index; }
   void set_name_index(int index)      { _name_index = index; }
 
   // signature
-  int signature_index() const         { return _signature_index; }
+  int signature_index()         const { return _signature_index; }
   void set_signature_index(int index) { _signature_index = index; }
 
   // generics support
@@ -322,14 +322,14 @@ public:
   // Size needed
   static int size(int code_size, InlineTableSizes* sizes);
 
-  int size() const                    { return _constMethod_size; }
+  int size()                    const { return _constMethod_size; }
   void set_constMethod_size(int size)     { _constMethod_size = size; }
 
   // ConstMethods should be stored in the read-only region of CDS archive.
   static bool is_read_only_by_default() { return true; }
 
   // code size
-  int code_size() const                          { return _code_size; }
+  int code_size()                          const { return _code_size; }
   void set_code_size(int size) {
     _code_size = size;
   }
@@ -423,9 +423,9 @@ public:
       memcpy(code_base(), code, code_size());
     }
   }
-  address code_base() const            { return (address) (this + 1); }
-  address code_end() const             { return code_base() + code_size(); }
-  bool    contains(address bcp) const  { return code_base() <= bcp && bcp < code_end(); }
+  address code_base()            const { return (address) (this + 1); }
+  address code_end()             const { return code_base() + code_size(); }
+  bool    contains(address bcp)  const { return code_base() <= bcp && bcp < code_end(); }
   // Offset to bytecodes
   static ByteSize codes_offset() { return in_ByteSize(sizeof(ConstMethod)); }
 
@@ -440,22 +440,22 @@ public:
   // Unique id for the method
   static const u2 MAX_IDNUM;
   static const u2 UNSET_IDNUM;
-  u2 method_idnum() const                        { return _method_idnum; }
+  u2 method_idnum()                        const { return _method_idnum; }
   void set_method_idnum(u2 idnum)                { _method_idnum = idnum; }
 
-  u2 orig_method_idnum() const                   { return _orig_method_idnum; }
+  u2 orig_method_idnum()                   const { return _orig_method_idnum; }
   void set_orig_method_idnum(u2 idnum)           { _orig_method_idnum = idnum; }
 
   // max stack
-  int  max_stack() const                         { return _max_stack; }
+  int  max_stack()                         const { return _max_stack; }
   void set_max_stack(int size)                   { _max_stack = size; }
 
   // max locals
-  int  max_locals() const                        { return _max_locals; }
+  int  max_locals()                        const { return _max_locals; }
   void set_max_locals(int size)                  { _max_locals = size; }
 
   // size of parameters
-  int  size_of_parameters() const                { return _size_of_parameters; }
+  int  size_of_parameters()                const { return _size_of_parameters; }
   void set_size_of_parameters(int size)          { _size_of_parameters = size; }
 
   void set_result_type(BasicType rt)             { _result_type = (u1)rt; }
@@ -483,9 +483,6 @@ private:
   void print_value_on(outputStream* st) const;
 
   const char* internal_name() const { return "{constMethod}"; }
-
-  // Verify
-  void verify_on(outputStream* st);
 };
 
 #endif

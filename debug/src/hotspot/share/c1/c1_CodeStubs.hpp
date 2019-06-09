@@ -30,11 +30,11 @@ class CodeStub: public CompilationResourceObj {
   // code generation
   void assert_no_unbound_labels()                { }
   virtual void emit_code(LIR_Assembler* e) = 0;
-  virtual CodeEmitInfo* info() const             { return NULL; }
-  virtual bool is_exception_throw_stub() const   { return false; }
-  virtual bool is_range_check_stub() const       { return false; }
-  virtual bool is_divbyzero_stub() const         { return false; }
-  virtual bool is_simple_exception_stub() const  { return false; }
+  virtual CodeEmitInfo* info()             const { return NULL; }
+  virtual bool is_exception_throw_stub()   const { return false; }
+  virtual bool is_range_check_stub()       const { return false; }
+  virtual bool is_divbyzero_stub()         const { return false; }
+  virtual bool is_simple_exception_stub()  const { return false; }
 
   // label access
   Label* entry()                                 { return &_entry; }
@@ -51,23 +51,6 @@ class CodeStubList: public GrowableArray<CodeStub*> {
     if (!contains(stub)) {
       GrowableArray<CodeStub*>::append(stub);
     }
-  }
-};
-
-class CounterOverflowStub: public CodeStub {
- private:
-  CodeEmitInfo* _info;
-  int           _bci;
-  LIR_Opr       _method;
-
-public:
-  CounterOverflowStub(CodeEmitInfo* info, int bci, LIR_Opr method) :  _info(info), _bci(bci), _method(method) { }
-
-  virtual void emit_code(LIR_Assembler* e);
-
-  virtual void visit(LIR_OpVisitState* visitor) {
-    visitor->do_slow_case(_info);
-    visitor->do_input(_method);
   }
 };
 
@@ -111,27 +94,13 @@ class RangeCheckStub: public CodeStub {
   // For IndexOutOfBoundsException.
   RangeCheckStub(CodeEmitInfo* info, LIR_Opr index);
   virtual void emit_code(LIR_Assembler* e);
-  virtual CodeEmitInfo* info() const             { return _info; }
-  virtual bool is_exception_throw_stub() const   { return true; }
-  virtual bool is_range_check_stub() const       { return true; }
+  virtual CodeEmitInfo* info()             const { return _info; }
+  virtual bool is_exception_throw_stub()   const { return true; }
+  virtual bool is_range_check_stub()       const { return true; }
   virtual void visit(LIR_OpVisitState* visitor) {
     visitor->do_slow_case(_info);
     visitor->do_input(_index);
     if (_array) { visitor->do_input(_array); }
-  }
-};
-
-// stub used when predicate fails and deoptimization is needed
-class PredicateFailedStub: public CodeStub {
- private:
-  CodeEmitInfo* _info;
-
- public:
-  PredicateFailedStub(CodeEmitInfo* info);
-  virtual void emit_code(LIR_Assembler* e);
-  virtual CodeEmitInfo* info() const             { return _info; }
-  virtual void visit(LIR_OpVisitState* visitor) {
-    visitor->do_slow_case(_info);
   }
 };
 
@@ -148,9 +117,9 @@ class DivByZeroStub: public CodeStub {
     : _info(info), _offset(offset) {
   }
   virtual void emit_code(LIR_Assembler* e);
-  virtual CodeEmitInfo* info() const             { return _info; }
-  virtual bool is_exception_throw_stub() const   { return true; }
-  virtual bool is_divbyzero_stub() const         { return true; }
+  virtual CodeEmitInfo* info()             const { return _info; }
+  virtual bool is_exception_throw_stub()   const { return true; }
+  virtual bool is_divbyzero_stub()         const { return true; }
   virtual void visit(LIR_OpVisitState* visitor) {
     visitor->do_slow_case(_info);
   }
@@ -166,8 +135,8 @@ class ImplicitNullCheckStub: public CodeStub {
     : _offset(offset), _info(info) {
   }
   virtual void emit_code(LIR_Assembler* e);
-  virtual CodeEmitInfo* info() const             { return _info; }
-  virtual bool is_exception_throw_stub() const   { return true; }
+  virtual CodeEmitInfo* info()             const { return _info; }
+  virtual bool is_exception_throw_stub()   const { return true; }
   virtual void visit(LIR_OpVisitState* visitor) {
     visitor->do_slow_case(_info);
   }
@@ -184,7 +153,7 @@ class NewInstanceStub: public CodeStub {
  public:
   NewInstanceStub(LIR_Opr klass_reg, LIR_Opr result, ciInstanceKlass* klass, CodeEmitInfo* info, Runtime1::StubID stub_id);
   virtual void emit_code(LIR_Assembler* e);
-  virtual CodeEmitInfo* info() const             { return _info; }
+  virtual CodeEmitInfo* info()             const { return _info; }
   virtual void visit(LIR_OpVisitState* visitor) {
     visitor->do_slow_case(_info);
     visitor->do_input(_klass_reg);
@@ -202,7 +171,7 @@ class NewTypeArrayStub: public CodeStub {
  public:
   NewTypeArrayStub(LIR_Opr klass_reg, LIR_Opr length, LIR_Opr result, CodeEmitInfo* info);
   virtual void emit_code(LIR_Assembler* e);
-  virtual CodeEmitInfo* info() const             { return _info; }
+  virtual CodeEmitInfo* info()             const { return _info; }
   virtual void visit(LIR_OpVisitState* visitor) {
     visitor->do_slow_case(_info);
     visitor->do_input(_klass_reg);
@@ -221,7 +190,7 @@ class NewObjectArrayStub: public CodeStub {
  public:
   NewObjectArrayStub(LIR_Opr klass_reg, LIR_Opr length, LIR_Opr result, CodeEmitInfo* info);
   virtual void emit_code(LIR_Assembler* e);
-  virtual CodeEmitInfo* info() const             { return _info; }
+  virtual CodeEmitInfo* info()             const { return _info; }
   virtual void visit(LIR_OpVisitState* visitor) {
     visitor->do_slow_case(_info);
     visitor->do_input(_klass_reg);
@@ -250,7 +219,7 @@ class MonitorEnterStub: public MonitorAccessStub {
   MonitorEnterStub(LIR_Opr obj_reg, LIR_Opr lock_reg, CodeEmitInfo* info);
 
   virtual void emit_code(LIR_Assembler* e);
-  virtual CodeEmitInfo* info() const             { return _info; }
+  virtual CodeEmitInfo* info()             const { return _info; }
   virtual void visit(LIR_OpVisitState* visitor) {
     visitor->do_input(_obj_reg);
     visitor->do_input(_lock_reg);
@@ -282,8 +251,7 @@ class PatchingStub: public CodeStub {
   enum PatchID {
     access_field_id,
     load_klass_id,
-    load_mirror_id,
-    load_appendix_id
+    load_mirror_id
   };
   enum constants {
     patch_info_size = 3
@@ -329,44 +297,22 @@ class PatchingStub: public CodeStub {
       // that we can refernce either the high or low word of a double word field.
       int field_offset = 0;
       switch (patch_code) {
-      case lir_patch_low:         field_offset = lo_word_offset_in_bytes; break;
-      case lir_patch_high:        field_offset = hi_word_offset_in_bytes; break;
-      case lir_patch_normal:      field_offset = 0;                       break;
-      default: ShouldNotReachHere();
+        case lir_patch_normal: field_offset = 0; break;
+        default: ShouldNotReachHere();
       }
       NativeMovRegMem* n_move = nativeMovRegMem_at(pc_start());
       n_move->set_offset(field_offset);
-    } else if (_id == load_klass_id || _id == load_mirror_id || _id == load_appendix_id) {
+    } else if (_id == load_klass_id || _id == load_mirror_id) {
     } else {
       ShouldNotReachHere();
     }
   }
 
-  address pc_start() const                       { return _pc_start; }
-  PatchID id() const                             { return _id; }
+  address pc_start() const { return _pc_start; }
+  PatchID id()       const { return _id; }
 
   virtual void emit_code(LIR_Assembler* e);
-  virtual CodeEmitInfo* info() const             { return _info; }
-  virtual void visit(LIR_OpVisitState* visitor) {
-    visitor->do_slow_case(_info);
-  }
-};
-
-//------------------------------------------------------------------------------
-// NULL
-//
-class NULL : public CodeStub {
-private:
-  CodeEmitInfo* _info;
-  jint _trap_request;
-
-public:
-  NULL(CodeEmitInfo* info, NULL::NULL reason, NULL::NULL action) :
-    _info(new CodeEmitInfo(info)), _trap_request(NULL::make_trap_request(reason, action)) { }
-
-  virtual void emit_code(LIR_Assembler* e);
-  virtual CodeEmitInfo* info() const           { return _info; }
-  virtual bool is_exception_throw_stub() const { return true; }
+  virtual CodeEmitInfo* info() const { return _info; }
   virtual void visit(LIR_OpVisitState* visitor) {
     visitor->do_slow_case(_info);
   }
@@ -388,9 +334,9 @@ class SimpleExceptionStub: public CodeStub {
   }
 
   virtual void emit_code(LIR_Assembler* e);
-  virtual CodeEmitInfo* info() const             { return _info; }
-  virtual bool is_exception_throw_stub() const   { return true; }
-  virtual bool is_simple_exception_stub() const  { return true; }
+  virtual CodeEmitInfo* info()             const { return _info; }
+  virtual bool is_exception_throw_stub()   const { return true; }
+  virtual bool is_simple_exception_stub()  const { return true; }
   virtual void visit(LIR_OpVisitState* visitor) {
     if (_obj->is_valid()) visitor->do_input(_obj);
     visitor->do_slow_case(_info);
@@ -412,15 +358,15 @@ class ArrayCopyStub: public CodeStub {
  public:
   ArrayCopyStub(LIR_OpArrayCopy* op): _op(op) { }
 
-  LIR_Opr src() const                         { return _op->src(); }
-  LIR_Opr src_pos() const                     { return _op->src_pos(); }
-  LIR_Opr dst() const                         { return _op->dst(); }
-  LIR_Opr dst_pos() const                     { return _op->dst_pos(); }
-  LIR_Opr length() const                      { return _op->length(); }
-  LIR_Opr tmp() const                         { return _op->tmp(); }
+  LIR_Opr src()                         const { return _op->src(); }
+  LIR_Opr src_pos()                     const { return _op->src_pos(); }
+  LIR_Opr dst()                         const { return _op->dst(); }
+  LIR_Opr dst_pos()                     const { return _op->dst_pos(); }
+  LIR_Opr length()                      const { return _op->length(); }
+  LIR_Opr tmp()                         const { return _op->tmp(); }
 
   virtual void emit_code(LIR_Assembler* e);
-  virtual CodeEmitInfo* info() const          { return _op->info(); }
+  virtual CodeEmitInfo* info()          const { return _op->info(); }
   virtual void visit(LIR_OpVisitState* visitor) {
     // don't pass in the code emit info since it's processed in the fast path
     visitor->do_slow_case();

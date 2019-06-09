@@ -28,11 +28,11 @@ class ObjArrayKlass : public ArrayKlass {
   ObjArrayKlass() { }
 
   // Instance variables
-  Klass* element_klass() const     { return _element_klass; }
+  Klass* element_klass()     const { return _element_klass; }
   void set_element_klass(Klass* k) { _element_klass = k; }
   Klass** element_klass_addr()     { return &_element_klass; }
 
-  Klass* bottom_klass() const      { return _bottom_klass; }
+  Klass* bottom_klass()      const { return _bottom_klass; }
   void set_bottom_klass(Klass* k)  { _bottom_klass = k; }
   Klass** bottom_klass_addr()      { return &_bottom_klass; }
 
@@ -84,7 +84,7 @@ class ObjArrayKlass : public ArrayKlass {
 
   // Sizing
   static int header_size()                { return sizeof(ObjArrayKlass)/wordSize; }
-  int size() const                        { return ArrayKlass::static_size(header_size()); }
+  int size()                        const { return ArrayKlass::static_size(header_size()); }
 
   // Initialization (virtual from Klass)
   void initialize(TRAPS);
@@ -137,11 +137,6 @@ class ObjArrayKlass : public ArrayKlass {
   void oop_print_value_on(oop obj, outputStream* st);
 
   const char* internal_name() const;
-
-  // Verification
-  void verify_on(outputStream* st);
-
-  void oop_verify_on(oop obj, outputStream* st);
 };
 
 #endif

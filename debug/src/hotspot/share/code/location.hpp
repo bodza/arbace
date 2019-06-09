@@ -72,10 +72,10 @@ class Location {
   unsigned offset() const { return (unsigned) ((_value & OFFSET_MASK) >> OFFSET_SHIFT); }
 
   // Accessors
-  bool is_register() const    { return where() == in_register; }
-  bool is_stack() const       { return where() == on_stack; }
+  bool is_register()    const { return where() == in_register; }
+  bool is_stack()       const { return where() == on_stack; }
 
-  int stack_offset() const    { return offset() << LogBytesPerInt; }
+  int stack_offset()    const { return offset() << LogBytesPerInt; }
   int register_number() const { return offset(); }
 
   VMReg reg() const { return VMRegImpl::as_VMReg(offset()); }

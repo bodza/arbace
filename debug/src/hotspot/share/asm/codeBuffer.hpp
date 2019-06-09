@@ -19,10 +19,7 @@ public:
   enum Entries { Entry,
                  Verified_Entry,
                  Frame_Complete, // Offset in the code where the frame setup is (for forte stackwalks) is complete
-                 OSR_Entry,
                  Exceptions,     // Offset where exception handler lives
-                 Deopt,          // Offset where deopt handler lives
-                 DeoptMH,        // Offset where MethodHandle deopt handler lives
                  UnwindHandler,  // Offset to default unwind handler
                  max_Entries };
 
@@ -39,10 +36,7 @@ public:
     _values[Entry         ] = 0;
     _values[Verified_Entry] = 0;
     _values[Frame_Complete] = frame_never_safe;
-    _values[OSR_Entry     ] = 0;
     _values[Exceptions    ] = -1;
-    _values[Deopt         ] = -1;
-    _values[DeoptMH       ] = -1;
     _values[UnwindHandler ] = -1;
   }
 
@@ -117,40 +111,40 @@ class CodeSection {
   }
 
  public:
-  address     start() const         { return _start; }
-  address     mark() const          { return _mark; }
-  address     end() const           { return _end; }
-  address     limit() const         { return _limit; }
-  csize_t     size() const          { return (csize_t)(_end - _start); }
-  csize_t     mark_off() const      { return (csize_t)(_mark - _start); }
-  csize_t     capacity() const      { return (csize_t)(_limit - _start); }
-  csize_t     remaining() const     { return (csize_t)(_limit - _end); }
+  address     start()         const { return _start; }
+  address     mark()          const { return _mark; }
+  address     end()           const { return _end; }
+  address     limit()         const { return _limit; }
+  csize_t     size()          const { return (csize_t)(_end - _start); }
+  csize_t     mark_off()      const { return (csize_t)(_mark - _start); }
+  csize_t     capacity()      const { return (csize_t)(_limit - _start); }
+  csize_t     remaining()     const { return (csize_t)(_limit - _end); }
 
-  relocInfo*  locs_start() const    { return _locs_start; }
-  relocInfo*  locs_end() const      { return _locs_end; }
-  int         locs_count() const    { return (int)(_locs_end - _locs_start); }
-  relocInfo*  locs_limit() const    { return _locs_limit; }
-  address     locs_point() const    { return _locs_point; }
-  csize_t     locs_point_off() const{ return (csize_t)(_locs_point - _start); }
+  relocInfo*  locs_start()    const { return _locs_start; }
+  relocInfo*  locs_end()      const { return _locs_end; }
+  int         locs_count()    const { return (int)(_locs_end - _locs_start); }
+  relocInfo*  locs_limit()    const { return _locs_limit; }
+  address     locs_point()    const { return _locs_point; }
+  csize_t     locs_point_off() const { return (csize_t)(_locs_point - _start); }
   csize_t     locs_capacity() const { return (csize_t)(_locs_limit - _locs_start); }
-  csize_t     locs_remaining()const { return (csize_t)(_locs_limit - _locs_end); }
+  csize_t     locs_remaining() const { return (csize_t)(_locs_limit - _locs_end); }
 
-  int         index() const         { return _index; }
-  bool        is_allocated() const  { return _start != NULL; }
-  bool        is_empty() const      { return _start == _end; }
-  bool        is_frozen() const     { return _frozen; }
-  bool        has_locs() const      { return _locs_end != NULL; }
+  int         index()         const { return _index; }
+  bool        is_allocated()  const { return _start != NULL; }
+  bool        is_empty()      const { return _start == _end; }
+  bool        is_frozen()     const { return _frozen; }
+  bool        has_locs()      const { return _locs_end != NULL; }
 
   // Mark scratch buffer.
   void        set_scratch_emit()    { _scratch_emit = true; }
   bool        scratch_emit()        { return _scratch_emit; }
 
-  CodeBuffer* outer() const         { return _outer; }
+  CodeBuffer* outer()         const { return _outer; }
 
   // is a given address in this section?  (2nd version is end-inclusive)
-  bool contains(address pc) const   { return pc >= _start && pc <  _end; }
-  bool contains2(address pc) const  { return pc >= _start && pc <= _end; }
-  bool allocates(address pc) const  { return pc >= _start && pc <  _limit; }
+  bool contains(address pc)   const { return pc >= _start && pc <  _end; }
+  bool contains2(address pc)  const { return pc >= _start && pc <= _end; }
+  bool allocates(address pc)  const { return pc >= _start && pc <  _limit; }
   bool allocates2(address pc) const { return pc >= _start && pc <= _limit; }
 
   void    set_end(address pc)       { _end = pc; }
@@ -186,7 +180,7 @@ class CodeSection {
   // Requirements are that the instruction area and the
   // stubs area must start on CodeEntryAlignment, and
   // the ctable on sizeof(jdouble)
-  int alignment() const             { return MAX2((int)sizeof(jdouble), (int)CodeEntryAlignment); }
+  int alignment()             const { return MAX2((int)sizeof(jdouble), (int)CodeEntryAlignment); }
 
   // Slop between sections, used only when allocating temporary BufferBlob buffers.
   static csize_t end_slop()         { return MAX2((int)sizeof(jdouble), (int)CodeEntryAlignment); }
@@ -430,38 +424,38 @@ class CodeBuffer: public StackObj {
   bool is_backward_branch(Label& L);
 
   // Properties
-  const char* name() const                  { return _name; }
+  const char* name()                  const { return _name; }
   void set_name(const char* name)           { _name = name; }
-  CodeBuffer* before_expand() const         { return _before_expand; }
-  BufferBlob* blob() const                  { return _blob; }
+  CodeBuffer* before_expand()         const { return _before_expand; }
+  BufferBlob* blob()                  const { return _blob; }
   void    set_blob(BufferBlob* blob);
   void   free_blob();                       // Free the blob, if we own one.
 
   // Properties relative to the insts section:
-  address       insts_begin() const      { return _insts.start();      }
-  address       insts_end() const        { return _insts.end();        }
+  address       insts_begin()      const { return _insts.start();      }
+  address       insts_end()        const { return _insts.end();        }
   void      set_insts_end(address end)   {        _insts.set_end(end); }
-  address       insts_limit() const      { return _insts.limit();      }
-  address       insts_mark() const       { return _insts.mark();       }
+  address       insts_limit()      const { return _insts.limit();      }
+  address       insts_mark()       const { return _insts.mark();       }
   void      set_insts_mark()             {        _insts.set_mark();   }
   void    clear_insts_mark()             {        _insts.clear_mark(); }
 
   // is there anything in the buffer other than the current section?
-  bool    is_pure() const                { return insts_size() == total_content_size(); }
+  bool    is_pure()                const { return insts_size() == total_content_size(); }
 
   // size in bytes of output so far in the insts sections
-  csize_t insts_size() const             { return _insts.size(); }
+  csize_t insts_size()             const { return _insts.size(); }
 
   // same as insts_size(), except that it asserts there is no non-code here
-  csize_t pure_insts_size() const        { return insts_size(); }
+  csize_t pure_insts_size()        const { return insts_size(); }
   // capacity in bytes of the insts sections
-  csize_t insts_capacity() const         { return _insts.capacity(); }
+  csize_t insts_capacity()         const { return _insts.capacity(); }
 
   // number of bytes remaining in the insts section
-  csize_t insts_remaining() const        { return _insts.remaining(); }
+  csize_t insts_remaining()        const { return _insts.remaining(); }
 
   // is a given address in the insts section?  (2nd version is end-inclusive)
-  bool insts_contains(address pc) const  { return _insts.contains(pc); }
+  bool insts_contains(address pc)  const { return _insts.contains(pc); }
   bool insts_contains2(address pc) const { return _insts.contains2(pc); }
 
   // Record any extra oops required to keep embedded metadata alive
@@ -501,7 +495,7 @@ class CodeBuffer: public StackObj {
   // Override default oop recorder.
   void initialize_oop_recorder(OopRecorder* r);
 
-  OopRecorder* oop_recorder() const   { return _oop_recorder; }
+  OopRecorder* oop_recorder()   const { return _oop_recorder; }
   CodeStrings& strings()              { return _code_strings; }
 
   address last_insn() const { return _last_insn; }

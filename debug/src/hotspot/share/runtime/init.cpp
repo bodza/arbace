@@ -6,7 +6,6 @@
 #include "gc/shared/collectedHeap.hpp"
 #include "interpreter/bytecodes.hpp"
 #include "memory/universe.hpp"
-#include "prims/methodHandles.hpp"
 #include "runtime/flags/jvmFlag.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/icache.hpp"
@@ -48,7 +47,6 @@ void vtableStubs_init();
 void InlineCacheBuffer_init();
 void compilerOracle_init();
 bool compileBroker_init();
-void dependencyContext_init();
 
 // Initialization after compiler initialization
 bool universe_post_init();  // must happen after compiler_init
@@ -96,7 +94,6 @@ jint init_globals() {
   vtableStubs_init();
   InlineCacheBuffer_init();
   compilerOracle_init();
-  dependencyContext_init();
 
   if (!compileBroker_init()) {
     return JNI_EINVAL;
@@ -107,7 +104,6 @@ jint init_globals() {
     return JNI_ERR;
   }
   stubRoutines_init2(); // note: StubRoutines need 2-phase init
-  MethodHandles::generate_adapters();
 
   // All the flags that get adjusted by VM_Version_init and os::init_2
   // have been set so dump the flags now.

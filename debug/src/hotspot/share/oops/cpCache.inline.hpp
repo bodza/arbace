@@ -46,10 +46,6 @@ inline bool ConstantPoolCacheEntry::has_appendix() const {
   return (!is_f1_null()) && (_flags & (1 << has_appendix_shift)) != 0;
 }
 
-inline bool ConstantPoolCacheEntry::has_method_type() const {
-  return (!is_f1_null()) && (_flags & (1 << has_method_type_shift)) != 0;
-}
-
 inline intx ConstantPoolCacheEntry::flags_ord() const { return (intx)OrderAccess::load_acquire(&_flags); }
 
 inline bool ConstantPoolCacheEntry::indy_resolution_failed() const {

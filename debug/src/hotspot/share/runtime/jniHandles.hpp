@@ -137,7 +137,7 @@ class JNIHandleBlock : public CHeapObj<mtInternal> {
   static void release_block(JNIHandleBlock* block, Thread* thread = NULL);
 
   // JNI PushLocalFrame/PopLocalFrame support
-  JNIHandleBlock* pop_frame_link() const          { return _pop_frame_link; }
+  JNIHandleBlock* pop_frame_link()          const { return _pop_frame_link; }
   void set_pop_frame_link(JNIHandleBlock* block)  { _pop_frame_link = block; }
 
   // Stub generator support

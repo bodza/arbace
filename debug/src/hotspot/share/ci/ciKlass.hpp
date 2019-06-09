@@ -64,7 +64,7 @@ public:
   static juint primary_super_limit() { return Klass::primary_super_limit(); }
 
   // Is this ciObject the ciInstanceKlass representing java.lang.Object()?
-  virtual bool is_java_lang_Object() const  { return false; }
+  virtual bool is_java_lang_Object()  const { return false; }
 
   // Get the shared parent of two klasses.
   ciKlass* least_common_ancestor(ciKlass* k);

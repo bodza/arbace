@@ -19,9 +19,6 @@
 // This class represents a Klass* in the HotSpot virtual machine
 // whose Klass part in an InstanceKlass.
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::ciInstanceKlass
-//
 // Loaded instance klass.
 ciInstanceKlass::ciInstanceKlass(Klass* k) : ciKlass(k) {
   InstanceKlass* ik = get_instanceKlass();
@@ -51,7 +48,7 @@ ciInstanceKlass::ciInstanceKlass(Klass* k) : ciKlass(k) {
     // It is enough to record a ciObject, since cached elements are never removed
     // during ciObjectFactory lifetime. ciObjectFactory itself is created for
     // every compilation and lives for the whole duration of the compilation.
-    (void)CURRENT_ENV->get_object(holder);
+    (void)ciEnv::current()->get_object(holder);
   }
 
   Thread *thread = Thread::current();
@@ -97,8 +94,6 @@ ciInstanceKlass::ciInstanceKlass(ciSymbol* name, jobject loader, jobject protect
   _field_cache = NULL;
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::compute_shared_is_initialized
 void ciInstanceKlass::compute_shared_init_state() {
   GUARDED_VM_ENTRY(
     InstanceKlass* ik = get_instanceKlass();
@@ -106,8 +101,6 @@ void ciInstanceKlass::compute_shared_init_state() {
   )
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::compute_shared_has_subklass
 bool ciInstanceKlass::compute_shared_has_subklass() {
   GUARDED_VM_ENTRY(
     InstanceKlass* ik = get_instanceKlass();
@@ -116,54 +109,38 @@ bool ciInstanceKlass::compute_shared_has_subklass() {
   )
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::loader
 oop ciInstanceKlass::loader() {
-  ASSERT_IN_VM;
   return JNIHandles::resolve(_loader);
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::loader_handle
 jobject ciInstanceKlass::loader_handle() {
   return _loader;
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::protection_domain
 oop ciInstanceKlass::protection_domain() {
-  ASSERT_IN_VM;
   return JNIHandles::resolve(_protection_domain);
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::protection_domain_handle
 jobject ciInstanceKlass::protection_domain_handle() {
   return _protection_domain;
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::field_cache
-//
 // Get the field cache associated with this klass.
 ciConstantPoolCache* ciInstanceKlass::field_cache() {
   if (is_shared()) {
     return NULL;
   }
   if (_field_cache == NULL) {
-    Arena* arena = CURRENT_ENV->arena();
+    Arena* arena = ciEnv::current()->arena();
     _field_cache = new (arena) ciConstantPoolCache(arena, 5);
   }
   return _field_cache;
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::get_canonical_holder
-//
 ciInstanceKlass* ciInstanceKlass::get_canonical_holder(int offset) {
   if (offset < instanceOopDesc::base_offset_in_bytes()) {
     // All header offsets belong properly to java/lang/Object.
-    return CURRENT_ENV->Object_klass();
+    return ciEnv::current()->Object_klass();
   }
 
   ciInstanceKlass* self = this;
@@ -177,16 +154,11 @@ ciInstanceKlass* ciInstanceKlass::get_canonical_holder(int offset) {
   }
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::is_java_lang_Object
-//
 // Is this klass java.lang.Object?
 bool ciInstanceKlass::is_java_lang_Object() const {
-  return equals(CURRENT_ENV->Object_klass());
+  return equals(ciEnv::current()->Object_klass());
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::uses_default_loader
 bool ciInstanceKlass::uses_default_loader() const {
   // Note:  We do not need to resolve the handle or enter the VM
   // in order to test null-ness.
@@ -221,9 +193,6 @@ bool ciInstanceKlass::is_boxed_value_offset(int offset) const {
   return is_java_primitive(bt) && (offset == java_lang_boxing_object::value_offset_in_bytes(bt));
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::is_in_package
-//
 // Is this klass in the given package?
 bool ciInstanceKlass::is_in_package(const char* packagename, int len) {
   // To avoid class loader mischief, this test always rejects application classes.
@@ -235,8 +204,6 @@ bool ciInstanceKlass::is_in_package(const char* packagename, int len) {
 }
 
 bool ciInstanceKlass::is_in_package_impl(const char* packagename, int len) {
-  ASSERT_IN_VM;
-
   // If packagename contains trailing '/' exclude it from the
   // prefix-test since we test for it explicitly.
   if (packagename[len - 1] == '/')
@@ -260,9 +227,6 @@ bool ciInstanceKlass::is_in_package_impl(const char* packagename, int len) {
   return true;
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::print_impl
-//
 // Implementation of the print method.
 void ciInstanceKlass::print_impl(outputStream* st) {
   ciKlass::print_impl(st);
@@ -288,23 +252,17 @@ void ciInstanceKlass::print_impl(outputStream* st) {
   }
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::super
-//
 // Get the superklass of this klass.
 ciInstanceKlass* ciInstanceKlass::super() {
   if (_super == NULL && !is_java_lang_Object()) {
     GUARDED_VM_ENTRY(
       Klass* super_klass = get_instanceKlass()->super();
-      _super = CURRENT_ENV->get_instance_klass(super_klass);
+      _super = ciEnv::current()->get_instance_klass(super_klass);
     )
   }
   return _super;
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::java_mirror
-//
 // Get the instance of java.lang.Class corresponding to this klass.
 // Cache it on this->_java_mirror.
 ciInstance* ciInstanceKlass::java_mirror() {
@@ -317,8 +275,6 @@ ciInstance* ciInstanceKlass::java_mirror() {
   return _java_mirror;
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::unique_concrete_subklass
 ciInstanceKlass* ciInstanceKlass::unique_concrete_subklass() {
   if (!is_loaded())     return NULL; // No change if class is not loaded
   if (!is_abstract())   return NULL; // Only applies to abstract classes.
@@ -329,19 +285,9 @@ ciInstanceKlass* ciInstanceKlass::unique_concrete_subklass() {
   if (ik == up) {
     return NULL;
   }
-  return CURRENT_THREAD_ENV->get_instance_klass(up);
+  return ciEnv::current(thread)->get_instance_klass(up);
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::has_finalizable_subclass
-bool ciInstanceKlass::has_finalizable_subclass() {
-  if (!is_loaded())     return true;
-  VM_ENTRY_MARK;
-  return Dependencies::find_finalizable_subclass(get_instanceKlass()) != NULL;
-}
-
-// ------------------------------------------------------------------
-// ciInstanceKlass::get_field_by_offset
 ciField* ciInstanceKlass::get_field_by_offset(int field_offset, bool is_static) {
   if (!is_static) {
     for (int i = 0, len = nof_nonstatic_fields(); i < len; i++) {
@@ -361,12 +307,10 @@ ciField* ciInstanceKlass::get_field_by_offset(int field_offset, bool is_static) 
   if (!k->find_field_from_offset(field_offset, is_static, &fd)) {
     return NULL;
   }
-  ciField* field = new (CURRENT_THREAD_ENV->arena()) ciField(&fd);
+  ciField* field = new (ciEnv::current(thread)->arena()) ciField(&fd);
   return field;
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::get_field_by_name
 ciField* ciInstanceKlass::get_field_by_name(ciSymbol* name, ciSymbol* signature, bool is_static) {
   VM_ENTRY_MARK;
   InstanceKlass* k = get_instanceKlass();
@@ -375,7 +319,7 @@ ciField* ciInstanceKlass::get_field_by_name(ciSymbol* name, ciSymbol* signature,
   if (def == NULL) {
     return NULL;
   }
-  ciField* field = new (CURRENT_THREAD_ENV->arena()) ciField(&fd);
+  ciField* field = new (ciEnv::current(thread)->arena()) ciField(&fd);
   return field;
 }
 
@@ -384,14 +328,12 @@ static int sort_field_by_offset(ciField** a, ciField** b) {
   // (no worries about 32-bit overflow...)
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::compute_nonstatic_fields
 int ciInstanceKlass::compute_nonstatic_fields() {
   if (_nonstatic_fields != NULL)
     return _nonstatic_fields->length();
 
   if (!has_nonstatic_fields()) {
-    Arena* arena = CURRENT_ENV->arena();
+    Arena* arena = ciEnv::current()->arena();
     _nonstatic_fields = new (arena) GrowableArray<ciField*>(arena, 0, 0, NULL);
     return 0;
   }
@@ -437,10 +379,8 @@ int ciInstanceKlass::compute_nonstatic_fields() {
 }
 
 GrowableArray<ciField*>*
-ciInstanceKlass::compute_nonstatic_fields_impl(GrowableArray<ciField*>*
-                                               super_fields) {
-  ASSERT_IN_VM;
-  Arena* arena = CURRENT_ENV->arena();
+ciInstanceKlass::compute_nonstatic_fields_impl(GrowableArray<ciField*>* super_fields) {
+  Arena* arena = ciEnv::current()->arena();
   int flen = 0;
   GrowableArray<ciField*>* fields = NULL;
   InstanceKlass* k = get_instanceKlass();
@@ -471,7 +411,6 @@ ciInstanceKlass::compute_nonstatic_fields_impl(GrowableArray<ciField*>*
 }
 
 bool ciInstanceKlass::compute_injected_fields_helper() {
-  ASSERT_IN_VM;
   InstanceKlass* k = get_instanceKlass();
 
   for (InternalFieldStream fs(k); !fs.done(); fs.next()) {
@@ -494,9 +433,6 @@ void ciInstanceKlass::compute_injected_fields() {
   _has_injected_fields = has_injected_fields;
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::find_method
-//
 // Find a method in this klass.
 ciMethod* ciInstanceKlass::find_method(ciSymbol* name, ciSymbol* signature) {
   VM_ENTRY_MARK;
@@ -505,13 +441,12 @@ ciMethod* ciInstanceKlass::find_method(ciSymbol* name, ciSymbol* signature) {
   Symbol* sig_sym= signature->get_symbol();
 
   Method* m = k->find_method(name_sym, sig_sym);
-  if (m == NULL)  return NULL;
+  if (m == NULL)
+    return NULL;
 
-  return CURRENT_THREAD_ENV->get_method(m);
+  return ciEnv::current(thread)->get_method(m);
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::is_leaf_type
 bool ciInstanceKlass::is_leaf_type() {
   if (is_shared()) {
     return is_final();  // approximately correct
@@ -520,9 +455,6 @@ bool ciInstanceKlass::is_leaf_type() {
   }
 }
 
-// ------------------------------------------------------------------
-// ciInstanceKlass::implementor
-//
 // Report an implementor of this interface.
 // Note that there are various races here, since my copy
 // of _nof_implementors might be out of date with respect
@@ -542,7 +474,7 @@ ciInstanceKlass* ciInstanceKlass::implementor() {
           // More than one implementors. Use 'this' in this case.
           impl = this;
         } else {
-          impl = CURRENT_THREAD_ENV->get_instance_klass(k);
+          impl = ciEnv::current(thread)->get_instance_klass(k);
         }
       }
     }
@@ -558,7 +490,7 @@ ciInstanceKlass* ciInstanceKlass::host_klass() {
   if (is_anonymous()) {
     VM_ENTRY_MARK
     Klass* host_klass = get_instanceKlass()->host_klass();
-    return CURRENT_ENV->get_instance_klass(host_klass);
+    return ciEnv::current()->get_instance_klass(host_klass);
   }
   return NULL;
 }
@@ -640,36 +572,3 @@ class StaticFinalFieldPrinter : public FieldClosure {
     }
   }
 };
-
-void ciInstanceKlass::dump_replay_data(outputStream* out) {
-  ResourceMark rm;
-
-  InstanceKlass* ik = get_instanceKlass();
-  ConstantPool*  cp = ik->constants();
-
-  // Try to record related loaded classes
-  Klass* sub = ik->subklass();
-  while (sub != NULL) {
-    if (sub->is_instance_klass()) {
-      out->print_cr("instanceKlass %s", sub->name()->as_quoted_ascii());
-    }
-    sub = sub->next_sibling();
-  }
-
-  // Dump out the state of the constant pool tags.  During replay the
-  // tags will be validated for things which shouldn't change and
-  // classes will be resolved if the tags indicate that they were
-  // resolved at compile time.
-  out->print("ciInstanceKlass %s %d %d %d", ik->name()->as_quoted_ascii(),
-             is_linked(), is_initialized(), cp->length());
-  for (int index = 1; index < cp->length(); index++) {
-    out->print(" %d", cp->tags()->at(index));
-  }
-  out->cr();
-  if (is_initialized()) {
-    //  Dump out the static final fields in case the compilation relies
-    //  on their value for correct replay.
-    StaticFinalFieldPrinter sffp(out, ik->name()->as_quoted_ascii());
-    ik->do_local_static_fields(&sffp);
-  }
-}

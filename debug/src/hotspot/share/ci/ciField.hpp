@@ -152,13 +152,6 @@ public:
   // (or class/initializer methods if the field is static).
   bool has_initialized_final_update() const { return flags().has_initialized_final_update(); }
 
-  bool is_call_site_target() {
-    ciInstanceKlass* callsite_klass = CURRENT_ENV->CallSite_klass();
-    if (callsite_klass == NULL)
-      return false;
-    return (holder()->is_subclass_of(callsite_klass) && (name() == ciSymbol::target_name()));
-  }
-
   bool is_autobox_cache() {
     ciSymbol* klass_name = holder()->name();
     return (name() == ciSymbol::cache_field_name() &&

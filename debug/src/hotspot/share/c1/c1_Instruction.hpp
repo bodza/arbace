@@ -42,7 +42,6 @@ class     IfOp;
 class   Convert;
 class   NullCheck;
 class   TypeCast;
-class   OsrEntry;
 class   ExceptionObject;
 class   StateSplit;
 class     Invoke;
@@ -145,15 +144,7 @@ class InstructionVisitor: public StackObj {
   virtual void do_NullCheck      (NullCheck*       x) = 0;
   virtual void do_TypeCast       (TypeCast*        x) = 0;
   virtual void do_Invoke         (Invoke*          x) = 0;
-  virtual void do_NewInstance    (NewInstance*     x) = 0;
-  virtual void do_NewTypeArray   (NewTypeArray*    x) = 0;
-  virtual void do_NewObjectArray (NewObjectArray*  x) = 0;
-  virtual void do_NewMultiArray  (NewMultiArray*   x) = 0;
-  virtual void do_CheckCast      (CheckCast*       x) = 0;
   virtual void do_InstanceOf     (InstanceOf*      x) = 0;
-  virtual void do_MonitorEnter   (MonitorEnter*    x) = 0;
-  virtual void do_MonitorExit    (MonitorExit*     x) = 0;
-  virtual void do_Intrinsic      (Intrinsic*       x) = 0;
   virtual void do_BlockBegin     (BlockBegin*      x) = 0;
   virtual void do_Goto           (Goto*            x) = 0;
   virtual void do_If             (If*              x) = 0;
@@ -163,20 +154,6 @@ class InstructionVisitor: public StackObj {
   virtual void do_Return         (Return*          x) = 0;
   virtual void do_Throw          (Throw*           x) = 0;
   virtual void do_Base           (Base*            x) = 0;
-  virtual void do_OsrEntry       (OsrEntry*        x) = 0;
-  virtual void do_ExceptionObject(ExceptionObject* x) = 0;
-  virtual void do_RoundFP        (RoundFP*         x) = 0;
-  virtual void do_UnsafeGetRaw   (UnsafeGetRaw*    x) = 0;
-  virtual void do_UnsafePutRaw   (UnsafePutRaw*    x) = 0;
-  virtual void do_UnsafeGetObject(UnsafeGetObject* x) = 0;
-  virtual void do_UnsafePutObject(UnsafePutObject* x) = 0;
-  virtual void do_UnsafeGetAndSetObject(UnsafeGetAndSetObject* x) = 0;
-  virtual void do_ProfileCall    (ProfileCall*     x) = 0;
-  virtual void do_ProfileReturnType (ProfileReturnType*  x) = 0;
-  virtual void do_ProfileInvoke  (ProfileInvoke*   x) = 0;
-  virtual void do_RuntimeCall    (RuntimeCall*     x) = 0;
-  virtual void do_MemBar         (MemBar*          x) = 0;
-  virtual void do_RangeCheckPredicate(RangeCheckPredicate* x) = 0;
 };
 
 // Hashing support
@@ -339,7 +316,7 @@ class Instruction: public CompilationResourceObj {
   };
 
  public:
-  bool check_flag(InstructionFlag id) const      { return (_flags & (1 << id)) != 0; }
+  bool check_flag(InstructionFlag id)      const { return (_flags & (1 << id)) != 0; }
   void set_flag(InstructionFlag id, bool f)      { _flags = f ? (_flags | (1 << id)) : (_flags & ~(1 << id)); };
 
   // 'globally' used condition values
@@ -383,29 +360,29 @@ class Instruction: public CompilationResourceObj {
   }
 
   // accessors
-  int id() const                                 { return _id; }
+  int id()                                 const { return _id; }
   int dominator_depth();
-  int use_count() const                          { return _use_count; }
-  int pin_state() const                          { return _pin_state; }
-  bool is_pinned() const                         { return _pin_state != 0 || PinAllInstructions; }
-  ValueType* type() const                        { return _type; }
-  BlockBegin *block() const                      { return _block; }
+  int use_count()                          const { return _use_count; }
+  int pin_state()                          const { return _pin_state; }
+  bool is_pinned()                         const { return _pin_state != 0 || PinAllInstructions; }
+  ValueType* type()                        const { return _type; }
+  BlockBegin *block()                      const { return _block; }
   Instruction* prev();                           // use carefully, expensive operation
-  Instruction* next() const                      { return _next; }
-  bool has_subst() const                         { return _subst != NULL; }
+  Instruction* next()                      const { return _next; }
+  bool has_subst()                         const { return _subst != NULL; }
   Instruction* subst()                           { return _subst == NULL ? this : _subst->subst(); }
-  LIR_Opr operand() const                        { return _operand; }
+  LIR_Opr operand()                        const { return _operand; }
 
   void set_needs_null_check(bool f)              { set_flag(NeedsNullCheckFlag, f); }
-  bool needs_null_check() const                  { return check_flag(NeedsNullCheckFlag); }
-  bool is_linked() const                         { return check_flag(IsLinkedInBlockFlag); }
+  bool needs_null_check()                  const { return check_flag(NeedsNullCheckFlag); }
+  bool is_linked()                         const { return check_flag(IsLinkedInBlockFlag); }
   bool can_be_linked()                           { return as_Local() == NULL && as_Phi() == NULL; }
 
-  bool has_uses() const                          { return use_count() > 0; }
-  ValueStack* state_before() const               { return _state_before; }
-  ValueStack* exception_state() const            { return _exception_state; }
-  virtual bool needs_exception_state() const     { return true; }
-  XHandlers* exception_handlers() const          { return _exception_handlers; }
+  bool has_uses()                          const { return use_count() > 0; }
+  ValueStack* state_before()               const { return _state_before; }
+  ValueStack* exception_state()            const { return _exception_state; }
+  virtual bool needs_exception_state()     const { return true; }
+  XHandlers* exception_handlers()          const { return _exception_handlers; }
 
   // manipulation
   void pin(PinReason reason)                     { _pin_state |= reason; }
@@ -477,7 +454,6 @@ class Instruction: public CompilationResourceObj {
   virtual IfOp*             as_IfOp()            { return NULL; }
   virtual Convert*          as_Convert()         { return NULL; }
   virtual NullCheck*        as_NullCheck()       { return NULL; }
-  virtual OsrEntry*         as_OsrEntry()        { return NULL; }
   virtual StateSplit*       as_StateSplit()      { return NULL; }
   virtual Invoke*           as_Invoke()          { return NULL; }
   virtual NewInstance*      as_NewInstance()     { return NULL; }
@@ -511,7 +487,7 @@ class Instruction: public CompilationResourceObj {
 
   virtual void visit(InstructionVisitor* v)      = 0;
 
-  virtual bool can_trap() const                  { return false; }
+  virtual bool can_trap()                  const { return false; }
 
   virtual void input_values_do(ValueVisitor* f)   = 0;
   virtual void state_values_do(ValueVisitor* f);
@@ -519,7 +495,7 @@ class Instruction: public CompilationResourceObj {
           void       values_do(ValueVisitor* f)   { input_values_do(f); state_values_do(f); other_values_do(f); }
 
   virtual ciType* exact_type() const;
-  virtual ciType* declared_type() const          { return NULL; }
+  virtual ciType* declared_type()          const { return NULL; }
 
   // hashing
   virtual const char* name() const               = 0;
@@ -544,7 +520,7 @@ class Instruction: public CompilationResourceObj {
 #define LEAF(class_name, super_class_name) \
   BASE(class_name, super_class_name) \
    public: \
-    virtual const char* name() const             { return #class_name; } \
+    virtual const char* name()             const { return #class_name; } \
     virtual void visit(InstructionVisitor* v)    { v->do_##class_name(this); }
 
 // Debugging support
@@ -580,10 +556,10 @@ LEAF(Phi, Instruction)
   };
 
   // accessors
-  bool is_local() const     { return _index >= 0; }
-  bool is_on_stack() const  { return !is_local(); }
-  int  local_index() const  { return _index; }
-  int  stack_index() const  { return -(_index + 1); }
+  bool is_local()     const { return _index >= 0; }
+  bool is_on_stack()  const { return !is_local(); }
+  int  local_index()  const { return _index; }
+  int  stack_index()  const { return -(_index + 1); }
 
   Value operand_at(int i) const;
   int  operand_count() const;
@@ -624,10 +600,10 @@ LEAF(Local, Instruction)
   }
 
   // accessors
-  int java_index() const                         { return _java_index; }
-  bool is_receiver() const                       { return _is_receiver; }
+  int java_index()                         const { return _java_index; }
+  bool is_receiver()                       const { return _is_receiver; }
 
-  virtual ciType* declared_type() const          { return _declared_type; }
+  virtual ciType* declared_type()          const { return _declared_type; }
 
   // generic
   virtual void input_values_do(ValueVisitor* f)   { /* no values */ }
@@ -649,7 +625,7 @@ LEAF(Constant, Instruction)
   }
 
   // generic
-  virtual bool can_trap() const                  { return state_before() != NULL; }
+  virtual bool can_trap()                  const { return state_before() != NULL; }
   virtual void input_values_do(ValueVisitor* f)   { /* no values */ }
 
   virtual intx hash() const;
@@ -702,18 +678,18 @@ BASE(AccessField, Instruction)
   }
 
   // accessors
-  Value obj() const                              { return _obj; }
-  int offset() const                             { return _offset; }
-  ciField* field() const                         { return _field; }
-  BasicType field_type() const                   { return _field->type()->basic_type(); }
-  bool is_static() const                         { return check_flag(IsStaticFlag); }
-  NullCheck* explicit_null_check() const         { return _explicit_null_check; }
-  bool needs_patching() const                    { return check_flag(NeedsPatchingFlag); }
+  Value obj()                              const { return _obj; }
+  int offset()                             const { return _offset; }
+  ciField* field()                         const { return _field; }
+  BasicType field_type()                   const { return _field->type()->basic_type(); }
+  bool is_static()                         const { return check_flag(IsStaticFlag); }
+  NullCheck* explicit_null_check()         const { return _explicit_null_check; }
+  bool needs_patching()                    const { return check_flag(NeedsPatchingFlag); }
 
   // Unresolved getstatic and putstatic can cause initialization.
   // Technically it occurs at the Constant that materializes the base
   // of the static fields but it's simpler to model it here.
-  bool is_init_point() const                     { return is_static() && (needs_patching() || !_field->holder()->is_initialized()); }
+  bool is_init_point()                     const { return is_static() && (needs_patching() || !_field->holder()->is_initialized()); }
 
   // manipulation
 
@@ -725,7 +701,7 @@ BASE(AccessField, Instruction)
   void set_explicit_null_check(NullCheck* check) { _explicit_null_check = check; }
 
   // generic
-  virtual bool can_trap() const                  { return needs_null_check() || needs_patching(); }
+  virtual bool can_trap()                  const { return needs_null_check() || needs_patching(); }
   virtual void input_values_do(ValueVisitor* f)   { f->visit(&_obj); }
 };
 
@@ -759,8 +735,8 @@ LEAF(StoreField, AccessField)
   }
 
   // accessors
-  Value value() const                            { return _value; }
-  bool needs_write_barrier() const               { return check_flag(NeedsWriteBarrierFlag); }
+  Value value()                            const { return _value; }
+  bool needs_write_barrier()               const { return check_flag(NeedsWriteBarrierFlag); }
 
   // generic
   virtual void input_values_do(ValueVisitor* f)   { AccessField::input_values_do(f); f->visit(&_value); }
@@ -781,10 +757,10 @@ BASE(AccessArray, Instruction)
     pin(); // instruction with side effect (null exception or range check throwing)
   }
 
-  Value array() const                            { return _array; }
+  Value array()                            const { return _array; }
 
   // generic
-  virtual bool can_trap() const                  { return needs_null_check(); }
+  virtual bool can_trap()                  const { return needs_null_check(); }
   virtual void input_values_do(ValueVisitor* f)   { f->visit(&_array); }
 };
 
@@ -799,7 +775,7 @@ LEAF(ArrayLength, AccessArray)
   , _explicit_null_check(NULL) { }
 
   // accessors
-  NullCheck* explicit_null_check() const         { return _explicit_null_check; }
+  NullCheck* explicit_null_check()         const { return _explicit_null_check; }
 
   // setters
   // See LoadField::set_explicit_null_check for documentation
@@ -830,10 +806,10 @@ BASE(AccessIndexed, AccessArray)
   }
 
   // accessors
-  Value index() const                            { return _index; }
-  Value length() const                           { return _length; }
-  BasicType elt_type() const                     { return _elt_type; }
-  bool mismatched() const                        { return _mismatched; }
+  Value index()                            const { return _index; }
+  Value length()                           const { return _length; }
+  BasicType elt_type()                     const { return _elt_type; }
+  bool mismatched()                        const { return _mismatched; }
 
   void clear_length()                            { _length = NULL; }
   // perform elimination of range checks involving constants
@@ -854,7 +830,7 @@ LEAF(LoadIndexed, AccessIndexed)
   , _explicit_null_check(NULL) { }
 
   // accessors
-  NullCheck* explicit_null_check() const         { return _explicit_null_check; }
+  NullCheck* explicit_null_check()         const { return _explicit_null_check; }
 
   // setters
   // See LoadField::set_explicit_null_check for documentation
@@ -889,17 +865,17 @@ LEAF(StoreIndexed, AccessIndexed)
   }
 
   // accessors
-  Value value() const                            { return _value; }
-  bool needs_write_barrier() const               { return check_flag(NeedsWriteBarrierFlag); }
-  bool needs_store_check() const                 { return check_flag(NeedsStoreCheckFlag); }
-  bool check_boolean() const                     { return _check_boolean; }
+  Value value()                            const { return _value; }
+  bool needs_write_barrier()               const { return check_flag(NeedsWriteBarrierFlag); }
+  bool needs_store_check()                 const { return check_flag(NeedsStoreCheckFlag); }
+  bool check_boolean()                     const { return _check_boolean; }
   // Helpers for MethodData* profiling
   void set_should_profile(bool value)                { set_flag(ProfileMDOFlag, value); }
   void set_profiled_method(ciMethod* method)         { _profiled_method = method; }
   void set_profiled_bci(int bci)                     { _profiled_bci = bci; }
-  bool      should_profile() const                   { return check_flag(ProfileMDOFlag); }
-  ciMethod* profiled_method() const                  { return _profiled_method; }
-  int       profiled_bci() const                     { return _profiled_bci; }
+  bool      should_profile()                   const { return check_flag(ProfileMDOFlag); }
+  ciMethod* profiled_method()                  const { return _profiled_method; }
+  int       profiled_bci()                     const { return _profiled_bci; }
   // generic
   virtual void input_values_do(ValueVisitor* f)   { AccessIndexed::input_values_do(f); f->visit(&_value); }
 };
@@ -915,7 +891,7 @@ LEAF(NegateOp, Instruction)
   }
 
   // accessors
-  Value x() const                                { return _x; }
+  Value x()                                const { return _x; }
 
   // generic
   virtual void input_values_do(ValueVisitor* f)   { f->visit(&_x); }
@@ -939,9 +915,9 @@ BASE(Op2, Instruction)
   }
 
   // accessors
-  Bytecodes::Code op() const                     { return _op; }
-  Value x() const                                { return _x; }
-  Value y() const                                { return _y; }
+  Bytecodes::Code op()                     const { return _op; }
+  Value x()                                const { return _x; }
+  Value y()                                const { return _y; }
 
   // manipulators
   void swap_operands() {
@@ -949,7 +925,7 @@ BASE(Op2, Instruction)
   }
 
   // generic
-  virtual bool is_commutative() const            { return false; }
+  virtual bool is_commutative()            const { return false; }
   virtual void input_values_do(ValueVisitor* f)   { f->visit(&_x); f->visit(&_y); }
 };
 
@@ -964,7 +940,7 @@ LEAF(ArithmeticOp, Op2)
   }
 
   // accessors
-  bool        is_strictfp() const                { return check_flag(IsStrictfpFlag); }
+  bool        is_strictfp()                const { return check_flag(IsStrictfpFlag); }
 
   // generic
   virtual bool is_commutative() const;
@@ -1019,10 +995,10 @@ LEAF(IfOp, Op2)
 
   // accessors
   virtual bool is_commutative() const;
-  Bytecodes::Code op() const                     { ShouldNotCallThis(); return Bytecodes::_illegal; }
-  Condition cond() const                         { return (Condition)Op2::op(); }
-  Value tval() const                             { return _tval; }
-  Value fval() const                             { return _fval; }
+  Bytecodes::Code op()                     const { ShouldNotCallThis(); return Bytecodes::_illegal; }
+  Condition cond()                         const { return (Condition)Op2::op(); }
+  Value tval()                             const { return _tval; }
+  Value fval()                             const { return _fval; }
 
   // generic
   virtual void input_values_do(ValueVisitor* f)   { Op2::input_values_do(f); f->visit(&_tval); f->visit(&_fval); }
@@ -1040,8 +1016,8 @@ LEAF(Convert, Instruction)
   }
 
   // accessors
-  Bytecodes::Code op() const                     { return _op; }
-  Value value() const                            { return _value; }
+  Bytecodes::Code op()                     const { return _op; }
+  Value value()                            const { return _value; }
 
   // generic
   virtual void input_values_do(ValueVisitor* f)   { f->visit(&_value); }
@@ -1064,13 +1040,13 @@ LEAF(NullCheck, Instruction)
   }
 
   // accessors
-  Value obj() const                              { return _obj; }
+  Value obj()                              const { return _obj; }
 
   // setters
   void set_can_trap(bool can_trap)               { set_flag(CanTrapFlag, can_trap); }
 
   // generic
-  virtual bool can_trap() const                  { return check_flag(CanTrapFlag); /* null-check elimination sets to false */ }
+  virtual bool can_trap()                  const { return check_flag(CanTrapFlag); /* null-check elimination sets to false */ }
   virtual void input_values_do(ValueVisitor* f)   { f->visit(&_obj); }
   HASHING1(NullCheck, true, obj()->subst())
 };
@@ -1090,8 +1066,8 @@ LEAF(TypeCast, Instruction)
     _obj(obj) { }
 
   // accessors
-  ciType* declared_type() const                  { return _declared_type; }
-  Value   obj() const                            { return _obj; }
+  ciType* declared_type()                  const { return _declared_type; }
+  Value   obj()                            const { return _obj; }
 
   // generic
   virtual void input_values_do(ValueVisitor* f)  { f->visit(&_obj); }
@@ -1114,7 +1090,7 @@ BASE(StateSplit, Instruction)
   }
 
   // accessors
-  ValueStack* state() const                      { return _state; }
+  ValueStack* state()                      const { return _state; }
   IRScope* scope() const;                        // the state's scope
 
   // manipulation
@@ -1140,35 +1116,33 @@ LEAF(Invoke, StateSplit)
          int vtable_index, ciMethod* target, ValueStack* state_before);
 
   // accessors
-  Bytecodes::Code code() const                   { return _code; }
-  Value receiver() const                         { return _recv; }
-  bool has_receiver() const                      { return receiver() != NULL; }
-  int number_of_arguments() const                { return _args->length(); }
-  Value argument_at(int i) const                 { return _args->at(i); }
-  int vtable_index() const                       { return _vtable_index; }
-  BasicTypeList* signature() const               { return _signature; }
-  ciMethod* target() const                       { return _target; }
+  Bytecodes::Code code()                   const { return _code; }
+  Value receiver()                         const { return _recv; }
+  bool has_receiver()                      const { return receiver() != NULL; }
+  int number_of_arguments()                const { return _args->length(); }
+  Value argument_at(int i)                 const { return _args->at(i); }
+  int vtable_index()                       const { return _vtable_index; }
+  BasicTypeList* signature()               const { return _signature; }
+  ciMethod* target()                       const { return _target; }
 
   ciType* declared_type() const;
 
   // Returns false if target is not loaded
-  bool target_is_final() const                   { return check_flag(TargetIsFinalFlag); }
-  bool target_is_loaded() const                  { return check_flag(TargetIsLoadedFlag); }
+  bool target_is_final()                   const { return check_flag(TargetIsFinalFlag); }
+  bool target_is_loaded()                  const { return check_flag(TargetIsLoadedFlag); }
   // Returns false if target is not loaded
-  bool target_is_strictfp() const                { return check_flag(TargetIsStrictfpFlag); }
+  bool target_is_strictfp()                const { return check_flag(TargetIsStrictfpFlag); }
 
-  // JSR 292 support
-  bool is_invokedynamic() const                  { return code() == Bytecodes::_invokedynamic; }
-  bool is_method_handle_intrinsic() const        { return target()->is_method_handle_intrinsic(); }
-
-  virtual bool needs_exception_state() const     { return false; }
+  virtual bool needs_exception_state()     const { return false; }
 
   // generic
-  virtual bool can_trap() const                  { return true; }
+  virtual bool can_trap()                  const { return true; }
   virtual void input_values_do(ValueVisitor* f) {
     StateSplit::input_values_do(f);
-    if (has_receiver()) f->visit(&_recv);
-    for (int i = 0; i < _args->length(); i++) f->visit(_args->adr_at(i));
+    if (has_receiver())
+        f->visit(&_recv);
+    for (int i = 0; i < _args->length(); i++)
+        f->visit(_args->adr_at(i));
   }
   virtual void state_values_do(ValueVisitor *f);
 };
@@ -1185,13 +1159,13 @@ LEAF(NewInstance, StateSplit)
   { }
 
   // accessors
-  ciInstanceKlass* klass() const                 { return _klass; }
-  bool is_unresolved() const                     { return _is_unresolved; }
+  ciInstanceKlass* klass()                 const { return _klass; }
+  bool is_unresolved()                     const { return _is_unresolved; }
 
-  virtual bool needs_exception_state() const     { return false; }
+  virtual bool needs_exception_state()     const { return false; }
 
   // generic
-  virtual bool can_trap() const                  { return true; }
+  virtual bool can_trap()                  const { return true; }
   ciType* exact_type() const;
   ciType* declared_type() const;
 };
@@ -1210,15 +1184,15 @@ BASE(NewArray, StateSplit)
   }
 
   // accessors
-  Value length() const                           { return _length; }
+  Value length()                           const { return _length; }
 
-  virtual bool needs_exception_state() const     { return false; }
+  virtual bool needs_exception_state()     const { return false; }
 
-  ciType* exact_type() const                     { return NULL; }
+  ciType* exact_type()                     const { return NULL; }
   ciType* declared_type() const;
 
   // generic
-  virtual bool can_trap() const                  { return true; }
+  virtual bool can_trap()                  const { return true; }
   virtual void input_values_do(ValueVisitor* f)   { StateSplit::input_values_do(f); f->visit(&_length); }
 };
 
@@ -1233,7 +1207,7 @@ LEAF(NewTypeArray, NewArray)
   { }
 
   // accessors
-  BasicType elt_type() const                     { return _elt_type; }
+  BasicType elt_type()                     const { return _elt_type; }
   ciType* exact_type() const;
 };
 
@@ -1246,7 +1220,7 @@ LEAF(NewObjectArray, NewArray)
   NewObjectArray(ciKlass* klass, Value length, ValueStack* state_before) : NewArray(length, state_before), _klass(klass) { }
 
   // accessors
-  ciKlass* klass() const                         { return _klass; }
+  ciKlass* klass()                         const { return _klass; }
   ciType* exact_type() const;
 };
 
@@ -1262,9 +1236,9 @@ LEAF(NewMultiArray, NewArray)
   }
 
   // accessors
-  ciKlass* klass() const                         { return _klass; }
-  Values* dims() const                           { return _dims; }
-  int rank() const                               { return dims()->length(); }
+  ciKlass* klass()                         const { return _klass; }
+  Values* dims()                           const { return _dims; }
+  int rank()                               const { return dims()->length(); }
 
   // generic
   virtual void input_values_do(ValueVisitor* f) {
@@ -1297,25 +1271,25 @@ BASE(TypeCheck, StateSplit)
   }
 
   // accessors
-  ciKlass* klass() const                        { return _klass; }
-  Value obj() const                             { return _obj; }
-  bool is_loaded() const                        { return klass() != NULL; }
-  bool direct_compare() const                   { return check_flag(DirectCompareFlag); }
+  ciKlass* klass()                        const { return _klass; }
+  Value obj()                             const { return _obj; }
+  bool is_loaded()                        const { return klass() != NULL; }
+  bool direct_compare()                   const { return check_flag(DirectCompareFlag); }
 
   // manipulation
   void set_direct_compare(bool flag)            { set_flag(DirectCompareFlag, flag); }
 
   // generic
-  virtual bool can_trap() const                 { return true; }
+  virtual bool can_trap()                 const { return true; }
   virtual void input_values_do(ValueVisitor* f) { StateSplit::input_values_do(f); f->visit(&_obj); }
 
   // Helpers for MethodData* profiling
   void set_should_profile(bool value)           { set_flag(ProfileMDOFlag, value); }
   void set_profiled_method(ciMethod* method)    { _profiled_method = method; }
   void set_profiled_bci(int bci)                { _profiled_bci = bci; }
-  bool      should_profile() const              { return check_flag(ProfileMDOFlag); }
-  ciMethod* profiled_method() const             { return _profiled_method; }
-  int       profiled_bci() const                { return _profiled_bci; }
+  bool      should_profile()              const { return check_flag(ProfileMDOFlag); }
+  ciMethod* profiled_method()             const { return _profiled_method; }
+  int       profiled_bci()                const { return _profiled_bci; }
 };
 
 LEAF(CheckCast, TypeCheck)
@@ -1349,7 +1323,7 @@ LEAF(InstanceOf, TypeCheck)
   // creation
   InstanceOf(ciKlass* klass, Value obj, ValueStack* state_before) : TypeCheck(klass, obj, intType, state_before) { }
 
-  virtual bool needs_exception_state() const     { return false; }
+  virtual bool needs_exception_state()     const { return false; }
 };
 
 BASE(AccessMonitor, StateSplit)
@@ -1369,8 +1343,8 @@ BASE(AccessMonitor, StateSplit)
   }
 
   // accessors
-  Value obj() const                              { return _obj; }
-  int monitor_no() const                         { return _monitor_no; }
+  Value obj()                              const { return _obj; }
+  int monitor_no()                         const { return _monitor_no; }
 
   // generic
   virtual void input_values_do(ValueVisitor* f)   { StateSplit::input_values_do(f); f->visit(&_obj); }
@@ -1386,7 +1360,7 @@ LEAF(MonitorEnter, AccessMonitor)
   }
 
   // generic
-  virtual bool can_trap() const                  { return true; }
+  virtual bool can_trap()                  const { return true; }
 };
 
 LEAF(MonitorExit, AccessMonitor)
@@ -1435,13 +1409,13 @@ LEAF(Intrinsic, StateSplit)
   }
 
   // accessors
-  vmIntrinsics::ID id() const            { return _id; }
-  int number_of_arguments() const        { return _args->length(); }
-  Value argument_at(int i) const         { return _args->at(i); }
+  vmIntrinsics::ID id()            const { return _id; }
+  int number_of_arguments()        const { return _args->length(); }
+  Value argument_at(int i)         const { return _args->at(i); }
 
-  bool has_receiver() const              { return (_recv != NULL); }
-  Value receiver() const                 { return _recv; }
-  bool preserves_state() const           { return check_flag(PreservesStateFlag); }
+  bool has_receiver()              const { return (_recv != NULL); }
+  Value receiver()                 const { return _recv; }
+  bool preserves_state()           const { return check_flag(PreservesStateFlag); }
 
   bool arg_needs_null_check(int i) const {
     return _nonnull_state.arg_needs_null_check(i);
@@ -1452,7 +1426,7 @@ LEAF(Intrinsic, StateSplit)
   }
 
   // generic
-  virtual bool can_trap() const          { return check_flag(CanTrapFlag); }
+  virtual bool can_trap()          const { return check_flag(CanTrapFlag); }
   virtual void input_values_do(ValueVisitor* f) {
     StateSplit::input_values_do(f);
     for (int i = 0; i < _args->length(); i++) f->visit(_args->adr_at(i));
@@ -1554,28 +1528,28 @@ LEAF(BlockBegin, StateSplit)
   }
 
   // accessors
-  int block_id() const                           { return _block_id; }
-  int bci() const                                { return _bci; }
+  int block_id()                           const { return _block_id; }
+  int bci()                                const { return _bci; }
   BlockList* successors()                        { return &_successors; }
   BlockList* dominates()                         { return &_dominates; }
-  BlockBegin* dominator() const                  { return _dominator; }
-  int loop_depth() const                         { return _loop_depth; }
-  int dominator_depth() const                    { return _dominator_depth; }
-  int depth_first_number() const                 { return _depth_first_number; }
-  int linear_scan_number() const                 { return _linear_scan_number; }
-  BlockEnd* end() const                          { return _end; }
+  BlockBegin* dominator()                  const { return _dominator; }
+  int loop_depth()                         const { return _loop_depth; }
+  int dominator_depth()                    const { return _dominator_depth; }
+  int depth_first_number()                 const { return _depth_first_number; }
+  int linear_scan_number()                 const { return _linear_scan_number; }
+  BlockEnd* end()                          const { return _end; }
   Label* label()                                 { return &_label; }
-  LIR_List* lir() const                          { return _lir; }
-  int exception_handler_pco() const              { return _exception_handler_pco; }
+  LIR_List* lir()                          const { return _lir; }
+  int exception_handler_pco()              const { return _exception_handler_pco; }
   ResourceBitMap& live_in()                      { return _live_in; }
   ResourceBitMap& live_out()                     { return _live_out; }
   ResourceBitMap& live_gen()                     { return _live_gen; }
   ResourceBitMap& live_kill()                    { return _live_kill; }
   ResourceBitMap& fpu_register_usage()           { return _fpu_register_usage; }
-  intArray* fpu_stack_state() const              { return _fpu_stack_state; }
-  int first_lir_instruction_id() const           { return _first_lir_instruction_id; }
-  int last_lir_instruction_id() const            { return _last_lir_instruction_id; }
-  int total_preds() const                        { return _total_preds; }
+  intArray* fpu_stack_state()              const { return _fpu_stack_state; }
+  int first_lir_instruction_id()           const { return _first_lir_instruction_id; }
+  int last_lir_instruction_id()            const { return _last_lir_instruction_id; }
+  int total_preds()                        const { return _total_preds; }
   BitMap& stores_to_locals()                     { return _stores_to_locals; }
 
   // manipulation
@@ -1611,30 +1585,29 @@ LEAF(BlockBegin, StateSplit)
   BlockBegin* sux_at(int i) const;
   void add_successor(BlockBegin* sux);
   void remove_successor(BlockBegin* pred);
-  bool is_successor(BlockBegin* sux) const       { return _successors.contains(sux); }
+  bool is_successor(BlockBegin* sux)       const { return _successors.contains(sux); }
 
   void add_predecessor(BlockBegin* pred);
   void remove_predecessor(BlockBegin* pred);
-  bool is_predecessor(BlockBegin* pred) const    { return _predecessors.contains(pred); }
-  int number_of_preds() const                    { return _predecessors.length(); }
-  BlockBegin* pred_at(int i) const               { return _predecessors.at(i); }
+  bool is_predecessor(BlockBegin* pred)    const { return _predecessors.contains(pred); }
+  int number_of_preds()                    const { return _predecessors.length(); }
+  BlockBegin* pred_at(int i)               const { return _predecessors.at(i); }
 
   // exception handlers potentially invoked by this block
   void add_exception_handler(BlockBegin* b);
   bool is_exception_handler(BlockBegin* b) const { return _exception_handlers.contains(b); }
-  int  number_of_exception_handlers() const      { return _exception_handlers.length(); }
-  BlockBegin* exception_handler_at(int i) const  { return _exception_handlers.at(i); }
+  int  number_of_exception_handlers()      const { return _exception_handlers.length(); }
+  BlockBegin* exception_handler_at(int i)  const { return _exception_handlers.at(i); }
 
   // states of the instructions that have an edge to this exception handler
   int number_of_exception_states()               { return _exception_states == NULL ? 0 : _exception_states->length(); }
-  ValueStack* exception_state_at(int idx) const  { return _exception_states->at(idx); }
+  ValueStack* exception_state_at(int idx)  const { return _exception_states->at(idx); }
   int add_exception_state(ValueStack* state);
 
   // flags
   enum Flag {
     no_flag                       = 0,
     std_entry_flag                = 1 << 0,
-    osr_entry_flag                = 1 << 1,
     exception_entry_flag          = 1 << 2,
     subroutine_entry_flag         = 1 << 3,
     backward_branch_target_flag   = 1 << 4,
@@ -1649,9 +1622,9 @@ LEAF(BlockBegin, StateSplit)
 
   void set(Flag f)                               { _flags |= f; }
   void clear(Flag f)                             { _flags &= ~f; }
-  bool is_set(Flag f) const                      { return (_flags & f) != 0; }
+  bool is_set(Flag f)                      const { return (_flags & f) != 0; }
   bool is_entry_block() const {
-    const int entry_mask = std_entry_flag | osr_entry_flag | exception_entry_flag;
+    const int entry_mask = std_entry_flag | exception_entry_flag;
     return (_flags & entry_mask) != 0;
   }
 
@@ -1663,7 +1636,7 @@ LEAF(BlockBegin, StateSplit)
 
   // loops
   void set_loop_index(int ix)                    { _loop_index = ix; }
-  int  loop_index() const                        { return _loop_index; }
+  int  loop_index()                        const { return _loop_index; }
 
   // merging
   bool try_merge(ValueStack* state);             // try to merge states at block begin
@@ -1679,7 +1652,7 @@ BASE(BlockEnd, StateSplit)
   BlockList*  _sux;
 
  protected:
-  BlockList* sux() const                         { return _sux; }
+  BlockList* sux()                         const { return _sux; }
 
   void set_sux(BlockList* sux) {
     _sux = sux;
@@ -1695,19 +1668,19 @@ BASE(BlockEnd, StateSplit)
   }
 
   // accessors
-  bool is_safepoint() const                      { return check_flag(IsSafepointFlag); }
+  bool is_safepoint()                      const { return check_flag(IsSafepointFlag); }
   // For compatibility with old code, for new code use block()
-  BlockBegin* begin() const                      { return _block; }
+  BlockBegin* begin()                      const { return _block; }
 
   // manipulation
   void set_begin(BlockBegin* begin);
 
   // successors
-  int number_of_sux() const                      { return _sux != NULL ? _sux->length() : 0; }
-  BlockBegin* sux_at(int i) const                { return _sux->at(i); }
-  BlockBegin* default_sux() const                { return sux_at(number_of_sux() - 1); }
-  BlockBegin** addr_sux_at(int i) const          { return _sux->adr_at(i); }
-  int sux_index(BlockBegin* sux) const           { return _sux->find(sux); }
+  int number_of_sux()                      const { return _sux != NULL ? _sux->length() : 0; }
+  BlockBegin* sux_at(int i)                const { return _sux->at(i); }
+  BlockBegin* default_sux()                const { return sux_at(number_of_sux() - 1); }
+  BlockBegin** addr_sux_at(int i)          const { return _sux->adr_at(i); }
+  int sux_index(BlockBegin* sux)           const { return _sux->find(sux); }
   void substitute_sux(BlockBegin* old_sux, BlockBegin* new_sux);
 };
 
@@ -1742,10 +1715,10 @@ LEAF(Goto, BlockEnd)
     set_sux(s);
   }
 
-  bool should_profile() const                    { return check_flag(ProfileMDOFlag); }
-  ciMethod* profiled_method() const              { return _profiled_method; } // set only for profiled branches
-  int profiled_bci() const                       { return _profiled_bci; }
-  Direction direction() const                    { return _direction; }
+  bool should_profile()                    const { return check_flag(ProfileMDOFlag); }
+  ciMethod* profiled_method()              const { return _profiled_method; } // set only for profiled branches
+  int profiled_bci()                       const { return _profiled_bci; }
+  Direction direction()                    const { return _direction; }
 
   void set_should_profile(bool value)            { set_flag(ProfileMDOFlag, value); }
   void set_profiled_method(ciMethod* method)     { _profiled_method = method; }
@@ -1784,10 +1757,10 @@ LEAF(RangeCheckPredicate, StateSplit)
   }
 
   // accessors
-  Value x() const                                { return _x; }
-  Condition cond() const                         { return _cond; }
-  bool unordered_is_true() const                 { return check_flag(UnorderedIsTrueFlag); }
-  Value y() const                                { return _y; }
+  Value x()                                const { return _x; }
+  Condition cond()                         const { return _cond; }
+  bool unordered_is_true()                 const { return check_flag(UnorderedIsTrueFlag); }
+  Value y()                                const { return _y; }
 
   void always_fail()                             { _x = _y = NULL; }
 
@@ -1826,18 +1799,18 @@ LEAF(If, BlockEnd)
   }
 
   // accessors
-  Value x() const                                { return _x; }
-  Condition cond() const                         { return _cond; }
-  bool unordered_is_true() const                 { return check_flag(UnorderedIsTrueFlag); }
-  Value y() const                                { return _y; }
-  BlockBegin* sux_for(bool is_true) const        { return sux_at(is_true ? 0 : 1); }
-  BlockBegin* tsux() const                       { return sux_for(true); }
-  BlockBegin* fsux() const                       { return sux_for(false); }
-  BlockBegin* usux() const                       { return sux_for(unordered_is_true()); }
-  bool should_profile() const                    { return check_flag(ProfileMDOFlag); }
-  ciMethod* profiled_method() const              { return _profiled_method; } // set only for profiled branches
-  int profiled_bci() const                       { return _profiled_bci; }    // set for profiled branches and tiered
-  bool is_swapped() const                        { return _swapped; }
+  Value x()                                const { return _x; }
+  Condition cond()                         const { return _cond; }
+  bool unordered_is_true()                 const { return check_flag(UnorderedIsTrueFlag); }
+  Value y()                                const { return _y; }
+  BlockBegin* sux_for(bool is_true)        const { return sux_at(is_true ? 0 : 1); }
+  BlockBegin* tsux()                       const { return sux_for(true); }
+  BlockBegin* fsux()                       const { return sux_for(false); }
+  BlockBegin* usux()                       const { return sux_for(unordered_is_true()); }
+  bool should_profile()                    const { return check_flag(ProfileMDOFlag); }
+  ciMethod* profiled_method()              const { return _profiled_method; } // set only for profiled branches
+  int profiled_bci()                       const { return _profiled_bci; }    // set for profiled branches and tiered
+  bool is_swapped()                        const { return _swapped; }
 
   // manipulation
   void swap_operands() {
@@ -1892,13 +1865,13 @@ LEAF(IfInstanceOf, BlockEnd)
   //         and an If instruction. The IfInstanceOf bci() corresponds to the
   //         bci that the If would have had; the (this->) instanceof_bci() is
   //         the bci of the original InstanceOf instruction.
-  ciKlass* klass() const                         { return _klass; }
-  Value obj() const                              { return _obj; }
-  int instanceof_bci() const                     { return _instanceof_bci; }
-  bool test_is_instance() const                  { return _test_is_instance; }
-  BlockBegin* sux_for(bool is_true) const        { return sux_at(is_true ? 0 : 1); }
-  BlockBegin* tsux() const                       { return sux_for(true); }
-  BlockBegin* fsux() const                       { return sux_for(false); }
+  ciKlass* klass()                         const { return _klass; }
+  Value obj()                              const { return _obj; }
+  int instanceof_bci()                     const { return _instanceof_bci; }
+  bool test_is_instance()                  const { return _test_is_instance; }
+  BlockBegin* sux_for(bool is_true)        const { return sux_at(is_true ? 0 : 1); }
+  BlockBegin* tsux()                       const { return sux_for(true); }
+  BlockBegin* fsux()                       const { return sux_for(false); }
 
   // manipulation
   void swap_sux() {
@@ -1925,10 +1898,10 @@ BASE(Switch, BlockEnd)
   }
 
   // accessors
-  Value tag() const                              { return _tag; }
-  int length() const                             { return number_of_sux() - 1; }
+  Value tag()                              const { return _tag; }
+  int length()                             const { return number_of_sux() - 1; }
 
-  virtual bool needs_exception_state() const     { return false; }
+  virtual bool needs_exception_state()     const { return false; }
 
   // generic
   virtual void input_values_do(ValueVisitor* f)   { BlockEnd::input_values_do(f); f->visit(&_tag); }
@@ -1945,8 +1918,8 @@ LEAF(TableSwitch, Switch)
     }
 
   // accessors
-  int lo_key() const                             { return _lo_key; }
-  int hi_key() const                             { return _lo_key + (length() - 1); }
+  int lo_key()                             const { return _lo_key; }
+  int hi_key()                             const { return _lo_key + (length() - 1); }
 };
 
 LEAF(LookupSwitch, Switch)
@@ -1961,7 +1934,7 @@ LEAF(LookupSwitch, Switch)
   }
 
   // accessors
-  int key_at(int i) const                        { return _keys->at(i); }
+  int key_at(int i)                        const { return _keys->at(i); }
 };
 
 LEAF(Return, BlockEnd)
@@ -1975,8 +1948,8 @@ LEAF(Return, BlockEnd)
     _result(result) { }
 
   // accessors
-  Value result() const                           { return _result; }
-  bool has_result() const                        { return result() != NULL; }
+  Value result()                           const { return _result; }
+  bool has_result()                        const { return result() != NULL; }
 
   // generic
   virtual void input_values_do(ValueVisitor* f) {
@@ -1996,35 +1969,24 @@ LEAF(Throw, BlockEnd)
   }
 
   // accessors
-  Value exception() const                        { return _exception; }
+  Value exception()                        const { return _exception; }
 
   // generic
-  virtual bool can_trap() const                  { return true; }
+  virtual bool can_trap()                  const { return true; }
   virtual void input_values_do(ValueVisitor* f)   { BlockEnd::input_values_do(f); f->visit(&_exception); }
 };
 
 LEAF(Base, BlockEnd)
  public:
   // creation
-  Base(BlockBegin* std_entry, BlockBegin* osr_entry) : BlockEnd(illegalType, NULL, false) {
+  Base(BlockBegin* std_entry) : BlockEnd(illegalType, NULL, false) {
     BlockList* s = new BlockList(2);
-    if (osr_entry != NULL) s->append(osr_entry);
     s->append(std_entry); // must be default sux!
     set_sux(s);
   }
 
   // accessors
-  BlockBegin* std_entry() const                  { return default_sux(); }
-  BlockBegin* osr_entry() const                  { return number_of_sux() < 2 ? NULL : sux_at(0); }
-};
-
-LEAF(OsrEntry, Instruction)
- public:
-  // creation
-  OsrEntry() : Instruction(longType) { pin(); }
-
-  // generic
-  virtual void input_values_do(ValueVisitor* f)   { }
+  BlockBegin* std_entry()                  const { return default_sux(); }
 };
 
 // Models the incoming exception at a catch site
@@ -2056,7 +2018,7 @@ LEAF(RoundFP, Instruction)
   }
 
   // accessors
-  Value input() const                            { return _input; }
+  Value input()                            const { return _input; }
 
   // generic
   virtual void input_values_do(ValueVisitor* f)   { f->visit(&_input); }
@@ -2124,14 +2086,18 @@ BASE(UnsafeRawOp, UnsafeOp)
   void set_log2_scale(int log2_scale)            { _log2_scale = log2_scale; }
 
   // generic
-  virtual void input_values_do(ValueVisitor* f)   { UnsafeOp::input_values_do(f);
-                                                   f->visit(&_base);
-                                                   if (has_index()) f->visit(&_index); }
+  virtual void input_values_do(ValueVisitor* f) {
+    UnsafeOp::input_values_do(f);
+    f->visit(&_base);
+    if (has_index()) {
+      f->visit(&_index);
+    }
+  }
 };
 
 LEAF(UnsafeGetRaw, UnsafeRawOp)
  private:
- bool _may_be_unaligned, _is_wide;  // For OSREntry
+ bool _may_be_unaligned, _is_wide;
 
  public:
  UnsafeGetRaw(BasicType basic_type, Value addr, bool may_be_unaligned, bool is_wide = false)
@@ -2146,8 +2112,8 @@ LEAF(UnsafeGetRaw, UnsafeRawOp)
     _is_wide = is_wide;
   }
 
-  bool may_be_unaligned()                         { return _may_be_unaligned; }
-  bool is_wide()                                  { return _is_wide; }
+  bool may_be_unaligned() { return _may_be_unaligned; }
+  bool is_wide()          { return _is_wide; }
 };
 
 LEAF(UnsafePutRaw, UnsafeRawOp)
@@ -2170,18 +2136,20 @@ LEAF(UnsafePutRaw, UnsafeRawOp)
   }
 
   // accessors
-  Value value()                                  { return _value; }
+  Value value() { return _value; }
 
   // generic
-  virtual void input_values_do(ValueVisitor* f)   { UnsafeRawOp::input_values_do(f);
-                                                   f->visit(&_value); }
+  virtual void input_values_do(ValueVisitor* f) {
+    UnsafeRawOp::input_values_do(f);
+    f->visit(&_value);
+  }
 };
 
 BASE(UnsafeObjectOp, UnsafeOp)
  private:
-  Value _object;                                 // Object to be fetched from or mutated
-  Value _offset;                                 // Offset within object
-  bool  _is_volatile;                            // true if volatile - dl/JSR166
+  Value _object;      // Object to be fetched from or mutated
+  Value _offset;      // Offset within object
+  bool  _is_volatile; // true if volatile - dl/JSR166
  public:
   UnsafeObjectOp(BasicType basic_type, Value object, Value offset, bool is_put, bool is_volatile)
     : UnsafeOp(basic_type, is_put), _object(object), _offset(offset), _is_volatile(is_volatile)
@@ -2189,13 +2157,15 @@ BASE(UnsafeObjectOp, UnsafeOp)
   }
 
   // accessors
-  Value object()                                 { return _object; }
-  Value offset()                                 { return _offset; }
-  bool  is_volatile()                            { return _is_volatile; }
+  Value object()      { return _object; }
+  Value offset()      { return _offset; }
+  bool  is_volatile() { return _is_volatile; }
   // generic
-  virtual void input_values_do(ValueVisitor* f)   { UnsafeOp::input_values_do(f);
-                                                   f->visit(&_object);
-                                                   f->visit(&_offset); }
+  virtual void input_values_do(ValueVisitor* f) {
+    UnsafeOp::input_values_do(f);
+    f->visit(&_object);
+    f->visit(&_offset);
+  }
 };
 
 LEAF(UnsafeGetObject, UnsafeObjectOp)
@@ -2240,7 +2210,7 @@ LEAF(UnsafeGetAndSetObject, UnsafeObjectOp)
   }
 
   // accessors
-  bool is_add() const                            { return _is_add; }
+  bool is_add()                            const { return _is_add; }
   Value value()                                  { return _value; }
 
   // generic
@@ -2352,11 +2322,11 @@ LEAF(RuntimeCall, Instruction)
     pin();
   }
 
-  const char* entry_name() const  { return _entry_name; }
-  address entry() const           { return _entry; }
+  const char* entry_name()  const { return _entry_name; }
+  address entry()           const { return _entry; }
   int number_of_arguments() const { return _args->length(); }
-  Value argument_at(int i) const  { return _args->at(i); }
-  bool pass_thread() const        { return _pass_thread; }
+  Value argument_at(int i)  const { return _args->at(i); }
+  bool pass_thread()        const { return _pass_thread; }
 
   virtual void input_values_do(ValueVisitor* f) {
     for (int i = 0; i < _args->length(); i++) f->visit(_args->adr_at(i));
@@ -2410,7 +2380,7 @@ class BlockPair: public CompilationResourceObj {
  public:
   BlockPair(BlockBegin* from, BlockBegin* to): _from(from), _to(to) { }
   BlockBegin* from() const { return _from; }
-  BlockBegin* to() const   { return _to; }
+  BlockBegin* to()   const { return _to; }
   bool is_same(BlockBegin* from, BlockBegin* to) const { return _from == from && _to == to; }
   bool is_same(BlockPair* p) const { return _from == p->from() && _to == p->to(); }
   void set_to(BlockBegin* b)   { _to = b; }

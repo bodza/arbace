@@ -184,8 +184,6 @@ int AOTOopRecorder::find_index(Metadata* h) {
     return index;
   }
 
-  vmassert(index + 1 == newCount, "must be last");
-
   JVMCIKlassHandle klass(THREAD);
   oop result = NULL;
   guarantee(h != NULL, "If DebugInformationRecorder::describe_scope passes NULL oldCount == newCount must hold.");
@@ -458,7 +456,6 @@ void CodeInstaller::initialize_dependencies(oop compiled_code, OopRecorder* reco
   JavaThread* thread = JavaThread::current();
   CompilerThread* compilerThread = thread->is_Compiler_thread() ? thread->as_CompilerThread() : NULL;
   _oop_recorder = recorder;
-  _dependencies = new Dependencies(&_arena, _oop_recorder);
   objArrayHandle assumptions(THREAD, HotSpotCompiledCode::assumptions(compiled_code));
   if (!assumptions.is_null()) {
     int length = assumptions->length();
@@ -564,12 +561,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler, Hand
       JVMCI_ERROR_OK("stub should have a name");
     }
     char* name = strdup(java_lang_String::as_utf8_string(stubName));
-    cb = RuntimeStub::new_runtime_stub(name,
-                                       &buffer,
-                                       CodeOffsets::frame_never_safe,
-                                       stack_slots,
-                                       _debug_recorder->_oopmaps,
-                                       false);
+    cb = RuntimeStub::new_runtime_stub(name, &buffer, CodeOffsets::frame_never_safe, stack_slots, _debug_recorder->_oopmaps, false);
     result = JVMCIEnv::ok;
   } else {
     nmethod* nm = NULL;
@@ -580,11 +572,11 @@ JVMCIEnv::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler, Hand
     JVMCIEnv* env = (JVMCIEnv*) (address) HotSpotCompiledNmethod::jvmciEnv(compiled_code);
     if (id == -1) {
       // Make sure a valid compile_id is associated with every compile
-      id = CompileBroker::assign_compile_id_unlocked(Thread::current(), method, entry_bci);
+      id = CompileBroker::assign_compile_id_unlocked(Thread::current(), method);
     }
     result = JVMCIEnv::register_method(method, nm, entry_bci, &_offsets, _orig_pc_offset, &buffer,
                                        stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table,
-                                       compiler, _debug_recorder, _dependencies, env, id,
+                                       compiler, _debug_recorder, env, id,
                                        has_unsafe_access, _has_wide_vector, installed_code, compiled_code, speculation_log);
     cb = nm->as_codeblob_or_null();
     if (nm != NULL && env == NULL) {
@@ -677,14 +669,6 @@ int CodeInstaller::estimate_stubs_size(TRAPS) {
           default:
             break;
           }
-        }
-      }
-      if (false && site->is_a(site_Call::klass())) {
-        oop target = site_Call::target(site);
-        InstanceKlass* target_klass = InstanceKlass::cast(target->klass());
-        if (!target_klass->is_subclass_of(SystemDictionary::HotSpotForeignCallTarget_klass())) {
-          // Add far aot trampolines.
-          aot_call_stubs++;
         }
       }
     }
@@ -825,7 +809,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
 void CodeInstaller::assumption_NoFinalizableSubclass(Thread* thread, Handle assumption) {
   Handle receiverType_handle (thread, Assumptions_NoFinalizableSubclass::receiverType(assumption()));
   Klass* receiverType = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(receiverType_handle));
-  _dependencies->assert_has_no_finalizable_subclasses(receiverType);
+  NULL->assert_has_no_finalizable_subclasses(receiverType);
 }
 
 void CodeInstaller::assumption_ConcreteSubtype(Thread* thread, Handle assumption) {
@@ -834,14 +818,14 @@ void CodeInstaller::assumption_ConcreteSubtype(Thread* thread, Handle assumption
   Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(context_handle));
   Klass* subtype = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(subtype_handle));
 
-  _dependencies->assert_abstract_with_unique_concrete_subtype(context, subtype);
+  NULL->assert_abstract_with_unique_concrete_subtype(context, subtype);
 }
 
 void CodeInstaller::assumption_LeafType(Thread* thread, Handle assumption) {
   Handle context_handle (thread, Assumptions_LeafType::context(assumption()));
   Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(context_handle));
 
-  _dependencies->assert_leaf_type(context);
+  NULL->assert_leaf_type(context);
 }
 
 void CodeInstaller::assumption_ConcreteMethod(Thread* thread, Handle assumption) {
@@ -851,14 +835,14 @@ void CodeInstaller::assumption_ConcreteMethod(Thread* thread, Handle assumption)
   methodHandle impl = getMethodFromHotSpotMethod(impl_handle());
   Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(context_handle));
 
-  _dependencies->assert_unique_concrete_method(context, impl());
+  NULL->assert_unique_concrete_method(context, impl());
 }
 
 void CodeInstaller::assumption_CallSiteTargetValue(Thread* thread, Handle assumption) {
   Handle callSite(thread, HotSpotObjectConstantImpl::object(Assumptions_CallSiteTargetValue::callSite(assumption())));
   Handle methodHandle(thread, HotSpotObjectConstantImpl::object(Assumptions_CallSiteTargetValue::methodHandle(assumption())));
 
-  _dependencies->assert_call_site_target_value(callSite(), methodHandle());
+  NULL->assert_call_site_target_value(callSite(), methodHandle());
 }
 
 void CodeInstaller::site_ExceptionHandler(jint pc_offset, Handle exc) {
@@ -875,7 +859,6 @@ void CodeInstaller::site_ExceptionHandler(jint pc_offset, Handle exc) {
 // This function mainly helps the compilers to set up the reexecute bit.
 static bool bytecode_should_reexecute(Bytecodes::Code code) {
   switch (code) {
-    case Bytecodes::_invokedynamic:
     case Bytecodes::_invokevirtual:
     case Bytecodes::_invokeinterface:
     case Bytecodes::_invokespecial:
@@ -1055,8 +1038,7 @@ void CodeInstaller::record_scope(jint pc_offset, Handle position, ScopeMode scop
     throw_exception = BytecodeFrame::rethrowException(frame) == JNI_TRUE;
   }
 
-  _debug_recorder->describe_scope(pc_offset, method, NULL, bci, reexecute, throw_exception, false, return_oop,
-                                  locals_token, expressions_token, monitors_token);
+  _debug_recorder->describe_scope(pc_offset, method, NULL, bci, reexecute, throw_exception, return_oop, locals_token, expressions_token, monitors_token);
 }
 
 void CodeInstaller::site_Safepoint(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS) {
@@ -1196,14 +1178,8 @@ void CodeInstaller::site_Mark(CodeBuffer& buffer, jint pc_offset, Handle site, T
       case VERIFIED_ENTRY:
         _offsets.set_value(CodeOffsets::Verified_Entry, pc_offset);
         break;
-      case OSR_ENTRY:
-        _offsets.set_value(CodeOffsets::OSR_Entry, pc_offset);
-        break;
       case EXCEPTION_HANDLER_ENTRY:
         _offsets.set_value(CodeOffsets::Exceptions, pc_offset);
-        break;
-      case DEOPT_HANDLER_ENTRY:
-        _offsets.set_value(CodeOffsets::Deopt, pc_offset);
         break;
       case INVOKEVIRTUAL:
       case INVOKEINTERFACE:

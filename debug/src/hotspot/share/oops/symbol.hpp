@@ -136,7 +136,7 @@ class Symbol : public MetaspaceObj {
   unsigned int new_hash(juint seed);
 
   // Reference counting.  See comments above this class for when to use.
-  int refcount() const      { return _refcount; }
+  int refcount()      const { return _refcount; }
   void increment_refcount();
   void decrement_refcount();
   bool is_permanent() {

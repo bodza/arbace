@@ -1,7 +1,6 @@
 #include "precompiled.hpp"
 
 #include "jvm.h"
-#include "aot/aotLoader.hpp"
 #include "classfile/classLoader.hpp"
 #include "classfile/stringTable.hpp"
 #include "classfile/systemDictionary.hpp"

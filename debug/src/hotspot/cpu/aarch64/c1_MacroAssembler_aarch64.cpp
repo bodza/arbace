@@ -38,8 +38,6 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   Label done, fail;
   int null_check_offset = -1;
 
-  verify_oop(obj);
-
   // save object being locked into the BasicObjectLock
   str(obj, Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()));
 
@@ -111,7 +109,6 @@ void C1_MacroAssembler::unlock_object(Register hdr, Register obj, Register disp_
     // load object
     ldr(obj, Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()));
   }
-  verify_oop(obj);
   // test if object header is pointing to the displaced header, and if so, restore
   // the displaced header in the object - if the object header is not pointing to
   // the displaced header, get the object header instead
@@ -233,9 +230,8 @@ void C1_MacroAssembler::initialize_object(Register obj, Register klass, Register
   }
 
   membar(StoreStore);
-
-  verify_oop(obj);
 }
+
 void C1_MacroAssembler::allocate_array(Register obj, Register len, Register t1, Register t2, int header_size, int f, Register klass, Label& slow_case) {
   // check for negative or excessive length
   mov(rscratch1, (int32_t)max_array_allocation_length);
@@ -257,13 +253,9 @@ void C1_MacroAssembler::allocate_array(Register obj, Register len, Register t1, 
   initialize_body(obj, arr_size, header_size * BytesPerWord, len_zero);
 
   membar(StoreStore);
-
-  verify_oop(obj);
 }
 
 void C1_MacroAssembler::inline_cache_check(Register receiver, Register iCache) {
-  verify_oop(receiver);
-
   cmp_klass(receiver, iCache, rscratch1);
 }
 

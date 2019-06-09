@@ -752,6 +752,7 @@ public:
     Register t1,                       // temp register
     Label&   slow_case                 // continuation point if fast allocation fails
   );
+
   void tlab_allocate(
     Register obj,                      // result: pointer to object after successful allocation
     Register var_size_in_bytes,        // object size in bytes if unknown at compile time; invalid otherwise
@@ -760,8 +761,8 @@ public:
     Register t2,                       // temp register
     Label&   slow_case                 // continuation point if fast allocation fails
   );
+
   void zero_memory(Register addr, Register len, Register t1);
-  void verify_tlab();
 
   // interface method calling
   void lookup_interface_method(Register recv_klass, Register intf_klass, RegisterOrConstant itable_index, Register method_result, Register scan_temp, Label& no_such_interface, bool return_method = true);
@@ -789,23 +790,7 @@ public:
   // Falls through on failure.
   void check_klass_subtype(Register sub_klass, Register super_klass, Register temp_reg, Label& L_success);
 
-  Address argument_address(RegisterOrConstant arg_slot, int extra_slot_offset = 0);
-
   // Debugging
-
-  // only if +VerifyOops
-  void verify_oop(Register reg, const char* s = "broken oop");
-  void verify_oop_addr(Address addr, const char * s = "broken oop addr");
-
-// TODO: verify method and klass metadata (compare against vptr?)
-  void _verify_method_ptr(Register reg, const char * msg, const char * file, int line) { }
-  void _verify_klass_ptr(Register reg, const char * msg, const char * file, int line) { }
-
-#define verify_method_ptr(reg) _verify_method_ptr(reg, "broken method " #reg, __FILE__, __LINE__)
-#define verify_klass_ptr(reg) _verify_klass_ptr(reg, "broken klass " #reg, __FILE__, __LINE__)
-
-  // only if +VerifyFPU
-  void verify_FPU(int stack_depth, const char* s = "illegal FPU state");
 
   // prints msg, dumps registers and stops execution
   void stop(const char* msg);
@@ -815,11 +800,11 @@ public:
 
   static void debug64(char* msg, int64_t pc, int64_t regs[]);
 
-  void untested()                                { stop("untested"); }
+  void untested()              { stop("untested"); }
 
   void unimplemented(const char* what = "");
 
-  void should_not_reach_here()                   { stop("should not reach here"); }
+  void should_not_reach_here() { stop("should not reach here"); }
 
   // Stack overflow checking
   void bang_stack_with_offset(int offset) {
@@ -883,7 +868,7 @@ public:
   address trampoline_call(Address entry, CodeBuffer *cbuf = NULL);
 
   static bool far_branches() {
-    return ReservedCodeCacheSize > branch_range || false;
+    return ReservedCodeCacheSize > branch_range;
   }
 
   // Jumps that can reach anywhere in the code cache.

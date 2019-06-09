@@ -30,10 +30,10 @@ class CompressedStream : public ResourceObj {
     _position = position;
   }
 
-  u_char* buffer() const               { return _buffer; }
+  u_char* buffer()               const { return _buffer; }
 
   // Positioning
-  int position() const                 { return _position; }
+  int position()                 const { return _position; }
   void set_position(int position)      { _position = position; }
 };
 

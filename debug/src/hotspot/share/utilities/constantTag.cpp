@@ -20,15 +20,7 @@ BasicType constantTag::basic_type() const {
     case JVM_CONSTANT_UnresolvedClassInError :
     case JVM_CONSTANT_ClassIndex :
     case JVM_CONSTANT_StringIndex :
-    case JVM_CONSTANT_MethodHandle :
-    case JVM_CONSTANT_MethodHandleInError :
-    case JVM_CONSTANT_MethodType :
-    case JVM_CONSTANT_MethodTypeInError :
       return T_OBJECT;
-
-    case JVM_CONSTANT_Dynamic :
-    case JVM_CONSTANT_DynamicInError :
-      ShouldNotReachHere();
 
     default:
       ShouldNotReachHere();
@@ -40,12 +32,6 @@ jbyte constantTag::non_error_value() const {
   switch (_tag) {
   case JVM_CONSTANT_UnresolvedClassInError:
     return JVM_CONSTANT_UnresolvedClass;
-  case JVM_CONSTANT_MethodHandleInError:
-    return JVM_CONSTANT_MethodHandle;
-  case JVM_CONSTANT_MethodTypeInError:
-    return JVM_CONSTANT_MethodType;
-  case JVM_CONSTANT_DynamicInError:
-    return JVM_CONSTANT_Dynamic;
   default:
     return _tag;
   }
@@ -55,12 +41,6 @@ jbyte constantTag::error_value() const {
   switch (_tag) {
   case JVM_CONSTANT_UnresolvedClass:
     return JVM_CONSTANT_UnresolvedClassInError;
-  case JVM_CONSTANT_MethodHandle:
-    return JVM_CONSTANT_MethodHandleInError;
-  case JVM_CONSTANT_MethodType:
-    return JVM_CONSTANT_MethodTypeInError;
-  case JVM_CONSTANT_Dynamic:
-    return JVM_CONSTANT_DynamicInError;
   default:
     ShouldNotReachHere();
     return JVM_CONSTANT_Invalid;
@@ -91,20 +71,6 @@ const char* constantTag::internal_name() const {
       return "Double";
     case JVM_CONSTANT_NameAndType :
       return "NameAndType";
-    case JVM_CONSTANT_MethodHandle :
-      return "MethodHandle";
-    case JVM_CONSTANT_MethodHandleInError :
-      return "MethodHandle Error";
-    case JVM_CONSTANT_MethodType :
-      return "MethodType";
-    case JVM_CONSTANT_MethodTypeInError :
-      return "MethodType Error";
-    case JVM_CONSTANT_Dynamic :
-      return "Dynamic";
-    case JVM_CONSTANT_DynamicInError :
-      return "Dynamic Error";
-    case JVM_CONSTANT_InvokeDynamic :
-      return "InvokeDynamic";
     case JVM_CONSTANT_Utf8 :
       return "Utf8";
     case JVM_CONSTANT_UnresolvedClass :

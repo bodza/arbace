@@ -264,7 +264,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
 
     case lir_nop:                      // may have info, result always invalid
     case lir_std_entry:                // may have result, info always invalid
-    case lir_osr_entry:                // may have result, info always invalid
     case lir_get_thread:               // may have result, info always invalid
     {
       if (op->_info != NULL)           do_info(op->_info);
@@ -500,10 +499,6 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
       }
 
       if (opJavaCall->_info)                     do_info(opJavaCall->_info);
-      if (FrameMap::method_handle_invoke_SP_save_opr() != LIR_OprFact::illegalOpr && opJavaCall->is_method_handle_invoke()) {
-        opJavaCall->_method_handle_invoke_SP_save_opr = FrameMap::method_handle_invoke_SP_save_opr();
-        do_temp(opJavaCall->_method_handle_invoke_SP_save_opr);
-      }
       do_call();
       if (opJavaCall->_result->is_valid())       do_output(opJavaCall->_result);
 
@@ -952,16 +947,9 @@ void LIR_List::store_check(LIR_Opr object, LIR_Opr array, LIR_Opr tmp1, LIR_Opr 
   append(c);
 }
 
-void LIR_List::null_check(LIR_Opr opr, CodeEmitInfo* info, bool deoptimize_on_null) {
-  if (deoptimize_on_null) {
-    // Emit an explicit null check and deoptimize if opr is null
-    CodeStub* deopt = new NULL(info, NULL::Reason_null_check, NULL::Action_none);
-    cmp(lir_cond_equal, opr, LIR_OprFact::oopConst(NULL));
-    branch(lir_cond_equal, T_OBJECT, deopt);
-  } else {
-    // Emit an implicit null check
-    append(new LIR_Op1(lir_null_check, opr, info));
-  }
+void LIR_List::null_check(LIR_Opr opr, CodeEmitInfo* info) {
+  // Emit an implicit null check
+  append(new LIR_Op1(lir_null_check, opr, info));
 }
 
 void LIR_List::cas_long(LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value, LIR_Opr t1, LIR_Opr t2, LIR_Opr result) {

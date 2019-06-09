@@ -57,12 +57,8 @@ JavaCallWrapper::JavaCallWrapper(const methodHandle& callee_method, Handle recei
   _callee_method = callee_method();
   _receiver = receiver();
 
-#ifdef CHECK_UNHANDLED_OOPS
-  THREAD->allow_unhandled_oop(&_receiver);
-#endif
-
-  _thread       = (JavaThread *)thread;
-  _handles      = _thread->active_handles();    // save previous handle block & Java frame linkage
+  _thread = (JavaThread *)thread;
+  _handles = _thread->active_handles();    // save previous handle block & Java frame linkage
 
   // For the profiler, the last_Java_frame information in thread must always be in
   // legal state. We have no last Java frame if last_Java_sp == NULL so
@@ -276,17 +272,15 @@ void JavaCalls::call(JavaValue* result, const methodHandle& method, JavaCallArgu
 void JavaCalls::call_helper(JavaValue* result, const methodHandle& method, JavaCallArguments* args, TRAPS) {
   JavaThread* thread = (JavaThread*)THREAD;
 
-  CHECK_UNHANDLED_OOPS_ONLY(thread->clear_unhandled_oops();)
-
   // Gets the nmethod (if any) that should be called instead of normal target
   nmethod* alternative_target = args->alternative_target();
 
   CompilationPolicy::compile_if_required(method, CHECK);
 
-  // Since the call stub sets up like the interpreter we call the from_interpreted_entry,
+  // Since the call stub sets up like the interpreter we call the NULL,
   // so we can go compiled via a i2c. Otherwise initial entry method will always
   // run interpreted.
-  address entry_point = method->from_interpreted_entry();
+  address entry_point = NULL;
 
   // Figure out if the result value is an oop or not (Note: This is a different value
   // than result_type. result_type will be T_INT of oops. (it is about size)
@@ -499,11 +493,7 @@ void JavaCallArguments::verify(const methodHandle& method, BasicType return_type
   // Check that oop information is correct
   Symbol* signature = method->signature();
 
-  SignatureChekker sc(signature,
-                      return_type,
-                      method->is_static(),
-                      _value_state,
-                      _value);
+  SignatureChekker sc(signature, return_type, method->is_static(), _value_state, _value);
   sc.iterate_parameters();
   sc.check_doing_return(true);
   sc.iterate_returntype();

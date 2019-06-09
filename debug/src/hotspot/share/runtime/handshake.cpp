@@ -7,7 +7,6 @@
 #include "runtime/osThread.hpp"
 #include "runtime/semaphore.inline.hpp"
 #include "runtime/task.hpp"
-#include "runtime/timerTrace.hpp"
 #include "runtime/thread.hpp"
 #include "runtime/vmThread.hpp"
 #include "utilities/formatBuffer.hpp"

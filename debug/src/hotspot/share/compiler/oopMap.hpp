@@ -25,7 +25,7 @@ class OopMapValue: public StackObj {
   friend class VMStructs;
 private:
   short _value;
-  int value() const                                 { return _value; }
+  int value()                                 const { return _value; }
   void set_value(int value)                         { _value = value; }
   short _content_reg;
 
@@ -82,7 +82,7 @@ public:
   void set_derived_oop()      { set_value((value() & register_mask_in_place) | derived_oop_value); }
 
   VMReg reg() const { return VMRegImpl::as_VMReg(mask_bits(value(), register_mask_in_place) >> register_shift); }
-  oop_types type() const      { return (oop_types)mask_bits(value(), type_mask_in_place); }
+  oop_types type()      const { return (oop_types)mask_bits(value(), type_mask_in_place); }
 
   static bool legal_vm_reg_name(VMReg p) {
     return (p->value()  == (p->value() & register_mask));
@@ -92,7 +92,7 @@ public:
     set_value((p->value() << register_shift) | t);
   }
 
-  VMReg content_reg() const       { return VMRegImpl::as_VMReg(_content_reg, true); }
+  VMReg content_reg()       const { return VMRegImpl::as_VMReg(_content_reg, true); }
   void set_content_reg(VMReg r)   { _content_reg = r->value(); }
 
   // Physical location queries
@@ -117,7 +117,7 @@ class OopMap: public ResourceObj {
   CompressedWriteStream* _write_stream;
 
   // Accessors
-  int omv_count() const                       { return _omv_count; }
+  int omv_count()                       const { return _omv_count; }
   void set_omv_count(int value)               { _omv_count = value; }
   void increment_count()                      { _omv_count++; }
   CompressedWriteStream* write_stream() const { return _write_stream; }
@@ -131,10 +131,10 @@ class OopMap: public ResourceObj {
   OopMap(int frame_size, int arg_count);
 
   // pc-offset handling
-  int offset() const     { return _pc_offset; }
+  int offset()     const { return _pc_offset; }
   void set_offset(int o) { _pc_offset = o; }
   int count() const { return _omv_count; }
-  int data_size() const  { return write_stream()->position(); }
+  int data_size()  const { return write_stream()->position(); }
   address data() const { return write_stream()->buffer(); }
 
   // Construction
@@ -171,12 +171,12 @@ class OopMapSet : public ResourceObj {
   int _om_size;
   OopMap** _om_data;
 
-  int om_count() const              { return _om_count; }
+  int om_count()              const { return _om_count; }
   void set_om_count(int value)      { _om_count = value; }
   void increment_count()            { _om_count++; }
-  int om_size() const               { return _om_size; }
+  int om_size()               const { return _om_size; }
   void set_om_size(int value)       { _om_size = value; }
-  OopMap** om_data() const          { return _om_data; }
+  OopMap** om_data()          const { return _om_data; }
   void set_om_data(OopMap** value)  { _om_data = value; }
   void grow_om_data();
   void set(int index,OopMap* value) { _om_data[index] = value; }
@@ -185,7 +185,7 @@ class OopMapSet : public ResourceObj {
   OopMapSet();
 
   // returns the number of OopMaps in this OopMapSet
-  int size() const            { return _om_count; }
+  int size()            const { return _om_count; }
   // returns the OopMap at a given index
   OopMap* at(int index) const { return _om_data[index]; }
 

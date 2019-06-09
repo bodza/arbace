@@ -1,13 +1,9 @@
 #include "precompiled.hpp"
 
-#include "ci/ciCallSite.hpp"
 #include "ci/ciInstance.hpp"
 #include "ci/ciInstanceKlass.hpp"
-#include "ci/ciMemberName.hpp"
 #include "ci/ciMethod.hpp"
 #include "ci/ciMethodData.hpp"
-#include "ci/ciMethodHandle.hpp"
-#include "ci/ciMethodType.hpp"
 #include "ci/ciNullObject.hpp"
 #include "ci/ciObjArray.hpp"
 #include "ci/ciObjArrayKlass.hpp"
@@ -48,8 +44,6 @@ ciSymbol*                 ciObjectFactory::_shared_ci_symbols[vmSymbols::SID_LIM
 int                       ciObjectFactory::_shared_ident_limit = 0;
 volatile bool             ciObjectFactory::_initialized = false;
 
-// ------------------------------------------------------------------
-// ciObjectFactory::ciObjectFactory
 ciObjectFactory::ciObjectFactory(Arena* arena, int expected_size) {
   for (int i = 0; i < NON_PERM_BUCKETS; i++) {
     _non_perm_bucket[i] = NULL;
@@ -74,10 +68,7 @@ ciObjectFactory::ciObjectFactory(Arena* arena, int expected_size) {
   _symbols = new (arena) GrowableArray<ciSymbol*>(arena, 100, 0, NULL);
 }
 
-// ------------------------------------------------------------------
-// ciObjectFactory::ciObjectFactory
 void ciObjectFactory::initialize() {
-  ASSERT_IN_VM;
   JavaThread* thread = JavaThread::current();
   HandleMark  handle_mark(thread);
 
@@ -183,15 +174,10 @@ void ciObjectFactory::remove_symbols() {
   // but it'll go away just the same.
 }
 
-// ------------------------------------------------------------------
-// ciObjectFactory::get
-//
 // Get the ciObject corresponding to some oop.  If the ciObject has
 // already been created, it is returned.  Otherwise, a new ciObject
 // is created.
 ciObject* ciObjectFactory::get(oop key) {
-  ASSERT_IN_VM;
-
   NonPermObject* &bucket = find_non_perm(key);
   if (bucket != NULL) {
     return bucket->object();
@@ -215,15 +201,10 @@ int ciObjectFactory::metadata_compare(Metadata* const& key, ciMetadata* const& e
   else                  return 0;
 }
 
-// ------------------------------------------------------------------
-// ciObjectFactory::get_metadata
-//
 // Get the ciMetadata corresponding to some Metadata. If the ciMetadata has
 // already been created, it is returned. Otherwise, a new ciMetadata
 // is created.
 ciMetadata* ciObjectFactory::get_metadata(Metadata* key) {
-  ASSERT_IN_VM;
-
   int len = _ci_metadata->length();
   bool found = false;
   int index = _ci_metadata->find_sorted<Metadata*, ciObjectFactory::metadata_compare>(key, found);
@@ -245,9 +226,6 @@ ciMetadata* ciObjectFactory::get_metadata(Metadata* key) {
   return _ci_metadata->at(index)->as_metadata();
 }
 
-// ------------------------------------------------------------------
-// ciObjectFactory::create_new_object
-//
 // Create a new ciObject from an oop.
 //
 // Implementation note: this functionality could be virtual behavior
@@ -257,16 +235,7 @@ ciObject* ciObjectFactory::create_new_object(oop o) {
 
   if (o->is_instance()) {
     instanceHandle h_i(THREAD, (instanceOop)o);
-    if (java_lang_invoke_CallSite::is_instance(o))
-      return new (arena()) ciCallSite(h_i);
-    else if (java_lang_invoke_MemberName::is_instance(o))
-      return new (arena()) ciMemberName(h_i);
-    else if (java_lang_invoke_MethodHandle::is_instance(o))
-      return new (arena()) ciMethodHandle(h_i);
-    else if (java_lang_invoke_MethodType::is_instance(o))
-      return new (arena()) ciMethodType(h_i);
-    else
-      return new (arena()) ciInstance(h_i);
+    return new (arena()) ciInstance(h_i);
   } else if (o->is_objArray()) {
     objArrayHandle h_oa(THREAD, (objArrayOop)o);
     return new (arena()) ciObjArray(h_oa);
@@ -280,9 +249,6 @@ ciObject* ciObjectFactory::create_new_object(oop o) {
   return NULL;
 }
 
-// ------------------------------------------------------------------
-// ciObjectFactory::create_new_metadata
-//
 // Create a new ciMetadata from a Metadata*.
 //
 // Implementation note: in order to keep Metadata live, an auxiliary ciObject
@@ -301,7 +267,7 @@ ciMetadata* ciObjectFactory::create_new_metadata(Metadata* o) {
     }
   } else if (o->is_method()) {
     methodHandle h_m(THREAD, (Method*)o);
-    ciEnv *env = CURRENT_THREAD_ENV;
+    ciEnv *env = ciEnv::current(thread);
     ciInstanceKlass* holder = env->get_instance_klass(h_m()->method_holder());
     return new (arena()) ciMethod(h_m, holder);
   } else if (o->is_methodData()) {
@@ -315,9 +281,6 @@ ciMetadata* ciObjectFactory::create_new_metadata(Metadata* o) {
   return NULL;
 }
 
-//------------------------------------------------------------------
-// ciObjectFactory::get_unloaded_method
-//
 // Get the ciMethod representing an unloaded/unfound method.
 //
 // Implementation note: unloaded methods are currently stored in
@@ -356,9 +319,6 @@ ciMethod* ciObjectFactory::get_unloaded_method(ciInstanceKlass* holder,
   return new_method;
 }
 
-//------------------------------------------------------------------
-// ciObjectFactory::get_unloaded_klass
-//
 // Get a ciKlass representing an unloaded klass.
 //
 // Implementation note: unloaded klasses are currently stored in
@@ -395,13 +355,13 @@ ciKlass* ciObjectFactory::get_unloaded_klass(ciKlass* accessing_klass, ciSymbol*
     BasicType element_type = FieldType::get_array_info(name->get_symbol(), fd, THREAD);
     if (HAS_PENDING_EXCEPTION) {
       CLEAR_PENDING_EXCEPTION;
-      CURRENT_THREAD_ENV->record_out_of_memory_failure();
+      ciEnv::current(thread)->record_out_of_memory_failure();
       return ciEnv::_unloaded_ciobjarrayklass;
     }
     int dimension = fd.dimension();
     ciKlass* element_klass = NULL;
     if (element_type == T_OBJECT) {
-      ciEnv *env = CURRENT_THREAD_ENV;
+      ciEnv *env = ciEnv::current(thread);
       ciSymbol* ci_name = env->get_symbol(fd.object_key());
       element_klass = env->get_klass_by_name(accessing_klass, ci_name, false)->as_instance_klass();
     } else {
@@ -427,9 +387,6 @@ ciKlass* ciObjectFactory::get_unloaded_klass(ciKlass* accessing_klass, ciSymbol*
   return new_klass;
 }
 
-//------------------------------------------------------------------
-// ciObjectFactory::get_unloaded_instance
-//
 // Get a ciInstance representing an as-yet undetermined instance of a given class.
 //
 ciInstance* ciObjectFactory::get_unloaded_instance(ciInstanceKlass* instance_klass) {
@@ -451,9 +408,6 @@ ciInstance* ciObjectFactory::get_unloaded_instance(ciInstanceKlass* instance_kla
   return new_instance;
 }
 
-//------------------------------------------------------------------
-// ciObjectFactory::get_unloaded_klass_mirror
-//
 // Get a ciInstance representing an unresolved klass mirror.
 //
 // Currently, this ignores the parameters and returns a unique unloaded instance.
@@ -461,9 +415,6 @@ ciInstance* ciObjectFactory::get_unloaded_klass_mirror(ciKlass* type) {
   return get_unloaded_instance(ciEnv::_Class_klass->as_instance_klass());
 }
 
-//------------------------------------------------------------------
-// ciObjectFactory::get_unloaded_method_handle_constant
-//
 // Get a ciInstance representing an unresolved method handle constant.
 //
 // Currently, this ignores the parameters and returns a unique unloaded instance.
@@ -472,9 +423,6 @@ ciInstance* ciObjectFactory::get_unloaded_method_handle_constant(ciKlass* holder
   return get_unloaded_instance(ciEnv::_MethodHandle_klass->as_instance_klass());
 }
 
-//------------------------------------------------------------------
-// ciObjectFactory::get_unloaded_method_type_constant
-//
 // Get a ciInstance representing an unresolved method type constant.
 //
 // Currently, this ignores the parameters and returns a unique unloaded instance.
@@ -488,20 +436,13 @@ ciInstance* ciObjectFactory::get_unloaded_object_constant() {
   return get_unloaded_instance(ciEnv::_Object_klass->as_instance_klass());
 }
 
-//------------------------------------------------------------------
-// ciObjectFactory::get_empty_methodData
-//
-// Get the ciMethodData representing the methodData for a method with
-// none.
+// Get the ciMethodData representing the methodData for a method with none.
 ciMethodData* ciObjectFactory::get_empty_methodData() {
   ciMethodData* new_methodData = new (arena()) ciMethodData();
   init_ident_of(new_methodData);
   return new_methodData;
 }
 
-//------------------------------------------------------------------
-// ciObjectFactory::get_return_address
-//
 // Get a ciReturnAddress for a specified bci.
 ciReturnAddress* ciObjectFactory::get_return_address(int bci) {
   for (int i = 0; i<_return_addresses->length(); i++) {
@@ -518,17 +459,12 @@ ciReturnAddress* ciObjectFactory::get_return_address(int bci) {
   return new_ret_addr;
 }
 
-// ------------------------------------------------------------------
-// ciObjectFactory::init_ident_of
 void ciObjectFactory::init_ident_of(ciBaseObject* obj) {
   obj->set_ident(_next_ident++);
 }
 
 static ciObjectFactory::NonPermObject* emptyBucket = NULL;
 
-// ------------------------------------------------------------------
-// ciObjectFactory::find_non_perm
-//
 // Use a small hash table, hashed on the klass of the key.
 // If there is no entry in the cache corresponding to this oop, return
 // the null tail of the bucket into which the oop should be inserted.
@@ -550,24 +486,17 @@ inline ciObjectFactory::NonPermObject::NonPermObject(ciObjectFactory::NonPermObj
   bucket = this;
 }
 
-// ------------------------------------------------------------------
-// ciObjectFactory::insert_non_perm
-//
 // Insert a ciObject into the non-perm table.
 void ciObjectFactory::insert_non_perm(ciObjectFactory::NonPermObject* &where, oop key, ciObject* obj) {
   NonPermObject* p = new (arena()) NonPermObject(where, key, obj);
   ++_non_perm_count;
 }
 
-// ------------------------------------------------------------------
-// ciObjectFactory::vm_symbol_at
 // Get the ciSymbol corresponding to some index in vmSymbols.
 ciSymbol* ciObjectFactory::vm_symbol_at(int index) {
   return _shared_ci_symbols[index];
 }
 
-// ------------------------------------------------------------------
-// ciObjectFactory::metadata_do
 void ciObjectFactory::metadata_do(void f(Metadata*)) {
   if (_ci_metadata == NULL) return;
   for (int j = 0; j< _ci_metadata->length(); j++) {
@@ -576,8 +505,6 @@ void ciObjectFactory::metadata_do(void f(Metadata*)) {
   }
 }
 
-// ------------------------------------------------------------------
-// ciObjectFactory::print_contents_impl
 void ciObjectFactory::print_contents_impl() {
   int len = _ci_metadata->length();
   tty->print_cr("ciObjectFactory (%d) meta data contents:", len);
@@ -587,17 +514,12 @@ void ciObjectFactory::print_contents_impl() {
   }
 }
 
-// ------------------------------------------------------------------
-// ciObjectFactory::print_contents
 void ciObjectFactory::print_contents() {
   print();
   tty->cr();
   GUARDED_VM_ENTRY(print_contents_impl();)
 }
 
-// ------------------------------------------------------------------
-// ciObjectFactory::print
-//
 // Print debugging information about the object factory
 void ciObjectFactory::print() {
   tty->print("<ciObjectFactory oops=%d metadata=%d unloaded_methods=%d unloaded_instances=%d unloaded_klasses=%d>",

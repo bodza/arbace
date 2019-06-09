@@ -46,9 +46,9 @@ class JavaAssertions::OptionList: public CHeapObj<mtClass> {
 public:
   inline OptionList(const char* name, bool enable, OptionList* next);
 
-  inline const char*    name() const    { return _name; }
+  inline const char*    name()    const { return _name; }
   inline bool           enabled() const { return _enabled; }
-  inline OptionList*    next() const    { return _next; }
+  inline OptionList*    next()    const { return _next; }
 
   static int count(OptionList* p);
 

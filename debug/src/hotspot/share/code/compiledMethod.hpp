@@ -5,7 +5,6 @@
 #include "code/pcDesc.hpp"
 #include "oops/metadata.hpp"
 
-class Dependencies;
 class ExceptionHandlerTable;
 class ImplicitExceptionTable;
 class AbstractCompiler;
@@ -111,14 +110,6 @@ class CompiledMethod : public CodeBlob {
 
   void init_defaults();
 protected:
-  enum MarkForDeoptimizationStatus {
-    not_marked,
-    deoptimize,
-    deoptimize_noupdate
-  };
-
-  MarkForDeoptimizationStatus _mark_for_deoptimization_status; // Used for stack deoptimization
-
   bool _is_far_code; // Code is far from CodeCache.
                      // Have to use far call instructions to call it from code in CodeCache.
   // set during construction
@@ -127,14 +118,8 @@ protected:
   unsigned int _lazy_critical_native:1;      // Lazy JNI critical native
   unsigned int _has_wide_vectors:1;          // Preserve wide vectors at safepoints
 
-  Method*   _method;
+  Method* _method;
   address _scopes_data_begin;
-  // All deoptee's will resume execution at this location described by
-  // this address.
-  address _deopt_handler_begin;
-  // All deoptee's at a MethodHandle call site will resume execution
-  // at this location described by this offset.
-  address _deopt_mh_handler_begin;
 
   PcDescContainer _pc_desc_container;
   ExceptionCache * volatile _exception_cache;
@@ -145,19 +130,19 @@ protected:
   CompiledMethod(Method* method, const char* name, CompilerType type, int size, int header_size, CodeBuffer* cb, int frame_complete_offset, int frame_size, OopMapSet* oop_maps, bool caller_must_gc_arguments);
 
 public:
-  virtual bool is_compiled() const                { return true; }
+  virtual bool is_compiled()           const { return true; }
 
-  bool  has_unsafe_access() const                 { return _has_unsafe_access; }
-  void  set_has_unsafe_access(bool z)             { _has_unsafe_access = z; }
+  bool has_unsafe_access()             const { return _has_unsafe_access; }
+  void set_has_unsafe_access(bool z)         { _has_unsafe_access = z; }
 
-  bool  has_method_handle_invokes() const         { return _has_method_handle_invokes; }
-  void  set_has_method_handle_invokes(bool z)     { _has_method_handle_invokes = z; }
+  bool has_method_handle_invokes()     const { return _has_method_handle_invokes; }
+  void set_has_method_handle_invokes(bool z) { _has_method_handle_invokes = z; }
 
-  bool  is_lazy_critical_native() const           { return _lazy_critical_native; }
-  void  set_lazy_critical_native(bool z)          { _lazy_critical_native = z; }
+  bool is_lazy_critical_native()       const { return _lazy_critical_native; }
+  void set_lazy_critical_native(bool z)      { _lazy_critical_native = z; }
 
-  bool  has_wide_vectors() const                  { return _has_wide_vectors; }
-  void  set_has_wide_vectors(bool z)              { _has_wide_vectors = z; }
+  bool has_wide_vectors()              const { return _has_wide_vectors; }
+  void set_has_wide_vectors(bool z)          { _has_wide_vectors = z; }
 
   enum { not_installed = -1, // in construction, only the owner doing the construction is
                              // allowed to advance state
@@ -170,9 +155,9 @@ public:
                              // will be transformed to zombie immediately
   };
 
-  virtual bool  is_in_use() const = 0;
-  virtual int   comp_level() const = 0;
-  virtual int   compile_id() const = 0;
+  virtual bool is_in_use() const = 0;
+  virtual int  comp_level() const = 0;
+  virtual int  compile_id() const = 0;
 
   virtual address verified_entry_point() const = 0;
   virtual bool make_not_used() = 0;
@@ -180,12 +165,10 @@ public:
   virtual bool make_entrant() = 0;
   virtual address entry_point() const = 0;
   virtual bool make_zombie() = 0;
-  virtual bool is_osr_method() const = 0;
-  virtual int osr_entry_bci() const = 0;
   Method* method() const { return _method; }
 
   bool is_native_method() const { return _method != NULL && _method->is_native(); }
-  bool is_java_method() const   { return _method != NULL && !_method->is_native(); }
+  bool is_java_method()   const { return _method != NULL && !_method->is_native(); }
 
   // ScopeDesc retrieval operation
   PcDesc* pc_desc_at(address pc)   { return find_pc_desc(pc, false); }
@@ -199,22 +182,7 @@ public:
   bool is_at_poll_return(address pc);
   bool is_at_poll_or_poll_return(address pc);
 
-  bool is_marked_for_deoptimization() const { return _mark_for_deoptimization_status != not_marked; }
-  void mark_for_deoptimization(bool inc_recompile_counts = true) {
-    _mark_for_deoptimization_status = (inc_recompile_counts ? deoptimize : deoptimize_noupdate);
-  }
-  bool update_recompile_counts() const {
-    // Update recompile counts when either the update is explicitly requested (deoptimize)
-    // or the nmethod is not marked for deoptimization at all (not_marked).
-    // The latter happens during uncommon traps when deoptimized nmethod is made not entrant.
-    return _mark_for_deoptimization_status != deoptimize_noupdate;
-  }
-
   static bool nmethod_access_is_safe(nmethod* nm);
-
-  // tells whether frames described by this nmethod can be deoptimized
-  // note: native wrappers cannot be deoptimized.
-  bool can_be_deoptimized() const { return is_java_method(); }
 
   virtual oop oop_at(int index) const = 0;
   virtual Metadata* metadata_at(int index) const = 0;
@@ -264,7 +232,7 @@ public:
 
   // Exception cache support
   // Note: _exception_cache may be read concurrently. We rely on memory_order_consume here.
-  ExceptionCache* exception_cache() const         { return _exception_cache; }
+  ExceptionCache* exception_cache()         const { return _exception_cache; }
   void set_exception_cache(ExceptionCache *ec)    { _exception_cache = ec; }
   void release_set_exception_cache(ExceptionCache *ec);
   address handler_for_exception_and_pc(Handle exception, address pc);
@@ -274,17 +242,7 @@ public:
   void add_exception_cache_entry(ExceptionCache* new_entry);
   ExceptionCache* exception_cache_entry_for_exception(Handle exception);
 
-  // MethodHandle
-  bool is_method_handle_return(address return_pc);
-  address deopt_mh_handler_begin() const  { return _deopt_mh_handler_begin; }
-
-  address deopt_handler_begin() const { return _deopt_handler_begin; }
   virtual address get_original_pc(const frame* fr) = 0;
-  // Deopt
-  // Return true is the PC is one would expect if the frame is being deopted.
-  inline bool is_deopt_pc(address pc);
-  bool is_deopt_mh_entry(address pc) { return pc == deopt_mh_handler_begin(); }
-  inline bool is_deopt_entry(address pc);
 
   virtual bool can_convert_to_zombie() = 0;
   virtual const char* compile_kind() const = 0;
@@ -302,8 +260,6 @@ public:
 
   // implicit exceptions support
   virtual address continuation_for_implicit_exception(address pc) { return NULL; }
-
-  static address get_deopt_original_pc(const frame* fr);
 
   // GC unloading support
   // Cleans unloaded klasses and unloaded nmethods in inline caches
@@ -323,12 +279,6 @@ public:
 
   // Verify and count cached icholder relocations.
   void verify_oop_relocations();
-
-  virtual bool is_evol_dependent_on(Klass* dependee) = 0;
-  // Fast breakpoint support. Tells if this compiled method is
-  // dependent on the given method. Returns true if this nmethod
-  // corresponds to the given method as well.
-  virtual bool is_dependent_on_method(Method* dependee) = 0;
 
   virtual NativeCallWrapper* call_wrapper_at(address call) const = 0;
   virtual NativeCallWrapper* call_wrapper_before(address return_pc) const = 0;

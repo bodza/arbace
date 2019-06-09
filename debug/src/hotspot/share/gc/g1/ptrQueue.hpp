@@ -188,9 +188,9 @@ class BufferNode {
   }
 
 public:
-  BufferNode* next() const     { return _next; }
+  BufferNode* next()     const { return _next; }
   void set_next(BufferNode* n) { _next = n; }
-  size_t index() const         { return _index; }
+  size_t index()         const { return _index; }
   void set_index(size_t i)     { _index = i; }
 
   // Allocate a new BufferNode with the "buffer" having size elements.

@@ -161,7 +161,7 @@ protected:
   bool is_klass() const volatile { return true; }
 
   // super
-  Klass* super() const               { return _super; }
+  Klass* super()               const { return _super; }
   void set_super(Klass* k)           { _super = k; }
 
   // initializes _super link, _primary_supers & _secondary_supers arrays
@@ -173,12 +173,12 @@ protected:
   virtual GrowableArray<Klass*>* compute_secondary_supers(int num_extra_slots, Array<Klass*>* transitive_interfaces);
 
   // java_super is the Java-level super type as specified by Class.getSuperClass.
-  virtual Klass* java_super() const  { return NULL; }
+  virtual Klass* java_super()  const { return NULL; }
 
-  juint    super_check_offset() const  { return _super_check_offset; }
+  juint    super_check_offset()  const { return _super_check_offset; }
   void set_super_check_offset(juint o) { _super_check_offset = o; }
 
-  Klass* secondary_super_cache() const     { return _secondary_super_cache; }
+  Klass* secondary_super_cache()     const { return _secondary_super_cache; }
   void set_secondary_super_cache(Klass* k) { _secondary_super_cache = k; }
 
   Array<Klass*>* secondary_supers() const { return _secondary_supers; }
@@ -225,19 +225,19 @@ protected:
   }
 
   // modifier flags
-  jint modifier_flags() const          { return _modifier_flags; }
+  jint modifier_flags()          const { return _modifier_flags; }
   void set_modifier_flags(jint flags)  { _modifier_flags = flags; }
 
   // size helper
-  int layout_helper() const            { return _layout_helper; }
+  int layout_helper()            const { return _layout_helper; }
   void set_layout_helper(int lh)       { _layout_helper = lh; }
 
   // Note: for instances layout_helper() may include padding.
   // Use InstanceKlass::contains_field_offset to classify field offsets.
 
   // sub/superklass links
-  Klass* subklass() const              { return _subklass; }
-  Klass* next_sibling() const          { return _next_sibling; }
+  Klass* subklass()              const { return _subklass; }
+  Klass* next_sibling()          const { return _next_sibling; }
   InstanceKlass* superklass() const;
   void append_to_sibling_list();           // add newly created receiver to superklass' subklass list
 
@@ -245,10 +245,10 @@ protected:
   Klass* next_link() const { return _next_link; }   // The next klass defined by the class loader.
 
   // class loader data
-  ClassLoaderData* class_loader_data() const               { return _class_loader_data; }
+  ClassLoaderData* class_loader_data()               const { return _class_loader_data; }
   void set_class_loader_data(ClassLoaderData* loader_data) {  _class_loader_data = loader_data; }
 
-  int shared_classpath_index() const   {
+  int shared_classpath_index()   const {
     return _shared_class_path_index;
   };
 
@@ -397,7 +397,7 @@ protected:
   virtual void  copy_array(arrayOop s, int src_pos, arrayOop d, int dst_pos, int length, TRAPS);
 
   // tells if the class should be initialized
-  virtual bool should_be_initialized() const    { return false; }
+  virtual bool should_be_initialized()    const { return false; }
   // initializes the klass
   virtual void initialize(TRAPS);
   // lookup operation for MethodLookupCache
@@ -424,7 +424,7 @@ protected:
 
   oop class_loader() const;
 
-  virtual oop klass_holder() const      { return class_loader(); }
+  virtual oop klass_holder()      const { return class_loader(); }
 
  protected:
   virtual Klass* array_klass_impl(bool or_null, int rank, TRAPS);
@@ -491,25 +491,25 @@ protected:
   #undef assert_same_query
 
   // Access flags
-  AccessFlags access_flags() const         { return _access_flags; }
+  AccessFlags access_flags()         const { return _access_flags; }
   void set_access_flags(AccessFlags flags) { _access_flags = flags; }
 
-  bool is_public() const                { return _access_flags.is_public(); }
-  bool is_final() const                 { return _access_flags.is_final(); }
-  bool is_interface() const             { return _access_flags.is_interface(); }
-  bool is_abstract() const              { return _access_flags.is_abstract(); }
-  bool is_super() const                 { return _access_flags.is_super(); }
-  bool is_synthetic() const             { return _access_flags.is_synthetic(); }
+  bool is_public()                const { return _access_flags.is_public(); }
+  bool is_final()                 const { return _access_flags.is_final(); }
+  bool is_interface()             const { return _access_flags.is_interface(); }
+  bool is_abstract()              const { return _access_flags.is_abstract(); }
+  bool is_super()                 const { return _access_flags.is_super(); }
+  bool is_synthetic()             const { return _access_flags.is_synthetic(); }
   void set_is_synthetic()               { _access_flags.set_is_synthetic(); }
-  bool has_finalizer() const            { return _access_flags.has_finalizer(); }
-  bool has_final_method() const         { return _access_flags.has_final_method(); }
+  bool has_finalizer()            const { return _access_flags.has_finalizer(); }
+  bool has_final_method()         const { return _access_flags.has_final_method(); }
   void set_has_finalizer()              { _access_flags.set_has_finalizer(); }
   void set_has_final_method()           { _access_flags.set_has_final_method(); }
-  bool has_vanilla_constructor() const  { return _access_flags.has_vanilla_constructor(); }
+  bool has_vanilla_constructor()  const { return _access_flags.has_vanilla_constructor(); }
   void set_has_vanilla_constructor()    { _access_flags.set_has_vanilla_constructor(); }
-  bool has_miranda_methods () const     { return access_flags().has_miranda_methods(); }
+  bool has_miranda_methods ()     const { return access_flags().has_miranda_methods(); }
   void set_has_miranda_methods()        { _access_flags.set_has_miranda_methods(); }
-  bool is_shared() const                { return access_flags().is_shared_class(); } // shadows MetaspaceObj::is_shared)()
+  bool is_shared()                const { return access_flags().is_shared_class(); } // shadows MetaspaceObj::is_shared)()
   void set_is_shared()                  { _access_flags.set_is_shared_class(); }
 
   bool is_cloneable() const;
@@ -519,7 +519,7 @@ protected:
   // Note: the prototype header is always set up to be at least the
   // prototype markOop. If biased locking is enabled it may further be
   // biasable and have an epoch.
-  markOop prototype_header() const      { return _prototype_header; }
+  markOop prototype_header()      const { return _prototype_header; }
   // NOTE: once instances of this klass are floating around in the
   // system, this header must only be updated at a safepoint.
   // NOTE 2: currently we only ever set the prototype header to the
@@ -565,7 +565,7 @@ protected:
   Klass *up_cast_abstract();
 
   // klass name
-  Symbol* name() const                   { return _name; }
+  Symbol* name()                   const { return _name; }
   void set_name(Symbol* n);
 
  public:
@@ -579,11 +579,6 @@ protected:
   virtual void oop_print_on      (oop obj, outputStream* st);
 
   virtual const char* internal_name() const = 0;
-
-  // Verification
-  virtual void verify_on(outputStream* st);
-
-  virtual void oop_verify_on(oop obj, outputStream* st);
 
   // for error reporting
   static Klass* decode_klass_raw(narrowKlass narrow_klass);

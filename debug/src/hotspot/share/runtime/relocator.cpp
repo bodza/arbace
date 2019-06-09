@@ -349,7 +349,7 @@ void Relocator::change_jumps(int break_bci, int delta) {
 // exception table, if any, of "rc->mb".
 void Relocator::adjust_exception_table(int bci, int delta) {
   ExceptionTable table(_method());
-  for (int index = 0; index < table.length(); index ++) {
+  for (int index = 0; index < table.length(); index++) {
     if (table.start_pc(index) > bci) {
       table.set_start_pc(index, table.start_pc(index) + delta);
       table.set_end_pc(index, table.end_pc(index) + delta);

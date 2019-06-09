@@ -48,18 +48,9 @@ define_pd_global(intx, StackRedPages, DEFAULT_STACK_RED_PAGES);
 define_pd_global(intx, StackShadowPages, DEFAULT_STACK_SHADOW_PAGES);
 define_pd_global(intx, StackReservedPages, DEFAULT_STACK_RESERVED_PAGES);
 
-define_pd_global(bool, RewriteBytecodes,     true);
-define_pd_global(bool, RewriteFrequentPairs, true);
-
-define_pd_global(bool, UseMembar,            true);
-
-// GC Ergo Flags
-define_pd_global(size_t, CMSYoungGenPerWorker, 64*M);  // default max size of CMS young gen, per GC worker thread
-
-define_pd_global(uintx, TypeProfileLevel, 111);
-
-define_pd_global(bool, CompactStrings, true);
-
+define_pd_global(bool, UseMembar,             true);
+define_pd_global(uintx, TypeProfileLevel,      111);
+define_pd_global(bool, CompactStrings,        true);
 define_pd_global(bool, PreserveFramePointer, false);
 
 define_pd_global(intx, InitArrayShortSize, 8*BytesPerLong);
@@ -119,15 +110,6 @@ define_pd_global(bool, ThreadLocalHandshakes, true);
           "Use fast-string operation for zeroing: rep stosb") \
  \
   /* Use Restricted Transactional Memory for lock eliding */ \
-  product(bool, UseRTMLocking, false, \
-          "Enable RTM lock eliding for inflated locks in compiled code") \
- \
-  experimental(bool, UseRTMForStackLocks, false, \
-          "Enable RTM lock eliding for stack locks in compiled code") \
- \
-  product(bool, UseRTMDeopt, false, \
-          "Perform deopt and recompilation based on RTM abort ratio") \
- \
   product(int, RTMRetryCount, 5, \
           "Number of RTM retries on lock abort or busy") \
           range(0, max_jint) \

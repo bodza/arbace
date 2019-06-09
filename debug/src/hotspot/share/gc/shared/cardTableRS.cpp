@@ -348,8 +348,7 @@ void CardTableRS::verify_space(Space* s, HeapWord* gen_boundary) {
       // We'd normally expect that cur_youngergen_and_prev_nonclean_card
       // is a transient value, that cannot be in the card table
       // except during GC, and thus assert that:
-      // guarantee(*cur_entry != cur_youngergen_and_prev_nonclean_card,
-      //        "Illegal CT value");
+      // guarantee(*cur_entry != cur_youngergen_and_prev_nonclean_card, "Illegal CT value");
       // That however, need not hold, as will become clear in the
       // following...
 
@@ -357,9 +356,7 @@ void CardTableRS::verify_space(Space* s, HeapWord* gen_boundary) {
       // we can't have left a prev value (which would be different
       // from the current value) in the card table, and so we'd like to
       // assert that:
-      // guarantee(cur_youngergen_card_val() == youngergen_card
-      //           || !is_prev_youngergen_card_val(*cur_entry),
-      //           "Illegal CT value");
+      // guarantee(cur_youngergen_card_val() == youngergen_card || !is_prev_youngergen_card_val(*cur_entry), "Illegal CT value");
       // That, however, may not hold occasionally, because of
       // CMS or MSC in the old gen. To wit, consider the
       // following two simple illustrative scenarios:

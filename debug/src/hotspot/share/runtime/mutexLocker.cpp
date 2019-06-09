@@ -30,7 +30,6 @@ Mutex*   StringTableWeakActive_lock   = NULL;
 Mutex*   JNIHandleBlockFreeList_lock  = NULL;
 Mutex*   VMWeakAlloc_lock             = NULL;
 Mutex*   VMWeakActive_lock            = NULL;
-Mutex*   ResolvedMethodTable_lock     = NULL;
 Mutex*   JmethodIdCreation_lock       = NULL;
 Mutex*   JfieldIdCreation_lock        = NULL;
 Monitor* JNICritical_lock             = NULL;
@@ -78,7 +77,6 @@ Monitor* BeforeExit_lock              = NULL;
 Monitor* Notify_lock                  = NULL;
 Mutex*   ProfilePrint_lock            = NULL;
 Mutex*   ExceptionCache_lock          = NULL;
-Mutex*   OsrList_lock                 = NULL;
 
 Mutex*   tty_lock                     = NULL;
 
@@ -171,7 +169,6 @@ void mutex_init() {
   def(StringTable_lock             , PaddedMutex  , leaf,        true,  Monitor::_safepoint_check_always);
   def(ProfilePrint_lock            , PaddedMutex  , leaf,        false, Monitor::_safepoint_check_always);     // serial profile printing
   def(ExceptionCache_lock          , PaddedMutex  , leaf,        false, Monitor::_safepoint_check_always);     // serial profile printing
-  def(OsrList_lock                 , PaddedMutex  , leaf,        true,  Monitor::_safepoint_check_never);
   def(BeforeExit_lock              , PaddedMonitor, leaf,        true,  Monitor::_safepoint_check_always);
 
   def(Safepoint_lock               , PaddedMonitor, safepoint,   true,  Monitor::_safepoint_check_sometimes);  // locks SnippetCache_lock/Threads_lock
@@ -198,7 +195,6 @@ void mutex_init() {
 
   def(Heap_lock                    , PaddedMonitor, nonleaf+1,   false, Monitor::_safepoint_check_sometimes);
   def(JfieldIdCreation_lock        , PaddedMutex  , nonleaf+1,   true,  Monitor::_safepoint_check_always);     // jfieldID, Used in VM_Operation
-  def(ResolvedMethodTable_lock     , PaddedMutex  , nonleaf+1,   false, Monitor::_safepoint_check_always);     // Used to protect ResolvedMethodTable
 
   def(CompiledIC_lock              , PaddedMutex  , nonleaf+2,   false, Monitor::_safepoint_check_always);     // locks VtableStubs_lock, InlineCacheBuffer_lock
   def(CompileTaskAlloc_lock        , PaddedMutex  , nonleaf+2,   true,  Monitor::_safepoint_check_always);

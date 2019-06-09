@@ -102,10 +102,6 @@ inline int g_isfinite(jdouble f) { return finite(f); }
 
 inline int wcslen(const jchar* x) { return wcslen((const wchar_t*)x); }
 
-// Portability macros
-#define PRAGMA_INTERFACE             #pragma interface
-#define PRAGMA_IMPLEMENTATION        #pragma implementation
-
 #if (__GNUC__ == 2) && (__GNUC_MINOR__ < 95)
 #define TEMPLATE_TABLE_BUG
 #endif

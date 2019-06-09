@@ -26,7 +26,7 @@ private:
   static ciType* _basic_types[T_CONFLICT+1];
 
 public:
-  BasicType basic_type() const              { return _basic_type; }
+  BasicType basic_type()              const { return _basic_type; }
 
   // Returns true iff the types are identical, or if both are klasses
   // and the is_subtype_of relation holds between the klasses.
@@ -43,15 +43,15 @@ public:
   ciKlass*  box_klass();
 
   // Returns true if this is not a klass or array (i.e., not a reference type).
-  bool is_primitive_type() const            { return basic_type() != T_OBJECT && basic_type() != T_ARRAY; }
-  int size() const                          { return type2size[basic_type()]; }
-  bool is_void() const                      { return basic_type() == T_VOID; }
-  bool is_one_word() const                  { return size() == 1; }
-  bool is_two_word() const                  { return size() == 2; }
+  bool is_primitive_type()            const { return basic_type() != T_OBJECT && basic_type() != T_ARRAY; }
+  int size()                          const { return type2size[basic_type()]; }
+  bool is_void()                      const { return basic_type() == T_VOID; }
+  bool is_one_word()                  const { return size() == 1; }
+  bool is_two_word()                  const { return size() == 2; }
 
   // What kind of ciObject is this?
-  bool is_type() const                      { return true; }
-  bool is_classless() const                 { return is_primitive_type(); }
+  bool is_type()                      const { return true; }
+  bool is_classless()                 const { return is_primitive_type(); }
 
   const char* name();
   virtual void print_name_on(outputStream* st);

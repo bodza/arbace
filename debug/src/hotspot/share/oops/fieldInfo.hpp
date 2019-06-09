@@ -52,9 +52,9 @@ class FieldInfo {
   void set_signature_index(u2 val)               { _shorts[signature_index_offset] = val; }
   void set_initval_index(u2 val)                 { _shorts[initval_index_offset] = val; }
 
-  u2 name_index() const                          { return _shorts[name_index_offset]; }
-  u2 signature_index() const                     { return _shorts[signature_index_offset]; }
-  u2 initval_index() const                       { return _shorts[initval_index_offset]; }
+  u2 name_index()                          const { return _shorts[name_index_offset]; }
+  u2 signature_index()                     const { return _shorts[signature_index_offset]; }
+  u2 initval_index()                       const { return _shorts[initval_index_offset]; }
 
  public:
   static FieldInfo* from_field_array(Array<u2>* fields, int index) {
@@ -73,7 +73,7 @@ class FieldInfo {
     _shorts[high_packed_offset] = 0;
   }
 
-  u2 access_flags() const                        { return _shorts[access_flags_offset]; }
+  u2 access_flags()                        const { return _shorts[access_flags_offset]; }
   u4 offset() const {
     u2 lo = _shorts[low_packed_offset];
     switch (lo & FIELDINFO_TAG_MASK) {

@@ -279,7 +279,7 @@ class Address {
   public:
     extend() { }
     extend(int s, int o, ext::operation op) : _shift(s), _option(o), _op(op) { }
-    int option() const{ return _option; }
+    int option() const { return _option; }
     int shift() const { return _shift; }
     ext::operation op() const { return _op; }
   };

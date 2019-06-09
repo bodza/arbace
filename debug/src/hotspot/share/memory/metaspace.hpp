@@ -44,7 +44,6 @@ namespace metaspace {
   class ClassLoaderMetaspaceStatistics;
   class Metablock;
   class Metachunk;
-  class PrintCLDMetaspaceInfoClosure;
   class SpaceManager;
   class VirtualSpaceList;
   class VirtualSpaceNode;
@@ -185,7 +184,6 @@ class ClassLoaderMetaspace : public CHeapObj<mtClass> {
   friend class ZCollectedHeap; // For expand_and_allocate()
   friend class Metaspace;
   friend class MetaspaceUtils;
-  friend class metaspace::PrintCLDMetaspaceInfoClosure;
   friend class VM_CollectForMetadataAllocation; // For expand_and_allocate()
 
  private:
@@ -250,7 +248,6 @@ class MetaspaceUtils : AllStatic {
   // Running counters for statistics concerning in-use chunks.
   // Note: capacity = used + free + waste + overhead. Note that we do not
   // count free and waste. Their sum can be deduces from the three other values.
-  // For more details, one should call print_report() from within a safe point.
   static size_t _capacity_words [Metaspace::MetadataTypeCount];
   static size_t _overhead_words [Metaspace::MetadataTypeCount];
   static volatile size_t _used_words [Metaspace::MetadataTypeCount];
@@ -329,38 +326,12 @@ public:
     return min_chunk_size_words() * BytesPerWord;
   }
 
-  // Flags for print_report().
-  enum ReportFlag {
-    // Show usage by class loader.
-    rf_show_loaders                 = (1 << 0),
-    // Breaks report down by chunk type (small, medium, ...).
-    rf_break_down_by_chunktype      = (1 << 1),
-    // Breaks report down by space type (anonymous, reflection, ...).
-    rf_break_down_by_spacetype      = (1 << 2),
-    // Print details about the underlying virtual spaces.
-    rf_show_vslist                  = (1 << 3),
-    // Print metaspace map.
-    rf_show_vsmap                   = (1 << 4),
-    // If show_loaders: show loaded classes for each loader.
-    rf_show_classes                 = (1 << 5)
-  };
-
-  // This will print out a basic metaspace usage report but
-  // unlike print_report() is guaranteed not to lock or to walk the CLDG.
-  static void print_basic_report(outputStream* st, size_t scale);
-
-  // Prints a report about the current metaspace state.
-  // Optional parts can be enabled via flags.
-  // Function will walk the CLDG and will lock the expand lock; if that is not
-  // convenient, use print_basic_report() instead.
-  static void print_report(outputStream* out, size_t scale = 0, int flags = 0);
-
   static bool has_chunk_free_list(Metaspace::MetadataType mdtype);
   static MetaspaceChunkFreeListSummary chunk_free_list_summary(Metaspace::MetadataType mdtype);
 
   // Print change in used metadata.
   static void print_metaspace_change(size_t prev_metadata_used);
-  static void print_on(outputStream * out);
+  static void print_on(outputStream* out);
 
   // Prints an ASCII representation of the given space.
   static void print_metaspace_map(outputStream* out, Metaspace::MetadataType mdtype);

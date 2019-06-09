@@ -41,7 +41,7 @@ public:
   void make_walkable(JavaThread* thread);
   void capture_last_Java_pc(void);
 
-  intptr_t* last_Java_sp(void) const             { return _last_Java_sp; }
+  intptr_t* last_Java_sp(void)             const { return _last_Java_sp; }
 
   address last_Java_pc(void)                     { return _last_Java_pc; }
 

@@ -57,7 +57,6 @@
 #include "runtime/threadSMR.inline.hpp"
 #include "runtime/threadStatisticalInfo.hpp"
 #include "runtime/timer.hpp"
-#include "runtime/timerTrace.hpp"
 #include "runtime/vframe.inline.hpp"
 #include "runtime/vframeArray.hpp"
 #include "runtime/vframe_hp.hpp"
@@ -75,9 +74,6 @@
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #include "c1/c1_Compiler.hpp"
-#if INCLUDE_RTM_OPT
-#include "runtime/rtmLocking.hpp"
-#endif
 
 // Initialization after module runtime initialization
 void universe_post_module_init();  // must happen after call_initPhase2
@@ -195,12 +191,6 @@ Thread::Thread() {
   _MutexEvent  = ParkEvent::Allocate(this);
   _MuxEvent    = ParkEvent::Allocate(this);
 
-#ifdef CHECK_UNHANDLED_OOPS
-  if (CheckUnhandledOops) {
-    _unhandled_oops = new UnhandledOops(this);
-  }
-#endif
-
   // Notify the barrier set that a thread is being created. Note that the
   // main thread is created before a barrier set is available. The call to
   // BarrierSet::on_thread_create() for the main thread is therefore deferred
@@ -299,8 +289,6 @@ Thread::~Thread() {
   if (this == Thread::current()) {
     Thread::clear_thread_current();
   }
-
-  CHECK_UNHANDLED_OOPS_ONLY(if (CheckUnhandledOops) delete unhandled_oops();)
 }
 
 ThreadPriority Thread::get_priority(const Thread* const thread) {
@@ -1064,8 +1052,6 @@ void JavaThread::initialize() {
   set_vm_result(NULL);
   set_vm_result_2(NULL);
   set_vframe_array_head(NULL);
-  set_vframe_array_last(NULL);
-  set_deopt_mark(NULL);
   set_deopt_compiled_method(NULL);
   clear_must_deopt_id();
   set_monitor_chunks(NULL);
@@ -1080,10 +1066,7 @@ void JavaThread::initialize() {
   _doing_unsafe_access = false;
   _stack_guard_state = stack_guard_unused;
   _pending_monitorenter = false;
-  _pending_deoptimization = -1;
   _pending_failed_speculation = 0;
-  _pending_transfer_to_interpreter = false;
-  _adjusting_comp_level = false;
   _jvmci._alternate_call_target = NULL;
   if (JVMCICounterSize > 0) {
     _jvmci_counters = NEW_C_HEAP_ARRAY(jlong, JVMCICounterSize, mtInternal);
@@ -1095,7 +1078,6 @@ void JavaThread::initialize() {
   (void)const_cast<oop&>(_exception_oop = oop(NULL));
   _exception_pc  = 0;
   _exception_handler_pc = 0;
-  _is_method_handle_return = 0;
   _should_post_on_exceptions_flag = JNI_FALSE;
   _interp_only_mode    = 0;
   _special_runtime_exit_condition = _no_async_condition;
@@ -1208,19 +1190,10 @@ JavaThread::~JavaThread() {
   Parker::Release(_parker);
   _parker = NULL;
 
-  // Free any remaining  previous NULL
-  vframeArray* old_array = vframe_array_last();
-
-  if (old_array != NULL) {
-    NULL::NULL* old_info = old_array->NULL();
-    old_array->NULL(NULL);
-    delete old_info;
-    delete old_array;
-  }
-
   // All Java related clean up happens in exit
   ThreadSafepointState::destroy(this);
-  if (_thread_stat != NULL) delete _thread_stat;
+  if (_thread_stat != NULL)
+    delete _thread_stat;
 
   if (JVMCICounterSize > 0) {
     if (jvmci_counters_include(this)) {
@@ -1510,9 +1483,6 @@ void JavaThread::check_and_handle_async_exceptions(bool check_unsafe_error) {
       //
       RegisterMap map(this, false);
       frame caller_fr = last_frame().sender(&map);
-      if (caller_fr.is_deoptimized_frame()) {
-        return;
-      }
     }
   }
 
@@ -1630,9 +1600,6 @@ void JavaThread::send_thread_stop(oop java_throwable) {
           // BiasedLocking needs an updated RegisterMap for the revoke monitors pass
           RegisterMap reg_map(this, UseBiasedLocking);
           frame compiled_frame = f.sender(&reg_map);
-          if (compiled_frame.can_be_deoptimized()) {
-            NULL::deoptimize(this, compiled_frame, &reg_map);
-          }
         }
       }
 
@@ -1782,21 +1749,6 @@ void JavaThread::check_safepoint_and_suspend_for_native_trans(JavaThread *thread
   }
 
   SafepointMechanism::block_if_requested(curJT);
-
-  if (thread->is_deopt_suspend()) {
-    thread->clear_deopt_suspend();
-    RegisterMap map(thread, false);
-    frame f = thread->last_frame();
-    while (f.id() != thread->must_deopt_id() && ! f.is_first_frame()) {
-      f = f.sender(&map);
-    }
-    if (f.id() == thread->must_deopt_id()) {
-      thread->clear_must_deopt_id();
-      f.deoptimize(thread);
-    } else {
-      fatal("missed deoptimization!");
-    }
-  }
 }
 
 // Slow path when the native==>VM/Java barriers detect a safepoint is in
@@ -2002,17 +1954,6 @@ void JavaThread::frames_do(void f(frame*, const RegisterMap* map)) {
   }
 }
 
-void JavaThread::deoptimized_wrt_marked_nmethods() {
-  if (!has_last_Java_frame()) return;
-  // BiasedLocking needs an updated RegisterMap for the revoke monitors pass
-  StackFrameStream fst(this, UseBiasedLocking);
-  for ( ; !fst.is_done(); fst.next()) {
-    if (fst.current()->should_be_deoptimized()) {
-      NULL::deoptimize(this, *fst.current(), fst.register_map());
-    }
-  }
-}
-
 // If the caller is a NamedThread, then remember, in the current scope,
 // the given JavaThread in its _processed_thread field.
 class RememberProcessedThread: public StackObj {
@@ -2126,7 +2067,7 @@ const char* _get_thread_state_name(JavaThreadState _thread_state) {
 }
 
 // Called by Threads::print() for VM_PrintThreads operation
-void JavaThread::print_on(outputStream *st, bool print_extended_info) const {
+void JavaThread::print_on(outputStream* st, bool print_extended_info) const {
   st->print_raw("\"");
   st->print_raw(get_thread_name());
   st->print_raw("\" ");
@@ -2609,13 +2550,6 @@ void Threads::initialize_java_lang_classes(JavaThread* main_thread, TRAPS) {
   initialize_class(vmSymbols::java_lang_IllegalArgumentException(), CHECK);
 }
 
-void Threads::initialize_jsr292_core_classes(TRAPS) {
-  initialize_class(vmSymbols::java_lang_invoke_MethodHandle(), CHECK);
-  initialize_class(vmSymbols::java_lang_invoke_ResolvedMethodName(), CHECK);
-  initialize_class(vmSymbols::java_lang_invoke_MemberName(), CHECK);
-  initialize_class(vmSymbols::java_lang_invoke_MethodHandleNatives(), CHECK);
-}
-
 jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   extern void JDK_Version_init();
 
@@ -2829,12 +2763,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
     CompileBroker::compilation_init_phase2();
   }
 
-  // Pre-initialize some JSR292 core classes to avoid deadlock during class loading.
-  // It is done after compilers are initialized, because otherwise compilations of
-  // signature polymorphic MH intrinsics can be missed
-  // (see SystemDictionary::find_method_handle_intrinsic).
-  initialize_jsr292_core_classes(CHECK_JNI_ERR);
-
   // This will initialize the module system.  Only java.base classes can be
   // loaded until phase 2 completes
   call_initPhase2(CHECK_JNI_ERR);
@@ -2851,10 +2779,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   }
 
   BiasedLocking::init();
-
-#if INCLUDE_RTM_OPT
-  RTMLockingCounters::init();
-#endif
 
   if (JDK_Version::current().post_vm_init_hook_enabled()) {
     call_postVMInitHook(THREAD);
@@ -3336,12 +3260,6 @@ void Threads::metadata_handles_do(void f(Metadata*)) {
   // Only walk the Handles in Thread.
   ThreadHandlesClosure handles_closure(f);
   threads_do(&handles_closure);
-}
-
-void Threads::deoptimized_wrt_marked_nmethods() {
-  ALL_JAVA_THREADS(p) {
-    p->deoptimized_wrt_marked_nmethods();
-  }
 }
 
 // Get count Java threads that are waiting to enter the specified monitor.

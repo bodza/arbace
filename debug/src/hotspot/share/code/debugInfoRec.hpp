@@ -79,7 +79,6 @@ class DebugInformationRecorder: public ResourceObj {
                       int         bci,
                       bool        reexecute,
                       bool        rethrow_exception = false,
-                      bool        is_method_handle_invoke = false,
                       bool        return_oop = false,
                       DebugToken* locals      = NULL,
                       DebugToken* expressions = NULL,
@@ -89,8 +88,8 @@ class DebugInformationRecorder: public ResourceObj {
 
   // This call must follow every add_safepoint,
   // after any intervening describe_scope calls.
-  void end_safepoint(int pc_offset)      { end_scopes(pc_offset, true); }
-  void end_non_safepoint(int pc_offset)  { end_scopes(pc_offset, false); }
+  void end_safepoint(int pc_offset)     { end_scopes(pc_offset, true); }
+  void end_non_safepoint(int pc_offset) { end_scopes(pc_offset, false); }
 
   // helper fuctions for describe_scope to enable sharing
   DebugToken* create_scope_values(GrowableArray<ScopeValue*>* values);

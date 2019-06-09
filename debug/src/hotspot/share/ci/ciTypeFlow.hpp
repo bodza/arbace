@@ -6,7 +6,6 @@ private:
   ciEnv*    _env;
   ciMethod* _method;
   ciMethodBlocks* _methodBlocks;
-  int       _osr_bci;
 
   // information cached from the method:
   int _max_locals;
@@ -22,19 +21,17 @@ public:
   class Block;
 
   // Build a type flow analyzer
-  // Do an OSR analysis if osr_bci >= 0.
-  ciTypeFlow(ciEnv* env, ciMethod* method, int osr_bci = InvocationEntryBci);
+  ciTypeFlow(ciEnv* env, ciMethod* method);
 
   // Accessors
-  ciMethod* method() const     { return _method; }
+  ciMethod* method()     const { return _method; }
   ciEnv*    env()              { return _env; }
   Arena*    arena()            { return _env->arena(); }
-  bool      is_osr_flow() const{ return _osr_bci != InvocationEntryBci; }
-  int       start_bci() const  { return is_osr_flow() ? _osr_bci : 0; }
+  int       start_bci()  const { return 0; }
   int       max_locals() const { return _max_locals; }
-  int       max_stack() const  { return _max_stack; }
-  int       max_cells() const  { return _max_locals + _max_stack; }
-  int       code_size() const  { return _code_size; }
+  int       max_stack()  const { return _max_stack; }
+  int       max_cells()  const { return _max_locals + _max_stack; }
+  int       code_size()  const { return _code_size; }
   bool      has_irreducible_entry() const { return _has_irreducible_entry; }
 
   // Represents information about an "active" jsr call.  This
@@ -50,7 +47,7 @@ public:
       _return_address = return_address;
     }
 
-    int entry_address() const  { return _entry_address; }
+    int entry_address()  const { return _entry_address; }
     int return_address() const { return _return_address; }
 
     void print_on(outputStream* st) const { }
@@ -110,7 +107,7 @@ public:
     void add(LocalSet* ls)      { _bits |= ls->_bits; }
     bool test(uint32_t i) const { return i < (uint32_t)max ? (_bits >> i)&1U : true; }
     void clear()                { _bits = 0; }
-    void print_on(outputStream* st, int limit) const  { };
+    void print_on(outputStream* st, int limit)  const { };
   };
 
   // Used as a combined index for locals and temps
@@ -128,7 +125,6 @@ public:
     ciTypeFlow* _outer;
 
     int         _trap_bci;
-    int         _trap_index;
 
     LocalSet    _def_locals;  // For entire block
 
@@ -163,9 +159,9 @@ public:
     }
 
     // Accessors
-    ciTypeFlow* outer() const      { return _outer; }
+    ciTypeFlow* outer()      const { return _outer; }
 
-    int      stack_size() const    { return _stack_size; }
+    int      stack_size()    const { return _stack_size; }
     void set_stack_size(int ss)    { _stack_size = ss; }
 
     int      monitor_count() const { return _monitor_count; }
@@ -183,19 +179,19 @@ public:
     // Cell creation
     Cell local(int lnum) const { return (Cell)(lnum); }
     Cell stack(int snum) const { return (Cell)(outer()->max_locals() + snum); }
-    Cell tos() const           { return stack(stack_size()-1); }
+    Cell tos()           const { return stack(stack_size()-1); }
 
     // For external use only:
     ciType* local_type_at(int i) const { return type_at(local(i)); }
     ciType* stack_type_at(int i) const { return type_at(stack(i)); }
 
     // Accessors for the type of some Cell c
-    ciType* type_at(Cell c) const             { return _types[c]; }
+    ciType* type_at(Cell c)             const { return _types[c]; }
     void    set_type_at(Cell c, ciType* type) { _types[c] = type; }
 
     // Top-of-stack operations.
     void    set_type_at_tos(ciType* type) { set_type_at(tos(), type); }
-    ciType* type_at_tos() const           { return type_at(tos()); }
+    ciType* type_at_tos()           const { return type_at(tos()); }
 
     void    push(ciType* type) {
       _stack_size++;
@@ -212,10 +208,10 @@ public:
 
     // Convenience operations.
     bool is_reference(ciType* type) const { return type == null_type() || !type->is_primitive_type(); }
-    bool is_int(ciType* type) const       { return type->basic_type() == T_INT; }
-    bool is_long(ciType* type) const      { return type->basic_type() == T_LONG; }
-    bool is_float(ciType* type) const     { return type->basic_type() == T_FLOAT; }
-    bool is_double(ciType* type) const    { return type->basic_type() == T_DOUBLE; }
+    bool is_int(ciType* type)       const { return type->basic_type() == T_INT; }
+    bool is_long(ciType* type)      const { return type->basic_type() == T_LONG; }
+    bool is_float(ciType* type)     const { return type->basic_type() == T_FLOAT; }
+    bool is_double(ciType* type)    const { return type->basic_type() == T_DOUBLE; }
 
     void store_to_local(int lnum) {
       _def_locals.add((uint) lnum);
@@ -369,7 +365,7 @@ public:
     }
 
     // Stop interpretation of this path with a trap.
-    void trap(ciBytecodeStream* str, ciKlass* klass, int index);
+    void trap(ciBytecodeStream* str, ciKlass* klass);
 
   public:
     StateVector(ciTypeFlow* outer);
@@ -390,11 +386,8 @@ public:
     // What is the bci of the trap?
     int  trap_bci() { return _trap_bci; }
 
-    // What is the index associated with the trap?
-    int  trap_index() { return _trap_index; }
-
     void print_cell_on(outputStream* st, Cell c) const { };
-    void print_on(outputStream* st) const              { };
+    void print_on(outputStream* st)              const { };
   };
 
   // Parameter for "find_block" calls:
@@ -435,7 +428,6 @@ public:
     JsrSet*                          _jsrs;
 
     int                              _trap_bci;
-    int                              _trap_index;
 
     // pre_order, assigned at first visit. Used as block ID and "visited" tag
     int                              _pre_order;
@@ -460,8 +452,8 @@ public:
     // Loop info
     Loop*                            _loop;              // nearest loop
 
-    ciBlock*     ciblock() const     { return _ciblock; }
-    StateVector* state() const     { return _state; }
+    ciBlock*     ciblock()     const { return _ciblock; }
+    StateVector* state()     const { return _state; }
 
     // Compute the exceptional successors and types for this Block.
     void compute_exceptions();
@@ -470,28 +462,26 @@ public:
     // constructors
     Block(ciTypeFlow* outer, ciBlock* ciblk, JsrSet* jsrs);
 
-    void set_trap(int trap_bci, int trap_index) {
+    void set_trap(int trap_bci) {
       _trap_bci = trap_bci;
-      _trap_index = trap_index;
     }
-    bool has_trap()   const  { return _trap_bci != -1; }
-    int  trap_bci()   const  { return _trap_bci; }
-    int  trap_index() const  { return _trap_index; }
+    bool has_trap()    const { return _trap_bci != -1; }
+    int  trap_bci()    const { return _trap_bci; }
 
     // accessors
     ciTypeFlow* outer() const { return state()->outer(); }
-    int start() const         { return _ciblock->start_bci(); }
-    int limit() const         { return _ciblock->limit_bci(); }
-    int control() const       { return _ciblock->control_bci(); }
-    JsrSet* jsrs() const      { return _jsrs; }
+    int start()         const { return _ciblock->start_bci(); }
+    int limit()         const { return _ciblock->limit_bci(); }
+    int control()       const { return _ciblock->control_bci(); }
+    JsrSet* jsrs()      const { return _jsrs; }
 
-    bool    is_backedge_copy() const       { return _backedge_copy; }
+    bool    is_backedge_copy()       const { return _backedge_copy; }
     void   set_backedge_copy(bool z);
     int        backedge_copy_count() const { return outer()->backedge_copy_count(ciblock()->index(), _jsrs); }
 
     // access to entry state
-    int     stack_size() const         { return _state->stack_size(); }
-    int     monitor_count() const      { return _state->monitor_count(); }
+    int     stack_size()         const { return _state->stack_size(); }
+    int     monitor_count()      const { return _state->monitor_count(); }
     ciType* local_type_at(int i) const { return _state->local_type_at(i); }
     ciType* stack_type_at(int i) const { return _state->stack_type_at(i); }
 
@@ -568,39 +558,39 @@ public:
 
     // Work list manipulation
     void   set_next(Block* block)   { _next = block; }
-    Block* next() const             { return _next; }
+    Block* next()             const { return _next; }
 
     void   set_on_work_list(bool c) { _on_work_list = c; }
-    bool   is_on_work_list() const  { return _on_work_list; }
+    bool   is_on_work_list()  const { return _on_work_list; }
 
-    bool   has_pre_order() const    { return _pre_order >= 0; }
+    bool   has_pre_order()    const { return _pre_order >= 0; }
     void   set_pre_order(int po)    { _pre_order = po; }
-    int    pre_order() const        { return _pre_order; }
+    int    pre_order()        const { return _pre_order; }
     void   set_next_pre_order()     { set_pre_order(outer()->inc_next_pre_order()); }
-    bool   is_start() const         { return _pre_order == outer()->start_block_num(); }
+    bool   is_start()         const { return _pre_order == outer()->start_block_num(); }
 
     // Reverse post order
     void   df_init();
-    bool   has_post_order() const   { return _post_order >= 0; }
+    bool   has_post_order()   const { return _post_order >= 0; }
     void   set_post_order(int po)   { _post_order = po; }
     void   reset_post_order(int o)  { _post_order = o; }
-    int    post_order() const       { return _post_order; }
+    int    post_order()       const { return _post_order; }
 
-    bool   has_rpo() const          { return has_post_order() && outer()->have_block_count(); }
-    int    rpo() const              { return outer()->block_count() - post_order() - 1; }
+    bool   has_rpo()          const { return has_post_order() && outer()->have_block_count(); }
+    int    rpo()              const { return outer()->block_count() - post_order() - 1; }
     void   set_rpo_next(Block* b)   { _rpo_next = b; }
     Block* rpo_next()               { return _rpo_next; }
 
     // Loops
-    Loop*  loop() const                  { return _loop; }
+    Loop*  loop()                  const { return _loop; }
     void   set_loop(Loop* lp)            { _loop = lp; }
-    bool   is_loop_head() const          { return _loop && _loop->head() == this; }
+    bool   is_loop_head()          const { return _loop && _loop->head() == this; }
     void   set_irreducible_entry(bool c) { _irreducible_entry = c; }
-    bool   is_irreducible_entry() const  { return _irreducible_entry; }
+    bool   is_irreducible_entry()  const { return _irreducible_entry; }
     void   set_has_monitorenter()        { _has_monitorenter = true; }
-    bool   has_monitorenter() const      { return _has_monitorenter; }
-    bool   is_visited() const            { return has_pre_order(); }
-    bool   is_post_visited() const       { return has_post_order(); }
+    bool   has_monitorenter()      const { return _has_monitorenter; }
+    bool   is_visited()            const { return has_pre_order(); }
+    bool   is_post_visited()       const { return has_post_order(); }
     bool   is_clonable_exit(Loop* lp);
     Block* looping_succ(Loop* lp);       // Successor inside of loop
     bool   is_single_entry_loop_head() const {
@@ -611,7 +601,7 @@ public:
     }
 
     void   print_value_on(outputStream* st) const { };
-    void   print_on(outputStream* st) const       { };
+    void   print_on(outputStream* st)       const { };
   };
 
   // Loop
@@ -751,12 +741,12 @@ public:
   void record_failure(const char* reason);
 
   // Return the block of a given pre-order number.
-  int have_block_count() const      { return _block_map != NULL; }
-  int block_count() const           { return _next_pre_order; }
+  int have_block_count()      const { return _block_map != NULL; }
+  int block_count()           const { return _next_pre_order; }
   Block* pre_order_at(int po) const { return _block_map[po]; }
-  Block* start_block() const        { return pre_order_at(start_block_num()); }
-  int start_block_num() const       { return 0; }
-  Block* rpo_at(int rpo) const      { return _block_map[rpo]; }
+  Block* start_block()        const { return pre_order_at(start_block_num()); }
+  int start_block_num()       const { return 0; }
+  Block* rpo_at(int rpo)      const { return _block_map[rpo]; }
   int next_pre_order()              { return _next_pre_order; }
   int inc_next_pre_order()          { return _next_pre_order++; }
 

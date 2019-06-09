@@ -18,6 +18,6 @@ ciObject* ciObjArray::obj_at(int index) {
   if (o == NULL) {
     return ciNullObject::make();
   } else {
-    return CURRENT_ENV->get_object(o);
+    return ciEnv::current()->get_object(o);
   }
 }

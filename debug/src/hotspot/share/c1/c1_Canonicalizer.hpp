@@ -9,13 +9,13 @@ class Canonicalizer: InstructionVisitor {
   Instruction* _canonical;
   int _bci;
 
-  Compilation *compilation()                     { return _compilation; }
+  Compilation *compilation()     { return _compilation; }
   void set_canonical(Value x);
-  void set_bci(int bci)                          { _bci = bci; }
-  void set_constant(jint x)                      { set_canonical(new Constant(new IntConstant(x))); }
-  void set_constant(jlong x)                     { set_canonical(new Constant(new LongConstant(x))); }
-  void set_constant(jfloat x)                    { set_canonical(new Constant(new FloatConstant(x))); }
-  void set_constant(jdouble x)                   { set_canonical(new Constant(new DoubleConstant(x))); }
+  void set_bci(int bci)          { _bci = bci; }
+  void set_constant(jint x)      { set_canonical(new Constant(new IntConstant(x))); }
+  void set_constant(jlong x)     { set_canonical(new Constant(new LongConstant(x))); }
+  void set_constant(jfloat x)    { set_canonical(new Constant(new FloatConstant(x))); }
+  void set_constant(jdouble x)   { set_canonical(new Constant(new DoubleConstant(x))); }
   void move_const_to_right(Op2* x);
   void do_Op2(Op2* x);
   void do_UnsafeRawOp(UnsafeRawOp* x);
@@ -26,8 +26,8 @@ class Canonicalizer: InstructionVisitor {
   Canonicalizer(Compilation* c, Value x, int bci) : _compilation(c), _canonical(x), _bci(bci) {
     if (CanonicalizeNodes) x->visit(this);
   }
-  Value canonical() const                        { return _canonical; }
-  int bci() const                                { return _bci; }
+  Value canonical()        const { return _canonical; }
+  int bci()                const { return _bci; }
 
   virtual void do_Phi            (Phi*             x);
   virtual void do_Constant       (Constant*        x);
@@ -48,15 +48,7 @@ class Canonicalizer: InstructionVisitor {
   virtual void do_NullCheck      (NullCheck*       x);
   virtual void do_TypeCast       (TypeCast*        x);
   virtual void do_Invoke         (Invoke*          x);
-  virtual void do_NewInstance    (NewInstance*     x);
-  virtual void do_NewTypeArray   (NewTypeArray*    x);
-  virtual void do_NewObjectArray (NewObjectArray*  x);
-  virtual void do_NewMultiArray  (NewMultiArray*   x);
-  virtual void do_CheckCast      (CheckCast*       x);
   virtual void do_InstanceOf     (InstanceOf*      x);
-  virtual void do_MonitorEnter   (MonitorEnter*    x);
-  virtual void do_MonitorExit    (MonitorExit*     x);
-  virtual void do_Intrinsic      (Intrinsic*       x);
   virtual void do_BlockBegin     (BlockBegin*      x);
   virtual void do_Goto           (Goto*            x);
   virtual void do_If             (If*              x);
@@ -65,20 +57,6 @@ class Canonicalizer: InstructionVisitor {
   virtual void do_Return         (Return*          x);
   virtual void do_Throw          (Throw*           x);
   virtual void do_Base           (Base*            x);
-  virtual void do_OsrEntry       (OsrEntry*        x);
-  virtual void do_ExceptionObject(ExceptionObject* x);
-  virtual void do_RoundFP        (RoundFP*         x);
-  virtual void do_UnsafeGetRaw   (UnsafeGetRaw*    x);
-  virtual void do_UnsafePutRaw   (UnsafePutRaw*    x);
-  virtual void do_UnsafeGetObject(UnsafeGetObject* x);
-  virtual void do_UnsafePutObject(UnsafePutObject* x);
-  virtual void do_UnsafeGetAndSetObject(UnsafeGetAndSetObject* x);
-  virtual void do_ProfileCall    (ProfileCall*     x);
-  virtual void do_ProfileReturnType (ProfileReturnType*  x);
-  virtual void do_ProfileInvoke  (ProfileInvoke*   x);
-  virtual void do_RuntimeCall    (RuntimeCall*     x);
-  virtual void do_MemBar         (MemBar*          x);
-  virtual void do_RangeCheckPredicate(RangeCheckPredicate* x);
 };
 
 #endif

@@ -9,9 +9,6 @@
 // This class represents an typeArrayOop in the HotSpot virtual
 // machine.
 
-// ------------------------------------------------------------------
-// ciTypeArray::char_at
-//
 // Implementation of the char_at method.
 jchar ciTypeArray::char_at(int index) {
   VM_ENTRY_MARK;
@@ -19,9 +16,6 @@ jchar ciTypeArray::char_at(int index) {
   return c;
 }
 
-// ------------------------------------------------------------------
-// ciTypeArray::byte_at
-//
 // Implementation of the byte_at method.
 jbyte ciTypeArray::byte_at(int index) {
   VM_ENTRY_MARK;

@@ -92,7 +92,7 @@ class VirtualSpaceList : public CHeapObj<mtClass> {
   // Unlink empty VirtualSpaceNodes and free it.
   void purge(ChunkManager* chunk_manager);
 
-  void print_on(outputStream* st) const                 { print_on(st, K); }
+  void print_on(outputStream* st)                 const { print_on(st, K); }
   void print_on(outputStream* st, size_t scale) const;
   void print_map(outputStream* st) const;
 

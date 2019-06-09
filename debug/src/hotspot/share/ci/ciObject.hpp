@@ -86,24 +86,19 @@ public:
   // be registered with the oopRecorder.
   jobject constant_encoding();
 
-  virtual bool is_object() const            { return true; }
+  virtual bool is_object()      const { return true; }
 
   // What kind of ciObject is this?
-  virtual bool is_null_object()       const { return false; }
-  virtual bool is_call_site()         const { return false; }
-  virtual bool is_cpcache()           const { return false; }
-  virtual bool is_instance()                { return false; }
-  virtual bool is_member_name()       const { return false; }
-  virtual bool is_method_handle()     const { return false; }
-  virtual bool is_method_type()       const { return false; }
-  virtual bool is_array()                   { return false; }
-  virtual bool is_obj_array()               { return false; }
-  virtual bool is_type_array()              { return false; }
+  virtual bool is_null_object() const { return false; }
+  virtual bool is_cpcache()     const { return false; }
+  virtual bool is_instance()          { return false; }
+  virtual bool is_array()             { return false; }
+  virtual bool is_obj_array()         { return false; }
+  virtual bool is_type_array()        { return false; }
 
   // Is this a type or value which has no associated class?
   // It is true of primitive types and null objects.
-  virtual bool is_classless() const         { return false; }
-  virtual void dump_replay_data(outputStream* st) { /* do nothing */ }
+  virtual bool is_classless()         const { return false; }
 
   // Note: some ciObjects refer to oops which have yet to be created.
   // We refer to these as "unloaded".  Specifically, there are
@@ -116,33 +111,11 @@ public:
   }
 
   // Subclass casting with assertions.
-  ciNullObject* as_null_object() {
-    return (ciNullObject*)this;
-  }
-  ciCallSite* as_call_site() {
-    return (ciCallSite*)this;
-  }
-  ciInstance* as_instance() {
-    return (ciInstance*)this;
-  }
-  ciMemberName* as_member_name() {
-    return (ciMemberName*)this;
-  }
-  ciMethodHandle* as_method_handle() {
-    return (ciMethodHandle*)this;
-  }
-  ciMethodType* as_method_type() {
-    return (ciMethodType*)this;
-  }
-  ciArray* as_array() {
-    return (ciArray*)this;
-  }
-  ciObjArray* as_obj_array() {
-    return (ciObjArray*)this;
-  }
-  ciTypeArray* as_type_array() {
-    return (ciTypeArray*)this;
-  }
+  ciNullObject* as_null_object() { return (ciNullObject*)this; }
+  ciInstance* as_instance()      { return (ciInstance*)this; }
+  ciArray* as_array()            { return (ciArray*)this; }
+  ciObjArray* as_obj_array()     { return (ciObjArray*)this; }
+  ciTypeArray* as_type_array()   { return (ciTypeArray*)this; }
 
   // Print debugging output about this ciObject.
   void print(outputStream* st);

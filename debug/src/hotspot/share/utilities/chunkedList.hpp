@@ -40,8 +40,8 @@ template <class T, MEMFLAGS F> class ChunkedList : public CHeapObj<F> {
   void set_next_used(ChunkedList<T, F>* buffer) { _next_used = buffer; }
   void set_next_free(ChunkedList<T, F>* buffer) { _next_free = buffer; }
 
-  ChunkedList<T, F>* next_used() const          { return _next_used; }
-  ChunkedList<T, F>* next_free() const          { return _next_free; }
+  ChunkedList<T, F>* next_used()          const { return _next_used; }
+  ChunkedList<T, F>* next_free()          const { return _next_free; }
 
   size_t size() const {
     return pointer_delta(_top, _values, sizeof(T));

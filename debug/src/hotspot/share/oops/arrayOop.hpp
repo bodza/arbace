@@ -65,7 +65,7 @@ class arrayOopDesc : public oopDesc {
   }
 
   // Tells whether index is within bounds.
-  bool is_within_bounds(int index) const        { return 0 <= index && index < length(); }
+  bool is_within_bounds(int index)        const { return 0 <= index && index < length(); }
 
   // Accessors for instance variable which is not a C++ declared nonstatic
   // field.

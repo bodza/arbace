@@ -1668,7 +1668,7 @@ JVM_ENTRY(jint, JVM_ConstantPoolGetNameAndTypeRefIndexAt(JNIEnv *env, jobject ob
   constantPoolHandle cp(THREAD, reflect_ConstantPool::get_cp(JNIHandles::resolve_non_null(obj)));
   bounds_check(cp, index, CHECK_0);
   constantTag tag = cp->tag_at(index);
-  if (!tag.is_invoke_dynamic() && !tag.is_field_or_method()) {
+  if (!tag.is_field_or_method()) {
     THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(), "Wrong type at constant pool index");
   }
   return (jint) cp->uncached_name_and_type_ref_index_at(index);
@@ -1775,12 +1775,6 @@ JVM_ENTRY(jbyte, JVM_ConstantPoolGetTagAt(JNIEnv *env, jobject obj, jobject unus
       result = JVM_CONSTANT_Class;
   } else if (tag.is_string_index()) {
       result = JVM_CONSTANT_String;
-  } else if (tag.is_method_type_in_error()) {
-      result = JVM_CONSTANT_MethodType;
-  } else if (tag.is_method_handle_in_error()) {
-      result = JVM_CONSTANT_MethodHandle;
-  } else if (tag.is_dynamic_constant_in_error()) {
-      result = JVM_CONSTANT_Dynamic;
   }
   return result;
 }

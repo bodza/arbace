@@ -32,7 +32,7 @@ class ChunkManagerStatistics {
 
 public:
   // Free chunk statistics, by chunk index.
-  const FreeChunksStatistics& chunk_stats(ChunkIndex index) const   { return _chunk_stats[index]; }
+  const FreeChunksStatistics& chunk_stats(ChunkIndex index)   const { return _chunk_stats[index]; }
   FreeChunksStatistics& chunk_stats(ChunkIndex index)               { return _chunk_stats[index]; }
 
   void reset();
@@ -97,11 +97,11 @@ public:
   SpaceManagerStatistics();
 
   // Chunk statistics by chunk index
-  const UsedChunksStatistics& chunk_stats(ChunkIndex index) const   { return _chunk_stats[index]; }
+  const UsedChunksStatistics& chunk_stats(ChunkIndex index)   const { return _chunk_stats[index]; }
   UsedChunksStatistics& chunk_stats(ChunkIndex index)               { return _chunk_stats[index]; }
 
-  uintx free_blocks_num () const                                    { return _free_blocks_num; }
-  size_t free_blocks_cap_words () const                             { return _free_blocks_cap_words; }
+  uintx free_blocks_num ()                                    const { return _free_blocks_num; }
+  size_t free_blocks_cap_words ()                             const { return _free_blocks_cap_words; }
 
   void reset();
 
@@ -126,7 +126,7 @@ public:
 
   const SpaceManagerStatistics& nonclass_sm_stats() const { return sm_stats(Metaspace::NonClassType); }
   SpaceManagerStatistics& nonclass_sm_stats()             { return sm_stats(Metaspace::NonClassType); }
-  const SpaceManagerStatistics& class_sm_stats() const    { return sm_stats(Metaspace::ClassType); }
+  const SpaceManagerStatistics& class_sm_stats()    const { return sm_stats(Metaspace::ClassType); }
   SpaceManagerStatistics& class_sm_stats()                { return sm_stats(Metaspace::ClassType); }
 
   void reset();

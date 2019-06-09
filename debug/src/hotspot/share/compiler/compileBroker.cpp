@@ -6,10 +6,8 @@
 #include "classfile/vmSymbols.hpp"
 #include "code/codeCache.hpp"
 #include "code/codeHeapState.hpp"
-#include "code/dependencyContext.hpp"
 #include "compiler/compileBroker.hpp"
 #include "compiler/compilerOracle.hpp"
-#include "compiler/directivesParser.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/resourceArea.hpp"
@@ -28,7 +26,6 @@
 #include "runtime/safepointVerifiers.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/sweeper.hpp"
-#include "runtime/timerTrace.hpp"
 #include "runtime/vframe.inline.hpp"
 #include "utilities/debug.hpp"
 #include "utilities/formatBuffer.hpp"
@@ -57,16 +54,9 @@ jobject* CompileBroker::_compiler2_objects = NULL;
 
 // These counters are used to assign an unique ID to each compilation.
 volatile jint CompileBroker::_compilation_id     = 0;
-volatile jint CompileBroker::_osr_compilation_id = 0;
-
-// Debugging information
-int  CompileBroker::_last_compile_type     = no_compile;
-int  CompileBroker::_last_compile_level    = CompLevel_none;
-char CompileBroker::_last_method_compiled[CompileBroker::name_buffer_length];
 
 // Timers and counters for generating statistics
 elapsedTimer CompileBroker::_t_total_compilation;
-elapsedTimer CompileBroker::_t_osr_compilation;
 elapsedTimer CompileBroker::_t_standard_compilation;
 elapsedTimer CompileBroker::_t_invalidated_compilation;
 elapsedTimer CompileBroker::_t_bailedout_compilation;
@@ -74,12 +64,10 @@ elapsedTimer CompileBroker::_t_bailedout_compilation;
 int CompileBroker::_total_bailout_count            = 0;
 int CompileBroker::_total_invalidated_count        = 0;
 int CompileBroker::_total_compile_count            = 0;
-int CompileBroker::_total_osr_compile_count        = 0;
 int CompileBroker::_total_standard_compile_count   = 0;
 int CompileBroker::_total_compiler_stopped_count   = 0;
 int CompileBroker::_total_compiler_restarted_count = 0;
 
-int CompileBroker::_sum_osr_bytes_compiled         = 0;
 int CompileBroker::_sum_standard_bytes_compiled    = 0;
 int CompileBroker::_sum_nmethod_size               = 0;
 int CompileBroker::_sum_nmethod_code_size          = 0;
@@ -93,9 +81,7 @@ bool compileBroker_init() {
   // init directives stack, adding default directive
   DirectivesStack::init();
 
-  if (DirectivesParser::has_file()) {
-    return DirectivesParser::parse_from_flag();
-  } else if (CompilerDirectivesPrint) {
+  if (CompilerDirectivesPrint) {
     // Print default directive even when no other was added
     DirectivesStack::print(tty);
   }
@@ -400,8 +386,6 @@ CompilerCounters::CompilerCounters() {
 //
 // Initialize the Compilation object
 void CompileBroker::compilation_init_phase1(TRAPS) {
-  _last_method_compiled[0] = '\0';
-
   // No need to initialize compilation system if we do not use it.
   if (!UseCompiler) {
     return;
@@ -637,13 +621,13 @@ void CompileBroker::mark_on_stack() {
 // CompileBroker::compile_method
 //
 // Request compilation of a method.
-void CompileBroker::compile_method_base(const methodHandle& method, int osr_bci, int comp_level, const methodHandle& hot_method, int hot_count, CompileTask::CompileReason compile_reason, bool blocking, Thread* thread) {
+void CompileBroker::compile_method_base(const methodHandle& method, int comp_level, const methodHandle& hot_method, int hot_count, CompileTask::CompileReason compile_reason, bool blocking, Thread* thread) {
   guarantee(!method->is_abstract(), "cannot compile abstract methods");
 
   // A request has been made for compilation.  Before we do any
   // real work, check to see if the method has been compiled
   // in the meantime with a definitive result.
-  if (compilation_is_complete(method, osr_bci, comp_level)) {
+  if (compilation_is_complete(method, comp_level)) {
     return;
   }
 
@@ -679,14 +663,14 @@ void CompileBroker::compile_method_base(const methodHandle& method, int osr_bci,
     // We need to check again to see if the compilation has
     // completed.  A previous compilation may have registered
     // some result.
-    if (compilation_is_complete(method, osr_bci, comp_level)) {
+    if (compilation_is_complete(method, comp_level)) {
       return;
     }
 
     // We now know that this compilation is not pending, complete,
     // or prohibited.  Assign a compile_id to this compilation
     // and check to see if it is in our [Start..Stop) range.
-    int compile_id = assign_compile_id(method, osr_bci);
+    int compile_id = assign_compile_id(method);
     if (compile_id == 0) {
       // The compilation falls outside the allowed range.
       return;
@@ -761,11 +745,7 @@ void CompileBroker::compile_method_base(const methodHandle& method, int osr_bci,
     // and in that case it's best to protect both the testing (here) of
     // these bits, and their updating (here and elsewhere) under a
     // common lock.
-    task = create_compile_task(queue,
-                               compile_id, method,
-                               osr_bci, comp_level,
-                               hot_method, hot_count, compile_reason,
-                               blocking);
+    task = create_compile_task(queue, compile_id, method, comp_level, hot_method, hot_count, compile_reason, blocking);
   }
 
   if (blocking) {
@@ -773,11 +753,7 @@ void CompileBroker::compile_method_base(const methodHandle& method, int osr_bci,
   }
 }
 
-nmethod* CompileBroker::compile_method(const methodHandle& method, int osr_bci,
-                                       int comp_level,
-                                       const methodHandle& hot_method, int hot_count,
-                                       CompileTask::CompileReason compile_reason,
-                                       Thread* THREAD) {
+nmethod* CompileBroker::compile_method(const methodHandle& method, int comp_level, const methodHandle& hot_method, int hot_count, CompileTask::CompileReason compile_reason, Thread* THREAD) {
   // Do nothing if compilebroker is not initalized or compiles are submitted on level none
   if (!_initialized || comp_level == CompLevel_none) {
     return NULL;
@@ -786,21 +762,16 @@ nmethod* CompileBroker::compile_method(const methodHandle& method, int osr_bci,
   AbstractCompiler *comp = CompileBroker::compiler(comp_level);
 
   DirectiveSet* directive = DirectivesStack::getMatchingDirective(method, comp);
-  nmethod* nm = CompileBroker::compile_method(method, osr_bci, comp_level, hot_method, hot_count, compile_reason, directive, THREAD);
+  nmethod* nm = CompileBroker::compile_method(method, comp_level, hot_method, hot_count, compile_reason, directive, THREAD);
   DirectivesStack::release(directive);
   return nm;
 }
 
-nmethod* CompileBroker::compile_method(const methodHandle& method, int osr_bci,
-                                         int comp_level,
-                                         const methodHandle& hot_method, int hot_count,
-                                         CompileTask::CompileReason compile_reason,
-                                         DirectiveSet* directive,
-                                         Thread* THREAD) {
+nmethod* CompileBroker::compile_method(const methodHandle& method, int comp_level, const methodHandle& hot_method, int hot_count, CompileTask::CompileReason compile_reason, DirectiveSet* directive, Thread* THREAD) {
   // lock, make sure that the compilation
   // isn't prohibited in a straightforward way.
   AbstractCompiler* comp = CompileBroker::compiler(comp_level);
-  if (comp == NULL || !comp->can_compile_method(method) || compilation_is_prohibited(method, osr_bci, comp_level, directive->ExcludeOption)) {
+  if (comp == NULL || !comp->can_compile_method(method) || compilation_is_prohibited(method, comp_level, directive->ExcludeOption)) {
     return NULL;
   }
 
@@ -808,22 +779,17 @@ nmethod* CompileBroker::compile_method(const methodHandle& method, int osr_bci,
     return NULL;
   }
 
-  if (osr_bci == InvocationEntryBci) {
+  {
     // standard compilation
     CompiledMethod* method_code = method->code();
     if (method_code != NULL && method_code->is_nmethod()) {
-      if (compilation_is_complete(method, osr_bci, comp_level)) {
+      if (compilation_is_complete(method, comp_level)) {
         return (nmethod*) method_code;
       }
     }
     if (method->is_not_compilable(comp_level)) {
       return NULL;
     }
-  } else {
-    // We accept a higher level osr method
-    nmethod* nm = method->lookup_osr_nmethod_for(osr_bci, comp_level, false);
-    if (nm != NULL) return nm;
-    if (method->is_not_osr_compilable(comp_level)) return NULL;
   }
 
   // some prerequisites that are compiler specific
@@ -840,13 +806,13 @@ nmethod* CompileBroker::compile_method(const methodHandle& method, int osr_bci,
   //
   // Note: A native method implies non-osr compilation which is
   //       checked with an assertion at the entry of this method.
-  if (method->is_native() && !method->is_method_handle_intrinsic()) {
+  if (method->is_native()) {
     bool in_base_library;
     address adr = NativeLookup::lookup(method, in_base_library, THREAD);
     if (HAS_PENDING_EXCEPTION) {
       // In case of an exception looking up the method, we just forget
       // about it. The interpreter will kick-in and throw the exception.
-      method->set_not_compilable(); // implies is_not_osr_compilable()
+      method->set_not_compilable();
       CLEAR_PENDING_EXCEPTION;
       return NULL;
     }
@@ -859,38 +825,34 @@ nmethod* CompileBroker::compile_method(const methodHandle& method, int osr_bci,
 
   // do the compilation
   if (method->is_native()) {
-    if (!PreferInterpreterNativeStubs || method->is_method_handle_intrinsic()) {
-      // The following native methods:
-      //
-      // java.lang.Float.intBitsToFloat
-      // java.lang.Float.floatToRawIntBits
-      // java.lang.Double.longBitsToDouble
-      // java.lang.Double.doubleToRawLongBits
-      //
-      // are called through the interpreter even if interpreter native stubs
-      // are not preferred (i.e., calling through adapter handlers is preferred).
-      // The reason is that on x86_32 signaling NaNs (sNaNs) are not preserved
-      // if the version of the methods from the native libraries is called.
-      // As the interpreter and the C2-intrinsified version of the methods preserves
-      // sNaNs, that would result in an inconsistent way of handling of sNaNs.
-      if ((UseSSE >= 1 &&
-          (method->intrinsic_id() == vmIntrinsics::_intBitsToFloat ||
-           method->intrinsic_id() == vmIntrinsics::_floatToRawIntBits)) ||
-          (UseSSE >= 2 &&
-           (method->intrinsic_id() == vmIntrinsics::_longBitsToDouble ||
-            method->intrinsic_id() == vmIntrinsics::_doubleToRawLongBits))) {
-        return NULL;
-      }
-
-      // To properly handle the appendix argument for out-of-line calls we are using a small trampoline that
-      // pops off the appendix argument and jumps to the target (see gen_special_dispatch in SharedRuntime).
-      //
-      // Since normal compiled-to-compiled calls are not able to handle such a thing we MUST generate an adapter
-      // in this case.  If we can't generate one and use it we can not execute the out-of-line method handle calls.
-      AdapterHandlerLibrary::create_native_wrapper(method);
-    } else {
+    // The following native methods:
+    //
+    // java.lang.Float.intBitsToFloat
+    // java.lang.Float.floatToRawIntBits
+    // java.lang.Double.longBitsToDouble
+    // java.lang.Double.doubleToRawLongBits
+    //
+    // are called through the interpreter even if interpreter native stubs
+    // are not preferred (i.e., calling through adapter handlers is preferred).
+    // The reason is that on x86_32 signaling NaNs (sNaNs) are not preserved
+    // if the version of the methods from the native libraries is called.
+    // As the interpreter and the C2-intrinsified version of the methods preserves
+    // sNaNs, that would result in an inconsistent way of handling of sNaNs.
+    if ((UseSSE >= 1 &&
+        (method->intrinsic_id() == vmIntrinsics::_intBitsToFloat ||
+         method->intrinsic_id() == vmIntrinsics::_floatToRawIntBits)) ||
+        (UseSSE >= 2 &&
+         (method->intrinsic_id() == vmIntrinsics::_longBitsToDouble ||
+          method->intrinsic_id() == vmIntrinsics::_doubleToRawLongBits))) {
       return NULL;
     }
+
+    // To properly handle the appendix argument for out-of-line calls we are using a small trampoline that
+    // pops off the appendix argument and jumps to the target.
+    //
+    // Since normal compiled-to-compiled calls are not able to handle such a thing we MUST generate an adapter
+    // in this case.  If we can't generate one and use it we can not execute the out-of-line method handle calls.
+    AdapterHandlerLibrary::create_native_wrapper(method);
   } else {
     // If the compiler is shut off due to code cache getting full
     // fail out now so blocking compiles dont hang the java thread
@@ -898,44 +860,31 @@ nmethod* CompileBroker::compile_method(const methodHandle& method, int osr_bci,
       CompilationPolicy::policy()->delay_compilation(method());
       return NULL;
     }
-    bool is_blocking = !directive->BackgroundCompilationOption || CompileTheWorld || ReplayCompiles;
-    compile_method_base(method, osr_bci, comp_level, hot_method, hot_count, compile_reason, is_blocking, THREAD);
+    bool is_blocking = !directive->BackgroundCompilationOption || CompileTheWorld;
+    compile_method_base(method, comp_level, hot_method, hot_count, compile_reason, is_blocking, THREAD);
   }
 
   // return requested nmethod
-  // We accept a higher level osr method
-  if (osr_bci == InvocationEntryBci) {
-    CompiledMethod* code = method->code();
-    if (code == NULL) {
-      return (nmethod*) code;
-    } else {
-      return code->as_nmethod_or_null();
-    }
+  CompiledMethod* code = method->code();
+  if (code == NULL) {
+    return (nmethod*) code;
+  } else {
+    return code->as_nmethod_or_null();
   }
-  return method->lookup_osr_nmethod_for(osr_bci, comp_level, false);
 }
 
 // ------------------------------------------------------------------
 // CompileBroker::compilation_is_complete
 //
 // See if compilation of this method is already complete.
-bool CompileBroker::compilation_is_complete(const methodHandle& method, int osr_bci, int comp_level) {
-  bool is_osr = (osr_bci != standard_entry_bci);
-  if (is_osr) {
-    if (method->is_not_osr_compilable(comp_level)) {
-      return true;
-    } else {
-      nmethod* result = method->lookup_osr_nmethod_for(osr_bci, comp_level, true);
-      return (result != NULL);
-    }
+bool CompileBroker::compilation_is_complete(const methodHandle& method, int comp_level) {
+  if (method->is_not_compilable(comp_level)) {
+    return true;
   } else {
-    if (method->is_not_compilable(comp_level)) {
-      return true;
-    } else {
-      CompiledMethod* result = method->code();
-      if (result == NULL) return false;
-      return comp_level == result->comp_level();
-    }
+    CompiledMethod* result = method->code();
+    if (result == NULL)
+        return false;
+    return comp_level == result->comp_level();
   }
 }
 
@@ -957,19 +906,12 @@ bool CompileBroker::compilation_is_in_queue(const methodHandle& method) {
 // CompileBroker::compilation_is_prohibited
 //
 // See if this compilation is not allowed.
-bool CompileBroker::compilation_is_prohibited(const methodHandle& method, int osr_bci, int comp_level, bool excluded) {
+bool CompileBroker::compilation_is_prohibited(const methodHandle& method, int comp_level, bool excluded) {
   bool is_native = method->is_native();
   // Some compilers may not support the compilation of natives.
   AbstractCompiler *comp = compiler(comp_level);
   if (is_native && (!CICompileNatives || comp == NULL || !comp->supports_native())) {
     method->set_not_compilable_quietly(comp_level);
-    return true;
-  }
-
-  bool is_osr = (osr_bci != standard_entry_bci);
-  // Some compilers may not support on stack replacement.
-  if (is_osr && (!CICompileOSR || comp == NULL || !comp->supports_osr())) {
-    method->set_not_osr_compilable(comp_level);
     return true;
   }
 
@@ -986,11 +928,8 @@ bool CompileBroker::compilation_is_prohibited(const methodHandle& method, int os
 /**
  * Generate serialized IDs for compilation requests. If certain debugging flags are used
  * and the ID is not within the specified range, the method is not compiled and 0 is returned.
- * The function also allows to generate separate compilation IDs for OSR compilations.
  */
-int CompileBroker::assign_compile_id(const methodHandle& method, int osr_bci) {
-  // CICountOSR is a develop flag and set to 'false' by default. In a product built,
-  // only _compilation_id is incremented.
+int CompileBroker::assign_compile_id(const methodHandle& method) {
   return Atomic::add(1, &_compilation_id);
 }
 
@@ -998,9 +937,9 @@ int CompileBroker::assign_compile_id(const methodHandle& method, int osr_bci) {
 // CompileBroker::assign_compile_id_unlocked
 //
 // Public wrapper for assign_compile_id that acquires the needed locks
-uint CompileBroker::assign_compile_id_unlocked(Thread* thread, const methodHandle& method, int osr_bci) {
+uint CompileBroker::assign_compile_id_unlocked(Thread* thread, const methodHandle& method) {
   MutexLocker locker(MethodCompileQueue_lock, thread);
-  return assign_compile_id(method, osr_bci);
+  return assign_compile_id(method);
 }
 
 // ------------------------------------------------------------------
@@ -1008,17 +947,16 @@ uint CompileBroker::assign_compile_id_unlocked(Thread* thread, const methodHandl
 //
 // Create a CompileTask object representing the current request for
 // compilation.  Add this task to the queue.
-CompileTask* CompileBroker::create_compile_task(CompileQueue*       queue,
-                                                int                 compile_id,
+CompileTask* CompileBroker::create_compile_task(CompileQueue* queue,
+                                                int compile_id,
                                                 const methodHandle& method,
-                                                int                 osr_bci,
-                                                int                 comp_level,
+                                                int comp_level,
                                                 const methodHandle& hot_method,
-                                                int                 hot_count,
+                                                int hot_count,
                                                 CompileTask::CompileReason compile_reason,
-                                                bool                blocking) {
+                                                bool blocking) {
   CompileTask* new_task = CompileTask::allocate();
-  new_task->initialize(compile_id, method, osr_bci, comp_level, hot_method, hot_count, compile_reason, blocking);
+  new_task->initialize(compile_id, method, comp_level, hot_method, hot_count, compile_reason, blocking);
   queue->add(new_task);
   return new_task;
 }
@@ -1210,7 +1148,6 @@ void CompileBroker::compiler_thread_loop() {
   // First thread to get here will initialize the compiler interface
 
   {
-    ASSERT_IN_VM;
     MutexLocker only_one (CompileThread_lock, thread);
     if (!ciObjectFactory::is_initialized()) {
       ciObjectFactory::initialize();
@@ -1310,7 +1247,7 @@ void CompileBroker::post_compile(CompilerThread* thread, CompileTask* task, bool
     if (ci_env != NULL) {
       task->set_num_inlined_bytecodes(ci_env->num_inlined_bytecodes());
     }
-  } else if (AbortVMOnCompilationFailure) {
+  } else {
     if (compilable == ciEnv::MethodCompilable_not_at_tier) {
       fatal("Not compilable at tier %d: %s", task->comp_level(), failure_reason);
     }
@@ -1338,8 +1275,6 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
 
   // Common flags.
   uint compile_id = task->compile_id();
-  int osr_bci = task->osr_bci();
-  bool is_osr = (osr_bci != standard_entry_bci);
   bool should_break = false;
   const int task_level = task->comp_level();
   AbstractCompiler* comp = task->compiler();
@@ -1354,9 +1289,6 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
 
     // Look up matching directives
     directive = DirectivesStack::getMatchingDirective(method, comp);
-
-    // Save information about this method in case of failure.
-    set_last_compile(thread, method, is_osr, task_level);
   }
 
   should_break = directive->BreakAtExecuteOption || task->check_break_at_flags();
@@ -1377,8 +1309,6 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
   if (UseJVMCICompiler && comp != NULL && comp->is_jvmci()) {
     JVMCICompiler* jvmci = (JVMCICompiler*) comp;
 
-    TraceTime t1("compilation", &time);
-
     // Skip redefined methods
     if (target_handle->is_old()) {
         failure_reason = "redefined method";
@@ -1387,7 +1317,7 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     } else {
         JVMCIEnv env(task, system_dictionary_modification_counter);
         methodHandle method(thread, target_handle);
-        jvmci->compile_method(method, osr_bci, &env);
+        jvmci->compile_method(method, -1, &env);
 
         failure_reason = env.failure_reason();
         if (!env.retryable()) {
@@ -1408,12 +1338,10 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
 
     ciMethod* target = ci_env.get_method_from_handle(target_handle);
 
-    TraceTime t1("compilation", &time);
-
     if (comp == NULL) {
       ci_env.record_method_not_compilable("no compiler");
     } else {
-      comp->compile_method(&ci_env, target, osr_bci, directive);
+      comp->compile_method(&ci_env, target, -1, directive);
     }
 
     if (!ci_env.failing() && task->code() == NULL) {
@@ -1453,16 +1381,10 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
   // Disable compilation, if required.
   switch (compilable) {
   case ciEnv::MethodCompilable_never:
-    if (is_osr)
-      method->set_not_osr_compilable_quietly();
-    else
-      method->set_not_compilable_quietly();
+    method->set_not_compilable_quietly();
     break;
   case ciEnv::MethodCompilable_not_at_tier:
-    if (is_osr)
-      method->set_not_osr_compilable_quietly(task_level);
-    else
-      method->set_not_compilable_quietly(task_level);
+    method->set_not_compilable_quietly(task_level);
     break;
   }
 
@@ -1512,26 +1434,6 @@ void CompileBroker::handle_full_code_cache(int code_blob_type) {
 }
 
 // ------------------------------------------------------------------
-// CompileBroker::set_last_compile
-//
-// Record this compilation for debugging purposes.
-void CompileBroker::set_last_compile(CompilerThread* thread, const methodHandle& method, bool is_osr, int comp_level) {
-  ResourceMark rm;
-  char* method_name = method->name()->as_C_string();
-  strncpy(_last_method_compiled, method_name, CompileBroker::name_buffer_length);
-  _last_method_compiled[CompileBroker::name_buffer_length - 1] = '\0'; // ensure null terminated
-  char current_method[CompilerCounters::cmname_buffer_length];
-  size_t maxLen = CompilerCounters::cmname_buffer_length;
-
-  if (CICountOSR && is_osr) {
-    _last_compile_type = osr_compile;
-  } else {
-    _last_compile_type = normal_compile;
-  }
-  _last_compile_level = comp_level;
-}
-
-// ------------------------------------------------------------------
 // CompileBroker::push_jni_handle_block
 //
 // Push on a new block of JNI handles.
@@ -1570,7 +1472,6 @@ void CompileBroker::collect_statistics(CompilerThread* thread, elapsedTimer time
   bool success = task->is_success();
   methodHandle method (thread, task->method());
   uint compile_id = task->compile_id();
-  bool is_osr = (task->osr_bci() != standard_entry_bci);
   nmethod* code = task->code();
   CompilerCounters* counters = thread->counters();
 
@@ -1595,10 +1496,7 @@ void CompileBroker::collect_statistics(CompilerThread* thread, elapsedTimer time
 
     if (CITime) {
       int bytes_compiled = method->code_size() + task->num_inlined_bytecodes();
-      if (is_osr) {
-        _t_osr_compilation.add(time);
-        _sum_osr_bytes_compiled += bytes_compiled;
-      } else {
+      {
         _t_standard_compilation.add(time);
         _sum_standard_bytes_compiled += method->code_size() + task->num_inlined_bytecodes();
       }
@@ -1607,9 +1505,7 @@ void CompileBroker::collect_statistics(CompilerThread* thread, elapsedTimer time
       if (comp) {
         CompilerStatistics* stats = comp->stats();
         if (stats) {
-          if (is_osr) {
-            stats->_osr.update(time, bytes_compiled);
-          } else {
+          {
             stats->_standard.update(time, bytes_compiled);
           }
           stats->_nmethods_size += code->total_size();
@@ -1632,9 +1528,7 @@ void CompileBroker::collect_statistics(CompilerThread* thread, elapsedTimer time
     _sum_nmethod_code_size += code->insts_size();
     _total_compile_count++;
 
-    if (is_osr) {
-      _total_osr_compile_count++;
-    } else {
+    {
       _total_standard_compile_count++;
     }
   }
@@ -1649,139 +1543,8 @@ const char* CompileBroker::compiler_name(int comp_level) {
   }
 }
 
-void CompileBroker::print_times(AbstractCompiler* comp) {
-  CompilerStatistics* stats = comp->stats();
-  if (stats) {
-    tty->print_cr("  %s {speed: %d bytes/s; standard: %6.3f s, %d bytes, %d methods; osr: %6.3f s, %d bytes, %d methods; nmethods_size: %d bytes; nmethods_code_size: %d bytes}",
-                comp->name(), stats->bytes_per_second(),
-                stats->_standard._time.seconds(), stats->_standard._bytes, stats->_standard._count,
-                stats->_osr._time.seconds(), stats->_osr._bytes, stats->_osr._count,
-                stats->_nmethods_size, stats->_nmethods_code_size);
-  } else { // if (!stats)
-    ShouldNotReachHere();
-  }
-  comp->print_timers();
-}
-
-void CompileBroker::print_times(bool per_compiler, bool aggregate) {
-  elapsedTimer standard_compilation;
-  elapsedTimer total_compilation;
-  elapsedTimer osr_compilation;
-
-  int standard_bytes_compiled = 0;
-  int osr_bytes_compiled = 0;
-
-  int standard_compile_count = 0;
-  int osr_compile_count = 0;
-  int total_compile_count = 0;
-
-  int nmethods_size = 0;
-  int nmethods_code_size = 0;
-  bool printedHeader = false;
-
-  for (unsigned int i = 0; i < sizeof(_compilers) / sizeof(AbstractCompiler*); i++) {
-    AbstractCompiler* comp = _compilers[i];
-    if (comp != NULL) {
-      if (per_compiler && aggregate && !printedHeader) {
-        printedHeader = true;
-        tty->cr();
-        tty->print_cr("Individual compiler times (for compiled methods only)");
-        tty->print_cr("------------------------------------------------");
-        tty->cr();
-      }
-      CompilerStatistics* stats = comp->stats();
-
-      if (stats) {
-        standard_compilation.add(stats->_standard._time);
-        osr_compilation.add(stats->_osr._time);
-
-        standard_bytes_compiled += stats->_standard._bytes;
-        osr_bytes_compiled += stats->_osr._bytes;
-
-        standard_compile_count += stats->_standard._count;
-        osr_compile_count += stats->_osr._count;
-
-        nmethods_size += stats->_nmethods_size;
-        nmethods_code_size += stats->_nmethods_code_size;
-      } else { // if (!stats)
-        ShouldNotReachHere();
-      }
-
-      if (per_compiler) {
-        print_times(comp);
-      }
-    }
-  }
-  total_compile_count = osr_compile_count + standard_compile_count;
-  total_compilation.add(osr_compilation);
-  total_compilation.add(standard_compilation);
-
-  // In hosted mode, print the JVMCI compiler specific counters manually.
-  if (!UseJVMCICompiler) {
-    JVMCICompiler::print_compilation_timers();
-  }
-
-  if (!aggregate) {
-    return;
-  }
-  tty->cr();
-  tty->print_cr("Accumulated compiler times");
-  tty->print_cr("----------------------------------------------------------");
-               //0000000000111111111122222222223333333333444444444455555555556666666666
-               //0123456789012345678901234567890123456789012345678901234567890123456789
-  tty->print_cr("  Total compilation time   : %7.3f s", total_compilation.seconds());
-  tty->print_cr("    Standard compilation   : %7.3f s, Average : %2.3f s",
-                standard_compilation.seconds(),
-                standard_compilation.seconds() / standard_compile_count);
-  tty->print_cr("    Bailed out compilation : %7.3f s, Average : %2.3f s",
-                CompileBroker::_t_bailedout_compilation.seconds(),
-                CompileBroker::_t_bailedout_compilation.seconds() / CompileBroker::_total_bailout_count);
-  tty->print_cr("    On stack replacement   : %7.3f s, Average : %2.3f s",
-                osr_compilation.seconds(),
-                osr_compilation.seconds() / osr_compile_count);
-  tty->print_cr("    Invalidated            : %7.3f s, Average : %2.3f s",
-                CompileBroker::_t_invalidated_compilation.seconds(),
-                CompileBroker::_t_invalidated_compilation.seconds() / CompileBroker::_total_invalidated_count);
-
-  AbstractCompiler *comp = compiler(CompLevel_simple);
-  if (comp != NULL) {
-    tty->cr();
-    comp->print_timers();
-  }
-  comp = compiler(CompLevel_full_optimization);
-  if (comp != NULL) {
-    tty->cr();
-    comp->print_timers();
-  }
-  tty->cr();
-  tty->print_cr("  Total compiled methods    : %8d methods", total_compile_count);
-  tty->print_cr("    Standard compilation    : %8d methods", standard_compile_count);
-  tty->print_cr("    On stack replacement    : %8d methods", osr_compile_count);
-  int tcb = osr_bytes_compiled + standard_bytes_compiled;
-  tty->print_cr("  Total compiled bytecodes  : %8d bytes", tcb);
-  tty->print_cr("    Standard compilation    : %8d bytes", standard_bytes_compiled);
-  tty->print_cr("    On stack replacement    : %8d bytes", osr_bytes_compiled);
-  double tcs = total_compilation.seconds();
-  int bps = tcs == 0.0 ? 0 : (int)(tcb / tcs);
-  tty->print_cr("  Average compilation speed : %8d bytes/s", bps);
-  tty->cr();
-  tty->print_cr("  nmethod code size         : %8d bytes", nmethods_code_size);
-  tty->print_cr("  nmethod total size        : %8d bytes", nmethods_size);
-}
-
-// Debugging output for failure
-void CompileBroker::print_last_compile() {
-  if (_last_compile_level != CompLevel_none && compiler(_last_compile_level) != NULL && _last_compile_type != no_compile) {
-    if (_last_compile_type == osr_compile) {
-      tty->print_cr("Last parse:  [osr]%d+++(%d) %s", _osr_compilation_id, _last_compile_level, _last_method_compiled);
-    } else {
-      tty->print_cr("Last parse:  %d+++(%d) %s", _compilation_id, _last_compile_level, _last_method_compiled);
-    }
-  }
-}
-
 // Print general/accumulated JIT information.
-void CompileBroker::print_info(outputStream *out) {
+void CompileBroker::print_info(outputStream* out) {
   if (out == NULL) out = tty;
   out->cr();
   out->print_cr("======================");

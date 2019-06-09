@@ -202,12 +202,5 @@ JVMFlag::Error InitArrayShortSizeConstraintFunc(intx value, bool verbose) {
 }
 
 JVMFlag::Error RTMTotalCountIncrRateConstraintFunc(int value, bool verbose) {
-#if INCLUDE_RTM_OPT
-  if (UseRTMLocking && !is_power_of_2(RTMTotalCountIncrRate)) {
-    JVMFlag::printError(verbose, "RTMTotalCountIncrRate (" INTX_FORMAT ") must be a power of 2, resetting it to 64\n", RTMTotalCountIncrRate);
-    FLAG_SET_DEFAULT(RTMTotalCountIncrRate, 64);
-  }
-#endif
-
   return JVMFlag::SUCCESS;
 }

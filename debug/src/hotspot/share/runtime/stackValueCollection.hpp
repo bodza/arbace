@@ -13,10 +13,10 @@ class StackValueCollection : public ResourceObj {
   StackValueCollection()            { _values = new GrowableArray<StackValue*>(); }
   StackValueCollection(int length)  { _values = new GrowableArray<StackValue*>(length); }
 
-  void add(StackValue *val) const   { _values->push(val); }
-  int  size() const                 { return _values->length(); }
-  bool is_empty() const             { return (size() == 0); }
-  StackValue* at(int i) const       { return _values->at(i); }
+  void add(StackValue *val)   const { _values->push(val); }
+  int  size()                 const { return _values->length(); }
+  bool is_empty()             const { return (size() == 0); }
+  StackValue* at(int i)       const { return _values->at(i); }
 
   // Get typed locals/expressions
   jint  int_at(int slot) const;

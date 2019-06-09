@@ -60,12 +60,12 @@ class ResolveNode: public CompilationResourceObj {
     , _start_node(false) { };
 
   // accessors
-  LIR_Opr operand() const           { return _operand; }
-  int no_of_destinations() const    { return _destinations.length(); }
+  LIR_Opr operand()           const { return _operand; }
+  int no_of_destinations()    const { return _destinations.length(); }
   ResolveNode* destination_at(int i)     { return _destinations.at(i); }
-  bool assigned() const             { return _assigned; }
-  bool visited() const              { return _visited; }
-  bool start_node() const           { return _start_node; }
+  bool assigned()             const { return _assigned; }
+  bool visited()              const { return _visited; }
+  bool start_node()           const { return _start_node; }
 
   // modifiers
   void append(ResolveNode* dest)         { _destinations.append(dest); }
@@ -163,8 +163,8 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
 
  public:
   // unified bailout support
-  void bailout(const char* msg) const            { compilation()->bailout(msg); }
-  bool bailed_out() const                        { return compilation()->bailed_out(); }
+  void bailout(const char* msg)            const { compilation()->bailout(msg); }
+  bool bailed_out()                        const { return compilation()->bailed_out(); }
 
   void block_do_prolog(BlockBegin* block);
   void block_do_epilog(BlockBegin* block);
@@ -416,8 +416,6 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
   SwitchRangeArray* create_lookup_ranges(LookupSwitch* x);
   void do_SwitchRanges(SwitchRangeArray* x, LIR_Opr value, BlockBegin* default_sux);
 
-  void do_RuntimeCall(address routine, Intrinsic* x);
-
   ciKlass* profile_type(ciMethodData* md, int md_first_offset, int md_offset, intptr_t profiled_k,
                         Value arg, LIR_Opr& mdp, bool not_null, ciKlass* signature_at_call_k,
                         ciKlass* callee_signature_k);
@@ -428,13 +426,13 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
   LIR_Opr maybe_mask_boolean(StoreIndexed* x, LIR_Opr array, LIR_Opr value, CodeEmitInfo*& null_check_info);
 
  public:
-  Compilation*  compilation() const              { return _compilation; }
-  FrameMap*     frame_map() const                { return _compilation->frame_map(); }
-  ciMethod*     method() const                   { return _method; }
-  BlockBegin*   block() const                    { return _block; }
-  IRScope*      scope() const                    { return block()->scope(); }
+  Compilation*  compilation()              const { return _compilation; }
+  FrameMap*     frame_map()                const { return _compilation->frame_map(); }
+  ciMethod*     method()                   const { return _method; }
+  BlockBegin*   block()                    const { return _block; }
+  IRScope*      scope()                    const { return block()->scope(); }
 
-  int max_virtual_register_number() const        { return _virtual_register_number; }
+  int max_virtual_register_number()        const { return _virtual_register_number; }
 
   void block_do(BlockBegin* block);
 
@@ -497,15 +495,7 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
   virtual void do_NullCheck      (NullCheck*       x);
   virtual void do_TypeCast       (TypeCast*        x);
   virtual void do_Invoke         (Invoke*          x);
-  virtual void do_NewInstance    (NewInstance*     x);
-  virtual void do_NewTypeArray   (NewTypeArray*    x);
-  virtual void do_NewObjectArray (NewObjectArray*  x);
-  virtual void do_NewMultiArray  (NewMultiArray*   x);
-  virtual void do_CheckCast      (CheckCast*       x);
   virtual void do_InstanceOf     (InstanceOf*      x);
-  virtual void do_MonitorEnter   (MonitorEnter*    x);
-  virtual void do_MonitorExit    (MonitorExit*     x);
-  virtual void do_Intrinsic      (Intrinsic*       x);
   virtual void do_BlockBegin     (BlockBegin*      x);
   virtual void do_Goto           (Goto*            x);
   virtual void do_If             (If*              x);
@@ -515,20 +505,6 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
   virtual void do_Return         (Return*          x);
   virtual void do_Throw          (Throw*           x);
   virtual void do_Base           (Base*            x);
-  virtual void do_OsrEntry       (OsrEntry*        x);
-  virtual void do_ExceptionObject(ExceptionObject* x);
-  virtual void do_RoundFP        (RoundFP*         x);
-  virtual void do_UnsafeGetRaw   (UnsafeGetRaw*    x);
-  virtual void do_UnsafePutRaw   (UnsafePutRaw*    x);
-  virtual void do_UnsafeGetObject(UnsafeGetObject* x);
-  virtual void do_UnsafePutObject(UnsafePutObject* x);
-  virtual void do_UnsafeGetAndSetObject(UnsafeGetAndSetObject* x);
-  virtual void do_ProfileCall    (ProfileCall*     x);
-  virtual void do_ProfileReturnType (ProfileReturnType* x);
-  virtual void do_ProfileInvoke  (ProfileInvoke*   x);
-  virtual void do_RuntimeCall    (RuntimeCall*     x);
-  virtual void do_MemBar         (MemBar*          x);
-  virtual void do_RangeCheckPredicate(RangeCheckPredicate* x);
 
 #ifdef C1_LIRGENERATOR_MD_HPP
 #include C1_LIRGENERATOR_MD_HPP
@@ -569,7 +545,7 @@ class LIRItem: public CompilationResourceObj {
     _new_result = LIR_OprFact::illegalOpr;
   }
 
-  Value value() const     { return _value; }
+  Value value()     const { return _value; }
   ValueType* type() const { return value()->type(); }
   LIR_Opr result()        {
     if (_destroys_register && _result->is_register()) {

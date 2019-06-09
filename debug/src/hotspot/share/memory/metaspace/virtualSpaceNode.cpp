@@ -60,7 +60,7 @@ void VirtualSpaceNode::print_map(outputStream* st, bool is_class) const {
   static const int NUM_LINES = 4;
 
   char* lines[NUM_LINES];
-  for (int i = 0; i < NUM_LINES; i ++) {
+  for (int i = 0; i < NUM_LINES; i++) {
     lines[i] = (char*)os::malloc(line_len, mtInternal);
   }
   int pos = 0;
@@ -70,7 +70,7 @@ void VirtualSpaceNode::print_map(outputStream* st, bool is_class) const {
   while (p < top()) {
     if (pos == line_len) {
       pos = 0;
-      for (int i = 0; i < NUM_LINES; i ++) {
+      for (int i = 0; i < NUM_LINES; i++) {
         st->fill_to(22);
         st->print_raw(lines[i], line_len);
         st->cr();
@@ -113,13 +113,13 @@ void VirtualSpaceNode::print_map(outputStream* st, bool is_class) const {
     pos ++;
   }
   if (pos > 0) {
-    for (int i = 0; i < NUM_LINES; i ++) {
+    for (int i = 0; i < NUM_LINES; i++) {
       st->fill_to(22);
       st->print_raw(lines[i], line_len);
       st->cr();
     }
   }
-  for (int i = 0; i < NUM_LINES; i ++) {
+  for (int i = 0; i < NUM_LINES; i++) {
     os::free(lines[i]);
   }
 }

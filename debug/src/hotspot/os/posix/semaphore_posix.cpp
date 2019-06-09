@@ -7,14 +7,11 @@
 
 #include <semaphore.h>
 
-#define check_with_errno(check_type, cond, msg) \
+#define guarantee_with_errno(cond, msg) \
   do { \
     int err = errno; \
-    check_type(cond, "%s; error='%s' (errno=%s)", msg, os::strerror(err), os::errno_name(err)); \
+    guarantee(cond, "%s; error='%s' (errno=%s)", msg, os::strerror(err), os::errno_name(err)); \
 } while (false)
-
-#define assert_with_errno(cond, msg)    check_with_errno(assert, cond, msg)
-#define guarantee_with_errno(cond, msg) check_with_errno(guarantee, cond, msg)
 
 PosixSemaphore::PosixSemaphore(uint value) {
   int ret = sem_init(&_semaphore, 0, value);
@@ -29,8 +26,6 @@ PosixSemaphore::~PosixSemaphore() {
 void PosixSemaphore::signal(uint count) {
   for (uint i = 0; i < count; i++) {
     int ret = sem_post(&_semaphore);
-
-    assert_with_errno(ret == 0, "sem_post failed");
   }
 }
 
@@ -40,8 +35,6 @@ void PosixSemaphore::wait() {
   do {
     ret = sem_wait(&_semaphore);
   } while (ret != 0 && errno == EINTR);
-
-  assert_with_errno(ret == 0, "sem_wait failed");
 }
 
 bool PosixSemaphore::trywait() {
@@ -50,8 +43,6 @@ bool PosixSemaphore::trywait() {
   do {
     ret = sem_trywait(&_semaphore);
   } while (ret != 0 && errno == EINTR);
-
-  assert_with_errno(ret == 0 || errno == EAGAIN, "trywait failed");
 
   return ret == 0;
 }
@@ -66,7 +57,6 @@ bool PosixSemaphore::timedwait(struct timespec ts) {
     } else if (errno == ETIMEDOUT) {
       return false;
     } else {
-      assert_with_errno(false, "timedwait failed");
       return false;
     }
   }

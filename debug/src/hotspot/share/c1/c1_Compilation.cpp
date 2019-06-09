@@ -12,7 +12,6 @@
 #include "compiler/compilerDirectives.hpp"
 #include "memory/resourceArea.hpp"
 #include "runtime/sharedRuntime.hpp"
-#include "runtime/timerTrace.hpp"
 
 typedef enum {
   _t_compile,
@@ -50,25 +49,10 @@ static const char * timer_name[] = {
 static elapsedTimer timers[max_phase_timers];
 static int totalInstructionNodes = 0;
 
-class PhaseTraceTime: public TraceTime {
- private:
-  JavaThread* _thread;
-  TimerName _timer;
-
- public:
-  PhaseTraceTime(TimerName timer) : TraceTime("", &timers[timer], CITime || CITimeEach, Verbose), _timer(timer) { }
-
-  ~PhaseTraceTime() { }
-};
-
 // Implementation of Compilation
 
 DebugInformationRecorder* Compilation::debug_info_recorder() const {
   return _env->debug_info();
-}
-
-Dependencies* Compilation::dependency_recorder() const {
-  return _env->dependencies();
 }
 
 void Compilation::initialize() {
@@ -78,17 +62,13 @@ void Compilation::initialize() {
   _env->set_oop_recorder(ooprec);
   _env->set_debug_info(new DebugInformationRecorder(ooprec));
   debug_info_recorder()->set_oopmaps(new OopMapSet());
-  _env->set_dependencies(new Dependencies(_env));
 }
 
 void Compilation::build_hir() {
   CHECK_BAILOUT();
 
   // setup ir
-  {
-    PhaseTraceTime timeit(_t_hir_parse);
-    _hir = new IR(this, method(), osr_bci());
-  }
+  _hir = new IR(this, method());
   if (!_hir->is_valid()) {
     bailout("invalid parsing");
     return;
@@ -97,8 +77,6 @@ void Compilation::build_hir() {
   if (UseC1Optimizations) {
     NEEDS_CLEANUP
     // optimization
-    PhaseTraceTime timeit(_t_optimize_blocks);
-
     _hir->optimize_blocks();
   }
 
@@ -108,18 +86,8 @@ void Compilation::build_hir() {
   // the control flow must not be changed from here on
   _hir->compute_code();
 
-  if (UseGlobalValueNumbering) {
-    // No resource mark here! LoopInvariantCodeMotion can allocate ValueStack objects.
-    PhaseTraceTime timeit(_t_gvn);
-    int instructions = Instruction::number_of_instructions();
-    GlobalValueNumbering gvn(_hir);
-  }
-
   if (RangeCheckElimination) {
-    if (_hir->osr_entry() == NULL) {
-      PhaseTraceTime timeit(_t_rangeCheckElimination);
-      RangeCheckElimination::eliminate(_hir);
-    }
+    RangeCheckElimination::eliminate(_hir);
   }
 
   if (UseC1Optimizations) {
@@ -128,8 +96,6 @@ void Compilation::build_hir() {
     // elimination after.
     NEEDS_CLEANUP
     // optimization
-    PhaseTraceTime timeit(_t_optimize_null_checks);
-
     _hir->eliminate_null_checks();
   }
 
@@ -141,16 +107,12 @@ void Compilation::emit_lir() {
   CHECK_BAILOUT();
 
   LIRGenerator gen(this, method());
-  {
-    PhaseTraceTime timeit(_t_lirGeneration);
-    hir()->iterate_linear_scan_order(&gen);
-  }
+
+  hir()->iterate_linear_scan_order(&gen);
 
   CHECK_BAILOUT();
 
   {
-    PhaseTraceTime timeit(_t_linearScan);
-
     LinearScan* allocator = new LinearScan(hir(), &gen, frame_map());
     set_allocator(allocator);
     // Assign physical registers to LIR operands using a linear scan algorithm.
@@ -161,9 +123,6 @@ void Compilation::emit_lir() {
   }
 
   if (BailoutAfterLIR) {
-    if (PrintLIR && !bailed_out()) {
-      print_LIR(hir()->code());
-    }
     bailout("Bailing out because of -XX:+BailoutAfterLIR");
   }
 }
@@ -185,22 +144,6 @@ void Compilation::emit_code_epilog(LIR_Assembler* assembler) {
   code_offsets->set_value(CodeOffsets::Exceptions, assembler->emit_exception_handler());
   CHECK_BAILOUT();
 
-  // Generate code for deopt handler.
-  code_offsets->set_value(CodeOffsets::Deopt, assembler->emit_deopt_handler());
-  CHECK_BAILOUT();
-
-  // Emit the MethodHandle deopt handler code (if required).
-  if (has_method_handle_invokes()) {
-    // We can use the same code as for the normal deopt handler, we
-    // just need a different entry point address.
-    code_offsets->set_value(CodeOffsets::DeoptMH, assembler->emit_deopt_handler());
-    CHECK_BAILOUT();
-  }
-
-  // Emit the handler to remove the activation from the stack and
-  // dispatch to the caller.
-  offsets()->set_value(CodeOffsets::UnwindHandler, assembler->emit_unwind_handler());
-
   // done
   masm()->flush();
 }
@@ -209,11 +152,10 @@ bool Compilation::setup_code_buffer(CodeBuffer* code, int call_stub_estimate) {
   // Preinitialize the consts section to some large size:
   int locs_buffer_size = 20 * (relocInfo::length_limit + sizeof(relocInfo));
   char* locs_buffer = NEW_RESOURCE_ARRAY(char, locs_buffer_size);
-  code->insts()->initialize_shared_locs((relocInfo*)locs_buffer,
-                                        locs_buffer_size / sizeof(relocInfo));
+  code->insts()->initialize_shared_locs((relocInfo*)locs_buffer, locs_buffer_size / sizeof(relocInfo));
   code->initialize_consts_size(Compilation::desired_max_constant_size());
   // Call stubs + two deopt handlers (regular and MH) + exception handler
-  int stub_size = (call_stub_estimate * LIR_Assembler::call_stub_size()) + LIR_Assembler::exception_handler_size() + (2 * LIR_Assembler::deopt_handler_size());
+  int stub_size = (call_stub_estimate * LIR_Assembler::call_stub_size()) + LIR_Assembler::exception_handler_size();
   if (stub_size >= code->insts_capacity()) return false;
   code->initialize_stubs_size(stub_size);
   return true;
@@ -255,33 +197,25 @@ int Compilation::compile_java_method() {
     BAILOUT_("mdo allocation failed", no_frame_size);
   }
 
-  {
-    PhaseTraceTime timeit(_t_buildIR);
-    build_hir();
-  }
+  build_hir();
   if (BailoutAfterHIR) {
     BAILOUT_("Bailing out because of -XX:+BailoutAfterHIR", no_frame_size);
   }
 
   {
-    PhaseTraceTime timeit(_t_emit_lir);
-
     _frame_map = new FrameMap(method(), hir()->number_of_locks(), MAX2(4, hir()->max_stack()));
     emit_lir();
   }
   CHECK_BAILOUT_(no_frame_size);
 
-  {
-    PhaseTraceTime timeit(_t_codeemit);
-    return emit_code_body();
-  }
+  return emit_code_body();
 }
 
 void Compilation::install_code(int frame_size) {
   // frame_size is in 32-bit words so adjust it intptr_t words
   _env->register_method(
     method(),
-    osr_bci(),
+    -1,
     &_offsets,
     in_bytes(_frame_map->sp_offset_for_orig_pc()),
     code(),
@@ -296,12 +230,7 @@ void Compilation::install_code(int frame_size) {
 }
 
 void Compilation::compile_method() {
-  {
-    PhaseTraceTime timeit(_t_setup);
-
-    // setup compilation
-    initialize();
-  }
+  initialize();
 
   if (!method()->can_be_compiled()) {
     // Prevent race condition 6328518.
@@ -314,7 +243,6 @@ void Compilation::compile_method() {
     BREAKPOINT;
   }
 
-  // compile method
   int frame_size = compile_java_method();
 
   // bailout if method couldn't be compiled
@@ -322,8 +250,6 @@ void Compilation::compile_method() {
   CHECK_BAILOUT();
 
   if (InstallMethods) {
-    // install code
-    PhaseTraceTime timeit(_t_codeinstall);
     install_code(frame_size);
   }
 
@@ -389,12 +315,11 @@ void Compilation::generate_exception_handler_table() {
   }
 }
 
-Compilation::Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* method, int osr_bci, BufferBlob* buffer_blob, DirectiveSet* directive)
+Compilation::Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* method, BufferBlob* buffer_blob, DirectiveSet* directive)
 : _compiler(compiler)
 , _env(env)
 , _directive(directive)
 , _method(method)
-, _osr_bci(osr_bci)
 , _hir(NULL)
 , _max_spills(-1)
 , _frame_map(NULL)
@@ -413,9 +338,7 @@ Compilation::Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* metho
 , _code(buffer_blob)
 , _has_access_indexed(false)
 , _current_instruction(NULL)
-, _interpreter_frame_size(0)
 {
-  PhaseTraceTime timeit(_t_compile);
   _arena = Thread::current()->resource_area();
   _env->set_compiler_data(this);
   _exception_info_list = new ExceptionInfoList();
@@ -452,68 +375,6 @@ void Compilation::notice_inlined_method(ciMethod* method) {
 void Compilation::bailout(const char* msg) {
   if (!bailed_out()) {
     // keep first bailout message
-    if (PrintBailouts) tty->print_cr("compilation bailout: %s", msg);
     _bailout_msg = msg;
-  }
-}
-
-ciKlass* Compilation::cha_exact_type(ciType* type) {
-  if (type != NULL && type->is_loaded() && type->is_instance_klass()) {
-    ciInstanceKlass* ik = type->as_instance_klass();
-    if (DeoptC1 && UseCHA && !(ik->has_subklass() || ik->is_interface())) {
-      dependency_recorder()->assert_leaf_type(ik);
-      return ik;
-    }
-  }
-  return NULL;
-}
-
-void Compilation::print_timers() {
-  tty->print_cr("    C1 Compile Time:      %7.3f s",      timers[_t_compile].seconds());
-  tty->print_cr("       Setup time:          %7.3f s",    timers[_t_setup].seconds());
-
-  {
-    tty->print_cr("       Build HIR:           %7.3f s",    timers[_t_buildIR].seconds());
-    tty->print_cr("         Parse:               %7.3f s", timers[_t_hir_parse].seconds());
-    tty->print_cr("         Optimize blocks:     %7.3f s", timers[_t_optimize_blocks].seconds());
-    tty->print_cr("         GVN:                 %7.3f s", timers[_t_gvn].seconds());
-    tty->print_cr("         Null checks elim:    %7.3f s", timers[_t_optimize_null_checks].seconds());
-    tty->print_cr("         Range checks elim:   %7.3f s", timers[_t_rangeCheckElimination].seconds());
-
-    double other = timers[_t_buildIR].seconds() -
-      (timers[_t_hir_parse].seconds() +
-       timers[_t_optimize_blocks].seconds() +
-       timers[_t_gvn].seconds() +
-       timers[_t_optimize_null_checks].seconds() +
-       timers[_t_rangeCheckElimination].seconds());
-    if (other > 0) {
-      tty->print_cr("         Other:               %7.3f s", other);
-    }
-  }
-
-  {
-    tty->print_cr("       Emit LIR:            %7.3f s",    timers[_t_emit_lir].seconds());
-    tty->print_cr("         LIR Gen:             %7.3f s",   timers[_t_lirGeneration].seconds());
-    tty->print_cr("         Linear Scan:         %7.3f s",   timers[_t_linearScan].seconds());
-
-    double other = timers[_t_emit_lir].seconds() -
-      (timers[_t_lirGeneration].seconds() +
-       timers[_t_linearScan].seconds());
-    if (other > 0) {
-      tty->print_cr("         Other:               %7.3f s", other);
-    }
-  }
-
-  tty->print_cr("       Code Emission:       %7.3f s",    timers[_t_codeemit].seconds());
-  tty->print_cr("       Code Installation:   %7.3f s",    timers[_t_codeinstall].seconds());
-
-  double other = timers[_t_compile].seconds() -
-      (timers[_t_setup].seconds() +
-       timers[_t_buildIR].seconds() +
-       timers[_t_emit_lir].seconds() +
-       timers[_t_codeemit].seconds() +
-       timers[_t_codeinstall].seconds());
-  if (other > 0) {
-    tty->print_cr("       Other:               %7.3f s", other);
   }
 }

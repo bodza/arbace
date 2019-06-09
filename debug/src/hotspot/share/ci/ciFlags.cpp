@@ -6,8 +6,6 @@
 //
 // This class represents klass or method flags
 
-// ------------------------------------------------------------------
-// ciFlags::print_klass_flags
 void ciFlags::print_klass_flags(outputStream* st) {
   if (is_public()) {
     st->print("public");
@@ -29,8 +27,6 @@ void ciFlags::print_klass_flags(outputStream* st) {
   }
 }
 
-// ------------------------------------------------------------------
-// ciFlags::print_member_flags
 void ciFlags::print_member_flags(outputStream* st) {
   if (is_public()) {
     st->print("public");
@@ -68,8 +64,6 @@ void ciFlags::print_member_flags(outputStream* st) {
   }
 }
 
-// ------------------------------------------------------------------
-// ciFlags::print
 void ciFlags::print(outputStream* st) {
   st->print(" flags=%x", _flags);
 }

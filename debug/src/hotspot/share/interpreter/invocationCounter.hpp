@@ -16,7 +16,7 @@
 class InvocationCounter {
   friend class VMStructs;
   friend class JVMCIVMStructs;
-  friend class ciReplay;
+
  private:                             // bit no: |31  3|  2  | 1 0 |
   unsigned int _counter;              // format: [count|carry|state]
 
@@ -65,15 +65,15 @@ class InvocationCounter {
   int raw_counter()                              { return _counter; }
 
   // Accessors
-  State  state() const                           { return (State)(_counter & state_mask); }
-  bool   carry() const                           { return (_counter & carry_mask) != 0; }
-  int    limit() const                           { return CompileThreshold; }
-  Action action() const                          { return _action[state()]; }
-  int    count() const                           { return _counter >> number_of_noncount_bits; }
+  State  state()                           const { return (State)(_counter & state_mask); }
+  bool   carry()                           const { return (_counter & carry_mask) != 0; }
+  int    limit()                           const { return CompileThreshold; }
+  Action action()                          const { return _action[state()]; }
+  int    count()                           const { return _counter >> number_of_noncount_bits; }
 
-  int   get_InvocationLimit() const              { return InterpreterInvocationLimit >> number_of_noncount_bits; }
-  int   get_BackwardBranchLimit() const          { return InterpreterBackwardBranchLimit >> number_of_noncount_bits; }
-  int   get_ProfileLimit() const                 { return InterpreterProfileLimit >> number_of_noncount_bits; }
+  int   get_InvocationLimit()              const { return InterpreterInvocationLimit >> number_of_noncount_bits; }
+  int   get_BackwardBranchLimit()          const { return InterpreterBackwardBranchLimit >> number_of_noncount_bits; }
+  int   get_ProfileLimit()                 const { return InterpreterProfileLimit >> number_of_noncount_bits; }
 
   void increment()                               { _counter += count_increment; }
 

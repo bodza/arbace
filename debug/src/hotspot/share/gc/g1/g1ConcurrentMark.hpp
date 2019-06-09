@@ -168,7 +168,7 @@ private:
   // _chunk_list.
   bool is_empty() const { return _chunk_list == NULL; }
 
-  size_t capacity() const  { return _chunk_capacity; }
+  size_t capacity()  const { return _chunk_capacity; }
 
   // Expand the stack, typically in response to an overflow condition
   void expand();
@@ -448,9 +448,9 @@ public:
   bool mark_stack_pop(G1TaskQueueEntry* arr) {
     return _global_mark_stack.par_pop_chunk(arr);
   }
-  size_t mark_stack_size() const                { return _global_mark_stack.size(); }
+  size_t mark_stack_size()                const { return _global_mark_stack.size(); }
   size_t partial_mark_stack_size_target() const { return _global_mark_stack.capacity() / 3; }
-  bool mark_stack_empty() const                 { return _global_mark_stack.is_empty(); }
+  bool mark_stack_empty()                 const { return _global_mark_stack.is_empty(); }
 
   G1CMRootRegions* root_regions() { return &_root_regions; }
 

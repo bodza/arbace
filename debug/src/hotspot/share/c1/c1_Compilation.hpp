@@ -44,7 +44,6 @@ class Compilation: public StackObj {
   DirectiveSet*      _directive;
   ciEnv*             _env;
   ciMethod*          _method;
-  int                _osr_bci;
   IR*                _hir;
   int                _max_spills;
   FrameMap*          _frame_map;
@@ -63,7 +62,6 @@ class Compilation: public StackObj {
   CodeOffsets        _offsets;
   CodeBuffer         _code;
   bool               _has_access_indexed;
-  int                _interpreter_frame_size; // Stack space needed in case of a deoptimization
 
   // compilation helpers
   void initialize();
@@ -79,7 +77,7 @@ class Compilation: public StackObj {
 
   void generate_exception_handler_table();
 
-  ExceptionInfoList* exception_info_list() const { return _exception_info_list; }
+  ExceptionInfoList* exception_info_list()   const { return _exception_info_list; }
   ExceptionHandlerTable* exception_handler_table() { return &_exception_handler_table; }
 
   LinearScan* allocator()                          { return _allocator; }
@@ -88,7 +86,7 @@ class Compilation: public StackObj {
   Instruction* _current_instruction;       // the instruction currently being processed
 
  public:
-  Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* method, int osr_bci, BufferBlob* buffer_blob, DirectiveSet* directive);
+  Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* method, BufferBlob* buffer_blob, DirectiveSet* directive);
   ~Compilation();
 
   static Compilation* current() {
@@ -96,32 +94,30 @@ class Compilation: public StackObj {
   }
 
   // accessors
-  ciEnv* env() const                             { return _env; }
-  DirectiveSet* directive() const                { return _directive; }
-  AbstractCompiler* compiler() const             { return _compiler; }
-  bool has_exception_handlers() const            { return _has_exception_handlers; }
-  bool has_fpu_code() const                      { return _has_fpu_code; }
-  bool has_unsafe_access() const                 { return _has_unsafe_access; }
-  int max_vector_size() const                    { return 0; }
-  ciMethod* method() const                       { return _method; }
-  int osr_bci() const                            { return _osr_bci; }
-  bool is_osr_compile() const                    { return osr_bci() >= 0; }
-  IR* hir() const                                { return _hir; }
-  int max_spills() const                         { return _max_spills; }
-  FrameMap* frame_map() const                    { return _frame_map; }
+  ciEnv* env()                             const { return _env; }
+  DirectiveSet* directive()                const { return _directive; }
+  AbstractCompiler* compiler()             const { return _compiler; }
+  bool has_exception_handlers()            const { return _has_exception_handlers; }
+  bool has_fpu_code()                      const { return _has_fpu_code; }
+  bool has_unsafe_access()                 const { return _has_unsafe_access; }
+  int max_vector_size()                    const { return 0; }
+  ciMethod* method()                       const { return _method; }
+  IR* hir()                                const { return _hir; }
+  int max_spills()                         const { return _max_spills; }
+  FrameMap* frame_map()                    const { return _frame_map; }
   CodeBuffer* code()                             { return &_code; }
-  C1_MacroAssembler* masm() const                { return _masm; }
+  C1_MacroAssembler* masm()                const { return _masm; }
   CodeOffsets* offsets()                         { return &_offsets; }
   Arena* arena()                                 { return _arena; }
   bool has_access_indexed()                      { return _has_access_indexed; }
 
   // Instruction ids
   int get_next_id()                              { return _next_id++; }
-  int number_of_instructions() const             { return _next_id; }
+  int number_of_instructions()             const { return _next_id; }
 
   // BlockBegin ids
   int get_next_block_id()                        { return _next_block_id++; }
-  int number_of_blocks() const                   { return _next_block_id; }
+  int number_of_blocks()                   const { return _next_block_id; }
 
   // setters
   void set_has_exception_handlers(bool f)        { _has_exception_handlers = f; }
@@ -142,10 +138,9 @@ class Compilation: public StackObj {
   void set_has_reserved_stack_access(bool z) { _has_reserved_stack_access = z; }
 
   DebugInformationRecorder* debug_info_recorder() const; // = _env->debug_info();
-  Dependencies* dependency_recorder() const; // = _env->dependencies()
   ImplicitExceptionTable* implicit_exception_table()     { return &_implicit_exception_table; }
 
-  Instruction* current_instruction() const       { return _current_instruction; }
+  Instruction* current_instruction()       const { return _current_instruction; }
   Instruction* set_current_instruction(Instruction* instr) {
     Instruction* previous = _current_instruction;
     _current_instruction = instr;
@@ -154,8 +149,8 @@ class Compilation: public StackObj {
 
   // error handling
   void bailout(const char* msg);
-  bool bailed_out() const                        { return _bailout_msg != NULL; }
-  const char* bailout_msg() const                { return _bailout_msg; }
+  bool bailed_out()                        const { return _bailout_msg != NULL; }
+  const char* bailout_msg()                const { return _bailout_msg; }
 
   static int desired_max_code_buffer_size() {
     return (int)NMethodSizeLimit;  // default 64K
@@ -166,9 +161,6 @@ class Compilation: public StackObj {
 
   static bool setup_code_buffer(CodeBuffer* cb, int call_stub_estimate);
 
-  // timers
-  static void print_timers();
-
   bool is_profiling() {
     return env()->comp_level() == CompLevel_full_profile || env()->comp_level() == CompLevel_limited_profile;
   }
@@ -176,63 +168,24 @@ class Compilation: public StackObj {
   bool count_backedges()   { return is_profiling(); }
 
   // Helpers for generation of profile information
-  bool profile_branches() {
-    return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && C1ProfileBranches;
-  }
-  bool profile_calls() {
-    return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && C1ProfileCalls;
-  }
-  bool profile_inlined_calls() {
-    return profile_calls() && C1ProfileInlinedCalls;
-  }
-  bool profile_checkcasts() {
-    return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && C1ProfileCheckcasts;
-  }
-  bool profile_parameters() {
-    return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && MethodData::profile_parameters();
-  }
-  bool profile_arguments() {
-    return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && MethodData::profile_arguments();
-  }
-  bool profile_return() {
-    return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && MethodData::profile_return();
-  }
-  bool age_code() const {
-    return _method->profile_aging();
-  }
-
-  // will compilation make optimistic assumptions that might lead to
-  // deoptimization and that the runtime will account for?
-  bool is_optimistic() const {
-    return (RangeCheckElimination || UseLoopInvariantCodeMotion) && method()->method_data()->trap_count(NULL::Reason_none) == 0;
-  }
-
-  ciKlass* cha_exact_type(ciType* type);
-
-  // Dump inlining replay data to the stream.
-  void dump_inline_data(outputStream* out) { /* do nothing now */ }
-
-  // How much stack space would the interpreter need in case of a
-  // deoptimization (worst case)
-  void update_interpreter_frame_size(int size) {
-    if (_interpreter_frame_size < size) {
-      _interpreter_frame_size = size;
-    }
-  }
-
-  int interpreter_frame_size() const {
-    return _interpreter_frame_size;
-  }
+  bool profile_branches()      { return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && C1ProfileBranches; }
+  bool profile_calls()         { return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && C1ProfileCalls; }
+  bool profile_inlined_calls() { return profile_calls() && C1ProfileInlinedCalls; }
+  bool profile_checkcasts()    { return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && C1ProfileCheckcasts; }
+  bool profile_parameters()    { return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && MethodData::profile_parameters(); }
+  bool profile_arguments()     { return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && MethodData::profile_arguments(); }
+  bool profile_return()        { return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && MethodData::profile_return(); }
+  bool age_code()        const { return _method->profile_aging(); }
 };
 
 // Macro definitions for unified bailout-support
 // The methods bailout() and bailed_out() are present in all classes
 // that might bailout, but forward all calls to Compilation
-#define BAILOUT(msg)               { bailout(msg); return; }
-#define BAILOUT_(msg, res)         { bailout(msg); return res; }
+#define BAILOUT(msg)        { bailout(msg); return; }
+#define BAILOUT_(msg, res)  { bailout(msg); return res; }
 
-#define CHECK_BAILOUT()            { if (bailed_out()) return; }
-#define CHECK_BAILOUT_(res)        { if (bailed_out()) return res; }
+#define CHECK_BAILOUT()     { if (bailed_out()) return; }
+#define CHECK_BAILOUT_(res) { if (bailed_out()) return res; }
 
 class InstructionMark: public StackObj {
  private:

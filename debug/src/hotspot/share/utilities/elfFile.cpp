@@ -165,7 +165,7 @@ NullDecoder::decoder_status ElfFile::load_tables() {
     return NullDecoder::file_invalid;
   }
 
-  for (int index = 0; index < _elfHdr.e_shnum; index ++) {
+  for (int index = 0; index < _elfHdr.e_shnum; index++) {
     if (!freader.read(&shdr, sizeof(shdr))) {
       return NullDecoder::file_invalid;
     }
@@ -206,7 +206,7 @@ int ElfFile::section_by_name(const char* name, Elf_Shdr& hdr) {
   if (!mfd.has_mark() || !mfd.set_position(_elfHdr.e_shoff)) return -1;
 
   int sect_index = -1;
-  for (int index = 0; index < _elfHdr.e_shnum; index ++) {
+  for (int index = 0; index < _elfHdr.e_shnum; index++) {
     if (!mfd.read((void*)&hdr, sizeof(hdr))) {
       break;
     }

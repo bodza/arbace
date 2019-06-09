@@ -15,7 +15,7 @@ OSThread::~OSThread() {
 }
 
 // Printing
-void OSThread::print_on(outputStream *st) const {
+void OSThread::print_on(outputStream* st) const {
   st->print("nid=0x%x ", thread_id());
   switch (_state) {
     case ALLOCATED:    st->print("allocated ");                 break;

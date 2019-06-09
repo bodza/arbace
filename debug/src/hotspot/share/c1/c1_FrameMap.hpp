@@ -147,20 +147,20 @@ class FrameMap : public CompilationResourceObj {
   FrameMap(ciMethod* method, int monitors, int reserved_argument_area_size);
   bool finalize_frame(int nof_slots);
 
-  int reserved_argument_area_size() const        { return _reserved_argument_area_size; }
-  int framesize() const                          { return _framesize; }
-  ByteSize framesize_in_bytes() const            { return in_ByteSize(framesize() * 4); }
-  int num_monitors() const                       { return _num_monitors; }
-  int num_spills() const                         { return _num_spills; }
-  int argcount() const                           { return _argcount; }
-  int oop_map_arg_count() const                  { return _oop_map_arg_count; }
-  CallingConvention* incoming_arguments() const  { return _incoming_arguments; }
+  int reserved_argument_area_size()        const { return _reserved_argument_area_size; }
+  int framesize()                          const { return _framesize; }
+  ByteSize framesize_in_bytes()            const { return in_ByteSize(framesize() * 4); }
+  int num_monitors()                       const { return _num_monitors; }
+  int num_spills()                         const { return _num_spills; }
+  int argcount()                           const { return _argcount; }
+  int oop_map_arg_count()                  const { return _oop_map_arg_count; }
+  CallingConvention* incoming_arguments()  const { return _incoming_arguments; }
 
   // convenience routines
-  Address address_for_slot(int index, int sp_adjust = 0) const        { return make_new_address(sp_offset_for_slot(index) + in_ByteSize(sp_adjust)); }
+  Address address_for_slot(int index, int sp_adjust = 0)        const { return make_new_address(sp_offset_for_slot(index) + in_ByteSize(sp_adjust)); }
   Address address_for_double_slot(int index, int sp_adjust = 0) const { return make_new_address(sp_offset_for_double_slot(index) + in_ByteSize(sp_adjust)); }
-  Address address_for_monitor_lock(int monitor_index) const           { return make_new_address(sp_offset_for_monitor_lock(monitor_index)); }
-  Address address_for_monitor_object(int monitor_index) const         { return make_new_address(sp_offset_for_monitor_object(monitor_index)); }
+  Address address_for_monitor_lock(int monitor_index)           const { return make_new_address(sp_offset_for_monitor_lock(monitor_index)); }
+  Address address_for_monitor_object(int monitor_index)         const { return make_new_address(sp_offset_for_monitor_object(monitor_index)); }
 
   // Creates Location describing desired slot and returns it via pointer
   // to Location object. Returns true if the stack frame offset was legal
@@ -176,7 +176,7 @@ class FrameMap : public CompilationResourceObj {
   }
   bool locations_for_slot(int index, Location::Type loc_type, Location* loc, Location* second = NULL) const;
 
-  VMReg slot_regname(int index) const                   { return sp_offset2vmreg(sp_offset_for_slot(index)); }
+  VMReg slot_regname(int index)                   const { return sp_offset2vmreg(sp_offset_for_slot(index)); }
   VMReg monitor_object_regname(int monitor_index) const { return sp_offset2vmreg(sp_offset_for_monitor_object(monitor_index)); }
   VMReg regname(LIR_Opr opr) const;
 
@@ -201,11 +201,11 @@ class CallingConvention: public ResourceObj {
 
   LIR_OprList* args()       { return _args; }
 
-  LIR_Opr at(int i) const   { return _args->at(i); }
-  int length() const        { return _args->length(); }
+  LIR_Opr at(int i)   const { return _args->at(i); }
+  int length()        const { return _args->length(); }
 
   // Indicates number of real frame slots used by arguments passed on stack.
-  int reserved_stack_slots() const            { return _reserved_stack_slots; }
+  int reserved_stack_slots()            const { return _reserved_stack_slots; }
 };
 
 #endif

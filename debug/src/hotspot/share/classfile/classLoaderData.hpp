@@ -126,7 +126,7 @@ class ClassLoaderDataGraph : public AllStatic {
   static bool has_metaspace_oom()           { return _metaspace_oom; }
   static void set_metaspace_oom(bool value) { _metaspace_oom = value; }
 
-  static void print_on(outputStream * const out) { };
+  static void print_on(outputStream* const out) { };
   static void print() { print_on(tty); }
 
   // instance and array class counters
@@ -234,7 +234,7 @@ class ClassLoaderData : public CHeapObj<mtClass> {
   Symbol* _name_and_id;
 
   void set_next(ClassLoaderData* next) { _next = next; }
-  ClassLoaderData* next() const        { return _next; }
+  ClassLoaderData* next()        const { return _next; }
 
   ClassLoaderData(Handle h_class_loader, bool is_anonymous);
   ~ClassLoaderData();
@@ -252,7 +252,7 @@ class ClassLoaderData : public CHeapObj<mtClass> {
   bool has_accumulated_modified_oops()   { return _accumulated_modified_oops; }
  private:
   void unload();
-  bool keep_alive() const       { return _keep_alive > 0; }
+  bool keep_alive()       const { return _keep_alive > 0; }
 
   oop holder_phantom() const;
   void classes_do(void f(Klass*));
@@ -335,7 +335,7 @@ class ClassLoaderData : public CHeapObj<mtClass> {
   void classes_do(KlassClosure* klass_closure);
   Klass* klasses() { return _klasses; }
 
-  JNIMethodBlock* jmethod_ids() const              { return _jmethod_ids; }
+  JNIMethodBlock* jmethod_ids()              const { return _jmethod_ids; }
   void set_jmethod_ids(JNIMethodBlock* new_block)  { _jmethod_ids = new_block; }
 
   void print()                                     { print_on(tty); }

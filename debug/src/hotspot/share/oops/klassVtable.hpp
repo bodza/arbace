@@ -34,15 +34,15 @@ class klassVtable {
   }
 
   // accessors
-  vtableEntry* table() const      { return (vtableEntry*)(address(_klass) + _tableOffset); }
-  Klass* klass() const            { return _klass; }
-  int length() const              { return _length; }
+  vtableEntry* table()      const { return (vtableEntry*)(address(_klass) + _tableOffset); }
+  Klass* klass()            const { return _klass; }
+  int length()              const { return _length; }
   inline Method* method_at(int i) const;
   inline Method* unchecked_method_at(int i) const;
   inline Method** adr_method_at(int i) const;
 
   // searching; all methods return -1 if not found
-  int index_of(Method* m) const                         { return index_of(m, _length); }
+  int index_of(Method* m)                         const { return index_of(m, _length); }
   int index_of_miranda(Symbol* name, Symbol* signature);
 
   void initialize_vtable(bool checkconstraints, TRAPS);   // initialize vtable of a new klass
@@ -132,7 +132,7 @@ class vtableEntry {
   static int size_in_bytes() { return sizeof(vtableEntry); }
 
   static int method_offset_in_bytes() { return offset_of(vtableEntry, _method); }
-  Method* method() const     { return _method; }
+  Method* method()     const { return _method; }
   Method** method_addr()     { return &_method; }
 
  private:
@@ -168,7 +168,7 @@ class itableOffsetEntry {
  public:
   Klass* interface_klass() const { return _interface; }
   Klass**interface_klass_addr()  { return &_interface; }
-  int      offset() const          { return _offset; }
+  int      offset()          const { return _offset; }
 
   static itableMethodEntry* method_entry(Klass* k, int offset) { return (itableMethodEntry*)(((address)k) + offset); }
   itableMethodEntry* first_method_entry(Klass* k)              { return method_entry(k, _offset); }

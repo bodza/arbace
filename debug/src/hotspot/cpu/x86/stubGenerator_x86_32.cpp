@@ -9,7 +9,6 @@
 #include "oops/method.hpp"
 #include "oops/objArrayKlass.hpp"
 #include "oops/oop.inline.hpp"
-#include "prims/methodHandles.hpp"
 #include "runtime/frame.inline.hpp"
 #include "runtime/handles.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
@@ -169,9 +168,6 @@ class StubGenerator: public StubCodeGenerator {
     __ movl(Address(rdi, 0), rax);
     __ BIND(exit);
 
-    // check that FPU stack is empty
-    __ verify_FPU(0, "generate_call_stub");
-
     // pop parameters
     __ lea(rsp, rsp_after_call);
 
@@ -237,10 +233,9 @@ class StubGenerator: public StubCodeGenerator {
     // get thread directly
     __ movptr(rcx, thread);
     // set pending exception
-    __ verify_oop(rax);
-    __ movptr(Address(rcx, Thread::pending_exception_offset()), rax          );
-    __ lea(Address(rcx, Thread::exception_file_offset   ()), ExternalAddress((address)__FILE__));
-    __ movl(Address(rcx, Thread::exception_line_offset   ()), __LINE__ );
+    __ movptr(Address(rcx, Thread::pending_exception_offset()), rax);
+    __ lea(Address(rcx, Thread::exception_file_offset()), ExternalAddress((address)__FILE__));
+    __ movl(Address(rcx, Thread::exception_line_offset()), __LINE__ );
     // complete return to VM
     __ jump(RuntimeAddress(StubRoutines::_call_stub_return_address));
 
@@ -288,9 +283,6 @@ class StubGenerator: public StubCodeGenerator {
     __ pop(exception_pc);
     __ movptr(exception_oop, Address(thread, Thread::pending_exception_offset()));
     __ movptr(Address(thread, Thread::pending_exception_offset()), NULL_WORD);
-
-    // Verify that there is really a valid exception in RAX.
-    __ verify_oop(exception_oop);
 
     // continue at exception handler (return address removed)
     // rax: exception
@@ -429,64 +421,6 @@ class StubGenerator: public StubCodeGenerator {
 
     __ ret(0);
 
-    return start;
-  }
-
-  //----------------------------------------------------------------------------------------------------
-  // Non-destructive plausibility checks for oops
-
-  address generate_verify_oop() {
-    StubCodeMark mark(this, "StubRoutines", "verify_oop");
-    address start = __ pc();
-
-    // Incoming arguments on stack after saving rax,:
-    //
-    // [tos    ]: saved rdx
-    // [tos + 1]: saved EFLAGS
-    // [tos + 2]: return address
-    // [tos + 3]: char* error message
-    // [tos + 4]: oop   object to verify
-    // [tos + 5]: saved rax, - saved by caller and bashed
-
-    Label exit, error;
-    __ pushf();
-    __ incrementl(ExternalAddress((address) StubRoutines::verify_oop_count_addr()));
-    __ push(rdx);                                // save rdx
-    // make sure object is 'reasonable'
-    __ movptr(rax, Address(rsp, 4 * wordSize));    // get object
-    __ testptr(rax, rax);
-    __ jcc(Assembler::zero, exit);               // if obj is NULL it is ok
-
-    // Check if the oop is in the right area of memory
-    const int oop_mask = Universe::verify_oop_mask();
-    const int oop_bits = Universe::verify_oop_bits();
-    __ mov(rdx, rax);
-    __ andptr(rdx, oop_mask);
-    __ cmpptr(rdx, oop_bits);
-    __ jcc(Assembler::notZero, error);
-
-    // make sure klass is 'reasonable', which is not zero.
-    __ movptr(rax, Address(rax, oopDesc::klass_offset_in_bytes())); // get klass
-    __ testptr(rax, rax);
-    __ jcc(Assembler::zero, error);              // if klass is NULL it is broken
-
-    // return if everything seems ok
-    __ bind(exit);
-    __ movptr(rax, Address(rsp, 5 * wordSize));  // get saved rax, back
-    __ pop(rdx);                                 // restore rdx
-    __ popf();                                   // restore EFLAGS
-    __ ret(3 * wordSize);                        // pop arguments
-
-    // handle errors
-    __ bind(error);
-    __ movptr(rax, Address(rsp, 5 * wordSize));  // get saved rax, back
-    __ pop(rdx);                                 // get saved rdx back
-    __ popf();                                   // get saved EFLAGS off stack -- will be ignored
-    __ pusha();                                  // push registers (eip = return address & msg are already pushed)
-    BLOCK_COMMENT("call MacroAssembler::debug");
-    __ call(RuntimeAddress(CAST_FROM_FN_PTR(address, MacroAssembler::debug32)));
-    __ popa();
-    __ ret(3 * wordSize);                        // pop arguments
     return start;
   }
 
@@ -3490,15 +3424,12 @@ class StubGenerator: public StubCodeGenerator {
 
     // These entry points require SharedInfo::stack0 to be set up in non-core builds
     // and need to be relocatable, so they each fabricate a RuntimeStub internally.
-    StubRoutines::_throw_AbstractMethodError_entry         = generate_throw_exception("AbstractMethodError throw_exception",          CAST_FROM_FN_PTR(address, SharedRuntime::throw_AbstractMethodError));
-    StubRoutines::_throw_IncompatibleClassChangeError_entry= generate_throw_exception("IncompatibleClassChangeError throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime::throw_IncompatibleClassChangeError));
-    StubRoutines::_throw_NullPointerException_at_call_entry= generate_throw_exception("NullPointerException at call throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime::throw_NullPointerException_at_call));
+    StubRoutines::_throw_AbstractMethodError_entry          = generate_throw_exception("AbstractMethodError throw_exception",          CAST_FROM_FN_PTR(address, SharedRuntime::throw_AbstractMethodError));
+    StubRoutines::_throw_IncompatibleClassChangeError_entry = generate_throw_exception("IncompatibleClassChangeError throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime::throw_IncompatibleClassChangeError));
+    StubRoutines::_throw_NullPointerException_at_call_entry = generate_throw_exception("NullPointerException at call throw_exception", CAST_FROM_FN_PTR(address, SharedRuntime::throw_NullPointerException_at_call));
 
     //------------------------------------------------------------------------------------------------------------------------
     // entry points that are platform specific
-
-    // support for verify_oop (must happen after universe_init)
-    StubRoutines::_verify_oop_subroutine_entry     = generate_verify_oop();
 
     // arraycopy stubs used by compilers
     generate_arraycopy_stubs();

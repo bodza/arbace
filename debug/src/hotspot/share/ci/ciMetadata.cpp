@@ -4,9 +4,6 @@
 #include "ci/ciUtilities.inline.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 
-// ------------------------------------------------------------------
-// ciMetadata::print
-//
 // Print debugging output about this ciMetadata.
 //
 // Implementation note: dispatch to the virtual print_impl behavior
@@ -17,9 +14,6 @@ void ciMetadata::print(outputStream* st) {
   st->print(" ident=%d address=" INTPTR_FORMAT ">", ident(), p2i((address)this));
 }
 
-// ------------------------------------------------------------------
-// ciMetadata::print_oop
-//
 // Print debugging output about the metadata this ciMetadata represents.
 void ciMetadata::print_metadata(outputStream* st) {
   if (!is_loaded()) {

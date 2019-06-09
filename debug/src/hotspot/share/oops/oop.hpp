@@ -212,9 +212,6 @@ class oopDesc {
   char* print_string();
   char* print_value_string();
 
-  // verification operations
-  void verify_on(outputStream* st);
-
   // locking operations
   inline bool is_locked()   const;
   inline bool is_unlocked() const;

@@ -6,7 +6,6 @@
 #include "ci/ciObject.hpp"
 #include "ci/ciSignature.hpp"
 #include "compiler/methodLiveness.hpp"
-#include "prims/methodHandles.hpp"
 #include "utilities/bitMap.hpp"
 
 class ciMethodBlocks;
@@ -32,8 +31,6 @@ class ciMethod : public ciMetadata {
   friend class ciEnv;
   friend class ciExceptionHandlerStream;
   friend class ciBytecodeStream;
-  friend class ciMethodHandle;
-  friend class ciReplay;
   friend class InlineTree;
 
  private:
@@ -75,7 +72,7 @@ class ciMethod : public ciMetadata {
   ciMethod(const methodHandle& h_m, ciInstanceKlass* holder);
   ciMethod(ciInstanceKlass* holder, ciSymbol* name, ciSymbol* signature, ciInstanceKlass* accessor);
 
-  oop loader() const                             { return _holder->loader(); }
+  oop loader()                             const { return _holder->loader(); }
 
   const char* type_string()                      { return "ciMethod"; }
 
@@ -96,21 +93,21 @@ class ciMethod : public ciMetadata {
   void assert_call_type_ok(int bci);
 
  public:
-  void check_is_loaded() const                  { }
+  void check_is_loaded()                  const { }
 
   // Basic method information.
-  ciFlags flags() const                         { check_is_loaded(); return _flags; }
-  ciSymbol* name() const                        { return _name; }
-  ciInstanceKlass* holder() const               { return _holder; }
+  ciFlags flags()                         const { check_is_loaded(); return _flags; }
+  ciSymbol* name()                        const { return _name; }
+  ciInstanceKlass* holder()               const { return _holder; }
   ciMethodData* method_data();
   ciMethodData* method_data_or_null();
 
   // Signature information.
-  ciSignature* signature() const                { return _signature; }
-  ciType*      return_type() const              { return _signature->return_type(); }
-  int          arg_size_no_receiver() const     { return _signature->size(); }
+  ciSignature* signature()                const { return _signature; }
+  ciType*      return_type()              const { return _signature->return_type(); }
+  int          arg_size_no_receiver()     const { return _signature->size(); }
   // Can only be used on loaded ciMethods
-  int          arg_size() const                 {
+  int          arg_size()                 const {
     check_is_loaded();
     return _signature->size() + (_flags.is_static() ? 0 : 1);
   }
@@ -127,7 +124,7 @@ class ciMethod : public ciMetadata {
       return arg_size();
     } else {
       int arg_size = _signature->size();
-      if (code != Bytecodes::_invokestatic && code != Bytecodes::_invokedynamic) {
+      if (code != Bytecodes::_invokestatic) {
         arg_size++;
       }
       return arg_size;
@@ -141,16 +138,16 @@ class ciMethod : public ciMetadata {
 
   // Method code and related information.
   address code()                                 { if (_code == NULL) load_code(); return _code; }
-  int code_size() const                          { check_is_loaded(); return _code_size; }
-  int max_stack() const                          { check_is_loaded(); return _max_stack; }
-  int max_locals() const                         { check_is_loaded(); return _max_locals; }
-  vmIntrinsics::ID intrinsic_id() const          { check_is_loaded(); return _intrinsic_id; }
-  bool has_exception_handlers() const            { check_is_loaded(); return _handler_count > 0; }
-  int exception_table_length() const             { check_is_loaded(); return _handler_count; }
-  int interpreter_invocation_count() const       { check_is_loaded(); return _interpreter_invocation_count; }
-  int interpreter_throwout_count() const         { check_is_loaded(); return _interpreter_throwout_count; }
-  int size_of_parameters() const                 { check_is_loaded(); return _size_of_parameters; }
-  int nmethod_age() const                        { check_is_loaded(); return _nmethod_age; }
+  int code_size()                          const { check_is_loaded(); return _code_size; }
+  int max_stack()                          const { check_is_loaded(); return _max_stack; }
+  int max_locals()                         const { check_is_loaded(); return _max_locals; }
+  vmIntrinsics::ID intrinsic_id()          const { check_is_loaded(); return _intrinsic_id; }
+  bool has_exception_handlers()            const { check_is_loaded(); return _handler_count > 0; }
+  int exception_table_length()             const { check_is_loaded(); return _handler_count; }
+  int interpreter_invocation_count()       const { check_is_loaded(); return _interpreter_invocation_count; }
+  int interpreter_throwout_count()         const { check_is_loaded(); return _interpreter_throwout_count; }
+  int size_of_parameters()                 const { check_is_loaded(); return _size_of_parameters; }
+  int nmethod_age()                        const { check_is_loaded(); return _nmethod_age; }
 
   // Should the method be compiled with an age counter?
   bool profile_aging() const;
@@ -164,7 +161,6 @@ class ciMethod : public ciMetadata {
   bool intrinsic_candidate() const { return get_Method()->intrinsic_candidate(); }
 
   int comp_level();
-  int highest_osr_comp_level();
 
   Bytecodes::Code java_code_at_bci(int bci) {
     address bcp = code() + bci;
@@ -188,7 +184,7 @@ class ciMethod : public ciMetadata {
   // Analysis and profiling.
   //
   // Usage note: liveness_at_bci and init_vars should be wrapped in ResourceMarks.
-  bool          has_monitor_bytecodes() const    { return _uses_monitors; }
+  bool          has_monitor_bytecodes()    const { return _uses_monitors; }
   bool          has_balanced_monitors();
 
   // Returns a bitmap indicating which locals are required to be
@@ -199,20 +195,9 @@ class ciMethod : public ciMetadata {
   MethodLivenessResult raw_liveness_at_bci(int bci);
   MethodLivenessResult liveness_at_bci(int bci);
 
-  // Get the interpreters viewpoint on oop liveness.  MethodLiveness is
-  // conservative in the sense that it may consider locals to be live which
-  // cannot be live, like in the case where a local could contain an oop or
-  // a primitive along different paths.  In that case the local must be
-  // dead when those paths merge. Since the interpreter's viewpoint is
-  // used when gc'ing an interpreter frame we need to use its viewpoint
-  // during OSR when loading the locals.
-
-  ResourceBitMap live_local_oops_at_bci(int bci);
-
   const BitMap& bci_block_start();
 
   ciTypeFlow*   get_flow_analysis();
-  ciTypeFlow*   get_osr_flow_analysis(int osr_bci);  // alternate entry point
   ciCallProfile call_profile_at_bci(int bci);
   int           interpreter_call_site_count(int bci);
 
@@ -239,10 +224,7 @@ class ciMethod : public ciMetadata {
   // Given a certain calling environment, find the monomorphic target
   // for the call.  Return NULL if the call is not monomorphic in
   // its calling environment.
-  ciMethod* find_monomorphic_target(ciInstanceKlass* caller,
-                                    ciInstanceKlass* callee_holder,
-                                    ciInstanceKlass* actual_receiver,
-                                    bool check_access = true);
+  ciMethod* find_monomorphic_target(ciInstanceKlass* caller, ciInstanceKlass* callee_holder, ciInstanceKlass* actual_receiver, bool check_access = true);
 
   // Given a known receiver klass, find the target for the call.
   // Return NULL if the call has no target or is abstract.
@@ -255,10 +237,8 @@ class ciMethod : public ciMetadata {
   bool has_option_value(const char* option, double& value);
   bool can_be_compiled();
   bool can_be_parsed() const { return _can_be_parsed; }
-  bool can_be_osr_compiled(int entry_bci);
   void set_not_compilable(const char* reason = NULL);
   bool has_compiled_code();
-  bool is_not_reached(int bci);
   bool was_executed_more_than(int times);
   bool has_unloaded_classes_in_signature();
   bool is_klass_loaded(int refinfo_index, bool must_be_resolved) const;
@@ -271,45 +251,39 @@ class ciMethod : public ciMetadata {
   // Stack walking support
   bool is_ignored_by_security_stack_walk() const;
 
-  // JSR 292 support
-  bool is_method_handle_intrinsic()  const;
-  bool is_compiled_lambda_form() const;
-  bool has_member_arg() const;
-
   // What kind of ciObject is this?
-  bool is_method() const                         { return true; }
+  bool is_method()                 const { return true; }
 
   // Java access flags
-  bool is_public      () const                   { return flags().is_public(); }
-  bool is_private     () const                   { return flags().is_private(); }
-  bool is_protected   () const                   { return flags().is_protected(); }
-  bool is_static      () const                   { return flags().is_static(); }
-  bool is_final       () const                   { return flags().is_final(); }
-  bool is_synchronized() const                   { return flags().is_synchronized(); }
-  bool is_native      () const                   { return flags().is_native(); }
-  bool is_interface   () const                   { return flags().is_interface(); }
-  bool is_abstract    () const                   { return flags().is_abstract(); }
-  bool is_strict      () const                   { return flags().is_strict(); }
+  bool is_public      ()           const { return flags().is_public(); }
+  bool is_private     ()           const { return flags().is_private(); }
+  bool is_protected   ()           const { return flags().is_protected(); }
+  bool is_static      ()           const { return flags().is_static(); }
+  bool is_final       ()           const { return flags().is_final(); }
+  bool is_synchronized()           const { return flags().is_synchronized(); }
+  bool is_native      ()           const { return flags().is_native(); }
+  bool is_interface   ()           const { return flags().is_interface(); }
+  bool is_abstract    ()           const { return flags().is_abstract(); }
+  bool is_strict      ()           const { return flags().is_strict(); }
 
   // Other flags
   bool is_empty_method() const;
   bool is_vanilla_constructor() const;
-  bool is_final_method() const                   { return is_final() || holder()->is_final(); }
+  bool is_final_method()           const { return is_final() || holder()->is_final(); }
   bool has_loops      () const;
   bool has_jsrs       () const;
   bool is_getter      () const;
   bool is_setter      () const;
   bool is_accessor    () const;
   bool is_initializer () const;
-  bool can_be_statically_bound() const           { return _can_be_statically_bound; }
-  bool has_reserved_stack_access() const         { return _has_reserved_stack_access; }
+  bool can_be_statically_bound()   const { return _can_be_statically_bound; }
+  bool has_reserved_stack_access() const { return _has_reserved_stack_access; }
   bool is_boxing_method() const;
   bool is_unboxing_method() const;
   bool is_object_initializer() const;
 
   // Replay data methods
   void dump_name_as_ascii(outputStream* st);
-  void dump_replay_data(outputStream* st);
 
   // Print the name of this method in various incarnations.
   void print_name(outputStream* st = tty);

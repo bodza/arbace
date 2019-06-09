@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "aot/aotLoader.hpp"
 #include "classfile/classLoader.hpp"
 #include "classfile/classLoaderData.hpp"
 #include "classfile/javaClasses.hpp"
@@ -8,7 +7,6 @@
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "code/codeCache.hpp"
-#include "code/dependencies.hpp"
 #include "gc/shared/collectedHeap.inline.hpp"
 #include "gc/shared/gcArguments.hpp"
 #include "gc/shared/gcConfig.hpp"
@@ -27,7 +25,6 @@
 #include "oops/objArrayOop.inline.hpp"
 #include "oops/oop.inline.hpp"
 #include "oops/typeArrayKlass.hpp"
-#include "prims/resolvedMethodTable.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/flags/flagSetting.hpp"
@@ -39,7 +36,6 @@
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/synchronizer.hpp"
 #include "runtime/thread.inline.hpp"
-#include "runtime/timerTrace.hpp"
 #include "runtime/vm_operations.hpp"
 #include "services/memoryService.hpp"
 #include "utilities/align.hpp"
@@ -105,7 +101,7 @@ Array<u2>* Universe::_the_empty_short_array           = NULL;
 Array<Klass*>* Universe::_the_empty_klass_array     = NULL;
 Array<Method*>* Universe::_the_empty_method_array   = NULL;
 
-// Oop verification (see MacroAssembler::verify_oop)
+// Oop verification
 uintptr_t       Universe::_verify_oop_mask = 0;
 uintptr_t       Universe::_verify_oop_bits = (uintptr_t) -1;
 
@@ -521,8 +517,6 @@ jint universe_init() {
   MetaspaceCounters::initialize_performance_counters();
   CompressedClassSpaceCounters::initialize_performance_counters();
 
-  AOTLoader::universe_init();
-
   // Checks 'AfterMemoryInit' constraints.
   if (!JVMFlagConstraintList::check_constraints(JVMFlagConstraint::AfterMemoryInit)) {
     return JNI_EINVAL;
@@ -546,8 +540,6 @@ jint universe_init() {
   if (strlen(VerifySubSet) > 0) {
     Universe::initialize_verify_flags();
   }
-
-  ResolvedMethodTable::create_table();
 
   return JNI_OK;
 }
@@ -588,7 +580,6 @@ jint Universe::initialize_heap() {
       // Did reserve heap below 32Gb. Can use base == 0;
       Universe::set_narrow_oop_base(0);
     }
-    AOTLoader::set_narrow_oop_shift();
 
     Universe::set_narrow_ptrs_base(Universe::narrow_oop_base());
 

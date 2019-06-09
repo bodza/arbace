@@ -293,8 +293,6 @@ Klass* ObjArrayKlass::array_klass_impl(bool or_null, int n, TRAPS) {
         release_set_higher_dimension(ak);
       }
     }
-  } else {
-    CHECK_UNHANDLED_OOPS_ONLY(Thread::current()->clear_unhandled_oops());
   }
 
   ObjArrayKlass *ak = ObjArrayKlass::cast(higher_dimension());
@@ -398,23 +396,4 @@ void ObjArrayKlass::oop_print_value_on(oop obj, outputStream* st) {
 
 const char* ObjArrayKlass::internal_name() const {
   return external_name();
-}
-
-// Verification
-
-void ObjArrayKlass::verify_on(outputStream* st) {
-  ArrayKlass::verify_on(st);
-  guarantee(element_klass()->is_klass(), "should be klass");
-  guarantee(bottom_klass()->is_klass(), "should be klass");
-  Klass* bk = bottom_klass();
-  guarantee(bk->is_instance_klass() || bk->is_typeArray_klass(),  "invalid bottom klass");
-}
-
-void ObjArrayKlass::oop_verify_on(oop obj, outputStream* st) {
-  ArrayKlass::oop_verify_on(obj, st);
-  guarantee(obj->is_objArray(), "must be objArray");
-  objArrayOop oa = objArrayOop(obj);
-  for (int index = 0; index < oa->length(); index++) {
-    guarantee(oopDesc::is_oop_or_null(oa->obj_at(index)), "should be oop");
-  }
 }

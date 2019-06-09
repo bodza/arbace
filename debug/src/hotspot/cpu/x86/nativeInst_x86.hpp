@@ -47,16 +47,16 @@ class NativeInstruction {
   inline bool is_mov_literal64();
 
  protected:
-  address addr_at(int offset) const    { return address(this) + offset; }
+  address addr_at(int offset)    const { return address(this) + offset; }
 
-  s_char sbyte_at(int offset) const    { return *(s_char*) addr_at(offset); }
-  u_char ubyte_at(int offset) const    { return *(u_char*) addr_at(offset); }
+  s_char sbyte_at(int offset)    const { return *(s_char*) addr_at(offset); }
+  u_char ubyte_at(int offset)    const { return *(u_char*) addr_at(offset); }
 
-  jint int_at(int offset) const         { return *(jint*) addr_at(offset); }
+  jint int_at(int offset)         const { return *(jint*) addr_at(offset); }
 
-  intptr_t ptr_at(int offset) const    { return *(intptr_t*) addr_at(offset); }
+  intptr_t ptr_at(int offset)    const { return *(intptr_t*) addr_at(offset); }
 
-  oop  oop_at (int offset) const       { return *(oop*) addr_at(offset); }
+  oop  oop_at (int offset)       const { return *(oop*) addr_at(offset); }
 
   void set_char_at(int offset, char c)        { *addr_at(offset) = (u_char)c; wrote(offset); }
   void set_int_at(int offset, jint  i)        { *(jint*)addr_at(offset) = i;  wrote(offset); }
@@ -131,11 +131,11 @@ class NativeCall: public NativeInstruction {
 
   enum { cache_line_size = BytesPerWord };  // conservative estimate!
 
-  address instruction_address() const      { return addr_at(instruction_offset); }
+  address instruction_address()      const { return addr_at(instruction_offset); }
   address next_instruction_address() const { return addr_at(return_address_offset); }
-  int displacement() const                 { return (jint) int_at(displacement_offset); }
-  address displacement_address() const     { return addr_at(displacement_offset); }
-  address return_address() const           { return addr_at(return_address_offset); }
+  int displacement()                 const { return (jint) int_at(displacement_offset); }
+  address displacement_address()     const { return addr_at(displacement_offset); }
+  address return_address()           const { return addr_at(return_address_offset); }
   address destination() const;
   void set_destination(address dest) {
 #ifdef AMD64
@@ -218,9 +218,9 @@ class NativeMovConstReg: public NativeInstruction {
     register_mask               = 0x07
   };
 
-  address instruction_address() const      { return addr_at(instruction_offset); }
+  address instruction_address()      const { return addr_at(instruction_offset); }
   address next_instruction_address() const { return addr_at(next_instruction_offset); }
-  intptr_t data() const                    { return ptr_at(data_offset); }
+  intptr_t data()                    const { return ptr_at(data_offset); }
   void set_data(intptr_t x)                { set_ptr_at(data_offset, x); }
 
   void print();
@@ -382,11 +382,11 @@ public:
     offset_offset = 2 + rex_size
   };
 
-  address instruction_address() const      { return addr_at(0); }
-  address rip_offset_address() const       { return addr_at(offset_offset); }
-  int rip_offset() const                   { return int_at(offset_offset); }
-  address return_address() const           { return addr_at(instruction_length); }
-  address got_address() const              { return return_address() + rip_offset(); }
+  address instruction_address()      const { return addr_at(0); }
+  address rip_offset_address()       const { return addr_at(offset_offset); }
+  int rip_offset()                   const { return int_at(offset_offset); }
+  address return_address()           const { return addr_at(instruction_length); }
+  address got_address()              const { return return_address() + rip_offset(); }
   address next_instruction_address() const { return return_address(); }
   intptr_t data() const;
   void set_data(intptr_t data) {
@@ -415,9 +415,9 @@ class NativeJump: public NativeInstruction {
     next_instruction_offset     =    5
   };
 
-  address instruction_address() const      { return addr_at(instruction_offset); }
+  address instruction_address()      const { return addr_at(instruction_offset); }
   address next_instruction_address() const { return addr_at(next_instruction_offset); }
-  address jump_destination() const         {
+  address jump_destination()         const {
      address dest = int_at(data_offset) + next_instruction_address();
      // 32bit used to encode unresolved jmp as jmp -1
      // 64bit can't produce this so it used jump to self.
@@ -486,7 +486,7 @@ class NativeGeneralJump: public NativeInstruction {
     instruction_size = 5
   };
 
-  address instruction_address() const       { return addr_at(0); }
+  address instruction_address()       const { return addr_at(0); }
   address jump_destination()    const;
 
   // Creation

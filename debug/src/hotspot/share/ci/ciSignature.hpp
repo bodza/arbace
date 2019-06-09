@@ -24,21 +24,20 @@ private:
   friend class ciObjectFactory;
 
   ciSignature(ciKlass* accessing_klass, const constantPoolHandle& cpool, ciSymbol* signature);
-  ciSignature(ciKlass* accessing_klass,                           ciSymbol* signature, ciMethodType* method_type);
 
   void get_all_klasses();
 
-  Symbol* get_symbol() const                     { return _symbol->get_symbol(); }
+  Symbol* get_symbol()                     const { return _symbol->get_symbol(); }
 
 public:
-  ciSymbol* as_symbol() const                    { return _symbol; }
-  ciKlass*  accessing_klass() const              { return _accessing_klass; }
+  ciSymbol* as_symbol()                    const { return _symbol; }
+  ciKlass*  accessing_klass()              const { return _accessing_klass; }
 
   ciType*   return_type() const;
   ciType*   type_at(int index) const;
 
-  int       size() const                         { return _size; }
-  int       count() const                        { return _count; }
+  int       size()                         const { return _size; }
+  int       count()                        const { return _count; }
 
   int       arg_size_for_bc(Bytecodes::Code bc)  { return size() + (Bytecodes::has_receiver(bc) ? 1 : 0); }
 

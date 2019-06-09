@@ -95,10 +95,10 @@ public:
   }
 
   // package name
-  Symbol*            name() const               { return literal(); }
+  Symbol*            name()               const { return literal(); }
 
   // the module containing the package definition
-  ModuleEntry*       module() const             { return _module; }
+  ModuleEntry*       module()             const { return _module; }
   void               set_module(ModuleEntry* m) { _module = m; }
 
   // package's export state
@@ -147,7 +147,7 @@ public:
   bool has_loaded_class() const { return _classpath_index != -1; }
 
   // returns true if the package is defined in the unnamed module
-  bool in_unnamed_module() const  { return !_module->is_named(); }
+  bool in_unnamed_module()  const { return !_module->is_named(); }
 
   // returns true if the package specifies m as a qualified export, including through an unnamed export
   bool is_qexported_to(ModuleEntry* m) const;

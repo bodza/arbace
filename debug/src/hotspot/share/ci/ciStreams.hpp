@@ -85,12 +85,12 @@ public:
     _end = _start + max;
   }
 
-  address cur_bcp() const       { return _bc_start; }  // Returns bcp to current instruction
-  int next_bci() const          { return _pc - _start; }
-  int cur_bci() const           { return _bc_start - _start; }
-  int instruction_size() const  { return _pc - _bc_start; }
+  address cur_bcp()       const { return _bc_start; }  // Returns bcp to current instruction
+  int next_bci()          const { return _pc - _start; }
+  int cur_bci()           const { return _bc_start - _start; }
+  int instruction_size()  const { return _pc - _bc_start; }
 
-  Bytecodes::Code cur_bc() const{ return check_java(_bc); }
+  Bytecodes::Code cur_bc() const { return check_java(_bc); }
   Bytecodes::Code cur_bc_raw() const { return check_defined(_raw_bc); }
   Bytecodes::Code next_bc()     { return Bytecodes::java_code((Bytecodes::Code)* _pc); }
 
@@ -118,8 +118,6 @@ public:
 
   // Does this instruction contain an index which refes into the CP cache?
   bool has_cache_index() const { return Bytecodes::uses_cp_cache(cur_bc_raw()); }
-
-  bool has_optional_appendix() { return Bytecodes::has_optional_appendix(cur_bc_raw()); }
 
   int get_index_u1() const {
     return bytecode().get_index_u1(cur_bc_raw());
@@ -226,8 +224,6 @@ public:
   ciMethod*     get_method(bool& will_link, ciSignature* *declared_signature_result);
   bool          has_appendix();
   ciObject*     get_appendix();
-  bool          has_method_type();
-  ciMethodType* get_method_type();
   ciKlass*      get_declared_method_holder();
   int           get_method_holder_index();
   int           get_method_signature_index(const constantPoolHandle& cpool);

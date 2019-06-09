@@ -8,12 +8,12 @@
 // Helper class to ensure that references to Klass* are kept alive for G1
 class JVMCIKlassHandle : public StackObj {
  private:
-  Klass*     _klass;
-  Handle     _holder;
-  Thread*    _thread;
+  Klass*  _klass;
+  Handle  _holder;
+  Thread* _thread;
 
-  Klass*        klass() const                     { return _klass; }
-  Klass*        non_null_klass() const            { return _klass; }
+  Klass*  klass()                const { return _klass; }
+  Klass*  non_null_klass()       const { return _klass; }
 
  public:
   /* Constructors */
@@ -25,15 +25,15 @@ class JVMCIKlassHandle : public StackObj {
   JVMCIKlassHandle& operator=(Klass* klass);
 
   /* Operators for ease of use */
-  Klass*        operator () () const            { return klass(); }
-  Klass*        operator -> () const            { return non_null_klass(); }
+  Klass*  operator () ()         const { return klass(); }
+  Klass*  operator -> ()         const { return non_null_klass(); }
 
-  bool    operator == (Klass* o) const          { return klass() == o; }
-  bool    operator == (const JVMCIKlassHandle& h) const  { return klass() == h.klass(); }
+  bool    operator == (Klass* o) const { return klass() == o; }
+  bool    operator == (const JVMCIKlassHandle& h) const { return klass() == h.klass(); }
 
   /* Null checks */
-  bool    is_null() const                      { return _klass == NULL; }
-  bool    not_null() const                     { return _klass != NULL; }
+  bool    is_null()              const { return _klass == NULL; }
+  bool    not_null()             const { return _klass != NULL; }
 };
 
 class CompilerToVM {
@@ -45,12 +45,8 @@ class CompilerToVM {
     static int Klass_vtable_start_offset;
     static int Klass_vtable_length_offset;
 
-    static int Method_extra_stack_entries;
-
     static address SharedRuntime_ic_miss_stub;
     static address SharedRuntime_handle_wrong_method_stub;
-    static address SharedRuntime_deopt_blob_unpack;
-    static address SharedRuntime_deopt_blob_uncommon_trap;
 
     static size_t ThreadLocalAllocBuffer_alignment_reserve;
 

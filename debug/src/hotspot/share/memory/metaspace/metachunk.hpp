@@ -74,7 +74,7 @@ class Metachunk : public Metabase<Metachunk> {
   int _use_count;
 
   MetaWord* initial_top() const { return (MetaWord*)this + overhead(); }
-  MetaWord* top() const         { return _top; }
+  MetaWord* top()         const { return _top; }
 
  public:
   // Metachunks are allocated out of a MetadataVirtualSpace and
@@ -114,17 +114,17 @@ class Metachunk : public Metabase<Metachunk> {
 
   void print_on(outputStream* st) const;
 
-  bool is_valid_sentinel() const        { return _sentinel == CHUNK_SENTINEL; }
+  bool is_valid_sentinel()        const { return _sentinel == CHUNK_SENTINEL; }
   void remove_sentinel()                { _sentinel = CHUNK_SENTINEL_INVALID; }
 
-  int get_use_count() const             { return _use_count; }
+  int get_use_count()             const { return _use_count; }
   void inc_use_count()                  { _use_count ++; }
 
-  ChunkOrigin get_origin() const        { return _origin; }
+  ChunkOrigin get_origin()        const { return _origin; }
   void set_origin(ChunkOrigin orig)     { _origin = orig; }
 
-  ChunkIndex get_chunk_type() const     { return _chunk_type; }
-  bool is_class() const                 { return _is_class; }
+  ChunkIndex get_chunk_type()     const { return _chunk_type; }
+  bool is_class()                 const { return _is_class; }
 };
 
 // Given a Metachunk, update its in-use information (both in the

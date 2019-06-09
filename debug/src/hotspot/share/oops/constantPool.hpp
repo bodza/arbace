@@ -106,11 +106,11 @@ class ConstantPool : public Metadata {
   void tag_at_put(int which, jbyte t)          { tags()->at_put(which, t); }
   void release_tag_at_put(int which, jbyte t);
 
-  u1* tag_addr_at(int which) const             { return tags()->adr_at(which); }
+  u1* tag_addr_at(int which)             const { return tags()->adr_at(which); }
 
   void set_operands(Array<u2>* operands)       { _operands = operands; }
 
-  int flags() const                            { return _flags; }
+  int flags()                            const { return _flags; }
   void set_flags(int f)                        { _flags = f; }
 
  private:
@@ -148,10 +148,10 @@ class ConstantPool : public Metadata {
 
   bool is_constantPool() const volatile     { return true; }
 
-  Array<u1>* tags() const                   { return _tags; }
-  Array<u2>* operands() const               { return _operands; }
+  Array<u1>* tags()                   const { return _tags; }
+  Array<u2>* operands()               const { return _operands; }
 
-  bool has_preresolution() const            { return (_flags & _has_preresolution) != 0; }
+  bool has_preresolution()            const { return (_flags & _has_preresolution) != 0; }
   void set_has_preresolution() {
     _flags |= _has_preresolution;
   }
@@ -160,22 +160,22 @@ class ConstantPool : public Metadata {
   // is on the executing stack, or as a handle in vm code, this constant pool
   // can't be removed from the set of previous versions saved in the instance
   // class.
-  bool on_stack() const                      { return (_flags &_on_stack) != 0; }
+  bool on_stack()                      const { return (_flags &_on_stack) != 0; }
   void set_on_stack(const bool value);
 
   // Faster than MetaspaceObj::is_shared() - used by set_on_stack()
-  bool is_shared() const                     { return (_flags & _is_shared) != 0; }
+  bool is_shared()                     const { return (_flags & _is_shared) != 0; }
 
-  bool has_dynamic_constant() const       { return (_flags & _has_dynamic_constant) != 0; }
+  bool has_dynamic_constant()       const { return (_flags & _has_dynamic_constant) != 0; }
   void set_has_dynamic_constant()         { _flags |= _has_dynamic_constant; }
 
   // Klass holding pool
-  InstanceKlass* pool_holder() const      { return _pool_holder; }
+  InstanceKlass* pool_holder()      const { return _pool_holder; }
   void set_pool_holder(InstanceKlass* k)  { _pool_holder = k; }
   InstanceKlass** pool_holder_addr()      { return &_pool_holder; }
 
   // NULL runtime support
-  ConstantPoolCache* cache() const        { return _cache; }
+  ConstantPoolCache* cache()        const { return _cache; }
   void set_cache(ConstantPoolCache* cache) { _cache = cache; }
 
   virtual void metaspace_pointers_do(MetaspaceClosure* iter);
@@ -192,7 +192,7 @@ class ConstantPool : public Metadata {
   int cp_to_object_index(int index);
 
   void set_resolved_klasses(Array<Klass*>* rk)  { _resolved_klasses = rk; }
-  Array<Klass*>* resolved_klasses() const       { return _resolved_klasses; }
+  Array<Klass*>* resolved_klasses()       const { return _resolved_klasses; }
   void allocate_resolved_klasses(ClassLoaderData* loader_data, int num_klasses, TRAPS);
   void initialize_unresolved_klasses(ClassLoaderData* loader_data, TRAPS);
 
@@ -239,26 +239,6 @@ class ConstantPool : public Metadata {
     release_tag_at_put(which, JVM_CONSTANT_UnresolvedClass);
 
     *int_at_addr(which) = build_int_from_shorts((jushort)resolved_klass_index, (jushort)name_index);
-  }
-
-  void method_handle_index_at_put(int which, int ref_kind, int ref_index) {
-    tag_at_put(which, JVM_CONSTANT_MethodHandle);
-    *int_at_addr(which) = ((jint) ref_index << 16) | ref_kind;
-  }
-
-  void method_type_index_at_put(int which, int ref_index) {
-    tag_at_put(which, JVM_CONSTANT_MethodType);
-    *int_at_addr(which) = ref_index;
-  }
-
-  void dynamic_constant_at_put(int which, int bootstrap_specifier_index, int name_and_type_index) {
-    tag_at_put(which, JVM_CONSTANT_Dynamic);
-    *int_at_addr(which) = ((jint) name_and_type_index << 16) | bootstrap_specifier_index;
-  }
-
-  void invoke_dynamic_at_put(int which, int bootstrap_specifier_index, int name_and_type_index) {
-    tag_at_put(which, JVM_CONSTANT_InvokeDynamic);
-    *int_at_addr(which) = ((jint) name_and_type_index << 16) | bootstrap_specifier_index;
   }
 
   void unresolved_string_at_put(int which, Symbol* s) {
@@ -633,21 +613,11 @@ class ConstantPool : public Metadata {
     return resolve_constant_at_impl(h_this, pool_index, _possible_index_sentinel, &found_it, THREAD);
   }
 
-  oop resolve_bootstrap_specifier_at(int index, TRAPS) {
-    constantPoolHandle h_this(THREAD, this);
-    return resolve_bootstrap_specifier_at_impl(h_this, index, THREAD);
-  }
-
-  void copy_bootstrap_arguments_at(int index, int start_arg, int end_arg, objArrayHandle info, int pos, bool must_resolve, Handle if_not_available, TRAPS) {
-    constantPoolHandle h_this(THREAD, this);
-    copy_bootstrap_arguments_at_impl(h_this, index, start_arg, end_arg, info, pos, must_resolve, if_not_available, THREAD);
-  }
-
   // Klass name matches name at offset
   bool klass_name_at_matches(const InstanceKlass* k, int which);
 
   // Sizing
-  int length() const          { return _length; }
+  int length()          const { return _length; }
   void set_length(int length) { _length = length; }
 
   // Tells whether index is within bounds.
@@ -656,11 +626,9 @@ class ConstantPool : public Metadata {
   }
 
   // Sizing (in words)
-  static int header_size()    {
-    return align_up((int)sizeof(ConstantPool), wordSize) / wordSize;
-  }
+  static int header_size()    { return align_up((int)sizeof(ConstantPool), wordSize) / wordSize; }
   static int size(int length) { return align_metadata_size(header_size() + length); }
-  int size() const            { return size(length()); }
+  int size()            const { return size(length()); }
 
   // ConstantPools should be stored in the read-only region of CDS archive.
   static bool is_read_only_by_default() { return true; }
@@ -669,12 +637,10 @@ class ConstantPool : public Metadata {
   friend class SystemDictionary;
 
   // Used by compiler to prevent classloading.
-  static Method*          method_at_if_loaded      (const constantPoolHandle& this_cp, int which);
-  static bool       has_appendix_at_if_loaded      (const constantPoolHandle& this_cp, int which);
-  static oop            appendix_at_if_loaded      (const constantPoolHandle& this_cp, int which);
-  static bool    has_method_type_at_if_loaded      (const constantPoolHandle& this_cp, int which);
-  static oop         method_type_at_if_loaded      (const constantPoolHandle& this_cp, int which);
-  static Klass*            klass_at_if_loaded      (const constantPoolHandle& this_cp, int which);
+  static Method*          method_at_if_loaded(const constantPoolHandle& this_cp, int which);
+  static bool       has_appendix_at_if_loaded(const constantPoolHandle& this_cp, int which);
+  static oop            appendix_at_if_loaded(const constantPoolHandle& this_cp, int which);
+  static Klass*            klass_at_if_loaded(const constantPoolHandle& this_cp, int which);
 
   // Routines currently used for annotations (only called by jvm.cpp) but which might be used in the
   // future by other Java code. These take constant pool indices rather than
@@ -682,8 +648,8 @@ class ConstantPool : public Metadata {
   Symbol* uncached_klass_ref_at_noresolve(int which);
   Symbol* uncached_name_ref_at(int which)                 { return impl_name_ref_at(which, true); }
   Symbol* uncached_signature_ref_at(int which)            { return impl_signature_ref_at(which, true); }
-  int       uncached_klass_ref_index_at(int which)          { return impl_klass_ref_index_at(which, true); }
-  int       uncached_name_and_type_ref_index_at(int which)  { return impl_name_and_type_ref_index_at(which, true); }
+  int     uncached_klass_ref_index_at(int which)          { return impl_klass_ref_index_at(which, true); }
+  int     uncached_name_and_type_ref_index_at(int which)  { return impl_name_and_type_ref_index_at(which, true); }
 
   // Sharing
   int pre_resolve_shared_klasses(TRAPS);
@@ -702,7 +668,7 @@ class ConstantPool : public Metadata {
 
  private:
   void set_resolved_references(OopHandle s) { _cache->set_resolved_references(s); }
-  Array<u2>* reference_map() const        {  return (_cache == NULL) ? NULL :  _cache->reference_map(); }
+  Array<u2>* reference_map()        const {  return (_cache == NULL) ? NULL :  _cache->reference_map(); }
   void set_reference_map(Array<u2>* o)    { _cache->set_reference_map(o); }
 
   // patch JSR 292 resolved references after the class is linked.
@@ -736,8 +702,6 @@ class ConstantPool : public Metadata {
   static void resolve_string_constants_impl(const constantPoolHandle& this_cp, TRAPS);
 
   static oop resolve_constant_at_impl(const constantPoolHandle& this_cp, int index, int cache_index, bool* status_return, TRAPS);
-  static oop resolve_bootstrap_specifier_at_impl(const constantPoolHandle& this_cp, int index, TRAPS);
-  static void copy_bootstrap_arguments_at_impl(const constantPoolHandle& this_cp, int index, int start_arg, int end_arg, objArrayHandle info, int pos, bool must_resolve, Handle if_not_available, TRAPS);
 
   // Exception handling
   static Symbol* exception_message(const constantPoolHandle& this_cp, int which, constantTag tag, oop pending_exception);
@@ -757,14 +721,14 @@ class ConstantPool : public Metadata {
   static void copy_entry_to(const constantPoolHandle& from_cp, int from_i, const constantPoolHandle& to_cp, int to_i, TRAPS);
   static void copy_operands(const constantPoolHandle& from_cp, const constantPoolHandle& to_cp, TRAPS);
   int  find_matching_entry(int pattern_i, const constantPoolHandle& search_cp, TRAPS);
-  int  version() const                    { return _saved._version; }
+  int  version()                    const { return _saved._version; }
   void set_version(int version)           { _saved._version = version; }
   void increment_and_save_version(int version) {
     _saved._version = version >= 0 ? (version + 1) : version;  // keep overflow
   }
 
   void set_resolved_reference_length(int length) { _saved._resolved_reference_length = length; }
-  int  resolved_reference_length() const  { return _saved._resolved_reference_length; }
+  int  resolved_reference_length()  const { return _saved._resolved_reference_length; }
 
   // Decrease ref counts of symbols that are in the constant pool
   // when the holder class is unloaded
@@ -786,9 +750,6 @@ class ConstantPool : public Metadata {
   int  copy_cpool_bytes(int cpool_size, SymbolHashMap* tbl, unsigned char *bytes);
 
  public:
-  // Verify
-  void verify_on(outputStream* st);
-
   // Printing
   void print_on(outputStream* st) const;
   void print_value_on(outputStream* st) const;
@@ -805,16 +766,16 @@ class SymbolHashMapEntry : public CHeapObj<mtSymbol> {
   u2                  _value;  // 2-nd part of the mapping: symbol => value
 
  public:
-  unsigned   int hash() const             { return _hash; }
+  unsigned   int hash()             const { return _hash; }
   void       set_hash(unsigned int hash)  { _hash = hash; }
 
-  SymbolHashMapEntry* next() const        { return _next; }
+  SymbolHashMapEntry* next()        const { return _next; }
   void set_next(SymbolHashMapEntry* next) { _next = next; }
 
-  Symbol*    symbol() const               { return _symbol; }
+  Symbol*    symbol()               const { return _symbol; }
   void       set_symbol(Symbol* sym)      { _symbol = sym; }
 
-  u2         value() const                {  return _value; }
+  u2         value()                const {  return _value; }
   void       set_value(u2 value)          { _value = value; }
 
   SymbolHashMapEntry(unsigned int hash, Symbol* symbol, u2 value)
@@ -826,7 +787,7 @@ private:
   SymbolHashMapEntry*    _entry;
 
 public:
-  SymbolHashMapEntry* entry() const         {  return _entry; }
+  SymbolHashMapEntry* entry()         const {  return _entry; }
   void set_entry(SymbolHashMapEntry* entry) { _entry = entry; }
   void clear()                              { _entry = NULL; }
 };
@@ -844,7 +805,7 @@ class SymbolHashMap: public CHeapObj<mtSymbol> {
   void initialize_table(int table_size);
 
  public:
-  int table_size() const        { return _table_size; }
+  int table_size()        const { return _table_size; }
 
   SymbolHashMap()               { initialize_table(_Def_HashMap_Size); }
   SymbolHashMap(int table_size) { initialize_table(table_size); }

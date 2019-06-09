@@ -10,9 +10,6 @@
 // Makes a string of the macro expansion of a
 #define XSTR(a) STR(a)
 
-// Allow commas in macro arguments.
-#define COMMA ,
-
 // Apply pre-processor token pasting to the expansions of x and y.
 // The token pasting operator (##) prevents its arguments from being
 // expanded.  This macro allows expansion of its arguments before the
@@ -21,14 +18,6 @@
 #define PASTE_TOKENS(x, y) PASTE_TOKENS_AUX(x, y)
 #define PASTE_TOKENS_AUX(x, y) PASTE_TOKENS_AUX2(x, y)
 #define PASTE_TOKENS_AUX2(x, y) x ## y
-
-#ifdef CHECK_UNHANDLED_OOPS
-#define CHECK_UNHANDLED_OOPS_ONLY(code) code
-#define NOT_CHECK_UNHANDLED_OOPS(code)
-#else
-#define CHECK_UNHANDLED_OOPS_ONLY(code)
-#define NOT_CHECK_UNHANDLED_OOPS(code)  code
-#endif
 
 #ifdef LINUX
 #define LINUX_ONLY(code) code

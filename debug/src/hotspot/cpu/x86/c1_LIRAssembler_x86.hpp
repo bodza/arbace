@@ -24,8 +24,7 @@
   enum {
     _call_stub_size = 28,
     _call_aot_stub_size = 12,
-    _exception_handler_size = 175,
-    _deopt_handler_size = 17
+    _exception_handler_size = 175
   };
 
 public:

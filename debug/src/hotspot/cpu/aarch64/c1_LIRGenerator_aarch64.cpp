@@ -269,41 +269,6 @@ void LIRGenerator::array_store_check(LIR_Opr value, LIR_Opr array, CodeEmitInfo*
 //             visitor functions
 //----------------------------------------------------------------------
 
-void LIRGenerator::do_MonitorEnter(MonitorEnter* x) {
-  LIRItem obj(x->obj(), this);
-  obj.load_item();
-
-  set_no_result(x);
-
-  // "lock" stores the address of the monitor stack slot, so this is not an oop
-  LIR_Opr lock = new_register(T_INT);
-  // Need a scratch register for biased locking
-  LIR_Opr scratch = LIR_OprFact::illegalOpr;
-  if (UseBiasedLocking) {
-    scratch = new_register(T_INT);
-  }
-
-  CodeEmitInfo* info_for_exception = NULL;
-  if (x->needs_null_check()) {
-    info_for_exception = state_for(x);
-  }
-  // this CodeEmitInfo must not have the xhandlers because here the
-  // object is already locked (xhandlers expect object to be unlocked)
-  CodeEmitInfo* info = state_for(x, x->state(), true);
-  monitor_enter(obj.result(), lock, syncTempOpr(), scratch,
-                        x->monitor_no(), info_for_exception, info);
-}
-
-void LIRGenerator::do_MonitorExit(MonitorExit* x) {
-  LIRItem obj(x->obj(), this);
-  obj.dont_load_item();
-
-  LIR_Opr lock = new_register(T_INT);
-  LIR_Opr obj_temp = new_register(T_INT);
-  set_no_result(x);
-  monitor_exit(obj_temp, lock, syncTempOpr(), LIR_OprFact::illegalOpr, x->monitor_no());
-}
-
 void LIRGenerator::do_NegateOp(NegateOp* x) {
   LIRItem from(x->x(), this);
   from.load_item();
@@ -1002,156 +967,8 @@ void LIRGenerator::do_Convert(Convert* x) {
   set_result(x, result);
 }
 
-void LIRGenerator::do_NewInstance(NewInstance* x) {
-  CodeEmitInfo* info = state_for(x, x->state());
-  LIR_Opr reg = result_register_for(x->type());
-  new_instance(reg, x->klass(), x->is_unresolved(),
-                       FrameMap::r2_oop_opr,
-                       FrameMap::r5_oop_opr,
-                       FrameMap::r4_oop_opr,
-                       LIR_OprFact::illegalOpr,
-                       FrameMap::r3_metadata_opr, info);
-  LIR_Opr result = rlock_result(x);
-  __ move(reg, result);
-}
-
-void LIRGenerator::do_NewTypeArray(NewTypeArray* x) {
-  CodeEmitInfo* info = state_for(x, x->state());
-
-  LIRItem length(x->length(), this);
-  length.load_item_force(FrameMap::r19_opr);
-
-  LIR_Opr reg = result_register_for(x->type());
-  LIR_Opr tmp1 = FrameMap::r2_oop_opr;
-  LIR_Opr tmp2 = FrameMap::r4_oop_opr;
-  LIR_Opr tmp3 = FrameMap::r5_oop_opr;
-  LIR_Opr tmp4 = reg;
-  LIR_Opr klass_reg = FrameMap::r3_metadata_opr;
-  LIR_Opr len = length.result();
-  BasicType elem_type = x->elt_type();
-
-  __ metadata2reg(ciTypeArrayKlass::make(elem_type)->constant_encoding(), klass_reg);
-
-  CodeStub* slow_path = new NewTypeArrayStub(klass_reg, len, reg, info);
-  __ allocate_array(reg, len, tmp1, tmp2, tmp3, tmp4, elem_type, klass_reg, slow_path);
-
-  LIR_Opr result = rlock_result(x);
-  __ move(reg, result);
-}
-
-void LIRGenerator::do_NewObjectArray(NewObjectArray* x) {
-  LIRItem length(x->length(), this);
-  // in case of patching (i.e., object class is not yet loaded), we need to reexecute the instruction
-  // and therefore provide the state before the parameters have been consumed
-  CodeEmitInfo* patching_info = NULL;
-  if (!x->klass()->is_loaded() || PatchALot) {
-    patching_info =  state_for(x, x->state_before());
-  }
-
-  CodeEmitInfo* info = state_for(x, x->state());
-
-  LIR_Opr reg = result_register_for(x->type());
-  LIR_Opr tmp1 = FrameMap::r2_oop_opr;
-  LIR_Opr tmp2 = FrameMap::r4_oop_opr;
-  LIR_Opr tmp3 = FrameMap::r5_oop_opr;
-  LIR_Opr tmp4 = reg;
-  LIR_Opr klass_reg = FrameMap::r3_metadata_opr;
-
-  length.load_item_force(FrameMap::r19_opr);
-  LIR_Opr len = length.result();
-
-  CodeStub* slow_path = new NewObjectArrayStub(klass_reg, len, reg, info);
-  ciKlass* obj = (ciKlass*) ciObjArrayKlass::make(x->klass());
-  if (obj == ciEnv::unloaded_ciobjarrayklass()) {
-    BAILOUT("encountered unloaded_ciobjarrayklass due to out of memory error");
-  }
-  klass2reg_with_patching(klass_reg, obj, patching_info);
-  __ allocate_array(reg, len, tmp1, tmp2, tmp3, tmp4, T_OBJECT, klass_reg, slow_path);
-
-  LIR_Opr result = rlock_result(x);
-  __ move(reg, result);
-}
-
-void LIRGenerator::do_NewMultiArray(NewMultiArray* x) {
-  Values* dims = x->dims();
-  int i = dims->length();
-  LIRItemList* items = new LIRItemList(i, i, NULL);
-  while (i-- > 0) {
-    LIRItem* size = new LIRItem(dims->at(i), this);
-    items->at_put(i, size);
-  }
-
-  // Evaluate state_for early since it may emit code.
-  CodeEmitInfo* patching_info = NULL;
-  if (!x->klass()->is_loaded() || PatchALot) {
-    patching_info = state_for(x, x->state_before());
-
-    // Cannot re-use same xhandlers for multiple CodeEmitInfos, so
-    // clone all handlers (NOTE: Usually this is handled transparently
-    // by the CodeEmitInfo cloning logic in CodeStub constructors but
-    // is done explicitly here because a stub isn't being used).
-    x->set_exception_handlers(new XHandlers(x->exception_handlers()));
-  }
-  CodeEmitInfo* info = state_for(x, x->state());
-
-  i = dims->length();
-  while (i-- > 0) {
-    LIRItem* size = items->at(i);
-    size->load_item();
-
-    store_stack_parameter(size->result(), in_ByteSize(i*4));
-  }
-
-  LIR_Opr klass_reg = FrameMap::r0_metadata_opr;
-  klass2reg_with_patching(klass_reg, x->klass(), patching_info);
-
-  LIR_Opr rank = FrameMap::r19_opr;
-  __ move(LIR_OprFact::intConst(x->rank()), rank);
-  LIR_Opr varargs = FrameMap::r2_opr;
-  __ move(FrameMap::sp_opr, varargs);
-  LIR_OprList* args = new LIR_OprList(3);
-  args->append(klass_reg);
-  args->append(rank);
-  args->append(varargs);
-  LIR_Opr reg = result_register_for(x->type());
-  __ call_runtime(Runtime1::entry_for(Runtime1::new_multi_array_id), LIR_OprFact::illegalOpr, reg, args, info);
-
-  LIR_Opr result = rlock_result(x);
-  __ move(reg, result);
-}
-
 void LIRGenerator::do_BlockBegin(BlockBegin* x) {
   // nothing to do for now
-}
-
-void LIRGenerator::do_CheckCast(CheckCast* x) {
-  LIRItem obj(x->obj(), this);
-
-  CodeEmitInfo* patching_info = NULL;
-  if (!x->klass()->is_loaded() || (PatchALot && !x->is_incompatible_class_change_check() && !x->is_invokespecial_receiver_check())) {
-    // must do this before locking the destination register as an oop register,
-    // and before the obj is loaded (the latter is for deoptimization)
-    patching_info = state_for(x, x->state_before());
-  }
-  obj.load_item();
-
-  // info for exceptions
-  CodeEmitInfo* info_for_exception = (x->needs_exception_state() ? state_for(x) : state_for(x, x->state_before(), true /*ignore_xhandler*/));
-
-  CodeStub* stub;
-  if (x->is_incompatible_class_change_check()) {
-    stub = new SimpleExceptionStub(Runtime1::throw_incompatible_class_change_error_id, LIR_OprFact::illegalOpr, info_for_exception);
-  } else if (x->is_invokespecial_receiver_check()) {
-    stub = new NULL(info_for_exception, NULL::Reason_class_check, NULL::Action_none);
-  } else {
-    stub = new SimpleExceptionStub(Runtime1::throw_class_cast_exception_id, obj.result(), info_for_exception);
-  }
-  LIR_Opr reg = rlock_result(x);
-  LIR_Opr tmp3 = LIR_OprFact::illegalOpr;
-  if (!x->klass()->is_loaded() || UseCompressedClassPointers) {
-    tmp3 = new_register(objectType);
-  }
-  __ checkcast(reg, obj.result(), x->klass(), new_register(objectType), new_register(objectType), tmp3, x->direct_compare(), info_for_exception, patching_info, stub, x->profiled_method(), x->profiled_bci());
 }
 
 void LIRGenerator::do_InstanceOf(InstanceOf* x) {
@@ -1160,7 +977,7 @@ void LIRGenerator::do_InstanceOf(InstanceOf* x) {
   // result and test object may not be in same register
   LIR_Opr reg = rlock_result(x);
   CodeEmitInfo* patching_info = NULL;
-  if ((!x->klass()->is_loaded() || PatchALot)) {
+  if (!x->klass()->is_loaded()) {
     // must do this before locking the destination register as an oop register
     patching_info = state_for(x, x->state_before());
   }

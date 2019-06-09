@@ -205,7 +205,3 @@ void Compiler::compile_method(ciEnv* env, ciMethod* method, int entry_bci, Direc
     Compilation c(this, env, method, entry_bci, buffer_blob, directive);
   }
 }
-
-void Compiler::print_timers() {
-  Compilation::print_timers();
-}

@@ -17,8 +17,6 @@ extern "C" void restore_thread_pointer(void* p) {
 
 void ThreadLocalStorage::init() {
   int rslt = pthread_key_create(&_thread_key, restore_thread_pointer);
-  // If this assert fails we will get a recursive assertion failure
-  // and not see the actual error message or get a hs_err file
   _initialized = true;
 }
 

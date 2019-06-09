@@ -29,16 +29,15 @@ class CompilerStatistics {
   };
 
  public:
-  Data _standard;  // stats for non-OSR compilations
-  Data _osr;       // stats for OSR compilations
+  Data _standard;
   int _nmethods_size;
   int _nmethods_code_size;
   int bytes_per_second() {
-    int bytes = _standard._bytes + _osr._bytes;
+    int bytes = _standard._bytes;
     if (bytes == 0) {
       return 0;
     }
-    double seconds = _standard._time.seconds() + _osr._time.seconds();
+    double seconds = _standard._time.seconds();
     return seconds == 0.0 ? 0 : (int) (bytes / seconds);
   }
   CompilerStatistics() : _nmethods_size(0), _nmethods_code_size(0) { }
@@ -74,7 +73,6 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
 
   // Missing feature tests
   virtual bool supports_native()                              { return true; }
-  virtual bool supports_osr   ()                              { return true; }
   virtual bool can_compile_method(const methodHandle& method) { return true; }
 
   // Determine if the current compiler provides an intrinsic
@@ -128,7 +126,7 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
   virtual bool is_trivial(Method* method) { return false; }
 
   // Customization
-  virtual void initialize () = 0;
+  virtual void initialize() = 0;
 
   void set_num_compiler_threads(int num) { _num_compiler_threads = num; }
   int num_compiler_threads()             { return _num_compiler_threads; }
@@ -140,11 +138,6 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
   void set_shut_down ()           { set_state(shut_down); }
   // Compilation entry point for methods
   virtual void compile_method(ciEnv* env, ciMethod* target, int entry_bci, DirectiveSet* directive) {
-    ShouldNotReachHere();
-  }
-
-  // Print compilation timers and statistics
-  virtual void print_timers() {
     ShouldNotReachHere();
   }
 

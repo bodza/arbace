@@ -133,7 +133,7 @@ class MethodLiveness : public ResourceObj {
 
     // -- Debugging.
 
-    void print_on(outputStream *os) const { };
+    void print_on(outputStream* os) const { };
   };
 
  private:
@@ -189,15 +189,6 @@ class MethodLiveness : public ResourceObj {
   BasicBlock *work_list_get();
   void work_list_add(BasicBlock *block);
 
-  // -- Timing and Statistics.
-
-  // Timers
-  static elapsedTimer _time_build_graph;
-  static elapsedTimer _time_gen_kill;
-  static elapsedTimer _time_flow;
-  static elapsedTimer _time_query;
-  static elapsedTimer _time_total;
-
  public:
   // Create a liveness analyzer for a method
   MethodLiveness(Arena* arena, ciMethod* method);
@@ -209,8 +200,6 @@ class MethodLiveness : public ResourceObj {
   MethodLivenessResult get_liveness_at(int bci);
 
   const BitMap& get_bci_block_start() const { return _bci_block_start; }
-
-  static void print_times() { };
 };
 
 #endif

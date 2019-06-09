@@ -52,8 +52,8 @@ class LocationValue: public ScopeValue {
   Location  _location;
  public:
   LocationValue(Location location)           { _location = location; }
-  bool      is_location() const              { return true; }
-  Location  location() const                 { return _location; }
+  bool      is_location()              const { return true; }
+  Location  location()                 const { return _location; }
 
   // Serialization of debugging information
   LocationValue(DebugInfoReadStream* stream);
@@ -90,14 +90,14 @@ class ObjectValue: public ScopeValue {
      , _visited(false) { }
 
   // Accessors
-  bool                        is_object() const         { return true; }
-  int                         id() const                { return _id; }
-  ScopeValue*                 klass() const             { return _klass; }
+  bool                        is_object()         const { return true; }
+  int                         id()                const { return _id; }
+  ScopeValue*                 klass()             const { return _klass; }
   GrowableArray<ScopeValue*>* field_values()            { return &_field_values; }
-  ScopeValue*                 field_at(int i) const     { return _field_values.at(i); }
+  ScopeValue*                 field_at(int i)     const { return _field_values.at(i); }
   int                         field_size()              { return _field_values.length(); }
-  Handle                      value() const             { return _value; }
-  bool                        is_visited() const        { return _visited; }
+  Handle                      value()             const { return _value; }
+  bool                        is_visited()        const { return _visited; }
 
   void                        set_value(oop value);
   void                        set_visited(bool visited) { _visited = false; }
@@ -119,8 +119,8 @@ class ConstantIntValue: public ScopeValue {
   jint _value;
  public:
   ConstantIntValue(jint value)         { _value = value; }
-  jint value() const                   { return _value; }
-  bool is_constant_int() const         { return true; }
+  jint value()                   const { return _value; }
+  bool is_constant_int()         const { return true; }
   bool equals(ScopeValue* other) const { return false; }
 
   // Serialization of debugging information
@@ -136,8 +136,8 @@ class ConstantLongValue: public ScopeValue {
   jlong _value;
  public:
   ConstantLongValue(jlong value)       { _value = value; }
-  jlong value() const                  { return _value; }
-  bool is_constant_long() const        { return true; }
+  jlong value()                  const { return _value; }
+  bool is_constant_long()        const { return true; }
   bool equals(ScopeValue* other) const { return false; }
 
   // Serialization of debugging information
@@ -153,8 +153,8 @@ class ConstantDoubleValue: public ScopeValue {
   jdouble _value;
  public:
   ConstantDoubleValue(jdouble value)   { _value = value; }
-  jdouble value() const                { return _value; }
-  bool is_constant_double() const      { return true; }
+  jdouble value()                const { return _value; }
+  bool is_constant_double()      const { return true; }
   bool equals(ScopeValue* other) const { return false; }
 
   // Serialization of debugging information
@@ -173,8 +173,8 @@ class ConstantOopWriteValue: public ScopeValue {
   jobject _value;
  public:
   ConstantOopWriteValue(jobject value) { _value = value; }
-  jobject value() const                { return _value; }
-  bool is_constant_oop() const         { return true; }
+  jobject value()                const { return _value; }
+  bool is_constant_oop()         const { return true; }
   bool equals(ScopeValue* other) const { return false; }
 
   // Serialization of debugging information
@@ -191,8 +191,8 @@ class ConstantOopReadValue: public ScopeValue {
  private:
   Handle _value;
  public:
-  Handle value() const                 { return _value; }
-  bool is_constant_oop() const         { return true; }
+  Handle value()                 const { return _value; }
+  bool is_constant_oop()         const { return true; }
   bool equals(ScopeValue* other) const { return false; }
 
   // Serialization of debugging information
