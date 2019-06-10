@@ -34,7 +34,6 @@
 #include "runtime/timer.hpp"
 #include "runtime/vm_operations.hpp"
 #include "utilities/globalDefinitions.hpp"
-#include "utilities/histogram.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/vmError.hpp"
 #include "c1/c1_Compiler.hpp"

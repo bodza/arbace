@@ -34,8 +34,6 @@ class InvocationCounter {
 
  public:
   static int InterpreterInvocationLimit;        // CompileThreshold scaled for interpreter use
-  static int InterpreterBackwardBranchLimit;    // A separate threshold for on stack replacement
-  static int InterpreterProfileLimit;           // Profiling threshold scaled for interpreter use
 
   typedef address (*Action)(const methodHandle& method, TRAPS);
 
@@ -72,8 +70,6 @@ class InvocationCounter {
   int    count()                           const { return _counter >> number_of_noncount_bits; }
 
   int   get_InvocationLimit()              const { return InterpreterInvocationLimit >> number_of_noncount_bits; }
-  int   get_BackwardBranchLimit()          const { return InterpreterBackwardBranchLimit >> number_of_noncount_bits; }
-  int   get_ProfileLimit()                 const { return InterpreterProfileLimit >> number_of_noncount_bits; }
 
   void increment()                               { _counter += count_increment; }
 

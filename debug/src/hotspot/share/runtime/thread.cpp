@@ -1016,28 +1016,6 @@ void WatcherThread::print_on(outputStream* st) const {
 
 // ======= JavaThread ========
 
-jlong* JavaThread::_jvmci_old_thread_counters;
-
-bool jvmci_counters_include(JavaThread* thread) {
-  return !JVMCICountersExcludeCompiler || !thread->is_Compiler_thread();
-}
-
-void JavaThread::collect_counters(typeArrayOop array) {
-  if (JVMCICounterSize > 0) {
-    JavaThreadIteratorWithHandle jtiwh;
-    for (int i = 0; i < array->length(); i++) {
-      array->long_at_put(i, _jvmci_old_thread_counters[i]);
-    }
-    for ( ; JavaThread *tp = jtiwh.next(); ) {
-      if (jvmci_counters_include(tp)) {
-        for (int i = 0; i < array->length(); i++) {
-          array->long_at_put(i, array->long_at(i) + tp->_jvmci_counters[i]);
-        }
-      }
-    }
-  }
-}
-
 // A JavaThread is a normal Java thread
 
 void JavaThread::initialize() {
@@ -1068,12 +1046,6 @@ void JavaThread::initialize() {
   _pending_monitorenter = false;
   _pending_failed_speculation = 0;
   _jvmci._alternate_call_target = NULL;
-  if (JVMCICounterSize > 0) {
-    _jvmci_counters = NEW_C_HEAP_ARRAY(jlong, JVMCICounterSize, mtInternal);
-    memset(_jvmci_counters, 0, sizeof(jlong) * JVMCICounterSize);
-  } else {
-    _jvmci_counters = NULL;
-  }
   _reserved_stack_activation = NULL;  // stack base not known yet
   (void)const_cast<oop&>(_exception_oop = oop(NULL));
   _exception_pc  = 0;
@@ -1194,15 +1166,6 @@ JavaThread::~JavaThread() {
   ThreadSafepointState::destroy(this);
   if (_thread_stat != NULL)
     delete _thread_stat;
-
-  if (JVMCICounterSize > 0) {
-    if (jvmci_counters_include(this)) {
-      for (int i = 0; i < JVMCICounterSize; i++) {
-        _jvmci_old_thread_counters[i] += _jvmci_counters[i];
-      }
-    }
-    FREE_C_HEAP_ARRAY(jlong, _jvmci_counters);
-  }
 }
 
 // The first routine called by a new Java thread
@@ -2585,7 +2548,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   Arguments::init_version_specific_system_properties();
 
   // Parse arguments
-  // Note: this internally calls os::init_container_support()
   jint parse_result = Arguments::parse(args);
   if (parse_result != JNI_OK) return parse_result;
 
@@ -2638,13 +2600,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   // Initialize global data structures and create system classes in heap
   vm_init_globals();
-
-  if (JVMCICounterSize > 0) {
-    JavaThread::_jvmci_old_thread_counters = NEW_C_HEAP_ARRAY(jlong, JVMCICounterSize, mtInternal);
-    memset(JavaThread::_jvmci_old_thread_counters, 0, sizeof(jlong) * JVMCICounterSize);
-  } else {
-    JavaThread::_jvmci_old_thread_counters = NULL;
-  }
 
   // Attach the main thread to this os thread
   JavaThread* main_thread = new JavaThread();
@@ -2745,16 +2700,9 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   bool force_JVMCI_intialization = false;
   if (EnableJVMCI) {
     // Initialize JVMCI eagerly when it is explicitly requested.
-    // Or when JVMCIPrintProperties is enabled.
     // The JVMCI Java initialization code will read this flag and
     // do the printing if it's set.
-    force_JVMCI_intialization = EagerJVMCI || JVMCIPrintProperties;
-
-    if (!force_JVMCI_intialization) {
-      // 8145270: Force initialization of JVMCI runtime otherwise requests for blocking
-      // compilations via JVMCI will not actually block until JVMCI is initialized.
-      force_JVMCI_intialization = UseJVMCICompiler;
-    }
+    force_JVMCI_intialization = EagerJVMCI;
   }
   CompileBroker::compilation_init_phase1(CHECK_JNI_ERR);
   // Postpone completion of compiler initialization to after JVMCI
@@ -3098,10 +3046,6 @@ bool Threads::destroy_vm() {
   // JavaThread cannot have an active ThreadsListHandle for
   // this JavaThread.
   delete thread;
-
-  if (JVMCICounterSize > 0) {
-    FREE_C_HEAP_ARRAY(jlong, JavaThread::_jvmci_old_thread_counters);
-  }
 
   return true;
 }

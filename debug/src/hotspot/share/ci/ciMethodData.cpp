@@ -103,9 +103,7 @@ void ciMethodData::load_data() {
   // Snapshot the data -- actually, take an approximate snapshot of
   // the data.  Any concurrently executing threads may be changing the
   // data as we copy it.
-  Copy::disjoint_words((HeapWord*) mdo,
-                       (HeapWord*) &_orig,
-                       sizeof(_orig) / HeapWordSize);
+  Copy::disjoint_words((HeapWord*) mdo, (HeapWord*) &_orig, sizeof(_orig) / HeapWordSize);
   Arena* arena = ciEnv::current()->arena();
   _data_size = mdo->data_size();
   _extra_data_size = mdo->extra_data_size();

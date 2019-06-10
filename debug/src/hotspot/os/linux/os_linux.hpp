@@ -8,7 +8,6 @@ static bool zero_page_read_protected() { return true; }
 
 class Linux {
   friend class os;
-  friend class OSContainer;
   friend class TestReserveMemorySpecial;
 
   static bool libjsig_is_loaded;        // libjsig that interposes sigaction(),
@@ -84,7 +83,6 @@ class Linux {
   static bool release_memory_special_huge_tlbfs(char* base, size_t bytes);
 
   static void print_full_memory_info(outputStream* st);
-  static void print_container_info(outputStream* st);
   static void print_distro_info(outputStream* st);
   static void print_libversion_info(outputStream* st);
   static void print_proc_sys_info(outputStream* st);

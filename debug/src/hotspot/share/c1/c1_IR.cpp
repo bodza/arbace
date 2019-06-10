@@ -174,7 +174,7 @@ IR::IR(Compilation* compilation, ciMethod* method) :
 
 void IR::optimize_blocks() {
   Optimizer opt(this);
-  if (!compilation()->profile_branches()) {
+  {
     if (DoCEE) {
       opt.eliminate_conditional_expressions();
     }
@@ -400,14 +400,6 @@ ComputeLinearScanOrder::ComputeLinearScanOrder(Compilation* c, BlockBegin* start
   _compilation(c)
 {
   count_edges(start_block, NULL);
-
-  if (compilation()->is_profiling()) {
-    ciMethod *method = compilation()->method();
-    if (!method->is_accessor()) {
-      ciMethodData* md = method->method_data_or_null();
-      md->set_compilation_stats(_num_loops, _num_blocks);
-    }
-  }
 
   if (_num_loops > 0) {
     mark_loops();

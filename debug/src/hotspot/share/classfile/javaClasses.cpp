@@ -1793,9 +1793,6 @@ void java_lang_Throwable::fill_in_stack_trace(Handle throwable, const methodHand
         skip_throwableInit_check = true;
       }
     }
-    if (method->is_hidden()) {
-      if (skip_hidden)  continue;
-    }
     bt.push(method, bci, CHECK);
     total_count++;
   }
@@ -1864,164 +1861,6 @@ void java_lang_Throwable::fill_in_stack_trace_of_preallocated_backtrace(Handle t
 
   // We support the Throwable immutability protocol defined for Java 7.
   java_lang_Throwable::set_stacktrace(throwable(), java_lang_Throwable::unassigned_stacktrace());
-}
-
-void java_lang_Throwable::get_stack_trace_elements(Handle throwable, objArrayHandle stack_trace_array_h, TRAPS) {
-  if (throwable.is_null() || stack_trace_array_h.is_null()) {
-    THROW(vmSymbols::java_lang_NullPointerException());
-  }
-
-  if (stack_trace_array_h->length() != depth(throwable())) {
-    THROW(vmSymbols::java_lang_IndexOutOfBoundsException());
-  }
-
-  objArrayHandle result(THREAD, objArrayOop(backtrace(throwable())));
-  BacktraceIterator iter(result, THREAD);
-
-  int index = 0;
-  while (iter.repeat()) {
-    BacktraceElement bte = iter.next(THREAD);
-
-    Handle stack_trace_element(THREAD, stack_trace_array_h->obj_at(index++));
-
-    if (stack_trace_element.is_null()) {
-      THROW(vmSymbols::java_lang_NullPointerException());
-    }
-
-    InstanceKlass* holder = InstanceKlass::cast(java_lang_Class::as_Klass(bte._mirror()));
-    methodHandle method (THREAD, holder->method_with_orig_idnum(bte._method_id, bte._version));
-
-    java_lang_StackTraceElement::fill_in(stack_trace_element, holder, method, bte._version, bte._bci, bte._name, CHECK);
-  }
-}
-
-oop java_lang_StackTraceElement::create(const methodHandle& method, int bci, TRAPS) {
-  // Allocate java.lang.StackTraceElement instance
-  InstanceKlass* k = SystemDictionary::StackTraceElement_klass();
-  if (k->should_be_initialized()) {
-    k->initialize(CHECK_0);
-  }
-
-  Handle element = k->allocate_instance_handle(CHECK_0);
-
-  int version = method->constants()->version();
-  fill_in(element, method->method_holder(), method, version, bci, method->name(), CHECK_0);
-  return element();
-}
-
-void java_lang_StackTraceElement::fill_in(Handle element, InstanceKlass* holder, const methodHandle& method, int version, int bci, Symbol* name, TRAPS) {
-  ResourceMark rm(THREAD);
-  HandleMark hm(THREAD);
-
-  // Fill in class name
-  Handle java_class(THREAD, holder->java_mirror());
-  oop classname = java_lang_Class::name(java_class, CHECK);
-  java_lang_StackTraceElement::set_declaringClass(element(), classname);
-  java_lang_StackTraceElement::set_declaringClassObject(element(), java_class());
-
-  oop loader = holder->class_loader();
-  if (loader != NULL) {
-    oop loader_name = java_lang_ClassLoader::name(loader);
-    if (loader_name != NULL)
-      java_lang_StackTraceElement::set_classLoaderName(element(), loader_name);
-  }
-
-  // Fill in method name
-  oop methodname = StringTable::intern(name, CHECK);
-  java_lang_StackTraceElement::set_methodName(element(), methodname);
-
-  // Fill in module name and version
-  ModuleEntry* module = holder->module();
-  if (module->is_named()) {
-    oop module_name = StringTable::intern(module->name(), CHECK);
-    java_lang_StackTraceElement::set_moduleName(element(), module_name);
-    oop module_version;
-    if (module->version() != NULL) {
-      module_version = StringTable::intern(module->version(), CHECK);
-    } else {
-      module_version = NULL;
-    }
-    java_lang_StackTraceElement::set_moduleVersion(element(), module_version);
-  }
-
-  if (method() == NULL || !version_matches(method(), version)) {
-    // The method was redefined, accurate line number information isn't available
-    java_lang_StackTraceElement::set_fileName(element(), NULL);
-    java_lang_StackTraceElement::set_lineNumber(element(), -1);
-  } else {
-    // Fill in source file name and line number.
-    Symbol* source = Backtrace::get_source_file_name(holder, version);
-    oop source_file = java_lang_Class::source_file(java_class());
-    if (source != NULL) {
-      // Class was not redefined. We can trust its cache if set,
-      // else we have to initialize it.
-      if (source_file == NULL) {
-        source_file = StringTable::intern(source, CHECK);
-        java_lang_Class::set_source_file(java_class(), source_file);
-      }
-    } else {
-      // Class was redefined. Dump the cache if it was set.
-      if (source_file != NULL) {
-        source_file = NULL;
-        java_lang_Class::set_source_file(java_class(), source_file);
-      }
-      if (ShowHiddenFrames) {
-        source = vmSymbols::unknown_class_name();
-        source_file = StringTable::intern(source, CHECK);
-      }
-    }
-    java_lang_StackTraceElement::set_fileName(element(), source_file);
-
-    int line_number = Backtrace::get_line_number(method, bci);
-    java_lang_StackTraceElement::set_lineNumber(element(), line_number);
-  }
-}
-
-Method* java_lang_StackFrameInfo::get_method(Handle stackFrame, InstanceKlass* holder, TRAPS) {
-  Handle mname(THREAD, stackFrame->obj_field(_memberName_offset));
-  return (Method*)NULL::vmtarget(mname());
-}
-
-void java_lang_StackFrameInfo::set_method_and_bci(Handle stackFrame, const methodHandle& method, int bci, TRAPS) {
-  // set bci
-  java_lang_StackFrameInfo::set_bci(stackFrame(), bci);
-  // method may be redefined; store the version
-  int version = method->constants()->version();
-  java_lang_StackFrameInfo::set_version(stackFrame(), (short)version);
-}
-
-void java_lang_StackFrameInfo::to_stack_trace_element(Handle stackFrame, Handle stack_trace_element, TRAPS) {
-  ResourceMark rm(THREAD);
-  Handle mname(THREAD, stackFrame->obj_field(java_lang_StackFrameInfo::_memberName_offset));
-  Klass* clazz = java_lang_Class::as_Klass(NULL::clazz(mname()));
-  InstanceKlass* holder = InstanceKlass::cast(clazz);
-  Method* method = java_lang_StackFrameInfo::get_method(stackFrame, holder, CHECK);
-
-  short version = stackFrame->short_field(_version_offset);
-  short bci = stackFrame->short_field(_bci_offset);
-  Symbol* name = method->name();
-  java_lang_StackTraceElement::fill_in(stack_trace_element, holder, method, version, bci, name, CHECK);
-}
-
-#define STACKFRAMEINFO_FIELDS_DO(macro) \
-  macro(_memberName_offset,     k, "memberName",  object_signature, false); \
-  macro(_bci_offset,            k, "bci",         short_signature,  false)
-
-void java_lang_StackFrameInfo::compute_offsets() {
-  InstanceKlass* k = SystemDictionary::StackFrameInfo_klass();
-  STACKFRAMEINFO_FIELDS_DO(FIELD_COMPUTE_OFFSET);
-  STACKFRAMEINFO_INJECTED_FIELDS(INJECTED_FIELD_COMPUTE_OFFSET);
-}
-
-#define LIVESTACKFRAMEINFO_FIELDS_DO(macro) \
-  macro(_monitors_offset,   k, "monitors",    object_array_signature, false); \
-  macro(_locals_offset,     k, "locals",      object_array_signature, false); \
-  macro(_operands_offset,   k, "operands",    object_array_signature, false); \
-  macro(_mode_offset,       k, "mode",        int_signature,          false)
-
-void java_lang_LiveStackFrameInfo::compute_offsets() {
-  InstanceKlass* k = SystemDictionary::LiveStackFrameInfo_klass();
-  LIVESTACKFRAMEINFO_FIELDS_DO(FIELD_COMPUTE_OFFSET);
 }
 
 #define ACCESSIBLEOBJECT_FIELDS_DO(macro) \
@@ -3016,21 +2855,6 @@ int java_lang_System::static_in_offset;
 int java_lang_System::static_out_offset;
 int java_lang_System::static_err_offset;
 int java_lang_System::static_security_offset;
-int java_lang_StackTraceElement::methodName_offset;
-int java_lang_StackTraceElement::fileName_offset;
-int java_lang_StackTraceElement::lineNumber_offset;
-int java_lang_StackTraceElement::moduleName_offset;
-int java_lang_StackTraceElement::moduleVersion_offset;
-int java_lang_StackTraceElement::classLoaderName_offset;
-int java_lang_StackTraceElement::declaringClass_offset;
-int java_lang_StackTraceElement::declaringClassObject_offset;
-int java_lang_StackFrameInfo::_memberName_offset;
-int java_lang_StackFrameInfo::_bci_offset;
-int java_lang_StackFrameInfo::_version_offset;
-int java_lang_LiveStackFrameInfo::_monitors_offset;
-int java_lang_LiveStackFrameInfo::_locals_offset;
-int java_lang_LiveStackFrameInfo::_operands_offset;
-int java_lang_LiveStackFrameInfo::_mode_offset;
 int java_lang_AssertionStatusDirectives::classes_offset;
 int java_lang_AssertionStatusDirectives::classEnabled_offset;
 int java_lang_AssertionStatusDirectives::packages_offset;
@@ -3040,78 +2864,6 @@ int java_nio_Buffer::_limit_offset;
 int java_util_concurrent_locks_AbstractOwnableSynchronizer::_owner_offset;
 int reflect_ConstantPool::_oop_offset;
 int reflect_UnsafeStaticFieldAccessorImpl::_base_offset;
-
-#define STACKTRACEELEMENT_FIELDS_DO(macro) \
-  macro(declaringClassObject_offset,  k, "declaringClassObject", class_signature, false); \
-  macro(classLoaderName_offset, k, "classLoaderName", string_signature, false); \
-  macro(moduleName_offset,      k, "moduleName",      string_signature, false); \
-  macro(moduleVersion_offset,   k, "moduleVersion",   string_signature, false); \
-  macro(declaringClass_offset,  k, "declaringClass",  string_signature, false); \
-  macro(methodName_offset,      k, "methodName",      string_signature, false); \
-  macro(fileName_offset,        k, "fileName",        string_signature, false); \
-  macro(lineNumber_offset,      k, "lineNumber",      int_signature,    false)
-
-// Support for java_lang_StackTraceElement
-void java_lang_StackTraceElement::compute_offsets() {
-  InstanceKlass* k = SystemDictionary::StackTraceElement_klass();
-  STACKTRACEELEMENT_FIELDS_DO(FIELD_COMPUTE_OFFSET);
-}
-
-void java_lang_StackTraceElement::set_fileName(oop element, oop value) {
-  element->obj_field_put(fileName_offset, value);
-}
-
-void java_lang_StackTraceElement::set_declaringClass(oop element, oop value) {
-  element->obj_field_put(declaringClass_offset, value);
-}
-
-void java_lang_StackTraceElement::set_methodName(oop element, oop value) {
-  element->obj_field_put(methodName_offset, value);
-}
-
-void java_lang_StackTraceElement::set_lineNumber(oop element, int value) {
-  element->int_field_put(lineNumber_offset, value);
-}
-
-void java_lang_StackTraceElement::set_moduleName(oop element, oop value) {
-  element->obj_field_put(moduleName_offset, value);
-}
-
-void java_lang_StackTraceElement::set_moduleVersion(oop element, oop value) {
-  element->obj_field_put(moduleVersion_offset, value);
-}
-
-void java_lang_StackTraceElement::set_classLoaderName(oop element, oop value) {
-  element->obj_field_put(classLoaderName_offset, value);
-}
-
-void java_lang_StackTraceElement::set_declaringClassObject(oop element, oop value) {
-  element->obj_field_put(declaringClassObject_offset, value);
-}
-
-void java_lang_StackFrameInfo::set_version(oop element, short value) {
-  element->short_field_put(_version_offset, value);
-}
-
-void java_lang_StackFrameInfo::set_bci(oop element, int value) {
-  element->int_field_put(_bci_offset, value);
-}
-
-void java_lang_LiveStackFrameInfo::set_monitors(oop element, oop value) {
-  element->obj_field_put(_monitors_offset, value);
-}
-
-void java_lang_LiveStackFrameInfo::set_locals(oop element, oop value) {
-  element->obj_field_put(_locals_offset, value);
-}
-
-void java_lang_LiveStackFrameInfo::set_operands(oop element, oop value) {
-  element->obj_field_put(_operands_offset, value);
-}
-
-void java_lang_LiveStackFrameInfo::set_mode(oop element, int value) {
-  element->int_field_put(_mode_offset, value);
-}
 
 // Support for java Assertions - java_lang_AssertionStatusDirectives.
 #define ASSERTIONSTATUSDIRECTIVES_FIELDS_DO(macro) \
@@ -3215,9 +2967,6 @@ void JavaClasses::compute_offsets() {
   reflect_UnsafeStaticFieldAccessorImpl::compute_offsets();
   java_lang_reflect_Parameter::compute_offsets();
   java_lang_Module::compute_offsets();
-  java_lang_StackTraceElement::compute_offsets();
-  java_lang_StackFrameInfo::compute_offsets();
-  java_lang_LiveStackFrameInfo::compute_offsets();
   java_util_concurrent_locks_AbstractOwnableSynchronizer::compute_offsets();
 
   // generated interpreter code wants to know about the offsets we just computed:

@@ -21,43 +21,6 @@ inline unsigned count_trailing_zeros(uintx x) {
 }
 
 /*****************************************************************************
- * Microsoft Visual Studio
- *****************************************************************************/
-#elif defined(TARGET_COMPILER_visCPP)
-
-#include <intrin.h>
-
-#pragma intrinsic(_BitScanForward64)
-
-inline unsigned count_trailing_zeros(uintx x) {
-  unsigned long index;
-  _BitScanForward64(&index, x);
-  return index;
-}
-
-/*****************************************************************************
- * IBM XL C/C++
- *****************************************************************************/
-#elif defined(TARGET_COMPILER_xlc)
-
-#include <builtins.h>
-
-inline unsigned count_trailing_zeros(uintx x) {
-  return __cnttz8(x);
-}
-
-/*****************************************************************************
- * Oracle Studio
- *****************************************************************************/
-#elif defined(TARGET_COMPILER_sparcWorks)
-
-// No compiler built-in / intrinsic, so use inline assembler.
-
-#include "utilities/macros.hpp"
-
-#include OS_CPU_HEADER(count_trailing_zeros)
-
-/*****************************************************************************
  * Unknown toolchain
  *****************************************************************************/
 #else

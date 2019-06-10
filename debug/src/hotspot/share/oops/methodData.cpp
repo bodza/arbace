@@ -103,13 +103,7 @@ int TypeEntriesAtCall::compute_cell_count(BytecodeStream* stream) {
   int bci = stream->bci();
   Bytecode_invoke inv(m, bci);
   int args_cell = 0;
-  if (MethodData::profile_arguments_for_invoke(m, bci)) {
-    args_cell = TypeStackSlotEntries::compute_cell_count(inv.signature(), false, TypeProfileArgsLimit);
-  }
   int ret_cell = 0;
-  if (MethodData::profile_return_for_invoke(m, bci) && (inv.result_type() == T_OBJECT || inv.result_type() == T_ARRAY)) {
-    ret_cell = ReturnTypeEntry::static_cell_count();
-  }
   int header_cell = 0;
   if (args_cell + ret_cell > 0) {
     header_cell = header_cell_count();
@@ -205,14 +199,6 @@ void ReturnTypeEntry::clean_weak_klass_links(bool always_clean) {
   if (k != NULL && (always_clean || !k->is_loader_alive())) {
     set_type(with_status((Klass*)NULL, p));
   }
-}
-
-bool TypeEntriesAtCall::return_profiling_enabled() {
-  return MethodData::profile_return();
-}
-
-bool TypeEntriesAtCall::arguments_profiling_enabled() {
-  return MethodData::profile_arguments();
 }
 
 void TypeEntries::print_klass(outputStream* st, intptr_t k) {
@@ -358,24 +344,10 @@ void MultiBranchData::post_initialize(BytecodeStream* stream, MethodData* mdo) {
   }
 }
 
-int ParametersTypeData::compute_cell_count(Method* m) {
-  if (!MethodData::profile_parameters_for_method(m)) {
-    return 0;
-  }
-  int max = TypeProfileParmsLimit == -1 ? INT_MAX : TypeProfileParmsLimit;
-  int obj_args = TypeStackSlotEntries::compute_cell_count(m->signature(), !m->is_static(), max);
-  if (obj_args > 0) {
-    return obj_args + 1; // 1 cell for array len
-  }
-  return 0;
-}
+int ParametersTypeData::compute_cell_count(Method* m) { return 0; }
 
 void ParametersTypeData::post_initialize(BytecodeStream* stream, MethodData* mdo) {
   _parameters.post_initialize(mdo->method()->signature(), !mdo->method()->is_static(), true);
-}
-
-bool ParametersTypeData::profiling_enabled() {
-  return MethodData::profile_parameters();
 }
 
 // ==================================================================
@@ -406,11 +378,7 @@ int MethodData::bytecode_cell_count(Bytecodes::Code code) {
     }
   case Bytecodes::_invokespecial:
   case Bytecodes::_invokestatic:
-    if (MethodData::profile_arguments() || MethodData::profile_return()) {
-      return variable_cell_count;
-    } else {
-      return CounterData::static_cell_count();
-    }
+    return CounterData::static_cell_count();
   case Bytecodes::_goto:
   case Bytecodes::_goto_w:
   case Bytecodes::_jsr:
@@ -418,11 +386,7 @@ int MethodData::bytecode_cell_count(Bytecodes::Code code) {
     return JumpData::static_cell_count();
   case Bytecodes::_invokevirtual:
   case Bytecodes::_invokeinterface:
-    if (MethodData::profile_arguments() || MethodData::profile_return()) {
-      return variable_cell_count;
-    } else {
-      return VirtualCallData::static_cell_count();
-    }
+    return VirtualCallData::static_cell_count();
   case Bytecodes::_ret:
     return RetData::static_cell_count();
   case Bytecodes::_ifeq:
@@ -465,19 +429,11 @@ int MethodData::compute_data_size(BytecodeStream* stream) {
       break;
     case Bytecodes::_invokespecial:
     case Bytecodes::_invokestatic:
-      if (profile_arguments_for_invoke(stream->method(), stream->bci()) || profile_return_for_invoke(stream->method(), stream->bci())) {
-        cell_count = CallTypeData::compute_cell_count(stream);
-      } else {
-        cell_count = CounterData::static_cell_count();
-      }
+      cell_count = CounterData::static_cell_count();
       break;
     case Bytecodes::_invokevirtual:
     case Bytecodes::_invokeinterface: {
-      if (profile_arguments_for_invoke(stream->method(), stream->bci()) || profile_return_for_invoke(stream->method(), stream->bci())) {
-        cell_count = VirtualCallTypeData::compute_cell_count(stream);
-      } else {
-        cell_count = VirtualCallData::static_cell_count();
-      }
+      cell_count = VirtualCallData::static_cell_count();
       break;
     }
     default:
@@ -568,11 +524,7 @@ int MethodData::initialize_data(BytecodeStream* stream, int data_index) {
   case Bytecodes::_invokespecial:
   case Bytecodes::_invokestatic: {
     int counter_data_cell_count = CounterData::static_cell_count();
-    if (profile_arguments_for_invoke(stream->method(), stream->bci()) || profile_return_for_invoke(stream->method(), stream->bci())) {
-      cell_count = CallTypeData::compute_cell_count(stream);
-    } else {
-      cell_count = counter_data_cell_count;
-    }
+    cell_count = counter_data_cell_count;
     if (cell_count > counter_data_cell_count) {
       tag = DataLayout::call_type_data_tag;
     } else {
@@ -590,11 +542,7 @@ int MethodData::initialize_data(BytecodeStream* stream, int data_index) {
   case Bytecodes::_invokevirtual:
   case Bytecodes::_invokeinterface: {
     int virtual_call_data_cell_count = VirtualCallData::static_cell_count();
-    if (profile_arguments_for_invoke(stream->method(), stream->bci()) || profile_return_for_invoke(stream->method(), stream->bci())) {
-      cell_count = VirtualCallTypeData::compute_cell_count(stream);
-    } else {
-      cell_count = virtual_call_data_cell_count;
-    }
+    cell_count = virtual_call_data_cell_count;
     if (cell_count > virtual_call_data_cell_count) {
       tag = DataLayout::virtual_call_type_data_tag;
     } else {
@@ -800,7 +748,6 @@ void MethodData::init() {
   _jvmci_ir_size = 0;
 
   // Initialize flags and trap history.
-  _nof_decompiles = 0;
   _nof_overflow_recompiles = 0;
   clear_escape_info();
 }
@@ -983,106 +930,6 @@ void MethodData::print_on(outputStream* st) const {
 void MethodData::print_value_on(outputStream* st) const {
   st->print("method data for ");
   method()->print_value_on(st);
-}
-
-bool MethodData::profile_unsafe(const methodHandle& m, int bci) {
-  Bytecode_invoke inv(m , bci);
-  if (inv.is_invokevirtual() && inv.klass() == vmSymbols::jdk_internal_misc_Unsafe()) {
-    ResourceMark rm;
-    char* name = inv.name()->as_C_string();
-    if (!strncmp(name, "get", 3) || !strncmp(name, "put", 3)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-int MethodData::profile_arguments_flag() {
-  return TypeProfileLevel % 10;
-}
-
-bool MethodData::profile_arguments() {
-  return profile_arguments_flag() > no_type_profile && profile_arguments_flag() <= type_profile_all;
-}
-
-bool MethodData::profile_arguments_jsr292_only() {
-  return profile_arguments_flag() == type_profile_jsr292;
-}
-
-bool MethodData::profile_all_arguments() {
-  return profile_arguments_flag() == type_profile_all;
-}
-
-bool MethodData::profile_arguments_for_invoke(const methodHandle& m, int bci) {
-  if (!profile_arguments()) {
-    return false;
-  }
-
-  if (profile_all_arguments()) {
-    return true;
-  }
-
-  if (profile_unsafe(m, bci)) {
-    return true;
-  }
-
-  return false;
-}
-
-int MethodData::profile_return_flag() {
-  return (TypeProfileLevel % 100) / 10;
-}
-
-bool MethodData::profile_return() {
-  return profile_return_flag() > no_type_profile && profile_return_flag() <= type_profile_all;
-}
-
-bool MethodData::profile_return_jsr292_only() {
-  return profile_return_flag() == type_profile_jsr292;
-}
-
-bool MethodData::profile_all_return() {
-  return profile_return_flag() == type_profile_all;
-}
-
-bool MethodData::profile_return_for_invoke(const methodHandle& m, int bci) {
-  if (!profile_return()) {
-    return false;
-  }
-
-  if (profile_all_return()) {
-    return true;
-  }
-
-  return false;
-}
-
-int MethodData::profile_parameters_flag() {
-  return TypeProfileLevel / 100;
-}
-
-bool MethodData::profile_parameters() {
-  return profile_parameters_flag() > no_type_profile && profile_parameters_flag() <= type_profile_all;
-}
-
-bool MethodData::profile_parameters_jsr292_only() {
-  return profile_parameters_flag() == type_profile_jsr292;
-}
-
-bool MethodData::profile_all_parameters() {
-  return profile_parameters_flag() == type_profile_all;
-}
-
-bool MethodData::profile_parameters_for_method(const methodHandle& m) {
-  if (!profile_parameters()) {
-    return false;
-  }
-
-  if (profile_all_parameters()) {
-    return true;
-  }
-
-  return false;
 }
 
 void MethodData::metaspace_pointers_do(MetaspaceClosure* it) {

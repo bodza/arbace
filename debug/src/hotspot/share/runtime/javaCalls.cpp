@@ -277,7 +277,7 @@ void JavaCalls::call_helper(JavaValue* result, const methodHandle& method, JavaC
 
   CompilationPolicy::compile_if_required(method, CHECK);
 
-  // Since the call stub sets up like the interpreter we call the NULL,
+  // Since the call stub sets up like the interpreter, we call the NULL,
   // so we can go compiled via a i2c. Otherwise initial entry method will always
   // run interpreted.
   address entry_point = NULL;

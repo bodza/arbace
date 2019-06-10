@@ -324,7 +324,6 @@ bool GenCollectedHeap::must_clear_all_soft_refs() {
 
 void GenCollectedHeap::collect_generation(Generation* gen, bool full, size_t size, bool is_tlab, bool run_verification, bool clear_soft_refs, bool restore_marks_for_biased_locking) {
   FormatBuffer<> title("Collect gen: %s", gen->short_name());
-  TraceMemoryManagerStats tmms(gen->gc_manager(), gc_cause());
 
   gen->stat_record()->invocations++;
   gen->stat_record()->accumulated_time.start();
@@ -483,9 +482,6 @@ void GenCollectedHeap::do_collection(bool full, bool clear_all_soft_refs, size_t
       MetaspaceGC::compute_new_size();
       update_full_collections_completed();
     }
-
-    // Track memory usage and detect low memory after GC finishes
-    MemoryService::track_memory_usage();
 
     gc_epilogue(complete);
 

@@ -28,7 +28,6 @@
 #include "prims/jvm_misc.hpp"
 #include "prims/nativeLookup.hpp"
 #include "prims/privilegedStack.hpp"
-#include "prims/stackwalk.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/atomic.hpp"
 #include "runtime/handles.inline.hpp"
@@ -50,7 +49,6 @@
 #include "services/threadService.hpp"
 #include "utilities/copy.hpp"
 #include "utilities/defaultStream.hpp"
-#include "utilities/histogram.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/utf8.hpp"
 
@@ -334,72 +332,6 @@ JVM_END
 
 JVM_ENTRY_NO_ENV(jint, JVM_ActiveProcessorCount(void))
   return os::active_processor_count();
-JVM_END
-
-// java.lang.Throwable //////////////////////////////////////////////////////
-
-JVM_ENTRY(void, JVM_FillInStackTrace(JNIEnv *env, jobject receiver))
-  Handle exception(thread, JNIHandles::resolve_non_null(receiver));
-  java_lang_Throwable::fill_in_stack_trace(exception);
-JVM_END
-
-// java.lang.StackTraceElement //////////////////////////////////////////////
-
-JVM_ENTRY(void, JVM_InitStackTraceElementArray(JNIEnv *env, jobjectArray elements, jobject throwable))
-  Handle exception(THREAD, JNIHandles::resolve(throwable));
-  objArrayOop st = objArrayOop(JNIHandles::resolve(elements));
-  objArrayHandle stack_trace(THREAD, st);
-  // Fill in the allocated stack trace
-  java_lang_Throwable::get_stack_trace_elements(exception, stack_trace, CHECK);
-JVM_END
-
-JVM_ENTRY(void, JVM_InitStackTraceElement(JNIEnv* env, jobject element, jobject stackFrameInfo))
-  Handle stack_frame_info(THREAD, JNIHandles::resolve_non_null(stackFrameInfo));
-  Handle stack_trace_element(THREAD, JNIHandles::resolve_non_null(element));
-  java_lang_StackFrameInfo::to_stack_trace_element(stack_frame_info, stack_trace_element, THREAD);
-JVM_END
-
-// java.lang.StackWalker //////////////////////////////////////////////////////
-
-JVM_ENTRY(jobject, JVM_CallStackWalk(JNIEnv *env, jobject stackStream, jlong mode, jint skip_frames, jint frame_count, jint start_index, jobjectArray frames))
-  JavaThread* jt = (JavaThread*) THREAD;
-  if (!jt->is_Java_thread() || !jt->has_last_Java_frame()) {
-    THROW_MSG_(vmSymbols::java_lang_InternalError(), "doStackWalk: no stack trace", NULL);
-  }
-
-  Handle stackStream_h(THREAD, JNIHandles::resolve_non_null(stackStream));
-
-  // frames array is a Class<?>[] array when only getting caller reference,
-  // and a StackFrameInfo[] array (or derivative) otherwise. It should never
-  // be null.
-  objArrayOop fa = objArrayOop(JNIHandles::resolve_non_null(frames));
-  objArrayHandle frames_array_h(THREAD, fa);
-
-  int limit = start_index + frame_count;
-  if (frames_array_h->length() < limit) {
-    THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(), "not enough space in buffers", NULL);
-  }
-
-  oop result = StackWalk::walk(stackStream_h, mode, skip_frames, frame_count, start_index, frames_array_h, CHECK_NULL);
-  return JNIHandles::make_local(env, result);
-JVM_END
-
-JVM_ENTRY(jint, JVM_MoreStackWalk(JNIEnv *env, jobject stackStream, jlong mode, jlong anchor, jint frame_count, jint start_index, jobjectArray frames))
-  JavaThread* jt = (JavaThread*) THREAD;
-
-  // frames array is a Class<?>[] array when only getting caller reference,
-  // and a StackFrameInfo[] array (or derivative) otherwise. It should never
-  // be null.
-  objArrayOop fa = objArrayOop(JNIHandles::resolve_non_null(frames));
-  objArrayHandle frames_array_h(THREAD, fa);
-
-  int limit = start_index+frame_count;
-  if (frames_array_h->length() < limit) {
-    THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(), "not enough space in buffers");
-  }
-
-  Handle stackStream_h(THREAD, JNIHandles::resolve_non_null(stackStream));
-  return StackWalk::fetchNextBatch(stackStream_h, mode, anchor, frame_count, start_index, frames_array_h, THREAD);
 JVM_END
 
 // java.lang.Object ///////////////////////////////////////////////
@@ -2785,44 +2717,6 @@ JVM_ENTRY(jobjectArray, JVM_GetAllThreads(JNIEnv *env, jclass dummy))
   }
 
   return (jobjectArray) JNIHandles::make_local(env, threads_ah());
-JVM_END
-
-// Support for java.lang.Thread.getStackTrace() and getAllStackTraces() methods
-// Return StackTraceElement[][], each element is the stack trace of a thread in
-// the corresponding entry in the given threads array
-JVM_ENTRY(jobjectArray, JVM_DumpThreads(JNIEnv *env, jclass threadClass, jobjectArray threads))
-  // Check if threads is null
-  if (threads == NULL) {
-    THROW_(vmSymbols::java_lang_NullPointerException(), 0);
-  }
-
-  objArrayOop a = objArrayOop(JNIHandles::resolve_non_null(threads));
-  objArrayHandle ah(THREAD, a);
-  int num_threads = ah->length();
-  // check if threads is non-empty array
-  if (num_threads == 0) {
-    THROW_(vmSymbols::java_lang_IllegalArgumentException(), 0);
-  }
-
-  // check if threads is not an array of objects of Thread class
-  Klass* k = ObjArrayKlass::cast(ah->klass())->element_klass();
-  if (k != SystemDictionary::Thread_klass()) {
-    THROW_(vmSymbols::java_lang_IllegalArgumentException(), 0);
-  }
-
-  ResourceMark rm(THREAD);
-
-  GrowableArray<instanceHandle>* thread_handle_array = new GrowableArray<instanceHandle>(num_threads);
-  for (int i = 0; i < num_threads; i++) {
-    oop thread_obj = ah->obj_at(i);
-    instanceHandle h(THREAD, (instanceOop) thread_obj);
-    thread_handle_array->append(h);
-  }
-
-  // The JavaThread references in thread_handle_array are validated
-  // in VM_ThreadDump::doit().
-  Handle stacktraces = ThreadService::dump_stack_traces(thread_handle_array, num_threads, CHECK_NULL);
-  return (jobjectArray)JNIHandles::make_local(env, stacktraces());
 JVM_END
 
 // JVM monitoring and management support

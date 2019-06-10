@@ -483,22 +483,11 @@ JRT_ENTRY(void, SharedRuntime::throw_NullPointerException_at_call(JavaThread* th
 JRT_END
 
 JRT_ENTRY(void, SharedRuntime::throw_StackOverflowError(JavaThread* thread))
-  throw_StackOverflowError_common(thread, false);
-JRT_END
-
-JRT_ENTRY(void, SharedRuntime::throw_delayed_StackOverflowError(JavaThread* thread))
-  throw_StackOverflowError_common(thread, true);
-JRT_END
-
-void SharedRuntime::throw_StackOverflowError_common(JavaThread* thread, bool delayed) {
   // We avoid using the normal exception construction in this case because
   // it performs an upcall to Java, and we're already out of stack space.
   Thread* THREAD = thread;
   Klass* k = SystemDictionary::StackOverflowError_klass();
   oop exception_oop = InstanceKlass::cast(k)->allocate_instance(CHECK);
-  if (delayed) {
-    java_lang_Throwable::set_message(exception_oop, Universe::delayed_stack_overflow_error_message());
-  }
   Handle exception (thread, exception_oop);
   if (StackTraceInThrowable) {
     java_lang_Throwable::fill_in_stack_trace(exception);
@@ -506,7 +495,7 @@ void SharedRuntime::throw_StackOverflowError_common(JavaThread* thread, bool del
   // Increment counter for hs_err file reporting
   Atomic::inc(&Exceptions::_stack_overflow_errors);
   throw_and_post_jvmti_exception(thread, exception);
-}
+JRT_END
 
 address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread, address pc, SharedRuntime::ImplicitExceptionKind exception_kind) {
   address target_pc = NULL;
@@ -1856,43 +1845,6 @@ JRT_LEAF(void, SharedRuntime::enable_stack_reserved_zone(JavaThread* thread))
   }
   thread->set_reserved_stack_activation(thread->stack_base());
 JRT_END
-
-frame SharedRuntime::look_for_reserved_stack_annotated_method(JavaThread* thread, frame fr) {
-  ResourceMark rm(thread);
-  frame activation;
-  CompiledMethod* nm = NULL;
-  int count = 1;
-
-  while (true) {
-    Method* method = NULL;
-    bool found = false;
-    {
-      CodeBlob* cb = fr.cb();
-      if (cb != NULL && cb->is_compiled()) {
-        nm = cb->as_compiled_method();
-        method = nm->method();
-        // scope_desc_near() must be used, instead of scope_desc_at() because on
-        // SPARC, the pcDesc can be on the delay slot after the call instruction.
-        for (ScopeDesc *sd = nm->scope_desc_near(fr.pc()); sd != NULL; sd = sd->sender()) {
-          method = sd->method();
-          if (method != NULL && method->has_reserved_stack_access()) {
-            found = true;
-          }
-        }
-      }
-    }
-    if (found) {
-      activation = fr;
-      warning("Potentially dangerous stack overflow in ReservedStackAccess annotated method %s [%d]", method->name_and_sig_as_C_string(), count++);
-    }
-    if (fr.is_first_java_frame()) {
-      break;
-    } else {
-      fr = fr.java_sender();
-    }
-  }
-  return activation;
-}
 
 void SharedRuntime::on_slowpath_allocation_exit(JavaThread* thread) {
   // After any safepoint, just before going back to compiled code,

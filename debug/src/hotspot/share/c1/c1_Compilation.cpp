@@ -193,10 +193,6 @@ int Compilation::compile_java_method() {
 
   CHECK_BAILOUT_(no_frame_size);
 
-  if (is_profiling() && !method()->ensure_method_data()) {
-    BAILOUT_("mdo allocation failed", no_frame_size);
-  }
-
   build_hir();
   if (BailoutAfterHIR) {
     BAILOUT_("Bailing out because of -XX:+BailoutAfterHIR", no_frame_size);
@@ -329,7 +325,6 @@ Compilation::Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* metho
 , _would_profile(false)
 , _has_unsafe_access(false)
 , _has_method_handle_invokes(false)
-, _has_reserved_stack_access(method->has_reserved_stack_access())
 , _bailout_msg(NULL)
 , _exception_info_list(NULL)
 , _allocator(NULL)
@@ -346,16 +341,6 @@ Compilation::Compilation(AbstractCompiler* compiler, ciEnv* env, ciMethod* metho
   compile_method();
   if (bailed_out()) {
     _env->record_method_not_compilable(bailout_msg());
-    if (is_profiling()) {
-      // Compilation failed, create MDO, which would signal the interpreter
-      // to start profiling on its own.
-      _method->ensure_method_data();
-    }
-  } else if (is_profiling()) {
-    ciMethodData *md = method->method_data_or_null();
-    if (md != NULL) {
-      md->set_would_profile(_would_profile);
-    }
   }
 }
 

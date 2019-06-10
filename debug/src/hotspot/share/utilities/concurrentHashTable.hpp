@@ -293,15 +293,13 @@ class ConcurrentHashTable : public CHeapObj<F> {
 
   // Check for dead items in a bucket.
   template <typename EVALUATE_FUNC>
-  size_t delete_check_nodes(Bucket* bucket, EVALUATE_FUNC& eval_f,
-                            size_t num_del, Node** ndel);
+  size_t delete_check_nodes(Bucket* bucket, EVALUATE_FUNC& eval_f, size_t num_del, Node** ndel);
 
   // Check for dead items in this table. During shrink/grow we cannot guarantee
   // that we only visit nodes once. To keep it simple caller will have locked
   // _resize_lock.
   template <typename EVALUATE_FUNC, typename DELETE_FUNC>
-  void do_bulk_delete_locked(Thread* thread, EVALUATE_FUNC& eval_f
-                             , DELETE_FUNC& del_f) {
+  void do_bulk_delete_locked(Thread* thread, EVALUATE_FUNC& eval_f, DELETE_FUNC& del_f) {
     do_bulk_delete_locked_for(thread, 0, _table->_size, eval_f, del_f);
   }
 

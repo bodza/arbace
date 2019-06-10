@@ -24,8 +24,6 @@ const bool CCallingConventionRequiresIntsAsLongs = false;
 // evidence that it's worth doing.
 #define DEOPTIMIZE_WHEN_PATCHING
 
-#define SUPPORT_RESERVED_STACK_AREA
-
 #define THREAD_LOCAL_POLL
 
 #endif

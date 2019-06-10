@@ -29,8 +29,8 @@ CompileTask* CompileTask::allocate() {
 }
 
 /**
-* Add a task to the free list.
-*/
+ * Add a task to the free list.
+ */
 
 void CompileTask::free(CompileTask* task) {
  MutexLocker locker(CompileTaskAlloc_lock);

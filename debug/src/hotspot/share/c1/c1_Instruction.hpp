@@ -77,9 +77,6 @@ class     UnsafeObjectOp;
 class       UnsafeGetObject;
 class       UnsafePutObject;
 class         UnsafeGetAndSetObject;
-class   ProfileCall;
-class   ProfileReturnType;
-class   ProfileInvoke;
 class   RuntimeCall;
 class   MemBar;
 class   RangeCheckPredicate;
@@ -307,7 +304,6 @@ class Instruction: public CompilationResourceObj {
     NeedsPatchingFlag,
     ThrowIncompatibleClassChangeErrorFlag,
     InvokeSpecialReceiverCheckFlag,
-    ProfileMDOFlag,
     IsLinkedInBlockFlag,
     NeedsRangeCheckFlag,
     InWorkListFlag,
@@ -355,7 +351,6 @@ class Instruction: public CompilationResourceObj {
   , _state_before(state_before)
   , _exception_handlers(NULL)
   {
-    check_state(state_before);
     update_exception_state(_state_before);
   }
 
@@ -425,8 +420,8 @@ class Instruction: public CompilationResourceObj {
 
   void set_subst(Instruction* subst)             { _subst = subst; }
   void set_exception_handlers(XHandlers *xhandlers) { _exception_handlers = xhandlers; }
-  void set_exception_state(ValueStack* s)        { check_state(s); _exception_state = s; }
-  void set_state_before(ValueStack* s)           { check_state(s); _state_before = s; }
+  void set_exception_state(ValueStack* s)        { _exception_state = s; }
+  void set_state_before(ValueStack* s)           { _state_before = s; }
 
   // machine-specifics
   void set_operand(LIR_Opr operand)              { _operand = operand; }
@@ -482,7 +477,6 @@ class Instruction: public CompilationResourceObj {
   virtual RoundFP*          as_RoundFP()         { return NULL; }
   virtual ExceptionObject*  as_ExceptionObject() { return NULL; }
   virtual UnsafeOp*         as_UnsafeOp()        { return NULL; }
-  virtual ProfileInvoke*    as_ProfileInvoke()   { return NULL; }
   virtual RangeCheckPredicate* as_RangeCheckPredicate() { return NULL; }
 
   virtual void visit(InstructionVisitor* v)      = 0;
@@ -502,7 +496,6 @@ class Instruction: public CompilationResourceObj {
   HASHING1(Instruction, false, id())             // hashing disabled by default
 
   // debugging
-  static void check_state(ValueStack* state)     { };
   void print()                                   { };
   void print_line()                              { };
   void print(InstructionPrinter& ip)             { };
@@ -845,18 +838,15 @@ LEAF(LoadIndexed, AccessIndexed)
 
 LEAF(StoreIndexed, AccessIndexed)
  private:
-  Value       _value;
+  Value _value;
 
-  ciMethod* _profiled_method;
-  int       _profiled_bci;
-  bool      _check_boolean;
+  bool  _check_boolean;
 
  public:
   // creation
-  StoreIndexed(Value array, Value index, Value length, BasicType elt_type, Value value, ValueStack* state_before,
-               bool check_boolean, bool mismatched = false)
+  StoreIndexed(Value array, Value index, Value length, BasicType elt_type, Value value, ValueStack* state_before, bool check_boolean, bool mismatched = false)
   : AccessIndexed(array, index, length, elt_type, state_before, mismatched)
-  , _value(value), _profiled_method(NULL), _profiled_bci(0), _check_boolean(check_boolean)
+  , _value(value), _check_boolean(check_boolean)
   {
     set_flag(NeedsWriteBarrierFlag, (as_ValueType(elt_type)->is_object()));
     set_flag(NeedsStoreCheckFlag, (as_ValueType(elt_type)->is_object()));
@@ -869,15 +859,8 @@ LEAF(StoreIndexed, AccessIndexed)
   bool needs_write_barrier()               const { return check_flag(NeedsWriteBarrierFlag); }
   bool needs_store_check()                 const { return check_flag(NeedsStoreCheckFlag); }
   bool check_boolean()                     const { return _check_boolean; }
-  // Helpers for MethodData* profiling
-  void set_should_profile(bool value)                { set_flag(ProfileMDOFlag, value); }
-  void set_profiled_method(ciMethod* method)         { _profiled_method = method; }
-  void set_profiled_bci(int bci)                     { _profiled_bci = bci; }
-  bool      should_profile()                   const { return check_flag(ProfileMDOFlag); }
-  ciMethod* profiled_method()                  const { return _profiled_method; }
-  int       profiled_bci()                     const { return _profiled_bci; }
   // generic
-  virtual void input_values_do(ValueVisitor* f)   { AccessIndexed::input_values_do(f); f->visit(&_value); }
+  virtual void input_values_do(ValueVisitor* f)  { AccessIndexed::input_values_do(f); f->visit(&_value); }
 };
 
 LEAF(NegateOp, Instruction)
@@ -894,7 +877,7 @@ LEAF(NegateOp, Instruction)
   Value x()                                const { return _x; }
 
   // generic
-  virtual void input_values_do(ValueVisitor* f)   { f->visit(&_x); }
+  virtual void input_values_do(ValueVisitor* f)  { f->visit(&_x); }
 };
 
 BASE(Op2, Instruction)
@@ -1094,7 +1077,7 @@ BASE(StateSplit, Instruction)
   IRScope* scope() const;                        // the state's scope
 
   // manipulation
-  void set_state(ValueStack* state)              { check_state(state); _state = state; }
+  void set_state(ValueStack* state)              { _state = state; }
 
   // generic
   virtual void input_values_do(ValueVisitor* f)   { /* no values */ }
@@ -1255,17 +1238,13 @@ LEAF(NewMultiArray, NewArray)
 
 BASE(TypeCheck, StateSplit)
  private:
-  ciKlass*    _klass;
-  Value       _obj;
-
-  ciMethod* _profiled_method;
-  int       _profiled_bci;
+  ciKlass* _klass;
+  Value    _obj;
 
  public:
   // creation
   TypeCheck(ciKlass* klass, Value obj, ValueType* type, ValueStack* state_before)
-  : StateSplit(type, state_before), _klass(klass), _obj(obj),
-    _profiled_method(NULL), _profiled_bci(0) {
+  : StateSplit(type, state_before), _klass(klass), _obj(obj) {
     ASSERT_VALUES
     set_direct_compare(false);
   }
@@ -1282,14 +1261,6 @@ BASE(TypeCheck, StateSplit)
   // generic
   virtual bool can_trap()                 const { return true; }
   virtual void input_values_do(ValueVisitor* f) { StateSplit::input_values_do(f); f->visit(&_obj); }
-
-  // Helpers for MethodData* profiling
-  void set_should_profile(bool value)           { set_flag(ProfileMDOFlag, value); }
-  void set_profiled_method(ciMethod* method)    { _profiled_method = method; }
-  void set_profiled_bci(int bci)                { _profiled_bci = bci; }
-  bool      should_profile()              const { return check_flag(ProfileMDOFlag); }
-  ciMethod* profiled_method()             const { return _profiled_method; }
-  int       profiled_bci()                const { return _profiled_bci; }
 };
 
 LEAF(CheckCast, TypeCheck)
@@ -1691,39 +1662,24 @@ LEAF(Goto, BlockEnd)
     taken, not_taken // Goto produced from If
   };
  private:
-  ciMethod*   _profiled_method;
-  int         _profiled_bci;
-  Direction   _direction;
+  Direction _direction;
  public:
   // creation
-  Goto(BlockBegin* sux, ValueStack* state_before, bool is_safepoint = false)
-    : BlockEnd(illegalType, state_before, is_safepoint)
-    , _direction(none)
-    , _profiled_method(NULL)
-    , _profiled_bci(0) {
+  Goto(BlockBegin* sux, ValueStack* state_before, bool is_safepoint = false) : BlockEnd(illegalType, state_before, is_safepoint), _direction(none) {
     BlockList* s = new BlockList(1);
     s->append(sux);
     set_sux(s);
   }
 
-  Goto(BlockBegin* sux, bool is_safepoint) : BlockEnd(illegalType, NULL, is_safepoint)
-                                           , _direction(none)
-                                           , _profiled_method(NULL)
-                                           , _profiled_bci(0) {
+  Goto(BlockBegin* sux, bool is_safepoint) : BlockEnd(illegalType, NULL, is_safepoint), _direction(none) {
     BlockList* s = new BlockList(1);
     s->append(sux);
     set_sux(s);
   }
 
-  bool should_profile()                    const { return check_flag(ProfileMDOFlag); }
-  ciMethod* profiled_method()              const { return _profiled_method; } // set only for profiled branches
-  int profiled_bci()                       const { return _profiled_bci; }
-  Direction direction()                    const { return _direction; }
+  Direction direction()     const { return _direction; }
 
-  void set_should_profile(bool value)            { set_flag(ProfileMDOFlag, value); }
-  void set_profiled_method(ciMethod* method)     { _profiled_method = method; }
-  void set_profiled_bci(int bci)                 { _profiled_bci = bci; }
-  void set_direction(Direction d)                { _direction = d; }
+  void set_direction(Direction d) { _direction = d; }
 };
 
 LEAF(RangeCheckPredicate, StateSplit)
@@ -1731,8 +1687,6 @@ LEAF(RangeCheckPredicate, StateSplit)
   Value       _x;
   Condition   _cond;
   Value       _y;
-
-  void check_state();
 
  public:
   // creation
@@ -1745,7 +1699,6 @@ LEAF(RangeCheckPredicate, StateSplit)
     ASSERT_VALUES
     set_flag(UnorderedIsTrueFlag, unordered_is_true);
     this->set_state(state);
-    check_state();
   }
 
   // Always deoptimize
@@ -1753,7 +1706,6 @@ LEAF(RangeCheckPredicate, StateSplit)
   {
     this->set_state(state);
     _x = _y = NULL;
-    check_state();
   }
 
   // accessors
@@ -1774,10 +1726,7 @@ LEAF(If, BlockEnd)
   Value       _x;
   Condition   _cond;
   Value       _y;
-  ciMethod*   _profiled_method;
-  int         _profiled_bci; // Canonicalizer may alter bci of If node
-  bool        _swapped;      // Is the order reversed with respect to the original If in the
-                             // bytecode stream?
+  bool        _swapped;      // Is the order reversed with respect to the original If in the bytecode stream?
  public:
   // creation
   // unordered_is_true is valid for float/double compares only
@@ -1786,8 +1735,6 @@ LEAF(If, BlockEnd)
   , _x(x)
   , _cond(cond)
   , _y(y)
-  , _profiled_method(NULL)
-  , _profiled_bci(0)
   , _swapped(false)
   {
     ASSERT_VALUES
@@ -1807,9 +1754,6 @@ LEAF(If, BlockEnd)
   BlockBegin* tsux()                       const { return sux_for(true); }
   BlockBegin* fsux()                       const { return sux_for(false); }
   BlockBegin* usux()                       const { return sux_for(unordered_is_true()); }
-  bool should_profile()                    const { return check_flag(ProfileMDOFlag); }
-  ciMethod* profiled_method()              const { return _profiled_method; } // set only for profiled branches
-  int profiled_bci()                       const { return _profiled_bci; }    // set for profiled branches and tiered
   bool is_swapped()                        const { return _swapped; }
 
   // manipulation
@@ -1825,12 +1769,9 @@ LEAF(If, BlockEnd)
     set_flag(UnorderedIsTrueFlag, !check_flag(UnorderedIsTrueFlag));
   }
 
-  void set_should_profile(bool value)             { set_flag(ProfileMDOFlag, value); }
-  void set_profiled_method(ciMethod* method)      { _profiled_method = method; }
-  void set_profiled_bci(int bci)                  { _profiled_bci = bci; }
-  void set_swapped(bool value)                    { _swapped = value; }
+  void set_swapped(bool value)                   { _swapped = value; }
   // generic
-  virtual void input_values_do(ValueVisitor* f)   { BlockEnd::input_values_do(f); f->visit(&_x); f->visit(&_y); }
+  virtual void input_values_do(ValueVisitor* f)  { BlockEnd::input_values_do(f); f->visit(&_x); f->visit(&_y); }
 };
 
 LEAF(IfInstanceOf, BlockEnd)
@@ -2210,95 +2151,13 @@ LEAF(UnsafeGetAndSetObject, UnsafeObjectOp)
   }
 
   // accessors
-  bool is_add()                            const { return _is_add; }
-  Value value()                                  { return _value; }
+  bool is_add() const { return _is_add; }
+  Value value()       { return _value; }
 
   // generic
-  virtual void input_values_do(ValueVisitor* f)   { UnsafeObjectOp::input_values_do(f);
-                                                   f->visit(&_value); }
-};
-
-LEAF(ProfileCall, Instruction)
- private:
-  ciMethod*        _method;
-  int              _bci_of_invoke;
-  ciMethod*        _callee;         // the method that is called at the given bci
-  Value            _recv;
-  ciKlass*         _known_holder;
-  Values*          _obj_args;       // arguments for type profiling
-  ArgsNonNullState _nonnull_state;  // Do we know whether some arguments are never null?
-  bool             _inlined;        // Are we profiling a call that is inlined
-
- public:
-  ProfileCall(ciMethod* method, int bci, ciMethod* callee, Value recv, ciKlass* known_holder, Values* obj_args, bool inlined)
-    : Instruction(voidType)
-    , _method(method)
-    , _bci_of_invoke(bci)
-    , _callee(callee)
-    , _recv(recv)
-    , _known_holder(known_holder)
-    , _obj_args(obj_args)
-    , _inlined(inlined)
-  {
-    // The ProfileCall has side-effects and must occur precisely where located
-    pin();
-  }
-
-  ciMethod* method()             const { return _method; }
-  int bci_of_invoke()            const { return _bci_of_invoke; }
-  ciMethod* callee()             const { return _callee; }
-  Value recv()                   const { return _recv; }
-  ciKlass* known_holder()        const { return _known_holder; }
-  int nb_profiled_args()         const { return _obj_args == NULL ? 0 : _obj_args->length(); }
-  Value profiled_arg_at(int i)   const { return _obj_args->at(i); }
-  bool arg_needs_null_check(int i) const {
-    return _nonnull_state.arg_needs_null_check(i);
-  }
-  bool inlined()                 const { return _inlined; }
-
-  void set_arg_needs_null_check(int i, bool check) {
-    _nonnull_state.set_arg_needs_null_check(i, check);
-  }
-
   virtual void input_values_do(ValueVisitor* f) {
-    if (_recv != NULL) {
-      f->visit(&_recv);
-    }
-    for (int i = 0; i < nb_profiled_args(); i++) {
-      f->visit(_obj_args->adr_at(i));
-    }
-  }
-};
-
-LEAF(ProfileReturnType, Instruction)
- private:
-  ciMethod*        _method;
-  ciMethod*        _callee;
-  int              _bci_of_invoke;
-  Value            _ret;
-
- public:
-  ProfileReturnType(ciMethod* method, int bci, ciMethod* callee, Value ret)
-    : Instruction(voidType)
-    , _method(method)
-    , _callee(callee)
-    , _bci_of_invoke(bci)
-    , _ret(ret)
-  {
-    set_needs_null_check(true);
-    // The ProfileType has side-effects and must occur precisely where located
-    pin();
-  }
-
-  ciMethod* method()             const { return _method; }
-  ciMethod* callee()             const { return _callee; }
-  int bci_of_invoke()            const { return _bci_of_invoke; }
-  Value ret()                    const { return _ret; }
-
-  virtual void input_values_do(ValueVisitor* f) {
-    if (_ret != NULL) {
-      f->visit(&_ret);
-    }
+    UnsafeObjectOp::input_values_do(f);
+    f->visit(&_value);
   }
 };
 
@@ -2331,29 +2190,6 @@ LEAF(RuntimeCall, Instruction)
   virtual void input_values_do(ValueVisitor* f) {
     for (int i = 0; i < _args->length(); i++) f->visit(_args->adr_at(i));
   }
-};
-
-// Use to trip invocation counter of an inlined method
-
-LEAF(ProfileInvoke, Instruction)
- private:
-  ciMethod*   _inlinee;
-  ValueStack* _state;
-
- public:
-  ProfileInvoke(ciMethod* inlinee,  ValueStack* state)
-    : Instruction(voidType)
-    , _inlinee(inlinee)
-    , _state(state)
-  {
-    // The ProfileInvoke has side-effects and must occur precisely where located QQQ???
-    pin();
-  }
-
-  ciMethod* inlinee()      { return _inlinee; }
-  ValueStack* state()      { return _state; }
-  virtual void input_values_do(ValueVisitor*)   { }
-  virtual void state_values_do(ValueVisitor*);
 };
 
 LEAF(MemBar, Instruction)

@@ -162,7 +162,6 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
   do_intx_flag(AllocatePrefetchStepSize) \
   do_intx_flag(AllocatePrefetchStyle) \
   do_intx_flag(BciProfileWidth) \
-  do_bool_flag(BootstrapJVMCI) \
   do_bool_flag(CITime) \
   do_bool_flag(CITimeEach) \
   do_uintx_flag(CodeCacheSegmentSize) \
@@ -177,14 +176,10 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
   do_bool_flag(ForceUnreachable) \
   do_intx_flag(HugeMethodLimit) \
   do_bool_flag(Inline) \
-  do_intx_flag(JVMCICounterSize) \
-  do_bool_flag(JVMCIPrintProperties) \
   do_bool_flag(JVMCIUseFastLocking) \
-  do_intx_flag(MethodProfileWidth) \
   do_intx_flag(ObjectAlignmentInBytes) \
   do_bool_flag(ReduceInitialCardMarks) \
   do_bool_flag(RestrictContended) \
-  do_intx_flag(StackReservedPages) \
   do_intx_flag(StackShadowPages) \
   do_bool_flag(TLABStats) \
   do_uintx_flag(TLABWasteIncrement) \

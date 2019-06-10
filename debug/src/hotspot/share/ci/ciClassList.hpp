@@ -9,7 +9,6 @@ class ciField;
 class ciConstant;
 class ciFlags;
 class ciExceptionHandler;
-class ciCallProfile;
 class ciSignature;
 
 class ciBytecodeStream;
@@ -59,7 +58,6 @@ friend class ciField; \
 friend class ciConstant; \
 friend class ciFlags; \
 friend class ciExceptionHandler; \
-friend class ciCallProfile; \
 friend class ciSignature; \
 friend class ciBytecodeStream; \
 friend class ciSignatureStream; \

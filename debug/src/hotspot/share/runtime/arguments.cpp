@@ -57,8 +57,6 @@ bool   Arguments::_sun_java_launcher_is_altjvm  = false;
 
 // These parameters are reset in method parse_vm_init_args()
 bool   Arguments::_AlwaysCompileLoopMethods     = AlwaysCompileLoopMethods;
-bool   Arguments::_BackgroundCompilation        = BackgroundCompilation;
-bool   Arguments::_ClipInlining                 = ClipInlining;
 intx   Arguments::_Tier3InvokeNotifyFreqLog     = Tier3InvokeNotifyFreqLog;
 intx   Arguments::_Tier4InvocationThreshold     = Tier4InvocationThreshold;
 
@@ -1116,18 +1114,12 @@ void Arguments::set_mode_flags(Mode mode) {
 
   // Default values may be platform/compiler dependent -
   // use the saved values
-  ClipInlining               = Arguments::_ClipInlining;
   AlwaysCompileLoopMethods   = Arguments::_AlwaysCompileLoopMethods;
-  BackgroundCompilation      = Arguments::_BackgroundCompilation;
 
   // Change from defaults based on mode
   switch (mode) {
   case _mixed:
-    // same as default
-    break;
   case _comp:
-    BackgroundCompilation    = false;
-    ClipInlining             = false;
     break;
   default:
     ShouldNotReachHere();
@@ -1487,19 +1479,11 @@ bool Arguments::check_vm_args_consistency() {
 
   status = CompilerConfig::check_args_consistency(status);
   if (status && EnableJVMCI) {
-    PropertyList_unique_add(&_system_properties, "jdk.internal.vm.ci.enabled", "true",
-        AddProperty, UnwriteableProperty, InternalProperty);
+    PropertyList_unique_add(&_system_properties, "jdk.internal.vm.ci.enabled", "true", AddProperty, UnwriteableProperty, InternalProperty);
     if (!create_numbered_property("jdk.module.addmods", "jdk.internal.vm.ci", addmods_count++)) {
       return false;
     }
   }
-
-#ifndef SUPPORT_RESERVED_STACK_AREA
-  if (StackReservedPages != 0) {
-    FLAG_SET_CMDLINE(intx, StackReservedPages, 0);
-    warning("Reserved Stack Area not supported on this platform");
-  }
-#endif
 
   return status;
 }
@@ -1600,8 +1584,6 @@ jint Arguments::parse_vm_init_args(const JavaVMInitArgs *java_tool_options_args,
 
   // Save default settings for some mode flags
   Arguments::_AlwaysCompileLoopMethods = AlwaysCompileLoopMethods;
-  Arguments::_ClipInlining             = ClipInlining;
-  Arguments::_BackgroundCompilation    = BackgroundCompilation;
 
   // Setup flags for mixed which is the default
   set_mode_flags(_mixed);
@@ -1632,9 +1614,6 @@ jint Arguments::parse_vm_init_args(const JavaVMInitArgs *java_tool_options_args,
   // needs to know about processor and memory resources must occur after
   // this point.
 
-  os::init_container_support();
-
-  // Do final processing now that all arguments have been parsed
   result = finalize_vm_init_args(patch_mod_javabase);
   if (result != JNI_OK) {
     return result;
@@ -1879,11 +1858,6 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
       if (FLAG_SET_CMDLINE(bool, ClassUnloading, false) != JVMFlag::SUCCESS) {
         return JNI_EINVAL;
       }
-    // -Xbatch
-    } else if (match_option(option, "-Xbatch")) {
-      if (FLAG_SET_CMDLINE(bool, BackgroundCompilation, false) != JVMFlag::SUCCESS) {
-        return JNI_EINVAL;
-      }
     // -Xmn for compatibility with other JVM vendors
     } else if (match_option(option, "-Xmn", &tail)) {
       julong long_initial_young_size = 0;
@@ -1987,9 +1961,6 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args, bool* patch_m
     // -Xconcurrentio
     } else if (match_option(option, "-Xconcurrentio")) {
       if (FLAG_SET_CMDLINE(bool, UseLWPSynchronization, true) != JVMFlag::SUCCESS) {
-        return JNI_EINVAL;
-      }
-      if (FLAG_SET_CMDLINE(bool, BackgroundCompilation, false) != JVMFlag::SUCCESS) {
         return JNI_EINVAL;
       }
       SafepointSynchronize::set_defer_thr_suspend_loop_count();

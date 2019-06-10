@@ -81,11 +81,6 @@ bool compileBroker_init() {
   // init directives stack, adding default directive
   DirectivesStack::init();
 
-  if (CompilerDirectivesPrint) {
-    // Print default directive even when no other was added
-    DirectivesStack::print(tty);
-  }
-
   return true;
 }
 
@@ -397,22 +392,6 @@ void CompileBroker::compilation_init_phase1(TRAPS) {
   if (EnableJVMCI) {
     // This is creating a JVMCICompiler singleton.
     JVMCICompiler* jvmci = new JVMCICompiler();
-
-    if (UseJVMCICompiler) {
-      _compilers[1] = jvmci;
-      if (FLAG_IS_DEFAULT(JVMCIThreads)) {
-        if (BootstrapJVMCI) {
-          // JVMCI will bootstrap so give it more threads
-          _c2_count = MIN2(32, os::active_processor_count());
-        }
-      } else {
-        _c2_count = JVMCIThreads;
-      }
-      if (FLAG_IS_DEFAULT(JVMCIHostThreads)) {
-      } else {
-        _c1_count = JVMCIHostThreads;
-      }
-    }
   }
 
   if (_c1_count > 0) {
@@ -518,7 +497,7 @@ void CompileBroker::init_compiler_sweeper_threads() {
   EXCEPTION_MARK;
   // Initialize the compilation queue
   if (_c2_count > 0) {
-    const char* name = UseJVMCICompiler ? "JVMCI compile queue" : "C2 compile queue";
+    const char* name = "C2 compile queue";
     _c2_compile_queue  = new CompileQueue(name);
     _compiler2_objects = NEW_C_HEAP_ARRAY(jobject, _c2_count, mtCompiler);
   }
@@ -676,37 +655,6 @@ void CompileBroker::compile_method_base(const methodHandle& method, int comp_lev
       return;
     }
 
-    if (UseJVMCICompiler) {
-      if (blocking) {
-        // Don't allow blocking compiles for requests triggered by JVMCI.
-        if (thread->is_Compiler_thread()) {
-          blocking = false;
-        }
-
-        // Don't allow blocking compiles if inside a class initializer or while performing class loading
-        vframeStream vfst((JavaThread*) thread);
-        for ( ; !vfst.at_end(); vfst.next()) {
-          if (vfst.method()->is_static_initializer() || (vfst.method()->method_holder()->is_subclass_of(SystemDictionary::ClassLoader_klass()) && vfst.method()->name() == vmSymbols::loadClass_name())) {
-            blocking = false;
-            break;
-          }
-        }
-
-        // Don't allow blocking compilation requests to JVMCI
-        // if JVMCI itself is not yet initialized
-        if (!JVMCIRuntime::is_HotSpotJVMCIRuntime_initialized() && compiler(comp_level)->is_jvmci()) {
-          blocking = false;
-        }
-
-        // Don't allow blocking compilation requests if we are in JVMCIRuntime::shutdown
-        // to avoid deadlock between compiler thread(s) and threads run at shutdown
-        // such as the DestroyJavaVM thread.
-        if (JVMCIRuntime::shutdown_called()) {
-          blocking = false;
-        }
-      }
-    }
-
     // We will enter the compilation in the queue.
     // 14012000: Note that this sets the queued_for_compile bits in
     // the target method. We can now reason that a method cannot be
@@ -860,7 +808,7 @@ nmethod* CompileBroker::compile_method(const methodHandle& method, int comp_leve
       CompilationPolicy::policy()->delay_compilation(method());
       return NULL;
     }
-    bool is_blocking = !directive->BackgroundCompilationOption || CompileTheWorld;
+    bool is_blocking = !directive->BackgroundCompilationOption;
     compile_method_base(method, comp_level, hot_method, hot_count, compile_reason, is_blocking, THREAD);
   }
 
@@ -1306,27 +1254,7 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     system_dictionary_modification_counter = SystemDictionary::number_of_modifications();
   }
 
-  if (UseJVMCICompiler && comp != NULL && comp->is_jvmci()) {
-    JVMCICompiler* jvmci = (JVMCICompiler*) comp;
-
-    // Skip redefined methods
-    if (target_handle->is_old()) {
-        failure_reason = "redefined method";
-        retry_message = "not retryable";
-        compilable = ciEnv::MethodCompilable_never;
-    } else {
-        JVMCIEnv env(task, system_dictionary_modification_counter);
-        methodHandle method(thread, target_handle);
-        jvmci->compile_method(method, -1, &env);
-
-        failure_reason = env.failure_reason();
-        if (!env.retryable()) {
-          retry_message = "not retryable";
-          compilable = ciEnv::MethodCompilable_not_at_tier;
-        }
-    }
-    post_compile(thread, task, task->code() != NULL, NULL, compilable, failure_reason);
-  } else {
+  {
     NoHandleMark  nhm;
     ThreadToNativeFromVM ttn(thread);
 

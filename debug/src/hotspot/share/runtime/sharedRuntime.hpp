@@ -144,8 +144,6 @@ class SharedRuntime: AllStatic {
   static void    throw_NullPointerException(JavaThread* thread);
   static void    throw_NullPointerException_at_call(JavaThread* thread);
   static void    throw_StackOverflowError(JavaThread* thread);
-  static void    throw_delayed_StackOverflowError(JavaThread* thread);
-  static void    throw_StackOverflowError_common(JavaThread* thread, bool delayed);
   static address continuation_for_implicit_exception(JavaThread* thread, address faulting_pc, ImplicitExceptionKind exception_kind);
 
   // Post-slow-path-allocation, pre-initializing-stores step for
@@ -153,7 +151,6 @@ class SharedRuntime: AllStatic {
   static void on_slowpath_allocation_exit(JavaThread* thread);
 
   static void enable_stack_reserved_zone(JavaThread* thread);
-  static frame look_for_reserved_stack_annotated_method(JavaThread* thread, frame fr);
 
   // Shared stub locations
   static address get_poll_stub(address pc);

@@ -845,17 +845,6 @@ void GraphBuilder::store_indexed(BasicType type) {
   StoreIndexed* result = new StoreIndexed(array, index, length, type, value, state_before, check_boolean);
   append(result);
   _memory->store_value(value);
-
-  if (type == T_OBJECT && is_profiling()) {
-    // Note that we'd collect profile data in this method if we wanted it.
-    compilation()->set_would_profile(true);
-
-    if (profile_checkcasts()) {
-      result->set_profiled_method(method());
-      result->set_profiled_bci(bci());
-      result->set_should_profile(true);
-    }
-  }
 }
 
 void GraphBuilder::stack_op(Bytecodes::Code code) {
@@ -1023,16 +1012,7 @@ void GraphBuilder::increment() {
 }
 
 void GraphBuilder::_goto(int from_bci, int to_bci) {
-  Goto *x = new Goto(block_at(to_bci), to_bci <= from_bci);
-  if (is_profiling()) {
-    compilation()->set_would_profile(true);
-    x->set_profiled_bci(bci());
-    if (profile_branches()) {
-      x->set_profiled_method(method());
-      x->set_should_profile(true);
-    }
-  }
-  append(x);
+  append(new Goto(block_at(to_bci), to_bci <= from_bci));
 }
 
 void GraphBuilder::if_node(Value x, If::Condition cond, Value y, ValueStack* state_before) {
@@ -1041,46 +1021,7 @@ void GraphBuilder::if_node(Value x, If::Condition cond, Value y, ValueStack* sta
   bool is_bb = tsux->bci() < stream()->cur_bci() || fsux->bci() < stream()->cur_bci();
   // In case of loop invariant code motion or predicate insertion
   // before the body of a loop the state is needed
-  Instruction *i = append(new If(x, cond, false, y, tsux, fsux, is_bb ? state_before : NULL, is_bb));
-
-  if (is_profiling()) {
-    If* if_node = i->as_If();
-    if (if_node != NULL) {
-      // Note that we'd collect profile data in this method if we wanted it.
-      compilation()->set_would_profile(true);
-      // At level 2 we need the proper bci to count backedges
-      if_node->set_profiled_bci(bci());
-      if (profile_branches()) {
-        // Successors can be rotated by the canonicalizer, check for this case.
-        if_node->set_profiled_method(method());
-        if_node->set_should_profile(true);
-        if (if_node->tsux() == fsux) {
-          if_node->set_swapped(true);
-        }
-      }
-      return;
-    }
-
-    // Check if this If was reduced to Goto.
-    Goto *goto_node = i->as_Goto();
-    if (goto_node != NULL) {
-      compilation()->set_would_profile(true);
-      goto_node->set_profiled_bci(bci());
-      if (profile_branches()) {
-        goto_node->set_profiled_method(method());
-        goto_node->set_should_profile(true);
-        // Find out which successor is used.
-        if (goto_node->default_sux() == tsux) {
-          goto_node->set_direction(Goto::taken);
-        } else if (goto_node->default_sux() == fsux) {
-          goto_node->set_direction(Goto::not_taken);
-        } else {
-          ShouldNotReachHere();
-        }
-      }
-      return;
-    }
-  }
+  append(new If(x, cond, false, y, tsux, fsux, is_bb ? state_before : NULL, is_bb));
 }
 
 void GraphBuilder::if_zero(ValueType* type, If::Condition cond) {
@@ -1137,7 +1078,7 @@ void GraphBuilder::ret(int local_index) {
 void GraphBuilder::table_switch() {
   Bytecode_tableswitch sw(stream());
   const int l = sw.length();
-  if (CanonicalizeNodes && l == 1 && compilation()->env()->comp_level() != CompLevel_full_profile) {
+  if (CanonicalizeNodes && l == 1) {
     // total of 2 successors => use If instead of switch
     // Note: This code should go into the canonicalizer as soon as it can
     //       can handle canonicalized forms that contain more than one node.
@@ -1171,7 +1112,7 @@ void GraphBuilder::table_switch() {
 void GraphBuilder::lookup_switch() {
   Bytecode_lookupswitch sw(stream());
   const int l = sw.number_of_pairs();
-  if (CanonicalizeNodes && l == 1 && compilation()->env()->comp_level() != CompLevel_full_profile) {
+  if (CanonicalizeNodes && l == 1) {
     // total of 2 successors => use If instead of switch
     // Note: This code should go into the canonicalizer as soon as it can
     //       can handle canonicalized forms that contain more than one node.
@@ -1309,14 +1250,8 @@ void GraphBuilder::method_return(Value x, bool ignore_return) {
     // without the method parameters on stack, including the
     // return value, if any, of the inlined method on operand stack.
     set_state(state()->caller_state()->copy_for_parsing());
-    if (x != NULL) {
-      if (!ignore_return) {
-        state()->push(x->type(), x);
-      }
-      if (profile_return() && x->type()->is_object_kind()) {
-        ciMethod* caller = state()->scope()->method();
-        profile_return_type(x, method(), caller, invoke_bci);
-      }
+    if (x != NULL && !ignore_return) {
+      state()->push(x->type(), x);
     }
     Goto* goto_callee = new Goto(continuation(), false);
 
@@ -1499,53 +1434,6 @@ void GraphBuilder::access_field(Bytecodes::Code code) {
   }
 }
 
-// How many arguments do we want to profile?
-Values* GraphBuilder::args_list_for_profiling(ciMethod* target, int& start, bool may_have_receiver) {
-  int n = 0;
-  bool has_receiver = may_have_receiver && Bytecodes::has_receiver(method()->java_code_at_bci(bci()));
-  start = has_receiver ? 1 : 0;
-  if (profile_arguments()) {
-    ciProfileData* data = method()->method_data()->bci_to_data(bci());
-    if (data != NULL && (data->is_CallTypeData() || data->is_VirtualCallTypeData())) {
-      n = data->is_CallTypeData() ? data->as_CallTypeData()->number_of_arguments() : data->as_VirtualCallTypeData()->number_of_arguments();
-    }
-  }
-  // If we are inlining then we need to collect arguments to profile parameters for the target
-  if (profile_parameters() && target != NULL) {
-    if (target->method_data() != NULL && target->method_data()->parameters_type_data() != NULL) {
-      // The receiver is profiled on method entry so it's included in
-      // the number of parameters but here we're only interested in
-      // actual arguments.
-      n = MAX2(n, target->method_data()->parameters_type_data()->number_of_parameters() - start);
-    }
-  }
-  if (n > 0) {
-    return new Values(n);
-  }
-  return NULL;
-}
-
-void GraphBuilder::check_args_for_profiling(Values* obj_args, int expected) { }
-
-// Collect arguments that we want to profile in a list
-Values* GraphBuilder::collect_args_for_profiling(Values* args, ciMethod* target, bool may_have_receiver) {
-  int start = 0;
-  Values* obj_args = args_list_for_profiling(target, start, may_have_receiver);
-  if (obj_args == NULL) {
-    return NULL;
-  }
-  int s = obj_args->max_length();
-  // if called through method handle invoke, some arguments may have been popped
-  for (int i = start, j = 0; j < s && i < args->length(); i++) {
-    if (args->at(i)->type()->is_object_kind()) {
-      obj_args->push(args->at(i));
-      j++;
-    }
-  }
-  check_args_for_profiling(obj_args, s);
-  return obj_args;
-}
-
 void GraphBuilder::invoke(Bytecodes::Code code) {
   bool will_link;
   ciSignature* declared_signature = NULL;
@@ -1629,7 +1517,7 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
   ValueStack* state_before = copy_state_exhandling();
 
   // The bytecode (code) might change in this method so we are checking this very late.
-  const bool has_receiver = code == Bytecodes::_invokespecial   || code == Bytecodes::_invokevirtual   || code == Bytecodes::_invokeinterface;
+  const bool has_receiver = (code == Bytecodes::_invokespecial) || (code == Bytecodes::_invokevirtual) || (code == Bytecodes::_invokeinterface);
   Values* args = state()->pop_arguments(target->arg_size_no_receiver() + patching_appendix_arg);
   Value recv = has_receiver ? apop() : NULL;
   int vtable_index = Method::invalid_vtable_index;
@@ -1647,20 +1535,11 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
   //
   // Normal invokevirtual will perform the null check during lookup
 
-  bool need_null_check = (code == Bytecodes::_invokespecial) || (target->is_loaded() && (target->is_final_method() || (is_profiling() && profile_calls())));
+  bool need_null_check = (code == Bytecodes::_invokespecial) || (target->is_loaded() && target->is_final_method());
 
   if (need_null_check) {
     if (recv != NULL) {
       null_check(recv);
-    }
-
-    if (is_profiling()) {
-      // Note that we'd collect profile data in this method if we wanted it.
-      compilation()->set_would_profile(true);
-
-      if (profile_calls()) {
-        profile_call(target, recv, NULL, collect_args_for_profiling(args, NULL, false), false);
-      }
     }
   }
 
@@ -1674,9 +1553,6 @@ void GraphBuilder::invoke(Bytecodes::Code code) {
     } else {
       push(result_type, result);
     }
-  }
-  if (profile_return() && result_type->is_object_kind()) {
-    profile_return_type(result, target);
   }
 }
 
@@ -1718,17 +1594,6 @@ void GraphBuilder::check_cast(int klass_index) {
   CheckCast* c = new CheckCast(klass, apop(), state_before);
   apush(append_split(c));
   c->set_direct_compare(direct_compare(klass));
-
-  if (is_profiling()) {
-    // Note that we'd collect profile data in this method if we wanted it.
-    compilation()->set_would_profile(true);
-
-    if (profile_checkcasts()) {
-      c->set_profiled_method(method());
-      c->set_profiled_bci(bci());
-      c->set_should_profile(true);
-    }
-  }
 }
 
 void GraphBuilder::instance_of(int klass_index) {
@@ -1738,17 +1603,6 @@ void GraphBuilder::instance_of(int klass_index) {
   InstanceOf* i = new InstanceOf(klass, apop(), state_before);
   ipush(append_split(i));
   i->set_direct_compare(direct_compare(klass));
-
-  if (is_profiling()) {
-    // Note that we'd collect profile data in this method if we wanted it.
-    compilation()->set_would_profile(true);
-
-    if (profile_checkcasts()) {
-      i->set_profiled_method(method());
-      i->set_profiled_bci(bci());
-      i->set_should_profile(true);
-    }
-  }
 }
 
 void GraphBuilder::monitorenter(Value x, int bci) {
@@ -2453,7 +2307,7 @@ BlockBegin* GraphBuilder::setup_start_block(BlockBegin* std_entry, ValueStack* s
   // also necessary when profiling so that there's a single block that
   // can increment the interpreter_invocation_count.
   BlockBegin* new_header_block;
-  if (std_entry->number_of_preds() > 0 || count_invocations() || count_backedges()) {
+  if (std_entry->number_of_preds() > 0) {
     new_header_block = header_block(std_entry, BlockBegin::std_entry_flag, state);
   } else {
     new_header_block = std_entry;
@@ -2681,9 +2535,6 @@ bool GraphBuilder::try_inline(ciMethod* callee, bool holder_known, bool ignore_r
   if (callee->intrinsic_id() != vmIntrinsics::_none && (CheckIntrinsics ? callee->intrinsic_candidate() : true)) {
     if (try_inline_intrinsics(callee, ignore_return)) {
       print_inlining(callee, "intrinsic");
-      if (callee->has_reserved_stack_access()) {
-        compilation()->set_has_reserved_stack_access(true);
-      }
       return true;
     }
     // try normal inlining
@@ -2701,9 +2552,6 @@ bool GraphBuilder::try_inline(ciMethod* callee, bool holder_known, bool ignore_r
     bc = code();
   }
   if (try_inline_full(callee, holder_known, ignore_return, bc, receiver)) {
-    if (callee->has_reserved_stack_access()) {
-      compilation()->set_has_reserved_stack_access(true);
-    }
     return true;
   }
 
@@ -2801,35 +2649,11 @@ void GraphBuilder::build_graph_for_intrinsic(ciMethod* callee, bool ignore_retur
 
   Values* args = state()->pop_arguments(callee->arg_size());
 
-  if (is_profiling()) {
-    // Don't profile in the special case where the root method
-    // is the intrinsic
-    if (callee != method()) {
-      // Note that we'd collect profile data in this method if we wanted it.
-      compilation()->set_would_profile(true);
-      if (profile_calls()) {
-        Value recv = NULL;
-        if (has_receiver) {
-          recv = args->at(0);
-          null_check(recv);
-        }
-        profile_call(callee, recv, NULL, collect_args_for_profiling(args, callee, true), true);
-      }
-    }
-  }
-
-  Intrinsic* result = new Intrinsic(result_type, callee->intrinsic_id(),
-                                    args, has_receiver, state_before,
-                                    vmIntrinsics::preserves_state(id),
-                                    vmIntrinsics::can_trap(id));
+  Intrinsic* result = new Intrinsic(result_type, callee->intrinsic_id(), args, has_receiver, state_before, vmIntrinsics::preserves_state(id), vmIntrinsics::can_trap(id));
   // append instruction & push result
   Value value = append_split(result);
   if (result_type != voidType && !ignore_return) {
     push(result_type, value);
-  }
-
-  if (callee != method() && profile_return() && result_type->is_object_kind()) {
-    profile_return_type(result, callee);
   }
 }
 
@@ -3001,10 +2825,6 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
     INLINE_BAILOUT("caller and callee have different strict fp requirements");
   }
 
-  if (is_profiling() && !callee->ensure_method_data()) {
-    INLINE_BAILOUT("mdo allocation failed");
-  }
-
   // now perform tests that are based on flag settings
   bool inlinee_by_directive = compilation()->directive()->should_inline(callee);
   if (callee->force_inline() || inlinee_by_directive) {
@@ -3060,30 +2880,6 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
     null_check(recv);
   }
 
-  if (is_profiling()) {
-    // Note that we'd collect profile data in this method if we wanted it.
-    // this may be redundant here...
-    compilation()->set_would_profile(true);
-
-    if (profile_calls()) {
-      int start = 0;
-      Values* obj_args = args_list_for_profiling(callee, start, has_receiver);
-      if (obj_args != NULL) {
-        int s = obj_args->max_length();
-        // if called through method handle invoke, some arguments may have been popped
-        for (int i = args_base+start, j = 0; j < obj_args->max_length() && i < state()->stack_size(); ) {
-          Value v = state()->stack_at_inc(i);
-          if (v->type()->is_object_kind()) {
-            obj_args->push(v);
-            j++;
-          }
-        }
-        check_args_for_profiling(obj_args, s);
-      }
-      profile_call(callee, recv, holder_known ? callee->holder() : NULL, obj_args, true);
-    }
-  }
-
   // Introduce a new callee continuation point - if the callee has
   // more than one return instruction or the return does not allow
   // fall-through of control flow, all return instructions of the
@@ -3133,14 +2929,9 @@ bool GraphBuilder::try_inline_full(ciMethod* callee, bool holder_known, bool ign
 
   // Inline the locking of the receiver if the callee is synchronized
   if (callee->is_synchronized()) {
-    lock = callee->is_static() ? append(new Constant(new InstanceConstant(callee->holder()->java_mirror())))
-                               : state()->local_at(0);
+    lock = callee->is_static() ? append(new Constant(new InstanceConstant(callee->holder()->java_mirror()))) : state()->local_at(0);
     sync_handler = new BlockBegin(SynchronizationEntryBCI);
     inline_sync_entry(lock, sync_handler);
-  }
-
-  if (profile_inlined_calls()) {
-    profile_invocation(callee, copy_state_before_with_bci(SynchronizationEntryBCI));
   }
 
   BlockBegin* callee_start_block = block_at(0);
@@ -3378,35 +3169,4 @@ void GraphBuilder::append_unsafe_get_and_set_obj(ciMethod* callee, bool is_add) 
   compilation()->set_has_unsafe_access(true);
   kill_all();
   push(op->type(), op);
-}
-
-void GraphBuilder::profile_call(ciMethod* callee, Value recv, ciKlass* known_holder, Values* obj_args, bool inlined) {
-  if (known_holder != NULL) {
-    if (known_holder->exact_klass() == NULL) {
-      known_holder = NULL;
-    }
-  }
-
-  append(new ProfileCall(method(), bci(), callee, recv, known_holder, obj_args, inlined));
-}
-
-void GraphBuilder::profile_return_type(Value ret, ciMethod* callee, ciMethod* m, int invoke_bci) {
-  if (m == NULL) {
-    m = method();
-  }
-  if (invoke_bci < 0) {
-    invoke_bci = bci();
-  }
-  ciMethodData* md = m->method_data_or_null();
-  ciProfileData* data = md->bci_to_data(invoke_bci);
-  if (data != NULL && (data->is_CallTypeData() || data->is_VirtualCallTypeData())) {
-    bool has_return = data->is_CallTypeData() ? ((ciCallTypeData*)data)->has_return() : ((ciVirtualCallTypeData*)data)->has_return();
-    if (has_return) {
-      append(new ProfileReturnType(m , invoke_bci, callee, ret));
-    }
-  }
-}
-
-void GraphBuilder::profile_invocation(ciMethod* callee, ValueStack* state) {
-  append(new ProfileInvoke(callee, state));
 }

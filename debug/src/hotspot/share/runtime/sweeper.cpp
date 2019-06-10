@@ -530,46 +530,6 @@ void NMethodSweeper::possibly_flush(nmethod* nm) {
         make_not_entrant = true;
       }
 
-      // The stack-scanning low-cost detection may not see the method was used (which can happen for
-      // flat profiles). Check the age counter for possible data.
-      if (UseCodeAging && make_not_entrant && (nm->is_compiled_by_c2() || nm->is_compiled_by_c1())) {
-        MethodCounters* mc = nm->method()->get_method_counters(Thread::current());
-        if (mc != NULL) {
-          // Snapshot the value as it's changed concurrently
-          int age = mc->nmethod_age();
-          if (MethodCounters::is_nmethod_hot(age)) {
-            // The method has gone through flushing, and it became relatively hot that it deopted
-            // before we could take a look at it. Give it more time to appear in the stack traces,
-            // proportional to the number of deopts.
-            MethodData* md = nm->method()->method_data();
-            if (md != NULL && time_since_reset > (int)(MinPassesBeforeFlush * (md->tenure_traps() + 1))) {
-              // It's been long enough, we still haven't seen it on stack.
-              // Try to flush it, but enable counters the next time.
-              mc->reset_nmethod_age();
-            } else {
-              make_not_entrant = false;
-            }
-          } else if (MethodCounters::is_nmethod_warm(age)) {
-            // Method has counters enabled, and the method was used within
-            // previous MinPassesBeforeFlush sweeps. Reset the counter. Stay in the existing
-            // compiled state.
-            mc->reset_nmethod_age();
-            // delay the next check
-            nm->set_hotness_counter(NMethodSweeper::hotness_counter_reset_val());
-            make_not_entrant = false;
-          } else if (MethodCounters::is_nmethod_age_unset(age)) {
-            // No counters were used before. Set the counters to the detection
-            // limit value. If the method is going to be used again it will be compiled
-            // with counters that we're going to use for analysis the the next time.
-            mc->reset_nmethod_age();
-          } else {
-            // Method was totally idle for 10 sweeps
-            // The counter already has the initial value, flush it and may be recompile
-            // later with counters
-          }
-        }
-      }
-
       if (make_not_entrant) {
         nm->make_not_entrant();
       }
@@ -587,7 +547,6 @@ void NMethodSweeper::print(outputStream* out) {
   out->print_cr("Code cache sweeper statistics:");
   out->print_cr("  Total sweep time:                %1.0lf ms", (double)_total_time_sweeping.value()/1000000);
   out->print_cr("  Total number of full sweeps:     %ld", _total_nof_code_cache_sweeps);
-  out->print_cr("  Total number of flushed methods: %ld (thereof %ld C2 methods)", _total_nof_methods_reclaimed,
-                                                    _total_nof_c2_methods_reclaimed);
+  out->print_cr("  Total number of flushed methods: %ld (thereof %ld C2 methods)", _total_nof_methods_reclaimed, _total_nof_c2_methods_reclaimed);
   out->print_cr("  Total size of flushed methods:   " SIZE_FORMAT " kB", _total_flushed_size/K);
 }

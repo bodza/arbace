@@ -253,8 +253,6 @@ int ciBytecodeStream::get_field_signature_index() {
 // If this is a method invocation bytecode, get the constant pool
 // index of the invoked method.
 int ciBytecodeStream::get_method_index() {
-  if (has_index_u4())
-    return get_index_u4();  // invokedynamic
   return get_index_u2_cpcache();
 }
 

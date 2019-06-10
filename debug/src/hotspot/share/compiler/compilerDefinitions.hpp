@@ -30,11 +30,8 @@ enum MethodCompilation {
 enum CompLevel {
   CompLevel_any               = -2,
   CompLevel_all               = -2,
-  CompLevel_aot               = -1,
   CompLevel_none              = 0,
   CompLevel_simple            = 1, // C1
-  CompLevel_limited_profile   = 2, // C1, invocation & backedge counters
-  CompLevel_full_profile      = 3, // C1, invocation & backedge counters + mdo
   CompLevel_full_optimization = 4  // C2 or JVMCI
 };
 

@@ -28,8 +28,6 @@ class MethodCounters : public Metadata {
   //                                    recompiled without the counters
   int               _nmethod_age;
   int               _interpreter_invocation_limit;        // per-method InterpreterInvocationLimit
-  int               _interpreter_backward_branch_limit;   // per-method InterpreterBackwardBranchLimit
-  int               _interpreter_profile_limit;           // per-method InterpreterProfileLimit
   int               _invoke_mask;                         // per-method Tier0InvokeNotifyFreqLog
   int               _backedge_mask;                       // per-method Tier0BackedgeNotifyFreqLog
 
@@ -46,8 +44,6 @@ class MethodCounters : public Metadata {
 
     int compile_threshold = CompilerConfig::scaled_compile_threshold(CompileThreshold, scale);
     _interpreter_invocation_limit = compile_threshold << InvocationCounter::count_shift;
-    _interpreter_backward_branch_limit = ((compile_threshold * OnStackReplacePercentage) / 100) << InvocationCounter::count_shift;
-    _interpreter_profile_limit = ((compile_threshold * InterpreterProfilePercentage) / 100) << InvocationCounter::count_shift;
     _invoke_mask = right_n_bits(CompilerConfig::scaled_freq_log(Tier0InvokeNotifyFreqLog, scale)) << InvocationCounter::count_shift;
     _backedge_mask = right_n_bits(CompilerConfig::scaled_freq_log(Tier0BackedgeNotifyFreqLog, scale)) << InvocationCounter::count_shift;
   }
@@ -118,8 +114,6 @@ class MethodCounters : public Metadata {
   static ByteSize invocation_counter_offset()                 { return byte_offset_of(MethodCounters, _invocation_counter); }
   static ByteSize backedge_counter_offset()                   { return byte_offset_of(MethodCounters, _backedge_counter); }
   static ByteSize interpreter_invocation_limit_offset()       { return byte_offset_of(MethodCounters, _interpreter_invocation_limit); }
-  static ByteSize interpreter_backward_branch_limit_offset()  { return byte_offset_of(MethodCounters, _interpreter_backward_branch_limit); }
-  static ByteSize interpreter_profile_limit_offset()          { return byte_offset_of(MethodCounters, _interpreter_profile_limit); }
   static ByteSize invoke_mask_offset()                        { return byte_offset_of(MethodCounters, _invoke_mask); }
   static ByteSize backedge_mask_offset()                      { return byte_offset_of(MethodCounters, _backedge_mask); }
 

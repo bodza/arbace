@@ -167,8 +167,6 @@ ccstrlist DirectiveSet::canonicalize_disableintrinsic(ccstrlist option_value) {
 DirectiveSet::DirectiveSet(CompilerDirectives* d) :_inlinematchers(NULL), _directive(d) {
 #define init_defaults_definition(name, type, dvalue, compiler) this->name##Option = dvalue;
   compilerdirectives_common_flags(init_defaults_definition)
-  compilerdirectives_c2_flags(init_defaults_definition)
-  compilerdirectives_c1_flags(init_defaults_definition)
   memset(_modified, 0, sizeof(_modified));
 
   // Canonicalize DisableIntrinsic to contain only ',' as a separator.
@@ -235,8 +233,6 @@ DirectiveSet* DirectiveSet::compilecommand_compatibility_init(const methodHandle
     // inline and dontinline (including exclude) are implemented in the directiveset accessors
 #define init_default_cc(name, type, dvalue, cc_flag) { type v; if (!_modified[name##Index] && CompilerOracle::has_option_value(method, #cc_flag, v) && v != this->name##Option) { set->name##Option = v; changed = true; } }
     compilerdirectives_common_flags(init_default_cc)
-    compilerdirectives_c2_flags(init_default_cc)
-    compilerdirectives_c1_flags(init_default_cc)
 
     // Canonicalize DisableIntrinsic to contain only ',' as a separator.
     ccstrlist option_value;
@@ -374,8 +370,6 @@ DirectiveSet* DirectiveSet::clone(DirectiveSet const* src) {
 
   #define copy_members_definition(name, type, dvalue, cc_flag) set->name##Option = src->name##Option;
     compilerdirectives_common_flags(copy_members_definition)
-    compilerdirectives_c2_flags(copy_members_definition)
-    compilerdirectives_c1_flags(copy_members_definition)
 
   // Create a local copy of the DisableIntrinsicOption.
   size_t len = strlen(src->DisableIntrinsicOption) + 1;

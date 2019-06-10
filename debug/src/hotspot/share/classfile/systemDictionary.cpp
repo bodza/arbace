@@ -1358,9 +1358,6 @@ void SystemDictionary::initialize_preloaded_classes(TRAPS) {
   InstanceKlass::cast(WK_KLASS(FinalReference_klass))->set_reference_type(REF_FINAL);
   InstanceKlass::cast(WK_KLASS(PhantomReference_klass))->set_reference_type(REF_PHANTOM);
 
-  // JSR 292 classes
-  initialize_wk_klasses_until(NULL, scan, CHECK);
-  initialize_wk_klasses_through(NULL, scan, CHECK);
   initialize_wk_klasses_until(FIRST_JVMCI_WKID, scan, CHECK);
 
   _box_klasses[T_BOOLEAN] = WK_KLASS(Boolean_klass);
@@ -1731,104 +1728,6 @@ Handle SystemDictionary::find_java_mirror_for_type(Symbol* signature, Klass* acc
   // Fall through to an error.
   ShouldNotReachHere();
   THROW_MSG_(vmSymbols::java_lang_InternalError(), "unsupported mirror syntax", empty);
-}
-
-// Ask Java code to find or construct a java.lang.invoke.MethodType for the given
-// signature, as interpreted relative to the given class loader.
-// Because of class loader constraints, all method handle usage must be
-// consistent with this loader.
-Handle SystemDictionary::find_method_handle_type(Symbol* signature, Klass* accessing_klass, TRAPS) {
-  Handle empty;
-  vmIntrinsics::ID null_iid = vmIntrinsics::_none;  // distinct from all method handle invoker intrinsics
-  unsigned int hash  = invoke_method_table()->compute_hash(signature, null_iid);
-  int          index = invoke_method_table()->hash_to_index(hash);
-  SymbolPropertyEntry* spe = invoke_method_table()->find_entry(index, hash, signature, null_iid);
-  if (spe != NULL && spe->method_type() != NULL) {
-    return Handle(THREAD, spe->method_type());
-  } else if (!THREAD->can_call_java()) {
-    warning("SystemDictionary::find_method_handle_type called from compiler thread");  // FIXME
-    return Handle();  // do not attempt from within compiler, unless it was cached
-  }
-
-  Handle class_loader, protection_domain;
-  if (accessing_klass != NULL) {
-    class_loader      = Handle(THREAD, accessing_klass->class_loader());
-    protection_domain = Handle(THREAD, accessing_klass->protection_domain());
-  }
-  bool can_be_cached = true;
-  int npts = ArgumentCount(signature).size();
-  objArrayHandle pts = oopFactory::new_objArray_handle(SystemDictionary::Class_klass(), npts, CHECK_(empty));
-  int arg = 0;
-  Handle rt; // the return type from the signature
-  ResourceMark rm(THREAD);
-  for (SignatureStream ss(signature); !ss.is_done(); ss.next()) {
-    oop mirror = NULL;
-    if (can_be_cached) {
-      // Use neutral class loader to lookup candidate classes to be placed in the cache.
-      mirror = ss.as_java_mirror(Handle(), Handle(), SignatureStream::ReturnNull, CHECK_(empty));
-      if (mirror == NULL || (ss.is_object() && !is_always_visible_class(mirror))) {
-        // Fall back to accessing_klass context.
-        can_be_cached = false;
-      }
-    }
-    if (!can_be_cached) {
-      // Resolve, throwing a real error if it doesn't work.
-      mirror = ss.as_java_mirror(class_loader, protection_domain, SignatureStream::NCDFError, CHECK_(empty));
-    }
-    if (ss.at_return_type())
-      rt = Handle(THREAD, mirror);
-    else
-      pts->obj_at_put(arg++, mirror);
-
-    // Check accessibility.
-    if (!java_lang_Class::is_primitive(mirror) && accessing_klass != NULL) {
-      Klass* sel_klass = java_lang_Class::as_Klass(mirror);
-      mirror = NULL;  // safety
-      // Emulate ConstantPool::verify_constant_pool_resolve.
-      bool fold_type_to_class = true;
-      LinkResolver::check_klass_accessability(accessing_klass, sel_klass, fold_type_to_class, CHECK_(empty));
-    }
-  }
-
-  // call java.lang.invoke.MethodHandleNatives::findMethodHandleType(Class rt, Class[] pts) -> MethodType
-  JavaCallArguments args(Handle(THREAD, rt()));
-  args.push_oop(pts);
-  JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result, SystemDictionary::NULL(), vmSymbols::NULL(), vmSymbols::NULL(), &args, CHECK_(empty));
-  Handle method_type(THREAD, (oop) result.get_jobject());
-
-  if (can_be_cached) {
-    // We can cache this MethodType inside the JVM.
-    MutexLocker ml(SystemDictionary_lock, THREAD);
-    spe = invoke_method_table()->find_entry(index, hash, signature, null_iid);
-    if (spe == NULL)
-      spe = invoke_method_table()->add_entry(index, hash, signature, null_iid);
-    if (spe->method_type() == NULL) {
-      spe->set_method_type(method_type());
-    }
-  }
-
-  // report back to the caller with the MethodType
-  return method_type;
-}
-
-Handle SystemDictionary::find_field_handle_type(Symbol* signature, Klass* accessing_klass, TRAPS) {
-  Handle empty;
-  ResourceMark rm(THREAD);
-  SignatureStream ss(signature, /*is_method=*/ false);
-  if (!ss.is_done()) {
-    Handle class_loader, protection_domain;
-    if (accessing_klass != NULL) {
-      class_loader      = Handle(THREAD, accessing_klass->class_loader());
-      protection_domain = Handle(THREAD, accessing_klass->protection_domain());
-    }
-    oop mirror = ss.as_java_mirror(class_loader, protection_domain, SignatureStream::NCDFError, CHECK_(empty));
-    ss.next();
-    if (ss.is_done()) {
-      return Handle(THREAD, mirror);
-    }
-  }
-  return empty;
 }
 
 // Protection domain cache table handling

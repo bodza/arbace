@@ -105,15 +105,6 @@ size_t SpaceManager::calc_chunk_size(size_t word_size) {
   return MAX2((size_t) chunk_word_size, if_humongous_sized_chunk);
 }
 
-void SpaceManager::track_metaspace_memory_usage() {
-  if (is_init_completed()) {
-    if (is_class()) {
-      MemoryService::track_compressed_class_memory_usage();
-    }
-    MemoryService::track_metaspace_memory_usage();
-  }
-}
-
 MetaWord* SpaceManager::grow_and_allocate(size_t word_size) {
   MutexLockerEx cl(MetaspaceExpand_lock, Mutex::_no_safepoint_check_flag);
 
@@ -138,9 +129,6 @@ MetaWord* SpaceManager::grow_and_allocate(size_t word_size) {
     add_chunk(next, make_current);
     mem = next->allocate(word_size);
   }
-
-  // Track metaspace memory usage statistic.
-  track_metaspace_memory_usage();
 
   return mem;
 }

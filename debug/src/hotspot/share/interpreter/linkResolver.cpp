@@ -413,15 +413,6 @@ methodHandle LinkResolver::resolve_method(const LinkInfo& link_info, Bytecodes::
   // 4. lookup method in all the interfaces implemented by the resolved klass
   if (resolved_method.is_null() && !resolved_klass->is_array_klass()) { // not found in the class hierarchy
     resolved_method = methodHandle(THREAD, lookup_method_in_interfaces(link_info));
-
-    if (resolved_method.is_null()) {
-      // JSR 292:  see if this is an implicitly generated method MethodHandle.linkToVirtual(*...), etc
-      resolved_method = NULL;
-      if (HAS_PENDING_EXCEPTION) {
-        nested_exception = Handle(THREAD, PENDING_EXCEPTION);
-        CLEAR_PENDING_EXCEPTION;
-      }
-    }
   }
 
   // 5. method lookup failed

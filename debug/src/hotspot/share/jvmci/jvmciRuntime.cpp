@@ -209,13 +209,6 @@ address JVMCIRuntime::exception_handler_for_pc(JavaThread* thread) {
 }
 
 JRT_ENTRY_NO_ASYNC(void, JVMCIRuntime::monitorenter(JavaThread* thread, oopDesc* obj, BasicLock* lock))
-  IF_TRACE_jvmci_3 {
-    char type[O_BUFLEN];
-    obj->klass()->name()->as_C_string(type, O_BUFLEN);
-    markOop mark = obj->mark();
-    TRACE_jvmci_3("%s: entered locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), p2i(obj), type, p2i(mark), p2i(lock));
-    tty->flush();
-  }
   Handle h_obj(thread, obj);
   if (UseBiasedLocking) {
     // Retry fast entry if bias is revoked to avoid unnecessary inflation
@@ -228,7 +221,6 @@ JRT_ENTRY_NO_ASYNC(void, JVMCIRuntime::monitorenter(JavaThread* thread, oopDesc*
       ObjectSynchronizer::fast_enter(h_obj, lock, false, THREAD);
     }
   }
-  TRACE_jvmci_3("%s: exiting locking slow with obj=" INTPTR_FORMAT, thread->name(), p2i(obj));
 JRT_END
 
 JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* thread, oopDesc* obj, BasicLock* lock))
@@ -240,12 +232,6 @@ JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* thread, oopDesc* obj, Basic
     ObjectSynchronizer::slow_exit(obj, lock, THREAD);
   } else {
     ObjectSynchronizer::fast_exit(obj, lock, THREAD);
-  }
-  IF_TRACE_jvmci_3 {
-    char type[O_BUFLEN];
-    obj->klass()->name()->as_C_string(type, O_BUFLEN);
-    TRACE_jvmci_3("%s: exited locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), p2i(obj), type, p2i(obj->mark()), p2i(lock));
-    tty->flush();
   }
 JRT_END
 

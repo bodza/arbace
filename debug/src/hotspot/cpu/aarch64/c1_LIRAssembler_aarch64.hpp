@@ -19,12 +19,9 @@ friend class ArrayCopyStub;
 
   bool is_literal_address(LIR_Address* addr);
 
-  // When we need to use something other than rscratch1 use this
-  // method.
+  // When we need to use something other than rscratch1 use this method.
   Address as_Address(LIR_Address* addr, Register tmp);
 
-  // Record the type of the receiver in ReceiverTypeData
-  void type_profile_helper(Register mdo, ciMethodData *md, ciProfileData *data, Register recv, Label* update_done);
   void add_debug_info_for_branch(address adr, CodeEmitInfo* info);
 
   void casw(Register addr, Register newval, Register cmpval);
@@ -37,8 +34,6 @@ friend class ArrayCopyStub;
   int tableswitch_count;
 
   void init() { tableswitch_count = 0; }
-
-  void deoptimize_trap(CodeEmitInfo *info);
 
   enum {
     _call_stub_size = 12 * NativeInstruction::instruction_size,

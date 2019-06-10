@@ -1,6 +1,5 @@
 #include "precompiled.hpp"
 
-#include "ci/ciCallProfile.hpp"
 #include "ci/ciExceptionHandler.hpp"
 #include "ci/ciInstanceKlass.hpp"
 #include "ci/ciMethod.hpp"
@@ -44,7 +43,6 @@ ciMethod::ciMethod(const methodHandle& h_m, ciInstanceKlass* holder) : ciMetadat
   _is_c1_compilable   = !h_m()->is_not_c1_compilable();
   _is_c2_compilable   = !h_m()->is_not_c2_compilable();
   _can_be_parsed      = true;
-  _has_reserved_stack_access = h_m()->has_reserved_stack_access();
   // Lazy fields, filled in on demand.  Require allocation.
   _code               = NULL;
   _exception_handlers = NULL;
@@ -222,12 +220,7 @@ MethodLivenessResult ciMethod::raw_liveness_at_bci(int bci) {
 // will return true for all locals in some cases to improve debug
 // information.
 MethodLivenessResult ciMethod::liveness_at_bci(int bci) {
-  MethodLivenessResult result = raw_liveness_at_bci(bci);
-  if (CompileTheWorld) {
-    // Keep all locals live for the user's edification and amusement.
-    result.at_put_range(0, result.size(), true);
-  }
-  return result;
+  return raw_liveness_at_bci(bci);
 }
 
 // Marks all bcis where a new basic block starts
@@ -241,183 +234,6 @@ const BitMap& ciMethod::bci_block_start() {
   }
 
   return _liveness->get_bci_block_start();
-}
-
-// Get the ciCallProfile for the invocation of this method.
-// Also reports receiver types for non-call type checks (if TypeProfileCasts).
-ciCallProfile ciMethod::call_profile_at_bci(int bci) {
-  ResourceMark rm;
-  ciCallProfile result;
-  if (method_data() != NULL && method_data()->is_mature()) {
-    ciProfileData* data = method_data()->bci_to_data(bci);
-    if (data != NULL && data->is_CounterData()) {
-      // Every profiled call site has a counter.
-      int count = data->as_CounterData()->count();
-
-      if (!data->is_ReceiverTypeData()) {
-        result._receiver_count[0] = 0;  // that's a definite zero
-      } else { // ReceiverTypeData is a subclass of CounterData
-        ciReceiverTypeData* call = (ciReceiverTypeData*)data->as_ReceiverTypeData();
-        // In addition, virtual call sites have receiver type information
-        int receivers_count_total = 0;
-        int morphism = 0;
-        // Precompute morphism for the possible fixup
-        for (uint i = 0; i < call->row_limit(); i++) {
-          ciKlass* receiver = call->receiver(i);
-          if (receiver == NULL)  continue;
-          morphism++;
-        }
-        int epsilon = 0;
-        for (uint i = 0; i < call->row_limit(); i++) {
-          ciKlass* receiver = call->receiver(i);
-          if (receiver == NULL)  continue;
-          int rcount = call->receiver_count(i) + epsilon;
-          if (rcount == 0) rcount = 1; // Should be valid value
-          receivers_count_total += rcount;
-          // Add the receiver to result data.
-          result.add_receiver(receiver, rcount);
-          // If we extend profiling to record methods,
-          // we will set result._method also.
-        }
-        // Determine call site's morphism.
-        // The call site count is 0 with known morphism (only 1 or 2 receivers)
-        // or < 0 in the case of a type check failure for checkcast, aastore, instanceof.
-        // The call site count is > 0 in the case of a polymorphic virtual call.
-        if (morphism > 0 && morphism == result._limit) {
-           // The morphism <= MorphismLimit.
-           if ((morphism < ciCallProfile::MorphismLimit) || (morphism == ciCallProfile::MorphismLimit && count == 0)) {
-             result._morphism = morphism;
-           }
-        }
-        // Make the count consistent if this is a call profile. If count is
-        // zero or less, presume that this is a typecheck profile and
-        // do nothing.  Otherwise, increase count to be the sum of all
-        // receiver's counts.
-        if (count >= 0) {
-          count += receivers_count_total;
-        }
-      }
-      result._count = count;
-    }
-  }
-  return result;
-}
-
-// ------------------------------------------------------------------
-// Add new receiver and sort data by receiver's profile count.
-void ciCallProfile::add_receiver(ciKlass* receiver, int receiver_count) {
-  // Add new receiver and sort data by receiver's counts when we have space
-  // for it otherwise replace the less called receiver (less called receiver
-  // is placed to the last array element which is not used).
-  // First array's element contains most called receiver.
-  int i = _limit;
-  for ( ; i > 0 && receiver_count > _receiver_count[i - 1]; i--) {
-    _receiver[i] = _receiver[i - 1];
-    _receiver_count[i] = _receiver_count[i - 1];
-  }
-  _receiver[i] = receiver;
-  _receiver_count[i] = receiver_count;
-  if (_limit < MorphismLimit) _limit++;
-}
-
-void ciMethod::assert_virtual_call_type_ok(int bci) { }
-
-void ciMethod::assert_call_type_ok(int bci) { }
-
-/**
- * Check whether profiling provides a type for the argument i to the
- * call at bci bci
- *
- * @param [in]bci         bci of the call
- * @param [in]i           argument number
- * @param [out]type       profiled type of argument, NULL if none
- * @param [out]ptr_kind   whether always null, never null or maybe null
- * @return                true if profiling exists
- *
- */
-bool ciMethod::argument_profiled_type(int bci, int i, ciKlass*& type, ProfilePtrKind& ptr_kind) {
-  if (MethodData::profile_parameters() && method_data() != NULL && method_data()->is_mature()) {
-    ciProfileData* data = method_data()->bci_to_data(bci);
-    if (data != NULL) {
-      if (data->is_VirtualCallTypeData()) {
-        assert_virtual_call_type_ok(bci);
-        ciVirtualCallTypeData* call = (ciVirtualCallTypeData*)data->as_VirtualCallTypeData();
-        if (i >= call->number_of_arguments()) {
-          return false;
-        }
-        type = call->valid_argument_type(i);
-        ptr_kind = call->argument_ptr_kind(i);
-        return true;
-      } else if (data->is_CallTypeData()) {
-        assert_call_type_ok(bci);
-        ciCallTypeData* call = (ciCallTypeData*)data->as_CallTypeData();
-        if (i >= call->number_of_arguments()) {
-          return false;
-        }
-        type = call->valid_argument_type(i);
-        ptr_kind = call->argument_ptr_kind(i);
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-/**
- * Check whether profiling provides a type for the return value from
- * the call at bci bci
- *
- * @param [in]bci         bci of the call
- * @param [out]type       profiled type of argument, NULL if none
- * @param [out]ptr_kind   whether always null, never null or maybe null
- * @return                true if profiling exists
- *
- */
-bool ciMethod::return_profiled_type(int bci, ciKlass*& type, ProfilePtrKind& ptr_kind) {
-  if (MethodData::profile_return() && method_data() != NULL && method_data()->is_mature()) {
-    ciProfileData* data = method_data()->bci_to_data(bci);
-    if (data != NULL) {
-      if (data->is_VirtualCallTypeData()) {
-        assert_virtual_call_type_ok(bci);
-        ciVirtualCallTypeData* call = (ciVirtualCallTypeData*)data->as_VirtualCallTypeData();
-        if (call->has_return()) {
-          type = call->valid_return_type();
-          ptr_kind = call->return_ptr_kind();
-          return true;
-        }
-      } else if (data->is_CallTypeData()) {
-        assert_call_type_ok(bci);
-        ciCallTypeData* call = (ciCallTypeData*)data->as_CallTypeData();
-        if (call->has_return()) {
-          type = call->valid_return_type();
-          ptr_kind = call->return_ptr_kind();
-        }
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-/**
- * Check whether profiling provides a type for the parameter i
- *
- * @param [in]i           parameter number
- * @param [out]type       profiled type of parameter, NULL if none
- * @param [out]ptr_kind   whether always null, never null or maybe null
- * @return                true if profiling exists
- *
- */
-bool ciMethod::parameter_profiled_type(int i, ciKlass*& type, ProfilePtrKind& ptr_kind) {
-  if (MethodData::profile_parameters() && method_data() != NULL && method_data()->is_mature()) {
-    ciParametersTypeData* parameters = method_data()->parameters_type_data();
-    if (parameters != NULL && i < parameters->number_of_parameters()) {
-      type = parameters->valid_parameter_type(i);
-      ptr_kind = parameters->parameter_ptr_kind(i);
-      return true;
-    }
-  }
-  return false;
 }
 
 // Given a certain calling environment, find the monomorphic target
@@ -530,17 +346,6 @@ int ciMethod::resolve_vtable_index(ciKlass* caller, ciKlass* receiver) {
    return vtable_index;
 }
 
-int ciMethod::interpreter_call_site_count(int bci) {
-  if (method_data() != NULL) {
-    ResourceMark rm;
-    ciProfileData* data = method_data()->bci_to_data(bci);
-    if (data != NULL && data->is_CounterData()) {
-      return scale_count(data->as_CounterData()->count());
-    }
-  }
-  return -1;  // unknown
-}
-
 ciField* ciMethod::get_field_at_bci(int bci, bool &will_link) {
   ciBytecodeStream iter(this);
   iter.reset_to_bci(bci);
@@ -646,16 +451,6 @@ ciMethodData* ciMethod::method_data() {
     _method_data = ciEnv::current()->get_empty_methodData();
   }
   return _method_data;
-}
-
-// Returns a pointer to ciMethodData if MDO exists on the VM side,
-// NULL otherwise.
-ciMethodData* ciMethod::method_data_or_null() {
-  ciMethodData *md = method_data();
-  if (md->is_empty()) {
-    return NULL;
-  }
-  return md;
 }
 
 MethodCounters* ciMethod::ensure_method_counters() {
@@ -770,7 +565,7 @@ bool ciMethod::is_klass_loaded(int refinfo_index, bool must_be_resolved) const {
 
 bool ciMethod::check_call(int refinfo_index, bool is_static) const {
   // This method is used only in C2 from InlineTree::ok_to_inline,
-  // and is only used under -Xcomp or -XX:CompileTheWorld.
+  // and is only used under -Xcomp.
   // It appears to fail when applied to an invokeinterface call site.
   // FIXME: Remove this method and resolve_method_statically; refactor to use the other LinkResolver entry points.
   VM_ENTRY_MARK;
@@ -788,11 +583,6 @@ bool ciMethod::check_call(int refinfo_index, bool is_static) const {
     }
   }
   return false;
-}
-
-// Should the method be compiled with an age counter?
-bool ciMethod::profile_aging() const {
-  return UseCodeAging && (!MethodCounters::is_nmethod_hot(nmethod_age()) && !MethodCounters::is_nmethod_age_unset(nmethod_age()));
 }
 
 #define FETCH_FLAG_FROM_VM(flag_accessor) { \

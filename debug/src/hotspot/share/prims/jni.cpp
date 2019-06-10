@@ -50,8 +50,6 @@
 #include "runtime/thread.inline.hpp"
 #include "runtime/vm_operations.hpp"
 #include "utilities/defaultStream.hpp"
-#include "utilities/histogram.hpp"
-#include "utilities/internalVMTests.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/vmError.hpp"
 #include "jvmci/jvmciCompiler.hpp"
@@ -191,7 +189,7 @@ JNI_ENTRY(jclass, jni_FindClass(JNIEnv *env, const char *name))
   // If we were the first invocation of jni_FindClass, we enable compilation again
   // rather than just allowing invocation counter to overflow and decay.
   // Controlled by flag DelayCompilationDuringStartup.
-  if (first_time && !CompileTheWorld)
+  if (first_time)
     CompilationPolicy::completed_vm_startup();
 
   return result;
@@ -2373,21 +2371,6 @@ static jint JNI_CreateJavaVM_inner(JavaVM **vm, void **penv, void *args) {
     /* thread is thread_in_vm here */
     *vm = (JavaVM *)(&main_vm);
     *(JNIEnv**)penv = thread->jni_environment();
-
-    if (EnableJVMCI) {
-      if (UseJVMCICompiler) {
-        // JVMCI is initialized on a CompilerThread
-        if (BootstrapJVMCI) {
-          JavaThread* THREAD = thread;
-          JVMCICompiler* compiler = JVMCICompiler::instance(true, CATCH);
-          compiler->bootstrap(THREAD);
-          if (HAS_PENDING_EXCEPTION) {
-            HandleMark hm;
-            vm_exit_during_initialization(Handle(THREAD, PENDING_EXCEPTION));
-          }
-        }
-      }
-    }
 
     // Since this is not a JVM_ENTRY we have to set the thread state manually before leaving.
     ThreadStateTransition::transition_and_fence(thread, _thread_in_vm, _thread_in_native);

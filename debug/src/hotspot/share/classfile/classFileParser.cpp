@@ -473,7 +473,6 @@ public:
     _method_HotSpotIntrinsicCandidate,
     _jdk_internal_vm_annotation_Contended,
     _field_Stable,
-    _jdk_internal_vm_annotation_ReservedStackAccess,
     _annotation_LIMIT
   };
   const Location _location;
@@ -1202,11 +1201,6 @@ AnnotationCollector::annotation_index(const ClassLoaderData* loader_data, const 
       }
       return _jdk_internal_vm_annotation_Contended;
     }
-    case vmSymbols::VM_SYMBOL_ENUM_NAME(jdk_internal_vm_annotation_ReservedStackAccess_signature): {
-      if (_location != _in_method)  break;  // only allow for methods
-      if (RestrictReservedStack && !privileged) break; // honor privileges
-      return _jdk_internal_vm_annotation_ReservedStackAccess;
-    }
     default: {
       break;
     }
@@ -1236,8 +1230,6 @@ void MethodAnnotationCollector::apply_to(const methodHandle& m) {
     m->set_dont_inline(true);
   if (has_annotation(_method_HotSpotIntrinsicCandidate) && !m->is_synthetic())
     m->set_intrinsic_candidate(true);
-  if (has_annotation(_jdk_internal_vm_annotation_ReservedStackAccess))
-    m->set_has_reserved_stack_access(true);
 }
 
 void ClassFileParser::ClassAnnotationCollector::apply_to(InstanceKlass* ik) {
@@ -2412,13 +2404,13 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
   unsigned int max_nonstatic_oop_maps  = fac->count[NONSTATIC_OOP] + 1;
 
   int* nonstatic_oop_offsets = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, int, max_nonstatic_oop_maps);
-  unsigned int* const nonstatic_oop_counts  = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, unsigned int, max_nonstatic_oop_maps);
+  unsigned int* const nonstatic_oop_counts = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, unsigned int, max_nonstatic_oop_maps);
 
   int first_nonstatic_oop_offset = 0; // will be set for first oop field
 
-  bool compact_fields   = CompactFields;
+  bool compact_fields = CompactFields;
   int allocation_style = FieldsAllocationStyle;
-  if (allocation_style < 0 || allocation_style > 2 ) { // Out of range?
+  if (allocation_style < 0 || allocation_style > 2) { // Out of range?
     ShouldNotReachHere();
     allocation_style = 1; // Optimistic
   }
@@ -2426,13 +2418,12 @@ void ClassFileParser::layout_fields(ConstantPool* cp, const FieldAllocationCount
   // The next classes have predefined hard-coded fields offsets
   // (see in JavaClasses::compute_hard_coded_offsets()).
   // Use default fields allocation order for them.
-  if ((allocation_style != 0 || compact_fields ) && _loader_data->class_loader() == NULL &&
+  if ((allocation_style != 0 || compact_fields) && _loader_data->class_loader() == NULL &&
       (_class_name == vmSymbols::java_lang_AssertionStatusDirectives() ||
        _class_name == vmSymbols::java_lang_Class() ||
        _class_name == vmSymbols::java_lang_ClassLoader() ||
        _class_name == vmSymbols::java_lang_ref_Reference() ||
        _class_name == vmSymbols::java_lang_ref_SoftReference() ||
-       _class_name == vmSymbols::java_lang_StackTraceElement() ||
        _class_name == vmSymbols::java_lang_String() ||
        _class_name == vmSymbols::java_lang_Throwable() ||
        _class_name == vmSymbols::java_lang_Boolean() ||

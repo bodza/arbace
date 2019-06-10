@@ -30,21 +30,7 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
     return false; \
   }
 
-  JVMCI_FLAG_CHECKED(UseJVMCICompiler)
   JVMCI_FLAG_CHECKED(EnableJVMCI)
-
-  CHECK_NOT_SET(BootstrapJVMCI,   UseJVMCICompiler)
-  CHECK_NOT_SET(PrintBootstrap,   UseJVMCICompiler)
-  CHECK_NOT_SET(JVMCIThreads,     UseJVMCICompiler)
-  CHECK_NOT_SET(JVMCIHostThreads, UseJVMCICompiler)
-
-  if (UseJVMCICompiler) {
-    if (!FLAG_IS_DEFAULT(EnableJVMCI) && !EnableJVMCI) {
-      jio_fprintf(defaultStream::error_stream(), "Improperly specified VM option UseJVMCICompiler: EnableJVMCI cannot be disabled\n");
-      return false;
-    }
-    FLAG_SET_DEFAULT(EnableJVMCI, true);
-  }
 
   if (!EnableJVMCI) {
     // Switch off eager JVMCI initialization if JVMCI is disabled.
@@ -55,14 +41,8 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
   }
   JVMCI_FLAG_CHECKED(EagerJVMCI)
 
-  CHECK_NOT_SET(JVMCITraceLevel,              EnableJVMCI)
-  CHECK_NOT_SET(JVMCICounterSize,             EnableJVMCI)
-  CHECK_NOT_SET(JVMCICountersExcludeCompiler, EnableJVMCI)
   CHECK_NOT_SET(JVMCIUseFastLocking,          EnableJVMCI)
   CHECK_NOT_SET(JVMCINMethodSizeLimit,        EnableJVMCI)
-  CHECK_NOT_SET(MethodProfileWidth,           EnableJVMCI)
-  CHECK_NOT_SET(JVMCIPrintProperties,         EnableJVMCI)
-  CHECK_NOT_SET(TraceUncollectedSpeculations, EnableJVMCI)
 
 #undef CHECK_NOT_SET
   return true;
@@ -73,7 +53,6 @@ void JVMCIGlobals::check_jvmci_supported_gc() {
     if (!UseG1GC) {
       vm_exit_during_initialization("JVMCI Compiler does not support selected GC", GCConfig::hs_err_name());
       FLAG_SET_DEFAULT(EnableJVMCI, false);
-      FLAG_SET_DEFAULT(UseJVMCICompiler, false);
     }
   }
 }

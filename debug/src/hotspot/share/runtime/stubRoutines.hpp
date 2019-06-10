@@ -70,7 +70,6 @@ class StubRoutines: AllStatic {
   static address _throw_IncompatibleClassChangeError_entry;
   static address _throw_NullPointerException_at_call_entry;
   static address _throw_StackOverflowError_entry;
-  static address _throw_delayed_StackOverflowError_entry;
 
   static address _atomic_xchg_entry;
   static address _atomic_xchg_long_entry;
@@ -231,7 +230,6 @@ class StubRoutines: AllStatic {
   static address throw_IncompatibleClassChangeError_entry() { return _throw_IncompatibleClassChangeError_entry; }
   static address throw_NullPointerException_at_call_entry() { return _throw_NullPointerException_at_call_entry; }
   static address throw_StackOverflowError_entry()          { return _throw_StackOverflowError_entry; }
-  static address throw_delayed_StackOverflowError_entry()  { return _throw_delayed_StackOverflowError_entry; }
 
   static address atomic_xchg_entry()                       { return _atomic_xchg_entry; }
   static address atomic_xchg_long_entry()                  { return _atomic_xchg_long_entry; }

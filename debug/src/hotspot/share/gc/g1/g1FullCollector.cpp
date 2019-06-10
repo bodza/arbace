@@ -104,8 +104,6 @@ G1FullCollector::~G1FullCollector() {
 void G1FullCollector::prepare_collection() {
   _heap->g1_policy()->record_full_collection_start();
 
-  _heap->print_heap_regions();
-
   _heap->abort_concurrent_cycle();
 
   _heap->gc_prologue(true);
@@ -152,8 +150,6 @@ void G1FullCollector::complete_collection() {
 
   _heap->g1_policy()->record_full_collection_end();
   _heap->gc_epilogue(true);
-
-  _heap->print_heap_after_full_collection(scope()->heap_transition());
 }
 
 void G1FullCollector::phase1_mark_live_objects() {

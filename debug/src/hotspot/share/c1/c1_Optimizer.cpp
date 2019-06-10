@@ -514,8 +514,6 @@ class NullCheckEliminator: public ValueVisitor {
   void handle_Intrinsic       (Intrinsic* x);
   void handle_ExceptionObject (ExceptionObject* x);
   void handle_Phi             (Phi* x);
-  void handle_ProfileCall     (ProfileCall* x);
-  void handle_ProfileReturnType (ProfileReturnType* x);
 };
 
 // NEEDS_CLEANUP
@@ -858,16 +856,6 @@ void NullCheckEliminator::handle_Phi(Phi* x) {
   } else if (set_contains(x)) {
     set_remove(x);
   }
-}
-
-void NullCheckEliminator::handle_ProfileCall(ProfileCall* x) {
-  for (int i = 0; i < x->nb_profiled_args(); i++) {
-    x->set_arg_needs_null_check(i, !set_contains(x->profiled_arg_at(i)));
-  }
-}
-
-void NullCheckEliminator::handle_ProfileReturnType(ProfileReturnType* x) {
-  x->set_needs_null_check(!set_contains(x->ret()));
 }
 
 void Optimizer::eliminate_null_checks() {

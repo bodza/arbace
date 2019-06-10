@@ -58,11 +58,8 @@ class Method : public Metadata {
     _caller_sensitive      = 1 << 0,
     _force_inline          = 1 << 1,
     _dont_inline           = 1 << 2,
-    _hidden                = 1 << 3,
-    _has_injected_profile  = 1 << 4,
     _running_emcp          = 1 << 5,
-    _intrinsic_candidate   = 1 << 6,
-    _reserved_stack_access = 1 << 7
+    _intrinsic_candidate   = 1 << 6
   };
   mutable u2 _flags;
 
@@ -266,16 +263,14 @@ class Method : public Metadata {
   CompiledMethod* volatile code() const;
   void clear_code(bool acquire_lock = true);    // Clear out any compiled code
   static void set_code(const methodHandle& mh, CompiledMethod* code);
-  void set_adapter_entry(AdapterHandlerEntry* adapter) {
-    constMethod()->set_adapter_entry(adapter);
-  }
-  void update_adapter_trampoline(AdapterHandlerEntry* adapter) {
-    constMethod()->update_adapter_trampoline(adapter);
-  }
+
+  void set_adapter_entry(AdapterHandlerEntry* adapter)         { constMethod()->set_adapter_entry(adapter); }
+  void update_adapter_trampoline(AdapterHandlerEntry* adapter) { constMethod()->update_adapter_trampoline(adapter); }
 
   address get_i2c_entry();
   address get_c2i_entry();
   address get_c2i_unverified_entry();
+
   AdapterHandlerEntry* adapter() const {
     return constMethod()->adapter();
   }
@@ -486,15 +481,15 @@ class Method : public Metadata {
   // this operates only on invoke methods:
   // presize interpreter frames for extra interpreter stack entries, if needed
   // Account for the extra appendix argument for invokehandle/invokedynamic
-  static int extra_stack_entries() { return 1; }
+  static int extra_stack_entries() { return 1; }
 
   // RedefineClasses() support:
-  bool is_old()                               const { return access_flags().is_old(); }
-  void set_is_old()                                 { _access_flags.set_is_old(); }
-  bool is_obsolete()                          const { return access_flags().is_obsolete(); }
-  void set_is_obsolete()                            { _access_flags.set_is_obsolete(); }
-  bool is_deleted()                           const { return access_flags().is_deleted(); }
-  void set_is_deleted()                             { _access_flags.set_is_deleted(); }
+  bool is_old()          const { return access_flags().is_old(); }
+  void set_is_old()            { _access_flags.set_is_old(); }
+  bool is_obsolete()     const { return access_flags().is_obsolete(); }
+  void set_is_obsolete()       { _access_flags.set_is_obsolete(); }
+  bool is_deleted()      const { return access_flags().is_deleted(); }
+  void set_is_deleted()        { _access_flags.set_is_deleted(); }
 
   bool is_running_emcp() const {
     // EMCP methods are old but not obsolete or deleted. Equivalent
@@ -574,55 +569,17 @@ class Method : public Metadata {
   void init_intrinsic_id();     // updates from _none if a match
   static vmSymbols::SID klass_id_for_intrinsics(const Klass* holder);
 
-  bool caller_sensitive() {
-    return (_flags & _caller_sensitive) != 0;
-  }
-  void set_caller_sensitive(bool x) {
-    _flags = x ? (_flags | _caller_sensitive) : (_flags & ~_caller_sensitive);
-  }
+  bool caller_sensitive() { return (_flags & _caller_sensitive) != 0; }
+  void set_caller_sensitive(bool x) { _flags = x ? (_flags | _caller_sensitive) : (_flags & ~_caller_sensitive); }
 
-  bool force_inline() {
-    return (_flags & _force_inline) != 0;
-  }
-  void set_force_inline(bool x) {
-    _flags = x ? (_flags | _force_inline) : (_flags & ~_force_inline);
-  }
+  bool force_inline() { return (_flags & _force_inline) != 0; }
+  void set_force_inline(bool x) { _flags = x ? (_flags | _force_inline) : (_flags & ~_force_inline); }
 
-  bool dont_inline() {
-    return (_flags & _dont_inline) != 0;
-  }
-  void set_dont_inline(bool x) {
-    _flags = x ? (_flags | _dont_inline) : (_flags & ~_dont_inline);
-  }
+  bool dont_inline() { return (_flags & _dont_inline) != 0; }
+  void set_dont_inline(bool x) { _flags = x ? (_flags | _dont_inline) : (_flags & ~_dont_inline); }
 
-  bool is_hidden() {
-    return (_flags & _hidden) != 0;
-  }
-  void NULL(bool x) {
-    _flags = x ? (_flags | _hidden) : (_flags & ~_hidden);
-  }
-
-  bool intrinsic_candidate() {
-    return (_flags & _intrinsic_candidate) != 0;
-  }
-  void set_intrinsic_candidate(bool x) {
-    _flags = x ? (_flags | _intrinsic_candidate) : (_flags & ~_intrinsic_candidate);
-  }
-
-  bool has_injected_profile() {
-    return (_flags & _has_injected_profile) != 0;
-  }
-  void NULL(bool x) {
-    _flags = x ? (_flags | _has_injected_profile) : (_flags & ~_has_injected_profile);
-  }
-
-  bool has_reserved_stack_access() {
-    return (_flags & _reserved_stack_access) != 0;
-  }
-
-  void set_has_reserved_stack_access(bool x) {
-    _flags = x ? (_flags | _reserved_stack_access) : (_flags & ~_reserved_stack_access);
-  }
+  bool intrinsic_candidate() { return (_flags & _intrinsic_candidate) != 0; }
+  void set_intrinsic_candidate(bool x) { _flags = x ? (_flags | _intrinsic_candidate) : (_flags & ~_intrinsic_candidate); }
 
   ConstMethod::MethodType method_type() const {
       return _constMethod->method_type();

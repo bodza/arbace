@@ -228,13 +228,11 @@ void* CodeInstaller::record_metadata_reference(CodeSection* section, address des
     Klass* klass = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(obj));
     int index = _oop_recorder->find_index(klass);
     section->relocate(dest, metadata_Relocation::spec(index));
-    TRACE_jvmci_3("metadata[%d of %d] = %s", index, _oop_recorder->metadata_count(), klass->name()->as_C_string());
     return klass;
   } else if (obj->is_a(HotSpotResolvedJavaMethodImpl::klass())) {
     Method* method = (Method*) (address) HotSpotResolvedJavaMethodImpl::metaspaceMethod(obj);
     int index = _oop_recorder->find_index(method);
     section->relocate(dest, metadata_Relocation::spec(index));
-    TRACE_jvmci_3("metadata[%d of %d] = %s", index, _oop_recorder->metadata_count(), method->name()->as_C_string());
     return method;
   } else {
     JVMCI_ERROR_NULL("unexpected metadata reference for constant of type %s", obj->klass()->signature_name());
@@ -251,7 +249,6 @@ narrowKlass CodeInstaller::record_narrow_metadata_reference(CodeSection* section
   Klass* klass = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(obj));
   int index = _oop_recorder->find_index(klass);
   section->relocate(dest, metadata_Relocation::spec(index));
-  TRACE_jvmci_3("narrowKlass[%d of %d] = %s", index, _oop_recorder->metadata_count(), klass->name()->as_C_string());
   return Klass::encode_klass(klass);
 }
 
@@ -598,7 +595,6 @@ void CodeInstaller::initialize_fields(oop target, oop compiled_code, TRAPS) {
     Handle hotspotJavaMethod(THREAD, HotSpotCompiledNmethod::method(compiled_code));
     methodHandle method = getMethodFromHotSpotMethod(hotspotJavaMethod());
     _parameter_count = method->size_of_parameters();
-    TRACE_jvmci_2("installing code for %s", method->name_and_sig_as_C_string());
   } else {
     // Must be a HotSpotCompiledRuntimeStub.
     // Only used in OopMap constructor for non-product builds
@@ -767,29 +763,23 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
     jint pc_offset = site_Site::pcOffset(site);
 
     if (site->is_a(site_Call::klass())) {
-      TRACE_jvmci_4("call at %i", pc_offset);
       site_Call(buffer, pc_offset, site, CHECK_OK);
     } else if (site->is_a(site_Infopoint::klass())) {
       // three reasons for infopoints denote actual safepoints
       oop reason = site_Infopoint::reason(site);
       if (site_InfopointReason::SAFEPOINT() == reason || site_InfopointReason::CALL() == reason || site_InfopointReason::IMPLICIT_EXCEPTION() == reason) {
-        TRACE_jvmci_4("safepoint at %i", pc_offset);
         site_Safepoint(buffer, pc_offset, site, CHECK_OK);
         if (_orig_pc_offset < 0) {
           JVMCI_ERROR_OK("method contains safepoint, but has no deopt rescue slot");
         }
       } else {
-        TRACE_jvmci_4("infopoint at %i", pc_offset);
         site_Infopoint(buffer, pc_offset, site, CHECK_OK);
       }
     } else if (site->is_a(site_DataPatch::klass())) {
-      TRACE_jvmci_4("datapatch at %i", pc_offset);
       site_DataPatch(buffer, pc_offset, site, CHECK_OK);
     } else if (site->is_a(site_Mark::klass())) {
-      TRACE_jvmci_4("mark at %i", pc_offset);
       site_Mark(buffer, pc_offset, site, CHECK_OK);
     } else if (site->is_a(site_ExceptionHandler::klass())) {
-      TRACE_jvmci_4("exceptionhandler at %i", pc_offset);
       site_ExceptionHandler(pc_offset, site);
     } else {
       JVMCI_ERROR_OK("unexpected site subclass: %s", site->klass()->signature_name());
@@ -817,14 +807,12 @@ void CodeInstaller::assumption_ConcreteSubtype(Thread* thread, Handle assumption
   Handle subtype_handle (thread, Assumptions_ConcreteSubtype::subtype(assumption()));
   Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(context_handle));
   Klass* subtype = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(subtype_handle));
-
   NULL->assert_abstract_with_unique_concrete_subtype(context, subtype);
 }
 
 void CodeInstaller::assumption_LeafType(Thread* thread, Handle assumption) {
   Handle context_handle (thread, Assumptions_LeafType::context(assumption()));
   Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(context_handle));
-
   NULL->assert_leaf_type(context);
 }
 
@@ -834,14 +822,12 @@ void CodeInstaller::assumption_ConcreteMethod(Thread* thread, Handle assumption)
 
   methodHandle impl = getMethodFromHotSpotMethod(impl_handle());
   Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(context_handle));
-
   NULL->assert_unique_concrete_method(context, impl());
 }
 
 void CodeInstaller::assumption_CallSiteTargetValue(Thread* thread, Handle assumption) {
   Handle callSite(thread, HotSpotObjectConstantImpl::object(Assumptions_CallSiteTargetValue::callSite(assumption())));
   Handle methodHandle(thread, HotSpotObjectConstantImpl::object(Assumptions_CallSiteTargetValue::methodHandle(assumption())));
-
   NULL->assert_call_site_target_value(callSite(), methodHandle());
 }
 
@@ -957,8 +943,6 @@ void CodeInstaller::record_scope(jint pc_offset, Handle position, ScopeMode scop
   Method* method = getMethodFromHotSpotMethod(hotspot_method());
   jint bci = map_jvmci_bci(BytecodePosition::bci(position));
 
-  TRACE_jvmci_2("Recording scope pc_offset=%d bci=%d method=%s", pc_offset, bci, method->name_and_sig_as_C_string());
-
   bool reexecute = false;
   if (frame.not_null()) {
     if (bci < 0) {
@@ -997,9 +981,6 @@ void CodeInstaller::record_scope(jint pc_offset, Handle position, ScopeMode scop
     GrowableArray<ScopeValue*>* locals = local_count > 0 ? new GrowableArray<ScopeValue*> (local_count) : NULL;
     GrowableArray<ScopeValue*>* expressions = expression_count > 0 ? new GrowableArray<ScopeValue*> (expression_count) : NULL;
     GrowableArray<MonitorValue*>* monitors = monitor_count > 0 ? new GrowableArray<MonitorValue*> (monitor_count) : NULL;
-
-    TRACE_jvmci_2("Scope at bci %d with %d values", bci, values->length());
-    TRACE_jvmci_2("%d locals %d expressions, %d monitors", local_count, expression_count, monitor_count);
 
     for (jint i = 0; i < values->length(); i++) {
       HandleMark hm(THREAD);
@@ -1109,7 +1090,6 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, Handle site, T
       JVMCI_ERROR("debug info expected at call at %i", pc_offset);
     }
 
-    TRACE_jvmci_3("method call");
     CodeInstaller::pd_relocate_JavaMethod(buffer, hotspot_method, pc_offset, CHECK);
     if (_next_call_type == INVOKESTATIC || _next_call_type == INVOKESPECIAL) {
       // Need a static call stub for transitions from compiled to interpreted.

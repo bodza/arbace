@@ -751,28 +751,26 @@ class LIR_OprFact: public AllStatic {
 //
 // class hierarchy:
 //
-class  LIR_Op;
-class    LIR_Op0;
-class      LIR_OpLabel;
-class    LIR_Op1;
-class      LIR_OpBranch;
-class      LIR_OpConvert;
-class      LIR_OpAllocObj;
-class      LIR_OpRoundFP;
-class    LIR_Op2;
-class    LIR_OpDelay;
-class    LIR_Op3;
-class      LIR_OpAllocArray;
-class    LIR_OpCall;
-class      LIR_OpJavaCall;
-class      LIR_OpRTCall;
-class    LIR_OpArrayCopy;
-class    LIR_OpUpdateCRC32;
-class    LIR_OpLock;
-class    LIR_OpTypeCheck;
-class    LIR_OpCompareAndSwap;
-class    LIR_OpProfileCall;
-class    LIR_OpProfileType;
+class LIR_Op;
+class   LIR_Op0;
+class     LIR_OpLabel;
+class   LIR_Op1;
+class     LIR_OpBranch;
+class     LIR_OpConvert;
+class     LIR_OpAllocObj;
+class     LIR_OpRoundFP;
+class   LIR_Op2;
+class   LIR_OpDelay;
+class   LIR_Op3;
+class     LIR_OpAllocArray;
+class   LIR_OpCall;
+class     LIR_OpJavaCall;
+class     LIR_OpRTCall;
+class   LIR_OpArrayCopy;
+class   LIR_OpUpdateCRC32;
+class   LIR_OpLock;
+class   LIR_OpTypeCheck;
+class   LIR_OpCompareAndSwap;
 
 // LIR operation codes
 enum LIR_Code {
@@ -886,10 +884,6 @@ enum LIR_Code {
     , lir_cas_obj
     , lir_cas_int
   , end_opCompareAndSwap
-  , begin_opMDOProfile
-    , lir_profile_call
-    , lir_profile_type
-  , end_opMDOProfile
   , begin_opAssert
     , lir_assert
   , end_opAssert
@@ -983,28 +977,26 @@ class LIR_Op: public CompilationResourceObj {
   virtual void print_instr(outputStream* out) const   = 0;
   virtual void print_on(outputStream* st) const { };
 
-  virtual bool is_patching() { return false; }
-  virtual LIR_OpCall* as_OpCall() { return NULL; }
-  virtual LIR_OpJavaCall* as_OpJavaCall() { return NULL; }
-  virtual LIR_OpLabel* as_OpLabel() { return NULL; }
-  virtual LIR_OpDelay* as_OpDelay() { return NULL; }
-  virtual LIR_OpLock* as_OpLock() { return NULL; }
-  virtual LIR_OpAllocArray* as_OpAllocArray() { return NULL; }
-  virtual LIR_OpAllocObj* as_OpAllocObj() { return NULL; }
-  virtual LIR_OpRoundFP* as_OpRoundFP() { return NULL; }
-  virtual LIR_OpBranch* as_OpBranch() { return NULL; }
-  virtual LIR_OpRTCall* as_OpRTCall() { return NULL; }
-  virtual LIR_OpConvert* as_OpConvert() { return NULL; }
-  virtual LIR_Op0* as_Op0() { return NULL; }
-  virtual LIR_Op1* as_Op1() { return NULL; }
-  virtual LIR_Op2* as_Op2() { return NULL; }
-  virtual LIR_Op3* as_Op3() { return NULL; }
-  virtual LIR_OpArrayCopy* as_OpArrayCopy() { return NULL; }
-  virtual LIR_OpUpdateCRC32* as_OpUpdateCRC32() { return NULL; }
-  virtual LIR_OpTypeCheck* as_OpTypeCheck() { return NULL; }
+  virtual bool is_patching()                          { return false; }
+  virtual LIR_OpCall* as_OpCall()                     { return NULL; }
+  virtual LIR_OpJavaCall* as_OpJavaCall()             { return NULL; }
+  virtual LIR_OpLabel* as_OpLabel()                   { return NULL; }
+  virtual LIR_OpDelay* as_OpDelay()                   { return NULL; }
+  virtual LIR_OpLock* as_OpLock()                     { return NULL; }
+  virtual LIR_OpAllocArray* as_OpAllocArray()         { return NULL; }
+  virtual LIR_OpAllocObj* as_OpAllocObj()             { return NULL; }
+  virtual LIR_OpRoundFP* as_OpRoundFP()               { return NULL; }
+  virtual LIR_OpBranch* as_OpBranch()                 { return NULL; }
+  virtual LIR_OpRTCall* as_OpRTCall()                 { return NULL; }
+  virtual LIR_OpConvert* as_OpConvert()               { return NULL; }
+  virtual LIR_Op0* as_Op0()                           { return NULL; }
+  virtual LIR_Op1* as_Op1()                           { return NULL; }
+  virtual LIR_Op2* as_Op2()                           { return NULL; }
+  virtual LIR_Op3* as_Op3()                           { return NULL; }
+  virtual LIR_OpArrayCopy* as_OpArrayCopy()           { return NULL; }
+  virtual LIR_OpUpdateCRC32* as_OpUpdateCRC32()       { return NULL; }
+  virtual LIR_OpTypeCheck* as_OpTypeCheck()           { return NULL; }
   virtual LIR_OpCompareAndSwap* as_OpCompareAndSwap() { return NULL; }
-  virtual LIR_OpProfileCall* as_OpProfileCall() { return NULL; }
-  virtual LIR_OpProfileType* as_OpProfileType() { return NULL; }
 };
 
 // for calls
@@ -1015,16 +1007,15 @@ class LIR_OpCall: public LIR_Op {
   address      _addr;
   LIR_OprList* _arguments;
  protected:
-  LIR_OpCall(LIR_Code code, address addr, LIR_Opr result,
-             LIR_OprList* arguments, CodeEmitInfo* info = NULL)
+  LIR_OpCall(LIR_Code code, address addr, LIR_Opr result, LIR_OprList* arguments, CodeEmitInfo* info = NULL)
     : LIR_Op(code, result, info)
     , _arguments(arguments)
     , _addr(addr) { }
 
  public:
-  address addr()                           const { return _addr; }
-  const LIR_OprList* arguments()           const { return _arguments; }
-  virtual LIR_OpCall* as_OpCall()                { return this; }
+  address addr()                  const { return _addr; }
+  const LIR_OprList* arguments()  const { return _arguments; }
+  virtual LIR_OpCall* as_OpCall()       { return this; }
 };
 
 // --------------------------------------------------
@@ -1395,34 +1386,23 @@ class LIR_OpTypeCheck: public LIR_Op {
   CodeEmitInfo* _info_for_patch;
   CodeEmitInfo* _info_for_exception;
   CodeStub*     _stub;
-  ciMethod*     _profiled_method;
-  int           _profiled_bci;
-  bool          _should_profile;
 
 public:
   LIR_OpTypeCheck(LIR_Code code, LIR_Opr result, LIR_Opr object, ciKlass* klass, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, bool fast_check, CodeEmitInfo* info_for_exception, CodeEmitInfo* info_for_patch, CodeStub* stub);
   LIR_OpTypeCheck(LIR_Code code, LIR_Opr object, LIR_Opr array, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, CodeEmitInfo* info_for_exception);
 
-  LIR_Opr object()                         const { return _object; }
-  LIR_Opr array()                          const { return _array; }
-  LIR_Opr tmp1()                           const { return _tmp1; }
-  LIR_Opr tmp2()                           const { return _tmp2; }
-  LIR_Opr tmp3()                           const { return _tmp3; }
-  ciKlass* klass()                         const { return _klass; }
-  bool fast_check()                        const { return _fast_check; }
-  CodeEmitInfo* info_for_patch()           const { return _info_for_patch; }
-  CodeEmitInfo* info_for_exception()       const { return _info_for_exception; }
-  CodeStub* stub()                         const { return _stub; }
+  LIR_Opr object()                   const { return _object; }
+  LIR_Opr array()                    const { return _array; }
+  LIR_Opr tmp1()                     const { return _tmp1; }
+  LIR_Opr tmp2()                     const { return _tmp2; }
+  LIR_Opr tmp3()                     const { return _tmp3; }
+  ciKlass* klass()                   const { return _klass; }
+  bool fast_check()                  const { return _fast_check; }
+  CodeEmitInfo* info_for_patch()     const { return _info_for_patch; }
+  CodeEmitInfo* info_for_exception() const { return _info_for_exception; }
+  CodeStub* stub()                   const { return _stub; }
 
-  // MethodData* profiling
-  void set_profiled_method(ciMethod *method)     { _profiled_method = method; }
-  void set_profiled_bci(int bci)                 { _profiled_bci = bci; }
-  void set_should_profile(bool b)                { _should_profile = b; }
-  ciMethod* profiled_method()              const { return _profiled_method; }
-  int       profiled_bci()                 const { return _profiled_bci; }
-  bool      should_profile()               const { return _should_profile; }
-
-  virtual bool is_patching() { return _info_for_patch != NULL; }
+  virtual bool is_patching()                { return _info_for_patch != NULL; }
   virtual void emit_code(LIR_Assembler* masm);
   virtual LIR_OpTypeCheck* as_OpTypeCheck() { return this; }
   void print_instr(outputStream* out) const { };
@@ -1661,8 +1641,7 @@ class LIR_OpCompareAndSwap : public LIR_Op {
   LIR_Opr _tmp2;
 
  public:
-  LIR_OpCompareAndSwap(LIR_Code code, LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value,
-                       LIR_Opr t1, LIR_Opr t2, LIR_Opr result)
+  LIR_OpCompareAndSwap(LIR_Code code, LIR_Opr addr, LIR_Opr cmp_value, LIR_Opr new_value, LIR_Opr t1, LIR_Opr t2, LIR_Opr result)
     : LIR_Op(code, result, NULL)  // no result, no info
     , _addr(addr)
     , _cmp_value(cmp_value)
@@ -1670,97 +1649,14 @@ class LIR_OpCompareAndSwap : public LIR_Op {
     , _tmp1(t1)
     , _tmp2(t2)                                  { }
 
-  LIR_Opr addr()                           const { return _addr; }
-  LIR_Opr cmp_value()                      const { return _cmp_value; }
-  LIR_Opr new_value()                      const { return _new_value; }
-  LIR_Opr tmp1()                           const { return _tmp1; }
-  LIR_Opr tmp2()                           const { return _tmp2; }
+  LIR_Opr addr()      const { return _addr; }
+  LIR_Opr cmp_value() const { return _cmp_value; }
+  LIR_Opr new_value() const { return _new_value; }
+  LIR_Opr tmp1()      const { return _tmp1; }
+  LIR_Opr tmp2()      const { return _tmp2; }
 
   virtual void emit_code(LIR_Assembler* masm);
-  virtual LIR_OpCompareAndSwap * as_OpCompareAndSwap () { return this; }
-  virtual void print_instr(outputStream* out) const { };
-};
-
-// LIR_OpProfileCall
-class LIR_OpProfileCall : public LIR_Op {
- friend class LIR_OpVisitState;
-
- private:
-  ciMethod* _profiled_method;
-  int       _profiled_bci;
-  ciMethod* _profiled_callee;
-  LIR_Opr   _mdo;
-  LIR_Opr   _recv;
-  LIR_Opr   _tmp1;
-  ciKlass*  _known_holder;
-
- public:
-  // Destroys recv
-  LIR_OpProfileCall(ciMethod* profiled_method, int profiled_bci, ciMethod* profiled_callee, LIR_Opr mdo, LIR_Opr recv, LIR_Opr t1, ciKlass* known_holder)
-    : LIR_Op(lir_profile_call, LIR_OprFact::illegalOpr, NULL)  // no result, no info
-    , _profiled_method(profiled_method)
-    , _profiled_bci(profiled_bci)
-    , _profiled_callee(profiled_callee)
-    , _mdo(mdo)
-    , _recv(recv)
-    , _tmp1(t1)
-    , _known_holder(known_holder)                { }
-
-  ciMethod* profiled_method()              const { return _profiled_method;  }
-  int       profiled_bci()                 const { return _profiled_bci;     }
-  ciMethod* profiled_callee()              const { return _profiled_callee;  }
-  LIR_Opr   mdo()                          const { return _mdo;              }
-  LIR_Opr   recv()                         const { return _recv;             }
-  LIR_Opr   tmp1()                         const { return _tmp1;             }
-  ciKlass*  known_holder()                 const { return _known_holder;     }
-
-  virtual void emit_code(LIR_Assembler* masm);
-  virtual LIR_OpProfileCall* as_OpProfileCall() { return this; }
-  virtual void print_instr(outputStream* out) const { };
-  bool should_profile_receiver_type() const {
-    bool callee_is_static = _profiled_callee->is_loaded() && _profiled_callee->is_static();
-    Bytecodes::Code bc = _profiled_method->java_code_at_bci(_profiled_bci);
-    bool call_is_virtual = (bc == Bytecodes::_invokevirtual && !_profiled_callee->can_be_statically_bound()) || bc == Bytecodes::_invokeinterface;
-    return C1ProfileVirtualCalls && call_is_virtual && !callee_is_static;
-  }
-};
-
-// LIR_OpProfileType
-class LIR_OpProfileType : public LIR_Op {
- friend class LIR_OpVisitState;
-
- private:
-  LIR_Opr      _mdp;
-  LIR_Opr      _obj;
-  LIR_Opr      _tmp;
-  ciKlass*     _exact_klass;   // non NULL if we know the klass statically (no need to load it from _obj)
-  intptr_t     _current_klass; // what the profiling currently reports
-  bool         _not_null;      // true if we know statically that _obj cannot be null
-  bool         _no_conflict;   // true if we're profling parameters, _exact_klass is not NULL and we know
-                               // _exact_klass it the only possible type for this parameter in any context.
-
- public:
-  // Destroys recv
-  LIR_OpProfileType(LIR_Opr mdp, LIR_Opr obj, ciKlass* exact_klass, intptr_t current_klass, LIR_Opr tmp, bool not_null, bool no_conflict)
-    : LIR_Op(lir_profile_type, LIR_OprFact::illegalOpr, NULL)  // no result, no info
-    , _mdp(mdp)
-    , _obj(obj)
-    , _exact_klass(exact_klass)
-    , _current_klass(current_klass)
-    , _tmp(tmp)
-    , _not_null(not_null)
-    , _no_conflict(no_conflict) { }
-
-  LIR_Opr      mdp()                          const { return _mdp; }
-  LIR_Opr      obj()                          const { return _obj; }
-  LIR_Opr      tmp()                          const { return _tmp; }
-  ciKlass*     exact_klass()                  const { return _exact_klass; }
-  intptr_t     current_klass()                const { return _current_klass; }
-  bool         not_null()                     const { return _not_null; }
-  bool         no_conflict()                  const { return _no_conflict; }
-
-  virtual void emit_code(LIR_Assembler* masm);
-  virtual LIR_OpProfileType* as_OpProfileType() { return this; }
+  virtual LIR_OpCompareAndSwap* as_OpCompareAndSwap() { return this; }
   virtual void print_instr(outputStream* out) const { };
 };
 
@@ -1989,26 +1885,17 @@ class LIR_List: public CompilationResourceObj {
   void restore_fpu()   { append(new LIR_Op0(lir_reset_FPU )); }
   void breakpoint()    { append(new LIR_Op0(lir_breakpoint)); }
 
-  void arraycopy(LIR_Opr src, LIR_Opr src_pos, LIR_Opr dst, LIR_Opr dst_pos, LIR_Opr length, LIR_Opr tmp, ciArrayKlass* expected_type, int flags, CodeEmitInfo* info) { append(new LIR_OpArrayCopy(src, src_pos, dst, dst_pos, length, tmp, expected_type, flags, info)); }
+  void arraycopy(LIR_Opr src, LIR_Opr src_pos, LIR_Opr dst, LIR_Opr dst_pos, LIR_Opr length, LIR_Opr tmp, ciArrayKlass* expected_type, int flags, CodeEmitInfo* info) {
+    append(new LIR_OpArrayCopy(src, src_pos, dst, dst_pos, length, tmp, expected_type, flags, info));
+  }
 
   void update_crc32(LIR_Opr crc, LIR_Opr val, LIR_Opr res)  { append(new LIR_OpUpdateCRC32(crc, val, res)); }
 
   void fpop_raw()      { append(new LIR_Op0(lir_fpop_raw)); }
 
-  void instanceof(LIR_Opr result, LIR_Opr object, ciKlass* klass, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, bool fast_check, CodeEmitInfo* info_for_patch, ciMethod* profiled_method, int profiled_bci);
-  void store_check(LIR_Opr object, LIR_Opr array, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, CodeEmitInfo* info_for_exception, ciMethod* profiled_method, int profiled_bci);
-
-  void checkcast (LIR_Opr result, LIR_Opr object, ciKlass* klass,
-                  LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, bool fast_check,
-                  CodeEmitInfo* info_for_exception, CodeEmitInfo* info_for_patch, CodeStub* stub,
-                  ciMethod* profiled_method, int profiled_bci);
-  // MethodData* profiling
-  void profile_call(ciMethod* method, int bci, ciMethod* callee, LIR_Opr mdo, LIR_Opr recv, LIR_Opr t1, ciKlass* cha_klass) {
-    append(new LIR_OpProfileCall(method, bci, callee, mdo, recv, t1, cha_klass));
-  }
-  void profile_type(LIR_Address* mdp, LIR_Opr obj, ciKlass* exact_klass, intptr_t current_klass, LIR_Opr tmp, bool not_null, bool no_conflict) {
-    append(new LIR_OpProfileType(LIR_OprFact::address(mdp), obj, exact_klass, current_klass, tmp, not_null, no_conflict));
-  }
+  void instanceof(LIR_Opr result, LIR_Opr object, ciKlass* klass, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, bool fast_check, CodeEmitInfo* info_for_patch);
+  void store_check(LIR_Opr object, LIR_Opr array, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, CodeEmitInfo* info_for_exception);
+  void checkcast(LIR_Opr result, LIR_Opr object, ciKlass* klass, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, bool fast_check, CodeEmitInfo* info_for_exception, CodeEmitInfo* info_for_patch, CodeStub* stub);
 
   void xadd(LIR_Opr src, LIR_Opr add, LIR_Opr res, LIR_Opr tmp) { append(new LIR_Op2(lir_xadd, src, add, res, tmp)); }
   void xchg(LIR_Opr src, LIR_Opr set, LIR_Opr res, LIR_Opr tmp) { append(new LIR_Op2(lir_xchg, src, set, res, tmp)); }

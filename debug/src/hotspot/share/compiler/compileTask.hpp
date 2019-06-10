@@ -22,8 +22,8 @@ class CompileTask : public CHeapObj<mtCompiler> {
   // Also mapped to reason_names[]
   enum CompileReason {
       Reason_None,
-      Reason_InvocationCount,  // Simple/StackWalk-policy
-      Reason_BackedgeCount,    // Simple/StackWalk-policy
+      Reason_InvocationCount,  // Simple-policy
+      Reason_BackedgeCount,    // Simple-policy
       Reason_Tiered,           // Tiered-policy
       Reason_CTW,              // Compile the world
       Reason_Whitebox,         // Whitebox API

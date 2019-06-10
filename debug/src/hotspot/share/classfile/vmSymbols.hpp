@@ -190,7 +190,6 @@
   template(java_lang_SecurityException,               "java/lang/SecurityException") \
   template(java_lang_VirtualMachineError,             "java/lang/VirtualMachineError") \
   template(java_lang_StackOverflowError,              "java/lang/StackOverflowError") \
-  template(java_lang_StackTraceElement,               "java/lang/StackTraceElement") \
  \
   /* Concurrency support */ \
   template(java_util_concurrent_locks_AbstractOwnableSynchronizer,           "java/util/concurrent/locks/AbstractOwnableSynchronizer") \
@@ -199,7 +198,6 @@
   template(java_util_concurrent_atomic_AtomicLongFieldUpdater_LockedUpdater, "java/util/concurrent/atomic/AtomicLongFieldUpdater$LockedUpdater") \
   template(java_util_concurrent_atomic_AtomicReferenceFieldUpdater_Impl,     "java/util/concurrent/atomic/AtomicReferenceFieldUpdater$AtomicReferenceFieldUpdaterImpl") \
   template(jdk_internal_vm_annotation_Contended_signature,                   "Ljdk/internal/vm/annotation/Contended;") \
-  template(jdk_internal_vm_annotation_ReservedStackAccess_signature,         "Ljdk/internal/vm/annotation/ReservedStackAccess;") \
  \
   /* class symbols needed by intrinsics */ \
   VM_INTRINSICS_DO(VM_INTRINSIC_IGNORE, template, VM_SYMBOL_IGNORE, VM_SYMBOL_IGNORE, VM_ALIAS_IGNORE) \
@@ -251,11 +249,6 @@
   /* Support for JVMCI */ \
   JVMCI_VM_SYMBOLS_DO(template, do_alias) \
  \
-  template(java_lang_StackWalker,                     "java/lang/StackWalker") \
-  template(java_lang_StackFrameInfo,                  "java/lang/StackFrameInfo") \
-  template(java_lang_LiveStackFrameInfo,              "java/lang/LiveStackFrameInfo") \
-  template(java_lang_StackStreamFactory_AbstractStackWalker, "java/lang/StackStreamFactory$AbstractStackWalker") \
-  template(doStackWalk_signature,                     "(JIIII)Ljava/lang/Object;") \
   template(asPrimitive_name,                          "asPrimitive") \
   template(asPrimitive_int_signature,                 "(I)Ljava/lang/LiveStackFrame$PrimitiveSlot;") \
   template(asPrimitive_long_signature,                "(J)Ljava/lang/LiveStackFrame$PrimitiveSlot;") \

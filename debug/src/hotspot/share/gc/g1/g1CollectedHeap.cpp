@@ -839,18 +839,6 @@ void G1CollectedHeap::abort_refinement() {
   G1BarrierSet::dirty_card_queue_set().abandon_logs();
 }
 
-void G1CollectedHeap::print_heap_after_full_collection(G1HeapTransition* heap_transition) {
-  // Post collection logging.
-  // We should do this after we potentially resize the heap so
-  // that all the COMMIT / UNCOMMIT events are generated before
-  // the compaction events.
-  heap_transition->print();
-  print_heap_regions();
-#ifdef TRACESPINNING
-  ParallelTaskTerminator::print_termination_counts();
-#endif
-}
-
 bool G1CollectedHeap::do_full_collection(bool explicit_gc, bool clear_all_soft_refs) {
   if (GCLocker::check_active_before_gc()) {
     // Full GC was not completed.
@@ -1764,8 +1752,6 @@ bool G1CollectedHeap::is_obj_dead_cond(const oop obj, const VerifyOption vo) con
   return false; // keep some compilers happy
 }
 
-void G1CollectedHeap::print_heap_regions() const { }
-
 void G1CollectedHeap::print_on(outputStream* st) const {
   st->print(" %-20s", "garbage-first heap");
   st->print(" total " SIZE_FORMAT "K, used " SIZE_FORMAT "K",
@@ -1878,7 +1864,6 @@ void G1CollectedHeap::gc_epilogue(bool full) {
   resize_all_tlabs();
   g1_policy()->phase_times()->record_resize_tlab_time_ms((os::elapsedTime() - start) * 1000.0);
 
-  MemoryService::track_memory_usage();
   // We have just completed a GC. Update the soft reference
   // policy with the new heap occupancy
   Universe::update_heap_info_at_gc();
@@ -2125,8 +2110,6 @@ G1CollectedHeap::do_collection_pause_at_safepoint(double target_pause_time_ms) {
 
   wait_for_root_region_scanning();
 
-  print_heap_regions();
-
   // We should not be doing initial mark unless the conc mark thread is running
   if (!_cm_thread->should_terminate()) {
     // This call will decide whether this pause is an initial-mark
@@ -2165,8 +2148,6 @@ G1CollectedHeap::do_collection_pause_at_safepoint(double target_pause_time_ms) {
 
     uint active_workers = AdaptiveSizePolicy::calc_active_workers(workers()->total_workers(), workers()->active_workers(), Threads::number_of_non_daemon_threads());
     active_workers = workers()->update_active_workers(active_workers);
-
-    TraceMemoryManagerStats tms(&_memory_manager, gc_cause(), collector_state()->yc_type() == Mixed /* allMemoryPoolsAffected */);
 
     G1HeapTransition heap_transition(this);
     size_t heap_used_bytes_before_gc = used();
@@ -2340,12 +2321,6 @@ G1CollectedHeap::do_collection_pause_at_safepoint(double target_pause_time_ms) {
     g1_policy()->print_phases();
     heap_transition.print();
 
-    print_heap_regions();
-
-    // We must call G1MonitoringSupport::update_sizes() in the same scoping level
-    // as an active TraceMemoryManagerStats object (i.e. before the destructor for the
-    // TraceMemoryManagerStats is called) so that the G1 memory pools are updated
-    // before any GC notifications are raised.
     g1mm()->update_sizes();
 
     _gc_timer_stw->register_gc_end();
@@ -2766,27 +2741,6 @@ public:
   }
 };
 
-class G1ResolvedMethodCleaningTask : public StackObj {
-  volatile int       _resolved_method_task_claimed;
-public:
-  G1ResolvedMethodCleaningTask() :
-      _resolved_method_task_claimed(0) { }
-
-  bool claim_resolved_method_task() {
-    if (_resolved_method_task_claimed) {
-      return false;
-    }
-    return Atomic::cmpxchg(1, &_resolved_method_task_claimed, 0) == 0;
-  }
-
-  // These aren't big, one thread can do it all.
-  void work() {
-    if (claim_resolved_method_task()) {
-      NULL::unlink();
-    }
-  }
-};
-
 // To minimize the remark pause times, the tasks below are done in parallel.
 class G1ParallelCleaningTask : public AbstractGangTask {
 private:
@@ -2794,7 +2748,6 @@ private:
   G1StringAndSymbolCleaningTask _string_symbol_task;
   G1CodeCacheUnloadingTask      _code_cache_task;
   G1KlassCleaningTask           _klass_cleaning_task;
-  G1ResolvedMethodCleaningTask  _resolved_method_cleaning_task;
 
 public:
   // The constructor is run in the VMThread.
@@ -2803,8 +2756,7 @@ public:
       _string_symbol_task(is_alive, true, true, G1StringDedup::is_enabled()),
       _code_cache_task(num_workers, is_alive, unloading_occurred),
       _klass_cleaning_task(),
-      _unloading_occurred(unloading_occurred),
-      _resolved_method_cleaning_task() {
+      _unloading_occurred(unloading_occurred) {
   }
 
   // The parallel work done by all worker threads.
@@ -2817,9 +2769,6 @@ public:
 
     // Clean the Strings and Symbols.
     _string_symbol_task.work(worker_id);
-
-    // Clean unreferenced things in the NULL
-    _resolved_method_cleaning_task.work();
 
     // Wait for all workers to finish the first code cache cleaning pass.
     _code_cache_task.barrier_wait(worker_id);

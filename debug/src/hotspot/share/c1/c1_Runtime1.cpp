@@ -766,7 +766,7 @@ int Runtime1::move_klass_patching(JavaThread* thread) {
 
   // Return true if calling code is deoptimized
 
-  return false;
+  return false;
 }
 
 int Runtime1::move_mirror_patching(JavaThread* thread) {
@@ -784,7 +784,7 @@ int Runtime1::move_mirror_patching(JavaThread* thread) {
 
   // Return true if calling code is deoptimized
 
-  return false;
+  return false;
 }
 
 //
@@ -812,7 +812,7 @@ int Runtime1::access_field_patching(JavaThread* thread) {
 
   // Return true if calling code is deoptimized
 
-  return false;
+  return false;
 JRT_END
 
 JRT_LEAF(void, Runtime1::trace_block_entry(jint block_id))

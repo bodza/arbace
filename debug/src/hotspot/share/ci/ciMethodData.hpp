@@ -450,12 +450,7 @@ public:
   // is not NULL look for a SpeculativeTrapData if any first.
   ciProfileData* bci_to_data(int bci, ciMethod* m = NULL);
 
-  uint overflow_recompile_count() const {
-    return _orig.overflow_recompile_count();
-  }
-  uint decompile_count() const {
-    return _orig.decompile_count();
-  }
+  uint overflow_recompile_count() const { return _orig.overflow_recompile_count(); }
 
   void clear_escape_info();
   bool has_escape_info();

@@ -176,9 +176,6 @@ LIR_OpTypeCheck::LIR_OpTypeCheck(LIR_Code code, LIR_Opr result, LIR_Opr object, 
   , _stub(stub)
   , _info_for_patch(info_for_patch)
   , _info_for_exception(info_for_exception)
-  , _profiled_method(NULL)
-  , _profiled_bci(-1)
-  , _should_profile(false)
 {
   if (code == lir_checkcast) {
   } else if (code == lir_instanceof) {
@@ -199,9 +196,6 @@ LIR_OpTypeCheck::LIR_OpTypeCheck(LIR_Code code, LIR_Opr object, LIR_Opr array, L
   , _stub(NULL)
   , _info_for_patch(NULL)
   , _info_for_exception(info_for_exception)
-  , _profiled_method(NULL)
-  , _profiled_bci(-1)
-  , _should_profile(false)
 {
   if (code == lir_store_check) {
     _stub = new ArrayStoreExceptionStub(object, info_for_exception);
@@ -638,27 +632,8 @@ void LIR_OpVisitState::visit(LIR_Op* op) {
       break;
     }
 
-// LIR_OpProfileCall:
-    case lir_profile_call: {
-      LIR_OpProfileCall* opProfileCall = (LIR_OpProfileCall*)op;
-
-      if (opProfileCall->_recv->is_valid())              do_temp(opProfileCall->_recv);
-      do_temp(opProfileCall->_mdo);
-      do_temp(opProfileCall->_tmp1);
-      break;
-    }
-
-// LIR_OpProfileType:
-    case lir_profile_type: {
-      LIR_OpProfileType* opProfileType = (LIR_OpProfileType*)op;
-
-      do_input(opProfileType->_mdp); do_temp(opProfileType->_mdp);
-      do_input(opProfileType->_obj);
-      do_temp(opProfileType->_tmp);
-      break;
-    }
-  default:
-    op->visit(this);
+    default:
+      op->visit(this);
   }
 }
 
@@ -775,14 +750,6 @@ void LIR_OpLock::emit_code(LIR_Assembler* masm) {
 
 void LIR_OpDelay::emit_code(LIR_Assembler* masm) {
   masm->emit_delay(this);
-}
-
-void LIR_OpProfileCall::emit_code(LIR_Assembler* masm) {
-  masm->emit_profile_call(this);
-}
-
-void LIR_OpProfileType::emit_code(LIR_Assembler* masm) {
-  masm->emit_profile_type(this);
 }
 
 // LIR_List
@@ -911,40 +878,16 @@ void LIR_List::unlock_object(LIR_Opr hdr, LIR_Opr obj, LIR_Opr lock, LIR_Opr scr
   append(new LIR_OpLock(lir_unlock, hdr, obj, lock, scratch, stub, NULL));
 }
 
-void check_LIR() {
-  // cannot do the proper checking as PRODUCT and other modes return different results
-  // guarantee(sizeof(LIR_OprDesc) == wordSize, "may not have a v-table");
+void LIR_List::checkcast(LIR_Opr result, LIR_Opr object, ciKlass* klass, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, bool fast_check, CodeEmitInfo* info_for_exception, CodeEmitInfo* info_for_patch, CodeStub* stub) {
+  append(new LIR_OpTypeCheck(lir_checkcast, result, object, klass, tmp1, tmp2, tmp3, fast_check, info_for_exception, info_for_patch, stub));
 }
 
-void LIR_List::checkcast(LIR_Opr result, LIR_Opr object, ciKlass* klass, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, bool fast_check, CodeEmitInfo* info_for_exception, CodeEmitInfo* info_for_patch, CodeStub* stub, ciMethod* profiled_method, int profiled_bci) {
-  LIR_OpTypeCheck* c = new LIR_OpTypeCheck(lir_checkcast, result, object, klass,
-                                           tmp1, tmp2, tmp3, fast_check, info_for_exception, info_for_patch, stub);
-  if (profiled_method != NULL) {
-    c->set_profiled_method(profiled_method);
-    c->set_profiled_bci(profiled_bci);
-    c->set_should_profile(true);
-  }
-  append(c);
+void LIR_List::instanceof(LIR_Opr result, LIR_Opr object, ciKlass* klass, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, bool fast_check, CodeEmitInfo* info_for_patch) {
+  append(new LIR_OpTypeCheck(lir_instanceof, result, object, klass, tmp1, tmp2, tmp3, fast_check, NULL, info_for_patch, NULL));
 }
 
-void LIR_List::instanceof(LIR_Opr result, LIR_Opr object, ciKlass* klass, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, bool fast_check, CodeEmitInfo* info_for_patch, ciMethod* profiled_method, int profiled_bci) {
-  LIR_OpTypeCheck* c = new LIR_OpTypeCheck(lir_instanceof, result, object, klass, tmp1, tmp2, tmp3, fast_check, NULL, info_for_patch, NULL);
-  if (profiled_method != NULL) {
-    c->set_profiled_method(profiled_method);
-    c->set_profiled_bci(profiled_bci);
-    c->set_should_profile(true);
-  }
-  append(c);
-}
-
-void LIR_List::store_check(LIR_Opr object, LIR_Opr array, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, CodeEmitInfo* info_for_exception, ciMethod* profiled_method, int profiled_bci) {
-  LIR_OpTypeCheck* c = new LIR_OpTypeCheck(lir_store_check, object, array, tmp1, tmp2, tmp3, info_for_exception);
-  if (profiled_method != NULL) {
-    c->set_profiled_method(profiled_method);
-    c->set_profiled_bci(profiled_bci);
-    c->set_should_profile(true);
-  }
-  append(c);
+void LIR_List::store_check(LIR_Opr object, LIR_Opr array, LIR_Opr tmp1, LIR_Opr tmp2, LIR_Opr tmp3, CodeEmitInfo* info_for_exception) {
+  append(new LIR_OpTypeCheck(lir_store_check, object, array, tmp1, tmp2, tmp3, info_for_exception));
 }
 
 void LIR_List::null_check(LIR_Opr opr, CodeEmitInfo* info) {

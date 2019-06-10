@@ -137,7 +137,6 @@
   volatile_nonstatic_field(JavaThread,         _exception_pc,                                 address) \
   nonstatic_field(JavaThread,                  _osthread,                                     OSThread*) \
   nonstatic_field(JavaThread,                  _pending_failed_speculation,                   long) \
-  nonstatic_field(JavaThread,                  _jvmci_counters,                               jlong*) \
   nonstatic_field(JavaThread,                  _reserved_stack_activation,                    address) \
  \
   static_field(java_lang_Class,                _klass_offset,                                 int) \
@@ -179,8 +178,6 @@
  \
   nonstatic_field(MethodCounters,              _nmethod_age,                                  int) \
   nonstatic_field(MethodCounters,              _interpreter_invocation_limit,                 int) \
-  nonstatic_field(MethodCounters,              _interpreter_backward_branch_limit,            int) \
-  nonstatic_field(MethodCounters,              _interpreter_profile_limit,                    int) \
   nonstatic_field(MethodCounters,              _invoke_mask,                                  int) \
   nonstatic_field(MethodCounters,              _backedge_mask,                                int) \
   nonstatic_field(MethodCounters,              _interpreter_invocation_count,                 int) \
@@ -193,7 +190,6 @@
   nonstatic_field(MethodData,                  _data_size,                                    int) \
   nonstatic_field(MethodData,                  _data[0],                                      intptr_t) \
   nonstatic_field(MethodData,                  _parameters_type_data_di,                      int) \
-  nonstatic_field(MethodData,                  _nof_decompiles,                               uint) \
   nonstatic_field(MethodData,                  _nof_overflow_recompiles,                      uint) \
   nonstatic_field(MethodData,                  _eflags,                                       intx) \
   nonstatic_field(MethodData,                  _arg_local,                                    intx) \
@@ -217,8 +213,6 @@
   volatile_nonstatic_field(OSThread,           _interrupted,                                  jint) \
  \
   static_field(StubRoutines,                _verify_oop_count,                                jint) \
- \
-  static_field(StubRoutines,                _throw_delayed_StackOverflowError_entry,          address) \
  \
   static_field(StubRoutines,                _jbyte_arraycopy,                                 address) \
   static_field(StubRoutines,                _jshort_arraycopy,                                address) \
@@ -327,8 +321,6 @@
  \
   declare_constant(CompLevel_none) \
   declare_constant(CompLevel_simple) \
-  declare_constant(CompLevel_limited_profile) \
-  declare_constant(CompLevel_full_profile) \
   declare_constant(CompLevel_full_optimization) \
   declare_constant(HeapWordSize) \
   declare_constant(InvocationEntryBci) \
@@ -468,9 +460,7 @@
   declare_constant(Method::_caller_sensitive) \
   declare_constant(Method::_force_inline) \
   declare_constant(Method::_dont_inline) \
-  declare_constant(Method::_hidden) \
   declare_constant(Method::_intrinsic_candidate) \
-  declare_constant(Method::_reserved_stack_access) \
  \
   declare_constant(Method::nonvirtual_vtable_index) \
   declare_constant(Method::invalid_vtable_index) \

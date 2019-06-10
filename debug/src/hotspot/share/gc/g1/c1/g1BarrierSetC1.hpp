@@ -20,22 +20,20 @@ class G1PreBarrierStub: public CodeStub {
   G1PreBarrierStub(LIR_Opr addr, LIR_Opr pre_val, LIR_PatchCode patch_code, CodeEmitInfo* info) :
     _addr(addr), _pre_val(pre_val), _do_load(true),
     _patch_code(patch_code), _info(info)
-  {
-  }
+  { }
 
   // Version that _does not_ generate load of the previous value; the
   // previous value is assumed to have already been loaded into pre_val.
   G1PreBarrierStub(LIR_Opr pre_val) :
     _addr(LIR_OprFact::illegalOpr), _pre_val(pre_val), _do_load(false),
     _patch_code(lir_patch_none), _info(NULL)
-  {
-  }
+  { }
 
-  LIR_Opr addr() const { return _addr; }
-  LIR_Opr pre_val() const { return _pre_val; }
+  LIR_Opr addr()             const { return _addr; }
+  LIR_Opr pre_val()          const { return _pre_val; }
   LIR_PatchCode patch_code() const { return _patch_code; }
-  CodeEmitInfo* info() const { return _info; }
-  bool do_load() const { return _do_load; }
+  CodeEmitInfo* info()       const { return _info; }
+  bool do_load()             const { return _do_load; }
 
   virtual void emit_code(LIR_Assembler* e);
   virtual void visit(LIR_OpVisitState* visitor) {

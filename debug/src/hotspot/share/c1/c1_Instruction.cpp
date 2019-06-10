@@ -796,9 +796,3 @@ int Phi::operand_count() const {
     return _block->number_of_preds();
   }
 }
-
-void RangeCheckPredicate::check_state() { }
-
-void ProfileInvoke::state_values_do(ValueVisitor* f) {
-  if (state() != NULL) state()->values_do(f);
-}

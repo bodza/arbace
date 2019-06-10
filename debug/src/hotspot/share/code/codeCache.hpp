@@ -204,27 +204,15 @@ class CodeCache : AllStatic {
     return get_code_heap(cm)->code_blob_type();
   }
 
-  static bool code_blob_type_accepts_compiled(int type) {
-    bool result = type == CodeBlobType::All || type <= CodeBlobType::MethodProfiled;
-    return result;
-  }
-
-  static bool code_blob_type_accepts_nmethod(int type) {
-    return type == CodeBlobType::All || type <= CodeBlobType::MethodProfiled;
-  }
-
-  static bool code_blob_type_accepts_allocable(int type) {
-    return type <= CodeBlobType::All;
-  }
+  static bool code_blob_type_accepts_compiled(int type)  { return type == CodeBlobType::All || type <= CodeBlobType::MethodProfiled; }
+  static bool code_blob_type_accepts_nmethod(int type)   { return type == CodeBlobType::All || type <= CodeBlobType::MethodProfiled; }
+  static bool code_blob_type_accepts_allocable(int type) { return type <= CodeBlobType::All; }
 
   // Returns the CodeBlobType for the given compilation level
   static int get_code_blob_type(int comp_level) {
     if (comp_level == CompLevel_none || comp_level == CompLevel_simple || comp_level == CompLevel_full_optimization) {
       // Non profiled methods
       return CodeBlobType::MethodNonProfiled;
-    } else if (comp_level == CompLevel_limited_profile || comp_level == CompLevel_full_profile) {
-      // Profiled methods
-      return CodeBlobType::MethodProfiled;
     }
     ShouldNotReachHere();
     return 0;

@@ -53,7 +53,6 @@ class Compilation: public StackObj {
   bool               _has_unsafe_access;
   bool               _would_profile;
   bool               _has_method_handle_invokes;  // True if this method has MethodHandle invokes.
-  bool               _has_reserved_stack_access;
   const char*        _bailout_msg;
   ExceptionInfoList* _exception_info_list;
   ExceptionHandlerTable _exception_handler_table;
@@ -134,13 +133,10 @@ class Compilation: public StackObj {
   bool     has_method_handle_invokes() const { return _has_method_handle_invokes; }
   void set_has_method_handle_invokes(bool z) {        _has_method_handle_invokes = z; }
 
-  bool     has_reserved_stack_access() const { return _has_reserved_stack_access; }
-  void set_has_reserved_stack_access(bool z) { _has_reserved_stack_access = z; }
-
   DebugInformationRecorder* debug_info_recorder() const; // = _env->debug_info();
   ImplicitExceptionTable* implicit_exception_table()     { return &_implicit_exception_table; }
 
-  Instruction* current_instruction()       const { return _current_instruction; }
+  Instruction* current_instruction()   const { return _current_instruction; }
   Instruction* set_current_instruction(Instruction* instr) {
     Instruction* previous = _current_instruction;
     _current_instruction = instr;
@@ -149,8 +145,8 @@ class Compilation: public StackObj {
 
   // error handling
   void bailout(const char* msg);
-  bool bailed_out()                        const { return _bailout_msg != NULL; }
-  const char* bailout_msg()                const { return _bailout_msg; }
+  bool bailed_out()         const { return _bailout_msg != NULL; }
+  const char* bailout_msg() const { return _bailout_msg; }
 
   static int desired_max_code_buffer_size() {
     return (int)NMethodSizeLimit;  // default 64K
@@ -160,22 +156,6 @@ class Compilation: public StackObj {
   }
 
   static bool setup_code_buffer(CodeBuffer* cb, int call_stub_estimate);
-
-  bool is_profiling() {
-    return env()->comp_level() == CompLevel_full_profile || env()->comp_level() == CompLevel_limited_profile;
-  }
-  bool count_invocations() { return is_profiling(); }
-  bool count_backedges()   { return is_profiling(); }
-
-  // Helpers for generation of profile information
-  bool profile_branches()      { return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && C1ProfileBranches; }
-  bool profile_calls()         { return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && C1ProfileCalls; }
-  bool profile_inlined_calls() { return profile_calls() && C1ProfileInlinedCalls; }
-  bool profile_checkcasts()    { return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && C1ProfileCheckcasts; }
-  bool profile_parameters()    { return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && MethodData::profile_parameters(); }
-  bool profile_arguments()     { return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && MethodData::profile_arguments(); }
-  bool profile_return()        { return env()->comp_level() == CompLevel_full_profile && C1UpdateMethodData && MethodData::profile_return(); }
-  bool age_code()        const { return _method->profile_aging(); }
 };
 
 // Macro definitions for unified bailout-support

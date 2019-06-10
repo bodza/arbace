@@ -1569,13 +1569,6 @@ static inline jlong replicate8_imm(int con, int width) {
 
 %}
 
-encode %{
-
-  enc_class call_epilog %{
-  %}
-
-%}
-
 //----------OPERANDS-----------------------------------------------------------
 // Operand definitions must precede instruction definitions for correct parsing
 // in the ADLC because operands constitute user defined types which are used in

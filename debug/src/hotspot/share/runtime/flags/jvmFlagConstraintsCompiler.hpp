@@ -10,35 +10,17 @@
  */
 
 JVMFlag::Error AliasLevelConstraintFunc(intx value, bool verbose);
-
 JVMFlag::Error CICompilerCountConstraintFunc(intx value, bool verbose);
-
 JVMFlag::Error AllocatePrefetchDistanceConstraintFunc(intx value, bool verbose);
-
 JVMFlag::Error AllocatePrefetchInstrConstraintFunc(intx value, bool verbose);
-
 JVMFlag::Error AllocatePrefetchStepSizeConstraintFunc(intx value, bool verbose);
-
 JVMFlag::Error CompileThresholdConstraintFunc(intx value, bool verbose);
-
-JVMFlag::Error OnStackReplacePercentageConstraintFunc(intx value, bool verbose);
-
 JVMFlag::Error CodeCacheSegmentSizeConstraintFunc(uintx value, bool verbose);
-
 JVMFlag::Error CompilerThreadPriorityConstraintFunc(intx value, bool verbose);
-
 JVMFlag::Error CodeEntryAlignmentConstraintFunc(intx value, bool verbose);
-
 JVMFlag::Error OptoLoopAlignmentConstraintFunc(intx value, bool verbose);
-
 JVMFlag::Error ArraycopyDstPrefetchDistanceConstraintFunc(uintx value, bool verbose);
-
 JVMFlag::Error ArraycopySrcPrefetchDistanceConstraintFunc(uintx value, bool verbose);
-
-JVMFlag::Error TypeProfileLevelConstraintFunc(uintx value, bool verbose);
-
 JVMFlag::Error InitArrayShortSizeConstraintFunc(intx value, bool verbose);
-
-JVMFlag::Error RTMTotalCountIncrRateConstraintFunc(int value, bool verbose);
 
 #endif

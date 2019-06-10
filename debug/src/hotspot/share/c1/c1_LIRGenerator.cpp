@@ -759,36 +759,6 @@ LIR_Opr LIRGenerator::force_to_spill(LIR_Opr value, BasicType t) {
   return tmp;
 }
 
-void LIRGenerator::profile_branch(If* if_instr, If::Condition cond) {
-  if (if_instr->should_profile()) {
-    ciMethod* method = if_instr->profiled_method();
-    ciMethodData* md = method->method_data_or_null();
-    ciProfileData* data = md->bci_to_data(if_instr->profiled_bci());
-    int taken_count_offset     = md->byte_offset_of_slot(data, BranchData::taken_offset());
-    int not_taken_count_offset = md->byte_offset_of_slot(data, BranchData::not_taken_offset());
-    if (if_instr->is_swapped()) {
-      int t = taken_count_offset;
-      taken_count_offset = not_taken_count_offset;
-      not_taken_count_offset = t;
-    }
-
-    LIR_Opr md_reg = new_register(T_METADATA);
-    __ metadata2reg(md->constant_encoding(), md_reg);
-
-    LIR_Opr data_offset_reg = new_pointer_register();
-    __ cmove(lir_cond(cond), LIR_OprFact::intptrConst(taken_count_offset), LIR_OprFact::intptrConst(not_taken_count_offset), data_offset_reg, as_BasicType(if_instr->x()->type()));
-
-    // MDO cells are intptr_t, so the data_reg width is arch-dependent.
-    LIR_Opr data_reg = new_pointer_register();
-    LIR_Address* data_addr = new LIR_Address(md_reg, data_offset_reg, data_reg->type());
-    __ move(data_addr, data_reg);
-    // Use leal instead of add to avoid destroying condition codes on x86
-    LIR_Address* fake_incr_value = new LIR_Address(data_reg, DataLayout::counter_increment, T_INT);
-    __ leal(LIR_OprFact::address(fake_incr_value), data_reg);
-    __ move(data_reg, data_addr);
-  }
-}
-
 // Phi technique:
 // This is about passing live values from one basic block to the other.
 // In code generated with Java it is rather rare that more than one
@@ -1268,7 +1238,7 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
   bool needs_range_check = x->compute_needs_range_check();
   bool use_length = x->length() != NULL;
   bool obj_store = x->elt_type() == T_ARRAY || x->elt_type() == T_OBJECT;
-  bool needs_store_check = obj_store && (x->value()->as_Constant() == NULL || !get_jobject_constant(x->value())->is_null_object() || x->should_profile());
+  bool needs_store_check = obj_store && (x->value()->as_Constant() == NULL || !get_jobject_constant(x->value())->is_null_object());
 
   LIRItem array(x->array(), this);
   LIRItem index(x->index(), this);
@@ -1312,7 +1282,7 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {
 
   if (GenerateArrayStoreCheck && needs_store_check) {
     CodeEmitInfo* store_check_info = new CodeEmitInfo(range_check_info);
-    array_store_check(value.result(), array.result(), store_check_info, x->profiled_method(), x->profiled_bci());
+    array_store_check(value.result(), array.result(), store_check_info);
   }
 
   DecoratorSet decorators = IN_HEAP | IS_ARRAY;
@@ -1688,31 +1658,6 @@ void LIRGenerator::do_TableSwitch(TableSwitch* x) {
   int len = x->length();
   LIR_Opr value = tag.result();
 
-  if (compilation()->env()->comp_level() == CompLevel_full_profile && UseSwitchProfiling) {
-    ciMethod* method = x->state()->scope()->method();
-    ciMethodData* md = method->method_data_or_null();
-    ciProfileData* data = md->bci_to_data(x->state()->bci());
-    int default_count_offset = md->byte_offset_of_slot(data, MultiBranchData::default_count_offset());
-    LIR_Opr md_reg = new_register(T_METADATA);
-    __ metadata2reg(md->constant_encoding(), md_reg);
-    LIR_Opr data_offset_reg = new_pointer_register();
-    LIR_Opr tmp_reg = new_pointer_register();
-
-    __ move(LIR_OprFact::intptrConst(default_count_offset), data_offset_reg);
-    for (int i = 0; i < len; i++) {
-      int count_offset = md->byte_offset_of_slot(data, MultiBranchData::case_count_offset(i));
-      __ cmp(lir_cond_equal, value, i + lo_key);
-      __ move(data_offset_reg, tmp_reg);
-      __ cmove(lir_cond_equal, LIR_OprFact::intptrConst(count_offset), tmp_reg, data_offset_reg, T_INT);
-    }
-
-    LIR_Opr data_reg = new_pointer_register();
-    LIR_Address* data_addr = new LIR_Address(md_reg, data_offset_reg, data_reg->type());
-    __ move(data_addr, data_reg);
-    __ add(data_reg, LIR_OprFact::intptrConst(1), data_reg);
-    __ move(data_reg, data_addr);
-  }
-
   if (UseTableRanges) {
     do_SwitchRanges(create_lookup_ranges(x), value, x->default_sux());
   } else {
@@ -1739,31 +1684,6 @@ void LIRGenerator::do_LookupSwitch(LookupSwitch* x) {
   LIR_Opr value = tag.result();
   int len = x->length();
 
-  if (compilation()->env()->comp_level() == CompLevel_full_profile && UseSwitchProfiling) {
-    ciMethod* method = x->state()->scope()->method();
-    ciMethodData* md = method->method_data_or_null();
-    ciProfileData* data = md->bci_to_data(x->state()->bci());
-    int default_count_offset = md->byte_offset_of_slot(data, MultiBranchData::default_count_offset());
-    LIR_Opr md_reg = new_register(T_METADATA);
-    __ metadata2reg(md->constant_encoding(), md_reg);
-    LIR_Opr data_offset_reg = new_pointer_register();
-    LIR_Opr tmp_reg = new_pointer_register();
-
-    __ move(LIR_OprFact::intptrConst(default_count_offset), data_offset_reg);
-    for (int i = 0; i < len; i++) {
-      int count_offset = md->byte_offset_of_slot(data, MultiBranchData::case_count_offset(i));
-      __ cmp(lir_cond_equal, value, x->key_at(i));
-      __ move(data_offset_reg, tmp_reg);
-      __ cmove(lir_cond_equal, LIR_OprFact::intptrConst(count_offset), tmp_reg, data_offset_reg, T_INT);
-    }
-
-    LIR_Opr data_reg = new_pointer_register();
-    LIR_Address* data_addr = new LIR_Address(md_reg, data_offset_reg, data_reg->type());
-    __ move(data_addr, data_reg);
-    __ add(data_reg, LIR_OprFact::intptrConst(1), data_reg);
-    __ move(data_reg, data_addr);
-  }
-
   if (UseTableRanges) {
     do_SwitchRanges(create_lookup_ranges(x), value, x->default_sux());
   } else {
@@ -1782,30 +1702,7 @@ void LIRGenerator::do_Goto(Goto* x) {
   if (x->is_safepoint()) {
     ValueStack* state = x->state_before() ? x->state_before() : x->state();
 
-    // increment backedge counter if needed
-    CodeEmitInfo* info = state_for(x, state);
-    increment_backedge_counter(info, x->profiled_bci());
-    CodeEmitInfo* safepoint_info = state_for(x, state);
-    __ safepoint(safepoint_poll_register(), safepoint_info);
-  }
-
-  // Gotos can be folded Ifs, handle this case.
-  if (x->should_profile()) {
-    ciMethod* method = x->profiled_method();
-    ciMethodData* md = method->method_data_or_null();
-    ciProfileData* data = md->bci_to_data(x->profiled_bci());
-    int offset;
-    if (x->direction() == Goto::taken) {
-      offset = md->byte_offset_of_slot(data, BranchData::taken_offset());
-    } else if (x->direction() == Goto::not_taken) {
-      offset = md->byte_offset_of_slot(data, BranchData::not_taken_offset());
-    } else {
-      offset = md->byte_offset_of_slot(data, JumpData::taken_offset());
-    }
-    LIR_Opr md_reg = new_register(T_METADATA);
-    __ metadata2reg(md->constant_encoding(), md_reg);
-
-    increment_counter(new LIR_Address(md_reg, offset, T_LONG), DataLayout::counter_increment);
+    __ safepoint(safepoint_poll_register(), state_for(x, state));
   }
 
   // emit phi-instruction move after safepoint since this simplifies
@@ -1813,126 +1710,6 @@ void LIRGenerator::do_Goto(Goto* x) {
   move_to_phi(x->state());
 
   __ jump(x->default_sux());
-}
-
-/**
- * Emit profiling code if needed for arguments, parameters, return value types
- *
- * @param md                    MDO the code will update at runtime
- * @param md_base_offset        common offset in the MDO for this profile and subsequent ones
- * @param md_offset             offset in the MDO (on top of md_base_offset) for this profile
- * @param profiled_k            current profile
- * @param obj                   IR node for the object to be profiled
- * @param mdp                   register to hold the pointer inside the MDO (md + md_base_offset).
- *                              Set once we find an update to make and use for next ones.
- * @param not_null              true if we know obj cannot be null
- * @param signature_at_call_k   signature at call for obj
- * @param callee_signature_k    signature of callee for obj
- *                              at call and callee signatures differ at method handle call
- * @return                      the only klass we know will ever be seen at this profile point
- */
-ciKlass* LIRGenerator::profile_type(ciMethodData* md, int md_base_offset, int md_offset, intptr_t profiled_k,
-                                    Value obj, LIR_Opr& mdp, bool not_null, ciKlass* signature_at_call_k,
-                                    ciKlass* callee_signature_k) {
-  ciKlass* result = NULL;
-  bool do_null = !not_null && !TypeEntries::was_null_seen(profiled_k);
-  bool do_update = !TypeEntries::is_type_unknown(profiled_k);
-  // known not to be null or null bit already set and already set to
-  // unknown: nothing we can do to improve profiling
-  if (!do_null && !do_update) {
-    return result;
-  }
-
-  ciKlass* exact_klass = NULL;
-  Compilation* comp = Compilation::current();
-  if (do_update) {
-    // try to find exact type, using CHA if possible, so that loading
-    // the klass from the object can be avoided
-    ciType* type = obj->exact_type();
-    exact_klass = (type != NULL && type->is_loaded()) ? (ciKlass*)type : NULL;
-
-    do_update = exact_klass == NULL || ciTypeEntries::valid_ciklass(profiled_k) != exact_klass;
-  }
-
-  if (!do_null && !do_update) {
-    return result;
-  }
-
-  ciKlass* exact_signature_k = NULL;
-  if (do_update) {
-    // Is the type from the signature exact (the only one possible)?
-    exact_signature_k = signature_at_call_k->exact_klass();
-    if (exact_signature_k != NULL) {
-      result = exact_signature_k;
-      // Known statically. No need to emit any code: prevent
-      // LIR_Assembler::emit_profile_type() from emitting useless code
-      profiled_k = ciTypeEntries::with_status(result, profiled_k);
-    }
-    // exact_klass and exact_signature_k can be both non NULL but
-    // different if exact_klass is loaded after the ciObject for
-    // exact_signature_k is created.
-    if (exact_klass == NULL && exact_signature_k != NULL && exact_klass != exact_signature_k) {
-      // sometimes the type of the signature is better than the best type
-      // the compiler has
-      exact_klass = exact_signature_k;
-    }
-    if (callee_signature_k != NULL && callee_signature_k != signature_at_call_k) {
-      ciKlass* improved_klass = callee_signature_k->exact_klass();
-      if (exact_klass == NULL && improved_klass != NULL && exact_klass != improved_klass) {
-        exact_klass = exact_signature_k;
-      }
-    }
-    do_update = exact_klass == NULL || ciTypeEntries::valid_ciklass(profiled_k) != exact_klass;
-  }
-
-  if (!do_null && !do_update) {
-    return result;
-  }
-
-  if (mdp == LIR_OprFact::illegalOpr) {
-    mdp = new_register(T_METADATA);
-    __ metadata2reg(md->constant_encoding(), mdp);
-    if (md_base_offset != 0) {
-      LIR_Address* base_type_address = new LIR_Address(mdp, md_base_offset, T_ADDRESS);
-      mdp = new_pointer_register();
-      __ leal(LIR_OprFact::address(base_type_address), mdp);
-    }
-  }
-  LIRItem value(obj, this);
-  value.load_item();
-  __ profile_type(new LIR_Address(mdp, md_offset, T_METADATA), value.result(), exact_klass, profiled_k, new_pointer_register(), not_null, exact_signature_k != NULL);
-  return result;
-}
-
-// profile parameters on entry to the root of the compilation
-void LIRGenerator::profile_parameters(Base* x) {
-  if (compilation()->profile_parameters()) {
-    CallingConvention* args = compilation()->frame_map()->incoming_arguments();
-    ciMethodData* md = scope()->method()->method_data_or_null();
-
-    if (md->parameters_type_data() != NULL) {
-      ciParametersTypeData* parameters_type_data = md->parameters_type_data();
-      ciTypeStackSlotEntries* parameters =  parameters_type_data->parameters();
-      LIR_Opr mdp = LIR_OprFact::illegalOpr;
-      for (int java_index = 0, i = 0, j = 0; j < parameters_type_data->number_of_parameters(); i++) {
-        LIR_Opr src = args->at(i);
-        BasicType t = src->type();
-        if (t == T_OBJECT || t == T_ARRAY) {
-          intptr_t profiled_k = parameters->type(j);
-          Local* local = x->state()->local_at(java_index)->as_Local();
-          ciKlass* exact = profile_type(md, md->byte_offset_of_slot(parameters_type_data, ParametersTypeData::type_offset(0)),
-                                        in_bytes(ParametersTypeData::type_offset(j)) - in_bytes(ParametersTypeData::type_offset(0)),
-                                        profiled_k, local, mdp, false, local->declared_type()->as_klass(), NULL);
-          // If the profile is known statically set it once for all and do not emit any code
-          if (exact != NULL) {
-            md->set_parameter_type(j, exact);
-          }
-          j++;
-        }
-        java_index += type2size[t];
-      }
-    }
-  }
 }
 
 void LIRGenerator::do_Base(Base* x) {
@@ -1988,16 +1765,6 @@ void LIRGenerator::do_Base(Base* x) {
       // receiver is guaranteed non-NULL so don't need CodeEmitInfo
       __ lock_object(syncTempOpr(), obj, lock, new_register(T_OBJECT), slow_path, NULL);
     }
-  }
-  if (compilation()->age_code()) {
-    CodeEmitInfo* info = new CodeEmitInfo(scope()->start()->state()->copy(ValueStack::StateBefore, 0), NULL, false);
-    decrement_age(info);
-  }
-  // increment invocation counters if needed
-  if (!method()->is_accessor()) { // Accessors do not have MDOs, so no counting.
-    profile_parameters(x);
-    CodeEmitInfo* info = new CodeEmitInfo(scope()->start()->state()->copy(ValueStack::StateBefore, SynchronizationEntryBCI), NULL, false);
-    increment_invocation_counter(info);
   }
 
   // all blocks with a successor must end with an unconditional jump
@@ -2169,200 +1936,6 @@ void LIRGenerator::do_IfOp(IfOp* x) {
 
   __ cmp(lir_cond(x->cond()), left.result(), right.result());
   __ cmove(lir_cond(x->cond()), t_val.result(), f_val.result(), reg, as_BasicType(x->x()->type()));
-}
-
-void LIRGenerator::profile_arguments(ProfileCall* x) {
-  if (compilation()->profile_arguments()) {
-    int bci = x->bci_of_invoke();
-    ciMethodData* md = x->method()->method_data_or_null();
-    ciProfileData* data = md->bci_to_data(bci);
-    if (data != NULL) {
-      if ((data->is_CallTypeData() && data->as_CallTypeData()->has_arguments()) || (data->is_VirtualCallTypeData() && data->as_VirtualCallTypeData()->has_arguments())) {
-        ByteSize extra = data->is_CallTypeData() ? CallTypeData::args_data_offset() : VirtualCallTypeData::args_data_offset();
-        int base_offset = md->byte_offset_of_slot(data, extra);
-        LIR_Opr mdp = LIR_OprFact::illegalOpr;
-        ciTypeStackSlotEntries* args = data->is_CallTypeData() ? ((ciCallTypeData*)data)->args() : ((ciVirtualCallTypeData*)data)->args();
-
-        Bytecodes::Code bc = x->method()->java_code_at_bci(bci);
-        int start = 0;
-        int stop = data->is_CallTypeData() ? ((ciCallTypeData*)data)->number_of_arguments() : ((ciVirtualCallTypeData*)data)->number_of_arguments();
-        if (x->callee()->is_loaded() && x->callee()->is_static() && Bytecodes::has_receiver(bc)) {
-          // first argument is not profiled at call (method handle invoke)
-          start = 1;
-        }
-        ciSignature* callee_signature = x->callee()->signature();
-        // method handle call to virtual method
-        bool has_receiver = x->callee()->is_loaded() && !x->callee()->is_static() && !Bytecodes::has_receiver(bc);
-        ciSignatureStream callee_signature_stream(callee_signature, has_receiver ? x->callee()->holder() : NULL);
-
-        bool ignored_will_link;
-        ciSignature* signature_at_call = NULL;
-        x->method()->get_method_at_bci(bci, ignored_will_link, &signature_at_call);
-        ciSignatureStream signature_at_call_stream(signature_at_call);
-
-        // if called through method handle invoke, some arguments may have been popped
-        for (int i = 0; i < stop && i+start < x->nb_profiled_args(); i++) {
-          int off = in_bytes(TypeEntriesAtCall::argument_type_offset(i)) - in_bytes(TypeEntriesAtCall::args_data_offset());
-          ciKlass* exact = profile_type(md, base_offset, off,
-              args->type(i), x->profiled_arg_at(i+start), mdp,
-              !x->arg_needs_null_check(i+start),
-              signature_at_call_stream.next_klass(), callee_signature_stream.next_klass());
-          if (exact != NULL) {
-            md->set_argument_type(bci, i, exact);
-          }
-        }
-      }
-    }
-  }
-}
-
-// profile parameters on entry to an inlined method
-void LIRGenerator::profile_parameters_at_call(ProfileCall* x) {
-  if (compilation()->profile_parameters() && x->inlined()) {
-    ciMethodData* md = x->callee()->method_data_or_null();
-    if (md != NULL) {
-      ciParametersTypeData* parameters_type_data = md->parameters_type_data();
-      if (parameters_type_data != NULL) {
-        ciTypeStackSlotEntries* parameters =  parameters_type_data->parameters();
-        LIR_Opr mdp = LIR_OprFact::illegalOpr;
-        bool has_receiver = !x->callee()->is_static();
-        ciSignature* sig = x->callee()->signature();
-        ciSignatureStream sig_stream(sig, has_receiver ? x->callee()->holder() : NULL);
-        int i = 0; // to iterate on the Instructions
-        Value arg = x->recv();
-        bool not_null = false;
-        int bci = x->bci_of_invoke();
-        Bytecodes::Code bc = x->method()->java_code_at_bci(bci);
-        // The first parameter is the receiver so that's what we start
-        // with if it exists. One exception is method handle call to
-        // virtual method: the receiver is in the args list
-        if (arg == NULL || !Bytecodes::has_receiver(bc)) {
-          i = 1;
-          arg = x->profiled_arg_at(0);
-          not_null = !x->arg_needs_null_check(0);
-        }
-        int k = 0; // to iterate on the profile data
-        for (;;) {
-          intptr_t profiled_k = parameters->type(k);
-          ciKlass* exact = profile_type(md, md->byte_offset_of_slot(parameters_type_data, ParametersTypeData::type_offset(0)),
-                                        in_bytes(ParametersTypeData::type_offset(k)) - in_bytes(ParametersTypeData::type_offset(0)),
-                                        profiled_k, arg, mdp, not_null, sig_stream.next_klass(), NULL);
-          // If the profile is known statically set it once for all and do not emit any code
-          if (exact != NULL) {
-            md->set_parameter_type(k, exact);
-          }
-          k++;
-          if (k >= parameters_type_data->number_of_parameters()) {
-            break;
-          }
-          arg = x->profiled_arg_at(i);
-          not_null = !x->arg_needs_null_check(i);
-          i++;
-        }
-      }
-    }
-  }
-}
-
-void LIRGenerator::increment_backedge_counter_conditionally(LIR_Condition cond, LIR_Opr left, LIR_Opr right, CodeEmitInfo* info, int left_bci, int right_bci, int bci) {
-  if (compilation()->count_backedges()) {
-    __ cmp(cond, left, right);
-    LIR_Opr step = new_register(T_INT);
-    LIR_Opr plus_one = LIR_OprFact::intConst(InvocationCounter::count_increment);
-    LIR_Opr zero = LIR_OprFact::intConst(0);
-    __ cmove(cond, (left_bci < bci) ? plus_one : zero, (right_bci < bci) ? plus_one : zero, step, left->type());
-    increment_backedge_counter(info, step, bci);
-  }
-}
-
-void LIRGenerator::increment_event_counter(CodeEmitInfo* info, LIR_Opr step, int bci, bool backedge) {
-  int freq_log = 0;
-  int level = compilation()->env()->comp_level();
-  if (level == CompLevel_limited_profile) {
-    freq_log = (backedge ? Tier2BackedgeNotifyFreqLog : Tier2InvokeNotifyFreqLog);
-  } else if (level == CompLevel_full_profile) {
-    freq_log = (backedge ? Tier3BackedgeNotifyFreqLog : Tier3InvokeNotifyFreqLog);
-  } else {
-    ShouldNotReachHere();
-  }
-  // Increment the appropriate invocation/backedge counter and notify the runtime.
-  double scale;
-  if (_method->has_option_value("CompileThresholdScaling", scale)) {
-    freq_log = CompilerConfig::scaled_freq_log(freq_log, scale);
-  }
-  increment_event_counter_impl(info, info->scope()->method(), step, right_n_bits(freq_log), bci, backedge, true);
-}
-
-void LIRGenerator::decrement_age(CodeEmitInfo* info) {
-  ciMethod* method = info->scope()->method();
-  MethodCounters* mc_adr = method->ensure_method_counters();
-  if (mc_adr != NULL) {
-    LIR_Opr mc = new_pointer_register();
-    __ move(LIR_OprFact::intptrConst(mc_adr), mc);
-    int offset = in_bytes(MethodCounters::nmethod_age_offset());
-    LIR_Address* counter = new LIR_Address(mc, offset, T_INT);
-    LIR_Opr result = new_register(T_INT);
-    __ load(counter, result);
-    __ sub(result, LIR_OprFact::intConst(1), result);
-    __ store(result, counter);
-    CodeStub* NULL = new NULL(info, NULL::Reason_tenured, NULL::Action_make_not_entrant);
-    __ cmp(lir_cond_lessEqual, result, LIR_OprFact::intConst(0));
-    __ branch(lir_cond_lessEqual, T_INT, NULL);
-  }
-}
-
-void LIRGenerator::increment_event_counter_impl(CodeEmitInfo* info, ciMethod *method, LIR_Opr step, int frequency, int bci, bool backedge, bool notify) {
-  int level = _compilation->env()->comp_level();
-
-  int offset = -1;
-  LIR_Opr counter_holder = NULL;
-  if (level == CompLevel_limited_profile) {
-    MethodCounters* counters_adr = method->ensure_method_counters();
-    if (counters_adr == NULL) {
-      bailout("method counters allocation failed");
-      return;
-    }
-    counter_holder = new_pointer_register();
-    __ move(LIR_OprFact::intptrConst(counters_adr), counter_holder);
-    offset = in_bytes(backedge ? MethodCounters::backedge_counter_offset() : MethodCounters::invocation_counter_offset());
-  } else if (level == CompLevel_full_profile) {
-    counter_holder = new_register(T_METADATA);
-    offset = in_bytes(backedge ? MethodData::backedge_counter_offset() : MethodData::invocation_counter_offset());
-    ciMethodData* md = method->method_data_or_null();
-    __ metadata2reg(md->constant_encoding(), counter_holder);
-  } else {
-    ShouldNotReachHere();
-  }
-  LIR_Address* counter = new LIR_Address(counter_holder, offset, T_INT);
-  LIR_Opr result = new_register(T_INT);
-  __ load(counter, result);
-  __ add(result, step, result);
-  __ store(result, counter);
-  if (notify && !backedge) {
-    LIR_Opr meth = LIR_OprFact::metadataConst(method->constant_encoding());
-    // The bci for info can point to cmp for if's we want the if bci
-    CodeStub* overflow = new NULL(info, bci, meth);
-    int freq = frequency << InvocationCounter::count_shift;
-    if (freq == 0) {
-      if (!step->is_constant()) {
-        __ cmp(lir_cond_notEqual, step, LIR_OprFact::intConst(0));
-        __ branch(lir_cond_notEqual, T_ILLEGAL, overflow);
-      } else {
-        __ branch(lir_cond_always, T_ILLEGAL, overflow);
-      }
-    } else {
-      LIR_Opr mask = load_immediate(freq, T_INT);
-      if (!step->is_constant()) {
-        // If step is 0, make sure the overflow check below always fails
-        __ cmp(lir_cond_notEqual, step, LIR_OprFact::intConst(0));
-        __ cmove(lir_cond_notEqual, result, LIR_OprFact::intConst(InvocationCounter::count_increment), result, T_INT);
-      }
-      __ logical_and(result, mask, result);
-      __ cmp(lir_cond_equal, result, LIR_OprFact::intConst(0));
-      __ branch(lir_cond_equal, T_INT, overflow);
-    }
-    __ branch_destination(overflow->continuation());
-  }
 }
 
 LIR_Opr LIRGenerator::call_runtime(Value arg1, address entry, ValueType* result_type, CodeEmitInfo* info) {

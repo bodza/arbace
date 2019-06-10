@@ -312,8 +312,6 @@ class Arguments : AllStatic {
 
   // Used to save default settings
   static bool _AlwaysCompileLoopMethods;
-  static bool _BackgroundCompilation;
-  static bool _ClipInlining;
   static bool _CIDynamicCompilePriority;
   static intx _Tier3InvokeNotifyFreqLog;
   static intx _Tier4InvocationThreshold;

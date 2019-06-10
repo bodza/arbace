@@ -774,8 +774,6 @@ class CodeBlob;
 class  CompiledMethod;
 class   nmethod;
 class RuntimeBlob;
-class  I2CAdapter;
-class  C2IAdapter;
 class CompiledIC;
 class relocInfo;
 class ScopeDesc;

@@ -69,9 +69,6 @@ public:
 
   static Handle get_current_contended_monitor(JavaThread* thread);
 
-  // This function is called by JVM_DumpThreads.
-  static Handle dump_stack_traces(GrowableArray<instanceHandle>* threads, int num_threads, TRAPS);
-
   static void reset_peak_thread_count();
   static void reset_contention_count_stat(JavaThread* thread);
   static void reset_contention_time_stat(JavaThread* thread);
@@ -224,7 +221,6 @@ class ThreadStackTrace : public CHeapObj<mtInternal> {
 
   void            add_stack_frame(javaVFrame* jvf);
   void            dump_stack_at_safepoint(int max_depth);
-  Handle          allocate_fill_stack_trace_element_array(TRAPS);
   void            oops_do(OopClosure* f);
   void            metadata_do(void f(Metadata*));
   GrowableArray<oop>* jni_locked_monitors() { return _jni_locked_monitors; }

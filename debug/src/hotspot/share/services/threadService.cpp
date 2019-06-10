@@ -186,44 +186,6 @@ void ThreadService::remove_thread_dump(ThreadDumpResult* dump) {
   }
 }
 
-// Dump stack trace of threads specified in the given threads array.
-// Returns StackTraceElement[][] each element is the stack trace of a thread in
-// the corresponding entry in the given threads array
-Handle ThreadService::dump_stack_traces(GrowableArray<instanceHandle>* threads, int num_threads, TRAPS) {
-  ThreadDumpResult dump_result;
-  VM_ThreadDump op(&dump_result,
-                   threads,
-                   num_threads,
-                   -1,    /* entire stack */
-                   false, /* with locked monitors */
-                   false  /* with locked synchronizers */);
-  VMThread::execute(&op);
-
-  // Allocate the resulting StackTraceElement[][] object
-
-  ResourceMark rm(THREAD);
-  Klass* k = SystemDictionary::resolve_or_fail(vmSymbols::java_lang_StackTraceElement_array(), true, CHECK_NH);
-  ObjArrayKlass* ik = ObjArrayKlass::cast(k);
-  objArrayOop r = oopFactory::new_objArray(ik, num_threads, CHECK_NH);
-  objArrayHandle result_obj(THREAD, r);
-
-  int num_snapshots = dump_result.num_snapshots();
-  int i = 0;
-  for (ThreadSnapshot* ts = dump_result.snapshots(); ts != NULL; i++, ts = ts->next()) {
-    ThreadStackTrace* stacktrace = ts->get_stack_trace();
-    if (stacktrace == NULL) {
-      // No stack trace
-      result_obj->obj_at_put(i, NULL);
-    } else {
-      // Construct an array of java/lang/StackTraceElement object
-      Handle backtrace_h = stacktrace->allocate_fill_stack_trace_element_array(CHECK_NH);
-      result_obj->obj_at_put(i, backtrace_h());
-    }
-  }
-
-  return result_obj;
-}
-
 void ThreadService::reset_contention_count_stat(JavaThread* thread) {
   ThreadStatistics* stat = thread->get_thread_stat();
   if (stat != NULL) {
@@ -539,21 +501,6 @@ bool ThreadStackTrace::is_owned_monitor_on_stack(oop object) {
     }
   }
   return found;
-}
-
-Handle ThreadStackTrace::allocate_fill_stack_trace_element_array(TRAPS) {
-  InstanceKlass* ik = SystemDictionary::StackTraceElement_klass();
-
-  // Allocate an array of java/lang/StackTraceElement object
-  objArrayOop ste = oopFactory::new_objArray(ik, _depth, CHECK_NH);
-  objArrayHandle backtrace(THREAD, ste);
-  for (int j = 0; j < _depth; j++) {
-    StackFrameInfo* frame = _frames->at(j);
-    methodHandle mh(THREAD, frame->method());
-    oop element = java_lang_StackTraceElement::create(mh, frame->bci(), CHECK_NH);
-    backtrace->obj_at_put(j, element);
-  }
-  return backtrace;
 }
 
 void ThreadStackTrace::add_stack_frame(javaVFrame* jvf) {

@@ -383,7 +383,6 @@ private:
   void prepare_heap_for_full_collection();
   void prepare_heap_for_mutators();
   void abort_refinement();
-  void print_heap_after_full_collection(G1HeapTransition* heap_transition);
 
   // Helper method for satisfy_failed_allocation()
   HeapWord* satisfy_failed_allocation_helper(size_t word_size, bool do_gc, bool clear_all_soft_refs, bool expect_null_mutator_alloc_region, bool* gc_succeeded);
@@ -1144,7 +1143,6 @@ public:
 
   // Printing
 private:
-  void print_heap_regions() const;
   void print_regions_on(outputStream* st) const;
 
 public:

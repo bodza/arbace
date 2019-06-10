@@ -236,7 +236,7 @@ JVM_handle_linux_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unr
             if (thread->in_stack_reserved_zone(addr)) {
               frame fr;
               if (os::Linux::get_frame_at_stack_banging_point(thread, uc, &fr)) {
-                frame activation = SharedRuntime::look_for_reserved_stack_annotated_method(thread, fr);
+                frame activation = SharedRuntime::NULL(thread, fr);
                 if (activation.sp() != NULL) {
                   thread->disable_stack_reserved_zone();
                   thread->set_reserved_stack_activation((address)activation.unextended_sp());
@@ -285,9 +285,6 @@ JVM_handle_linux_signal(int sig, siginfo_t* info, void* ucVoid, int abort_if_unr
 
       // Handle signal from NativeJump::patch_verified_entry().
       if ((sig == SIGILL || sig == SIGTRAP) && nativeInstruction_at(pc)->is_sigill_zombie_not_entrant()) {
-        if (TraceTraps) {
-          tty->print_cr("trap: zombie_not_entrant (%s)", (sig == SIGTRAP) ? "SIGTRAP" : "SIGILL");
-        }
         stub = SharedRuntime::get_handle_wrong_method_stub();
       } else if (sig == SIGSEGV && os::is_poll_address((address)info->si_addr)) {
         stub = SharedRuntime::get_poll_stub(pc);

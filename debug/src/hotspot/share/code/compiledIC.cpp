@@ -425,12 +425,12 @@ void CompiledStaticCall::compute_entry(const methodHandle& m, bool caller_is_nme
       info._to_aot = false;
     }
     info._to_interpreter = false;
-    info._entry  = m_code->verified_entry_point();
+    info._entry = m_code->verified_entry_point();
   } else {
     // Callee is interpreted code.  In any case entering the interpreter
     // puts a converter-frame on the stack to save arguments.
     info._to_interpreter = true;
-    info._entry      = m()->get_c2i_entry();
+    info._entry = m()->get_c2i_entry();
   }
 }
 

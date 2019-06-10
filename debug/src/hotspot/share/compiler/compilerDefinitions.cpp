@@ -99,60 +99,9 @@ void CompilerConfig::set_tiered_flags() {
     FLAG_SET_ERGO(intx, Tier0InvokeNotifyFreqLog, scaled_freq_log(Tier0InvokeNotifyFreqLog));
     FLAG_SET_ERGO(intx, Tier0BackedgeNotifyFreqLog, scaled_freq_log(Tier0BackedgeNotifyFreqLog));
 
-    FLAG_SET_ERGO(intx, Tier3InvocationThreshold, scaled_compile_threshold(Tier3InvocationThreshold));
-    FLAG_SET_ERGO(intx, Tier3MinInvocationThreshold, scaled_compile_threshold(Tier3MinInvocationThreshold));
-    FLAG_SET_ERGO(intx, Tier3CompileThreshold, scaled_compile_threshold(Tier3CompileThreshold));
-    FLAG_SET_ERGO(intx, Tier3BackEdgeThreshold, scaled_compile_threshold(Tier3BackEdgeThreshold));
-
-    // Tier2{Invocation,MinInvocation,Compile,Backedge}Threshold should be scaled here
-    // once these thresholds become supported.
-
-    FLAG_SET_ERGO(intx, Tier2InvokeNotifyFreqLog, scaled_freq_log(Tier2InvokeNotifyFreqLog));
-    FLAG_SET_ERGO(intx, Tier2BackedgeNotifyFreqLog, scaled_freq_log(Tier2BackedgeNotifyFreqLog));
-
     FLAG_SET_ERGO(intx, Tier3InvokeNotifyFreqLog, scaled_freq_log(Tier3InvokeNotifyFreqLog));
-    FLAG_SET_ERGO(intx, Tier3BackedgeNotifyFreqLog, scaled_freq_log(Tier3BackedgeNotifyFreqLog));
-
-    FLAG_SET_ERGO(intx, Tier23InlineeNotifyFreqLog, scaled_freq_log(Tier23InlineeNotifyFreqLog));
 
     FLAG_SET_ERGO(intx, Tier4InvocationThreshold, scaled_compile_threshold(Tier4InvocationThreshold));
-    FLAG_SET_ERGO(intx, Tier4MinInvocationThreshold, scaled_compile_threshold(Tier4MinInvocationThreshold));
-    FLAG_SET_ERGO(intx, Tier4CompileThreshold, scaled_compile_threshold(Tier4CompileThreshold));
-    FLAG_SET_ERGO(intx, Tier4BackEdgeThreshold, scaled_compile_threshold(Tier4BackEdgeThreshold));
-  }
-}
-
-void set_jvmci_specific_flags() {
-  if (UseJVMCICompiler) {
-    Compilation_mode = CompMode_server;
-
-    if (FLAG_IS_DEFAULT(TypeProfileWidth)) {
-      FLAG_SET_DEFAULT(TypeProfileWidth, 8);
-    }
-    if (FLAG_IS_DEFAULT(OnStackReplacePercentage)) {
-      FLAG_SET_DEFAULT(OnStackReplacePercentage, 933);
-    }
-    // JVMCI needs values not less than defaults
-    if (FLAG_IS_DEFAULT(ReservedCodeCacheSize)) {
-      FLAG_SET_DEFAULT(ReservedCodeCacheSize, MAX2(64*M, ReservedCodeCacheSize));
-    }
-    if (FLAG_IS_DEFAULT(InitialCodeCacheSize)) {
-      FLAG_SET_DEFAULT(InitialCodeCacheSize, MAX2(16*M, InitialCodeCacheSize));
-    }
-    if (FLAG_IS_DEFAULT(MetaspaceSize)) {
-      FLAG_SET_DEFAULT(MetaspaceSize, MAX2(12*M, MetaspaceSize));
-    }
-    if (FLAG_IS_DEFAULT(NewSizeThreadIncrease)) {
-      FLAG_SET_DEFAULT(NewSizeThreadIncrease, MAX2(4*K, NewSizeThreadIncrease));
-    }
-    if (TieredStopAtLevel != CompLevel_full_optimization) {
-      // Currently JVMCI compiler can only work at the full optimization level
-      warning("forcing TieredStopAtLevel to full optimization because JVMCI is enabled");
-      FLAG_SET_ERGO(intx, TieredStopAtLevel, CompLevel_full_optimization);
-    }
-    if (FLAG_IS_DEFAULT(TypeProfileLevel)) {
-      FLAG_SET_DEFAULT(TypeProfileLevel, 0);
-    }
   }
 }
 
@@ -178,13 +127,6 @@ bool CompilerConfig::check_args_consistency(bool status) {
     warning("The VM option CICompilerCountPerCPU overrides CICompilerCount.");
   }
 
-  if (BackgroundCompilation && CompileTheWorld) {
-    if (!FLAG_IS_DEFAULT(BackgroundCompilation)) {
-      warning("BackgroundCompilation disabled due to CompileTheWorld or false options.");
-    }
-    FLAG_SET_CMDLINE(bool, BackgroundCompilation, false);
-  }
-
   return status && JVMCIGlobals::check_jvmci_flags_are_consistent();
 }
 
@@ -192,7 +134,6 @@ void CompilerConfig::ergo_initialize() {
   // Check that JVMCI compiler supports selested GC.
   // Should be done after GCConfig::initialize() was called.
   JVMCIGlobals::check_jvmci_supported_gc();
-  set_jvmci_specific_flags();
 
   {
     int max_compilation_policy_choice = 1;

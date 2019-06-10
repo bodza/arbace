@@ -45,56 +45,24 @@ class Bytecode: public StackObj {
 
   // Static functions for parsing bytecodes in place.
   int get_index_u1(Bytecodes::Code bc) const {
-    assert_same_format_as(bc); assert_index_size(1, bc);
     return *(jubyte*)addr_at(1);
   }
   int get_index_u2(Bytecodes::Code bc, bool is_wide = false) const {
-    assert_same_format_as(bc, is_wide); assert_index_size(2, bc, is_wide);
     address p = addr_at(is_wide ? 2 : 1);
     if (can_use_native_byte_order(bc, is_wide))
       return Bytes::get_native_u2(p);
     else  return Bytes::get_Java_u2(p);
   }
-  int get_index_u1_cpcache(Bytecodes::Code bc) const {
-    assert_same_format_as(bc); assert_index_size(1, bc);
-    return *(jubyte*)addr_at(1) + ConstantPool::CPCACHE_INDEX_TAG;
-  }
-  int get_index_u2_cpcache(Bytecodes::Code bc) const {
-    assert_same_format_as(bc); assert_index_size(2, bc); assert_native_index(bc);
-    return Bytes::get_native_u2(addr_at(1)) + ConstantPool::CPCACHE_INDEX_TAG;
-  }
-  int get_index_u4(Bytecodes::Code bc) const {
-    assert_same_format_as(bc); assert_index_size(4, bc);
-    return Bytes::get_native_u4(addr_at(1));
-  }
-  bool has_index_u4(Bytecodes::Code bc) const {
-    return false;
-  }
+  int get_index_u1_cpcache(Bytecodes::Code bc) const { return *(jubyte*)addr_at(1) + ConstantPool::CPCACHE_INDEX_TAG; }
+  int get_index_u2_cpcache(Bytecodes::Code bc) const { return Bytes::get_native_u2(addr_at(1)) + ConstantPool::CPCACHE_INDEX_TAG; }
 
-  int get_offset_s2(Bytecodes::Code bc) const {
-    assert_same_format_as(bc); assert_offset_size(2, bc);
-    return (jshort) Bytes::get_Java_u2(addr_at(1));
-  }
-  int get_offset_s4(Bytecodes::Code bc) const {
-    assert_same_format_as(bc); assert_offset_size(4, bc);
-    return (jint) Bytes::get_Java_u4(addr_at(1));
-  }
+  int get_offset_s2(Bytecodes::Code bc)        const { return (jshort) Bytes::get_Java_u2(addr_at(1)); }
+  int get_offset_s4(Bytecodes::Code bc)        const { return (jint) Bytes::get_Java_u4(addr_at(1)); }
 
-  int get_constant_u1(int offset, Bytecodes::Code bc) const {
-    assert_same_format_as(bc); assert_constant_size(1, offset, bc);
-    return *(jbyte*)addr_at(offset);
-  }
-  int get_constant_u2(int offset, Bytecodes::Code bc, bool is_wide = false) const {
-    assert_same_format_as(bc, is_wide); assert_constant_size(2, offset, bc, is_wide);
-    return (jshort) Bytes::get_Java_u2(addr_at(offset));
-  }
+  int get_constant_u1(int offset, Bytecodes::Code bc)                       const { return *(jbyte*)addr_at(offset); }
+  int get_constant_u2(int offset, Bytecodes::Code bc, bool is_wide = false) const { return (jshort) Bytes::get_Java_u2(addr_at(offset)); }
 
   // These are used locally and also from bytecode streams.
-  void assert_same_format_as(Bytecodes::Code testbc, bool is_wide = false) const { };
-  static void assert_index_size(int required_size, Bytecodes::Code bc, bool is_wide = false) { };
-  static void assert_offset_size(int required_size, Bytecodes::Code bc, bool is_wide = false) { };
-  static void assert_constant_size(int required_size, int where, Bytecodes::Code bc, bool is_wide = false) { };
-  static void assert_native_index(Bytecodes::Code bc, bool is_wide = false) { };
   static bool can_use_native_byte_order(Bytecodes::Code bc, bool is_wide = false) {
     return (!Endian::is_Java_byte_ordering_different() || Bytecodes::native_byte_order(bc /*, is_wide*/));
   }
@@ -105,8 +73,8 @@ class LookupswitchPair {
  private:
   const address _bcp;
 
-  address addr_at            (int offset)            const { return _bcp + offset; }
-  int     get_Java_u4_at     (int offset)            const { return Bytes::get_Java_u4(addr_at(offset)); }
+  address addr_at            (int offset)  const { return _bcp + offset; }
+  int     get_Java_u4_at     (int offset)  const { return Bytes::get_Java_u4(addr_at(offset)); }
 
  public:
   LookupswitchPair(address bcp): _bcp(bcp) { }

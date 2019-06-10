@@ -64,7 +64,6 @@ void JNIHandleMark::pop_jni_handle_block() {
 // Entry to native method implementation that transitions current thread to '_thread_in_vm'.
 #define C2V_VMENTRY(result_type, name, signature) \
   JNIEXPORT result_type JNICALL c2v_ ## name signature { \
-  TRACE_jvmci_1("CompilerToVM::" #name); \
   JVMCI_VM_ENTRY_MARK;
 
 #define C2V_END }

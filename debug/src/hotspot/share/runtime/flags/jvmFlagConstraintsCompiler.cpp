@@ -89,28 +89,6 @@ JVMFlag::Error CompileThresholdConstraintFunc(intx value, bool verbose) {
   return JVMFlag::SUCCESS;
 }
 
-JVMFlag::Error OnStackReplacePercentageConstraintFunc(intx value, bool verbose) {
-  int backward_branch_limit;
-  {
-    if (OnStackReplacePercentage < 0) {
-      JVMFlag::printError(verbose, "OnStackReplacePercentage (" INTX_FORMAT ") must be non-negative\n", OnStackReplacePercentage);
-      return JVMFlag::VIOLATES_CONSTRAINT;
-    }
-
-    backward_branch_limit = ((CompileThreshold * OnStackReplacePercentage) / 100) << InvocationCounter::count_shift;
-
-    if (backward_branch_limit < 0) {
-      JVMFlag::printError(verbose,
-                          "CompileThreshold * OnStackReplacePercentage / 100 = " INTX_FORMAT " "
-                          "must be between 0 and " INTX_FORMAT ", try changing CompileThreshold and/or OnStackReplacePercentage\n",
-                          (CompileThreshold * OnStackReplacePercentage) / 100,
-                          INT_MAX >> InvocationCounter::count_shift);
-      return JVMFlag::VIOLATES_CONSTRAINT;
-    }
-  }
-  return JVMFlag::SUCCESS;
-}
-
 JVMFlag::Error CodeCacheSegmentSizeConstraintFunc(uintx value, bool verbose) {
   if (CodeCacheSegmentSize < (uintx)CodeEntryAlignment) {
     JVMFlag::printError(verbose,
@@ -181,26 +159,10 @@ JVMFlag::Error ArraycopySrcPrefetchDistanceConstraintFunc(uintx value, bool verb
   return JVMFlag::SUCCESS;
 }
 
-JVMFlag::Error TypeProfileLevelConstraintFunc(uintx value, bool verbose) {
-  for (int i = 0; i < 3; i++) {
-    if (value % 10 > 2) {
-      JVMFlag::printError(verbose, "Invalid value (" UINTX_FORMAT ") in TypeProfileLevel at position %d\n", value, i);
-      return JVMFlag::VIOLATES_CONSTRAINT;
-    }
-    value = value / 10;
-  }
-
-  return JVMFlag::SUCCESS;
-}
-
 JVMFlag::Error InitArrayShortSizeConstraintFunc(intx value, bool verbose) {
   if (value % BytesPerLong != 0) {
     return JVMFlag::VIOLATES_CONSTRAINT;
   } else {
     return JVMFlag::SUCCESS;
   }
-}
-
-JVMFlag::Error RTMTotalCountIncrRateConstraintFunc(int value, bool verbose) {
-  return JVMFlag::SUCCESS;
 }

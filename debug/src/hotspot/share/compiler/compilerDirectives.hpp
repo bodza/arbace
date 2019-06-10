@@ -14,15 +14,10 @@
     cflags(BreakAtExecute,          bool, false, X) \
     cflags(BreakAtCompile,          bool, false, X) \
     cflags(PrintAssembly,           bool, PrintAssembly, PrintAssembly) \
-    cflags(BackgroundCompilation,   bool, BackgroundCompilation, BackgroundCompilation) \
     cflags(ReplayInline,            bool, false, ReplayInline) \
     cflags(DumpReplay,              bool, false, DumpReplay) \
     cflags(DumpInline,              bool, false, DumpInline) \
-    cflags(CompilerDirectivesIgnoreCompileCommands, bool, CompilerDirectivesIgnoreCompileCommands, X) \
     cflags(DisableIntrinsic,        ccstrlist, DisableIntrinsic, DisableIntrinsic)
-
-#define compilerdirectives_c1_flags(cflags)
-#define compilerdirectives_c2_flags(cflags)
 
 class CompilerDirectives;
 class DirectiveSet;
@@ -72,8 +67,6 @@ public:
   typedef enum {
 #define enum_of_flags(name, type, dvalue, cc_flag) name##Index,
     compilerdirectives_common_flags(enum_of_flags)
-    compilerdirectives_c2_flags(enum_of_flags)
-    compilerdirectives_c1_flags(enum_of_flags)
     number_of_flags
   } flags;
 
@@ -81,14 +74,10 @@ public:
 
 #define flag_store_definition(name, type, dvalue, cc_flag) type name##Option;
   compilerdirectives_common_flags(flag_store_definition)
-  compilerdirectives_c2_flags(flag_store_definition)
-  compilerdirectives_c1_flags(flag_store_definition)
 
 // Casting to get the same function signature for all setters. Used from parser.
 #define set_function_definition(name, type, dvalue, cc_flag) void set_##name(void* value) { type val = *(type*)value; name##Option = val; _modified[name##Index] = true; }
   compilerdirectives_common_flags(set_function_definition)
-  compilerdirectives_c2_flags(set_function_definition)
-  compilerdirectives_c1_flags(set_function_definition)
 
   void print_intx(outputStream* st, ccstr n, intx v, bool mod) { if (mod) { st->print("%s:" INTX_FORMAT " ", n, v); } }
   void print_uintx(outputStream* st, ccstr n, intx v, bool mod) { if (mod) { st->print("%s:" UINTX_FORMAT " ", n, v); } }
@@ -102,8 +91,6 @@ void print(outputStream* st) {
     st->print("  ");
 #define print_function_definition(name, type, dvalue, cc_flag) print_##type(st, #name, this->name##Option, true);
     compilerdirectives_common_flags(print_function_definition)
-    compilerdirectives_c2_flags(print_function_definition)
-    compilerdirectives_c1_flags(print_function_definition)
     st->cr();
   }
 };

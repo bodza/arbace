@@ -202,11 +202,11 @@ void LIRGenerator::store_stack_parameter(LIR_Opr item, ByteSize offset_from_sp) 
   __ store(item, new LIR_Address(FrameMap::rsp_opr, in_bytes(offset_from_sp), type));
 }
 
-void LIRGenerator::array_store_check(LIR_Opr value, LIR_Opr array, CodeEmitInfo* store_check_info, ciMethod* profiled_method, int profiled_bci) {
+void LIRGenerator::array_store_check(LIR_Opr value, LIR_Opr array, CodeEmitInfo* store_check_info) {
   LIR_Opr tmp1 = new_register(objectType);
   LIR_Opr tmp2 = new_register(objectType);
   LIR_Opr tmp3 = new_register(objectType);
-  __ store_check(value, array, tmp1, tmp2, tmp3, store_check_info, profiled_method, profiled_bci);
+  __ store_check(value, array, tmp1, tmp2, tmp3, store_check_info);
 }
 
 //----------------------------------------------------------------------
@@ -1001,7 +1001,7 @@ void LIRGenerator::do_InstanceOf(InstanceOf* x) {
   if (!x->klass()->is_loaded() || UseCompressedClassPointers) {
     tmp3 = new_register(objectType);
   }
-  __ instanceof(reg, obj.result(), x->klass(), new_register(objectType), new_register(objectType), tmp3, x->direct_compare(), patching_info, x->profiled_method(), x->profiled_bci());
+  __ instanceof(reg, obj.result(), x->klass(), new_register(objectType), new_register(objectType), tmp3, x->direct_compare(), patching_info);
 }
 
 void LIRGenerator::do_If(If* x) {
@@ -1043,15 +1043,10 @@ void LIRGenerator::do_If(If* x) {
 
   // add safepoint before generating condition code so it can be recomputed
   if (x->is_safepoint()) {
-    // increment backedge counter if needed
-    increment_backedge_counter_conditionally(lir_cond(cond), left, right, state_for(x, x->state_before()),
-        x->tsux()->bci(), x->fsux()->bci(), x->profiled_bci());
     __ safepoint(safepoint_poll_register(), state_for(x, x->state_before()));
   }
 
   __ cmp(lir_cond(cond), left, right);
-  // Generate branch profiling. Profiling code doesn't kill flags.
-  profile_branch(x, cond);
   move_to_phi(x->state());
   if (x->x()->type()->is_float_kind()) {
     __ branch(lir_cond(cond), right->type(), x->tsux(), x->usux());

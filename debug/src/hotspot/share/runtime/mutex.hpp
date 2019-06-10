@@ -3,7 +3,6 @@
 
 #include "memory/allocation.hpp"
 #include "runtime/os.hpp"
-#include "utilities/histogram.hpp"
 
 // The SplitWord construct allows us to colocate the contention queue
 // (cxq) with the lock-byte.  The queue elements are ParkEvents, which are
@@ -17,7 +16,7 @@
 // fast-path.
 //
 // Colocation allows us to use a fast-path unlock() form that uses
-// A MEMBAR instead of a CAS.  MEMBAR has lower local latency than CAS
+// a MEMBAR instead of a CAS.  MEMBAR has lower local latency than CAS
 // on many platforms.
 //
 // See:

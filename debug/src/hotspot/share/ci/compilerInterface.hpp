@@ -3,7 +3,6 @@
 
 #include "ci/ciArray.hpp"
 #include "ci/ciArrayKlass.hpp"
-#include "ci/ciCallProfile.hpp"
 #include "ci/ciConstant.hpp"
 #include "ci/ciEnv.hpp"
 #include "ci/ciExceptionHandler.hpp"

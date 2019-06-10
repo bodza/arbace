@@ -228,7 +228,7 @@ void VM_ThreadDump::doit() {
       JavaThread* jt = java_lang_Thread::thread(th());
       if (jt != NULL && !_result->t_list()->includes(jt)) {
         // _threads[i] doesn't refer to a valid JavaThread; this check
-        // is primarily for JVM_DumpThreads() which doesn't have a good
+        // is primarily for ... which doesn't have a good
         // way to validate the _threads array.
         jt = NULL;
       }

@@ -145,37 +145,6 @@ JNIEXPORT jobjectArray JNICALL
 JVM_GetVmArguments(JNIEnv *env);
 
 /*
- * java.lang.Throwable
- */
-JNIEXPORT void JNICALL
-JVM_FillInStackTrace(JNIEnv *env, jobject throwable);
-
-/*
- * java.lang.StackTraceElement
- */
-JNIEXPORT void JNICALL
-JVM_InitStackTraceElementArray(JNIEnv *env, jobjectArray elements, jobject throwable);
-
-JNIEXPORT void JNICALL
-JVM_InitStackTraceElement(JNIEnv* env, jobject element, jobject stackFrameInfo);
-
-/*
- * java.lang.StackWalker
- */
-enum {
-  JVM_STACKWALK_FILL_CLASS_REFS_ONLY       = 0x2,
-  JVM_STACKWALK_GET_CALLER_CLASS           = 0x04,
-  JVM_STACKWALK_SHOW_HIDDEN_FRAMES         = 0x20,
-  JVM_STACKWALK_FILL_LIVE_STACK_FRAMES     = 0x100
-};
-
-JNIEXPORT jobject JNICALL
-JVM_CallStackWalk(JNIEnv *env, jobject stackStream, jlong mode, jint skip_frames, jint frame_count, jint start_index, jobjectArray frames);
-
-JNIEXPORT jint JNICALL
-JVM_MoreStackWalk(JNIEnv *env, jobject stackStream, jlong mode, jlong anchor, jint frame_count, jint start_index, jobjectArray frames);
-
-/*
  * java.lang.Thread
  */
 JNIEXPORT void JNICALL
@@ -225,10 +194,6 @@ JVM_GetAllThreads(JNIEnv *env, jclass dummy);
 
 JNIEXPORT void JNICALL
 JVM_SetNativeThreadName(JNIEnv *env, jobject jthread, jstring name);
-
-/* getStackTrace() and getAllStackTraces() method */
-JNIEXPORT jobjectArray JNICALL
-JVM_DumpThreads(JNIEnv *env, jclass threadClass, jobjectArray threads);
 
 /*
  * java.lang.SecurityManager

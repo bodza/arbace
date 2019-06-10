@@ -163,9 +163,6 @@ class SpaceManager : public CHeapObj<mtClass> {
   // and allocates from that chunk.
   MetaWord* grow_and_allocate(size_t word_size);
 
-  // Notify memory usage to MemoryService.
-  void track_metaspace_memory_usage();
-
   // debugging support.
 
   void print_on(outputStream* st) const;

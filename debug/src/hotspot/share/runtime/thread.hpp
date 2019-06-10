@@ -833,12 +833,6 @@ class JavaThread: public Thread {
     address   _alternate_call_target;
   } _jvmci;
 
-  // Support for high precision, thread sensitive counters in JVMCI compiled code.
-  jlong*    _jvmci_counters;
-
- public:
-  static jlong* _jvmci_old_thread_counters;
-  static void collect_counters(typeArrayOop array);
  private:
   StackGuardState  _stack_guard_state;
 
@@ -1250,9 +1244,8 @@ class JavaThread: public Thread {
   //
 
  private:
-  // These values are derived from flags StackRedPages, StackYellowPages,
-  // StackReservedPages and StackShadowPages. The zone size is determined
-  // ergonomically if page_size > 4K.
+  // These values are derived from flags StackRedPages, StackYellowPages and StackShadowPages.
+  // The zone size is determined ergonomically if page_size > 4K.
   static size_t _stack_red_zone_size;
   static size_t _stack_yellow_zone_size;
   static size_t _stack_reserved_zone_size;
@@ -1283,9 +1276,6 @@ class JavaThread: public Thread {
   static size_t stack_reserved_zone_size() {
     // _stack_reserved_zone_size may be 0. This indicates the feature is off.
     return _stack_reserved_zone_size;
-  }
-  static void set_stack_reserved_zone_size(size_t s) {
-    _stack_reserved_zone_size = s;
   }
   address stack_reserved_zone_base() {
     return (address)(stack_end() + (stack_red_zone_size() + stack_yellow_zone_size() + stack_reserved_zone_size()));
@@ -1338,9 +1328,7 @@ class JavaThread: public Thread {
   inline bool stack_guards_enabled();
 
   address reserved_stack_activation() const { return _reserved_stack_activation; }
-  void set_reserved_stack_activation(address addr) {
-    _reserved_stack_activation = addr;
-  }
+  void set_reserved_stack_activation(address addr) { _reserved_stack_activation = addr; }
 
   // Attempt to reguard the stack after a stack overflow may have occurred.
   // Returns true if (a) guard pages are not needed on this thread, (b) the
@@ -1388,7 +1376,6 @@ class JavaThread: public Thread {
   static ByteSize pending_failed_speculation_offset() { return byte_offset_of(JavaThread, _pending_failed_speculation); }
   static ByteSize jvmci_alternate_call_target_offset() { return byte_offset_of(JavaThread, _jvmci._alternate_call_target); }
   static ByteSize jvmci_implicit_exception_pc_offset() { return byte_offset_of(JavaThread, _jvmci._implicit_exception_pc); }
-  static ByteSize jvmci_counters_offset()        { return byte_offset_of(JavaThread, _jvmci_counters); }
   static ByteSize exception_oop_offset()         { return byte_offset_of(JavaThread, _exception_oop); }
   static ByteSize exception_pc_offset()          { return byte_offset_of(JavaThread, _exception_pc); }
   static ByteSize exception_handler_pc_offset()  { return byte_offset_of(JavaThread, _exception_handler_pc); }

@@ -486,8 +486,6 @@ class java_lang_Throwable: AllStatic {
   // Fill in current stack trace, can cause GC
   static void fill_in_stack_trace(Handle throwable, const methodHandle& method, TRAPS);
   static void fill_in_stack_trace(Handle throwable, const methodHandle& method = methodHandle());
-  // Programmatic access to stack trace
-  static void get_stack_trace_elements(Handle throwable, objArrayHandle stack_trace, TRAPS);
   // Printing
   static void print(oop throwable, outputStream* st);
   static void print_stack_trace(Handle throwable, outputStream* st);
@@ -1019,42 +1017,6 @@ class java_lang_System : AllStatic {
   friend class JavaClasses;
 };
 
-// Interface to java.lang.StackTraceElement objects
-
-class java_lang_StackTraceElement: AllStatic {
- private:
-  static int declaringClassObject_offset;
-  static int classLoaderName_offset;
-  static int moduleName_offset;
-  static int moduleVersion_offset;
-  static int declaringClass_offset;
-  static int methodName_offset;
-  static int fileName_offset;
-  static int lineNumber_offset;
-
-  // Setters
-  static void set_classLoaderName(oop element, oop value);
-  static void set_moduleName(oop element, oop value);
-  static void set_moduleVersion(oop element, oop value);
-  static void set_declaringClass(oop element, oop value);
-  static void set_methodName(oop element, oop value);
-  static void set_fileName(oop element, oop value);
-  static void set_lineNumber(oop element, int value);
-  static void set_declaringClassObject(oop element, oop value);
-
- public:
-  // Create an instance of StackTraceElement
-  static oop create(const methodHandle& method, int bci, TRAPS);
-
-  static void fill_in(Handle element, InstanceKlass* holder, const methodHandle& method, int version, int bci, Symbol* name, TRAPS);
-
-  static void compute_offsets();
-  static void serialize(SerializeClosure* f) { };
-
-  // Debugging
-  friend class JavaClasses;
-};
-
 class Backtrace: AllStatic {
  public:
   // Helper backtrace functions to store bci|version together.
@@ -1066,55 +1028,6 @@ class Backtrace: AllStatic {
   static int cpref_at(unsigned int merged);
   static int get_line_number(const methodHandle& method, int bci);
   static Symbol* get_source_file_name(InstanceKlass* holder, int version);
-
-  // Debugging
-  friend class JavaClasses;
-};
-
-// Interface to java.lang.StackFrameInfo objects
-
-#define STACKFRAMEINFO_INJECTED_FIELDS(macro) \
-  macro(java_lang_StackFrameInfo, version, short_signature, false)
-
-class java_lang_StackFrameInfo: AllStatic {
-private:
-  static int _memberName_offset;
-  static int _bci_offset;
-  static int _version_offset;
-
-  static Method* get_method(Handle stackFrame, InstanceKlass* holder, TRAPS);
-
-public:
-  // Setters
-  static void set_method_and_bci(Handle stackFrame, const methodHandle& method, int bci, TRAPS);
-  static void set_bci(oop info, int value);
-
-  static void set_version(oop info, short value);
-
-  static void compute_offsets();
-  static void serialize(SerializeClosure* f) { };
-
-  static void to_stack_trace_element(Handle stackFrame, Handle stack_trace_element, TRAPS);
-
-  // Debugging
-  friend class JavaClasses;
-};
-
-class java_lang_LiveStackFrameInfo: AllStatic {
- private:
-  static int _monitors_offset;
-  static int _locals_offset;
-  static int _operands_offset;
-  static int _mode_offset;
-
- public:
-  static void set_monitors(oop info, oop value);
-  static void set_locals(oop info, oop value);
-  static void set_operands(oop info, oop value);
-  static void set_mode(oop info, int value);
-
-  static void compute_offsets();
-  static void serialize(SerializeClosure* f) { };
 
   // Debugging
   friend class JavaClasses;
@@ -1198,7 +1111,6 @@ class InjectedField {
 #define ALL_INJECTED_FIELDS(macro) \
   CLASS_INJECTED_FIELDS(macro) \
   CLASSLOADER_INJECTED_FIELDS(macro) \
-  STACKFRAMEINFO_INJECTED_FIELDS(macro) \
   MODULE_INJECTED_FIELDS(macro)
 
 // Interface to hard-coded offset checking

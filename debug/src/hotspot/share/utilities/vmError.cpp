@@ -243,17 +243,15 @@ static void report_vm_version(outputStream* st, char* buf, int buflen) {
    st->print_cr("# JRE version: %s (%s) (%sbuild %s)", runtime_name, buf, jdk_debug_level, runtime_version);
 
    // This is the long version with some default settings added
-   st->print_cr("# Java VM: %s (%s%s, %s%s%s%s, %s, %s)",
+   st->print_cr("# Java VM: %s (%s%s, %s%s%s, %s, %s)",
                  Abstract_VM_Version::vm_name(),
                  jdk_debug_level,
                  Abstract_VM_Version::vm_release(),
                  Abstract_VM_Version::vm_info_string(),
                  EnableJVMCI ? ", jvmci" : "",
-                 UseJVMCICompiler ? ", jvmci compiler" : "",
                  UseCompressedOops ? ", compressed oops" : "",
                  GCConfig::hs_err_name(),
-                 Abstract_VM_Version::vm_platform_string()
-               );
+                 Abstract_VM_Version::vm_platform_string());
 }
 
 // This is the main function to report a fatal error. Only one thread can

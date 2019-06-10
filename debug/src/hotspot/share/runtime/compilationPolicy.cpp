@@ -84,14 +84,6 @@ bool CompilationPolicy::can_be_compiled(const methodHandle& m, int comp_level) {
   if (m->is_abstract()) return false;
   if (DontCompileHugeMethods && m->code_size() > HugeMethodLimit) return false;
 
-  // Math intrinsics should never be compiled as this can lead to
-  // monotonicity problems because the interpreter will prefer the
-  // compiled code to the intrinsic version.  This can't happen in
-  // production because the invocation counter can't be incremented
-  // but we shouldn't expose the system to this problem in testing
-  // modes.
-  if (!NULL::can_be_compiled(m)) return false;
-
   if (comp_level == CompLevel_all) {
     // must be compilable at available level for non-tiered
     return !m->is_not_compilable(CompLevel_highest_tier);
@@ -107,20 +99,6 @@ bool CompilationPolicy::is_compilation_enabled() {
 }
 
 CompileTask* CompilationPolicy::select_task_helper(CompileQueue* compile_queue) {
-  if (UseJVMCICompiler && !BackgroundCompilation) {
-    /*
-     * In blocking compilation mode, the CompileBroker will make
-     * compilations submitted by a JVMCI compiler thread non-blocking. These
-     * compilations should be scheduled after all blocking compilations
-     * to service non-compiler related compilations sooner and reduce the
-     * chance of such compilations timing out.
-     */
-    for (CompileTask* task = compile_queue->first(); task != NULL; task = task->next()) {
-      if (task->is_blocking()) {
-        return task;
-      }
-    }
-  }
   return compile_queue->first();
 }
 
@@ -260,16 +238,6 @@ bool NonTieredCompPolicy::is_mature(Method* method) {
 }
 
 nmethod* NonTieredCompPolicy::event(const methodHandle& method, const methodHandle& inlinee, int branch_bci, int bci, CompLevel comp_level, CompiledMethod* nm, JavaThread* thread) {
-  if (CompileTheWorld) {
-    // Don't trigger other compiles in testing mode
-    if (bci == InvocationEntryBci) {
-      reset_counter_for_invocation_event(method);
-    } else {
-      reset_counter_for_back_branch_event(method);
-    }
-    return NULL;
-  }
-
   if (bci == InvocationEntryBci) {
     // when code cache is full, compilation gets switched off, UseCompiler
     // is set to false

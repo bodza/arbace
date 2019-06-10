@@ -19,61 +19,12 @@
                     constraint, \
                     writeable) \
  \
-  experimental(bool, EnableJVMCI, false, \
-          "Enable JVMCI") \
- \
-  experimental(bool, UseJVMCICompiler, false, \
-          "Use JVMCI as the default compiler") \
- \
-  experimental(bool, JVMCIPrintProperties, false, \
-          "Prints properties used by the JVMCI compiler and exits") \
- \
-  experimental(bool, BootstrapJVMCI, false, \
-          "Bootstrap JVMCI before running Java main method") \
- \
-  experimental(bool, EagerJVMCI, false, \
-          "Force eager JVMCI initialization") \
- \
-  experimental(bool, PrintBootstrap, true, \
-          "Print JVMCI bootstrap progress and summary") \
- \
-  experimental(intx, JVMCIThreads, 1, \
-          "Force number of JVMCI compiler threads to use") \
-          range(1, max_jint) \
- \
-  experimental(intx, JVMCIHostThreads, 1, \
-          "Force number of compiler threads for JVMCI host compiler") \
-          range(1, max_jint) \
- \
-  product(intx, MaxVectorSize, 64, \
-          "Max vector size in bytes, actual size could be less depending on elements type") \
- \
-  product(bool, ReduceInitialCardMarks, true, \
-          "Defer write barriers of young objects") \
- \
-  experimental(intx, JVMCITraceLevel, 0, \
-          "Trace level for JVMCI: " \
-          "1 means emit a message for each CompilerToVM call," \
-          "levels greater than 1 provide progressively greater detail") \
- \
-  experimental(intx, JVMCICounterSize, 0, \
-          "Reserved size for benchmark counters") \
-          range(0, max_jint) \
- \
-  experimental(bool, JVMCICountersExcludeCompiler, true, \
-          "Exclude JVMCI compiler threads from benchmark counters") \
- \
-  develop(bool, JVMCIUseFastLocking, true, \
-          "Use fast inlined locking code") \
- \
-  experimental(intx, JVMCINMethodSizeLimit, (80*K)*wordSize, \
-          "Maximum size of a compiled method.") \
- \
-  experimental(intx, MethodProfileWidth, 0, \
-          "Number of methods to record in call profile") \
- \
-  develop(bool, TraceUncollectedSpeculations, false, \
-          "Print message when a failed speculation was not collected")
+  experimental(bool, EnableJVMCI, false, "Enable JVMCI") \
+  experimental(bool, EagerJVMCI, false, "Force eager JVMCI initialization") \
+  product(intx, MaxVectorSize, 64, "Max vector size in bytes, actual size could be less depending on elements type") \
+  product(bool, ReduceInitialCardMarks, true, "Defer write barriers of young objects") \
+  develop(bool, JVMCIUseFastLocking, true, "Use fast inlined locking code") \
+  experimental(intx, JVMCINMethodSizeLimit, (80*K)*wordSize, "Maximum size of a compiled method.")
 
 // Read default values for JVMCI globals
 

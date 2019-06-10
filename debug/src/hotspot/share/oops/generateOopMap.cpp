@@ -1177,11 +1177,11 @@ void GenerateOopMap::print_current_state(outputStream* os, BytecodeStream *curre
     case Bytecodes::_invokespecial:
     case Bytecodes::_invokestatic:
     case Bytecodes::_invokeinterface: {
-      int idx = currentBC->has_index_u4() ? currentBC->get_index_u4() : currentBC->get_index_u2_cpcache();
-      ConstantPool* cp      = method()->constants();
-      int nameAndTypeIdx    = cp->name_and_type_ref_index_at(idx);
-      int signatureIdx      = cp->signature_ref_index_at(nameAndTypeIdx);
-      Symbol* signature     = cp->symbol_at(signatureIdx);
+      int idx = currentBC->get_index_u2_cpcache();
+      ConstantPool* cp = method()->constants();
+      int nameAndTypeIdx = cp->name_and_type_ref_index_at(idx);
+      int signatureIdx = cp->signature_ref_index_at(nameAndTypeIdx);
+      Symbol* signature = cp->symbol_at(signatureIdx);
       os->print("%s", signature->as_C_string());
     }
     default:

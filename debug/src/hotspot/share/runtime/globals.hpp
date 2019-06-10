@@ -246,9 +246,6 @@
   develop(bool, SafepointALot, false, \
           "Generate a lot of safepoints. This works with GuaranteedSafepointInterval") \
  \
-  product_pd(bool, BackgroundCompilation, \
-          "A thread requesting compilation is not blocked during compilation") \
- \
   product(bool, MethodFlushing, true, \
           "Reclamation of zombie and not-entrant methods") \
  \
@@ -705,12 +702,6 @@
   product(bool, Inline, true, \
           "Enable inlining") \
  \
-  product(bool, ClipInlining, true, \
-          "Clip inlining if aggregate method exceeds DesiredMethodLimit") \
- \
-  product(bool, UseTypeProfile, true, \
-          "Check interpreter profile for historically monomorphic calls") \
- \
   product(bool, UsePopCountInstruction, false, \
           "Use population count instruction") \
  \
@@ -725,9 +716,6 @@
   diagnostic(intx, MinPassesBeforeFlush, 10, \
           "Minimum number of sweeper passes before an nmethod can be flushed") \
           range(0, max_intx) \
- \
-  product(bool, UseCodeAging, true, \
-          "Insert counter to detect warm methods") \
  \
   product(bool, PrintVMOptions, false, \
           "Print flags that appeared on the command line") \
@@ -783,9 +771,6 @@
   develop(bool, DelayCompilationDuringStartup, true, \
           "Delay invoking the compiler until main application class is loaded") \
  \
-  develop(bool, CompileTheWorld, false, \
-          "Compile all methods in all classes in bootstrap class path (stress test)") \
- \
   develop(bool, CompileTheWorldPreloadClasses, true, \
           "Preload all classes used by a class before start loading") \
  \
@@ -802,21 +787,6 @@
   product_pd(bool, CompactStrings, \
           "Enable Strings to use single byte chars in backing store") \
  \
-  product_pd(uintx, TypeProfileLevel, \
-          "=XYZ, with Z: Type profiling of arguments at call; " \
-                     "Y: Type profiling of return value at call; " \
-                     "X: Type profiling of parameters to methods; " \
-          "X, Y and Z in 0=off ; 1=jsr292 only; 2=all methods") \
-          constraint(TypeProfileLevelConstraintFunc, AfterErgo) \
- \
-  product(intx, TypeProfileArgsLimit, 2, \
-          "max number of call arguments to consider for type profiling") \
-          range(0, 16) \
- \
-  product(intx, TypeProfileParmsLimit, 2, \
-          "max number of incoming parameters to consider for type profiling, -1 for all") \
-          range(-1, 64) \
- \
   /* interpreter */ \
   develop_pd(bool, InlineIntrinsics, \
           "Inline intrinsics that can be statically resolved") \
@@ -829,9 +799,6 @@
   /* compilation */ \
   product(bool, UseCompiler, true, \
           "Use Just-In-Time compilation") \
- \
-  develop(bool, TimeCompilationPolicy, false, \
-          "Time the compilation policy") \
  \
   product(bool, UseCounterDecay, true, \
           "Adjust recompilation counters") \
@@ -966,14 +933,6 @@
   develop(intx, BciProfileWidth, 2, \
           "Number of return bci's to record in ret profile") \
  \
-  product(intx, PerMethodRecompilationCutoff, 400, \
-          "After recompiling N times, stay in the interpreter (-1=>'Inf')") \
-          range(-1, max_intx) \
- \
-  product(intx, PerBytecodeRecompilationCutoff, 200, \
-          "Per-BCI limit on repeated recompilation (-1=>'Inf')") \
-          range(-1, max_intx) \
- \
   product(intx, PerMethodTrapLimit, 100, \
           "Limit on traps (of one kind) in a method (includes inlines)") \
           range(0, max_jint) \
@@ -1071,14 +1030,6 @@
           "Number of red zone (unrecoverable overflows) pages of size " \
           "4KB. If pages are bigger red zone is aligned up.") \
           range(MIN_STACK_RED_PAGES, (DEFAULT_STACK_RED_PAGES+2)) \
- \
-  product_pd(intx, StackReservedPages, \
-          "Number of reserved zone (reserved to annotated methods) pages" \
-          " of size 4KB. If pages are bigger reserved zone is aligned up.") \
-          range(MIN_STACK_RESERVED_PAGES, (DEFAULT_STACK_RESERVED_PAGES+10)) \
- \
-  product(bool, RestrictReservedStack, true, \
-          "Restrict @ReservedStackAccess to trusted classes") \
  \
   /* greater stack shadow pages can't generate instruction to bang stack */ \
   product_pd(intx, StackShadowPages, \
@@ -1300,16 +1251,6 @@
   experimental(bool, UseCriticalCompilerThreadPriority, false, \
           "Compiler thread(s) run at critical scheduling priority") \
  \
-  /* compiler debugging */ \
-  notproduct(intx, CompileTheWorldStartAt, 1, \
-          "First class to consider when using +CompileTheWorld") \
- \
-  notproduct(intx, CompileTheWorldStopAt, max_jint, \
-          "Last class to consider when using +CompileTheWorld") \
- \
-  develop(intx, NewCodeParameter, 0, \
-          "Testing Only: Create a dedicated integer parameter before putback") \
- \
   /* new oopmap storage allocation */ \
   develop(intx, MinOopMapAllocation, 8, \
           "Minimum number of OopMap entries in an OopMapSet") \
@@ -1337,147 +1278,21 @@
           "NULL (tier 0) invocation notification frequency") \
           range(0, 30) \
  \
-  product(intx, Tier2InvokeNotifyFreqLog, 11, \
-          "C1 without MDO (tier 2) invocation notification frequency") \
-          range(0, 30) \
- \
   product(intx, Tier3InvokeNotifyFreqLog, 10, \
           "C1 with MDO profiling (tier 3) invocation notification frequency") \
-          range(0, 30) \
- \
-  product(intx, Tier23InlineeNotifyFreqLog, 20, \
-          "Inlinee invocation (tiers 2 and 3) notification frequency") \
           range(0, 30) \
  \
   product(intx, Tier0BackedgeNotifyFreqLog, 10, \
           "NULL (tier 0) invocation notification frequency") \
           range(0, 30) \
  \
-  product(intx, Tier2BackedgeNotifyFreqLog, 14, \
-          "C1 without MDO (tier 2) invocation notification frequency") \
-          range(0, 30) \
- \
-  product(intx, Tier3BackedgeNotifyFreqLog, 13, \
-          "C1 with MDO profiling (tier 3) invocation notification frequency") \
-          range(0, 30) \
- \
-  product(intx, Tier2CompileThreshold, 0, \
-          "threshold at which tier 2 compilation is invoked") \
-          range(0, max_jint) \
- \
-  product(intx, Tier2BackEdgeThreshold, 0, \
-          "Back edge threshold at which tier 2 compilation is invoked") \
-          range(0, max_jint) \
- \
-  product(intx, Tier3InvocationThreshold, 200, \
-          "Compile if number of method invocations crosses this threshold") \
-          range(0, max_jint) \
- \
-  product(intx, Tier3MinInvocationThreshold, 100, \
-          "Minimum invocation to compile at tier 3") \
-          range(0, max_jint) \
- \
-  product(intx, Tier3CompileThreshold, 2000, \
-          "Threshold at which tier 3 compilation is invoked (invocation minimum must be satisfied)") \
-          range(0, max_jint) \
- \
-  product(intx, Tier3BackEdgeThreshold, 60000, \
-          "Back edge threshold at which tier 3 OSR compilation is invoked") \
-          range(0, max_jint) \
- \
-  product(intx, Tier3AOTInvocationThreshold, 10000, \
-          "Compile if number of method invocations crosses this threshold if coming from AOT") \
-          range(0, max_jint) \
- \
-  product(intx, Tier3AOTMinInvocationThreshold, 1000, \
-          "Minimum invocation to compile at tier 3 if coming from AOT") \
-          range(0, max_jint) \
- \
-  product(intx, Tier3AOTCompileThreshold, 15000, \
-          "Threshold at which tier 3 compilation is invoked (invocation minimum must be satisfied) if coming from AOT") \
-          range(0, max_jint) \
- \
-  product(intx, Tier3AOTBackEdgeThreshold, 120000, \
-          "Back edge threshold at which tier 3 OSR compilation is invoked if coming from AOT") \
-          range(0, max_jint) \
- \
   product(intx, Tier4InvocationThreshold, 5000, \
           "Compile if number of method invocations crosses this threshold") \
           range(0, max_jint) \
  \
-  product(intx, Tier4MinInvocationThreshold, 600, \
-          "Minimum invocation to compile at tier 4") \
-          range(0, max_jint) \
- \
-  product(intx, Tier4CompileThreshold, 15000, \
-          "Threshold at which tier 4 compilation is invoked (invocation minimum must be satisfied") \
-          range(0, max_jint) \
- \
-  product(intx, Tier4BackEdgeThreshold, 40000, \
-          "Back edge threshold at which tier 4 OSR compilation is invoked") \
-          range(0, max_jint) \
- \
-  product(intx, Tier3DelayOn, 5, \
-          "If C2 queue size grows over this amount per compiler thread " \
-          "stop compiling at tier 3 and start compiling at tier 2") \
-          range(0, max_jint) \
- \
-  product(intx, Tier3DelayOff, 2, \
-          "If C2 queue size is less than this amount per compiler thread " \
-          "allow methods compiled at tier 2 transition to tier 3") \
-          range(0, max_jint) \
- \
-  product(intx, Tier3LoadFeedback, 5, \
-          "Tier 3 thresholds will increase twofold when C1 queue size " \
-          "reaches this amount per compiler thread") \
-          range(0, max_jint) \
- \
-  product(intx, Tier4LoadFeedback, 3, \
-          "Tier 4 thresholds will increase twofold when C2 queue size " \
-          "reaches this amount per compiler thread") \
-          range(0, max_jint) \
- \
-  product(intx, TieredCompileTaskTimeout, 50, \
-          "Kill compile task if method was not used within given timeout in milliseconds") \
-          range(0, max_intx) \
- \
   product(intx, TieredStopAtLevel, 4, \
           "Stop at given compilation level") \
           range(0, 4) \
- \
-  product(intx, Tier0ProfilingStartPercentage, 200, \
-          "Start profiling in interpreter if the counters exceed tier 3 " \
-          "thresholds by the specified percentage") \
-          range(0, max_jint) \
- \
-  product(uintx, IncreaseFirstTierCompileThresholdAt, 50, \
-          "Increase the compile threshold for C1 compilation if the code " \
-          "cache is filled by the specified percentage") \
-          range(0, 99) \
- \
-  product(intx, TieredRateUpdateMinTime, 1, \
-          "Minimum rate sampling interval (in milliseconds)") \
-          range(0, max_intx) \
- \
-  product(intx, TieredRateUpdateMaxTime, 25, \
-          "Maximum rate sampling interval (in milliseconds)") \
-          range(0, max_intx) \
- \
-  product_pd(intx, OnStackReplacePercentage, \
-          "NON_TIERED number of method invocations/branches (expressed as " \
-          "% of CompileThreshold) before (re-)compiling OSR code") \
-          constraint(OnStackReplacePercentageConstraintFunc, AfterErgo) \
- \
-  product(intx, InterpreterProfilePercentage, 33, \
-          "NON_TIERED number of method invocations/branches (expressed as " \
-          "% of CompileThreshold) before profiling in the interpreter") \
-          range(0, 100) \
- \
-  develop(intx, MaxRecompilationSearchLength, 10, \
-          "The maximum number of frames to inspect when searching for recompilee") \
- \
-  develop(intx, MaxInterpretedSearchLength, 3, \
-          "The maximum number of interpreted frames to skip when searching for recompilee") \
  \
   develop(intx, DesiredMethodLimit, 8000, \
           "The desired maximum method size (in bytecodes) after inlining") \
@@ -1497,15 +1312,6 @@
           range(0, max_jlong) \
  \
   /* Flags used for temporary code during development  */ \
- \
-  diagnostic(bool, UseNewCode, false, \
-          "Testing Only: Use the new version while testing") \
- \
-  diagnostic(bool, UseNewCode2, false, \
-          "Testing Only: Use the new version while testing") \
- \
-  diagnostic(bool, UseNewCode3, false, \
-          "Testing Only: Use the new version while testing") \
  \
   product(intx, UnguardOnExecutionViolation, 0, \
           "Unguard page and retry on no-execute fault (Win32 only) " \
@@ -1559,12 +1365,6 @@
   product(bool, AllowNonVirtualCalls, false, \
           "Obey the ACC_SUPER flag and allow invokenonvirtual calls") \
  \
-  product(ccstr, SharedClassListFile, NULL, \
-          "Override the default CDS class list") \
- \
-  product(ccstr, ExtraSharedClassListFile, NULL, \
-          "Extra classlist for building the CDS archive file") \
- \
   experimental(size_t, ArrayAllocatorMallocLimit, \
           (size_t)-1, \
           "Allocation less than this value will be allocated " \
@@ -1599,20 +1399,12 @@
           range(0, max_intx) \
           constraint(InitArrayShortSizeConstraintFunc, AfterErgo) \
  \
-  diagnostic(bool, CompilerDirectivesIgnoreCompileCommands, false, \
-             "Disable backwards compatibility for compile commands.") \
- \
-  diagnostic(bool, CompilerDirectivesPrint, false, \
-             "Print compiler directives on installation.") \
   diagnostic(int, CompilerDirectivesLimit, 50, \
              "Limit on number of compiler directives.") \
  \
   product(ccstr, AllocateHeapAt, NULL, \
           "Path to the directoy where a temporary file will be created " \
           "to use as the backing store for Java Heap.") \
- \
-  experimental(bool, UseSwitchProfiling, true, \
-          "leverage profiling for table/lookup switch") \
  \
   experimental(bool, UseFastUnorderedTimeStamps, false, \
           "Use platform unstable time where supported for timestamps only")

@@ -7,11 +7,11 @@
 
 void OSThread::pd_initialize() {
 #ifdef __APPLE__
-  _thread_id        = 0;
+  _thread_id = 0;
 #else
-  _thread_id        = NULL;
+  _thread_id = NULL;
 #endif
-  _pthread_id       = NULL;
+  _pthread_id = NULL;
   _siginfo = NULL;
   _ucontext = NULL;
   _expanding_stack = 0;
@@ -19,8 +19,7 @@ void OSThread::pd_initialize() {
 
   sigemptyset(&_caller_sigmask);
 
-  _startThread_lock = new Monitor(Mutex::event, "startThread_lock", true,
-                                  Monitor::_safepoint_check_never);
+  _startThread_lock = new Monitor(Mutex::event, "startThread_lock", true, Monitor::_safepoint_check_never);
 }
 
 void OSThread::pd_destroy() {

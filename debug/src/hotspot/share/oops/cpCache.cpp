@@ -115,7 +115,7 @@ void ConstantPoolCacheEntry::set_direct_or_vtable_call(Bytecodes::Code invoke_co
         set_f1(holder); // interface klass*
         break;
       } else {
-        // We get here from NULL::resolve_invoke when an invokeinterface instruction
+        // We get here from ...::resolve_invoke when an invokeinterface instruction
         // links to a non-interface method (in Object). This can happen when an interface
         // redeclares an Object method (like CharSequence declaring toString()) or when
         // invokeinterface is used explicitly.

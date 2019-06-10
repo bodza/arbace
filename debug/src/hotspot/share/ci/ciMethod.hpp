@@ -60,7 +60,6 @@ class ciMethod : public ciMetadata {
   bool _is_c2_compilable;
   bool _can_be_parsed;
   bool _can_be_statically_bound;
-  bool _has_reserved_stack_access;
 
   // Lazy fields, filled in on demand
   address              _code;
@@ -88,10 +87,6 @@ class ciMethod : public ciMetadata {
     *bcp = code;
   }
 
-  // Check bytecode and profile data collected are compatible
-  void assert_virtual_call_type_ok(int bci);
-  void assert_call_type_ok(int bci);
-
  public:
   void check_is_loaded()                  const { }
 
@@ -100,7 +95,6 @@ class ciMethod : public ciMetadata {
   ciSymbol* name()                        const { return _name; }
   ciInstanceKlass* holder()               const { return _holder; }
   ciMethodData* method_data();
-  ciMethodData* method_data_or_null();
 
   // Signature information.
   ciSignature* signature()                const { return _signature; }
@@ -149,9 +143,6 @@ class ciMethod : public ciMetadata {
   int size_of_parameters()                 const { check_is_loaded(); return _size_of_parameters; }
   int nmethod_age()                        const { check_is_loaded(); return _nmethod_age; }
 
-  // Should the method be compiled with an age counter?
-  bool profile_aging() const;
-
   // Code size for inlining decisions.
   int code_size_for_inlining();
 
@@ -198,13 +189,6 @@ class ciMethod : public ciMetadata {
   const BitMap& bci_block_start();
 
   ciTypeFlow*   get_flow_analysis();
-  ciCallProfile call_profile_at_bci(int bci);
-  int           interpreter_call_site_count(int bci);
-
-  // Does type profiling provide any useful information at this point?
-  bool          argument_profiled_type(int bci, int i, ciKlass*& type, ProfilePtrKind& ptr_kind);
-  bool          parameter_profiled_type(int i, ciKlass*& type, ProfilePtrKind& ptr_kind);
-  bool          return_profiled_type(int bci, ciKlass*& type, ProfilePtrKind& ptr_kind);
 
   ciField*      get_field_at_bci( int bci, bool &will_link);
   ciMethod*     get_method_at_bci(int bci, bool &will_link, ciSignature* *declared_signature);
@@ -277,7 +261,6 @@ class ciMethod : public ciMetadata {
   bool is_accessor    () const;
   bool is_initializer () const;
   bool can_be_statically_bound()   const { return _can_be_statically_bound; }
-  bool has_reserved_stack_access() const { return _has_reserved_stack_access; }
   bool is_boxing_method() const;
   bool is_unboxing_method() const;
   bool is_object_initializer() const;

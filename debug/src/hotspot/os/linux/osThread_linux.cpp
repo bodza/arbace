@@ -15,8 +15,7 @@ void OSThread::pd_initialize() {
 
   sigemptyset(&_caller_sigmask);
 
-  _startThread_lock = new Monitor(Mutex::event, "startThread_lock", true,
-                                  Monitor::_safepoint_check_never);
+  _startThread_lock = new Monitor(Mutex::event, "startThread_lock", true, Monitor::_safepoint_check_never);
 }
 
 void OSThread::pd_destroy() {

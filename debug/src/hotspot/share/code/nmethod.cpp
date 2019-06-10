@@ -504,19 +504,6 @@ bool nmethod::can_convert_to_zombie() {
   return stack_traversal_mark()+1 < NMethodSweeper::traversal_count() && !is_locked_by_vm();
 }
 
-void nmethod::inc_decompile_count() {
-  if (!is_compiled_by_c2() && !is_compiled_by_jvmci())
-    return;
-  Method* m = method();
-  if (m == NULL)
-    return;
-  MethodData* mdo = m->method_data();
-  if (mdo == NULL)
-    return;
-  // There is a benign race here.  See comments in methodData.hpp.
-  mdo->inc_decompile_count();
-}
-
 void nmethod::make_unloaded(oop cause) {
   post_compiled_method_unload();
 
@@ -592,12 +579,6 @@ bool nmethod::make_not_entrant_or_zombie(int state) {
     // cache call.
     if (!is_not_entrant()) {
       NativeJump::patch_verified_entry(entry_point(), verified_entry_point(), SharedRuntime::get_handle_wrong_method_stub());
-    }
-
-    if (is_in_use()) {
-      // It's a true state change, so mark the method as decompiled.
-      // Do it only for transition from alive.
-      inc_decompile_count();
     }
 
     // If the state is becoming a zombie, signal to unregister the nmethod with

@@ -145,15 +145,6 @@ public:
     return bytecode().get_index_u2_cpcache(cur_bc_raw());
   }
 
-  // Get 4-byte index, for invokedynamic.
-  int get_index_u4() const {
-    return bytecode().get_index_u4(cur_bc_raw());
-  }
-
-  bool has_index_u4() const {
-    return bytecode().has_index_u4(cur_bc_raw());
-  }
-
   // Get dimensions byte (multinewarray)
   int get_dimensions() const { return *(unsigned char*)(_pc - 1); }
 

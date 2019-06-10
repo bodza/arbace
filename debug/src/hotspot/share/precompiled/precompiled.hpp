@@ -182,7 +182,6 @@
 # include "utilities/globalDefinitions.hpp"
 # include "utilities/growableArray.hpp"
 # include "utilities/hashtable.hpp"
-# include "utilities/histogram.hpp"
 # include "utilities/macros.hpp"
 # include "utilities/numberSeq.hpp"
 # include "utilities/ostream.hpp"

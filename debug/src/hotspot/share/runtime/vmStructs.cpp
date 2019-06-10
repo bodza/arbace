@@ -201,7 +201,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   nonstatic_field(MethodData,                  _data_size,                                    int) \
   nonstatic_field(MethodData,                  _data[0],                                      intptr_t) \
   nonstatic_field(MethodData,                  _parameters_type_data_di,                      int) \
-  nonstatic_field(MethodData,                  _nof_decompiles,                               uint) \
   nonstatic_field(MethodData,                  _nof_overflow_recompiles,                      uint) \
   nonstatic_field(MethodData,                  _eflags,                                       intx) \
   nonstatic_field(MethodData,                  _arg_local,                                    intx) \
@@ -217,8 +216,6 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   nonstatic_field(DataLayout,                  _cells[0],                                     intptr_t) \
   nonstatic_field(MethodCounters,              _nmethod_age,                                  int) \
   nonstatic_field(MethodCounters,              _interpreter_invocation_limit,                 int) \
-  nonstatic_field(MethodCounters,              _interpreter_backward_branch_limit,            int) \
-  nonstatic_field(MethodCounters,              _interpreter_profile_limit,                    int) \
   nonstatic_field(MethodCounters,              _invoke_mask,                                  int) \
   nonstatic_field(MethodCounters,              _backedge_mask,                                int) \
   nonstatic_field(MethodCounters, _interpreter_invocation_count,   int) \
@@ -1942,14 +1939,13 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   declare_constant(Klass::_lh_array_tag_type_value) \
   declare_constant(Klass::_lh_array_tag_obj_value) \
  \
-  /********************************/ \
+  /*************************/ \
   /* ConstMethod anon-enum */ \
-  /********************************/ \
+  /*************************/ \
  \
   declare_constant(Method::_caller_sensitive) \
   declare_constant(Method::_force_inline) \
   declare_constant(Method::_dont_inline) \
-  declare_constant(Method::_hidden) \
  \
   declare_constant(Method::nonvirtual_vtable_index) \
  \
@@ -2187,10 +2183,7 @@ typedef PaddedEnd<ObjectMonitor>              PaddedObjectMonitor;
   declare_constant(CompLevel_all) \
   declare_constant(CompLevel_none) \
   declare_constant(CompLevel_simple) \
-  declare_constant(CompLevel_limited_profile) \
-  declare_constant(CompLevel_full_profile) \
   declare_constant(CompLevel_full_optimization) \
-  declare_constant(CompLevel_aot) \
  \
   /***************/ \
   /* OopMapValue */ \

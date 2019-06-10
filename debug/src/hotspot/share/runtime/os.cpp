@@ -353,10 +353,9 @@ void os::init_before_ergo() {
   // We need to adapt the configured number of stack protection pages given
   // in 4K pages to the actual os page size. We must do this before setting
   // up minimal stack sizes etc. in os::init_2().
-  JavaThread::set_stack_red_zone_size     (align_up(StackRedPages      * 4 * K, vm_page_size()));
-  JavaThread::set_stack_yellow_zone_size  (align_up(StackYellowPages   * 4 * K, vm_page_size()));
-  JavaThread::set_stack_reserved_zone_size(align_up(StackReservedPages * 4 * K, vm_page_size()));
-  JavaThread::set_stack_shadow_zone_size  (align_up(StackShadowPages   * 4 * K, vm_page_size()));
+  JavaThread::set_stack_red_zone_size   (align_up(StackRedPages      * 4 * K, vm_page_size()));
+  JavaThread::set_stack_yellow_zone_size(align_up(StackYellowPages   * 4 * K, vm_page_size()));
+  JavaThread::set_stack_shadow_zone_size(align_up(StackShadowPages   * 4 * K, vm_page_size()));
 
   // VM version initialization identifies some characteristics of the
   // platform that are used during ergonomic decisions.
@@ -371,11 +370,7 @@ void os::initialize_jdk_signal_support(TRAPS) {
 
     // Initialize thread_oop to put it into the system threadGroup
     Handle thread_group (THREAD, Universe::system_thread_group());
-    Handle thread_oop = JavaCalls::construct_new_instance(SystemDictionary::Thread_klass(),
-                           vmSymbols::threadgroup_string_void_signature(),
-                           thread_group,
-                           string,
-                           CHECK);
+    Handle thread_oop = JavaCalls::construct_new_instance(SystemDictionary::Thread_klass(), vmSymbols::threadgroup_string_void_signature(), thread_group, string, CHECK);
 
     Klass* group = SystemDictionary::ThreadGroup_klass();
     JavaValue result(T_VOID);
@@ -1170,7 +1165,7 @@ bool os::stack_shadow_pages_available(Thread *thread, const methodHandle& method
   // the handler for stack overflow.  'instanceof' in the stack overflow
   // handler or a println uses at least 8k stack of VM and native code
   // respectively.
-  const int framesize_in_bytes = NULL::size_top_interpreter_activation(method()) * wordSize;
+  const int framesize_in_bytes = 0 * wordSize;
 
   address limit = ((JavaThread*)thread)->stack_end() + (JavaThread::stack_guard_zone_size() + JavaThread::stack_shadow_zone_size());
 

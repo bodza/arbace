@@ -7,14 +7,14 @@
 // Sets the default values for platform dependent flags used by the runtime system.
 // (see globals.hpp)
 
-define_pd_global(bool, ShareVtableStubs,         true);
-define_pd_global(bool, NeedsDeoptSuspend,        false); // only register window machines need this
+define_pd_global(bool, ShareVtableStubs,      true);
+define_pd_global(bool, NeedsDeoptSuspend,    false); // only register window machines need this
 
-define_pd_global(bool, ImplicitNullChecks,       true);  // Generate code for implicit null checks
-define_pd_global(bool, TrapBasedNullChecks,      false); // Not needed on x86.
-define_pd_global(bool, UncommonNullCast,         true);  // Uncommon-trap NULLs passed to check cast
+define_pd_global(bool, ImplicitNullChecks,    true);  // Generate code for implicit null checks
+define_pd_global(bool, TrapBasedNullChecks,  false); // Not needed on x86.
+define_pd_global(bool, UncommonNullCast,      true);  // Uncommon-trap NULLs passed to check cast
 
-define_pd_global(uintx, CodeCacheSegmentSize,    64); // Tiered compilation has large code-entry alignment.
+define_pd_global(uintx, CodeCacheSegmentSize,   64); // Tiered compilation has large code-entry alignment.
 // See 4827828 for this change. There is no globals_core_i486.hpp. I can't
 // assign a different value for C2 without touching a number of files. Use
 // #ifdef to minimize the change as it's late in Mantis. -- FIXME.
@@ -22,18 +22,16 @@ define_pd_global(uintx, CodeCacheSegmentSize,    64); // Tiered compilation has 
 // the the vep is aligned at CodeEntryAlignment whereas c2 only aligns
 // the uep and the vep doesn't get real alignment but just slops on by
 // only assured that the entry instruction meets the 5 byte size requirement.
-define_pd_global(intx, CodeEntryAlignment,       32);
-define_pd_global(intx, OptoLoopAlignment,        16);
-define_pd_global(intx, InlineFrequencyCount,     100);
-define_pd_global(intx, InlineSmallCode,          1000);
+define_pd_global(intx, CodeEntryAlignment,      32);
+define_pd_global(intx, OptoLoopAlignment,       16);
+define_pd_global(intx, InlineFrequencyCount,   100);
+define_pd_global(intx, InlineSmallCode,       1000);
 
 #define DEFAULT_STACK_YELLOW_PAGES (2)
 #define DEFAULT_STACK_RED_PAGES (1)
-#define DEFAULT_STACK_RESERVED_PAGES (1)
 
 #define MIN_STACK_YELLOW_PAGES DEFAULT_STACK_YELLOW_PAGES
 #define MIN_STACK_RED_PAGES DEFAULT_STACK_RED_PAGES
-#define MIN_STACK_RESERVED_PAGES (0)
 
 // Java_java_net_SocketOutputStream_socketWrite0() uses a 64k buffer on the
 // stack if compiled for unix and LP64. To pass stack overflow tests we need
@@ -46,10 +44,8 @@ define_pd_global(intx, InlineSmallCode,          1000);
 define_pd_global(intx, StackYellowPages, DEFAULT_STACK_YELLOW_PAGES);
 define_pd_global(intx, StackRedPages, DEFAULT_STACK_RED_PAGES);
 define_pd_global(intx, StackShadowPages, DEFAULT_STACK_SHADOW_PAGES);
-define_pd_global(intx, StackReservedPages, DEFAULT_STACK_RESERVED_PAGES);
 
 define_pd_global(bool, UseMembar,             true);
-define_pd_global(uintx, TypeProfileLevel,      111);
 define_pd_global(bool, CompactStrings,        true);
 define_pd_global(bool, PreserveFramePointer, false);
 
@@ -66,97 +62,26 @@ define_pd_global(bool, ThreadLocalHandshakes, true);
                    constraint, \
                    writeable) \
  \
-  develop(bool, IEEEPrecision, true, \
-          "Enables IEEE precision (for INTEL only)") \
- \
-  product(bool, UseStoreImmI16, true, \
-          "Use store immediate 16-bits value instruction on x86") \
- \
-  product(intx, UseAVX, 3, \
-          "Highest supported AVX instructions set on x86/x64") \
-          range(0, 99) \
- \
-  product(bool, UseCLMUL, false, \
-          "Control whether CLMUL instructions can be used on x86/x64") \
- \
-  diagnostic(bool, UseIncDec, true, \
-          "Use INC, DEC instructions on x86") \
- \
-  product(bool, UseNewLongLShift, false, \
-          "Use optimized bitwise shift left") \
- \
-  product(bool, UseAddressNop, false, \
-          "Use '0F 1F [addr]' NOP instructions on x86 cpus") \
- \
-  product(bool, UseXmmLoadAndClearUpper, true, \
-          "Load low part of XMM register and clear upper part") \
- \
-  product(bool, UseXmmRegToRegMoveAll, false, \
-          "Copy all XMM register bits when moving value between registers") \
- \
-  product(bool, UseXmmI2D, false, \
-          "Use SSE2 CVTDQ2PD instruction to convert Integer to Double") \
- \
-  product(bool, UseXmmI2F, false, \
-          "Use SSE2 CVTDQ2PS instruction to convert Integer to Float") \
- \
-  product(bool, UseUnalignedLoadStores, false, \
-          "Use SSE2 MOVDQU instruction for Arraycopy") \
- \
-  product(bool, UseXMMForObjInit, false, \
-          "Use XMM/YMM MOVDQU instruction for Object Initialization") \
- \
-  product(bool, UseFastStosb, false, \
-          "Use fast-string operation for zeroing: rep stosb") \
- \
-  /* Use Restricted Transactional Memory for lock eliding */ \
-  product(int, RTMRetryCount, 5, \
-          "Number of RTM retries on lock abort or busy") \
-          range(0, max_jint) \
- \
-  experimental(int, RTMSpinLoopCount, 100, \
-          "Spin count for lock to become free before RTM retry") \
-          range(0, max_jint) \
- \
-  experimental(int, RTMAbortThreshold, 1000, \
-          "Calculate abort ratio after this number of aborts") \
-          range(0, max_jint) \
- \
-  experimental(int, RTMLockingThreshold, 10000, \
-          "Lock count at which to do RTM lock eliding without abort ratio calculation") \
-          range(0, max_jint) \
- \
-  experimental(int, RTMAbortRatio, 50, \
-          "Lock abort ratio at which to stop use RTM lock eliding") \
-          range(0, 100) /* natural range */ \
- \
-  experimental(int, RTMTotalCountIncrRate, 64, \
-          "Increment total RTM attempted lock count once every n times") \
-          range(1, max_jint) \
-          constraint(RTMTotalCountIncrRateConstraintFunc,AfterErgo) \
- \
-  experimental(intx, RTMLockingCalculationDelay, 0, \
-          "Number of milliseconds to wait before start calculating aborts for RTM locking") \
- \
-  experimental(bool, UseRTMXendForLockBusy, true, \
-          "Use RTM Xend instead of Xabort when lock busy") \
+  develop(bool,    IEEEPrecision,           true, "Enables IEEE precision (for INTEL only)") \
+  product(bool,    UseStoreImmI16,          true, "Use store immediate 16-bits value instruction on x86") \
+  product(intx,    UseAVX,                     3, "Highest supported AVX instructions set on x86/x64") range(0, 99) \
+  product(bool,    UseCLMUL,               false, "Control whether CLMUL instructions can be used on x86/x64") \
+  diagnostic(bool, UseIncDec,               true, "Use INC, DEC instructions on x86") \
+  product(bool,    UseNewLongLShift,       false, "Use optimized bitwise shift left") \
+  product(bool,    UseAddressNop,          false, "Use '0F 1F [addr]' NOP instructions on x86 cpus") \
+  product(bool,    UseXmmLoadAndClearUpper, true, "Load low part of XMM register and clear upper part") \
+  product(bool,    UseXmmRegToRegMoveAll,  false, "Copy all XMM register bits when moving value between registers") \
+  product(bool,    UseXmmI2D,              false, "Use SSE2 CVTDQ2PD instruction to convert Integer to Double") \
+  product(bool,    UseXmmI2F,              false, "Use SSE2 CVTDQ2PS instruction to convert Integer to Float") \
+  product(bool,    UseUnalignedLoadStores, false, "Use SSE2 MOVDQU instruction for Arraycopy") \
+  product(bool,    UseXMMForObjInit,       false, "Use XMM/YMM MOVDQU instruction for Object Initialization") \
+  product(bool,    UseFastStosb,           false, "Use fast-string operation for zeroing: rep stosb") \
  \
   /* assembler */ \
-  product(bool, UseCountLeadingZerosInstruction, false, \
-          "Use count leading zeros instruction") \
- \
-  product(bool, UseCountTrailingZerosInstruction, false, \
-          "Use count trailing zeros instruction") \
- \
-  product(bool, UseSSE42Intrinsics, false, \
-          "SSE4.2 versions of intrinsics") \
- \
-  product(bool, UseBMI1Instructions, false, \
-          "Use BMI1 instructions") \
- \
-  product(bool, UseBMI2Instructions, false, \
-          "Use BMI2 instructions") \
- \
-  diagnostic(bool, UseLibmIntrinsic, true, \
-          "Use Libm Intrinsics")
+  product(bool,    UseCountLeadingZerosInstruction,  false, "Use count leading zeros instruction") \
+  product(bool,    UseCountTrailingZerosInstruction, false, "Use count trailing zeros instruction") \
+  product(bool,    UseSSE42Intrinsics,               false, "SSE4.2 versions of intrinsics") \
+  product(bool,    UseBMI1Instructions,              false, "Use BMI1 instructions") \
+  product(bool,    UseBMI2Instructions,              false, "Use BMI2 instructions") \
+  diagnostic(bool, UseLibmIntrinsic,                  true, "Use Libm Intrinsics")
 #endif

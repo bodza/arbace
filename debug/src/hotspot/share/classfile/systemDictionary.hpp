@@ -151,16 +151,8 @@ class OopStorage;
   do_klass(jdk_internal_loader_ClassLoaders_PlatformClassLoader_klass, jdk_internal_loader_ClassLoaders_PlatformClassLoader,  Pre ) \
   do_klass(CodeSource_klass,                            java_security_CodeSource,                  Pre                 ) \
  \
-  do_klass(StackTraceElement_klass,                     java_lang_StackTraceElement,               Opt                 ) \
- \
   /* It's okay if this turns out to be NULL in non-1.4 JDKs. */ \
   do_klass(nio_Buffer_klass,                            java_nio_Buffer,                           Opt                 ) \
- \
-  /* Stack Walking */ \
-  do_klass(StackWalker_klass,                           java_lang_StackWalker,                     Opt                 ) \
-  do_klass(AbstractStackWalker_klass,                   java_lang_StackStreamFactory_AbstractStackWalker, Opt          ) \
-  do_klass(StackFrameInfo_klass,                        java_lang_StackFrameInfo,                  Opt                 ) \
-  do_klass(LiveStackFrameInfo_klass,                    java_lang_LiveStackFrameInfo,              Opt                 ) \
  \
   /* support for stack dump lock analysis */ \
   do_klass(java_util_concurrent_locks_AbstractOwnableSynchronizer_klass, java_util_concurrent_locks_AbstractOwnableSynchronizer, Pre ) \
@@ -420,29 +412,14 @@ public:
 
   // compute java_mirror (java.lang.Class instance) for a type ("I", "[[B", "LFoo;", etc.)
   // Either the accessing_klass or the CL/PD can be non-null, but not both.
-  static Handle    find_java_mirror_for_type(Symbol* signature,
-                                             Klass* accessing_klass,
-                                             Handle class_loader,
-                                             Handle protection_domain,
-                                             SignatureStream::FailureMode failure_mode,
-                                             TRAPS);
-  static Handle    find_java_mirror_for_type(Symbol* signature,
-                                             Klass* accessing_klass,
-                                             SignatureStream::FailureMode failure_mode,
-                                             TRAPS) {
+  static Handle find_java_mirror_for_type(Symbol* signature, Klass* accessing_klass, Handle class_loader, Handle protection_domain, SignatureStream::FailureMode failure_mode, TRAPS);
+  static Handle find_java_mirror_for_type(Symbol* signature, Klass* accessing_klass, SignatureStream::FailureMode failure_mode, TRAPS) {
     // callee will fill in CL/PD from AK, if they are needed
     return find_java_mirror_for_type(signature, accessing_klass, Handle(), Handle(), failure_mode, THREAD);
   }
 
   // fast short-cut for the one-character case:
-  static oop       find_java_mirror_for_type(char signature_char);
-
-  // find a java.lang.invoke.MethodType object for a given signature
-  // (asks Java to compute it if necessary, except in a compiler thread)
-  static Handle    find_method_handle_type(Symbol* signature, Klass* accessing_klass, TRAPS);
-
-  // find a java.lang.Class object for a given signature
-  static Handle    find_field_handle_type(Symbol* signature, Klass* accessing_klass, TRAPS);
+  static oop find_java_mirror_for_type(char signature_char);
 
   // Record the error when the first attempt to resolve a reference from a constant
   // pool entry to a class fails.
@@ -454,11 +431,10 @@ public:
 
  protected:
   enum Constants {
-    _loader_constraint_size = 107,                     // number of entries in constraint table
-    _resolution_error_size  = 107,                     // number of entries in resolution error table
-    _invoke_method_size     = 139,                     // number of entries in invoke method table
-    _shared_dictionary_size = 1009,                    // number of entries in shared dictionary
-    _placeholder_table_size = 1009                     // number of entries in hash table for placeholders
+    _loader_constraint_size =  107, // number of entries in constraint table
+    _resolution_error_size  =  107, // number of entries in resolution error table
+    _invoke_method_size     =  139, // number of entries in invoke method table
+    _placeholder_table_size = 1009  // number of entries in hash table for placeholders
   };
 
   // Static tables owned by the SystemDictionary

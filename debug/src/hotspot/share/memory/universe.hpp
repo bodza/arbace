@@ -120,7 +120,6 @@ class Universe: AllStatic {
   static LatestMethodCache* _loader_addClass_cache;    // method for registering loaded classes in class loader vector
   static LatestMethodCache* _pd_implies_cache;         // method for checking protection domain attributes
   static LatestMethodCache* _throw_illegal_access_error_cache; // Unsafe.throwIllegalAccessError() method
-  static LatestMethodCache* _do_stack_walk_cache;      // method for stack walker callback
 
   // preallocated error objects (no backtrace)
   static oop          _out_of_memory_error_java_heap;
@@ -129,9 +128,6 @@ class Universe: AllStatic {
   static oop          _out_of_memory_error_array_size;
   static oop          _out_of_memory_error_gc_overhead_limit;
   static oop          _out_of_memory_error_realloc_objects;
-
-  // preallocated cause message for delayed StackOverflowError
-  static oop          _delayed_stack_overflow_error_message;
 
   static Array<int>*       _the_empty_int_array;    // Canonicalized int array
   static Array<u2>*        _the_empty_short_array;  // Canonicalized short array
@@ -281,8 +277,6 @@ class Universe: AllStatic {
   static Method*      protection_domain_implies_method() { return _pd_implies_cache->get_method(); }
   static Method*      throw_illegal_access_error()    { return _throw_illegal_access_error_cache->get_method(); }
 
-  static Method*      do_stack_walk_method()          { return _do_stack_walk_cache->get_method(); }
-
   static oop          the_null_sentinel()             { return _the_null_sentinel; }
   static address      the_null_sentinel_addr()        { return (address) &_the_null_sentinel; }
 
@@ -305,32 +299,31 @@ class Universe: AllStatic {
   static bool         has_reference_pending_list();
   static oop          swap_reference_pending_list(oop list);
 
-  static Array<int>*       the_empty_int_array()    { return _the_empty_int_array; }
-  static Array<u2>*        the_empty_short_array()  { return _the_empty_short_array; }
+  static Array<int>*     the_empty_int_array()    { return _the_empty_int_array; }
+  static Array<u2>*      the_empty_short_array()  { return _the_empty_short_array; }
   static Array<Method*>* the_empty_method_array() { return _the_empty_method_array; }
   static Array<Klass*>*  the_empty_klass_array()  { return _the_empty_klass_array; }
 
   // OutOfMemoryError support. Returns an error with the required message. The returned error
   // may or may not have a backtrace. If error has a backtrace then the stack trace is already
   // filled in.
-  static oop out_of_memory_error_java_heap()          { return gen_out_of_memory_error(_out_of_memory_error_java_heap); }
-  static oop out_of_memory_error_metaspace()          { return gen_out_of_memory_error(_out_of_memory_error_metaspace); }
-  static oop out_of_memory_error_class_metaspace()    { return gen_out_of_memory_error(_out_of_memory_error_class_metaspace); }
-  static oop out_of_memory_error_array_size()         { return gen_out_of_memory_error(_out_of_memory_error_array_size); }
-  static oop out_of_memory_error_gc_overhead_limit()  { return gen_out_of_memory_error(_out_of_memory_error_gc_overhead_limit); }
-  static oop out_of_memory_error_realloc_objects()    { return gen_out_of_memory_error(_out_of_memory_error_realloc_objects); }
-  static oop delayed_stack_overflow_error_message()   { return _delayed_stack_overflow_error_message; }
+  static oop out_of_memory_error_java_heap()         { return gen_out_of_memory_error(_out_of_memory_error_java_heap); }
+  static oop out_of_memory_error_metaspace()         { return gen_out_of_memory_error(_out_of_memory_error_metaspace); }
+  static oop out_of_memory_error_class_metaspace()   { return gen_out_of_memory_error(_out_of_memory_error_class_metaspace); }
+  static oop out_of_memory_error_array_size()        { return gen_out_of_memory_error(_out_of_memory_error_array_size); }
+  static oop out_of_memory_error_gc_overhead_limit() { return gen_out_of_memory_error(_out_of_memory_error_gc_overhead_limit); }
+  static oop out_of_memory_error_realloc_objects()   { return gen_out_of_memory_error(_out_of_memory_error_realloc_objects); }
 
   // Accessors needed for fast allocation
-  static Klass** boolArrayKlassObj_addr()           { return &_boolArrayKlassObj; }
-  static Klass** byteArrayKlassObj_addr()           { return &_byteArrayKlassObj; }
-  static Klass** charArrayKlassObj_addr()           { return &_charArrayKlassObj; }
-  static Klass** intArrayKlassObj_addr()            { return &_intArrayKlassObj; }
-  static Klass** shortArrayKlassObj_addr()          { return &_shortArrayKlassObj; }
-  static Klass** longArrayKlassObj_addr()           { return &_longArrayKlassObj; }
-  static Klass** singleArrayKlassObj_addr()         { return &_singleArrayKlassObj; }
-  static Klass** doubleArrayKlassObj_addr()         { return &_doubleArrayKlassObj; }
-  static Klass** objectArrayKlassObj_addr()         { return &_objectArrayKlassObj; }
+  static Klass** boolArrayKlassObj_addr()   { return &_boolArrayKlassObj; }
+  static Klass** byteArrayKlassObj_addr()   { return &_byteArrayKlassObj; }
+  static Klass** charArrayKlassObj_addr()   { return &_charArrayKlassObj; }
+  static Klass** intArrayKlassObj_addr()    { return &_intArrayKlassObj; }
+  static Klass** shortArrayKlassObj_addr()  { return &_shortArrayKlassObj; }
+  static Klass** longArrayKlassObj_addr()   { return &_longArrayKlassObj; }
+  static Klass** singleArrayKlassObj_addr() { return &_singleArrayKlassObj; }
+  static Klass** doubleArrayKlassObj_addr() { return &_doubleArrayKlassObj; }
+  static Klass** objectArrayKlassObj_addr() { return &_objectArrayKlassObj; }
 
   // The particular choice of collected heap.
   static CollectedHeap* heap() { return _collectedHeap; }

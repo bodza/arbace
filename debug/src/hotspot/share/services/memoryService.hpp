@@ -41,82 +41,13 @@ public:
   static MemoryPool*    get_memory_pool(instanceHandle pool);
   static MemoryManager* get_memory_manager(instanceHandle mgr);
 
-  static const int num_memory_pools() {
-    return _pools_list->length();
-  }
-  static const int num_memory_managers() {
-    return _managers_list->length();
-  }
+  static const int num_memory_pools()    { return _pools_list->length(); }
+  static const int num_memory_managers() { return _managers_list->length(); }
 
-  static MemoryPool* get_memory_pool(int index) {
-    return _pools_list->at(index);
-  }
-
-  static MemoryManager* get_memory_manager(int index) {
-    return _managers_list->at(index);
-  }
-
-  static void track_memory_usage();
-  static void track_code_cache_memory_usage() {
-    // Track memory pool usage of all CodeCache memory pools
-    for (int i = 0; i < _code_heap_pools->length(); ++i) {
-      track_memory_pool_usage(_code_heap_pools->at(i));
-    }
-  }
-  static void track_metaspace_memory_usage() {
-    track_memory_pool_usage(_metaspace_pool);
-  }
-  static void track_compressed_class_memory_usage() {
-    track_memory_pool_usage(_compressed_class_pool);
-  }
-  static void track_memory_pool_usage(MemoryPool* pool);
-
-  static void gc_begin(GCMemoryManager* manager, bool recordGCBeginTime, bool recordAccumulatedGCTime, bool recordPreGCUsage, bool recordPeakUsage);
-  static void gc_end(GCMemoryManager* manager, bool recordPostGCUsage, bool recordAccumulatedGCTime, bool recordGCEndTime, bool countCollection, GCCause::Cause cause, bool allMemoryPoolsAffected);
+  static MemoryPool* get_memory_pool(int index)       { return _pools_list->at(index); }
+  static MemoryManager* get_memory_manager(int index) { return _managers_list->at(index); }
 
   static void oops_do(OopClosure* f);
-
-  // Create an instance of java/lang/management/MemoryUsage
-  static Handle create_MemoryUsage_obj(MemoryUsage usage, TRAPS);
-};
-
-class TraceMemoryManagerStats : public StackObj {
-private:
-  GCMemoryManager* _gc_memory_manager;
-  bool         _allMemoryPoolsAffected;
-  bool         _recordGCBeginTime;
-  bool         _recordPreGCUsage;
-  bool         _recordPeakUsage;
-  bool         _recordPostGCUsage;
-  bool         _recordAccumulatedGCTime;
-  bool         _recordGCEndTime;
-  bool         _countCollection;
-  GCCause::Cause _cause;
-public:
-  TraceMemoryManagerStats() { }
-  TraceMemoryManagerStats(GCMemoryManager* gc_memory_manager,
-                          GCCause::Cause cause,
-                          bool allMemoryPoolsAffected = true,
-                          bool recordGCBeginTime = true,
-                          bool recordPreGCUsage = true,
-                          bool recordPeakUsage = true,
-                          bool recordPostGCUsage = true,
-                          bool recordAccumulatedGCTime = true,
-                          bool recordGCEndTime = true,
-                          bool countCollection = true);
-
-  void initialize(GCMemoryManager* gc_memory_manager,
-                  GCCause::Cause cause,
-                  bool allMemoryPoolsAffected,
-                  bool recordGCBeginTime,
-                  bool recordPreGCUsage,
-                  bool recordPeakUsage,
-                  bool recordPostGCUsage,
-                  bool recordAccumulatedGCTime,
-                  bool recordGCEndTime,
-                  bool countCollection);
-
-  ~TraceMemoryManagerStats();
 };
 
 #endif

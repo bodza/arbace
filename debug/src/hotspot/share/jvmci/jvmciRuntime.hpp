@@ -119,18 +119,4 @@ class JVMCIRuntime: public AllStatic {
   static void force_initialization(TRAPS);
 };
 
-// Tracing macros.
-
-#define IF_TRACE_jvmci_1 if (!(JVMCITraceLevel >= 1)) ; else
-#define IF_TRACE_jvmci_2 if (!(JVMCITraceLevel >= 2)) ; else
-#define IF_TRACE_jvmci_3 if (!(JVMCITraceLevel >= 3)) ; else
-#define IF_TRACE_jvmci_4 if (!(JVMCITraceLevel >= 4)) ; else
-#define IF_TRACE_jvmci_5 if (!(JVMCITraceLevel >= 5)) ; else
-
-#define TRACE_jvmci_1 if (!(JVMCITraceLevel >= 1 && (tty->print("JVMCITrace-1: "), true))) ; else tty->print_cr
-#define TRACE_jvmci_2 if (!(JVMCITraceLevel >= 2 && (tty->print("   JVMCITrace-2: "), true))) ; else tty->print_cr
-#define TRACE_jvmci_3 if (!(JVMCITraceLevel >= 3 && (tty->print("      JVMCITrace-3: "), true))) ; else tty->print_cr
-#define TRACE_jvmci_4 if (!(JVMCITraceLevel >= 4 && (tty->print("         JVMCITrace-4: "), true))) ; else tty->print_cr
-#define TRACE_jvmci_5 if (!(JVMCITraceLevel >= 5 && (tty->print("            JVMCITrace-5: "), true))) ; else tty->print_cr
-
 #endif

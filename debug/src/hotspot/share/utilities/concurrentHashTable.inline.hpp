@@ -513,22 +513,18 @@ inline bool ConcurrentHashTable<VALUE, CONFIG, F>::unzip_bucket(Thread* thread, 
     if (dead_hash) {
       delete_me = aux;
       // This item is dead, move both list to next
-      new_table->get_bucket(odd_index)->release_assign_node_ptr(odd,
-                                                                aux_next);
-      new_table->get_bucket(even_index)->release_assign_node_ptr(even,
-                                                                 aux_next);
+      new_table->get_bucket(odd_index)->release_assign_node_ptr(odd, aux_next);
+      new_table->get_bucket(even_index)->release_assign_node_ptr(even, aux_next);
     } else {
       size_t aux_index = bucket_idx_hash(new_table, aux_hash);
       if (aux_index == even_index) {
         // This is a even, so move odd to aux/even next
-        new_table->get_bucket(odd_index)->release_assign_node_ptr(odd,
-                                                                  aux_next);
+        new_table->get_bucket(odd_index)->release_assign_node_ptr(odd, aux_next);
         // Keep in even list
         even = aux->next_ptr();
       } else if (aux_index == odd_index) {
         // This is a odd, so move odd to aux/odd next
-        new_table->get_bucket(even_index)->release_assign_node_ptr(even,
-                                                                   aux_next);
+        new_table->get_bucket(even_index)->release_assign_node_ptr(even, aux_next);
         // Keep in odd list
         odd = aux->next_ptr();
       } else {

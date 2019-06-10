@@ -47,12 +47,10 @@ void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle constant, TRAPS) 
     address operand = Assembler::locate_operand(pc, Assembler::narrow_oop_operand);
     int oop_index = _oop_recorder->find_index(value);
     _instructions->relocate(pc, oop_Relocation::spec(oop_index), Assembler::narrow_oop_operand);
-    TRACE_jvmci_3("relocating (narrow oop constant) at " PTR_FORMAT "/" PTR_FORMAT, p2i(pc), p2i(operand));
   } else {
     address operand = Assembler::locate_operand(pc, Assembler::imm_operand);
     *((jobject*) operand) = value;
     _instructions->relocate(pc, oop_Relocation::spec_for_immediate(), Assembler::imm_operand);
-    TRACE_jvmci_3("relocating (oop constant) at " PTR_FORMAT "/" PTR_FORMAT, p2i(pc), p2i(operand));
   }
 }
 
@@ -61,11 +59,9 @@ void CodeInstaller::pd_patch_MetaspaceConstant(int pc_offset, Handle constant, T
   if (HotSpotMetaspaceConstantImpl::compressed(constant)) {
     address operand = Assembler::locate_operand(pc, Assembler::narrow_oop_operand);
     *((narrowKlass*) operand) = record_narrow_metadata_reference(_instructions, operand, constant, CHECK);
-    TRACE_jvmci_3("relocating (narrow metaspace constant) at " PTR_FORMAT "/" PTR_FORMAT, p2i(pc), p2i(operand));
   } else {
     address operand = Assembler::locate_operand(pc, Assembler::imm_operand);
     *((void**) operand) = record_metadata_reference(_instructions, operand, constant, CHECK);
-    TRACE_jvmci_3("relocating (metaspace constant) at " PTR_FORMAT "/" PTR_FORMAT, p2i(pc), p2i(operand));
   }
 }
 
@@ -80,7 +76,6 @@ void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, int data_offset
   *((jint*) operand) = (jint) disp;
 
   _instructions->relocate(pc, section_word_Relocation::spec((address) dest, CodeBuffer::SECT_CONSTS), Assembler::disp32_operand);
-  TRACE_jvmci_3("relocating at " PTR_FORMAT "/" PTR_FORMAT " with destination at " PTR_FORMAT " (%d)", p2i(pc), p2i(operand), p2i(dest), data_offset);
 }
 
 void CodeInstaller::pd_relocate_ForeignCall(NativeInstruction* inst, jlong foreign_call_destination, TRAPS) {
@@ -106,8 +101,6 @@ void CodeInstaller::pd_relocate_ForeignCall(NativeInstruction* inst, jlong forei
   } else {
     JVMCI_ERROR("unsupported relocation for foreign call");
   }
-
-  TRACE_jvmci_3("relocating (foreign call)  at " PTR_FORMAT, p2i(inst));
 }
 
 void CodeInstaller::pd_relocate_JavaMethod(CodeBuffer &, Handle hotspot_method, jint pc_offset, TRAPS) {

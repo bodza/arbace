@@ -51,17 +51,8 @@ Handle Bytecode_invoke::appendix(TRAPS) {
   return Handle();  // usual case
 }
 
-int Bytecode_member_ref::index() const {
-  Bytecodes::Code rawc = code();
-  if (has_index_u4(rawc))
-    return get_index_u4(rawc);
-  else
-    return get_index_u2_cpcache(rawc);
-}
-
-int Bytecode_member_ref::pool_index() const {
-  return cpcache_entry()->constant_pool_index();
-}
+int Bytecode_member_ref::index()      const { return get_index_u2_cpcache(code()); }
+int Bytecode_member_ref::pool_index() const { return cpcache_entry()->constant_pool_index(); }
 
 ConstantPoolCacheEntry* Bytecode_member_ref::cpcache_entry() const {
   int index = this->index();

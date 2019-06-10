@@ -346,26 +346,6 @@ class GraphBuilder {
 
   void print_inlining(ciMethod* callee, const char* msg = NULL, bool success = true);
 
-  void profile_call(ciMethod* callee, Value recv, ciKlass* predicted_holder, Values* obj_args, bool inlined);
-  void profile_return_type(Value ret, ciMethod* callee, ciMethod* m = NULL, int bci = -1);
-  void profile_invocation(ciMethod* inlinee, ValueStack* state);
-
-  // Shortcuts to profiling control.
-  bool is_profiling()          { return _compilation->is_profiling(); }
-  bool count_invocations()     { return _compilation->count_invocations(); }
-  bool count_backedges()       { return _compilation->count_backedges(); }
-  bool profile_branches()      { return _compilation->profile_branches(); }
-  bool profile_calls()         { return _compilation->profile_calls(); }
-  bool profile_inlined_calls() { return _compilation->profile_inlined_calls(); }
-  bool profile_checkcasts()    { return _compilation->profile_checkcasts(); }
-  bool profile_parameters()    { return _compilation->profile_parameters(); }
-  bool profile_arguments()     { return _compilation->profile_arguments(); }
-  bool profile_return()        { return _compilation->profile_return(); }
-
-  Values* args_list_for_profiling(ciMethod* target, int& start, bool may_have_receiver);
-  Values* collect_args_for_profiling(Values* args, ciMethod* target, bool may_have_receiver);
-  void check_args_for_profiling(Values* obj_args, int expected);
-
  public:
   // initialization
   static void initialize();

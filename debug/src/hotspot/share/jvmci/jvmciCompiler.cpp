@@ -24,26 +24,12 @@ JVMCICompiler::JVMCICompiler() : AbstractCompiler(compiler_jvmci) {
   _instance = this;
 }
 
-// Initialization
-void JVMCICompiler::initialize() {
-  if (!UseCompiler || !EnableJVMCI || !UseJVMCICompiler || !should_perform_init()) {
-    return;
-  }
-
-  set_state(initialized);
-
-  // JVMCI is considered as application code so we need to
-  // stop the VM deferring compilation now.
-  CompilationPolicy::completed_vm_startup();
-}
+void JVMCICompiler::initialize() { }
 
 void JVMCICompiler::bootstrap(TRAPS) {
   _bootstrapping = true;
   ResourceMark rm;
   HandleMark hm;
-  if (PrintBootstrap) {
-    tty->print("Bootstrapping JVMCI");
-  }
   jlong start = os::javaTimeMillis();
 
   Array<Method*>* objectMethods = SystemDictionary::Object_klass()->methods();
@@ -68,17 +54,8 @@ void JVMCICompiler::bootstrap(TRAPS) {
       qsize = CompileBroker::queue_size(CompLevel_full_optimization);
     } while (!_bootstrap_compilation_request_handled && first_round && qsize == 0);
     first_round = false;
-    if (PrintBootstrap) {
-      while (z < (_methods_compiled / 100)) {
-        ++z;
-        tty->print_raw(".");
-      }
-    }
   } while (qsize != 0);
 
-  if (PrintBootstrap) {
-    tty->print_cr(" in " JLONG_FORMAT " ms (compiled %d methods)", os::javaTimeMillis() - start, _methods_compiled);
-  }
   _bootstrapping = false;
   JVMCIRuntime::bootstrap_finished(CHECK);
 }

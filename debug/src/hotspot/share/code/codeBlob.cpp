@@ -131,9 +131,6 @@ void RuntimeBlob::trace_new_stub(RuntimeBlob* stub, const char* name1, const cha
     jio_snprintf(stub_id, sizeof(stub_id), "%s%s", name1, name2);
     Forte::register_stub(stub_id, stub->code_begin(), stub->code_end());
   }
-
-  // Track memory usage statistic after releasing CodeCache_lock
-  MemoryService::track_code_cache_memory_usage();
 }
 
 const ImmutableOopMap* CodeBlob::oop_map_for_return_address(address return_address) {
@@ -162,8 +159,6 @@ BufferBlob* BufferBlob::create(const char* name, int buffer_size) {
     MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
     blob = new (size) BufferBlob(name, size);
   }
-  // Track memory usage statistic after releasing CodeCache_lock
-  MemoryService::track_code_cache_memory_usage();
 
   return blob;
 }
@@ -179,8 +174,6 @@ BufferBlob* BufferBlob::create(const char* name, CodeBuffer* cb) {
     MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
     blob = new (size) BufferBlob(name, size, cb);
   }
-  // Track memory usage statistic after releasing CodeCache_lock
-  MemoryService::track_code_cache_memory_usage();
 
   return blob;
 }
@@ -196,8 +189,6 @@ void BufferBlob::free(BufferBlob *blob) {
     MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
     CodeCache::free((RuntimeBlob*)blob);
   }
-  // Track memory usage statistic after releasing CodeCache_lock
-  MemoryService::track_code_cache_memory_usage();
 }
 
 //----------------------------------------------------------------------------------------------------
@@ -217,8 +208,6 @@ AdapterBlob* AdapterBlob::create(CodeBuffer* cb) {
     MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
     blob = new (size) AdapterBlob(size, cb);
   }
-  // Track memory usage statistic after releasing CodeCache_lock
-  MemoryService::track_code_cache_memory_usage();
 
   return blob;
 }
@@ -239,8 +228,6 @@ VtableBlob* VtableBlob::create(const char* name, int buffer_size) {
     MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
     blob = new (size) VtableBlob(name, size);
   }
-  // Track memory usage statistic after releasing CodeCache_lock
-  MemoryService::track_code_cache_memory_usage();
 
   return blob;
 }

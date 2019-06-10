@@ -823,29 +823,12 @@ public:
     dl->set_cell_at(off, cell_count - base - header_cell_count());
   }
 
-  static bool arguments_profiling_enabled();
-  static bool return_profiling_enabled();
-
   // Code generation support
-  static ByteSize cell_count_offset() {
-    return in_ByteSize(cell_count_local_offset() * DataLayout::cell_size);
-  }
-
-  static ByteSize args_data_offset() {
-    return in_ByteSize(header_cell_count() * DataLayout::cell_size);
-  }
-
-  static ByteSize stack_slot_offset(int i) {
-    return in_ByteSize(stack_slot_local_offset(i) * DataLayout::cell_size);
-  }
-
-  static ByteSize argument_type_offset(int i) {
-    return in_ByteSize(argument_type_local_offset(i) * DataLayout::cell_size);
-  }
-
-  static ByteSize return_only_size() {
-    return ReturnTypeEntry::size() + in_ByteSize(header_cell_count() * DataLayout::cell_size);
-  }
+  static ByteSize cell_count_offset()         { return in_ByteSize(cell_count_local_offset() * DataLayout::cell_size); }
+  static ByteSize args_data_offset()          { return in_ByteSize(header_cell_count() * DataLayout::cell_size); }
+  static ByteSize stack_slot_offset(int i)    { return in_ByteSize(stack_slot_local_offset(i) * DataLayout::cell_size); }
+  static ByteSize argument_type_offset(int i) { return in_ByteSize(argument_type_local_offset(i) * DataLayout::cell_size); }
+  static ByteSize return_only_size()          { return ReturnTypeEntry::size() + in_ByteSize(header_cell_count() * DataLayout::cell_size); }
 };
 
 // CallTypeData
@@ -1043,12 +1026,9 @@ public:
     // only bimorphic. Then keeping total count not 0 will be wrong.
     // Even if we use monomorphic (when it is not) for compilation
     // we will only have trap, deoptimization and recompile again
-    // with updated MDO after executing method in NULL.
+    // with updated MDO after executing method in ...
     // An additional receiver will be recorded in the cleaned row
     // during next call execution.
-    //
-    // Note: our profiling logic works with empty rows in any slot.
-    // We do sorting a profiling info (ciCallProfile) for compilation.
     //
     set_count(0);
     set_receiver(row, NULL);
@@ -1061,21 +1041,18 @@ public:
   }
 
   // Code generation support
-  static ByteSize receiver_offset(uint row) {
-    return cell_offset(receiver_cell_index(row));
-  }
-  static ByteSize receiver_count_offset(uint row) {
-    return cell_offset(receiver_count_cell_index(row));
-  }
-  static ByteSize nonprofiled_receiver_count_offset() {
-    return cell_offset(nonprofiled_count_off_set);
-  }
+  static ByteSize receiver_offset(uint row)           { return cell_offset(receiver_cell_index(row)); }
+  static ByteSize receiver_count_offset(uint row)     { return cell_offset(receiver_count_cell_index(row)); }
+  static ByteSize nonprofiled_receiver_count_offset() { return cell_offset(nonprofiled_count_off_set); }
+
   uint nonprofiled_count() const {
     return uint_at(nonprofiled_count_off_set);
   }
+
   void set_nonprofiled_count(uint count) {
     set_uint_at(nonprofiled_count_off_set, count);
   }
+
   static ByteSize receiver_type_data_size() {
     return cell_offset(static_cell_count());
   }
@@ -1095,9 +1072,9 @@ public:
   virtual bool is_VirtualCallData() const { return true; }
 
   static int static_cell_count() {
-    // At this point we could add more profile state, e.g., for arguments.
+    // At this point we could add more profile state, e.g. for arguments.
     // But for now it's the same size as the base record type.
-    return ReceiverTypeData::static_cell_count() + (uint) MethodProfileWidth * receiver_type_row_cell_count;
+    return ReceiverTypeData::static_cell_count();
   }
 
   virtual int cell_count() const {
@@ -1109,25 +1086,18 @@ public:
     return cell_offset(static_cell_count());
   }
 
-  static ByteSize method_offset(uint row) {
-    return cell_offset(method_cell_index(row));
-  }
-  static ByteSize method_count_offset(uint row) {
-    return cell_offset(method_count_cell_index(row));
-  }
-  static int method_cell_index(uint row) {
-    return receiver0_offset + (row + TypeProfileWidth) * receiver_type_row_cell_count;
-  }
-  static int method_count_cell_index(uint row) {
-    return count0_offset + (row + TypeProfileWidth) * receiver_type_row_cell_count;
-  }
+  static ByteSize method_offset(uint row)       { return cell_offset(method_cell_index(row)); }
+  static ByteSize method_count_offset(uint row) { return cell_offset(method_count_cell_index(row)); }
+
+  static int method_cell_index(uint row)       { return receiver0_offset + (row + TypeProfileWidth) * receiver_type_row_cell_count; }
+  static int method_count_cell_index(uint row) { return count0_offset + (row + TypeProfileWidth) * receiver_type_row_cell_count; }
+
   static uint method_row_limit() {
-    return MethodProfileWidth;
+    return 0;
   }
 
   Method* method(uint row) const {
-    Method* method = (Method*)intptr_at(method_cell_index(row));
-    return method;
+    return (Method*)intptr_at(method_cell_index(row));
   }
 
   uint method_count(uint row) const {
@@ -1590,18 +1560,8 @@ class ParametersTypeData : public ArrayData {
 private:
   TypeStackSlotEntries _parameters;
 
-  static int stack_slot_local_offset(int i) {
-    assert_profiling_enabled();
-    return array_start_off_set + TypeStackSlotEntries::stack_slot_local_offset(i);
-  }
-
-  static int type_local_offset(int i) {
-    assert_profiling_enabled();
-    return array_start_off_set + TypeStackSlotEntries::type_local_offset(i);
-  }
-
-  static bool profiling_enabled();
-  static void assert_profiling_enabled() { }
+  static int stack_slot_local_offset(int i) { return array_start_off_set + TypeStackSlotEntries::stack_slot_local_offset(i); }
+  static int type_local_offset(int i)       { return array_start_off_set + TypeStackSlotEntries::type_local_offset(i); }
 
 public:
   ParametersTypeData(DataLayout* layout) : ArrayData(layout), _parameters(1, number_of_parameters()) {
@@ -1634,13 +1594,8 @@ public:
     _parameters.clean_weak_klass_links(always_clean);
   }
 
-  static ByteSize stack_slot_offset(int i) {
-    return cell_offset(stack_slot_local_offset(i));
-  }
-
-  static ByteSize type_offset(int i) {
-    return cell_offset(type_local_offset(i));
-  }
+  static ByteSize stack_slot_offset(int i) { return cell_offset(stack_slot_local_offset(i)); }
+  static ByteSize type_offset(int i)       { return cell_offset(type_local_offset(i)); }
 };
 
 // SpeculativeTrapData
@@ -1763,7 +1718,6 @@ public:
   bool is_methodData() const volatile { return true; }
   void initialize();
 private:
-  uint _nof_decompiles;             // count of all nmethod removals
   uint _nof_overflow_recompiles;    // recompile count, excluding recomp. bits
 
   // Support for interprocedural escape analysis, from Thomas Kotzmann.
@@ -1800,7 +1754,7 @@ private:
   int               _jvmci_ir_size;
 
   // Size of _data array in bytes.  (Excludes header and extra_data fields.)
-  int _data_size;
+  int               _data_size;
 
   // data index for the area dedicated to parameters. -1 if no
   // parameter profiling.
@@ -1865,31 +1819,12 @@ private:
   // return the argument info cell
   ArgInfoData *arg_info();
 
-  enum {
-    no_type_profile = 0,
-    type_profile_jsr292 = 1,
-    type_profile_all = 2
-  };
-
-  static bool profile_unsafe(const methodHandle& m, int bci);
-  static int profile_arguments_flag();
-  static bool profile_all_arguments();
-  static bool profile_arguments_for_invoke(const methodHandle& m, int bci);
-  static int profile_return_flag();
-  static bool profile_all_return();
-  static bool profile_return_for_invoke(const methodHandle& m, int bci);
-  static int profile_parameters_flag();
-  static bool profile_parameters_jsr292_only();
-  static bool profile_all_parameters();
-
   void clean_extra_data(CleanExtraDataClosure* cl);
   void clean_extra_data_helper(DataLayout* dp, int shift, bool reset = false);
   void verify_extra_data_clean(CleanExtraDataClosure* cl);
 
 public:
-  static int header_size() {
-    return sizeof(MethodData)/wordSize;
-  }
+  static int header_size() { return sizeof(MethodData) / wordSize; }
 
   // Compute the size of a MethodData* before it is created.
   static int compute_allocation_size_in_bytes(const methodHandle& method);
@@ -2047,27 +1982,11 @@ public:
   int extra_data_size()          const { return (address)extra_data_limit() - (address)extra_data_base(); }
   static DataLayout* next_extra(DataLayout* dp);
 
-  uint overflow_recompile_count() const {
-    return _nof_overflow_recompiles;
-  }
-  void inc_overflow_recompile_count() {
-    _nof_overflow_recompiles += 1;
-  }
-  uint decompile_count() const {
-    return _nof_decompiles;
-  }
-  void inc_decompile_count() {
-    _nof_decompiles += 1;
-    if (decompile_count() > (uint)PerMethodRecompilationCutoff) {
-      method()->set_not_compilable(CompLevel_full_optimization, true, "decompile_count > PerMethodRecompilationCutoff");
-    }
-  }
-  uint tenure_traps() const {
-    return _tenure_traps;
-  }
-  void inc_tenure_traps() {
-    _tenure_traps += 1;
-  }
+  uint overflow_recompile_count() const { return _nof_overflow_recompiles; }
+  void inc_overflow_recompile_count() { _nof_overflow_recompiles += 1; }
+
+  uint tenure_traps() const { return _tenure_traps; }
+  void inc_tenure_traps() { _tenure_traps += 1; }
 
   // Return pointer to area dedicated to parameters in MDO
   ParametersTypeData* parameters_type_data() const {
@@ -2100,13 +2019,6 @@ public:
   void print_value_on(outputStream* st) const;
 
   const char* internal_name() const { return "{method data}"; }
-
-  static bool profile_parameters_for_method(const methodHandle& m);
-  static bool profile_arguments();
-  static bool profile_arguments_jsr292_only();
-  static bool profile_return();
-  static bool profile_parameters();
-  static bool profile_return_jsr292_only();
 
   void clean_method_data(bool always_clean);
   void clean_weak_method_links();

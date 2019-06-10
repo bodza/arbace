@@ -167,8 +167,6 @@ class nmethod : public CompiledMethod {
   // Returns true if this thread changed the state of the nmethod or
   // false if another thread performed the transition.
   bool make_not_entrant_or_zombie(int state);
-  bool make_entrant() { Unimplemented(); return false; }
-  void inc_decompile_count();
 
   // Inform external interfaces that a compiled method has been unloaded
   void post_compiled_method_unload();
@@ -270,10 +268,7 @@ class nmethod : public CompiledMethod {
   // alive.  It is used when an uncommon trap happens.  Returns true
   // if this thread changed the state of the nmethod or false if
   // another thread performed the transition.
-  bool make_not_entrant() {
-    return make_not_entrant_or_zombie(not_entrant);
-  }
-  bool make_not_used()                          { return make_not_entrant(); }
+  bool make_not_entrant()                       { return make_not_entrant_or_zombie(not_entrant); }
   bool make_zombie()                            { return make_not_entrant_or_zombie(zombie); }
 
   // used by jvmti to track if the unload event has been reported
@@ -288,7 +283,7 @@ class nmethod : public CompiledMethod {
 
   // Support for oops in scopes and relocs:
   // Note: index 0 is reserved for null.
-  oop   oop_at(int index)                 const { return index == 0 ? (oop) NULL : *oop_addr_at(index); }
+  oop   oop_at(int index)                 const { return (index == 0) ? (oop) NULL : *oop_addr_at(index); }
   oop*  oop_addr_at(int index) const {  // for GC
     // relocation indexes are biased by 1 (because 0 is reserved)
     return &oops_begin()[index - 1];
@@ -296,7 +291,7 @@ class nmethod : public CompiledMethod {
 
   // Support for meta data in scopes and relocs:
   // Note: index 0 is reserved for null.
-  Metadata*     metadata_at(int index)    const { return index == 0 ? NULL : *metadata_addr_at(index); }
+  Metadata*     metadata_at(int index)    const { return (index == 0) ? NULL : *metadata_addr_at(index); }
   Metadata**  metadata_addr_at(int index) const {  // for GC
     // relocation indexes are biased by 1 (because 0 is reserved)
     return &metadata_begin()[index - 1];

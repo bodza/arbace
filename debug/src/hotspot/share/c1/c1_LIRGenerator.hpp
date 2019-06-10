@@ -264,7 +264,7 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
 #endif
 
   // specific implementations
-  void array_store_check(LIR_Opr value, LIR_Opr array, CodeEmitInfo* store_check_info, ciMethod* profiled_method, int profiled_bci);
+  void array_store_check(LIR_Opr value, LIR_Opr array, CodeEmitInfo* store_check_info);
 
   static LIR_Opr result_register_for(ValueType* type, bool callee = false);
 
@@ -326,10 +326,7 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
   // emit some code as part of address calculation.  If
   // needs_card_mark is true then compute the full address for use by
   // both the store and the card mark.
-  LIR_Address* generate_address(LIR_Opr base,
-                                LIR_Opr index, int shift,
-                                int disp,
-                                BasicType type);
+  LIR_Address* generate_address(LIR_Opr base, LIR_Opr index, int shift, int disp, BasicType type);
   LIR_Address* generate_address(LIR_Opr base, int disp, BasicType type) {
     return generate_address(base, LIR_OprFact::illegalOpr, 0, disp, type);
   }
@@ -345,26 +342,6 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
 
   LIR_Opr safepoint_poll_register();
 
-  void profile_branch(If* if_instr, If::Condition cond);
-  void increment_event_counter_impl(CodeEmitInfo* info, ciMethod *method, LIR_Opr step, int frequency, int bci, bool backedge, bool notify);
-  void increment_event_counter(CodeEmitInfo* info, LIR_Opr step, int bci, bool backedge);
-  void increment_invocation_counter(CodeEmitInfo *info) {
-    if (compilation()->count_invocations()) {
-      increment_event_counter(info, LIR_OprFact::intConst(InvocationCounter::count_increment), InvocationEntryBci, false);
-    }
-  }
-  void increment_backedge_counter(CodeEmitInfo* info, int bci) {
-    if (compilation()->count_backedges()) {
-      increment_event_counter(info, LIR_OprFact::intConst(InvocationCounter::count_increment), bci, true);
-    }
-  }
-  void increment_backedge_counter_conditionally(LIR_Condition cond, LIR_Opr left, LIR_Opr right, CodeEmitInfo* info, int left_bci, int right_bci, int bci);
-  void increment_backedge_counter(CodeEmitInfo* info, LIR_Opr step, int bci) {
-    if (compilation()->count_backedges()) {
-      increment_event_counter(info, step, bci, true);
-    }
-  }
-  void decrement_age(CodeEmitInfo* info);
   CodeEmitInfo* state_for(Instruction* x, ValueStack* state, bool ignore_xhandler = false);
   CodeEmitInfo* state_for(Instruction* x);
 
@@ -372,20 +349,20 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
   // one isn't already allocated.  Only for Phi and Local.
   LIR_Opr operand_for_instruction(Instruction *x);
 
-  void set_block(BlockBegin* block)              { _block = block; }
+  void set_block(BlockBegin* block) { _block = block; }
 
   void block_prolog(BlockBegin* block);
   void block_epilog(BlockBegin* block);
 
-  void do_root (Instruction* instr);
-  void walk    (Instruction* instr);
+  void do_root(Instruction* instr);
+  void walk(Instruction* instr);
 
   void bind_block_entry(BlockBegin* block);
   void start_block(BlockBegin* block);
 
   LIR_Opr new_register(BasicType type);
-  LIR_Opr new_register(Value value)              { return new_register(as_BasicType(value->type())); }
-  LIR_Opr new_register(ValueType* type)          { return new_register(as_BasicType(type)); }
+  LIR_Opr new_register(Value value)     { return new_register(as_BasicType(value->type())); }
+  LIR_Opr new_register(ValueType* type) { return new_register(as_BasicType(type)); }
 
   // returns a register suitable for doing pointer math
   LIR_Opr new_pointer_register() {
@@ -395,15 +372,15 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
   static LIR_Condition lir_cond(If::Condition cond) {
     LIR_Condition l = lir_cond_unknown;
     switch (cond) {
-    case If::eql: l = lir_cond_equal;        break;
-    case If::neq: l = lir_cond_notEqual;     break;
-    case If::lss: l = lir_cond_less;         break;
-    case If::leq: l = lir_cond_lessEqual;    break;
-    case If::geq: l = lir_cond_greaterEqual; break;
-    case If::gtr: l = lir_cond_greater;      break;
-    case If::aeq: l = lir_cond_aboveEqual;   break;
-    case If::beq: l = lir_cond_belowEqual;   break;
-    default: fatal("You must pass valid If::Condition");
+      case If::eql: l = lir_cond_equal;        break;
+      case If::neq: l = lir_cond_notEqual;     break;
+      case If::lss: l = lir_cond_less;         break;
+      case If::leq: l = lir_cond_lessEqual;    break;
+      case If::geq: l = lir_cond_greaterEqual; break;
+      case If::gtr: l = lir_cond_greater;      break;
+      case If::aeq: l = lir_cond_aboveEqual;   break;
+      case If::beq: l = lir_cond_belowEqual;   break;
+      default: fatal("You must pass valid If::Condition");
     };
     return l;
   }
@@ -416,23 +393,17 @@ class LIRGenerator: public InstructionVisitor, public BlockClosure {
   SwitchRangeArray* create_lookup_ranges(LookupSwitch* x);
   void do_SwitchRanges(SwitchRangeArray* x, LIR_Opr value, BlockBegin* default_sux);
 
-  ciKlass* profile_type(ciMethodData* md, int md_first_offset, int md_offset, intptr_t profiled_k,
-                        Value arg, LIR_Opr& mdp, bool not_null, ciKlass* signature_at_call_k,
-                        ciKlass* callee_signature_k);
-  void profile_arguments(ProfileCall* x);
-  void profile_parameters(Base* x);
-  void profile_parameters_at_call(ProfileCall* x);
   LIR_Opr mask_boolean(LIR_Opr array, LIR_Opr value, CodeEmitInfo*& null_check_info);
   LIR_Opr maybe_mask_boolean(StoreIndexed* x, LIR_Opr array, LIR_Opr value, CodeEmitInfo*& null_check_info);
 
  public:
-  Compilation*  compilation()              const { return _compilation; }
-  FrameMap*     frame_map()                const { return _compilation->frame_map(); }
-  ciMethod*     method()                   const { return _method; }
-  BlockBegin*   block()                    const { return _block; }
-  IRScope*      scope()                    const { return block()->scope(); }
+  Compilation*  compilation()       const { return _compilation; }
+  FrameMap*     frame_map()         const { return _compilation->frame_map(); }
+  ciMethod*     method()            const { return _method; }
+  BlockBegin*   block()             const { return _block; }
+  IRScope*      scope()             const { return block()->scope(); }
 
-  int max_virtual_register_number()        const { return _virtual_register_number; }
+  int max_virtual_register_number() const { return _virtual_register_number; }
 
   void block_do(BlockBegin* block);
 

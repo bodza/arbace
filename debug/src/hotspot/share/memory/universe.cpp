@@ -79,14 +79,12 @@ LatestMethodCache* Universe::_finalizer_register_cache = NULL;
 LatestMethodCache* Universe::_loader_addClass_cache    = NULL;
 LatestMethodCache* Universe::_pd_implies_cache         = NULL;
 LatestMethodCache* Universe::_throw_illegal_access_error_cache = NULL;
-LatestMethodCache* Universe::_do_stack_walk_cache     = NULL;
 oop Universe::_out_of_memory_error_java_heap          = NULL;
 oop Universe::_out_of_memory_error_metaspace          = NULL;
 oop Universe::_out_of_memory_error_class_metaspace    = NULL;
 oop Universe::_out_of_memory_error_array_size         = NULL;
 oop Universe::_out_of_memory_error_gc_overhead_limit  = NULL;
 oop Universe::_out_of_memory_error_realloc_objects    = NULL;
-oop Universe::_delayed_stack_overflow_error_message   = NULL;
 objArrayOop Universe::_preallocated_out_of_memory_error_array = NULL;
 volatile jint Universe::_preallocated_out_of_memory_error_avail_count = 0;
 long Universe::verify_flags                           = Universe::Verify_All;
@@ -156,7 +154,6 @@ void Universe::oops_do(OopClosure* f, bool do_all) {
   f->do_oop((oop*)&_out_of_memory_error_array_size);
   f->do_oop((oop*)&_out_of_memory_error_gc_overhead_limit);
   f->do_oop((oop*)&_out_of_memory_error_realloc_objects);
-  f->do_oop((oop*)&_delayed_stack_overflow_error_message);
   f->do_oop((oop*)&_preallocated_out_of_memory_error_array);
   f->do_oop((oop*)&_null_ptr_exception_instance);
   f->do_oop((oop*)&_arithmetic_exception_instance);
@@ -195,7 +192,6 @@ void Universe::metaspace_pointers_do(MetaspaceClosure* it) {
   _loader_addClass_cache->metaspace_pointers_do(it);
   _pd_implies_cache->metaspace_pointers_do(it);
   _throw_illegal_access_error_cache->metaspace_pointers_do(it);
-  _do_stack_walk_cache->metaspace_pointers_do(it);
 }
 
 // Serialize metadata and pointers to primitive type mirrors in and out of CDS archive
@@ -229,7 +225,6 @@ void Universe::serialize(SerializeClosure* f, bool do_all) {
   _loader_addClass_cache->serialize(f);
   _pd_implies_cache->serialize(f);
   _throw_illegal_access_error_cache->serialize(f);
-  _do_stack_walk_cache->serialize(f);
 }
 
 void Universe::check_alignment(uintx size, uintx alignment, const char* name) {
@@ -531,7 +526,6 @@ jint universe_init() {
   Universe::_loader_addClass_cache    = new LatestMethodCache();
   Universe::_pd_implies_cache         = new LatestMethodCache();
   Universe::_throw_illegal_access_error_cache = new LatestMethodCache();
-  Universe::_do_stack_walk_cache = new LatestMethodCache();
 
   {
     SymbolTable::create_table();
@@ -707,9 +701,6 @@ void Universe::initialize_known_methods(TRAPS) {
 
   // Set up method for checking protection domain
   initialize_known_method(_pd_implies_cache, SystemDictionary::ProtectionDomain_klass(), "impliesCreateAccessControlContext", vmSymbols::void_boolean_signature(), false, CHECK);
-
-  // Set up method for stack walking
-  initialize_known_method(_do_stack_walk_cache, SystemDictionary::AbstractStackWalker_klass(), "doStackWalk", vmSymbols::doStackWalk_signature(), false, CHECK);
 }
 
 void universe2_init() {
@@ -746,11 +737,6 @@ bool universe_post_init() {
   Universe::_out_of_memory_error_array_size = ik->allocate_instance(CHECK_false);
   Universe::_out_of_memory_error_gc_overhead_limit = ik->allocate_instance(CHECK_false);
   Universe::_out_of_memory_error_realloc_objects = ik->allocate_instance(CHECK_false);
-
-  // Setup preallocated cause message for delayed StackOverflowError
-  if (StackReservedPages > 0) {
-    Universe::_delayed_stack_overflow_error_message = java_lang_String::create_oop_from_str("Delayed StackOverflowError due to ReservedStackAccess annotated method", CHECK_false);
-  }
 
   // Setup preallocated NullPointerException
   // (this is currently used for a cheap & dirty solution in compiler exception handling)

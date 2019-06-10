@@ -15,34 +15,14 @@
                          constraint, \
                          writeable) \
  \
-  product(bool, UseOprofile, false, \
-        "enable support for Oprofile profiler") \
- \
   /*  NB: The default value of UseLinuxPosixThreadCPUClocks may be   */ \
   /* overridden in Arguments::parse_each_vm_init_arg.                */ \
-  product(bool, UseLinuxPosixThreadCPUClocks, true, \
-          "enable fast Linux Posix clocks where available") \
- \
-  product(bool, UseHugeTLBFS, false, \
-          "Use MAP_HUGETLB for large pages") \
- \
-  product(bool, UseTransparentHugePages, false, \
-          "Use MADV_HUGEPAGE for large pages") \
- \
-  product(bool, LoadExecStackDllInVMThread, true, \
-          "Load DLLs with executable-stack attribute in the VM Thread") \
- \
-  product(bool, UseSHM, false, \
-          "Use SYSV shared memory for large pages") \
- \
-  product(bool, UseContainerSupport, true, \
-          "Enable detection and runtime container configuration support") \
- \
-  product(bool, PreferContainerQuotaForCPUCount, true, \
-          "Calculate the container CPU availability based on the value of quotas (if set), when true. Otherwise, use the CPU shares value, provided it is less than quota.") \
- \
-  diagnostic(bool, UseCpuAllocPath, false, \
-          "Use CPU_ALLOC code path in os::active_processor_count ")
+  product(bool,    UseLinuxPosixThreadCPUClocks, true, "enable fast Linux Posix clocks where available") \
+  product(bool,    UseHugeTLBFS,                false, "Use MAP_HUGETLB for large pages") \
+  product(bool,    UseTransparentHugePages,     false, "Use MADV_HUGEPAGE for large pages") \
+  product(bool,    LoadExecStackDllInVMThread,   true, "Load DLLs with executable-stack attribute in the VM Thread") \
+  product(bool,    UseSHM,                      false, "Use SYSV shared memory for large pages") \
+  diagnostic(bool, UseCpuAllocPath,             false, "Use CPU_ALLOC code path in os::active_processor_count ")
 
 //
 // Defines Linux-specific default values. The flags are available on all

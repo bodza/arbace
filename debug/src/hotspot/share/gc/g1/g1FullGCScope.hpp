@@ -14,16 +14,15 @@ class GCMemoryManager;
 
 // Class used to group scoped objects used in the Full GC together.
 class G1FullGCScope : public StackObj {
-  ResourceMark            _rm;
-  bool                    _explicit_gc;
-  G1CollectedHeap*        _g1h;
-  GCIdMark                _gc_id;
-  SvcGCMarker             _svc_marker;
-  STWGCTimer              _timer;
-  IsGCActiveMark          _active;
-  ClearedAllSoftRefs      _soft_refs;
-  TraceMemoryManagerStats _memory_stats;
-  G1HeapTransition        _heap_transition;
+  ResourceMark       _rm;
+  bool               _explicit_gc;
+  G1CollectedHeap*   _g1h;
+  GCIdMark           _gc_id;
+  SvcGCMarker        _svc_marker;
+  STWGCTimer         _timer;
+  IsGCActiveMark     _active;
+  ClearedAllSoftRefs _soft_refs;
+  G1HeapTransition   _heap_transition;
 
 public:
   G1FullGCScope(GCMemoryManager* memory_manager, bool explicit_gc, bool clear_soft);

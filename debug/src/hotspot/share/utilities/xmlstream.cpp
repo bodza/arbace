@@ -274,10 +274,7 @@ void xmlStream::method(const methodHandle& method) {
   if (throwouts != 0)  print(" throwouts='%d'", throwouts);
   MethodData* mdo = method->method_data();
   if (mdo != NULL) {
-    uint cnt;
-    cnt = mdo->decompile_count();
-    if (cnt != 0)  print(" decompiles='%d'", cnt);
-    cnt = mdo->overflow_recompile_count();
+    uint cnt = mdo->overflow_recompile_count();
     if (cnt != 0)  print(" overflow_recompiles='%d'", cnt);
   }
 }

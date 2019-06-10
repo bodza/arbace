@@ -23,7 +23,6 @@
 #include "runtime/os.hpp"
 #include "utilities/align.hpp"
 #include "utilities/globalDefinitions.hpp"
-#include "utilities/intHisto.hpp"
 #include "utilities/stack.inline.hpp"
 #include "utilities/ticks.hpp"
 

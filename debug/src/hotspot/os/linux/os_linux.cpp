@@ -11,7 +11,6 @@
 #include "oops/oop.inline.hpp"
 #include "os_linux.inline.hpp"
 #include "os_share_linux.hpp"
-#include "osContainer_linux.hpp"
 #include "prims/jniFastGetField.hpp"
 #include "prims/jvm_misc.hpp"
 #include "runtime/arguments.hpp"
@@ -147,36 +146,13 @@ julong os::available_memory() {
 julong os::Linux::available_memory() {
   // values in struct sysinfo are "unsigned long"
   struct sysinfo si;
-  julong avail_mem;
-
-  if (OSContainer::is_containerized()) {
-    jlong mem_limit, mem_usage;
-    if ((mem_limit = OSContainer::memory_limit_in_bytes()) < 1) {
-    }
-    if (mem_limit > 0 && (mem_usage = OSContainer::memory_usage_in_bytes()) < 1) {
-    }
-    if (mem_limit > 0 && mem_usage > 0) {
-      avail_mem = mem_limit > mem_usage ? (julong)mem_limit - (julong)mem_usage : 0;
-      return avail_mem;
-    }
-  }
 
   sysinfo(&si);
-  avail_mem = (julong)si.freeram * si.mem_unit;
-  return avail_mem;
+  return (julong)si.freeram * si.mem_unit;
 }
 
 julong os::physical_memory() {
-  jlong phys_mem = 0;
-  if (OSContainer::is_containerized()) {
-    jlong mem_limit;
-    if ((mem_limit = OSContainer::memory_limit_in_bytes()) > 0) {
-      return mem_limit;
-    }
-  }
-
-  phys_mem = Linux::physical_memory();
-  return phys_mem;
+  return Linux::physical_memory();
 }
 
 // Return true if user is running as root.
@@ -1763,8 +1739,6 @@ void os::print_os_info(outputStream* st) {
   os::Linux::print_proc_sys_info(st);
 
   os::Linux::print_ld_preload_file(st);
-
-  os::Linux::print_container_info(st);
 }
 
 // Try to identify popular distros.
@@ -1927,57 +1901,6 @@ void os::Linux::print_ld_preload_file(outputStream* st) {
   st->cr();
 }
 
-void os::Linux::print_container_info(outputStream* st) {
-  if (!OSContainer::is_containerized()) {
-    return;
-  }
-
-  st->print("container (cgroup) information:\n");
-
-  const char *p_ct = OSContainer::container_type();
-  st->print("container_type: %s\n", p_ct != NULL ? p_ct : "failed");
-
-  char *p = OSContainer::cpu_cpuset_cpus();
-  st->print("cpu_cpuset_cpus: %s\n", p != NULL ? p : "failed");
-  free(p);
-
-  p = OSContainer::cpu_cpuset_memory_nodes();
-  st->print("cpu_memory_nodes: %s\n", p != NULL ? p : "failed");
-  free(p);
-
-  int i = OSContainer::active_processor_count();
-  if (i > 0) {
-    st->print("active_processor_count: %d\n", i);
-  } else {
-    st->print("active_processor_count: failed\n");
-  }
-
-  i = OSContainer::cpu_quota();
-  st->print("cpu_quota: %d\n", i);
-
-  i = OSContainer::cpu_period();
-  st->print("cpu_period: %d\n", i);
-
-  i = OSContainer::cpu_shares();
-  st->print("cpu_shares: %d\n", i);
-
-  jlong j = OSContainer::memory_limit_in_bytes();
-  st->print("memory_limit_in_bytes: " JLONG_FORMAT "\n", j);
-
-  j = OSContainer::memory_and_swap_limit_in_bytes();
-  st->print("memory_and_swap_limit_in_bytes: " JLONG_FORMAT "\n", j);
-
-  j = OSContainer::memory_soft_limit_in_bytes();
-  st->print("memory_soft_limit_in_bytes: " JLONG_FORMAT "\n", j);
-
-  j = OSContainer::OSContainer::memory_usage_in_bytes();
-  st->print("memory_usage_in_bytes: " JLONG_FORMAT "\n", j);
-
-  j = OSContainer::OSContainer::memory_max_usage_in_bytes();
-  st->print("memory_max_usage_in_bytes: " JLONG_FORMAT "\n", j);
-  st->cr();
-}
-
 void os::print_memory_info(outputStream* st) {
   st->print("Memory:");
   st->print(" %dk page", os::vm_page_size()>>10);
@@ -1986,14 +1909,10 @@ void os::print_memory_info(outputStream* st) {
   struct sysinfo si;
   sysinfo(&si);
 
-  st->print(", physical " UINT64_FORMAT "k",
-            os::physical_memory() >> 10);
-  st->print("(" UINT64_FORMAT "k free)",
-            os::available_memory() >> 10);
-  st->print(", swap " UINT64_FORMAT "k",
-            ((jlong)si.totalswap * si.mem_unit) >> 10);
-  st->print("(" UINT64_FORMAT "k free)",
-            ((jlong)si.freeswap * si.mem_unit) >> 10);
+  st->print(", physical " UINT64_FORMAT "k", os::physical_memory() >> 10);
+  st->print("(" UINT64_FORMAT "k free)", os::available_memory() >> 10);
+  st->print(", swap " UINT64_FORMAT "k", ((jlong)si.totalswap * si.mem_unit) >> 10);
+  st->print("(" UINT64_FORMAT "k free)", ((jlong)si.freeswap * si.mem_unit) >> 10);
   st->cr();
 }
 
@@ -2365,35 +2284,7 @@ int os::vm_allocation_granularity() {
 //  samples for JITted code. Here we create private executable mapping over the code cache
 //  and then we can use standard (well, almost, as mapping can change) way to provide
 //  info for the reporting script by storing timestamp and location of symbol
-void linux_wrap_code(char* base, size_t size) {
-  static volatile jint cnt = 0;
-
-  if (!UseOprofile) {
-    return;
-  }
-
-  char buf[PATH_MAX+1];
-  int num = Atomic::add(1, &cnt);
-
-  snprintf(buf, sizeof(buf), "%s/hs-vm-%d-%d",
-           os::get_temp_directory(), os::current_process_id(), num);
-  unlink(buf);
-
-  int fd = ::open(buf, O_CREAT | O_RDWR, S_IRWXU);
-
-  if (fd != -1) {
-    off_t rv = ::lseek(fd, size - 2, SEEK_SET);
-    if (rv != (off_t)-1) {
-      if (::write(fd, "", 1) == 1) {
-        mmap(base, size,
-             PROT_READ|PROT_WRITE|PROT_EXEC,
-             MAP_PRIVATE|MAP_FIXED|MAP_NORESERVE, fd, 0);
-      }
-    }
-    ::close(fd);
-    unlink(buf);
-  }
-}
+void linux_wrap_code(char* base, size_t size) { }
 
 static bool recoverable_mmap_error(int err) {
   // See if the error is one we can let the caller handle. This
@@ -4532,10 +4423,6 @@ void os::init(void) {
   os::Posix::init();
 }
 
-void os::pd_init_container_support() {
-  OSContainer::init();
-}
-
 // this is called _after_ the global arguments have been parsed
 jint os::init_2(void) {
   os::Posix::init_2();
@@ -4727,14 +4614,7 @@ int os::active_processor_count() {
     return ActiveProcessorCount;
   }
 
-  int active_cpus;
-  if (OSContainer::is_containerized()) {
-    active_cpus = OSContainer::active_processor_count();
-  } else {
-    active_cpus = os::Linux::active_processor_count();
-  }
-
-  return active_cpus;
+  return os::Linux::active_processor_count();
 }
 
 uint os::processor_id() {

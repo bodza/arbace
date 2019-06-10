@@ -66,7 +66,6 @@ ciEnv::ciEnv(CompileTask* task, int system_dictionary_modification_counter)
   _oop_recorder = NULL;
   _debug_info = NULL;
   _failure_reason = NULL;
-  _inc_decompile_count_on_failure = true;
   _compilable = MethodCompilable;
   _break_at_compile = false;
   _compiler_data = NULL;
@@ -108,7 +107,6 @@ ciEnv::ciEnv(Arena* arena) : _ciEnv_arena(mtCompiler) {
   _oop_recorder = NULL;
   _debug_info = NULL;
   _failure_reason = NULL;
-  _inc_decompile_count_on_failure = true;
   _compilable = MethodCompilable_never;
   _break_at_compile = false;
   _compiler_data = NULL;
@@ -644,23 +642,9 @@ void ciEnv::register_method(ciMethod* target, int entry_bci, CodeOffsets* offset
     MutexLocker ml(Compile_lock);
     NoSafepointVerifier nsv;
 
-    if (!failing()) {
-      // Encode the dependencies now, so we can check them right away.
-      NULL->encode_content_bytes();
-
-      // Check for {class loads, evolution, breakpoints, ...} during compilation
-      NULL(target);
-    }
-
     methodHandle method(THREAD, target->get_Method());
 
     if (failing()) {
-      // While not a true deoptimization, it is a preemptive decompile.
-      MethodData* mdo = method()->method_data();
-      if (mdo != NULL && _inc_decompile_count_on_failure) {
-        mdo->inc_decompile_count();
-      }
-
       // All buffers in the CodeBuffer are allocated in the CodeCache.
       // If the code buffer is created on each compile attempt
       // as in C2, then it must be freed.
