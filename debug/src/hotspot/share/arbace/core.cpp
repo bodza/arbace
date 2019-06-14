@@ -11,11 +11,6 @@ namespace arb {
         public: static const int MIN_VALUE = 0x80000000;
     };
 
-    class Appendable {
-        public: virtual Appendable* Appendable_3_append(char x) = 0;
-        public: virtual Appendable* Appendable_3_append(const String* x) = 0;
-    };
-
     class String {
 ///     (defn #_"char" String_2_charAt [#_"String" this, #_"int" i] (.charAt this, i))
 ///     (defn #_"bool" String_2_endsWith [#_"String" this, #_"String" s] (.endsWith this, s))
@@ -81,24 +76,7 @@ namespace arb {
 ///    inline bool pattern_9_(const Object* x) { return instance_9_<Pattern>(x); }
 }
 
-/// (defn A_1_new [n] (object_array n))
-
-/// (defn A_1_clone  [#_"[Ljava.lang.Object;" a]     (aclone a))
-/// (defn A_1_get    [#_"[Ljava.lang.Object;" a i]   (aget a i))
-/// (defn A_1_length [#_"[Ljava.lang.Object;" a]     (alength a))
-/// (defn A_1_set    [#_"[Ljava.lang.Object;" a i x] (aset a i x))
-
-/// (defn new_8_ [#_"Class" c & s] (.newInstance #_"Constructor" (first (.getConstructors c)), (A_1_new s)))
-
-/// (defn M_1_get ([m k] (-/get m k)) ([m k not_found] (-/get m k not_found)))
-
-// (about #_"arbace.Mutable"
-///     (defn #_"Mutable" Mutable_2_mutate_4_ [#_"Mutable" this, #_"Object" key, #_"Object" val] (.mutate this, key, val))
-// )
-
-// (about #_"arbace.Typed"
-///     (defn #_"type" Typed_2_type [#_"Typed" this] (.type this))
-// )
+/// (defn new_8_ [#_"Class" c & s] (.newInstance #_"Constructor" (first (.getConstructors c)), (A_1_new s)))
 
 /// (defmacro case_4_ [e & clauses] (if (odd_9_ (count clauses)) `(condp _eq_9_ ~e ~@clauses) `(condp _eq_9_ ~e ~@clauses (throw (str ~e " is definitely not that case!")))))
 
@@ -109,21 +87,15 @@ namespace arb {
 ///     ([prefix] (symbol (str prefix (next_id_4_))))
 /// )
 
-/// (defmacro declare [& names] `(do ~@(map #(list _1_def (vary_meta % assoc _0_declared true)) names)))
-
 /// (defmacro def_      [x & s] `(def      ~(vary_meta x assoc _0_private true) ~@s))
 /// (defmacro defn_     [x & s] `(defn     ~(vary_meta x assoc _0_private true) ~@s))
 /// (defmacro defmacro_ [x & s] `(defmacro ~(vary_meta x assoc _0_private true) ~@s))
 
 /// (defn identity   [x] x)
-/// (defn constantly [x] (fn [& _] x))
 
 /// (defn nil_9_   [x] (identical_9_ x nil))
-/// (defn false_9_ [x] (identical_9_ x false))
-/// (defn true_9_  [x] (identical_9_ x true))
 /// (defn not    [x] (if x false true))
 /// (defn some_9_  [x] (not (nil_9_ x)))
-/// (defn any_9_   [_] true)
 
 /// (defmacro if_not
 ///     ([_9_ then] (if_not _9_ then nil))
@@ -190,12 +162,6 @@ namespace arb {
 ///                 ~then
 ///             )
 ///         )
-///     )
-/// )
-
-/// (defmacro cond_let [bind then & else]
-///     (let [bind (if (vector_9_ bind) bind [`_# bind])]
-///         `(if_let ~bind ~then ~(when else `(cond_let ~@else)))
 ///     )
 /// )
 
@@ -312,29 +278,6 @@ namespace arb {
 ///     )
 /// )
 
-/// (defmacro dotimes [bindings & body]
-///     (assert_args
-///         (vector_9_ bindings) "a vector for its binding"
-///         (_eq_9_ 2 (count bindings)) "exactly 2 forms in binding vector"
-///     )
-///     (let [[i n] bindings]
-///         `(let [n# (long ~n)]
-///             (loop_when_recur [~i 0] (lt_9_ ~i n#) [(inc ~i)]
-///                 ~@body
-///             )
-///         )
-///     )
-/// )
-
-/// (defmacro doto [x & s]
-///     (let [x_1_ (gensym)]
-///         `(let [~x_1_ ~x]
-///             ~@(map (fn [f] (with_meta (if (seq_9_ f) `(~(first f) ~x_1_ ~@(next f)) `(~f ~x_1_)) (meta f))) s)
-///             ~x_1_
-///         )
-///     )
-/// )
-
 /// (defmacro -> [x & s]
 ///     (when s => x
 ///         (recur &form &env
@@ -404,12 +347,6 @@ namespace arb {
 namespace arb {
     class IObject {
         public: virtual bool IObject_3_equals(const Object* that) = 0;
-    };
-}
-
-namespace arb {
-    class IAppend {
-        public: virtual Appendable* IAppend_3_append(const Appendable* a) = 0;
     };
 }
 
@@ -1131,188 +1068,38 @@ namespace arb {
 }
 
 // (about #_"defarray"
-///     (defn aget    [a i] (A_1_get a i))
-///     (defn alength [a]   (A_1_length a))
+///     (defn aget    [a i] (A_1_get a i))
+///     (defn alength [a]   (A_1_length a))
 
-///     (defn aclone [a]         (when (some_9_ a) (A_1_clone a)))
+///     (defn aclone [a]         (when (some_9_ a) (A_1_clone a)))
 ///     (defn acopy_4_ [a i b j n] (System_1_arraycopy b, j, a, i, n) a)
-///     (defn aset_4_  [a i x]     (A_1_set a i x) a)
+///     (defn aset_4_  [a i x]     (A_1_set a i x) a)
 ///     (defn aswap_4_ [a i f & s] (aset_4_ a i (apply f (aget a i) s)))
 
 ///     (defn anew [size_or_seq]
 ///         (if (number_9_ size_or_seq)
-///             (A_1_new (int size_or_seq))
+///             (A_1_new (int size_or_seq))
 ///             (let [#_"ISeq" s (seq size_or_seq) #_"int" n (count s)]
-///                 (loop_when_recur [#_"array" a (A_1_new n) #_"int" i 0 s s] (and (lt_9_ i n) (some_9_ s)) [(aset_4_ a i (first s)) (inc i) (next s)] => a)
+///                 (loop_when_recur [#_"array" a (A_1_new n) #_"int" i 0 s s] (and (lt_9_ i n) (some_9_ s)) [(aset_4_ a i (first s)) (inc i) (next s)] => a)
 ///             )
 ///         )
 ///     )
 
 ///     (defn_ qset_4_
-///         ([a k v]    (Mutable_2_mutate_4_ a, k, v))
+///         ([a k v]    (Mutable_2_mutate_4_ a, k, v))
 ///         ([a k v & kvs]
-///             (let [a (Mutable_2_mutate_4_ a, k, v)]
+///             (let [a (Mutable_2_mutate_4_ a, k, v)]
 ///                 (recur_when kvs [a (first kvs) (second kvs) (next (next kvs))] => a)
 ///             )
 ///         )
 ///     )
 
 ///     (defn_ qswap_4_
-///         ([a k f]         (Mutable_2_mutate_4_ a, k,       (f (ILookup_2_valAt a, k))))
-///         ([a k f x]       (Mutable_2_mutate_4_ a, k,       (f (ILookup_2_valAt a, k) x)))
-///         ([a k f x y]     (Mutable_2_mutate_4_ a, k,       (f (ILookup_2_valAt a, k) x y)))
-///         ([a k f x y & z] (Mutable_2_mutate_4_ a, k, (apply f (ILookup_2_valAt a, k) x y z)))
+///         ([a k f]         (Mutable_2_mutate_4_ a, k,       (f (ILookup_2_valAt a, k))))
+///         ([a k f x]       (Mutable_2_mutate_4_ a, k,       (f (ILookup_2_valAt a, k) x)))
+///         ([a k f x y]     (Mutable_2_mutate_4_ a, k,       (f (ILookup_2_valAt a, k) x y)))
+///         ([a k f x y & z] (Mutable_2_mutate_4_ a, k, (apply f (ILookup_2_valAt a, k) x y z)))
 ///     )
-// )
-
-// (about #_"append, str, pr, prn"
-///     (def_ #_"{char String}" char_name_string
-///         (hash_map
-///             \newline   "newline"
-///             \tab       "tab"
-///             \space     "space"
-///             \backspace "backspace"
-///             \formfeed  "formfeed"
-///             \return    "return"
-///         )
-///     )
-
-///     (defn_ #_"Appendable" append_chr [#_"Appendable" a, #_"char" x]
-///         (-> a (Appendable_3_append "\\") (Appendable_3_append (M_1_get char_name_string x x)))
-///     )
-
-///     (def_ #_"{char String}" char_escape_string
-///         (hash_map
-///             \newline   "\\n"
-///             \tab       "\\t"
-///             \return    "\\r"
-///             \"         "\\\""
-///             \\         "\\\\"
-///             \formfeed  "\\f"
-///             \backspace "\\b"
-///         )
-///     )
-
-///     (defn_ #_"Appendable" append_str [#_"Appendable" a, #_"String" x]
-///         (let [
-///             a (Appendable_3_append a, "\"")
-///             a (reduce #(Appendable_3_append %1, (M_1_get char_escape_string %2 %2)) a x)
-///             a (Appendable_3_append a, "\"")
-///         ]
-///             a
-///         )
-///     )
-
-///     (defn_ #_"Appendable" append_rex [#_"Appendable" a, #_"Pattern" x]
-///         (let [
-///             a (Appendable_3_append a, "#\"")
-///             a
-///                 (loop_when [a a [#_"char" c & #_"ISeq" r _0_as #_"ISeq" s] (seq (Pattern_2_pattern x)) q_9_ false] (some_9_ s) => a
-///                     (case_4_ c
-///                         \\  (let [[c & r] r] (recur (-> a (Appendable_3_append "\\") (Appendable_3_append c)) r (if q_9_ (not_eq_9_ c \E) (_eq_9_ c \Q))))
-///                         \"                   (recur (-> a (Appendable_3_append (if q_9_ "\\E\\\"\\Q" "\\\""))) r q_9_)
-///                                              (recur (-> a (Appendable_3_append c))                           r q_9_)
-///                     )
-///                 )
-///             a (Appendable_3_append a, "\"")
-///         ]
-///             a
-///         )
-///     )
-
-    class SeqForm { };
-    class VecForm { };
-    class MapForm { };
-    class SetForm { };
-
-///     (defn_ #_"Appendable" append_8_ [#_"Appendable" a, #_"String" b, #_"IFn" f_1_append, #_"String" c, #_"String" d, #_"Seqable" q]
-///         (let [a (let_when [a (Appendable_3_append a, b) #_"ISeq" s (seq q)] (some_9_ s) => a
-///                     (loop [a a s s]
-///                         (let_when [a (f_1_append a (first s)) s (next s)] (some_9_ s) => a
-///                             (recur (Appendable_3_append a, c) s)
-///                         )
-///                     )
-///                 )]
-///             (Appendable_3_append a, d)
-///         )
-///     )
-
-///     (defn_ #_"Appendable" append_seq [#_"Appendable" a, #_"ISeq" x]    (append_8_ a "(" append " " ")" x))
-///     (defn_ #_"Appendable" append_vec [#_"Appendable" a, #_"vector" x] (append_8_ a "[" append " " "]" x))
-///     (defn_ #_"Appendable" append_map [#_"Appendable" a, #_"IPersistentMap" x]    (append_8_ a "{" (fn [a e] (-> a (append (key e)) (Appendable_3_append " ") (append (val e)))) ", " "}" x))
-///     (defn_ #_"Appendable" append_set [#_"Appendable" a, #_"set" x]    (append_8_ a "#{" append " " "}" x))
-
-///     (defn #_"Appendable" append [#_"Appendable" a, #_"Object" x]
-///         (case_4_ x
-///             nil   (Appendable_3_append a, "nil")
-///             false (Appendable_3_append a, "false")
-///             true  (Appendable_3_append a, "true")
-///             (cond
-///                 (number_9_ x) (Appendable_3_append a, (Number_2_toString x))
-///                 (string_9_ x) (append_str a x)
-///                 _0_else
-///                 (condp satisfies_9_ x
-///                     IAppend (IAppend_3_append x, a)
-///                     SeqForm (append_seq a x)
-///                     VecForm (append_vec a x)
-///                     MapForm (append_map a x)
-///                     SetForm (append_set a x)
-///                     (cond
-///                         (seq_9_ x)     (append_seq a x)
-///                         (vector_9_ x)  (append_vec a x)
-///                         (map_9_ x)     (append_map a x)
-///                         (set_9_ x)     (append_set a x)
-///                         (char_9_ x)    (append_chr a x)
-///                         (pattern_9_ x) (append_rex a x)
-///                         _0_else        (Appendable_3_append a, (Object_2_toString x))
-///                     )
-///                 )
-///             )
-///         )
-///     )
-
-///     (defn #_"Appendable" append_4_ [#_"Appendable" a, #_"Object" x]
-///         (if (or (string_9_ x) (char_9_ x)) (Appendable_3_append a, x) (append a x))
-///     )
-
-///     (defn #_"String" str
-///         ([] "")
-///         ([x] (if (some_9_ x) (-> (StringBuilder_1_new) (append_4_ x) (StringBuilder_2_toString)) ""))
-///         ([x & s]
-///             ((fn [#_"StringBuilder" sb s] (recur_when s [(append_4_ sb (first s)) (next s)] => (StringBuilder_2_toString sb)))
-///                 (-> (StringBuilder_1_new) (append_4_ x)) s
-///             )
-///         )
-///     )
-
-///     (defn space   [] (Appendable_3_append std::cout \space)   nil)
-///     (defn newline [] (Appendable_3_append std::cout \newline) nil)
-///     (defn flush   [] (Flushable_3_flush   std::cout)          nil)
-
-///     (defn pr
-///         ([] nil)
-///         ([x] (append std::cout x) nil)
-///         ([x & s]
-///             (pr x) (space)
-///             (let_when [[x & s] s] (some_9_ s) => (pr x)
-///                 (recur x s)
-///             )
-///         )
-///     )
-
-///     (defn print
-///         ([] nil)
-///         ([x] (append_4_ std::cout x) nil)
-///         ([x & s]
-///             (print x) (space)
-///             (let_when [[x & s] s] (some_9_ s) => (print x)
-///                 (recur x s)
-///             )
-///         )
-///     )
-
-///     (defn prn     [& s] (apply pr    s) (newline) (flush) nil)
-///     (defn println [& s] (apply print s) (newline) (flush) nil)
 // )
 
 namespace arb {
@@ -1646,7 +1433,6 @@ namespace arb {
 ///     )
 // )
 
-/// #_oops!
 /// (defn _eq_9_
 ///     ([x] true)
 ///     ([x y] (Util_1_equiv x y))
@@ -1856,10 +1642,6 @@ namespace arb {
 ///         )
 ///     )
 
-///     (defn_ #_"Appendable" Symbol_2_append [#_"Symbol" this, #_"Appendable" a]
-///         (if (some_9_ (_0_ns this)) (-> a (Appendable_3_append (_0_ns this)) (Appendable_3_append "/") (Appendable_3_append (_0_name this))) (Appendable_3_append a, (_0_name this)))
-///     )
-
 ///     (defn_ #_"int" Symbol_2_hash [#_"Symbol" this]
 ///         (hash_combine (Murmur3_1_hashUnencodedChars (_0_name this)) (_0_ns this))
 ///     )
@@ -1899,10 +1681,6 @@ namespace arb {
 ///         (IObject_3_equals => Symbol_2_equals)
 ///     )
 
-///     (defm Symbol IAppend
-///         (IAppend_3_append => Symbol_2_append)
-///     )
-
 ///     (defm Symbol Hashed
 ///         (Hashed_3_hash => Symbol_2_hash)
 ///     )
@@ -1921,8 +1699,6 @@ namespace arb {
 ///     ([name] (if (symbol_9_ name) name (Symbol_1_intern name)))
 ///     ([ns name] (Symbol_1_intern ns, name))
 /// )
-
-/// (-/defmethod -/print_method (_0_on_interface Symbol) [o w] (.write w, (str o)))
 }
 
 namespace arb {
@@ -1983,10 +1759,6 @@ namespace arb {
 ///         (identical_9_ this that)
 ///     )
 
-///     (defn_ #_"Appendable" Keyword_2_append [#_"Keyword" this, #_"Appendable" a]
-///         (-> a (Appendable_3_append ":") (append (_0_sym this)))
-///     )
-
 ///     (defn_ #_"Object" Keyword_2_invoke
 ///         ([#_"Keyword" this, #_"Object" obj] (get obj this))
 ///         ([#_"Keyword" this, #_"Object" obj, #_"Object" not_found] (get obj this not_found))
@@ -2007,10 +1779,6 @@ namespace arb {
 
 ///     (defm Keyword IObject
 ///         (IObject_3_equals => Keyword_2_equals)
-///     )
-
-///     (defm Keyword IAppend
-///         (IAppend_3_append => Keyword_2_append)
 ///     )
 
 ///     (defm Keyword IFn
@@ -2044,8 +1812,6 @@ namespace arb {
 ///     )
 ///     ([ns name] (Keyword_1_find (symbol ns name)))
 /// )
-
-/// (-/defmethod -/print_method (_0_on_interface Keyword) [o w] (.write w, (str o)))
 }
 
 namespace arb {
@@ -2192,7 +1958,7 @@ namespace arb {
 namespace arb {
 
 // (about #_"Cons"
-///     (defq Cons [#_"IPersistentMap" _meta, #_"Object" car, #_"ISeq" cdr] SeqForm)
+///     (defq Cons [#_"IPersistentMap" _meta, #_"Object" car, #_"ISeq" cdr] SeqForm)
 
 ///     #_inherit
 ///     (defm Cons ASeq)
@@ -2260,7 +2026,7 @@ namespace arb {
 namespace arb {
 
 // (about #_"Iterate"
-///     (defq Iterate [#_"IPersistentMap" _meta, #_"IFn" f, #_"Object" x, #_"Object'" y] SeqForm)
+///     (defq Iterate [#_"IPersistentMap" _meta, #_"IFn" f, #_"Object" x, #_"Object'" y] SeqForm)
 
 ///     #_inherit
 ///     (defm Iterate ASeq)
@@ -2360,7 +2126,7 @@ namespace arb {
 namespace arb {
 
 // (about #_"Repeat"
-///     (defq Repeat [#_"IPersistentMap" _meta, #_"long" cnt, #_"Object" val] SeqForm)
+///     (defq Repeat [#_"IPersistentMap" _meta, #_"long" cnt, #_"Object" val] SeqForm)
 
 ///     #_inherit
 ///     (defm Repeat ASeq)
@@ -2470,7 +2236,7 @@ namespace arb {
 namespace arb {
 
 // (about #_"Range"
-///     (defq Range [#_"IPersistentMap" _meta, #_"Object" start, #_"Object" end, #_"Object" step, #_"IFn" f_1_boundsCheck] SeqForm)
+///     (defq Range [#_"IPersistentMap" _meta, #_"Object" start, #_"Object" end, #_"Object" step, #_"IFn" f_1_boundsCheck] SeqForm)
 
 ///     #_inherit
 ///     (defm Range ASeq)
@@ -2594,7 +2360,7 @@ namespace arb {
 namespace arb {
 
 // (about #_"ArraySeq"
-///     (defq ArraySeq [#_"IPersistentMap" _meta, #_"array" a, #_"int" i] SeqForm)
+///     (defq ArraySeq [#_"IPersistentMap" _meta, #_"array" a, #_"int" i] SeqForm)
 
 ///     #_inherit
 ///     (defm ArraySeq ASeq)
@@ -2705,7 +2471,7 @@ namespace arb {
 namespace arb {
 
 // (about #_"StringSeq"
-///     (defq StringSeq [#_"IPersistentMap" _meta, #_"String" s, #_"int" i] SeqForm)
+///     (defq StringSeq [#_"IPersistentMap" _meta, #_"String" s, #_"int" i] SeqForm)
 
 ///     #_inherit
 ///     (defm StringSeq ASeq)
@@ -2807,7 +2573,7 @@ namespace arb {
 namespace arb {
 
 // (about #_"LazySeq"
-///     (defq LazySeq [#_"IPersistentMap" _meta, #_"fn'" f, #_"Object'" o, #_"seq'" s] SeqForm)
+///     (defq LazySeq [#_"IPersistentMap" _meta, #_"fn'" f, #_"Object'" o, #_"seq'" s] SeqForm)
 
 ///     (defn_ #_"LazySeq" LazySeq_1_init [#_"IPersistentMap" meta, #_"IFn" f, #_"ISeq" s]
 ///         (new_8_ LazySeq_1_class (anew [meta, (atom f), (atom nil), (atom s)]))
@@ -3662,7 +3428,7 @@ namespace arb {
 namespace arb {
 
 // (about #_"VSeq"
-///     (defq VSeq [#_"IPersistentMap" _meta, #_"vector" v, #_"int" i] SeqForm)
+///     (defq VSeq [#_"IPersistentMap" _meta, #_"vector" v, #_"int" i] SeqForm)
 
 ///     #_inherit
 ///     (defm VSeq ASeq)
@@ -3756,7 +3522,7 @@ namespace arb {
 // )
 
 // (about #_"RSeq"
-///     (defq RSeq [#_"IPersistentMap" _meta, #_"vector" v, #_"int" i] SeqForm)
+///     (defq RSeq [#_"IPersistentMap" _meta, #_"vector" v, #_"int" i] SeqForm)
 
 ///     #_inherit
 ///     (defm RSeq ASeq)
@@ -3890,7 +3656,7 @@ namespace arb {
 namespace arb {
 
 // (about #_"MapEntry"
-///     (defq MapEntry [#_"Object" k, #_"Object" v] VecForm)
+///     (defq MapEntry [#_"Object" k, #_"Object" v] VecForm)
 
 ///     #_inherit
 ///     (defm MapEntry AMapEntry APersistentVector AFn)
@@ -3973,7 +3739,7 @@ namespace arb {
 namespace arb {
 
 // (about #_"EmptyList"
-///     (defq EmptyList [#_"IPersistentMap" _meta] SeqForm)
+///     (defq EmptyList [#_"IPersistentMap" _meta] SeqForm)
 
 ///     (defn #_"EmptyList" EmptyList_1_new [#_"IPersistentMap" meta]
 ///         (new_8_ EmptyList_1_class (anew [meta]))
@@ -4070,7 +3836,7 @@ namespace arb {
 // )
 
 // (about #_"PersistentList"
-///     (defq PersistentList [#_"IPersistentMap" _meta, #_"Object" car, #_"IPersistentList" cdr, #_"int" cnt] SeqForm)
+///     (defq PersistentList [#_"IPersistentMap" _meta, #_"Object" car, #_"IPersistentList" cdr, #_"int" cnt] SeqForm)
 
 ///     #_inherit
 ///     (defm PersistentList ASeq)
@@ -4182,7 +3948,7 @@ namespace arb {
 namespace arb {
 
 // (about #_"MSeq"
-///     (defq MSeq [#_"IPersistentMap" _meta, #_"array" a, #_"int" i] SeqForm)
+///     (defq MSeq [#_"IPersistentMap" _meta, #_"array" a, #_"int" i] SeqForm)
 
 ///     #_inherit
 ///     (defm MSeq ASeq)
@@ -4251,7 +4017,7 @@ namespace arb {
 // )
 
 // (about #_"TransientArrayMap"
-///     (defq TransientArrayMap [#_"thread'" edit, #_"array" array, #_"int" cnt] #_"MapForm")
+///     (defq TransientArrayMap [#_"thread'" edit, #_"array" array, #_"int" cnt] #_"MapForm")
 
 ///     #_inherit
 ///     (defm TransientArrayMap ATransientMap AFn)
@@ -4390,7 +4156,7 @@ namespace arb {
 // )
 
 // (about #_"PersistentArrayMap"
-///     (defq PersistentArrayMap [#_"IPersistentMap" _meta, #_"array" array] MapForm)
+///     (defq PersistentArrayMap [#_"IPersistentMap" _meta, #_"array" array] MapForm)
 
 ///     #_inherit
 ///     (defm PersistentArrayMap APersistentMap AFn)
@@ -4644,7 +4410,7 @@ namespace arb {
 namespace arb {
 
 // (about #_"HSeq"
-///     (defq HSeq [#_"IPersistentMap" _meta, #_"node[]" nodes, #_"int" i, #_"ISeq" s] SeqForm)
+///     (defq HSeq [#_"IPersistentMap" _meta, #_"node[]" nodes, #_"int" i, #_"ISeq" s] SeqForm)
 
 ///     #_inherit
 ///     (defm HSeq ASeq)
@@ -4716,7 +4482,7 @@ namespace arb {
 // )
 
 // (about #_"NSeq"
-///     (defq NSeq [#_"IPersistentMap" _meta, #_"array" a, #_"int" i, #_"ISeq" s] SeqForm)
+///     (defq NSeq [#_"IPersistentMap" _meta, #_"array" a, #_"int" i, #_"ISeq" s] SeqForm)
 
 ///     #_inherit
 ///     (defm NSeq ASeq)
@@ -5461,7 +5227,7 @@ namespace arb {
 // )
 
 // (about #_"TransientHashMap"
-///     (defq TransientHashMap [#_"thread'" edit, #_"node" root, #_"int" cnt, #_"bool" has_nil_9_, #_"Object" nil_value] #_"MapForm")
+///     (defq TransientHashMap [#_"thread'" edit, #_"node" root, #_"int" cnt, #_"bool" has_nil_9_, #_"Object" nil_value] #_"MapForm")
 
 ///     #_inherit
 ///     (defm TransientHashMap ATransientMap AFn)
@@ -5596,7 +5362,7 @@ namespace arb {
 // )
 
 // (about #_"PersistentHashMap"
-///     (defq PersistentHashMap [#_"IPersistentMap" _meta, #_"int" cnt, #_"node" root, #_"bool" has_nil_9_, #_"Object" nil_value] MapForm)
+///     (defq PersistentHashMap [#_"IPersistentMap" _meta, #_"int" cnt, #_"node" root, #_"bool" has_nil_9_, #_"Object" nil_value] MapForm)
 
 ///     #_inherit
 ///     (defm PersistentHashMap APersistentMap AFn)
@@ -5847,7 +5613,7 @@ namespace arb {
 namespace arb {
 
 // (about #_"TransientHashSet"
-///     (defq TransientHashSet [#_"ITransientMap" impl] #_"SetForm")
+///     (defq TransientHashSet [#_"ITransientMap" impl] #_"SetForm")
 
 ///     #_inherit
 ///     (defm TransientHashSet ATransientSet AFn)
@@ -5910,7 +5676,7 @@ namespace arb {
 // )
 
 // (about #_"PersistentHashSet"
-///     (defq PersistentHashSet [#_"IPersistentMap" _meta, #_"IPersistentMap" impl] SetForm)
+///     (defq PersistentHashSet [#_"IPersistentMap" _meta, #_"IPersistentMap" impl] SetForm)
 
 ///     #_inherit
 ///     (defm PersistentHashSet APersistentSet AFn)
@@ -6682,7 +6448,7 @@ namespace arb {
 // )
 
 // (about #_"TSeq"
-///     (defq TSeq [#_"IPersistentMap" _meta, #_"ISeq" stack, #_"bool" asc_9_, #_"int" cnt] SeqForm)
+///     (defq TSeq [#_"IPersistentMap" _meta, #_"ISeq" stack, #_"bool" asc_9_, #_"int" cnt] SeqForm)
 
 ///     #_inherit
 ///     (defm TSeq ASeq)
@@ -6766,7 +6532,7 @@ namespace arb {
 // )
 
 // (about #_"PersistentTreeMap"
-///     (defq PersistentTreeMap [#_"IPersistentMap" _meta, #_"Comparator" cmp, #_"node" tree, #_"int" cnt] MapForm)
+///     (defq PersistentTreeMap [#_"IPersistentMap" _meta, #_"Comparator" cmp, #_"node" tree, #_"int" cnt] MapForm)
 
 ///     #_inherit
 ///     (defm PersistentTreeMap APersistentMap AFn)
@@ -7161,7 +6927,7 @@ namespace arb {
 namespace arb {
 
 // (about #_"PersistentTreeSet"
-///     (defq PersistentTreeSet [#_"IPersistentMap" _meta, #_"IPersistentMap" impl] SetForm)
+///     (defq PersistentTreeSet [#_"IPersistentMap" _meta, #_"IPersistentMap" impl] SetForm)
 
 ///     #_inherit
 ///     (defm PersistentTreeSet APersistentSet AFn)
@@ -8069,7 +7835,7 @@ namespace arb {
 // )
 
 // (about #_"TransientVector"
-///     (defq TransientVector [#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail, #_"int" tlen] #_"VecForm")
+///     (defq TransientVector [#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail, #_"int" tlen] #_"VecForm")
 
 ///     #_inherit
 ///     (defm TransientVector AFn)
@@ -8314,7 +8080,7 @@ namespace arb {
 // )
 
 // (about #_"PersistentVector"
-///     (defq PersistentVector [#_"IPersistentMap" _meta, #_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] VecForm)
+///     (defq PersistentVector [#_"IPersistentMap" _meta, #_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] VecForm)
 
 ///     #_inherit
 ///     (defm PersistentVector APersistentVector AFn)
@@ -8835,21 +8601,12 @@ namespace arb {
 ///     ([a b c d]                                  (IPersistentVector_3_splicev (IPersistentVector_3_splicev a, b), (IPersistentVector_3_splicev c, d)))
 ///     ([a b c d & s] (IPersistentVector_3_splicev (IPersistentVector_3_splicev (IPersistentVector_3_splicev a, b), (IPersistentVector_3_splicev c, d)), (apply catvec s)))
 /// )
-
-/// (defn assoc_1_  [v i x & s] (apply assoc  (vec v) i x s))
-/// (defn conj_1_   [v   x & s] (apply conj   (vec v)   x s))
-/// (defn into_1_   [v       s]       (into   (vec v)     s))
-/// (defn peek_1_   [v]               (peek   (vec v)      ))
-/// (defn pop_1_    [v]               (pop    (vec v)      ))
-/// (defn update_1_ [v i f & s] (apply update (vec v) i f s))
-
-/// (defn dissoc_1_ [v i] (let [v (vec v)] (catvec (subvec v 0 i) (subvec v (inc i)))))
 }
 
 namespace arb {
 
 // (about #_"QSeq"
-///     (defq QSeq [#_"IPersistentMap" _meta, #_"ISeq" f, #_"ISeq" rseq] SeqForm)
+///     (defq QSeq [#_"IPersistentMap" _meta, #_"ISeq" f, #_"ISeq" rseq] SeqForm)
 
 ///     #_inherit
 ///     (defm QSeq ASeq)
@@ -8921,7 +8678,7 @@ namespace arb {
 // )
 
 // (about #_"PersistentQueue"
-///     (defq PersistentQueue [#_"IPersistentMap" _meta, #_"int" cnt, #_"ISeq" f, #_"vector" r] VecForm)
+///     (defq PersistentQueue [#_"IPersistentMap" _meta, #_"int" cnt, #_"ISeq" f, #_"vector" r] VecForm)
 
 ///     (defn #_"PersistentQueue" PersistentQueue_1_new [#_"IPersistentMap" meta, #_"int" cnt, #_"ISeq" f, #_"vector" r]
 ///         (new_8_ PersistentQueue_1_class (anew [meta, cnt, f, r]))
@@ -9215,15 +8972,6 @@ namespace arb {
 
 namespace arb {
 
-// (about #_"Var"
-///     (defn_ #_"Appendable" Var_1_append [#_"Appendable" a, #_"Namespace" ns, #_"Symbol" sym]
-///         (if (some_9_ ns)
-///             (-> a (Appendable_3_append "#'") (append (_0_name ns)) (Appendable_3_append "/") (append sym))
-///             (-> a (Appendable_3_append "#_var nil #_\"") (append sym) (Appendable_3_append "\""))
-///         )
-///     )
-// )
-
 // (about #_"Unbound"
 ///     (defq Unbound [#_"Namespace" ns, #_"Symbol" sym])
 
@@ -9234,16 +8982,8 @@ namespace arb {
 ///         (new_8_ Unbound_1_class (anew [ns, sym]))
 ///     )
 
-///     (defn_ #_"Appendable" Unbound_2_append [#_"Unbound" this, #_"Appendable" a]
-///         (-> a (Appendable_3_append "#_unbound ") (Var_1_append (_0_ns this), (_0_sym this)))
-///     )
-
 ///     (defm Unbound IObject
 ///         (IObject_3_equals => identical_9_)
-///     )
-
-///     (defm Unbound IAppend
-///         (IAppend_3_append => Unbound_2_append)
 ///     )
 // )
 
@@ -9267,10 +9007,6 @@ namespace arb {
 
 ///     (defn_ #_"IPersistentMap" Var_2_resetMeta [#_"Var" this, #_"IPersistentMap" m]
 ///         (reset_meta_4_ (_0_root this) m)
-///     )
-
-///     (defn_ #_"Appendable" Var_2_append [#_"Var" this, #_"Appendable" a]
-///         (Var_1_append a, (_0_ns this), (_0_sym this))
 ///     )
 
 ///     (defn #_"bool" Var_2_hasRoot [#_"Var" this]
@@ -9372,10 +9108,6 @@ namespace arb {
 ///         (IObject_3_equals => identical_9_)
 ///     )
 
-///     (defm Var IAppend
-///         (IAppend_3_append => Var_2_append)
-///     )
-
 ///     (defm Var IDeref
 ///         (IDeref_3_deref => Var_2_get)
 ///     )
@@ -9445,10 +9177,6 @@ namespace arb {
 ///     )
 
 /// (defn remove_ns [sym] (Namespace_1_remove sym))
-
-///     (defn_ #_"Appendable" Namespace_2_append [#_"Namespace" this, #_"Appendable" a]
-///         (Appendable_3_append a, (_0_name (_0_name this)))
-///     )
 
 /// (defn ns_name [ns] (_0_name (the_ns ns)))
 
@@ -9625,10 +9353,6 @@ namespace arb {
 ///     (defm Namespace IObject
 ///         (IObject_3_equals => identical_9_)
 ///     )
-
-///     (defm Namespace IAppend
-///         (IAppend_3_append => Namespace_2_append)
-///     )
 // )
 }
 
@@ -9705,7 +9429,6 @@ namespace arb {
 ///     )
 /// )
 
-/// #_oops!
 /// (defmacro let [bindings & body]
 ///     (assert_args
 ///         (vector_9_ bindings) "a vector for its binding"
@@ -9728,7 +9451,6 @@ namespace arb {
 ///     )
 /// )
 
-/// #_oops!
 /// (defmacro fn [& s]
 ///     (let [name (when (symbol_9_ (first s)) (first s)) s (if name (next s) s)
 ///           s (if (vector_9_ (first s))
@@ -9761,7 +9483,6 @@ namespace arb {
 ///     )
 /// )
 
-/// #_oops!
 /// (defmacro loop [bindings & body]
 ///     (assert_args
 ///         (vector_9_ bindings) "a vector for its binding"
@@ -9809,7 +9530,6 @@ namespace arb {
 ///         )
 ///     )
 
-///     #_oops!
 ///     (defmacro defn [fname & s]
 ///         (when (symbol_9_ fname) => (throw "first argument to defn must be a symbol")
 ///             (let [m (if (map_9_    (first s)) (first s) (hash_map))
@@ -9827,7 +9547,6 @@ namespace arb {
 ///         )
 ///     )
 
-///     #_oops!
 ///     (defmacro defmacro [name & args]
 ///         (let [[m s] (split_with map_9_ args) s (if (vector_9_ (first s)) (list s) s)
 ///               s (map (fn [[bindings & body]] (cons (apply vector '&form '&env bindings) body)) s)]
@@ -9859,7 +9578,6 @@ namespace arb {
 ///     ([f #_"Comparator" cmp s] (sort #(Comparator_3_compare cmp, (f %1), (f %2)) s))
 /// )
 
-/// #_oops!
 /// (defmacro for [bindings body]
 ///     (assert_args
 ///         (vector_9_ bindings) "a vector for its binding"
@@ -9963,118 +9681,6 @@ namespace arb {
 ///             (re_find m)
 ///         )
 ///     )
-/// )
-
-/// (defn tree_seq [branch_9_ children root]
-///     (letfn [(walk_ [node]
-///                 (lazy_seq
-///                     (cons node (when (branch_9_ node) (mapcat walk_ (children node))))
-///                 )
-///             )]
-///         (walk_ root)
-///     )
-/// )
-
-/// (defn flatten [s] (remove sequential_9_ (next (tree_seq sequential_9_ seq s))))
-
-/// (defn max_key
-///     ([k x] x)
-///     ([k x y] (if (gt_9_ (k x) (k y)) x y))
-///     ([k x y & s]
-///         (let [kx (k x) ky (k y) [v kv] (if (gt_9_ kx ky) [x kx] [y ky])]
-///             (loop_when [v v kv kv s s] s => v
-///                 (let [w (first s) kw (k w)]
-///                     (if (gte_9_ kw kv)
-///                         (recur w kw (next s))
-///                         (recur v kv (next s))
-///                     )
-///                 )
-///             )
-///         )
-///     )
-/// )
-
-/// (defn min_key
-///     ([k x] x)
-///     ([k x y] (if (lt_9_ (k x) (k y)) x y))
-///     ([k x y & s]
-///         (let [kx (k x) ky (k y) [v kv] (if (lt_9_ kx ky) [x kx] [y ky])]
-///             (loop_when [v v kv kv s s] s => v
-///                 (let [w (first s) kw (k w)]
-///                     (if (lte_9_ kw kv)
-///                         (recur w kw (next s))
-///                         (recur v kv (next s))
-///                     )
-///                 )
-///             )
-///         )
-///     )
-/// )
-
-/// (defn replace
-///     ([m] (map #(if_some [e (find m %)] (val e) %)))
-///     ([m s]
-///         (when (vector_9_ s) => (map #(if_some [e (find m %)] (val e) %) s)
-///             (reduce
-///                 (fn [v i]
-///                     (if_some [e (find m (nth v i))]
-///                         (assoc v i (val e))
-///                         v
-///                     )
-///                 )
-///                 s (range (count s))
-///             )
-///         )
-///     )
-/// )
-
-/// (defn_ mk_bound_fn [#_"Sorted" sc f_1_test key]
-///     (fn [e] (f_1_test (Comparator_3_compare (Sorted_3_comparator sc), (Sorted_3_entryKey sc, e), key) 0))
-/// )
-
-/// (defn subseq
-///     ([#_"Sorted" sc f_1_test key]
-///         (let [keep_9_ (mk_bound_fn sc f_1_test key)]
-///             (if ((hash_set gt_9_ gte_9_) f_1_test)
-///                 (when_some [[e _0_as s] (Sorted_3_seqFrom sc, key, true)]
-///                     (if (keep_9_ e) s (next s))
-///                 )
-///                 (take_while keep_9_ (Sorted_3_seq sc, true))
-///             )
-///         )
-///     )
-///     ([#_"Sorted" sc f_1_test key f_1_test_1_ key_1_]
-///         (when_some [[e _0_as s] (Sorted_3_seqFrom sc, key, true)]
-///             (take_while (mk_bound_fn sc f_1_test_1_ key_1_) (if ((mk_bound_fn sc f_1_test key) e) s (next s)))
-///         )
-///     )
-/// )
-
-/// (defn rsubseq
-///     ([#_"Sorted" sc f_1_test key]
-///         (let [keep_9_ (mk_bound_fn sc f_1_test key)]
-///             (if ((hash_set lt_9_ lte_9_) f_1_test)
-///                 (when_some [[e _0_as s] (Sorted_3_seqFrom sc, key, false)]
-///                     (if (keep_9_ e) s (next s))
-///                 )
-///                 (take_while keep_9_ (Sorted_3_seq sc, false))
-///             )
-///         )
-///     )
-///     ([#_"Sorted" sc f_1_test key f_1_test_1_ key_1_]
-///         (when_some [[e _0_as s] (Sorted_3_seqFrom sc, key_1_, false)]
-///             (take_while (mk_bound_fn sc f_1_test key) (if ((mk_bound_fn sc f_1_test_1_ key_1_) e) s (next s)))
-///         )
-///     )
-/// )
-
-/// (defn trampoline
-///     ([f]
-///         (let_when [r (f)] (fn_9_ r) => r
-///             (recur r)
-///         )
-///     )
-///     ([f & args] (trampoline #(apply f args)))
 /// )
 
 /// (defn memoize [f]
@@ -10265,26 +9871,6 @@ namespace arb {
 ///     )
 /// )
 
-/// (defn reduce_kv [f r m]
-///     (when (some_9_ m) => r
-///         (condp satisfies_9_ m
-///             IKVReduce      (IKVReduce_3_kvreduce m, f, r)
-///             IPersistentMap (reduce (fn [r [k v]] (f r k v)) r m)
-///         )
-///     )
-/// )
-
-/// (defn completing
-///     ([f] (completing f identity))
-///     ([f cf]
-///         (fn
-///             ([] (f))
-///             ([x] (cf x))
-///             ([x y] (f x y))
-///         )
-///     )
-/// )
-
 /// (defn transduce
 ///     ([xform f s] (transduce xform f (f) s))
 ///     ([xform f r s] (let [f (xform f)] (f (reduce f r s))))
@@ -10305,189 +9891,6 @@ namespace arb {
 ///             (transduce xform conj to from)
 ///         )
 ///     )
-/// )
-
-/// (defn group_by [f s] (reduce_4_ #(let [k (f %2)] (assoc_4_ %1 k (conj (get %1 k (vector)) %2))) (hash_map) s))
-
-/// (defn frequencies [s] (reduce_4_ #(assoc_4_ %1 %2 (inc (get %1 %2 0))) (hash_map) s))
-
-/// (defn reductions
-///     ([f coll]
-///         (lazy_seq
-///             (if_some [s (seq coll)]
-///                 (reductions f (first s) (next s))
-///                 (list (f))
-///             )
-///         )
-///     )
-///     ([f init coll]
-///         (if (reduced_9_ init)
-///             (list (deref init))
-///             (cons init
-///                 (lazy_seq
-///                     (when_some [s (seq coll)]
-///                         (reductions f (f init (first s)) (next s))
-///                     )
-///                 )
-///             )
-///         )
-///     )
-/// )
-
-/// (defn every_pred
-///     ([p]
-///         (fn ep_
-///             ([] true)
-///             ([x] (boolean (p x)))
-///             ([x y] (boolean (and (p x) (p y))))
-///             ([x y z] (boolean (and (p x) (p y) (p z))))
-///             ([x y z & args] (boolean (and (ep_ x y z) (every_9_ p args))))
-///         )
-///     )
-///     ([p1 p2]
-///         (fn ep_
-///             ([] true)
-///             ([x] (boolean (and (p1 x) (p2 x))))
-///             ([x y] (boolean (and (p1 x) (p1 y) (p2 x) (p2 y))))
-///             ([x y z] (boolean (and (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z))))
-///             ([x y z & args] (boolean (and (ep_ x y z) (every_9_ #(and (p1 %) (p2 %)) args))))
-///         )
-///     )
-///     ([p1 p2 p3]
-///         (fn ep_
-///             ([] true)
-///             ([x] (boolean (and (p1 x) (p2 x) (p3 x))))
-///             ([x y] (boolean (and (p1 x) (p2 x) (p3 x) (p1 y) (p2 y) (p3 y))))
-///             ([x y z] (boolean (and (p1 x) (p2 x) (p3 x) (p1 y) (p2 y) (p3 y) (p1 z) (p2 z) (p3 z))))
-///             ([x y z & args] (boolean (and (ep_ x y z) (every_9_ #(and (p1 %) (p2 %) (p3 %)) args))))
-///         )
-///     )
-///     ([p1 p2 p3 & ps]
-///         (let [ps (list_8_ p1 p2 p3 ps)]
-///             (fn ep_
-///                 ([] true)
-///                 ([x] (every_9_ #(% x) ps))
-///                 ([x y] (every_9_ #(and (% x) (% y)) ps))
-///                 ([x y z] (every_9_ #(and (% x) (% y) (% z)) ps))
-///                 ([x y z & args] (boolean (and (ep_ x y z) (every_9_ #(every_9_ % args) ps))))
-///             )
-///         )
-///     )
-/// )
-
-/// (defn some_fn
-///     ([p]
-///         (fn sp_
-///             ([] nil)
-///             ([x] (p x))
-///             ([x y] (or (p x) (p y)))
-///             ([x y z] (or (p x) (p y) (p z)))
-///             ([x y z & args] (or (sp_ x y z) (some p args)))
-///         )
-///     )
-///     ([p1 p2]
-///         (fn sp_
-///             ([] nil)
-///             ([x] (or (p1 x) (p2 x)))
-///             ([x y] (or (p1 x) (p1 y) (p2 x) (p2 y)))
-///             ([x y z] (or (p1 x) (p1 y) (p1 z) (p2 x) (p2 y) (p2 z)))
-///             ([x y z & args] (or (sp_ x y z) (some #(or (p1 %) (p2 %)) args)))
-///         )
-///     )
-///     ([p1 p2 p3]
-///         (fn sp_
-///             ([] nil)
-///             ([x] (or (p1 x) (p2 x) (p3 x)))
-///             ([x y] (or (p1 x) (p2 x) (p3 x) (p1 y) (p2 y) (p3 y)))
-///             ([x y z] (or (p1 x) (p2 x) (p3 x) (p1 y) (p2 y) (p3 y) (p1 z) (p2 z) (p3 z)))
-///             ([x y z & args] (or (sp_ x y z) (some #(or (p1 %) (p2 %) (p3 %)) args)))
-///         )
-///     )
-///     ([p1 p2 p3 & ps]
-///         (let [ps (list_8_ p1 p2 p3 ps)]
-///             (fn sp_
-///                 ([] nil)
-///                 ([x] (some #(% x) ps))
-///                 ([x y] (some #(or (% x) (% y)) ps))
-///                 ([x y z] (some #(or (% x) (% y) (% z)) ps))
-///                 ([x y z & args] (or (sp_ x y z) (some #(some % args) ps)))
-///             )
-///         )
-///     )
-/// )
-
-/// (defmacro cond_> [e & s]
-///     (assert_args
-///         (even_9_ (count s)) "an even number of forms as clauses"
-///     )
-///     (let [e_1_ (gensym)
-///           s (map (fn [[_9_ x]] `(if ~_9_ (-> ~e_1_ ~x) ~e_1_)) (partition 2 s))]
-///         `(let [~e_1_ ~e ~@(interleave (repeat e_1_) (butlast s))]
-///             ~(if (seq s) (last s) e_1_)
-///         )
-///     )
-/// )
-
-/// (defmacro cond_>> [e & s]
-///     (assert_args
-///         (even_9_ (count s)) "an even number of forms as clauses"
-///     )
-///     (let [e_1_ (gensym)
-///           s (map (fn [[_9_ x]] `(if ~_9_ (->> ~e_1_ ~x) ~e_1_)) (partition 2 s))]
-///         `(let [~e_1_ ~e ~@(interleave (repeat e_1_) (butlast s))]
-///             ~(if (seq s) (last s) e_1_)
-///         )
-///     )
-/// )
-
-/// (defmacro as_> [e e_1_ & s]
-///     `(let [~e_1_ ~e ~@(interleave (repeat e_1_) (butlast s))]
-///         ~(if (seq s) (last s) e_1_)
-///     )
-/// )
-
-/// (defmacro some_> [e & s]
-///     (let [e_1_ (gensym)
-///           s (map (fn [x] `(when (some_9_ ~e_1_) (-> ~e_1_ ~x))) s)]
-///         `(let [~e_1_ ~e ~@(interleave (repeat e_1_) (butlast s))]
-///             ~(if (seq s) (last s) e_1_)
-///         )
-///     )
-/// )
-
-/// (defmacro some_>> [e & s]
-///     (let [e_1_ (gensym)
-///           s (map (fn [x] `(when (some_9_ ~e_1_) (->> ~e_1_ ~x))) s)]
-///         `(let [~e_1_ ~e ~@(interleave (repeat e_1_) (butlast s))]
-///             ~(if (seq s) (last s) e_1_)
-///         )
-///     )
-/// )
-
-/// (defn halt_when
-///     ([f_9_] (halt_when f_9_ nil))
-///     ([f_9_ h]
-///         (fn [g]
-///             (fn
-///                 ([] (g))
-///                 ([s]
-///                     (when (and (map_9_ s) (contains_9_ s _0_0_halt)) => (g s)
-///                         (_0_0_halt s)
-///                     )
-///                 )
-///                 ([s x]
-///                     (when (f_9_ x) => (g s x)
-///                         (reduced (hash_map _0_0_halt (if (some_9_ h) (h (g s) x) x)))
-///                     )
-///                 )
-///             )
-///         )
-///     )
-/// )
-
-/// (defn run_4_ [proc coll]
-///     (reduce #(proc %2) nil coll)
-///     nil
 /// )
 }
 
@@ -10633,6 +10036,9 @@ namespace arb {
 ///         (conj gen [_0_try_catch_finally (deref start) (deref end) (deref finally)])
 ///     )
 // )
+}
+
+namespace arb {
 
 /// (def Context_1_enum_set
 ///     (hash_set
@@ -12936,30 +12342,6 @@ namespace arb {
 /// )
 
 /// (defn eval [form] (Compiler_1_eval form))
-
-/// (defmacro definline [name & decl]
-///     (let [[pre_args [args expr]] (split_with (comp not vector_9_) decl)]
-///         `(do
-///             (defn ~name ~@pre_args ~args ~(apply (eval (list _7_fn args expr)) args))
-///             (alter_meta_4_ (var ~name) assoc _0_inline (fn ~name ~args ~expr))
-///             (var ~name)
-///         )
-///     )
-/// )
-
-/// (defn ns_resolve
-///     ([ns sym] (ns_resolve ns nil sym))
-///     ([ns env sym]
-///         (when_not (contains_9_ env sym)
-///             (Compiler_1_maybeResolveIn (the_ns ns) sym)
-///         )
-///     )
-/// )
-
-/// (defn resolve
-///     ([    sym] (ns_resolve _8_ns_8_     sym))
-///     ([env sym] (ns_resolve _8_ns_8_ env sym))
-/// )
 
 int main() {
     std::cout << "áéíóöőúüű" << std::endl;
