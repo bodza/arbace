@@ -2,54 +2,21 @@
 
 #define nil nullptr
 
-namespace arbace {
-} using namespace arbace;
+namespace arb { } using namespace arb;
 
-namespace java_lang {
-    class Object {
-///     (defn #_"int" Object_2_hashCode [#_"Object" this] (.hashCode this))
-///     (defn #_"String" Object_2_toString [#_"Object" this] (.toString this))
-    };
+namespace arb {
 
-    class Number : Object {
-///     (defn #_"long" Number_2_longValue [#_"Number" this] (.longValue this))
-///     (defn #_"String" Number_2_toString [#_"Number" this] (.toString this))
-    };
-
-    class Integer : Number/*, Comparable<Integer>*/ {
+    class Number {
         public: static const int MAX_VALUE = 0x7fffffff;
         public: static const int MIN_VALUE = 0x80000000;
-
-///     (defn #_"int" Integer_1_bitCount [#_"int" i] (Integer/bitCount i))
-///     (defn #_"int" Integer_1_parseInt [#_"String" s] (Integer/parseInt s))
-///     (defn #_"int" Integer_1_rotateLeft [#_"int" x, #_"int" y] (Integer/rotateLeft x, y))
-///     (defn #_"String" Integer_1_toString [#_"int" i, #_"int" radix] (Integer/toString i, radix))
-    };
-
-    class Long : Number/*, Comparable<Long>*/ {
-        public: static const long MAX_VALUE = 0x7fffffffffffffff;
-        public: static const long MIN_VALUE = 0x8000000000000000;
-
-///     (defn #_"Long" Long_1_valueOf [#_"long" l] (Long/valueOf l))
-    };
-
-    class Character : Object/*, Comparable<Character>*/ {
-///     (defn #_"int" Character_1_digit [#_"char" ch, #_"int" radix] (Character/digit ch, radix))
-///     (defn #_"bool" Character_1_isWhitespace [#_"char" ch] (Character/isWhitespace ch))
-///     (defn #_"Character" Character_1_valueOf [#_"char" ch] (Character/valueOf ch))
-    };
-
-    class CharSequence {
-        public: virtual char CharSequence_3_charAt(int i) = 0;
-        public: virtual int CharSequence_3_length() = 0;
     };
 
     class Appendable {
         public: virtual Appendable* Appendable_3_append(char x) = 0;
-        public: virtual Appendable* Appendable_3_append(const CharSequence* x) = 0;
+        public: virtual Appendable* Appendable_3_append(const String* x) = 0;
     };
 
-    class String : Object, CharSequence/*, Comparable<String>*/ {
+    class String {
 ///     (defn #_"char" String_2_charAt [#_"String" this, #_"int" i] (.charAt this, i))
 ///     (defn #_"bool" String_2_endsWith [#_"String" this, #_"String" s] (.endsWith this, s))
 ///     (defn #_"int" String_2_indexOf ([#_"String" this, #_"int" ch] (.indexOf this, ch)) ([#_"String" this, #_"String" s, #_"int" from] (.indexOf this, s, from)))
@@ -59,208 +26,94 @@ namespace java_lang {
 ///     (defn #_"String" String_2_substring ([#_"String" this, #_"int" from] (.substring this, from)) ([#_"String" this, #_"int" from, #_"int" over] (.substring this, from, over)))
     };
 
-    class StringBuilder : Object, Appendable, CharSequence/*, Comparable<StringBuilder>*/ {
-///     (defn #_"StringBuilder" StringBuilder_1_new [] (StringBuilder.))
-
-///     (defn #_"StringBuilder" StringBuilder_2_append [#_"StringBuilder" this, #_"char" ch] (.append this, ch))
-///     (defn #_"String" StringBuilder_2_toString [#_"StringBuilder" this] (.toString this))
-    };
-
-    class Thread/* : Object, Runnable*/ {
+    class Thread {
 ///     (defn thread [] (Thread/currentThread))
     };
-} using namespace java_lang;
 
-namespace java_lang_ref {
 ///     #_abstract
-    class Reference/*<T>*/ : Object {
-///     (defn #_"Object" Reference_2_get [#_"Reference" this] (.get this))
+    class Reference/*<T>*/ {
+///     (defn #_"Object" Reference_2_get [#_"Reference" this] (.get this))
     };
 
-    class ReferenceQueue/*<T>*/ : Object {
+    class ReferenceQueue/*<T>*/ {
 ///     (defn #_"ReferenceQueue" ReferenceQueue_1_new [] (ReferenceQueue.))
 
 ///     (defn #_"Reference" ReferenceQueue_2_poll [#_"ReferenceQueue" this] (.poll this))
     };
 
     class WeakReference/*<T>*/ : Reference/*<T>*/ {
-///     (defn #_"WeakReference" WeakReference_1_new [#_"Object" x, #_"ReferenceQueue" q] (WeakReference. x, q))
+///     (defn #_"WeakReference" WeakReference_1_new [#_"Object" x, #_"ReferenceQueue" q] (WeakReference. x, q))
     };
-} using namespace java_lang_ref;
 
-namespace java_lang_reflect {
-    class Array/* : Object*/ {
-///     (defn array_9_ [x] (.isArray (-/class x)))
-    };
-} using namespace java_lang_reflect;
-
-namespace java_util_regex {
-    class Matcher : Object/*, MatchResult*/ {
+    class Matcher {
 ///     (defn #_"bool" Matcher_2_find [#_"Matcher" this] (.find this))
 ///     (defn #_"String" Matcher_2_group ([#_"Matcher" this] (.group this)) ([#_"Matcher" this, #_"int" n] (.group this, n)))
 ///     (defn #_"int" Matcher_2_groupCount [#_"Matcher" this] (.groupCount this))
 ///     (defn #_"bool" Matcher_2_matches [#_"Matcher" this] (.matches this))
     };
 
-    class Pattern : Object {
+    class Pattern {
 ///     (defn #_"Pattern" Pattern_1_compile [#_"String" s] (Pattern/compile s))
-///     (defn #_"Matcher" Pattern_2_matcher [#_"Pattern" this, #_"CharSequence" s] (.matcher this, s))
+///     (defn #_"Matcher" Pattern_2_matcher [#_"Pattern" this, #_"String" s] (.matcher this, s))
 ///     (defn #_"String" Pattern_2_pattern [#_"Pattern" this] (.pattern this))
     };
-} using namespace java_util_regex;
 
-namespace arbace_math {
-    class BigInteger : Number/*, Comparable<BigInteger>*/ {
-///     (defn #_"BigInteger" BigInteger_1_new ([#_"String" s] (BigInteger. s)) ([#_"String" s, #_"int" radix] (BigInteger. s, radix)))
+    class AtomicReference/*<V>*/ {
+///     (defn #_"AtomicReference" AtomicReference_1_new [#_"Object" init] (AtomicReference. init))
 
-///     (def #_"BigInteger" BigInteger_1_ZERO BigInteger/ZERO)
-///     (def #_"BigInteger" BigInteger_1_ONE BigInteger/ONE)
-
-///     (defn #_"BigInteger" BigInteger_2_add [#_"BigInteger" this, #_"BigInteger" x] (.add this, x))
-///     (defn #_"int" BigInteger_2_bitLength [#_"BigInteger" this] (.bitLength this))
-///     (defn #_"BigInteger" BigInteger_2_divide [#_"BigInteger" this, #_"BigInteger" x] (.divide this, x))
-///     (defn #_"BigInteger" BigInteger_2_gcd [#_"BigInteger" this, #_"BigInteger" x] (.gcd this, x))
-///     (defn #_"int" BigInteger_2_intValue [#_"BigInteger" this] (.intValue this))
-///     (defn #_"long" BigInteger_2_longValue [#_"BigInteger" this] (.longValue this))
-///     (defn #_"BigInteger" BigInteger_2_multiply [#_"BigInteger" this, #_"BigInteger" x] (.multiply this, x))
-///     (defn #_"BigInteger" BigInteger_2_negate [#_"BigInteger" this] (.negate this))
-///     (defn #_"BigInteger" BigInteger_2_remainder [#_"BigInteger" this, #_"BigInteger" x] (.remainder this, x))
-///     (defn #_"int" BigInteger_2_signum [#_"BigInteger" this] (.signum this))
-///     (defn #_"BigInteger" BigInteger_2_subtract [#_"BigInteger" this, #_"BigInteger" x] (.subtract this, x))
-///     (defn #_"String" BigInteger_2_toString [#_"BigInteger" this] (.toString this))
-///     (defn #_"BigInteger" BigInteger_1_valueOf [#_"long" x] (BigInteger/valueOf x))
+///     (defn #_"bool" AtomicReference_2_compareAndSet [#_"AtomicReference" this, #_"Object" x, #_"Object" y] (.compareAndSet this, x, y))
+///     (defn #_"Object" AtomicReference_2_get [#_"AtomicReference" this] (.get this))
+///     (defn #_"void" AtomicReference_2_set [#_"AtomicReference" this, #_"Object" x] (.set this, x))
     };
-} using namespace arbace_math;
+}
 
-namespace arbace_util_concurrent_atomic {
-    class AtomicReference/*<V>*/ : Object {
-///     (defn #_"AtomicReference" AtomicReference_1_new [#_"Object" init] (AtomicReference. init))
+namespace arb {
 
-///     (defn #_"bool" AtomicReference_2_compareAndSet [#_"AtomicReference" this, #_"Object" x, #_"Object" y] (.compareAndSet this, x, y))
-///     (defn #_"Object" AtomicReference_2_get [#_"AtomicReference" this] (.get this))
-///     (defn #_"void" AtomicReference_2_set [#_"AtomicReference" this, #_"Object" x] (.set this, x))
-    };
-} using namespace arbace_util_concurrent_atomic;
-
-namespace cloiure {
     template<typename Base, typename T>
     inline bool instance_9_(const T* x) {
         return dynamic_cast<const Base*>(x) != nil;
     }
 
-///    inline bool char_9_(const Object* x) { return instance_9_<Character>(x); }
-///    inline bool char_sequence_9_(const Object* x) { return instance_9_<CharSequence>(x); }
-///    inline bool int_9_(const Object* x) { return instance_9_<Integer>(x); }
-///    inline bool long_9_(const Object* x) { return instance_9_<Long>(x); }
-///    inline bool number_9_(const Object* x) { return instance_9_<Number>(x); }
-///    inline bool string_9_(const Object* x) { return instance_9_<String>(x); }
-///    inline bool matcher_9_(const Object* x) { return instance_9_<Matcher>(x); }
-///    inline bool pattern_9_(const Object* x) { return instance_9_<Pattern>(x); }
-///    inline bool biginteger_9_(const Object* x) { return instance_9_<BigInteger>(x); }
-} using namespace cloiure;
+///    inline bool char_9_(const Object* x) { return instance_9_<Character>(x); }
+///    inline bool number_9_(const Object* x) { return instance_9_<Number>(x); }
+///    inline bool string_9_(const Object* x) { return instance_9_<String>(x); }
+///    inline bool matcher_9_(const Object* x) { return instance_9_<Matcher>(x); }
+///    inline bool pattern_9_(const Object* x) { return instance_9_<Pattern>(x); }
+}
 
-/// (refer! - [< <= > >= defn first int let neg_9_ pos_9_ reduce zero_9_])
+/// (defn A_1_new [n] (object_array n))
 
-// (about #_"Numbers"
-///     (defn int_4_ [#_"Number" n] (.intValue n))
-
-///     (defn +
-///         ([] (int 0))
-///         ([x] (int_4_ x))
-///         ([x y] (-/unchecked_add_int (int_4_ x) (int_4_ y)))
-///         ([x y & s] (reduce + (+ x y) s))
-///     )
-
-///     (defn -
-///         ([x] (-/unchecked_negate_int (int_4_ x)))
-///         ([x y] (-/unchecked_subtract_int (int_4_ x) (int_4_ y)))
-///         ([x y & s] (reduce - (- x y) s))
-///     )
-
-///     (def inc  -/unchecked_inc_int)
-///     (def dec  -/unchecked_dec_int)
-///     (def *    -/unchecked_multiply_int)
-///     (def quot -/unchecked_divide_int)
-///     (def rem  -/unchecked_remainder_int)
-
-///     (defn bit_and [x y] (int_4_ (-/bit_and x y)))
-///     (defn bit_or  [x y] (int_4_ (-/bit_or x y)))
-///     (defn bit_xor [x y] (int_4_ (-/bit_xor x y)))
-
-///     (defn <<  [x y] (int_4_ (-/bit_shift_left x y)))
-///     (defn >>  [x y] (int_4_ (-/bit_shift_right x y)))
-///     (defn >>> [x y] (int_4_ (-/unsigned_bit_shift_right (-/bit_and x 0xffffffff) y)))
-// )
-
-/// (defn identical_9_ [a b] (-/identical_9_ a b))
-
-/// (defn -'=       [a b] (-/= a b))
-/// (defn -'==      [a b] (-/== a b))
-/// (defn -'<       [a b] (-/< a b))
-/// (defn -'<=      [a b] (-/<= a b))
-/// (defn -'>       [a b] (-/> a b))
-/// (defn -'compare [a b] (-/compare a b))
-/// (defn -'+       [a b] (-/+ a b))
-/// (defn -'-       [a b] (-/- a b))
-/// (defn -'*       [a b] (-/* a b))
-/// (defn -'quot    [a b] (-/quot a b))
-/// (defn -'rem     [a b] (-/rem a b))
-/// (defn -'bit_not [a]   (-/bit_not a))
-/// (defn -'bit_and [a b] (-/bit_and a b))
-/// (defn -'bit_or  [a b] (-/bit_or a b))
-/// (defn -'bit_xor [a b] (-/bit_xor a b))
-/// (defn -'bit_shift_left [a b] (-/bit_shift_left a b))
-/// (defn -'bit_shift_right [a b] (-/bit_shift_right a b))
-/// (defn -'unsigned_bit_shift_right [a b] (-/unsigned_bit_shift_right a b))
-
-/// (defn A_1_new [n] (-/object_array n))
-
-/// (defn A_1_clone  [#_"[Ljava.lang.Object;" a]     (-/aclone a))
-/// (defn A_1_get    [#_"[Ljava.lang.Object;" a i]   (-/aget a i))
-/// (defn A_1_length [#_"[Ljava.lang.Object;" a]     (-/alength a))
-/// (defn A_1_set    [#_"[Ljava.lang.Object;" a i x] (-/aset a i x))
+/// (defn A_1_clone  [#_"[Ljava.lang.Object;" a]     (aclone a))
+/// (defn A_1_get    [#_"[Ljava.lang.Object;" a i]   (aget a i))
+/// (defn A_1_length [#_"[Ljava.lang.Object;" a]     (alength a))
+/// (defn A_1_set    [#_"[Ljava.lang.Object;" a i x] (aset a i x))
 
 /// (defn new_8_ [#_"Class" c & s] (.newInstance #_"Constructor" (first (.getConstructors c)), (A_1_new s)))
 
 /// (defn M_1_get ([m k] (-/get m k)) ([m k not_found] (-/get m k not_found)))
 
 // (about #_"arbace.Mutable"
-///     (defn #_"Mutable" Mutable_2_mutate_4_ [#_"Mutable" this, #_"Object" key, #_"Object" val] (.mutate this, key, val))
+///     (defn #_"Mutable" Mutable_2_mutate_4_ [#_"Mutable" this, #_"Object" key, #_"Object" val] (.mutate this, key, val))
 // )
 
 // (about #_"arbace.Typed"
 ///     (defn #_"type" Typed_2_type [#_"Typed" this] (.type this))
 // )
 
-/// (ns arbace.core
-///     (refer! - [boolean char long satisfies_9_])
-///     (_0_refer arbace.bore _0_only
-///         [
-///             int int_4_ thread array_9_ identical_9_
-///             -'= -'== -'< -'<= -'> -'compare -'+ -'- -'* -'quot -'rem -'bit_not -'bit_and -'bit_or -'bit_xor -'bit_shift_left -'bit_shift_right -'unsigned_bit_shift_right
-///             A_1_new A_1_clone A_1_get A_1_length A_1_set new_8_ M_1_get
-///             Mutable_2_mutate_4_ Typed_2_type
-///         ]
-///     )
-/// )
+/// (defmacro case_4_ [e & clauses] (if (odd_9_ (count clauses)) `(condp _eq_9_ ~e ~@clauses) `(condp _eq_9_ ~e ~@clauses (throw (str ~e " is definitely not that case!")))))
 
-/// (refer! - [= alter_var_root conj cons count defmacro defn defonce even_9_ first fn hash_map interleave keyword keyword_9_ let list list_8_ loop map mapcat merge meta next not= nth odd_9_ partial partition range second seq seq_9_ sequential_9_ split_at str symbol symbol_9_ var_get vary_meta vec vector vector_9_ with_meta zipmap])
-/// (refer! arbace.bore [* + - < << <= > >= >> >>> bit_xor dec inc neg_9_ pos_9_ quot rem zero_9_])
-
-/// (defmacro case_4_ [e & clauses] (if (odd_9_ (count clauses)) `(condp = ~e ~@clauses) `(condp = ~e ~@clauses (throw (str ~e " is definitely not that case!")))))
-
-/// (let [last_id_1_ (-/atom 0)] (defn next_id_4_ [] (-/swap_4_ last_id_1_ inc)))
+/// (let [last_id_1_ (atom 0)] (defn next_id_4_ [] (swap_4_ last_id_1_ inc)))
 
 /// (defn gensym
 ///     ([] (gensym "G__"))
-///     ([prefix] (-/symbol (str prefix (next_id_4_))))
+///     ([prefix] (symbol (str prefix (next_id_4_))))
 /// )
 
-/// (defmacro declare [& names] `(do ~@(map #(list _1_def (vary_meta % -/assoc _0_declared true)) names)))
+/// (defmacro declare [& names] `(do ~@(map #(list _1_def (vary_meta % assoc _0_declared true)) names)))
 
-/// (defmacro def_      [x & s] `(def      ~(vary_meta x -/assoc _0_private true) ~@s))
-/// (defmacro defn_     [x & s] `(defn     ~(vary_meta x -/assoc _0_private true) ~@s))
-/// (defmacro defmacro_ [x & s] `(defmacro ~(vary_meta x -/assoc _0_private true) ~@s))
+/// (defmacro def_      [x & s] `(def      ~(vary_meta x assoc _0_private true) ~@s))
+/// (defmacro defn_     [x & s] `(defn     ~(vary_meta x assoc _0_private true) ~@s))
+/// (defmacro defmacro_ [x & s] `(defmacro ~(vary_meta x assoc _0_private true) ~@s))
 
 /// (defn identity   [x] x)
 /// (defn constantly [x] (fn [& _] x))
@@ -298,7 +151,7 @@ namespace cloiure {
 ///     `(letfn_8_ ~(vec (interleave (map first fnspecs) (map #(cons _7_fn %) fnspecs))) ~@body)
 /// )
 
-/// (letfn [(=> [s] (if (= '=> (first s)) (next s) (cons nil s)))]
+/// (letfn [(=> [s] (if (_eq_9_ '=> (first s)) (next s) (cons nil s)))]
 ///     (defmacro     when       [_9_ & s] (let [[e & s] (=> s)]               `(if     ~_9_ (do ~@s) ~e)))
 ///     (defmacro     when_not   [_9_ & s] (let [[e & s] (=> s)]               `(if_not ~_9_ (do ~@s) ~e)))
 ///     (defmacro let_when     [v _9_ & s] (let [[e & s] (=> s)] `(let ~(vec v) (if     ~_9_ (do ~@s) ~e))))
@@ -329,7 +182,7 @@ namespace cloiure {
 ///     ([bind then else & _]
 ///         (assert_args
 ///             (vector_9_ bind) "a vector for its binding"
-///             (= 2 (count bind)) "exactly 2 forms in binding vector"
+///             (_eq_9_ 2 (count bind)) "exactly 2 forms in binding vector"
 ///             (nil_9_ _) "1 or 2 forms after binding vector"
 ///         )
 ///         `(let_when [x# ~(bind 1)] x# ~'=> ~else
@@ -351,7 +204,7 @@ namespace cloiure {
 ///     ([bind then else & _]
 ///         (assert_args
 ///             (vector_9_ bind) "a vector for its binding"
-///             (= 2 (count bind)) "exactly 2 forms in binding vector"
+///             (_eq_9_ 2 (count bind)) "exactly 2 forms in binding vector"
 ///             (nil_9_ _) "1 or 2 forms after binding vector"
 ///         )
 ///         `(let_when [x# ~(bind 1)] (some_9_ x#) ~'=> ~else
@@ -373,7 +226,7 @@ namespace cloiure {
 ///     ([bind then else & _]
 ///         (assert_args
 ///             (vector_9_ bind) "a vector for its binding"
-///             (= 2 (count bind)) "exactly 2 forms in binding vector"
+///             (_eq_9_ 2 (count bind)) "exactly 2 forms in binding vector"
 ///             (nil_9_ _) "1 or 2 forms after binding vector"
 ///         )
 ///         `(let_when [s# (seq ~(bind 1))] (some_9_ s#) ~'=> ~else
@@ -384,43 +237,7 @@ namespace cloiure {
 ///     )
 /// )
 
-/// (ß defmacro when_let [bindings & body]
-///     (assert_args
-///         (vector_9_ bindings) "a vector for its binding"
-///         (= 2 (count bindings)) "exactly 2 forms in binding vector"
-///     )
-///     `(let_when [x# ~(bindings 1)] x#
-///         (let [~(bindings 0) x#]
-///             ~@body
-///         )
-///     )
-/// )
-
-/// (ß defmacro when_some [bindings & body]
-///     (assert_args
-///         (vector_9_ bindings) "a vector for its binding"
-///         (= 2 (count bindings)) "exactly 2 forms in binding vector"
-///     )
-///     `(let_when [x# ~(bindings 1)] (some_9_ x#)
-///         (let [~(bindings 0) x#]
-///             ~@body
-///         )
-///     )
-/// )
-
-/// (ß defmacro when_first [bindings & body]
-///     (assert_args
-///         (vector_9_ bindings) "a vector for its binding"
-///         (= 2 (count bindings)) "exactly 2 forms in binding vector"
-///     )
-///     `(when_some [s# (seq ~(bindings 1))]
-///         (let [~(bindings 0) (first s#)]
-///             ~@body
-///         )
-///     )
-/// )
-
-/// (letfn [(=> [s] (if (= '=> (first s)) (next s) (cons nil s)))]
+/// (letfn [(=> [s] (if (_eq_9_ '=> (first s)) (next s) (cons nil s)))]
 ///     (defmacro when_let   [v & s] (let [[e & s] (=> s)] `(if_let   ~(vec v) (do ~@s) ~e)))
 ///     (defmacro when_some  [v & s] (let [[e & s] (=> s)] `(if_some  ~(vec v) (do ~@s) ~e)))
 ///     (defmacro when_first [v & s] (let [[e & s] (=> s)] `(if_first ~(vec v) (do ~@s) ~e)))
@@ -430,11 +247,11 @@ namespace cloiure {
 ///     (let [gpred (gensym "pred__") gexpr (gensym "expr__")
 ///           emit_
 ///             (fn emit_ [f_9_ expr args]
-///                 (let [[[a b c _0_as clause] more] (split_at (if (= :>> (second args)) 3 2) args) n (count clause)]
+///                 (let [[[a b c _0_as clause] more] (split_at (if (_eq_9_ :>> (second args)) 3 2) args) n (count clause)]
 ///                     (cond
-///                         (= 0 n) `(throw (str "no matching clause: " ~expr))
-///                         (= 1 n) a
-///                         (= 2 n) `(if (~f_9_ ~a ~expr)
+///                         (_eq_9_ 0 n) `(throw (str "no matching clause: " ~expr))
+///                         (_eq_9_ 1 n) a
+///                         (_eq_9_ 2 n) `(if (~f_9_ ~a ~expr)
 ///                                     ~b
 ///                                     ~(emit_ f_9_ expr more)
 ///                                 )
@@ -453,14 +270,14 @@ namespace cloiure {
 
 /// (letfn [(v_1_ [v] (cond (vector_9_ v) v (symbol_9_ v) [v v] _0_else [`_# v]))
 ///         (r_1_ [r] (cond (vector_9_ r) `((recur ~@r)) (some_9_ r) `((recur ~r))))
-///         (=> [s] (if (= '=> (first s)) (next s) (cons nil s)))
+///         (=> [s] (if (_eq_9_ '=> (first s)) (next s) (cons nil s)))
 ///         (l_1_ [v _9_ r s] (let [r (r_1_ r) [e & s] (=> s)] `(loop ~(v_1_ v) (if ~_9_ (do ~@s ~@r) ~e))))]
 ///     (defmacro loop_when [v _9_ & s] (l_1_ v _9_ nil s))
 ///     (defmacro loop_when_recur [v _9_ r & s] (l_1_ v _9_ r s))
 /// )
 
 /// (letfn [(r_1_ [r] (cond (vector_9_ r) `(recur ~@r) (some_9_ r) `(recur ~r)))
-///         (=> [s] (if (= '=> (first s)) (second s)))]
+///         (=> [s] (if (_eq_9_ '=> (first s)) (second s)))]
 ///     (defmacro recur_when [_9_ r & s] `(if ~_9_ ~(r_1_ r) ~(=> s)))
 /// )
 
@@ -498,11 +315,11 @@ namespace cloiure {
 /// (defmacro dotimes [bindings & body]
 ///     (assert_args
 ///         (vector_9_ bindings) "a vector for its binding"
-///         (= 2 (count bindings)) "exactly 2 forms in binding vector"
+///         (_eq_9_ 2 (count bindings)) "exactly 2 forms in binding vector"
 ///     )
 ///     (let [[i n] bindings]
 ///         `(let [n# (long ~n)]
-///             (loop_when_recur [~i 0] (< ~i n#) [(inc ~i)]
+///             (loop_when_recur [~i 0] (lt_9_ ~i n#) [(inc ~i)]
 ///                 ~@body
 ///             )
 ///         )
@@ -552,277 +369,7 @@ namespace cloiure {
 ///     )
 /// )
 
-// (about #_"defp, defq, defr, defm"
-
-// (about #_"defproto"
-
-/// #_bore!
-/// (defn_ gen_interface_8_ [sym]
-///     (DynamicClassLoader_2_defineClass (var_get Compiler_1_LOADER), (str sym), (second (#'-/generate_interface (hash_map (-/keyword (-/name _0_name)) sym))), nil)
-/// )
-
-/// (defn_ emit_defproto_8_ [name sigs]
-///     (let [
-///         iname (-/symbol (str (-/munge (-/namespace_munge -/_8_ns_8_)) "." (-/munge name)))
-///     ]
-///         `(do
-///             #_bore!
-///             (defonce ~name (hash_map)) #_alt #_(declare ~name) #_(refer_8_ '~name)
-///             #_bore!
-///             (gen_interface_8_ '~iname)
-///             (alter_var_root (var ~name) merge
-///                 ~(hash_map _0_var (list _1_var name), _0_on (list _1_quote iname), _0_on_interface (list `-/resolve (list _1_quote iname)))
-///             )
-///             ~@(map (fn [[f & _]] `(defmacro ~f [x# & s#] (list_8_ (list -/find_protocol_method '~name ~(-/keyword (str f)) x#) x# s#))) sigs)
-///             '~name
-///         )
-///     )
-/// )
-
-/// (defmacro defproto [name & sigs]
-///     (emit_defproto_8_ name sigs)
-/// )
-// )
-
-/// #_bore!
-/// (defn_ parse_opts [s]
-///     (loop_when_recur [opts {} [k v & rs _0_as s] s] (keyword_9_ k) [(-/assoc opts k v) rs] => [opts s])
-/// )
-
-/// #_bore!
-/// (refer! - [take_while drop_while])
-
-/// #_bore!
-/// (defn_ parse_impls [specs]
-///     (loop_when_recur [impls {} s specs] (seq s) [(-/assoc impls (first s) (take_while seq_9_ (next s))) (drop_while seq_9_ (next s))] => impls)
-/// )
-
-/// #_bore!
-/// (refer! - [#_var_9_ complement resolve deref keys maybe_destructured apply concat vals])
-
-/// #_bore!
-/// (defn_ parse_opts+specs [opts+specs]
-///     (let [
-///         [opts specs] (parse_opts opts+specs)
-///         impls        (parse_impls specs)
-///         interfaces   (-> (map #(if (#_var_9_ (complement -/class_9_) (resolve %)) (_0_on (deref (resolve %))) %) (keys impls)) -/set (-/disj _1_Object _1_java.lang.Object) vec)
-///         methods      (map (fn [[name params & body]] (-/cons name (maybe_destructured params body))) (apply concat (vals impls)))
-///     ]
-///         [interfaces methods opts]
-///     )
-/// )
-
-// (about #_"arbace.Mutable"
-///     (ß defp Mutable
-///         (#_"Mutable" Mutable_3_mutate_4_ [#_"Mutable" this, #_"Object" key, #_"Object" val])
-///     )
-
-///     #_bore!
-///     (defonce Mutable (hash_map)) #_alt #_(refer_8_ _1_Mutable)
-///     #_bore!
-///     (DynamicClassLoader_2_defineClass (var_get Compiler_1_LOADER), "arbace.core.Mutable", (second (#'-/generate_interface (hash_map (-/keyword (-/name _0_name)) _1_arbace.core.Mutable, (-/keyword (-/name _0_methods)) '[[mutate [java.lang.Object java.lang.Object] java.lang.Object nil]]))), nil)
-///     (alter_var_root #_1_Mutable merge (hash_map _0_var #_1_Mutable, _0_on _1_arbace.core.Mutable, _0_on_interface (-/resolve (-/symbol "arbace.core.Mutable"))))
-///     (ß defmacro Mutable_3_mutate_4_ [this, key, val] ((-/find_protocol_method _1_Mutable (-/keyword "Mutable_3_mutate_4_") this) this, key, val))
-
-///     (ß -/extend_protocol Mutable arbace.core.Mutable
-///         (Mutable_3_mutate_4_ [this, key, val] (Mutable_2_mutate_4_ this, key, val))
-///     )
-
-///     (defn mutable_9_ [x] (satisfies_9_ Mutable x))
-// )
-
-// (about #_"arbace.Typed"
-///     (ß defp Typed
-///         (#_"type" Typed_3_type [#_"Typed" this])
-///     )
-
-///     #_bore!
-///     (defonce Typed (hash_map)) #_alt #_(refer_8_ _1_Typed)
-///     #_bore!
-///     (DynamicClassLoader_2_defineClass (var_get Compiler_1_LOADER), "arbace.core.Typed", (second (#'-/generate_interface (hash_map (-/keyword (-/name _0_name)) _1_arbace.core.Typed, (-/keyword (-/name _0_methods)) '[[type [] java.lang.Object nil]]))), nil)
-///     (alter_var_root #_1_Typed merge (hash_map _0_var #_1_Typed, _0_on _1_arbace.core.Typed, _0_on_interface (-/resolve (-/symbol "arbace.core.Typed"))))
-///     (ß defmacro Typed_3_type [this] ((-/find_protocol_method _1_Typed (-/keyword "Typed_3_type") this) this))
-
-///     (ß -/extend_protocol Typed arbace.core.Typed
-///         (Typed_3_type [this] (Typed_2_type this))
-///     )
-
-///     (defn typed_9_ [x] (satisfies_9_ Typed x))
-// )
-
-// (about #_"defarray"
-
-/// #_bore!
-/// (defn_ emit_defarray_8_ [tname cname fields interfaces methods opts]
-///     (let [
-///         classname  (-/with_meta (-/symbol (str (-/namespace_munge -/_8_ns_8_) "." cname)) (meta cname))
-///         interfaces (vec interfaces)
-///         fields     (map #(with_meta % nil) fields)
-///     ]
-///         (let [a '__array s (mapcat (fn [x y] [(-/name #_keyword y) x]) (range) fields)]
-///             (letfn [(ilookup [[i m]]
-///                         [
-///                             (conj i _1_clojure.lang.ILookup)
-///                             (conj m
-///                                 `(valAt [this# k#] (ILookup_2_valAt this# k# nil))
-///                                 `(valAt [this# k# else#] (if_some [x# (case_4_ (-/name k#) ~@s nil)] (#_A_1_get -/aget (. this# ~a) x#) else#))
-///                             )
-///                         ]
-///                     )
-///                     (mutable [[i m]]
-///                         [
-///                             (conj i _1_arbace.core.Mutable)
-///                             (conj m
-///                                 `(mutate [this# k# v#] (let [x# (case_4_ (-/name k#) ~@s)] (#_A_1_set -/aset (. this# ~a) x# v#) this#))
-///                             )
-///                         ]
-///                     )
-///                     (typed [[i m]]
-///                         [
-///                             (conj i _1_arbace.core.Typed)
-///                             (conj m
-///                                 `(type [this#] '~classname)
-///                             )
-///                         ]
-///                     )]
-///                 (let [[i m] (-> [interfaces methods] ilookup mutable typed)]
-///                     `(-/eval '~(-/read_string (str (list_8_ _1_deftype_8_ (symbol (-/name (-/ns_name -/_8_ns_8_)) (-/name tname)) classname (vector a) _0_implements (vec i) m))))
-///                 )
-///             )
-///         )
-///     )
-/// )
-
-/// #_bore!
-/// (defmacro defarray [name fields & opts+specs] #_alt #_`(refer_8_ '~name)
-///     (ß #'-/validate_fields fields name)
-///     (let [[interfaces methods opts] (parse_opts+specs opts+specs)]
-///         `(do
-///             ~(emit_defarray_8_ name name (vec fields) (vec interfaces) methods opts)
-///             (-/eval '~(-/list (-/symbol "clojure.core/import_8_") (str (-/namespace_munge -/_8_ns_8_) "." name)))
-///         )
-///     )
-/// )
-// )
-
-// (about #_"defassoc"
-
-/// #_bore!
-/// (defn_ emit_defassoc_8_ [tname cname interfaces methods opts]
-///     (let [
-///         classname  (-/with_meta (-/symbol (str (-/namespace_munge -/_8_ns_8_) "." cname)) (meta cname))
-///         interfaces (vec interfaces)
-///         type_hash  (IHashEq_2_hasheq classname)
-///     ]
-///         (let [a '__assoc]
-///             (letfn [(eqhash [[i m]]
-///                         [
-///                             (conj i _1_clojure.lang.IHashEq)
-///                             (conj m
-///                                 `(hasheq [this#] (-/int (bit_xor ~type_hash (.hasheq (. this# ~a)))))
-///                                 `(hashCode [this#] (.hashCode (. this# ~a)))
-///                                 `(equals [this# that#] (and #_(some_9_ that#) (instance_9_ ~tname that#) (.equals (. this# ~a) (. that# ~a))))
-///                             )
-///                         ]
-///                     )
-///                     (iobj [[i m]]
-///                         [
-///                             (conj i _1_clojure.lang.IObj)
-///                             (conj m
-///                                 `(meta [this#] (.meta (. this# ~a)))
-///                                 `(withMeta [this# m#] (new ~tname (.withMeta (. this# ~a) m#)))
-///                             )
-///                         ]
-///                     )
-///                     (ilookup [[i m]]
-///                         [
-///                             (conj i _1_clojure.lang.ILookup)
-///                             (conj m
-///                                 `(valAt [this# k#] (.valAt this# k# nil))
-///                                 `(valAt [this# k# else#] (.valAt (. this# ~a) k# else#))
-///                             )
-///                         ]
-///                     )
-///                     (imap [[i m]]
-///                         [
-///                             (conj i _1_clojure.lang.IPersistentMap)
-///                             (conj m
-///                                 `(count [this#] (.count (. this# ~a)))
-///                                 `(empty [this#] (new ~tname (.empty (. this# ~a))))
-///                                 `(cons [this# e#] (new ~tname (.cons (. this# ~a) e#)))
-///                                 `(equiv [this# that#]
-///                                     (or (identical_9_ this# that#)
-///                                         (and (identical_9_ (-/class this#) (-/class that#))
-///                                             (= (. this# ~a) (. that# ~a))
-///                                         )
-///                                     )
-///                                 )
-///                                 `(containsKey [this# k#] (.containsKey (. this# ~a) k#))
-///                                 `(entryAt [this# k#] (.entryAt (. this# ~a) k#))
-///                                 `(seq [this#] (.seq (. this# ~a)))
-///                                 `(assoc [this# k# v#] (new ~tname (.assoc (. this# ~a) k# v#)))
-///                                 `(without [this# k#] (new ~tname (.without (. this# ~a) k#)))
-///                             )
-///                         ]
-///                     )
-///                     (typed [[i m]]
-///                         [
-///                             (conj i _1_arbace.core.Typed)
-///                             (conj m
-///                                 `(type [this#] '~classname)
-///                             )
-///                         ]
-///                     )]
-///                 (let [[i m] (-> [interfaces methods] eqhash iobj ilookup imap typed)]
-///                     `(-/eval '~(-/read_string (str (list_8_ _1_deftype_8_ (symbol (-/name (-/ns_name -/_8_ns_8_)) (-/name tname)) classname (vector a) _0_implements (vec i) m))))
-///                 )
-///             )
-///         )
-///     )
-/// )
-
-/// #_bore!
-/// (defmacro defassoc [name & opts+specs] #_alt #_`(refer_8_ '~name)
-///     (ß #'-/validate_fields [] name)
-///     (let [[interfaces methods opts] (parse_opts+specs opts+specs)]
-///         `(do
-///             ~(emit_defassoc_8_ name name (vec interfaces) methods opts)
-///             (-/eval '~(-/list (-/symbol "clojure.core/import_8_") (str (-/namespace_munge -/_8_ns_8_) "." name)))
-///         )
-///     )
-/// )
-// )
-
-// (about #_"extend"
-
-/// (defn extend [atype & proto+mmaps]
-///     (doseq [[proto mmap] (partition 2 proto+mmaps)]
-///         (when_not (#'-/protocol_9_ proto)
-///             (throw (str proto " is not a protocol"))
-///         )
-///         (when (#'-/implements_9_ proto atype)
-///             (throw (str atype " already directly implements " (_0_on_interface proto) " for protocol " (_0_var proto)))
-///         )
-///         (alter_var_root (_0_var proto) -/assoc_in [_0_impls atype] mmap)
-///     )
-/// )
-
-/// (defn_ emit_impl_8_ [_ [p fs]]
-///     [p (-/zipmap (map #(-> % first -/name -/keyword) fs) (map #(let [% (next %)] (if (= '=> (first %)) (second %) (cons _7_fn %))) fs))]
-/// )
-
-/// (defmacro extend_type [t & specs]
-///     `(extend ~t ~@(mapcat (partial emit_impl_8_ t) (#'-/parse_impls specs)))
-/// )
-// )
-
-/// (defmacro defp [p & s]                                      `(do (defproto ~p ~@s)             '~p))
-/// (defmacro defq [r f & s] (let [c (-/symbol (str r "'class"))] `(do (defarray ~c ~(vec f) ~r ~@s) '~c)))
-/// (defmacro defr [r]       (let [c (-/symbol (str r "'class"))] `(do (defassoc ~c ~r)              '~c)))
-/// (defmacro defm [r & s]   (let [i `(_0_on_interface ~r)]       `(do (extend_type ~i ~@s)          ~i)))
-// )
-
-namespace arbace {
+namespace arb {
     class ISeq;
 
     class Seqable {
@@ -836,9 +383,9 @@ namespace arbace {
 ///     (defn empty_9_ [x] (not (seq x)))
 }
 
-namespace arbace {
+namespace arb {
     class ISeq {
-        public: virtual Object* ISeq_3_first() = 0;
+        public: virtual Object* ISeq_3_first() = 0;
         public: virtual ISeq* ISeq_3_next() = 0;
     };
 
@@ -854,45 +401,41 @@ namespace arbace {
 ///     (defn last   [s] (if_some [r (next s)] (recur r) (first s)))
 }
 
-namespace arbace {
+namespace arb {
     class IObject {
-        public: virtual bool IObject_3_equals(const Object* that) = 0;
+        public: virtual bool IObject_3_equals(const Object* that) = 0;
     };
-
-///     (-/extend_protocol IObject java.lang.Object
-///         (IObject_3_equals [this, that] (.equals this, that))
-///     )
 }
 
-namespace arbace {
+namespace arb {
     class IAppend {
         public: virtual Appendable* IAppend_3_append(const Appendable* a) = 0;
     };
 }
 
-namespace arbace {
+namespace arb {
     class Comparable {
-        public: virtual int Comparable_3_compareTo(const Object* that) = 0;
+        public: virtual int Comparable_3_compareTo(const Object* that) = 0;
     };
 
 ///     (defn comparable_9_ [x] (satisfies_9_ Comparable x))
 }
 
-namespace arbace {
+namespace arb {
     class Comparator {
-        public: virtual int Comparator_3_compare(const Object* x, const Object* y) = 0;
+        public: virtual int Comparator_3_compare(const Object* x, const Object* y) = 0;
     };
 
 ///     (defn comparator_9_ [x] (satisfies_9_ Comparator x))
 }
 
-namespace arbace {
+namespace arb {
     class Counted {
         public: virtual int Counted_3_count() = 0;
     };
 
 ///     (-/extend_protocol Counted
-///         java.lang.CharSequence (Counted_3_count [s] (.length s))
+///         java.lang.String (Counted_3_count [s] (.length s))
 ///     )
 
 ///     (-/extend_protocol Counted
@@ -910,9 +453,9 @@ namespace arbace {
 ///                 (counted_9_ x)
 ///                     (Counted_3_count x)
 ///                 (seqable_9_ x)
-///                     (loop_when [n 0 s (seq x)] (and (some_9_ s) (or (neg_9_ m) (< n m))) => n
+///                     (loop_when [n 0 s (seq x)] (and (some_9_ s) (or (neg_9_ m) (lt_9_ n m))) => n
 ///                         (when (counted_9_ s) => (recur (inc n) (next s))
-///                             (+ n (Counted_3_count s))
+///                             (plus n (Counted_3_count s))
 ///                         )
 ///                     )
 ///                 _0_else
@@ -922,54 +465,44 @@ namespace arbace {
 ///     )
 }
 
-namespace arbace {
+namespace arb {
     class Hashed {
         public: virtual int Hashed_3_hash() = 0;
     };
 
-///     (declare Murmur3_1_hashInt)
-///     (declare Murmur3_1_hashLong)
-
 ///     (-/extend_protocol Hashed
-///         java.lang.Object       (Hashed_3_hash [o] (Object_2_hashCode o))
-///         java.lang.String       (Hashed_3_hash [s] (Murmur3_1_hashInt (Object_2_hashCode s)))
-///         java.lang.Number       (Hashed_3_hash [n] (Murmur3_1_hashLong (Number_2_longValue n)))
-///         arbace.math.BigInteger (Hashed_3_hash [i] (if (< (BigInteger_2_bitLength i) 64) (Murmur3_1_hashLong (BigInteger_2_longValue i)) (Object_2_hashCode i)))
-///         clojure.lang.Ratio     (Hashed_3_hash [r] (Object_2_hashCode r))
+///         java.lang.String       (Hashed_3_hash [s] (Murmur3_1_hashInt (Object_2_hashCode s)))
+///         java.lang.Number       (Hashed_3_hash [n] (Murmur3_1_hashInt (Number_2_intValue n)))
 ///     )
 
 ///     (defn hashed_9_ [x] (satisfies_9_ Hashed x))
 
 ///     (defn f_1_hash [x] (if (some_9_ x) (Hashed_3_hash x) (int 0)))
 
-///     (defn f_1_hashcode [x] (if (some_9_ x) (Object_2_hashCode x) (int 0)))
+///     (defn f_1_hashcode [x] (if (some_9_ x) (Object_2_hashCode x) (int 0)))
 
 ///     (defn hash_combine [seed x]
-///         (bit_xor seed (+ (f_1_hashcode x) (int_4_ 0x9e3779b9) (<< seed 6) (>> seed 2)))
+///         (bit_xor seed (plus (f_1_hashcode x) (int 0x9e3779b9) (bit_shift_left seed 6) (bit_shift_right seed 2)))
 ///     )
 }
 
-namespace arbace {
+namespace arb {
     class IFn {
-        public: virtual Object* IFn_3_invoke() = 0;
-        public: virtual Object* IFn_3_invoke(const Object* a1) = 0;
-        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2) = 0;
-        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3) = 0;
-        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3, const Object* a4) = 0;
-        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3, const Object* a4, const Object* a5) = 0;
-        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3, const Object* a4, const Object* a5, const Object* a6) = 0;
-        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3, const Object* a4, const Object* a5, const Object* a6, const Object* a7) = 0;
-        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3, const Object* a4, const Object* a5, const Object* a6, const Object* a7, const Object* a8) = 0;
-        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3, const Object* a4, const Object* a5, const Object* a6, const Object* a7, const Object* a8, const Object* a9) = 0;
-        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3, const Object* a4, const Object* a5, const Object* a6, const Object* a7, const Object* a8, const Object* a9, const ISeq* args) = 0;
-        public: virtual Object* IFn_3_applyTo(const ISeq* args) = 0;
+        public: virtual Object* IFn_3_invoke() = 0;
+        public: virtual Object* IFn_3_invoke(const Object* a1) = 0;
+        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2) = 0;
+        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3) = 0;
+        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3, const Object* a4) = 0;
+        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3, const Object* a4, const Object* a5) = 0;
+        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3, const Object* a4, const Object* a5, const Object* a6) = 0;
+        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3, const Object* a4, const Object* a5, const Object* a6, const Object* a7) = 0;
+        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3, const Object* a4, const Object* a5, const Object* a6, const Object* a7, const Object* a8) = 0;
+        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3, const Object* a4, const Object* a5, const Object* a6, const Object* a7, const Object* a8, const Object* a9) = 0;
+        public: virtual Object* IFn_3_invoke(const Object* a1, const Object* a2, const Object* a3, const Object* a4, const Object* a5, const Object* a6, const Object* a7, const Object* a8, const Object* a9, const ISeq* args) = 0;
+        public: virtual Object* IFn_3_applyTo(const ISeq* args) = 0;
     };
 
-///     (declare anew)
-
 ///     (defn ifn_9_ [x] (satisfies_9_ IFn x))
-
-///     (declare cons)
 
 ///     (defn_ spread [s]
 ///         (cond
@@ -1005,7 +538,7 @@ namespace arbace {
 ///     )
 }
 
-namespace arbace {
+namespace arb {
     class INamed {
         public: virtual String* INamed_3_getNamespace() = 0;
         public: virtual String* INamed_3_getName() = 0;
@@ -1018,7 +551,7 @@ namespace arbace {
 ///     (defn #_"String" name [x] (if (string_9_ x) x (INamed_3_getName #_"INamed" x)))
 }
 
-namespace arbace {
+namespace arb {
     class IPersistentMap;
 
     class IMeta {
@@ -1028,7 +561,7 @@ namespace arbace {
 ///     (defn meta [x] (when (satisfies_9_ IMeta x) (IMeta_3_meta #_"IMeta" x)))
 }
 
-namespace arbace {
+namespace arb {
     class IObj {
         public: virtual IObj* IObj_3_withMeta(const IPersistentMap* meta) = 0;
     };
@@ -1038,7 +571,7 @@ namespace arbace {
 ///     (defn vary_meta [x f & args] (with_meta x (apply f (meta x) args)))
 }
 
-namespace arbace {
+namespace arb {
     class IReference {
         public: virtual IPersistentMap* IReference_3_alterMeta(const IFn* f, const ISeq* args) = 0;
         public: virtual IPersistentMap* IReference_3_resetMeta(const IPersistentMap* m) = 0;
@@ -1049,25 +582,25 @@ namespace arbace {
 ///     (defn reset_meta_4_ [#_"IReference" r m] (IReference_3_resetMeta r, m))
 }
 
-namespace arbace {
+namespace arb {
     class IDeref {
-        public: virtual Object* IDeref_3_deref() = 0;
+        public: virtual Object* IDeref_3_deref() = 0;
     };
 
 ///     (defn deref [#_"IDeref" ref] (IDeref_3_deref ref))
 }
 
-namespace arbace {
+namespace arb {
     class IAtom {
-        public: virtual bool IAtom_3_compareAndSet(const Object* o, const Object* o_1_) = 0;
-        public: virtual Object* IAtom_3_swap(const IFn* f, const ISeq* args) = 0;
-        public: virtual Object* IAtom_3_reset(const Object* o_1_) = 0;
-///        public: virtual "[Object Object]" IAtom_3_swapVals(const IFn* f, const ISeq* args) = 0;
-///        public: virtual "[Object Object]" IAtom_3_resetVals(const Object* o_1_) = 0;
+        public: virtual bool IAtom_3_compareAndSet(const Object* o, const Object* o_1_) = 0;
+        public: virtual Object* IAtom_3_swap(const IFn* f, const ISeq* args) = 0;
+        public: virtual Object* IAtom_3_reset(const Object* o_1_) = 0;
+///        public: virtual "[Object Object]" IAtom_3_swapVals(const IFn* f, const ISeq* args) = 0;
+///        public: virtual "[Object Object]" IAtom_3_resetVals(const Object* o_1_) = 0;
     };
 }
 
-namespace arbace {
+namespace arb {
     class IPending {
         public: virtual bool IPending_3_isRealized() = 0;
     };
@@ -1075,13 +608,13 @@ namespace arbace {
 ///     (defn realized_9_ [#_"IPending" x] (IPending_3_isRealized x))
 }
 
-namespace arbace {
+namespace arb {
     class Sequential { };
 
 ///     (defn sequential_9_ [x] (satisfies_9_ Sequential x))
 }
 
-namespace arbace {
+namespace arb {
     class Reversible {
         public: virtual ISeq* Reversible_3_rseq() = 0;
     };
@@ -1091,21 +624,21 @@ namespace arbace {
 ///     (defn rseq [#_"Reversible" s] (Reversible_3_rseq s))
 }
 
-namespace arbace {
+namespace arb {
     class Sorted {
         public: virtual Comparator* Sorted_3_comparator() = 0;
-        public: virtual Object* Sorted_3_entryKey(const Object* entry) = 0;
+        public: virtual Object* Sorted_3_entryKey(const Object* entry) = 0;
         public: virtual ISeq* Sorted_3_seq(bool ascending_9_) = 0;
-        public: virtual ISeq* Sorted_3_seqFrom(const Object* key, bool ascending_9_) = 0;
+        public: virtual ISeq* Sorted_3_seqFrom(const Object* key, bool ascending_9_) = 0;
     };
 
 ///     (defn sorted_9_ [x] (satisfies_9_ Sorted x))
 }
 
-namespace arbace {
+namespace arb {
     class Indexed {
-        public: virtual Object* Indexed_3_nth(int i) = 0;
-        public: virtual Object* Indexed_3_nth(int i, const Object* not_found) = 0;
+        public: virtual Object* Indexed_3_nth(int i) = 0;
+        public: virtual Object* Indexed_3_nth(int i, const Object* not_found) = 0;
     };
 
 ///     (defn indexed_9_ [x] (satisfies_9_ Indexed x))
@@ -1113,23 +646,20 @@ namespace arbace {
 ///     (defn nthnext [s n] (loop_when_recur [s (seq s) n n] (and s (pos_9_ n)) [(next s) (dec n)] => s))
 }
 
-namespace arbace {
+namespace arb {
     class ILookup {
-        public: virtual Object* ILookup_3_valAt(const Object* key) = 0;
-        public: virtual Object* ILookup_3_valAt(const Object* key, const Object* not_found) = 0;
+        public: virtual Object* ILookup_3_valAt(const Object* key) = 0;
+        public: virtual Object* ILookup_3_valAt(const Object* key, const Object* not_found) = 0;
     };
 }
 
-namespace arbace {
+namespace arb {
     class IPersistentCollection {
-        public: virtual IPersistentCollection* IPersistentCollection_3_conj(const Object* o) = 0;
+        public: virtual IPersistentCollection* IPersistentCollection_3_conj(const Object* o) = 0;
         public: virtual IPersistentCollection* IPersistentCollection_3_empty() = 0;
     };
 
 ///     (defn coll_9_ [x] (satisfies_9_ IPersistentCollection x))
-
-///     (declare vector)
-///     (declare list)
 
 ///     (defn conj
 ///         ([] (vector))
@@ -1151,7 +681,7 @@ namespace arbace {
 ///     (defn not_empty [coll] (when (seq coll) coll))
 }
 
-namespace arbace {
+namespace arb {
     class ITransientCollection;
 
     class IEditableCollection {
@@ -1163,10 +693,10 @@ namespace arbace {
 ///     (defn transient [#_"IEditableCollection" coll] (IEditableCollection_3_asTransient coll))
 }
 
-namespace arbace {
+namespace arb {
     class IMapEntry {
-        public: virtual Object* IMapEntry_3_key() = 0;
-        public: virtual Object* IMapEntry_3_val() = 0;
+        public: virtual Object* IMapEntry_3_key() = 0;
+        public: virtual Object* IMapEntry_3_val() = 0;
     };
 
 ///     (defn map_entry_9_ [x] (satisfies_9_ IMapEntry x))
@@ -1174,22 +704,18 @@ namespace arbace {
 ///     (defn key [#_"IMapEntry" e] (IMapEntry_3_key e))
 ///     (defn val [#_"IMapEntry" e] (IMapEntry_3_val e))
 
-///     (declare map)
-
 ///     (defn keys [m] (not_empty (map key m)))
 ///     (defn vals [m] (not_empty (map val m)))
 }
 
-namespace arbace {
+namespace arb {
     class Associative {
-        public: virtual Associative* Associative_3_assoc(const Object* key, const Object* val) = 0;
-        public: virtual bool Associative_3_containsKey(const Object* key) = 0;
-        public: virtual IMapEntry* Associative_3_entryAt(const Object* key) = 0;
+        public: virtual Associative* Associative_3_assoc(const Object* key, const Object* val) = 0;
+        public: virtual bool Associative_3_containsKey(const Object* key) = 0;
+        public: virtual IMapEntry* Associative_3_entryAt(const Object* key) = 0;
     };
 
 ///     (defn associative_9_ [x] (satisfies_9_ Associative x))
-
-///     (declare PersistentArrayMap_1_new)
 
 ///     (defn assoc
 ///         ([#_"Associative" a k v]
@@ -1206,8 +732,6 @@ namespace arbace {
 ///             )
 ///         )
 ///     )
-
-///     (declare get)
 
 ///     (defn assoc_in [m [k & ks] v]
 ///         (if ks
@@ -1233,9 +757,9 @@ namespace arbace {
 ///     )
 }
 
-namespace arbace {
+namespace arb {
     class IPersistentMap {
-        public: virtual IPersistentMap* IPersistentMap_3_dissoc(const Object* key) = 0;
+        public: virtual IPersistentMap* IPersistentMap_3_dissoc(const Object* key) = 0;
     };
 
 ///     (defn map_9_ [x] (satisfies_9_ IPersistentMap x))
@@ -1251,11 +775,11 @@ namespace arbace {
 ///     )
 }
 
-namespace arbace {
+namespace arb {
     class IPersistentSet {
-        public: virtual IPersistentSet* IPersistentSet_3_disj(const Object* key) = 0;
-        public: virtual bool IPersistentSet_3_contains_9_(const Object* key) = 0;
-        public: virtual Object* IPersistentSet_3_get(const Object* key) = 0;
+        public: virtual IPersistentSet* IPersistentSet_3_disj(const Object* key) = 0;
+        public: virtual bool IPersistentSet_3_contains_9_(const Object* key) = 0;
+        public: virtual Object* IPersistentSet_3_get(const Object* key) = 0;
     };
 
 ///     (defn set_9_ [x] (satisfies_9_ IPersistentSet x))
@@ -1271,9 +795,9 @@ namespace arbace {
 ///     )
 }
 
-namespace arbace {
+namespace arb {
     class IPersistentStack {
-        public: virtual Object* IPersistentStack_3_peek() = 0;
+        public: virtual Object* IPersistentStack_3_peek() = 0;
         public: virtual IPersistentStack* IPersistentStack_3_pop() = 0;
     };
 
@@ -1294,15 +818,15 @@ namespace arbace {
 ///     )
 }
 
-namespace arbace {
+namespace arb {
     class IPersistentList { };
 
 ///     (defn list_9_ [x] (satisfies_9_ IPersistentList x))
 }
 
-namespace arbace {
+namespace arb {
     class IPersistentVector {
-        public: virtual IPersistentVector* IPersistentVector_3_assocN(int i, const Object* val) = 0;
+        public: virtual IPersistentVector* IPersistentVector_3_assocN(int i, const Object* val) = 0;
         public: virtual IPersistentVector* IPersistentVector_3_slicev(int start, int end) = 0;
         public: virtual IPersistentVector* IPersistentVector_3_splicev(const IPersistentVector* that) = 0;
     };
@@ -1310,9 +834,9 @@ namespace arbace {
 ///     (defn vector_9_ [x] (satisfies_9_ IPersistentVector x))
 }
 
-namespace arbace {
+namespace arb {
     class ITransientCollection {
-        public: virtual ITransientCollection* ITransientCollection_3_conj_4_(const Object* val) = 0;
+        public: virtual ITransientCollection* ITransientCollection_3_conj_4_(const Object* val) = 0;
         public: virtual IPersistentCollection* ITransientCollection_3_persistent_4_() = 0;
     };
 
@@ -1330,11 +854,11 @@ namespace arbace {
 ///     (defn persistent_4_ [#_"ITransientCollection" coll] (ITransientCollection_3_persistent_4_ coll))
 }
 
-namespace arbace {
+namespace arb {
     class ITransientAssociative {
-        public: virtual ITransientAssociative* ITransientAssociative_3_assoc_4_(const Object* key, const Object* val) = 0;
-        public: virtual bool ITransientAssociative_3_containsKey(const Object* key) = 0;
-        public: virtual IMapEntry* ITransientAssociative_3_entryAt(const Object* key) = 0;
+        public: virtual ITransientAssociative* ITransientAssociative_3_assoc_4_(const Object* key, const Object* val) = 0;
+        public: virtual bool ITransientAssociative_3_containsKey(const Object* key) = 0;
+        public: virtual IMapEntry* ITransientAssociative_3_entryAt(const Object* key) = 0;
     };
 
 ///     (defn assoc_4_
@@ -1349,9 +873,9 @@ namespace arbace {
 ///     )
 }
 
-namespace arbace {
+namespace arb {
     class ITransientMap {
-        public: virtual ITransientMap* ITransientMap_3_dissoc_4_(const Object* key) = 0;
+        public: virtual ITransientMap* ITransientMap_3_dissoc_4_(const Object* key) = 0;
     };
 
 ///     (defn dissoc_4_
@@ -1365,11 +889,11 @@ namespace arbace {
 ///     )
 }
 
-namespace arbace {
+namespace arb {
     class ITransientSet {
-        public: virtual ITransientSet* ITransientSet_3_disj_4_(const Object* key) = 0;
-        public: virtual bool ITransientSet_3_contains_9_(const Object* key) = 0;
-        public: virtual Object* ITransientSet_3_get(const Object* key) = 0;
+        public: virtual ITransientSet* ITransientSet_3_disj_4_(const Object* key) = 0;
+        public: virtual bool ITransientSet_3_contains_9_(const Object* key) = 0;
+        public: virtual Object* ITransientSet_3_get(const Object* key) = 0;
     };
 
 ///     (defn disj_4_
@@ -1383,182 +907,141 @@ namespace arbace {
 ///     )
 }
 
-namespace arbace {
+namespace arb {
     class ITransientVector {
-        public: virtual ITransientVector* ITransientVector_3_assocN_4_(int i, const Object* val) = 0;
+        public: virtual ITransientVector* ITransientVector_3_assocN_4_(int i, const Object* val) = 0;
         public: virtual ITransientVector* ITransientVector_3_pop_4_() = 0;
     };
 
 ///     (defn pop_4_ [#_"ITransientVector" coll] (ITransientVector_3_pop_4_ coll))
 }
 
-namespace arbace {
+namespace arb {
     class IReduce {
-        public: virtual Object* IReduce_3_reduce(const IFn* f) = 0;
-        public: virtual Object* IReduce_3_reduce(const IFn* f, const Object* r) = 0;
+        public: virtual Object* IReduce_3_reduce(const IFn* f) = 0;
+        public: virtual Object* IReduce_3_reduce(const IFn* f, const Object* r) = 0;
     };
 }
 
-namespace arbace {
+namespace arb {
     class IKVReduce {
-        public: virtual Object* IKVReduce_3_kvreduce(const IFn* f, const Object* r) = 0;
+        public: virtual Object* IKVReduce_3_kvreduce(const IFn* f, const Object* r) = 0;
     };
 }
 
-namespace arbace {
-    class Ratio { };
-
-///     (defn ratio_9_ [n] (satisfies_9_ Ratio n))
-
-///     (defn integer_9_ [n] (or (int_9_ n) (long_9_ n) (biginteger_9_ n) (byte_9_ n)))
-
-///     (defn rational_9_ [n] (or (integer_9_ n) (ratio_9_ n)))
-}
-
-namespace arbace {
-    class LongOps;
-    class RatioOps;
-    class BigIntOps;
-
-    class Ops {
-        public: virtual Ops* Ops_3_combine(const Ops* y) = 0;
-        public: virtual Ops* Ops_3_opsWithLong(const LongOps* x) = 0;
-        public: virtual Ops* Ops_3_opsWithRatio(const RatioOps* x) = 0;
-        public: virtual Ops* Ops_3_opsWithBigInt(const BigIntOps* x) = 0;
-        public: virtual bool Ops_3_eq(const Number* x, const Number* y) = 0;
-        public: virtual bool Ops_3_lt(const Number* x, const Number* y) = 0;
-        public: virtual bool Ops_3_lte(const Number* x, const Number* y) = 0;
-        public: virtual bool Ops_3_isZero(const Number* x) = 0;
-        public: virtual bool Ops_3_isPos(const Number* x) = 0;
-        public: virtual bool Ops_3_isNeg(const Number* x) = 0;
-        public: virtual Number* Ops_3_add(const Number* x, const Number* y) = 0;
-        public: virtual Number* Ops_3_negate(const Number* x) = 0;
-        public: virtual Number* Ops_3_inc(const Number* x) = 0;
-        public: virtual Number* Ops_3_dec(const Number* x) = 0;
-        public: virtual Number* Ops_3_multiply(const Number* x, const Number* y) = 0;
-        public: virtual Number* Ops_3_divide(const Number* x, const Number* y) = 0;
-        public: virtual Number* Ops_3_quotient(const Number* x, const Number* y) = 0;
-        public: virtual Number* Ops_3_remainder(const Number* x, const Number* y) = 0;
-    };
-
-    class LongOps { };
-    class RatioOps { };
-    class BigIntOps { };
-}
-
-namespace arbace {
+namespace arb {
     class Atom { };
 }
 
-namespace arbace {
+namespace arb {
 ///     #_abstract
     class AFn { };
 }
 
-namespace arbace {
+namespace arb {
     class Symbol { };
 
 ///     (defn symbol_9_ [x] (satisfies_9_ Symbol x))
 }
 
-namespace arbace {
+namespace arb {
     class Keyword { };
 
 ///     (defn keyword_9_ [x] (satisfies_9_ Keyword x))
 }
 
-namespace arbace {
+namespace arb {
 ///     #_abstract
     class Fn { };
 
 ///     (defn fn_9_ [x] (satisfies_9_ Fn x))
 }
 
-namespace arbace {
+namespace arb {
     class Closure { };
 }
 
-namespace arbace {
+namespace arb {
 ///     #_abstract
     class ASeq { };
 }
 
-namespace arbace {
+namespace arb {
     class LazySeq { };
 }
 
-namespace arbace {
+namespace arb {
 ///     #_abstract
     class APersistentMap { };
 }
 
-namespace arbace {
+namespace arb {
 ///     #_abstract
     class APersistentSet { };
 }
 
-namespace arbace {
+namespace arb {
     class VSeq { };
     class RSeq { };
 ///     #_abstract
     class APersistentVector { };
 }
 
-namespace arbace {
+namespace arb {
 ///     #_abstract
     class AMapEntry { };
 }
 
-namespace arbace {
+namespace arb {
     class ArraySeq { };
 }
 
-namespace arbace {
+namespace arb {
 ///     #_abstract
     class ATransientMap { };
 }
 
-namespace arbace {
+namespace arb {
 ///     #_abstract
     class ATransientSet { };
 }
 
-namespace arbace {
+namespace arb {
     class Cons { };
 }
 
-namespace arbace {
+namespace arb {
     class Delay { };
 }
 
-namespace arbace {
+namespace arb {
     class Iterate { };
 }
 
-namespace arbace {
+namespace arb {
     class MapEntry { };
 }
 
-namespace arbace {
+namespace arb {
     class Namespace { };
 }
 
-namespace arbace {
+namespace arb {
     class MSeq { };
     class TransientArrayMap { };
     class PersistentArrayMap { };
 }
 
-namespace arbace {
+namespace arb {
     class INode {
-///        public: virtual INode* INode_3_assoc(int shift, int hash, const Object* key, const Object* val, "bool'" addedLeaf) = 0;
-        public: virtual INode* INode_3_dissoc(int shift, int hash, const Object* key) = 0;
-///        public: virtual "IMapEntry|Object" INode_3_find(int shift, int hash, const Object* key) = 0;
-///        public: virtual "IMapEntry|Object" INode_3_find(int shift, int hash, const Object* key, const Object* not_found) = 0;
+///        public: virtual INode* INode_3_assoc(int shift, int hash, const Object* key, const Object* val, "bool'" addedLeaf) = 0;
+        public: virtual INode* INode_3_dissoc(int shift, int hash, const Object* key) = 0;
+///        public: virtual "IMapEntry|Object" INode_3_find(int shift, int hash, const Object* key) = 0;
+///        public: virtual "IMapEntry|Object" INode_3_find(int shift, int hash, const Object* key, const Object* not_found) = 0;
         public: virtual ISeq* INode_3_nodeSeq() = 0;
-///        public: virtual INode* INode_3_assocT("thread'" edit, int shift, int hash, const Object* key, const Object* val, "bool'" addedLeaf) = 0;
-///        public: virtual INode* INode_3_dissocT("thread'" edit, int shift, int hash, const Object* key, "bool'" removedLeaf) = 0;
-        public: virtual Object* INode_3_kvreduce(const IFn* f, const Object* r) = 0;
+///        public: virtual INode* INode_3_assocT("thread'" edit, int shift, int hash, const Object* key, const Object* val, "bool'" addedLeaf) = 0;
+///        public: virtual INode* INode_3_dissocT("thread'" edit, int shift, int hash, const Object* key, "bool'" removedLeaf) = 0;
+        public: virtual Object* INode_3_kvreduce(const IFn* f, const Object* r) = 0;
     };
 
     class HSeq { };
@@ -1570,22 +1053,22 @@ namespace arbace {
     class PersistentHashMap { };
 }
 
-namespace arbace {
+namespace arb {
     class TransientHashSet { };
     class PersistentHashSet { };
 }
 
-namespace arbace {
+namespace arb {
     class EmptyList { };
     class PersistentList { };
 }
 
-namespace arbace {
+namespace arb {
     class QSeq { };
     class PersistentQueue { };
 }
 
-namespace arbace {
+namespace arb {
     class ITNode {
         public: virtual ITNode* ITNode_3_addLeft(const ITNode* ins) = 0;
         public: virtual ITNode* ITNode_3_addRight(const ITNode* ins) = 0;
@@ -1595,7 +1078,7 @@ namespace arbace {
         public: virtual ITNode* ITNode_3_redden() = 0;
         public: virtual ITNode* ITNode_3_balanceLeft(const ITNode* parent) = 0;
         public: virtual ITNode* ITNode_3_balanceRight(const ITNode* parent) = 0;
-        public: virtual ITNode* ITNode_3_replace(const Object* key, const Object* val, const ITNode* left, const ITNode* right) = 0;
+        public: virtual ITNode* ITNode_3_replace(const Object* key, const Object* val, const ITNode* left, const ITNode* right) = 0;
     };
 
 ///     #_abstract
@@ -1612,35 +1095,35 @@ namespace arbace {
     class PersistentTreeMap { };
 }
 
-namespace arbace {
+namespace arb {
     class PersistentTreeSet { };
 }
 
-namespace arbace {
+namespace arb {
     class VNode { };
     class TransientVector { };
     class PersistentVector { };
 }
 
-namespace arbace {
+namespace arb {
     class Repeat { };
 }
 
-namespace arbace {
+namespace arb {
     class Range { };
 }
 
-namespace arbace {
+namespace arb {
     class Reduced { };
 
 ///     (defn reduced_9_ [x] (satisfies_9_ Reduced x))
 }
 
-namespace arbace {
+namespace arb {
     class StringSeq { };
 }
 
-namespace arbace {
+namespace arb {
     class Unbound { };
     class Var { };
 
@@ -1658,9 +1141,9 @@ namespace arbace {
 
 ///     (defn anew [size_or_seq]
 ///         (if (number_9_ size_or_seq)
-///             (A_1_new (int_4_ size_or_seq))
+///             (A_1_new (int size_or_seq))
 ///             (let [#_"ISeq" s (seq size_or_seq) #_"int" n (count s)]
-///                 (loop_when_recur [#_"array" a (A_1_new n) #_"int" i 0 s s] (and (< i n) (some_9_ s)) [(aset_4_ a i (first s)) (inc i) (next s)] => a)
+///                 (loop_when_recur [#_"array" a (A_1_new n) #_"int" i 0 s s] (and (lt_9_ i n) (some_9_ s)) [(aset_4_ a i (first s)) (inc i) (next s)] => a)
 ///             )
 ///         )
 ///     )
@@ -1713,7 +1196,7 @@ namespace arbace {
 ///     (defn_ #_"Appendable" append_str [#_"Appendable" a, #_"String" x]
 ///         (let [
 ///             a (Appendable_3_append a, "\"")
-///             a (-/reduce #(Appendable_3_append %1, (M_1_get char_escape_string %2 %2)) a x)
+///             a (reduce #(Appendable_3_append %1, (M_1_get char_escape_string %2 %2)) a x)
 ///             a (Appendable_3_append a, "\"")
 ///         ]
 ///             a
@@ -1726,7 +1209,7 @@ namespace arbace {
 ///             a
 ///                 (loop_when [a a [#_"char" c & #_"ISeq" r _0_as #_"ISeq" s] (seq (Pattern_2_pattern x)) q_9_ false] (some_9_ s) => a
 ///                     (case_4_ c
-///                         \\  (let [[c & r] r] (recur (-> a (Appendable_3_append "\\") (Appendable_3_append c)) r (if q_9_ (not= c \E) (= c \Q))))
+///                         \\  (let [[c & r] r] (recur (-> a (Appendable_3_append "\\") (Appendable_3_append c)) r (if q_9_ (not_eq_9_ c \E) (_eq_9_ c \Q))))
 ///                         \"                   (recur (-> a (Appendable_3_append (if q_9_ "\\E\\\"\\Q" "\\\""))) r q_9_)
 ///                                              (recur (-> a (Appendable_3_append c))                           r q_9_)
 ///                     )
@@ -1754,20 +1237,18 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (declare append)
-
 ///     (defn_ #_"Appendable" append_seq [#_"Appendable" a, #_"ISeq" x]    (append_8_ a "(" append " " ")" x))
 ///     (defn_ #_"Appendable" append_vec [#_"Appendable" a, #_"vector" x] (append_8_ a "[" append " " "]" x))
 ///     (defn_ #_"Appendable" append_map [#_"Appendable" a, #_"IPersistentMap" x]    (append_8_ a "{" (fn [a e] (-> a (append (key e)) (Appendable_3_append " ") (append (val e)))) ", " "}" x))
 ///     (defn_ #_"Appendable" append_set [#_"Appendable" a, #_"set" x]    (append_8_ a "#{" append " " "}" x))
 
-///     (defn #_"Appendable" append [#_"Appendable" a, #_"Object" x]
+///     (defn #_"Appendable" append [#_"Appendable" a, #_"Object" x]
 ///         (case_4_ x
 ///             nil   (Appendable_3_append a, "nil")
 ///             false (Appendable_3_append a, "false")
 ///             true  (Appendable_3_append a, "true")
 ///             (cond
-///                 (number_9_ x) (Appendable_3_append a, (Number_2_toString x))
+///                 (number_9_ x) (Appendable_3_append a, (Number_2_toString x))
 ///                 (string_9_ x) (append_str a x)
 ///                 _0_else
 ///                 (condp satisfies_9_ x
@@ -1783,23 +1264,23 @@ namespace arbace {
 ///                         (set_9_ x)     (append_set a x)
 ///                         (char_9_ x)    (append_chr a x)
 ///                         (pattern_9_ x) (append_rex a x)
-///                         _0_else        (Appendable_3_append a, (Object_2_toString x))
+///                         _0_else        (Appendable_3_append a, (Object_2_toString x))
 ///                     )
 ///                 )
 ///             )
 ///         )
 ///     )
 
-///     (defn #_"Appendable" append_4_ [#_"Appendable" a, #_"Object" x]
-///         (if (or (char_sequence_9_ x) (char_9_ x)) (Appendable_3_append a, x) (append a x))
+///     (defn #_"Appendable" append_4_ [#_"Appendable" a, #_"Object" x]
+///         (if (or (string_9_ x) (char_9_ x)) (Appendable_3_append a, x) (append a x))
 ///     )
 
 ///     (defn #_"String" str
 ///         ([] "")
-///         ([x] (if (some_9_ x) (-> (StringBuilder_1_new) (append_4_ x) (StringBuilder_2_toString)) ""))
+///         ([x] (if (some_9_ x) (-> (StringBuilder_1_new) (append_4_ x) (StringBuilder_2_toString)) ""))
 ///         ([x & s]
-///             ((fn [#_"StringBuilder" sb s] (recur_when s [(append_4_ sb (first s)) (next s)] => (StringBuilder_2_toString sb)))
-///                 (-> (StringBuilder_1_new) (append_4_ x)) s
+///             ((fn [#_"StringBuilder" sb s] (recur_when s [(append_4_ sb (first s)) (next s)] => (StringBuilder_2_toString sb)))
+///                 (-> (StringBuilder_1_new) (append_4_ x)) s
 ///             )
 ///         )
 ///     )
@@ -1834,25 +1315,25 @@ namespace arbace {
 ///     (defn println [& s] (apply print s) (newline) (flush) nil)
 // )
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Murmur3"
 ///     (def_ #_"int" Murmur3_1_seed (int 0))
-///     (def_ #_"int" Murmur3_1_C1 (int_4_ 0xcc9e2d51))
-///     (def_ #_"int" Murmur3_1_C2 (int_4_ 0x1b873593))
+///     (def_ #_"int" Murmur3_1_C1 (int 0xcc9e2d51))
+///     (def_ #_"int" Murmur3_1_C2 (int 0x1b873593))
 
 ///     (defn_ #_"int" Murmur3_1_mixK1 [#_"int" k1]
-///         (-> k1 (* Murmur3_1_C1) (Integer_1_rotateLeft 15) (* Murmur3_1_C2))
+///         (-> k1 (mult Murmur3_1_C1) (Number_1_rotateLeft 15) (mult Murmur3_1_C2))
 ///     )
 
 ///     (defn_ #_"int" Murmur3_1_mixH1 [#_"int" h1, #_"int" k1]
-///         (-> h1 (bit_xor k1) (Integer_1_rotateLeft 13) (* (int 5)) (+ (int_4_ 0xe6546b64)))
+///         (-> h1 (bit_xor k1) (Number_1_rotateLeft 13) (mult (int 5)) (plus (int 0xe6546b64)))
 ///     )
 
 ///     (defn_ #_"int" Murmur3_1_fmix [#_"int" h1, #_"int" n]
-///         (let [h1 (bit_xor h1 n)    h1 (bit_xor h1 (>>> h1 16))
-///               h1 (* (int_4_ h1) (int_4_ 0x85ebca6b)) h1 (bit_xor h1 (>>> h1 13))
-///               h1 (* (int_4_ h1) (int_4_ 0xc2b2ae35)) h1 (bit_xor h1 (>>> h1 16))]
+///         (let [h1 (bit_xor h1 n)    h1 (bit_xor h1 (unsigned_bit_shift_right h1 16))
+///               h1 (mult (int h1) (int 0x85ebca6b)) h1 (bit_xor h1 (unsigned_bit_shift_right h1 13))
+///               h1 (mult (int h1) (int 0xc2b2ae35)) h1 (bit_xor h1 (unsigned_bit_shift_right h1 16))]
 ///             h1
 ///         )
 ///     )
@@ -1868,8 +1349,8 @@ namespace arbace {
 
 ///     (defn #_"int" Murmur3_1_hashLong [#_"long" input]
 ///         (when_not (zero_9_ input) => (int 0)
-///             (let [#_"int" low (int_4_ input)
-///                   #_"int" high (int_4_ (>>> input 32))
+///             (let [#_"int" low (int input)
+///                   #_"int" high (int (unsigned_bit_shift_right input 32))
 ///                   #_"int" k1 (Murmur3_1_mixK1 low)
 ///                   #_"int" h1 (Murmur3_1_mixH1 Murmur3_1_seed, k1)
 ///                   k1 (Murmur3_1_mixK1 high)
@@ -1879,22 +1360,20 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (declare odd_9_)
-
-///     (defn #_"int" Murmur3_1_hashUnencodedChars [#_"CharSequence" s]
+///     (defn #_"int" Murmur3_1_hashUnencodedChars [#_"String" s]
 ///         (let [#_"int" h1
-///                 (loop_when [h1 Murmur3_1_seed #_"int" i 1] (< i (CharSequence_3_length s)) => h1
-///                     (let [#_"int" k1 (bit_or (int (CharSequence_3_charAt s, (dec i))) (<< (int (CharSequence_3_charAt s, i)) 16))]
-///                         (recur (Murmur3_1_mixH1 h1, (Murmur3_1_mixK1 k1)) (+ i 2))
+///                 (loop_when [h1 Murmur3_1_seed #_"int" i 1] (lt_9_ i (String_2_length s)) => h1
+///                     (let [#_"int" k1 (bit_or (int (String_2_charAt s, (dec i))) (bit_shift_left (int (String_2_charAt s, i)) 16))]
+///                         (recur (Murmur3_1_mixH1 h1, (Murmur3_1_mixK1 k1)) (plus i 2))
 ///                     )
 ///                 )
 ///               h1
-///                 (when (odd_9_ (CharSequence_3_length s)) => h1
-///                     (let [#_"int" k1 (int (CharSequence_3_charAt s, (dec (CharSequence_3_length s))))]
+///                 (when (odd_9_ (String_2_length s)) => h1
+///                     (let [#_"int" k1 (int (String_2_charAt s, (dec (String_2_length s))))]
 ///                         (bit_xor h1 (Murmur3_1_mixK1 k1))
 ///                     )
 ///                 )]
-///             (Murmur3_1_fmix h1, (<< (CharSequence_3_length s) 1))
+///             (Murmur3_1_fmix h1, (bit_shift_left (String_2_length s) 1))
 ///         )
 ///     )
 
@@ -1905,7 +1384,7 @@ namespace arbace {
 ///     (defn #_"int" Murmur3_1_hashOrdered [#_"Seqable" items]
 ///         (loop_when_recur [#_"int" hash (int 1) #_"int" n (int 0) #_"ISeq" s (seq items)]
 ///                          (some_9_ s)
-///                          [(+ (* (int 31) hash) (f_1_hash (first s))) (inc n) (next s)]
+///                          [(plus (mult (int 31) hash) (f_1_hash (first s))) (inc n) (next s)]
 ///                       => (Murmur3_1_mixCollHash hash, n)
 ///         )
 ///     )
@@ -1913,7 +1392,7 @@ namespace arbace {
 ///     (defn #_"int" Murmur3_1_hashUnordered [#_"Seqable" items]
 ///         (loop_when_recur [#_"int" hash (int 0) #_"int" n (int 0) #_"ISeq" s (seq items)]
 ///                          (some_9_ s)
-///                          [(+ hash (f_1_hash (first s))) (inc n) (next s)]
+///                          [(plus hash (f_1_hash (first s))) (inc n) (next s)]
 ///                       => (Murmur3_1_mixCollHash hash, n)
 ///         )
 ///     )
@@ -1926,18 +1405,14 @@ namespace arbace {
 /// (defn #_"long" hash_unordered_coll [s] (Murmur3_1_hashUnordered s))
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Atom"
-///     (declare Atom_2_deref)
-
-///     (defq Atom [#_"AtomicReference" meta, #_"AtomicReference" data]
-///         java.util.concurrent.Future (get [_] (Atom_2_deref _))
-///     )
+///     (defq Atom [#_"AtomicReference" meta, #_"AtomicReference" data])
 
 ///     (defn #_"Atom" Atom_1_new
-///         ([#_"Object" data] (Atom_1_new nil, data))
-///         ([#_"IPersistentMap" meta, #_"Object" data]
+///         ([#_"Object" data] (Atom_1_new nil, data))
+///         ([#_"IPersistentMap" meta, #_"Object" data]
 ///             (new_8_ Atom_1_class (anew [(AtomicReference_1_new meta), (AtomicReference_1_new data)]))
 ///         )
 ///     )
@@ -1961,17 +1436,17 @@ namespace arbace {
 ///         m_1_
 ///     )
 
-///     (defn_ #_"Object" Atom_2_deref [#_"Atom" this]
+///     (defn_ #_"Object" Atom_2_deref [#_"Atom" this]
 ///         (AtomicReference_2_get (_0_data this))
 ///     )
 
-///     (defn_ #_"bool" Atom_2_compareAndSet [#_"Atom" this, #_"Object" o, #_"Object" o_1_]
+///     (defn_ #_"bool" Atom_2_compareAndSet [#_"Atom" this, #_"Object" o, #_"Object" o_1_]
 ///         (AtomicReference_2_compareAndSet (_0_data this), o, o_1_)
 ///     )
 
-///     (defn_ #_"Object" Atom_2_swap [#_"Atom" this, #_"IFn" f, #_"ISeq" args]
+///     (defn_ #_"Object" Atom_2_swap [#_"Atom" this, #_"IFn" f, #_"ISeq" args]
 ///         (loop []
-///             (let [#_"Object" o (AtomicReference_2_get (_0_data this)) #_"Object" o_1_ (apply f o args)]
+///             (let [#_"Object" o (AtomicReference_2_get (_0_data this)) #_"Object" o_1_ (apply f o args)]
 ///                 (when (AtomicReference_2_compareAndSet (_0_data this), o, o_1_) => (recur)
 ///                     o_1_
 ///                 )
@@ -1979,14 +1454,14 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"Object" Atom_2_reset [#_"Atom" this, #_"Object" o_1_]
+///     (defn_ #_"Object" Atom_2_reset [#_"Atom" this, #_"Object" o_1_]
 ///         (AtomicReference_2_set (_0_data this), o_1_)
 ///         o_1_
 ///     )
 
-///     (defn_ #_"[Object Object]" Atom_2_swapVals [#_"Atom" this, #_"IFn" f, #_"ISeq" args]
+///     (defn_ #_"[Object Object]" Atom_2_swapVals [#_"Atom" this, #_"IFn" f, #_"ISeq" args]
 ///         (loop []
-///             (let [#_"Object" o (AtomicReference_2_get (_0_data this)) #_"Object" o_1_ (apply f o args)]
+///             (let [#_"Object" o (AtomicReference_2_get (_0_data this)) #_"Object" o_1_ (apply f o args)]
 ///                 (when (AtomicReference_2_compareAndSet (_0_data this), o, o_1_) => (recur)
 ///                     [o o_1_]
 ///                 )
@@ -1994,9 +1469,9 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"[Object Object]" Atom_2_resetVals [#_"Atom" this, #_"Object" o_1_]
+///     (defn_ #_"[Object Object]" Atom_2_resetVals [#_"Atom" this, #_"Object" o_1_]
 ///         (loop []
-///             (let [#_"Object" o (AtomicReference_2_get (_0_data this))]
+///             (let [#_"Object" o (AtomicReference_2_get (_0_data this))]
 ///                 (when (AtomicReference_2_compareAndSet (_0_data this), o, o_1_) => (recur)
 ///                     [o o_1_]
 ///                 )
@@ -2004,20 +1479,20 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm Atom IMeta
+///     (defm Atom IMeta
 ///         (IMeta_3_meta => Atom_2_meta)
 ///     )
 
-///     (defm Atom IReference
+///     (defm Atom IReference
 ///         (IReference_3_alterMeta => Atom_2_alterMeta)
 ///         (IReference_3_resetMeta => Atom_2_resetMeta)
 ///     )
 
-///     (defm Atom IDeref
+///     (defm Atom IDeref
 ///         (IDeref_3_deref => Atom_2_deref)
 ///     )
 
-///     (defm Atom IAtom
+///     (defm Atom IAtom
 ///         (IAtom_3_compareAndSet => Atom_2_compareAndSet)
 ///         (IAtom_3_swap => Atom_2_swap)
 ///         (IAtom_3_reset => Atom_2_reset)
@@ -2042,20 +1517,20 @@ namespace arbace {
 /// (defn #_"vector" reset_vals_4_ [#_"IAtom" a x_1_] (IAtom_3_resetVals a, x_1_))
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Delay"
-///     (defq Delay [#_"fn'" f, #_"Object'" o, #_"Throwable'" e])
+///     (defq Delay [#_"fn'" f, #_"Object'" o, #_"Throwable'" e])
 
 ///     (defn #_"Delay" Delay_1_new [#_"IFn" f]
 ///         (new_8_ Delay_1_class (anew [(atom f), (atom nil), (atom nil)]))
 ///     )
 
-///     (defn #_"Object" Delay_1_force [#_"Object" x]
+///     (defn #_"Object" Delay_1_force [#_"Object" x]
 ///         (if (satisfies_9_ Delay x) (deref x) x)
 ///     )
 
-///     (defn_ #_"Object" Delay_2_deref [#_"Delay" this]
+///     (defn_ #_"Object" Delay_2_deref [#_"Delay" this]
 ///         (when (some_9_ (deref (_0_f this)))
 ///             (locking this
 ///                 (when_some [#_"IFn" f (deref (_0_f this))]
@@ -2081,11 +1556,11 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm Delay IDeref
+///     (defm Delay IDeref
 ///         (IDeref_3_deref => Delay_2_deref)
 ///     )
 
-///     (defm Delay IPending
+///     (defm Delay IPending
 ///         (IPending_3_isRealized => Delay_2_isRealized)
 ///     )
 // )
@@ -2097,16 +1572,16 @@ namespace arbace {
 /// (defn force [x] (Delay_1_force x))
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Reduced"
-///     (defq Reduced [#_"Object" val])
+///     (defq Reduced [#_"Object" val])
 
-///     (defn #_"Reduced" Reduced_1_new [#_"Object" val]
+///     (defn #_"Reduced" Reduced_1_new [#_"Object" val]
 ///         (new_8_ Reduced_1_class (anew [val]))
 ///     )
 
-///     (defm Reduced IDeref
+///     (defm Reduced IDeref
 ///         (IDeref_3_deref => _0_val)
 ///     )
 // )
@@ -2118,8 +1593,6 @@ namespace arbace {
 /// (defn unreduced [x] (if (reduced_9_ x) (deref x) x))
 
 /// (defn_ preserving_reduced [f] #(let [r (f %1 %2)] (if (reduced_9_ r) (reduced r) r)))
-
-// naïve reduce to be redefined later with IReduce
 
 /// (defn reduce
 ///     ([f s] (if_some [s (seq s)] (reduce f (first s) (next s)) (f)))
@@ -2158,17 +1631,14 @@ namespace arbace {
 /// (defn filterv [f_9_ s] (reduce_4_ #(if (f_9_ %2) (conj_4_ %1 %2) %1) (vector) s))
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Util"
-///     (declare Symbol_2_equals)
-///     (declare Keyword_2_equals)
-
-///     (defn #_"bool" Util_1_equiv [#_"Object" a, #_"Object" b]
+///     (defn #_"bool" Util_1_equiv [#_"Object" a, #_"Object" b]
 ///         (cond
 ///             (identical_9_ a b)              true
 ///             (nil_9_ a)                      false
-///             (and (number_9_ a) (number_9_ b)) #_(Numbers_1_equal a, b) (-'== a b)
+///             (and (number_9_ a) (number_9_ b)) #_(Numbers_1_equal a, b) (identical_9_ a b)
 ///             (coll_9_ a)                     (IObject_3_equals a, b)
 ///             (coll_9_ b)                     (IObject_3_equals b, a)
 ///             _0_else                         (IObject_3_equals a, b)
@@ -2177,27 +1647,25 @@ namespace arbace {
 // )
 
 /// #_oops!
-/// (defn =
+/// (defn _eq_9_
 ///     ([x] true)
 ///     ([x y] (Util_1_equiv x y))
-///     ([x y & s] (and (= x y) (recur_when (next s) [y (first s) (next s)] => (= y (first s)))))
+///     ([x y & s] (and (_eq_9_ x y) (recur_when (next s) [y (first s) (next s)] => (_eq_9_ y (first s)))))
 /// )
 
-/// (defn not=
+/// (defn not_eq_9_
 ///     ([x] false)
-///     ([x y] (not (= x y)))
-///     ([x y & s] (not (apply = x y s)))
+///     ([x y] (not (_eq_9_ x y)))
+///     ([x y & s] (not (apply _eq_9_ x y s)))
 /// )
 
 // (about #_"Util"
-///     (declare Numbers_1_compare)
-
-///     (defn #_"int" Util_1_compare [#_"Object" a, #_"Object" b]
+///     (defn #_"int" Util_1_compare [#_"Object" a, #_"Object" b]
 ///         (cond
-///             (= a b)     0
+///             (_eq_9_ a b)     0
 ///             (nil_9_ a)   -1
 ///             (nil_9_ b)    1
-///             (number_9_ a) #_(Numbers_1_compare a, #_"Number" b) (-'compare a b)
+///             (number_9_ a) #_(Numbers_1_compare a, #_"Number" b) (compare a b)
 ///             _0_else       (Comparable_3_compareTo a, b)
 ///         )
 ///     )
@@ -2206,606 +1674,112 @@ namespace arbace {
 /// (defn compare [x y] (Util_1_compare x, y))
 }
 
-namespace arbace {
+namespace arb {
 
-// (about #_"Ratio"
-///     (declare Ratio_2_hashcode)
-
-///     (defq Ratio [#_"BigInteger" n, #_"BigInteger" d]
-///         java.lang.Object (hashCode [_] (Ratio_2_hashcode _))
-///     )
-
-///     (§ inherit Ratio #_"Number")
-
-///     (defn #_"Ratio" Ratio_1_new [#_"BigInteger" numerator, #_"BigInteger" denominator]
-///         (new_8_ Ratio_1_class (anew [numerator, denominator]))
-///     )
-
-///     (defn #_"BigInteger" Ratio_2_bigIntegerValue [#_"Ratio" this]
-///         (BigInteger_2_divide (_0_n this), (_0_d this))
-///     )
-
-///     (defn #_"long" Ratio_2_longValue [#_"Ratio" this]
-///         (BigInteger_2_longValue (Ratio_2_bigIntegerValue this))
-///     )
-
-///     (defn #_"int" Ratio_2_intValue [#_"Ratio" this]
-///         (BigInteger_2_intValue (Ratio_2_bigIntegerValue this))
-///     )
-
-///     (defn_ #_"int" Ratio_2_hashcode [#_"Ratio" this]
-///         (bit_xor (Object_2_hashCode (_0_n this)) (Object_2_hashCode (_0_d this)))
-///     )
-
-///     (defn_ #_"bool" Ratio_2_equals [#_"Ratio" this, #_"Object" that]
-///         (and (satisfies_9_ Ratio that) (= (_0_n that) (_0_n this)) (= (_0_d that) (_0_d this)))
-///     )
-
-///     (defn_ #_"Appendable" Ratio_2_append [#_"Ratio" this, #_"Appendable" a]
-///         (-> a (Appendable_3_append (BigInteger_2_toString (_0_n this))) (Appendable_3_append "/") (Appendable_3_append (BigInteger_2_toString (_0_d this))))
-///     )
-
-///     (defn_ #_"int" Ratio_2_compareTo [#_"Ratio" this, #_"Number" that]
-///         #_(Numbers_1_compare this, that) (-'compare this that)
-///     )
-
-///     (defm Ratio Hashed
-///         (Hashed_3_hash => Ratio_2_hashcode)
-///     )
-
-///     (defm Ratio IObject
-///         (IObject_3_equals => Ratio_2_equals)
-///     )
-
-///     (defm Ratio IAppend
-///         (IAppend_3_append => Ratio_2_append)
-///     )
-
-///     (defm Ratio Comparable
-///         (Comparable_3_compareTo => Ratio_2_compareTo)
-///     )
-// )
-
-/// (defn #_"BigInteger" biginteger [x]
-///     (cond
-///         (biginteger_9_ x) x
-///         (ratio_9_ x)      (Ratio_2_bigIntegerValue #_"Ratio" x)
-///         (number_9_ x)     (BigInteger_1_valueOf (long x))
-///         _0_else           (BigInteger_1_new #_"String|byte[]" x)
-///     )
-/// )
-}
-
-namespace arbace {
-
-// (about #_"LongOps"
-///     (defq LongOps [])
-
-///     (defn #_"LongOps" LongOps_1_new []
-///         (new_8_ LongOps_1_class (anew []))
-///     )
-
-///     (defn #_"long" LongOps_1_gcd [#_"long" u, #_"long" v] (if (-'= v 0) u (recur v (-'rem u v))))
-
-///     (declare Numbers_1_RATIO_OPS)
-///     (declare Numbers_1_BIGINT_OPS)
-
-///     (defn_ #_"Ops" LongOps_2_combine [#_"LongOps" this, #_"Ops" y] (Ops_3_opsWithLong y, this))
-
-///     (defn_ #_"Ops" LongOps_2_opsWithLong [#_"LongOps" this, #_"LongOps" x] this)
-///     (defn_ #_"Ops" LongOps_2_opsWithRatio [#_"LongOps" this, #_"RatioOps" x] Numbers_1_RATIO_OPS)
-///     (defn_ #_"Ops" LongOps_2_opsWithBigInt [#_"LongOps" this, #_"BigIntOps" x] Numbers_1_BIGINT_OPS)
-
-///     (defn_ #_"bool" LongOps_2_eq [#_"LongOps" this, #_"Number" x, #_"Number" y] (-'= (Number_2_longValue x) (Number_2_longValue y)))
-///     (defn_ #_"bool" LongOps_2_lt [#_"LongOps" this, #_"Number" x, #_"Number" y] (-'< (Number_2_longValue x) (Number_2_longValue y)))
-///     (defn_ #_"bool" LongOps_2_lte [#_"LongOps" this, #_"Number" x, #_"Number" y] (-'<= (Number_2_longValue x) (Number_2_longValue y)))
-
-///     (defn_ #_"bool" LongOps_2_isZero [#_"LongOps" this, #_"Number" x] (-'= (Number_2_longValue x) 0))
-///     (defn_ #_"bool" LongOps_2_isPos [#_"LongOps" this, #_"Number" x] (-'> (Number_2_longValue x) 0))
-///     (defn_ #_"bool" LongOps_2_isNeg [#_"LongOps" this, #_"Number" x] (-'< (Number_2_longValue x) 0))
-
-///     (defn_ #_"Number" LongOps_2_add [#_"LongOps" this, #_"Number" x, #_"Number" y]
-///         (let [#_"long" lx (Number_2_longValue x) #_"long" ly (Number_2_longValue y) #_"long" lz (-'+ lx ly)]
-///             (when (and (-'< (-'bit_xor lz lx) 0) (-'< (-'bit_xor lz ly) 0)) => (Long_1_valueOf lz)
-///                 (Ops_3_add Numbers_1_BIGINT_OPS, x, y)
-///             )
-///         )
-///     )
-
-///     (defn_ #_"Number" LongOps_2_negate [#_"LongOps" this, #_"Number" x]
-///         (let [#_"long" lx (Number_2_longValue x)]
-///             (when (-'= lx Long::MIN_VALUE) => (Long_1_valueOf (-'- lx))
-///                 (BigInteger_2_negate (BigInteger_1_valueOf lx))
-///             )
-///         )
-///     )
-
-///     (defn_ #_"Number" LongOps_2_inc [#_"LongOps" this, #_"Number" x]
-///         (let [#_"long" lx (Number_2_longValue x)]
-///             (when (-'= lx Long::MAX_VALUE) => (Long_1_valueOf (-'+ lx 1))
-///                 (Ops_3_inc Numbers_1_BIGINT_OPS, x)
-///             )
-///         )
-///     )
-
-///     (defn_ #_"Number" LongOps_2_dec [#_"LongOps" this, #_"Number" x]
-///         (let [#_"long" lx (Number_2_longValue x)]
-///             (when (-'= lx Long::MIN_VALUE) => (Long_1_valueOf (-'- lx 1))
-///                 (Ops_3_dec Numbers_1_BIGINT_OPS, x)
-///             )
-///         )
-///     )
-
-///     (defn_ #_"Number" LongOps_2_multiply [#_"LongOps" this, #_"Number" x, #_"Number" y]
-///         (let [#_"long" lx (Number_2_longValue x) #_"long" ly (Number_2_longValue y)]
-///             (when_not (and (-'= lx Long::MIN_VALUE) (-'< ly 0)) => (Ops_3_multiply Numbers_1_BIGINT_OPS, x, y)
-///                 (let [#_"long" lz (-'* lx ly)]
-///                     (when (or (-'= ly 0) (-'= (-'quot lz ly) lx)) => (Ops_3_multiply Numbers_1_BIGINT_OPS, x, y)
-///                         (Long_1_valueOf lz)
-///                     )
-///                 )
-///             )
-///         )
-///     )
-
-///     (defn_ #_"Number" LongOps_2_divide [#_"LongOps" this, #_"Number" x, #_"Number" y]
-///         (let [#_"long" lx (Number_2_longValue x) #_"long" ly (Number_2_longValue y)]
-///             (let_when_not [#_"long" gcd (LongOps_1_gcd lx, ly)] (-'= gcd 0) => (Long_1_valueOf 0)
-///                 (let_when_not [lx (-'quot lx gcd) ly (-'quot ly gcd)] (-'= ly 1) => (Long_1_valueOf lx)
-///                     (let [[lx ly]
-///                             (when (-'< ly 0) => [lx ly]
-///                                 [(-'- lx) (-'- ly)]
-///                             )]
-///                         (Ratio_1_new (BigInteger_1_valueOf lx), (BigInteger_1_valueOf ly))
-///                     )
-///                 )
-///             )
-///         )
-///     )
-
-///     (defn_ #_"Number" LongOps_2_quotient [#_"LongOps" this, #_"Number" x, #_"Number" y] (Long_1_valueOf (-'quot (Number_2_longValue x) (Number_2_longValue y))))
-///     (defn_ #_"Number" LongOps_2_remainder [#_"LongOps" this, #_"Number" x, #_"Number" y] (Long_1_valueOf (-'rem (Number_2_longValue x) (Number_2_longValue y))))
-
-///     (defm LongOps Ops
-///         (Ops_3_combine => LongOps_2_combine)
-///         (Ops_3_opsWithLong => LongOps_2_opsWithLong)
-///         (Ops_3_opsWithRatio => LongOps_2_opsWithRatio)
-///         (Ops_3_opsWithBigInt => LongOps_2_opsWithBigInt)
-///         (Ops_3_eq => LongOps_2_eq)
-///         (Ops_3_lt => LongOps_2_lt)
-///         (Ops_3_lte => LongOps_2_lte)
-///         (Ops_3_isZero => LongOps_2_isZero)
-///         (Ops_3_isPos => LongOps_2_isPos)
-///         (Ops_3_isNeg => LongOps_2_isNeg)
-///         (Ops_3_add => LongOps_2_add)
-///         (Ops_3_negate => LongOps_2_negate)
-///         (Ops_3_inc => LongOps_2_inc)
-///         (Ops_3_dec => LongOps_2_dec)
-///         (Ops_3_multiply => LongOps_2_multiply)
-///         (Ops_3_divide => LongOps_2_divide)
-///         (Ops_3_quotient => LongOps_2_quotient)
-///         (Ops_3_remainder => LongOps_2_remainder)
-///     )
-// )
-
-// (about #_"RatioOps"
-///     (defq RatioOps [])
-
-///     (defn #_"RatioOps" RatioOps_1_new []
-///         (new_8_ RatioOps_1_class (anew []))
-///     )
-
-///     (declare Numbers_1_toRatio)
-///     (declare Numbers_1_divide)
-///     (declare Numbers_1_subtract)
-///     (declare Numbers_1_multiply)
-///     (declare Numbers_1_lt)
-///     (declare Numbers_1_lte)
-///     (declare Numbers_1_gte)
-
-///     (defn_ #_"Ops" RatioOps_2_combine [#_"RatioOps" this, #_"Ops" y] (Ops_3_opsWithRatio y, this))
-
-///     (defn_ #_"Ops" RatioOps_2_opsWithLong [#_"RatioOps" this, #_"LongOps" x] this)
-///     (defn_ #_"Ops" RatioOps_2_opsWithRatio [#_"RatioOps" this, #_"RatioOps" x] this)
-///     (defn_ #_"Ops" RatioOps_2_opsWithBigInt [#_"RatioOps" this, #_"BigIntOps" x] this)
-
-///     (defn_ #_"bool" RatioOps_2_eq [#_"RatioOps" this, #_"Number" x, #_"Number" y]
-///         (let [#_"Ratio" rx (Numbers_1_toRatio x) #_"Ratio" ry (Numbers_1_toRatio y)]
-///             (and (-'= (_0_n rx) (_0_n ry)) (-'= (_0_d rx) (_0_d ry)))
-///         )
-///     )
-
-///     (defn_ #_"bool" RatioOps_2_lt [#_"RatioOps" this, #_"Number" x, #_"Number" y]
-///         (let [#_"Ratio" rx (Numbers_1_toRatio x) #_"Ratio" ry (Numbers_1_toRatio y)]
-///             (Numbers_1_lt (BigInteger_2_multiply (_0_n rx), (_0_d ry)), (BigInteger_2_multiply (_0_n ry), (_0_d rx)))
-///         )
-///     )
-
-///     (defn_ #_"bool" RatioOps_2_lte [#_"RatioOps" this, #_"Number" x, #_"Number" y]
-///         (let [#_"Ratio" rx (Numbers_1_toRatio x) #_"Ratio" ry (Numbers_1_toRatio y)]
-///             (Numbers_1_lte (BigInteger_2_multiply (_0_n rx), (_0_d ry)), (BigInteger_2_multiply (_0_n ry), (_0_d rx)))
-///         )
-///     )
-
-///     (defn_ #_"bool" RatioOps_2_isZero [#_"RatioOps" this, #_"Number" x] (-'= (BigInteger_2_signum (_0_n #_"Ratio" x)) 0))
-///     (defn_ #_"bool" RatioOps_2_isPos [#_"RatioOps" this, #_"Number" x] (-'> (BigInteger_2_signum (_0_n #_"Ratio" x)) 0))
-///     (defn_ #_"bool" RatioOps_2_isNeg [#_"RatioOps" this, #_"Number" x] (-'< (BigInteger_2_signum (_0_n #_"Ratio" x)) 0))
-
-///     (defn_ #_"Number" RatioOps_2_add [#_"RatioOps" this, #_"Number" x, #_"Number" y]
-///         (let [#_"Ratio" rx (Numbers_1_toRatio x) #_"Ratio" ry (Numbers_1_toRatio y)]
-///             (Ops_3_divide this, (BigInteger_2_add (BigInteger_2_multiply (_0_n ry), (_0_d rx)), (BigInteger_2_multiply (_0_n rx), (_0_d ry))), (BigInteger_2_multiply (_0_d ry), (_0_d rx)))
-///         )
-///     )
-
-///     (defn_ #_"Number" RatioOps_2_negate [#_"RatioOps" this, #_"Number" x]
-///         (let [#_"Ratio" r (Numbers_1_toRatio x)]
-///             (Ratio_1_new (BigInteger_2_negate (_0_n r)), (_0_d r))
-///         )
-///     )
-
-///     (defn_ #_"Number" RatioOps_2_inc [#_"RatioOps" this, #_"Number" x] (Ops_3_add this, x, 1))
-///     (defn_ #_"Number" RatioOps_2_dec [#_"RatioOps" this, #_"Number" x] (Ops_3_add this, x, -1))
-
-///     (defn_ #_"Number" RatioOps_2_multiply [#_"RatioOps" this, #_"Number" x, #_"Number" y]
-///         (let [#_"Ratio" rx (Numbers_1_toRatio x) #_"Ratio" ry (Numbers_1_toRatio y)]
-///             (Numbers_1_divide (BigInteger_2_multiply (_0_n ry), (_0_n rx)), (BigInteger_2_multiply (_0_d ry), (_0_d rx)))
-///         )
-///     )
-
-///     (defn_ #_"Number" RatioOps_2_divide [#_"RatioOps" this, #_"Number" x, #_"Number" y]
-///         (let [#_"Ratio" rx (Numbers_1_toRatio x) #_"Ratio" ry (Numbers_1_toRatio y)]
-///             (Numbers_1_divide (BigInteger_2_multiply (_0_d ry), (_0_n rx)), (BigInteger_2_multiply (_0_n ry), (_0_d rx)))
-///         )
-///     )
-
-///     (defn_ #_"Number" RatioOps_2_quotient [#_"RatioOps" this, #_"Number" x, #_"Number" y]
-///         (let [#_"Ratio" rx (Numbers_1_toRatio x) #_"Ratio" ry (Numbers_1_toRatio y)]
-///             (BigInteger_2_divide (BigInteger_2_multiply (_0_n rx), (_0_d ry)), (BigInteger_2_multiply (_0_d rx), (_0_n ry)))
-///         )
-///     )
-
-///     (defn_ #_"Number" RatioOps_2_remainder [#_"RatioOps" this, #_"Number" x, #_"Number" y]
-///         (Numbers_1_subtract x, (Numbers_1_multiply (Ops_3_quotient this, x, y), y))
-///     )
-
-///     (defm RatioOps Ops
-///         (Ops_3_combine => RatioOps_2_combine)
-///         (Ops_3_opsWithLong => RatioOps_2_opsWithLong)
-///         (Ops_3_opsWithRatio => RatioOps_2_opsWithRatio)
-///         (Ops_3_opsWithBigInt => RatioOps_2_opsWithBigInt)
-///         (Ops_3_eq => RatioOps_2_eq)
-///         (Ops_3_lt => RatioOps_2_lt)
-///         (Ops_3_lte => RatioOps_2_lte)
-///         (Ops_3_isZero => RatioOps_2_isZero)
-///         (Ops_3_isPos => RatioOps_2_isPos)
-///         (Ops_3_isNeg => RatioOps_2_isNeg)
-///         (Ops_3_add => RatioOps_2_add)
-///         (Ops_3_negate => RatioOps_2_negate)
-///         (Ops_3_inc => RatioOps_2_inc)
-///         (Ops_3_dec => RatioOps_2_dec)
-///         (Ops_3_multiply => RatioOps_2_multiply)
-///         (Ops_3_divide => RatioOps_2_divide)
-///         (Ops_3_quotient => RatioOps_2_quotient)
-///         (Ops_3_remainder => RatioOps_2_remainder)
-///     )
-// )
-
-// (about #_"BigIntOps"
-///     (defq BigIntOps [])
-
-///     (defn #_"BigIntOps" BigIntOps_1_new []
-///         (new_8_ BigIntOps_1_class (anew []))
-///     )
-
-///     (declare Numbers_1_toBigInteger)
-
-///     (defn_ #_"Ops" BigIntOps_2_combine [#_"BigIntOps" this, #_"Ops" y] (Ops_3_opsWithBigInt y, this))
-
-///     (defn_ #_"Ops" BigIntOps_2_opsWithLong [#_"BigIntOps" this, #_"LongOps" x] this)
-///     (defn_ #_"Ops" BigIntOps_2_opsWithRatio [#_"BigIntOps" this, #_"RatioOps" x] Numbers_1_RATIO_OPS)
-///     (defn_ #_"Ops" BigIntOps_2_opsWithBigInt [#_"BigIntOps" this, #_"BigIntOps" x] this)
-
-///     (defn_ #_"bool" BigIntOps_2_eq [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-///         (-'= (Numbers_1_toBigInteger x) (Numbers_1_toBigInteger y))
-///     )
-
-///     (defn_ #_"bool" BigIntOps_2_lt [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-///         (-'< (Comparable_3_compareTo (Numbers_1_toBigInteger x), (Numbers_1_toBigInteger y)) 0)
-///     )
-
-///     (defn_ #_"bool" BigIntOps_2_lte [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-///         (-'<= (Comparable_3_compareTo (Numbers_1_toBigInteger x), (Numbers_1_toBigInteger y)) 0)
-///     )
-
-///     (defn_ #_"bool" BigIntOps_2_isZero [#_"BigIntOps" this, #_"Number" x] (-'= (BigInteger_2_signum (Numbers_1_toBigInteger x)) 0))
-///     (defn_ #_"bool" BigIntOps_2_isPos [#_"BigIntOps" this, #_"Number" x] (-'> (BigInteger_2_signum (Numbers_1_toBigInteger x)) 0))
-///     (defn_ #_"bool" BigIntOps_2_isNeg [#_"BigIntOps" this, #_"Number" x] (-'< (BigInteger_2_signum (Numbers_1_toBigInteger x)) 0))
-
-///     (defn_ #_"Number" BigIntOps_2_add [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-///         (BigInteger_2_add (Numbers_1_toBigInteger x), (Numbers_1_toBigInteger y))
-///     )
-
-///     (defn_ #_"Number" BigIntOps_2_negate [#_"BigIntOps" this, #_"Number" x] (BigInteger_2_negate (Numbers_1_toBigInteger x)))
-
-///     (defn_ #_"Number" BigIntOps_2_inc [#_"BigIntOps" this, #_"Number" x] (BigInteger_2_add (Numbers_1_toBigInteger x), BigInteger_1_ONE))
-///     (defn_ #_"Number" BigIntOps_2_dec [#_"BigIntOps" this, #_"Number" x] (BigInteger_2_subtract (Numbers_1_toBigInteger x), BigInteger_1_ONE))
-
-///     (defn_ #_"Number" BigIntOps_2_multiply [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-///         (BigInteger_2_multiply (Numbers_1_toBigInteger x), (Numbers_1_toBigInteger y))
-///     )
-
-///     (defn_ #_"Number" BigIntOps_2_divide [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-///         (let [#_"BigInteger" n (Numbers_1_toBigInteger x) #_"BigInteger" d (Numbers_1_toBigInteger y)]
-///             (when_not (-'= d BigInteger_1_ZERO) => (throw "divide by zero")
-///                 (let [#_"BigInteger" gcd (BigInteger_2_gcd n, d)]
-///                     (when_not (-'= gcd BigInteger_1_ZERO) => BigInteger_1_ZERO
-///                         (let [n (BigInteger_2_divide n, gcd) d (BigInteger_2_divide d, gcd)]
-///                             (condp -'= d
-///                                 BigInteger_1_ONE           n
-///                                 (BigInteger_2_negate BigInteger_1_ONE) (BigInteger_2_negate n)
-///                                                             (Ratio_1_new (if (-'< (BigInteger_2_signum d) 0) (BigInteger_2_negate n) n), (if (-'< (BigInteger_2_signum d) 0) (BigInteger_2_negate d) d))
-///                             )
-///                         )
-///                     )
-///                 )
-///             )
-///         )
-///     )
-
-///     (defn_ #_"Number" BigIntOps_2_quotient [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-///         (BigInteger_2_divide (Numbers_1_toBigInteger x), (Numbers_1_toBigInteger y))
-///     )
-
-///     (defn_ #_"Number" BigIntOps_2_remainder [#_"BigIntOps" this, #_"Number" x, #_"Number" y]
-///         (BigInteger_2_remainder (Numbers_1_toBigInteger x), (Numbers_1_toBigInteger y))
-///     )
-
-///     (defm BigIntOps Ops
-///         (Ops_3_combine => BigIntOps_2_combine)
-///         (Ops_3_opsWithLong => BigIntOps_2_opsWithLong)
-///         (Ops_3_opsWithRatio => BigIntOps_2_opsWithRatio)
-///         (Ops_3_opsWithBigInt => BigIntOps_2_opsWithBigInt)
-///         (Ops_3_eq => BigIntOps_2_eq)
-///         (Ops_3_lt => BigIntOps_2_lt)
-///         (Ops_3_lte => BigIntOps_2_lte)
-///         (Ops_3_isZero => BigIntOps_2_isZero)
-///         (Ops_3_isPos => BigIntOps_2_isPos)
-///         (Ops_3_isNeg => BigIntOps_2_isNeg)
-///         (Ops_3_add => BigIntOps_2_add)
-///         (Ops_3_negate => BigIntOps_2_negate)
-///         (Ops_3_inc => BigIntOps_2_inc)
-///         (Ops_3_dec => BigIntOps_2_dec)
-///         (Ops_3_multiply => BigIntOps_2_multiply)
-///         (Ops_3_divide => BigIntOps_2_divide)
-///         (Ops_3_quotient => BigIntOps_2_quotient)
-///         (Ops_3_remainder => BigIntOps_2_remainder)
-///     )
-// )
-
-// (about #_"Numbers"
-///     (def #_"LongOps"   Numbers_1_LONG_OPS   (LongOps_1_new))
-///     (def #_"RatioOps"  Numbers_1_RATIO_OPS  (RatioOps_1_new))
-///     (def #_"BigIntOps" Numbers_1_BIGINT_OPS (BigIntOps_1_new))
-
-///     (defn #_"Ops" Numbers_1_ops [#_"Number" x]
-///         (cond
-///             (biginteger_9_ x) Numbers_1_BIGINT_OPS
-///             (ratio_9_ x)      Numbers_1_RATIO_OPS
-///             _0_else           Numbers_1_LONG_OPS
-///         )
-///     )
-
-///     (defn #_"int" Numbers_1_compare [#_"Number" x, #_"Number" y]
-///         (let [#_"Ops" ops (Ops_3_combine (Numbers_1_ops x), (Numbers_1_ops y))]
-///             (cond (Ops_3_lt ops, x, y) -1 (Ops_3_lt ops, y, x) 1 _0_else 0)
-///         )
-///     )
-
-///     (defn #_"bool" Numbers_1_equal [#_"Number" x, #_"Number" y]
-///         (-> (Ops_3_combine (Numbers_1_ops x), (Numbers_1_ops y)) (Ops_3_eq x, y))
-///     )
-
-///     (defn #_"bool" Numbers_1_lt [#_"Number" x, #_"Number" y]
-///         (-> (Ops_3_combine (Numbers_1_ops x), (Numbers_1_ops y)) (Ops_3_lt x, y))
-///     )
-
-///     (defn #_"bool" Numbers_1_lte [#_"Number" x, #_"Number" y]
-///         (-> (Ops_3_combine (Numbers_1_ops x), (Numbers_1_ops y)) (Ops_3_lte x, y))
-///     )
-
-///     (defn #_"bool" Numbers_1_gt [#_"Number" x, #_"Number" y]
-///         (-> (Ops_3_combine (Numbers_1_ops x), (Numbers_1_ops y)) (Ops_3_lt y, x))
-///     )
-
-///     (defn #_"bool" Numbers_1_gte [#_"Number" x, #_"Number" y]
-///         (-> (Ops_3_combine (Numbers_1_ops x), (Numbers_1_ops y)) (Ops_3_lte y, x))
-///     )
-
-///     (defn #_"bool" Numbers_1_isZero [#_"Number" x] (Ops_3_isZero (Numbers_1_ops x), x))
-///     (defn #_"bool" Numbers_1_isPos  [#_"Number" x] (Ops_3_isPos  (Numbers_1_ops x), x))
-///     (defn #_"bool" Numbers_1_isNeg  [#_"Number" x] (Ops_3_isNeg  (Numbers_1_ops x), x))
-
-///     (defn #_"Number" Numbers_1_add [#_"Number" x, #_"Number" y]
-///         (-> (Ops_3_combine (Numbers_1_ops x), (Numbers_1_ops y)) (Ops_3_add x, y))
-///     )
-
-///     (defn #_"Number" Numbers_1_subtract [#_"Number" x, #_"Number" y]
-///         (let [#_"Number" negativeY (Ops_3_negate (Numbers_1_ops y), y)]
-///             (-> (Ops_3_combine (Numbers_1_ops x), (Numbers_1_ops negativeY)) (Ops_3_add x, negativeY))
-///         )
-///     )
-
-///     (defn #_"Number" Numbers_1_negate [#_"Number" x] (Ops_3_negate (Numbers_1_ops x), x))
-///     (defn #_"Number" Numbers_1_inc    [#_"Number" x] (Ops_3_inc    (Numbers_1_ops x), x))
-///     (defn #_"Number" Numbers_1_dec    [#_"Number" x] (Ops_3_dec    (Numbers_1_ops x), x))
-
-///     (defn #_"Number" Numbers_1_multiply [#_"Number" x, #_"Number" y]
-///         (-> (Ops_3_combine (Numbers_1_ops x), (Numbers_1_ops y)) (Ops_3_multiply x, y))
-///     )
-
-///     (defn #_"Number" Numbers_1_divide [#_"Number" x, #_"Number" y]
-///         (let_when_not [#_"Ops" yops (Numbers_1_ops y)] (Ops_3_isZero yops, y) => (throw "divide by zero")
-///             (-> (Ops_3_combine (Numbers_1_ops x), yops) (Ops_3_divide x, y))
-///         )
-///     )
-
-///     (defn #_"Number" Numbers_1_quotient [#_"Number" x, #_"Number" y]
-///         (let_when_not [#_"Ops" yops (Numbers_1_ops y)] (Ops_3_isZero yops, y) => (throw "divide by zero")
-///             (-> (Ops_3_combine (Numbers_1_ops x), yops) (Ops_3_quotient x, y))
-///         )
-///     )
-
-///     (defn #_"Number" Numbers_1_remainder [#_"Number" x, #_"Number" y]
-///         (let_when_not [#_"Ops" yops (Numbers_1_ops y)] (Ops_3_isZero yops, y) => (throw "divide by zero")
-///             (-> (Ops_3_combine (Numbers_1_ops x), yops) (Ops_3_remainder x, y))
-///         )
-///     )
-
-///     (defn #_"BigInteger" Numbers_1_toBigInteger [#_"Number" x]
-///         (if (biginteger_9_ x) x (BigInteger_1_valueOf (Number_2_longValue x)))
-///     )
-
-///     (defn #_"Ratio" Numbers_1_toRatio [#_"Number" x]
-///         (if (ratio_9_ x) x (Ratio_1_new (Numbers_1_toBigInteger x), BigInteger_1_ONE))
-///     )
-
-///     (defn_ #_"long" Numbers_1_bitOpsCast [#_"Number" x]
-///         (when (or (long_9_ x) (int_9_ x) (byte_9_ x)) => (throw (str "bit operation not supported on " x))
-///             (long x)
-///         )
-///     )
-
-///     (defn #_"long" Numbers_1_not [#_"Number" x] (-'bit_not (Numbers_1_bitOpsCast x)))
-
-///     (defn #_"long" Numbers_1_and [#_"Number" x, #_"Number" y] (-'bit_and (Numbers_1_bitOpsCast x) (Numbers_1_bitOpsCast y)))
-///     (defn #_"long" Numbers_1_or  [#_"Number" x, #_"Number" y] (-'bit_or (Numbers_1_bitOpsCast x) (Numbers_1_bitOpsCast y)))
-///     (defn #_"long" Numbers_1_xor [#_"Number" x, #_"Number" y] (-'bit_xor (Numbers_1_bitOpsCast x) (Numbers_1_bitOpsCast y)))
-
-///     (defn #_"long" Numbers_1_andNot [#_"Number" x, #_"Number" y] (-'bit_and (Numbers_1_bitOpsCast x) (-'bit_not (Numbers_1_bitOpsCast y))))
-
-///     (defn #_"long" Numbers_1_shiftLeft          [#_"Number" x, #_"Number" n] (-'bit_shift_left (Numbers_1_bitOpsCast x) (Numbers_1_bitOpsCast n)))
-///     (defn #_"long" Numbers_1_shiftRight         [#_"Number" x, #_"Number" n] (-'bit_shift_right (Numbers_1_bitOpsCast x) (Numbers_1_bitOpsCast n)))
-///     (defn #_"long" Numbers_1_unsignedShiftRight [#_"Number" x, #_"Number" n] (-'unsigned_bit_shift_right (Numbers_1_bitOpsCast x) (Numbers_1_bitOpsCast n)))
-
-///     (defn #_"long" Numbers_1_clearBit [#_"Number" x, #_"Number" n] (-'bit_and (Numbers_1_bitOpsCast x) (-'bit_not (-'bit_shift_left 1 (Numbers_1_bitOpsCast n)))))
-///     (defn #_"long" Numbers_1_setBit   [#_"Number" x, #_"Number" n] (-'bit_or (Numbers_1_bitOpsCast x) (-'bit_shift_left 1 (Numbers_1_bitOpsCast n))))
-///     (defn #_"long" Numbers_1_flipBit  [#_"Number" x, #_"Number" n] (-'bit_xor (Numbers_1_bitOpsCast x) (-'bit_shift_left 1 (Numbers_1_bitOpsCast n))))
-
-///     (defn #_"bool" Numbers_1_testBit [#_"Number" x, #_"Number" n] (-/not= (-'bit_and (Numbers_1_bitOpsCast x) (-'bit_shift_left 1 (Numbers_1_bitOpsCast n))) 0))
-// )
-
-/// (§ defn <
+/// (defn lt_9_
 ///     ([x] true)
-///     ([x y] (Numbers_1_lt x y))
-///     ([x y & s] (and (< x y) (recur_when (next s) [y (first s) (next s)] => (< y (first s)))))
+///     ([x y] (Numbers_1_lt x y))
+///     ([x y & s] (and (lt_9_ x y) (recur_when (next s) [y (first s) (next s)] => (lt_9_ y (first s)))))
 /// )
 
-/// (§ defn <=
+/// (defn lte_9_
 ///     ([x] true)
-///     ([x y] (Numbers_1_lte x y))
-///     ([x y & s] (and (<= x y) (recur_when (next s) [y (first s) (next s)] => (<= y (first s)))))
+///     ([x y] (Numbers_1_lte x y))
+///     ([x y & s] (and (lte_9_ x y) (recur_when (next s) [y (first s) (next s)] => (lte_9_ y (first s)))))
 /// )
 
-/// (§ defn >
+/// (defn gt_9_
 ///     ([x] true)
-///     ([x y] (Numbers_1_gt x y))
-///     ([x y & s] (and (> x y) (recur_when (next s) [y (first s) (next s)] => (> y (first s)))))
+///     ([x y] (Numbers_1_gt x y))
+///     ([x y & s] (and (gt_9_ x y) (recur_when (next s) [y (first s) (next s)] => (gt_9_ y (first s)))))
 /// )
 
-/// (§ defn >=
+/// (defn gte_9_
 ///     ([x] true)
-///     ([x y] (Numbers_1_gte x y))
-///     ([x y & s] (and (>= x y) (recur_when (next s) [y (first s) (next s)] => (>= y (first s)))))
+///     ([x y] (Numbers_1_gte x y))
+///     ([x y & s] (and (gte_9_ x y) (recur_when (next s) [y (first s) (next s)] => (gte_9_ y (first s)))))
 /// )
 
 /// (defn max
 ///     ([x] x)
-///     ([x y] (if (> x y) x y))
+///     ([x y] (if (gt_9_ x y) x y))
 ///     ([x y & s] (reduce max (max x y) s))
 /// )
 
 /// (defn min
 ///     ([x] x)
-///     ([x y] (if (< x y) x y))
+///     ([x y] (if (lt_9_ x y) x y))
 ///     ([x y & s] (reduce min (min x y) s))
 /// )
 
-/// (§ defn zero_9_ [n] (Numbers_1_isZero n))
-/// (§ defn pos_9_  [n] (Numbers_1_isPos  n))
-/// (§ defn neg_9_  [n] (Numbers_1_isNeg  n))
+/// (defn zero_9_ [n] (Numbers_1_isZero n))
+/// (defn pos_9_  [n] (Numbers_1_isPos  n))
+/// (defn neg_9_  [n] (Numbers_1_isNeg  n))
 
-/// (§ defn +
+/// (defn plus
 ///     ([] 0)
 ///     ([x] #_"Number" x)
-///     ([x y] (Numbers_1_add x y))
-///     ([x y & s] (reduce + (+ x y) s))
+///     ([x y] (unchecked_add x y))
+///     ([x y & s] (reduce plus (plus x y) s))
 /// )
 
-/// (§ defn -
-///     ([x] (Numbers_1_negate x))
-///     ([x y] (Numbers_1_subtract x y))
-///     ([x y & s] (reduce - (- x y) s))
+/// (defn minus
+///     ([x] (unchecked_negate x))
+///     ([x y] (unchecked_subtract x y))
+///     ([x y & s] (reduce minus (minus x y) s))
 /// )
 
-/// (defn abs [a] (if (neg_9_ a) (- a) a))
+/// (defn abs [a] (if (neg_9_ a) (minus a) a))
 
-/// (§ defn inc [x] (Numbers_1_inc x))
+/// (defn inc [x] (unchecked_inc x))
+/// (defn dec [x] (unchecked_dec x))
 
-/// (§ defn dec [x] (Numbers_1_dec x))
-
-/// (§ defn *
+/// (defn mult
 ///     ([] 1)
 ///     ([x] #_"Number" x)
-///     ([x y] (Numbers_1_multiply x y))
-///     ([x y & s] (reduce * (* x y) s))
+///     ([x y] (unchecked_multiply x y))
+///     ([x y & s] (reduce mult (mult x y) s))
 /// )
 
-/// (§ defn /
-///     ([x] (/ 1 x))
-///     ([x y] (Numbers_1_divide x y))
-///     ([x y & s] (reduce / (/ x y) s))
-/// )
-
-/// (§ defn quot [num div] (Numbers_1_quotient num div))
-
-/// (§ defn rem [num div] (Numbers_1_remainder num div))
+/// (defn quot [num div] (unchecked_quotient num div))
+/// (defn rem [num div] (unchecked_remainder num div))
 
 /// (defn mod [num div]
-///     (let_when [m (rem num div)] (or (zero_9_ m) (= (pos_9_ num) (pos_9_ div))) => (+ m div)
+///     (let_when [m (rem num div)] (or (zero_9_ m) (_eq_9_ (pos_9_ num) (pos_9_ div))) => (plus m div)
 ///         m
 ///     )
 /// )
 
-/// (defn bit_not [x] (Numbers_1_not x))
+/// (defn bit_not [x] (Numbers_1_not x))
 
-/// (§ defn bit_and
-///     ([x y] (Numbers_1_and x y))
+/// (defn bit_and
+///     ([x y] (Numbers_1_and x y))
 ///     ([x y & s] (reduce bit_and (bit_and x y) s))
 /// )
 
-/// (§ defn bit_or
-///     ([x y] (Numbers_1_or x y))
+/// (defn bit_or
+///     ([x y] (Numbers_1_or x y))
 ///     ([x y & s] (reduce bit_or (bit_or x y) s))
 /// )
 
-/// (§ defn bit_xor
-///     ([x y] (Numbers_1_xor x y))
+/// (defn bit_xor
+///     ([x y] (Numbers_1_xor x y))
 ///     ([x y & s] (reduce bit_xor (bit_xor x y) s))
 /// )
 
 /// (defn bit_and_not
-///     ([x y] (Numbers_1_andNot x y))
+///     ([x y] (Numbers_1_andNot x y))
 ///     ([x y & s] (reduce bit_and_not (bit_and_not x y) s))
 /// )
 
-/// (defn bit_clear [x i] (Numbers_1_clearBit x i))
-/// (defn bit_set   [x i] (Numbers_1_setBit   x i))
-/// (defn bit_flip  [x i] (Numbers_1_flipBit  x i))
-/// (defn bit_test  [x i] (Numbers_1_testBit  x i))
+/// (defn bit_clear [x i] (Numbers_1_clearBit x i))
+/// (defn bit_set   [x i] (Numbers_1_setBit   x i))
+/// (defn bit_flip  [x i] (Numbers_1_flipBit  x i))
+/// (defn bit_test  [x i] (Numbers_1_testBit  x i))
 
-/// (defn          bit_shift_left  [x n] (Numbers_1_shiftLeft          x n))
-/// (defn          bit_shift_right [x n] (Numbers_1_shiftRight         x n))
-/// (defn unsigned_bit_shift_right [x n] (Numbers_1_unsignedShiftRight x n))
+/// (defn          bit_shift_left  [x n] (Numbers_1_shiftLeft          x n))
+/// (defn          bit_shift_right [x n] (Numbers_1_shiftRight         x n))
+/// (defn unsigned_bit_shift_right [x n] (Numbers_1_unsignedShiftRight x n))
 
 /// (defn even_9_ [n]
 ///     (when (integer_9_ n) => (throw (str "argument must be an integer: " n))
@@ -2816,14 +1790,14 @@ namespace arbace {
 /// (defn odd_9_ [n] (not (even_9_ n)))
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"AFn"
 ///     (defn #_"void" AFn_1_throwArity [#_"IFn" f, #_"int" n]
-///         (throw (str "wrong number of args (" (if (neg_9_ n) (str "more than " (dec (- n))) n) ") passed to " f))
+///         (throw (str "wrong number of args (" (if (neg_9_ n) (str "more than " (dec (minus n))) n) ") passed to " f))
 ///     )
 
-///     (defn #_"Object" AFn_1_applyTo [#_"IFn" f, #_"ISeq" s]
+///     (defn #_"Object" AFn_1_applyTo [#_"IFn" f, #_"ISeq" s]
 ///         (case_4_ (count s (inc 9))
 ///             0                                           (IFn_3_invoke f)
 ///             1 (let [[a1] s]                             (IFn_3_invoke f, a1))
@@ -2841,21 +1815,13 @@ namespace arbace {
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Symbol"
-///     (declare Symbol_2_withMeta Symbol_2_hash Symbol_2_equals)
-
-///     (defq Symbol [#_"IPersistentMap" _meta, #_"String" ns, #_"String" name]
-///         clojure.lang.IMeta (meta [_] (-/into {} (_0__meta _)))
-///         clojure.lang.IObj (withMeta [_, m] (Symbol_2_withMeta _, m))
-///         clojure.lang.IHashEq (hasheq [_] (Symbol_2_hash _))
-///         clojure.lang.Named (getNamespace [_] (_0_ns _)) (getName [_] (_0_name _))
-///         java.lang.Object (equals [_, o] (Symbol_2_equals _, o)) (hashCode [_] (hash_combine (Object_2_hashCode (_0_name _)) (_0_ns _))) (toString [_] (str _))
-///     )
+///     (defq Symbol [#_"IPersistentMap" _meta, #_"String" ns, #_"String" name])
 
 ///     #_inherit
-///     (defm Symbol AFn)
+///     (defm Symbol AFn)
 
 ///     (defn_ #_"Symbol" Symbol_1_new
 ///         ([#_"String" ns, #_"String" name] (Symbol_1_new nil, ns, name))
@@ -2865,7 +1831,7 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"Symbol" Symbol_2_withMeta [#_"Symbol" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (Symbol_1_new meta, (_0_ns this), (_0_name this))
 ///         )
 ///     )
@@ -2873,7 +1839,7 @@ namespace arbace {
 ///     (defn #_"Symbol" Symbol_1_intern
 ///         ([#_"String" nsname]
 ///             (let [#_"int" i (String_2_indexOf nsname, (int \/))]
-///                 (if (or (= i -1) (= nsname "/"))
+///                 (if (or (_eq_9_ i -1) (_eq_9_ nsname "/"))
 ///                     (Symbol_1_new nil, nsname)
 ///                     (Symbol_1_new (String_2_substring nsname, 0, i), (String_2_substring nsname, (inc i)))
 ///                 )
@@ -2884,9 +1850,9 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"bool" Symbol_2_equals [#_"Symbol" this, #_"Object" that]
+///     (defn_ #_"bool" Symbol_2_equals [#_"Symbol" this, #_"Object" that]
 ///         (or (identical_9_ this that)
-///             (and (symbol_9_ that) (= (_0_ns this) (#__0_ns namespace that)) (= (_0_name this) (#__0_name name that)))
+///             (and (symbol_9_ that) (_eq_9_ (_0_ns this) (#__0_ns namespace that)) (_eq_9_ (_0_name this) (#__0_name name that)))
 ///         )
 ///     )
 
@@ -2898,14 +1864,14 @@ namespace arbace {
 ///         (hash_combine (Murmur3_1_hashUnencodedChars (_0_name this)) (_0_ns this))
 ///     )
 
-///     (defn_ #_"Object" Symbol_2_invoke
-///         ([#_"Symbol" this, #_"Object" obj] (get obj this))
-///         ([#_"Symbol" this, #_"Object" obj, #_"Object" not_found] (get obj this not_found))
+///     (defn_ #_"Object" Symbol_2_invoke
+///         ([#_"Symbol" this, #_"Object" obj] (get obj this))
+///         ([#_"Symbol" this, #_"Object" obj, #_"Object" not_found] (get obj this not_found))
 ///     )
 
 ///     (defn_ #_"int" Symbol_2_compareTo [#_"Symbol" this, #_"Symbol" that]
 ///         (cond
-///             (= this that)                              0
+///             (_eq_9_ this that)                              0
 ///             (and (nil_9_ (_0_ns this)) (some_9_ (_0_ns that))) -1
 ///             (nil_9_ (_0_ns this))                          (compare (_0_name this) (_0_name that))
 ///             (nil_9_ (_0_ns that))                          1
@@ -2916,37 +1882,37 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm Symbol IMeta
+///     (defm Symbol IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm Symbol IObj
+///     (defm Symbol IObj
 ///         (IObj_3_withMeta => Symbol_2_withMeta)
 ///     )
 
-///     (defm Symbol INamed
+///     (defm Symbol INamed
 ///         (INamed_3_getNamespace => _0_ns)
 ///         (INamed_3_getName => _0_name)
 ///     )
 
-///     (defm Symbol IObject
+///     (defm Symbol IObject
 ///         (IObject_3_equals => Symbol_2_equals)
 ///     )
 
-///     (defm Symbol IAppend
+///     (defm Symbol IAppend
 ///         (IAppend_3_append => Symbol_2_append)
 ///     )
 
-///     (defm Symbol Hashed
+///     (defm Symbol Hashed
 ///         (Hashed_3_hash => Symbol_2_hash)
 ///     )
 
-///     (defm Symbol IFn
+///     (defm Symbol IFn
 ///         (IFn_3_invoke => Symbol_2_invoke)
 ///         (IFn_3_applyTo => AFn_1_applyTo)
 ///     )
 
-///     (defm Symbol Comparable
+///     (defm Symbol Comparable
 ///         (Comparable_3_compareTo => Symbol_2_compareTo)
 ///     )
 // )
@@ -2956,32 +1922,23 @@ namespace arbace {
 ///     ([ns name] (Symbol_1_intern ns, name))
 /// )
 
-/// (-/defmethod -/print_method (_0_on_interface Symbol) [o w] (.write w, (str o)))
+/// (-/defmethod -/print_method (_0_on_interface Symbol) [o w] (.write w, (str o)))
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Keyword"
-///     (declare Keyword_2_equals Keyword_2_invoke)
-
-///     (defq Keyword [#_"Symbol" sym, #_"int" _hash]
-///         clojure.lang.IHashEq (hasheq [_] (_0__hash _))
-///         clojure.lang.Named (getNamespace [_] (_0_ns (_0_sym _))) (getName [_] (_0_name (_0_sym _)))
-///         java.lang.Object (equals [_, o] (Keyword_2_equals _, o)) (hashCode [_] (+ (Object_2_hashCode (_0_sym _)) (int_4_ 0x9e3779b9))) (toString [_] (str _))
-///         clojure.lang.IFn (invoke [_, a] (Keyword_2_invoke _, a))
-///     )
+///     (defq Keyword [#_"Symbol" sym, #_"int" _hash])
 
 ///     #_inherit
-///     (defm Keyword AFn)
+///     (defm Keyword AFn)
 
 ///     (def_ #_"{Symbol Reference<Keyword>}'" Keyword_1_cache (atom (hash_map)))
 ///     (def_ #_"ReferenceQueue" Keyword_1_queue (ReferenceQueue_1_new))
 
 ///     (defn_ #_"Keyword" Keyword_1_new [#_"Symbol" sym]
-///         (new_8_ Keyword_1_class (anew [sym, (+ (f_1_hash sym) (int_4_ 0x9e3779b9))]))
+///         (new_8_ Keyword_1_class (anew [sym, (plus (f_1_hash sym) (int 0x9e3779b9))]))
 ///     )
-
-///     (declare Cache_1_purge)
 
 ///     (defn #_"Keyword" Keyword_1_intern [#_"Symbol" sym]
 ///         (let [#_"Reference<Keyword>" r (get (deref Keyword_1_cache) sym)
@@ -3022,7 +1979,7 @@ namespace arbace {
 ///         (INamed_3_getName (_0_sym this))
 ///     )
 
-///     (defn_ #_"bool" Keyword_2_equals [#_"Keyword" this, #_"Object" that]
+///     (defn_ #_"bool" Keyword_2_equals [#_"Keyword" this, #_"Object" that]
 ///         (identical_9_ this that)
 ///     )
 
@@ -3030,38 +1987,38 @@ namespace arbace {
 ///         (-> a (Appendable_3_append ":") (append (_0_sym this)))
 ///     )
 
-///     (defn_ #_"Object" Keyword_2_invoke
-///         ([#_"Keyword" this, #_"Object" obj] (get obj this))
-///         ([#_"Keyword" this, #_"Object" obj, #_"Object" not_found] (get obj this not_found))
+///     (defn_ #_"Object" Keyword_2_invoke
+///         ([#_"Keyword" this, #_"Object" obj] (get obj this))
+///         ([#_"Keyword" this, #_"Object" obj, #_"Object" not_found] (get obj this not_found))
 ///     )
 
 ///     (defn_ #_"int" Keyword_2_compareTo [#_"Keyword" this, #_"Keyword" that]
 ///         (compare (_0_sym this) (_0_sym that))
 ///     )
 
-///     (defm Keyword INamed
+///     (defm Keyword INamed
 ///         (INamed_3_getNamespace => Keyword_2_getNamespace)
 ///         (INamed_3_getName => Keyword_2_getName)
 ///     )
 
-///     (defm Keyword Hashed
+///     (defm Keyword Hashed
 ///         (Hashed_3_hash => _0__hash)
 ///     )
 
-///     (defm Keyword IObject
+///     (defm Keyword IObject
 ///         (IObject_3_equals => Keyword_2_equals)
 ///     )
 
-///     (defm Keyword IAppend
+///     (defm Keyword IAppend
 ///         (IAppend_3_append => Keyword_2_append)
 ///     )
 
-///     (defm Keyword IFn
+///     (defm Keyword IFn
 ///         (IFn_3_invoke => Keyword_2_invoke)
 ///         (IFn_3_applyTo => AFn_1_applyTo)
 ///     )
 
-///     (defm Keyword Comparable
+///     (defm Keyword Comparable
 ///         (Comparable_3_compareTo => Keyword_2_compareTo)
 ///     )
 // )
@@ -3088,22 +2045,22 @@ namespace arbace {
 ///     ([ns name] (Keyword_1_find (symbol ns name)))
 /// )
 
-/// (-/defmethod -/print_method (_0_on_interface Keyword) [o w] (.write w, (str o)))
+/// (-/defmethod -/print_method (_0_on_interface Keyword) [o w] (.write w, (str o)))
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Fn"
-///     (defq Fn [])
+///     (defq Fn [])
 
 ///     #_inherit
-///     (defm Fn AFn)
+///     (defm Fn AFn)
 
 ///     (defn #_"Fn" Fn_1_new []
 ///         (new_8_ Fn_1_class (anew []))
 ///     )
 
-///     (defn_ #_"Object" Fn_2_invoke
+///     (defn_ #_"Object" Fn_2_invoke
 ///         ([#_"Fn" this]                                                   (AFn_1_throwArity this,   0))
 ///         ([#_"Fn" this, a1]                                               (AFn_1_throwArity this,   1))
 ///         ([#_"Fn" this, a1, a2]                                           (AFn_1_throwArity this,   2))
@@ -3117,37 +2074,33 @@ namespace arbace {
 ///         ([#_"Fn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"ISeq" args] (AFn_1_throwArity this, -10))
 ///     )
 
-///     (defn_ #_"int" Fn_2_compare [#_"Fn" this, #_"Object" o1, #_"Object" o2]
-///         (let [#_"Object" o (IFn_3_invoke this, o1, o2)]
+///     (defn_ #_"int" Fn_2_compare [#_"Fn" this, #_"Object" o1, #_"Object" o2]
+///         (let [#_"Object" o (IFn_3_invoke this, o1, o2)]
 ///             (if (boolean_9_ o)
 ///                 (cond (boolean o) -1 (boolean (IFn_3_invoke this, o2, o1)) 1 _0_else 0)
-///                 (int_4_ o)
+///                 (int o)
 ///             )
 ///         )
 ///     )
 
-///     (defm Fn IFn
+///     (defm Fn IFn
 ///         (IFn_3_invoke => Fn_2_invoke)
 ///         (IFn_3_applyTo => AFn_1_applyTo)
 ///     )
 
-///     (defm Fn Comparator
+///     (defm Fn Comparator
 ///         (Comparator_3_compare => Fn_2_compare)
 ///     )
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Closure"
-///     (declare Closure_2_invoke Closure_2_applyTo)
-
-///     (defq Closure [#_"IPersistentMap" _meta, #_"FnExpr" fun, #_"map'" _env]
-///         clojure.lang.IFn (invoke [_] (Closure_2_invoke _)) (invoke [_, a1] (Closure_2_invoke _, a1)) (invoke [_, a1, a2] (Closure_2_invoke _, a1, a2)) (applyTo [_, args] (Closure_2_applyTo _, args))
-///     )
+///     (defq Closure [#_"IPersistentMap" _meta, #_"FnExpr" fun, #_"map'" _env])
 
 ///     #_inherit
-///     (defm Closure Fn AFn)
+///     (defm Closure Fn AFn)
 
 ///     (defn #_"Closure" Closure_1_new
 ///         ([#_"FnExpr" fun, #_"IPersistentMap" env] (Closure_1_new nil, fun, env))
@@ -3157,12 +2110,12 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"Closure" Closure_2_withMeta [#_"Closure" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (new_8_ Closure_1_class (anew [meta, (_0_fun this), (_0__env this)]))
 ///         )
 ///     )
 
-///     (defn_ #_"Object" Closure_2_invoke
+///     (defn_ #_"Object" Closure_2_invoke
 ///         ([#_"Closure" this]                                                 (IFn_3_applyTo this, nil))
 ///         ([#_"Closure" this, a1]                                             (IFn_3_applyTo this, (list a1)))
 ///         ([#_"Closure" this, a1, a2]                                         (IFn_3_applyTo this, (list a1 a2)))
@@ -3176,16 +2129,12 @@ namespace arbace {
 ///         ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"ISeq" a_8_] (IFn_3_applyTo this, (list_8_ a1 a2 a3 a4 a5 a6 a7 a8 a9 a_8_)))
 ///     )
 
-///     (declare Compiler_1_MAX_POSITIONAL_ARITY)
-///     (declare Machine_1_compute)
-///     (declare compile_and_memoize)
-
-///     (defn_ #_"Object" Closure_2_applyTo [#_"Closure" this, #_"ISeq" args]
+///     (defn_ #_"Object" Closure_2_applyTo [#_"Closure" this, #_"ISeq" args]
 ///         (let [
 ///             #_"FnMethod" fm
 ///                 (let [#_"int" m (inc Compiler_1_MAX_POSITIONAL_ARITY) #_"int" n (min (count args m) m)]
 ///                     (or (get (_0_regulars (_0_fun this)) n)
-///                         (let_when [fm (_0_variadic (_0_fun this))] (and (some_9_ fm) (<= (dec (- (_0_arity fm))) n)) => (AFn_1_throwArity this, (if (< n m) n (- m)))
+///                         (let_when [fm (_0_variadic (_0_fun this))] (and (some_9_ fm) (lte_9_ (dec (minus (_0_arity fm))) n)) => (AFn_1_throwArity this, (if (lt_9_ n m) n (minus m)))
 ///                             fm
 ///                         )
 ///                     )
@@ -3193,46 +2142,46 @@ namespace arbace {
 ///             #_"array" vars
 ///                 (let [
 ///                     #_"int" m (inc (reduce max (inc -1) (map _0_idx (vals (deref (_0_1_locals fm))))))
-///                     #_"int" n (_0_arity fm) n (if (neg_9_ n) (- n) (inc n))
+///                     #_"int" n (_0_arity fm) n (if (neg_9_ n) (minus n) (inc n))
 ///                 ]
 ///                     (loop_when_recur [vars (-> (anew m) (aset_4_ 0 this)) #_"int" i 1 #_"ISeq" s (seq args)]
-///                                      (< i n)
+///                                      (lt_9_ i n)
 ///                                      [(aset_4_ vars i (first s)) (inc i) (next s)]
 ///                                   => (if (some_9_ s) (aset_4_ vars i s) vars)
 ///                     )
 ///                 )
 ///         ]
-///             (Machine_1_compute (compile_and_memoize fm), vars)
+///             (Machine_1_compute (compile_and_memoize fm), vars)
 ///         )
 ///     )
 
-///     (defm Closure IMeta
+///     (defm Closure IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm Closure IObj
+///     (defm Closure IObj
 ///         (IObj_3_withMeta => Closure_2_withMeta)
 ///     )
 
-///     (defm Closure IFn
+///     (defm Closure IFn
 ///         (IFn_3_invoke => Closure_2_invoke)
 ///         (IFn_3_applyTo => Closure_2_applyTo)
 ///     )
 
-///     (defm Closure Comparator
+///     (defm Closure Comparator
 ///         (Comparator_3_compare => Fn_2_compare)
 ///     )
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"ASeq"
-///     (defn #_"bool" ASeq_2_equals [#_"ASeq" this, #_"Object" that]
+///     (defn #_"bool" ASeq_2_equals [#_"ASeq" this, #_"Object" that]
 ///         (or (identical_9_ this that)
 ///             (and (sequential_9_ that)
 ///                 (loop_when [#_"ISeq" s (seq this) #_"ISeq" z (seq that)] (some_9_ s) => (nil_9_ z)
-///                     (and (some_9_ z) (= (first s) (first z)) (recur (next s) (next z)))
+///                     (and (some_9_ z) (_eq_9_ (first s) (first z)) (recur (next s) (next z)))
 ///                 )
 ///             )
 ///         )
@@ -3240,32 +2189,23 @@ namespace arbace {
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Cons"
-///     (declare Cons_2_withMeta Cons_2_seq Cons_2_next Cons_2_count)
-///     (declare cons)
-
-///     (defq Cons [#_"IPersistentMap" _meta, #_"Object" car, #_"ISeq" cdr] SeqForm
-///         clojure.lang.IMeta (meta [_] (-/into {} (_0__meta _)))
-///         clojure.lang.IObj (withMeta [_, m] (Cons_2_withMeta _, m))
-///         clojure.lang.ISeq (seq [_] (Cons_2_seq _)) (first [_] (_0_car _)) (next [_] (Cons_2_next _)) (more [_] (or (Cons_2_next _) ()))
-///         clojure.lang.IPersistentCollection (cons [_, o] (cons o _)) (count [_] (Cons_2_count _)) (equiv [_, o] (ASeq_2_equals _, o))
-///         clojure.lang.Sequential
-///     )
+///     (defq Cons [#_"IPersistentMap" _meta, #_"Object" car, #_"ISeq" cdr] SeqForm)
 
 ///     #_inherit
-///     (defm Cons ASeq)
+///     (defm Cons ASeq)
 
 ///     (defn #_"Cons" Cons_1_new
-///         ([#_"Object" car, #_"ISeq" cdr] (Cons_1_new nil, car, cdr))
-///         ([#_"IPersistentMap" meta, #_"Object" car, #_"ISeq" cdr]
+///         ([#_"Object" car, #_"ISeq" cdr] (Cons_1_new nil, car, cdr))
+///         ([#_"IPersistentMap" meta, #_"Object" car, #_"ISeq" cdr]
 ///             (new_8_ Cons_1_class (anew [meta, car, cdr]))
 ///         )
 ///     )
 
 ///     (defn_ #_"Cons" Cons_2_withMeta [#_"Cons" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (Cons_1_new meta, (_0_car this), (_0_cdr this))
 ///         )
 ///     )
@@ -3282,34 +2222,34 @@ namespace arbace {
 ///         (inc (count (_0_cdr this)))
 ///     )
 
-///     (defm Cons IMeta
+///     (defm Cons IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm Cons IObj
+///     (defm Cons IObj
 ///         (IObj_3_withMeta => Cons_2_withMeta)
 ///     )
 
-///     (defm Cons Sequential)
+///     (defm Cons Sequential)
 
-///     (defm Cons Seqable
+///     (defm Cons Seqable
 ///         (Seqable_3_seq => Cons_2_seq)
 ///     )
 
-///     (defm Cons ISeq
+///     (defm Cons ISeq
 ///         (ISeq_3_first => _0_car)
 ///         (ISeq_3_next => Cons_2_next)
 ///     )
 
-///     (defm Cons Counted
+///     (defm Cons Counted
 ///         (Counted_3_count => Cons_2_count)
 ///     )
 
-///     (defm Cons Hashed
+///     (defm Cons Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm Cons IObject
+///     (defm Cons IObject
 ///         (IObject_3_equals => ASeq_2_equals)
 ///     )
 // )
@@ -3317,34 +2257,30 @@ namespace arbace {
 /// (defn cons [x s] (Cons_1_new x, (seq s)))
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Iterate"
-///     (declare Iterate_2_seq Iterate_2_first Iterate_2_next)
-
-///     (defq Iterate [#_"IPersistentMap" _meta, #_"IFn" f, #_"Object" x, #_"Object'" y] SeqForm
-///         clojure.lang.ISeq (seq [_] (Iterate_2_seq _)) (first [_] (Iterate_2_first _)) (next [_] (Iterate_2_next _)) (more [_] (or (Iterate_2_next _) ()))
-///     )
+///     (defq Iterate [#_"IPersistentMap" _meta, #_"IFn" f, #_"Object" x, #_"Object'" y] SeqForm)
 
 ///     #_inherit
-///     (defm Iterate ASeq)
+///     (defm Iterate ASeq)
 
 ///     (defn_ #_"Iterate" Iterate_1_new
-///         ([#_"IFn" f, #_"Object" x, #_"Object" y] (Iterate_1_new nil, f, x, y))
-///         ([#_"IPersistentMap" meta, #_"IFn" f, #_"Object" x, #_"Object" y]
+///         ([#_"IFn" f, #_"Object" x, #_"Object" y] (Iterate_1_new nil, f, x, y))
+///         ([#_"IPersistentMap" meta, #_"IFn" f, #_"Object" x, #_"Object" y]
 ///             (new_8_ Iterate_1_class (anew [meta, f, x, (atom y)]))
 ///         )
 ///     )
 
 ///     (defn_ #_"Iterate" Iterate_2_withMeta [#_"Iterate" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (Iterate_1_new meta, (_0_f this), (_0_x this), (deref (_0_y this)))
 ///         )
 ///     )
 
-///     (defn #_"ISeq" Iterate_1_create [#_"IFn" f, #_"Object" y] (Iterate_1_new f, nil, y))
+///     (defn #_"ISeq" Iterate_1_create [#_"IFn" f, #_"Object" y] (Iterate_1_new f, nil, y))
 
-///     (def_ #_"Object" Iterate_1_UNREALIZED (anew 0))
+///     (def_ #_"Object" Iterate_1_UNREALIZED (anew 0))
 
 ///     (defn_ #_"bool" Iterate_2_isRealized [#_"Iterate" this]
 ///         (not (identical_9_ (deref (_0_y this)) Iterate_1_UNREALIZED))
@@ -3354,8 +2290,8 @@ namespace arbace {
 ///         this
 ///     )
 
-///     (defn_ #_"Object" Iterate_2_first [#_"Iterate" this]
-///         (let_when [#_"Object" y (deref (_0_y this))] (identical_9_ y Iterate_1_UNREALIZED) => y
+///     (defn_ #_"Object" Iterate_2_first [#_"Iterate" this]
+///         (let_when [#_"Object" y (deref (_0_y this))] (identical_9_ y Iterate_1_UNREALIZED) => y
 ///             (reset_4_ (_0_y this) ((_0_f this) (_0_x this)))
 ///         )
 ///     )
@@ -3365,16 +2301,16 @@ namespace arbace {
 ///         (Iterate_1_new (_0_f this), (first this), Iterate_1_UNREALIZED)
 ///     )
 
-///     (defn_ #_"Object" Iterate_2_reduce
+///     (defn_ #_"Object" Iterate_2_reduce
 ///         ([#_"Iterate" this, #_"IFn" f]
-///             (loop [#_"Object" r (first this) #_"Object" v ((_0_f this) r)]
+///             (loop [#_"Object" r (first this) #_"Object" v ((_0_f this) r)]
 ///                 (let_when [r (f r v)] (reduced_9_ r) => (recur r ((_0_f this) v))
 ///                     (deref r)
 ///                 )
 ///             )
 ///         )
-///         ([#_"Iterate" this, #_"IFn" f, #_"Object" r]
-///             (loop [r r #_"Object" v (first this)]
+///         ([#_"Iterate" this, #_"IFn" f, #_"Object" r]
+///             (loop [r r #_"Object" v (first this)]
 ///                 (let_when [r (f r v)] (reduced_9_ r) => (recur r ((_0_f this) v))
 ///                     (deref r)
 ///                 )
@@ -3382,38 +2318,38 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm Iterate IMeta
+///     (defm Iterate IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm Iterate IObj
+///     (defm Iterate IObj
 ///         (IObj_3_withMeta => Iterate_2_withMeta)
 ///     )
 
-///     (defm Iterate IPending
+///     (defm Iterate IPending
 ///         (IPending_3_isRealized => Iterate_2_isRealized)
 ///     )
 
-///     (defm Iterate Sequential)
+///     (defm Iterate Sequential)
 
-///     (defm Iterate Seqable
+///     (defm Iterate Seqable
 ///         (Seqable_3_seq => Iterate_2_seq)
 ///     )
 
-///     (defm Iterate ISeq
+///     (defm Iterate ISeq
 ///         (ISeq_3_first => Iterate_2_first)
 ///         (ISeq_3_next => Iterate_2_next)
 ///     )
 
-///     (defm Iterate IReduce
+///     (defm Iterate IReduce
 ///         (IReduce_3_reduce => Iterate_2_reduce)
 ///     )
 
-///     (defm Iterate Hashed
+///     (defm Iterate Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm Iterate IObject
+///     (defm Iterate IObject
 ///         (IObject_3_equals => ASeq_2_equals)
 ///     )
 // )
@@ -3421,38 +2357,32 @@ namespace arbace {
 /// (defn iterate [f x] (Iterate_1_create f x))
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Repeat"
-///     (declare Repeat_2_seq Repeat_2_next)
-
-///     (defq Repeat [#_"IPersistentMap" _meta, #_"long" cnt, #_"Object" val] SeqForm
-///         clojure.lang.ISeq (seq [_] (Repeat_2_seq _)) (first [_] (_0_val _)) (next [_] (Repeat_2_next _)) (more [_] (or (Repeat_2_next _) ()))
-///     )
+///     (defq Repeat [#_"IPersistentMap" _meta, #_"long" cnt, #_"Object" val] SeqForm)
 
 ///     #_inherit
-///     (defm Repeat ASeq)
+///     (defm Repeat ASeq)
 
 ///     (def_ #_"long" Repeat_1_INFINITE -1)
 
 ///     (defn_ #_"Repeat" Repeat_1_new
-///         ([#_"long" cnt, #_"Object" val] (Repeat_1_new nil, cnt, val))
-///         ([#_"IPersistentMap" meta, #_"long" cnt, #_"Object" val]
+///         ([#_"long" cnt, #_"Object" val] (Repeat_1_new nil, cnt, val))
+///         ([#_"IPersistentMap" meta, #_"long" cnt, #_"Object" val]
 ///             (new_8_ Repeat_1_class (anew [meta, cnt, val]))
 ///         )
 ///     )
 
 ///     (defn_ #_"Repeat" Repeat_2_withMeta [#_"Repeat" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (Repeat_1_new meta, (_0_cnt this), (_0_val this))
 ///         )
 ///     )
 
-///     (declare list)
-
 ///     (defn #_"Repeat|ISeq" Repeat_1_create
-///         ([#_"Object" val] (Repeat_1_new Repeat_1_INFINITE, val))
-///         ([#_"long" n, #_"Object" val] (if (pos_9_ n) (Repeat_1_new n, val) (list)))
+///         ([#_"Object" val] (Repeat_1_new Repeat_1_INFINITE, val))
+///         ([#_"long" n, #_"Object" val] (if (pos_9_ n) (Repeat_1_new n, val) (list)))
 ///     )
 
 ///     (defn_ #_"ISeq" Repeat_2_seq [#_"Repeat" this]
@@ -3461,21 +2391,21 @@ namespace arbace {
 
 ///     (defn_ #_"ISeq" Repeat_2_next [#_"Repeat" this]
 ///         (cond
-///             (< 1 (_0_cnt this))               (Repeat_1_new (dec (_0_cnt this)), (_0_val this))
-///             (= (_0_cnt this) Repeat_1_INFINITE) this
+///             (lt_9_ 1 (_0_cnt this))               (Repeat_1_new (dec (_0_cnt this)), (_0_val this))
+///             (_eq_9_ (_0_cnt this) Repeat_1_INFINITE) this
 ///         )
 ///     )
 
-///     (defn_ #_"Object" Repeat_2_reduce
+///     (defn_ #_"Object" Repeat_2_reduce
 ///         ([#_"Repeat" this, #_"IFn" f]
-///             (let [#_"Object" r (_0_val this)]
-///                 (if (= (_0_cnt this) Repeat_1_INFINITE)
+///             (let [#_"Object" r (_0_val this)]
+///                 (if (_eq_9_ (_0_cnt this) Repeat_1_INFINITE)
 ///                     (loop [r r]
 ///                         (let [r (f r (_0_val this))]
 ///                             (if (reduced_9_ r) (deref r) (recur r))
 ///                         )
 ///                     )
-///                     (loop_when [r r #_"long" i 1] (< i (_0_cnt this)) => r
+///                     (loop_when [r r #_"long" i 1] (lt_9_ i (_0_cnt this)) => r
 ///                         (let [r (f r (_0_val this))]
 ///                             (if (reduced_9_ r) (deref r) (recur r (inc i)))
 ///                         )
@@ -3483,14 +2413,14 @@ namespace arbace {
 ///                 )
 ///             )
 ///         )
-///         ([#_"Repeat" this, #_"IFn" f, #_"Object" r]
-///             (if (= (_0_cnt this) Repeat_1_INFINITE)
+///         ([#_"Repeat" this, #_"IFn" f, #_"Object" r]
+///             (if (_eq_9_ (_0_cnt this) Repeat_1_INFINITE)
 ///                 (loop [r r]
 ///                     (let [r (f r (_0_val this))]
 ///                         (if (reduced_9_ r) (deref r) (recur r))
 ///                     )
 ///                 )
-///                 (loop_when [r r #_"long" i 0] (< i (_0_cnt this)) => r
+///                 (loop_when [r r #_"long" i 0] (lt_9_ i (_0_cnt this)) => r
 ///                     (let [r (f r (_0_val this))]
 ///                         (if (reduced_9_ r) (deref r) (recur r (inc i)))
 ///                     )
@@ -3499,34 +2429,34 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm Repeat IMeta
+///     (defm Repeat IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm Repeat IObj
+///     (defm Repeat IObj
 ///         (IObj_3_withMeta => Repeat_2_withMeta)
 ///     )
 
-///     (defm Repeat Sequential)
+///     (defm Repeat Sequential)
 
-///     (defm Repeat Seqable
+///     (defm Repeat Seqable
 ///         (Seqable_3_seq => Repeat_2_seq)
 ///     )
 
-///     (defm Repeat ISeq
+///     (defm Repeat ISeq
 ///         (ISeq_3_first => _0_val)
 ///         (ISeq_3_next => Repeat_2_next)
 ///     )
 
-///     (defm Repeat IReduce
+///     (defm Repeat IReduce
 ///         (IReduce_3_reduce => Repeat_2_reduce)
 ///     )
 
-///     (defm Repeat Hashed
+///     (defm Repeat Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm Repeat IObject
+///     (defm Repeat IObject
 ///         (IObject_3_equals => ASeq_2_equals)
 ///     )
 // )
@@ -3537,53 +2467,49 @@ namespace arbace {
 /// )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Range"
-///     (declare Range_2_seq Range_2_next)
-
-///     (defq Range [#_"IPersistentMap" _meta, #_"Object" start, #_"Object" end, #_"Object" step, #_"IFn" f_1_boundsCheck] SeqForm
-///         clojure.lang.ISeq (seq [_] (Range_2_seq _)) (first [_] (_0_start _)) (next [_] (Range_2_next _)) (more [_] (or (Range_2_next _) ()))
-///     )
+///     (defq Range [#_"IPersistentMap" _meta, #_"Object" start, #_"Object" end, #_"Object" step, #_"IFn" f_1_boundsCheck] SeqForm)
 
 ///     #_inherit
-///     (defm Range ASeq)
+///     (defm Range ASeq)
 
 ///     #_abstract
-///     (defm Range Counted)
+///     (defm Range Counted)
 
 ///     (defn_ #_"Range" Range_1_new
-///         ([#_"Object" start, #_"Object" end, #_"Object" step, #_"IFn" f_1_boundsCheck]
+///         ([#_"Object" start, #_"Object" end, #_"Object" step, #_"IFn" f_1_boundsCheck]
 ///             (Range_1_new nil, start, end, step, f_1_boundsCheck)
 ///         )
-///         ([#_"IPersistentMap" meta, #_"Object" start, #_"Object" end, #_"Object" step, #_"IFn" f_1_boundsCheck]
+///         ([#_"IPersistentMap" meta, #_"Object" start, #_"Object" end, #_"Object" step, #_"IFn" f_1_boundsCheck]
 ///             (new_8_ Range_1_class (anew [meta, start, end, step, f_1_boundsCheck]))
 ///         )
 ///     )
 
 ///     (defn_ #_"Range" Range_2_withMeta [#_"Range" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (Range_1_new meta, (_0_end this), (_0_start this), (_0_step this), (_0_f_1_boundsCheck this))
 ///         )
 ///     )
 
-///     (defn_ #_"IFn" Range_1_positiveStep [#_"Object" end] #(<= end %))
-///     (defn_ #_"IFn" Range_1_negativeStep [#_"Object" end] #(<= % end))
+///     (defn_ #_"IFn" Range_1_positiveStep [#_"Object" end] #(lte_9_ end %))
+///     (defn_ #_"IFn" Range_1_negativeStep [#_"Object" end] #(lte_9_ % end))
 
 ///     (defn #_"ISeq" Range_1_create
-///         ([#_"Object" end]
+///         ([#_"Object" end]
 ///             (when (pos_9_ end) => (list)
 ///                 (Range_1_new 0, end, 1, (Range_1_positiveStep end))
 ///             )
 ///         )
-///         ([#_"Object" start, #_"Object" end]
+///         ([#_"Object" start, #_"Object" end]
 ///             (Range_1_create start, end, 1)
 ///         )
-///         ([#_"Object" start, #_"Object" end, #_"Object" step]
+///         ([#_"Object" start, #_"Object" end, #_"Object" step]
 ///             (cond
-///                 (or (and (pos_9_ step) (< end start))
-///                     (and (neg_9_ step) (< start end))
-///                     (= start end)
+///                 (or (and (pos_9_ step) (lt_9_ end start))
+///                     (and (neg_9_ step) (lt_9_ start end))
+///                     (_eq_9_ start end)
 ///                 )
 ///                     (list)
 ///                 (zero_9_ step)
@@ -3599,25 +2525,25 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"ISeq" Range_2_next [#_"Range" this]
-///         (let_when_not [#_"Object" n (+ (_0_start this) (_0_step this))] ((_0_f_1_boundsCheck this) n)
+///         (let_when_not [#_"Object" n (plus (_0_start this) (_0_step this))] ((_0_f_1_boundsCheck this) n)
 ///             (Range_1_new n, (_0_end this), (_0_step this), (_0_f_1_boundsCheck this))
 ///         )
 ///     )
 
-///     (defn_ #_"Object" Range_2_reduce
+///     (defn_ #_"Object" Range_2_reduce
 ///         ([#_"Range" this, #_"IFn" f]
-///             (loop [#_"Object" r (_0_start this) #_"Number" n r]
-///                 (let_when_not [n (+ n (_0_step this))] ((_0_f_1_boundsCheck this) n) => r
+///             (loop [#_"Object" r (_0_start this) #_"Number" n r]
+///                 (let_when_not [n (plus n (_0_step this))] ((_0_f_1_boundsCheck this) n) => r
 ///                     (let_when_not [r (f r n)] (reduced_9_ r) => (deref r)
 ///                         (recur r n)
 ///                     )
 ///                 )
 ///             )
 ///         )
-///         ([#_"Range" this, #_"IFn" f, #_"Object" r]
-///             (loop [r r #_"Object" n (_0_start this)]
+///         ([#_"Range" this, #_"IFn" f, #_"Object" r]
+///             (loop [r r #_"Object" n (_0_start this)]
 ///                 (let_when_not [r (f r n)] (reduced_9_ r) => (deref r)
-///                     (let_when_not [n (+ n (_0_step this))] ((_0_f_1_boundsCheck this) n) => r
+///                     (let_when_not [n (plus n (_0_step this))] ((_0_f_1_boundsCheck this) n) => r
 ///                         (recur r n)
 ///                     )
 ///                 )
@@ -3625,34 +2551,34 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm Range IMeta
+///     (defm Range IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm Range IObj
+///     (defm Range IObj
 ///         (IObj_3_withMeta => Range_2_withMeta)
 ///     )
 
-///     (defm Range Sequential)
+///     (defm Range Sequential)
 
-///     (defm Range Seqable
+///     (defm Range Seqable
 ///         (Seqable_3_seq => Range_2_seq)
 ///     )
 
-///     (defm Range ISeq
+///     (defm Range ISeq
 ///         (ISeq_3_first => _0_start)
 ///         (ISeq_3_next => Range_2_next)
 ///     )
 
-///     (defm Range IReduce
+///     (defm Range IReduce
 ///         (IReduce_3_reduce => Range_2_reduce)
 ///     )
 
-///     (defm Range Hashed
+///     (defm Range Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm Range IObject
+///     (defm Range IObject
 ///         (IObject_3_equals => ASeq_2_equals)
 ///     )
 // )
@@ -3665,18 +2591,13 @@ namespace arbace {
 /// )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"ArraySeq"
-///     (declare ArraySeq_2_seq ArraySeq_2_first ArraySeq_2_next)
-
-///     (defq ArraySeq [#_"IPersistentMap" _meta, #_"array" a, #_"int" i] SeqForm
-///         clojure.lang.ISeq (seq [_] (ArraySeq_2_seq _)) (first [_] (ArraySeq_2_first _)) (next [_] (ArraySeq_2_next _)) (more [_] (or (ArraySeq_2_next _) ()))
-///         clojure.lang.Sequential
-///     )
+///     (defq ArraySeq [#_"IPersistentMap" _meta, #_"array" a, #_"int" i] SeqForm)
 
 ///     #_inherit
-///     (defm ArraySeq ASeq)
+///     (defm ArraySeq ASeq)
 
 ///     (defn #_"ArraySeq" ArraySeq_1_new
 ///         ([#_"array" a, #_"int" i] (ArraySeq_1_new nil, a, i))
@@ -3686,7 +2607,7 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"ArraySeq" ArraySeq_2_withMeta [#_"ArraySeq" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (ArraySeq_1_new meta, (_0_a this), (_0_i this))
 ///         )
 ///     )
@@ -3705,27 +2626,27 @@ namespace arbace {
 ///         this
 ///     )
 
-///     (defn_ #_"Object" ArraySeq_2_first [#_"ArraySeq" this]
+///     (defn_ #_"Object" ArraySeq_2_first [#_"ArraySeq" this]
 ///         (when (some_9_ (_0_a this))
 ///             (aget (_0_a this) (_0_i this))
 ///         )
 ///     )
 
 ///     (defn_ #_"ISeq" ArraySeq_2_next [#_"ArraySeq" this]
-///         (when (and (some_9_ (_0_a this)) (< (inc (_0_i this)) (count (_0_a this))))
+///         (when (and (some_9_ (_0_a this)) (lt_9_ (inc (_0_i this)) (count (_0_a this))))
 ///             (ArraySeq_1_new (_0_a this), (inc (_0_i this)))
 ///         )
 ///     )
 
 ///     (defn_ #_"int" ArraySeq_2_count [#_"ArraySeq" this]
-///         (if (some_9_ (_0_a this)) (- (count (_0_a this)) (_0_i this)) 0)
+///         (if (some_9_ (_0_a this)) (minus (count (_0_a this)) (_0_i this)) 0)
 ///     )
 
-///     (defn_ #_"Object" ArraySeq_2_reduce
+///     (defn_ #_"Object" ArraySeq_2_reduce
 ///         ([#_"ArraySeq" this, #_"IFn" f]
 ///             (when_some [#_"array" a (_0_a this)]
 ///                 (let [#_"int" i (_0_i this) #_"int" n (count a)]
-///                     (loop_when [#_"Object" r (aget a i) i (inc i)] (< i n) => r
+///                     (loop_when [#_"Object" r (aget a i) i (inc i)] (lt_9_ i n) => r
 ///                         (let [r (f r (aget a i))]
 ///                             (if (reduced_9_ r) (deref r) (recur r (inc i)))
 ///                         )
@@ -3733,10 +2654,10 @@ namespace arbace {
 ///                 )
 ///             )
 ///         )
-///         ([#_"ArraySeq" this, #_"IFn" f, #_"Object" r]
+///         ([#_"ArraySeq" this, #_"IFn" f, #_"Object" r]
 ///             (when_some [#_"array" a (_0_a this)]
 ///                 (let [#_"int" i (_0_i this) #_"int" n (count a)]
-///                     (loop_when [r (f r (aget a i)) i (inc i)] (< i n) => (if (reduced_9_ r) (deref r) r)
+///                     (loop_when [r (f r (aget a i)) i (inc i)] (lt_9_ i n) => (if (reduced_9_ r) (deref r) r)
 ///                         (if (reduced_9_ r) (deref r) (recur (f r (aget a i)) (inc i)))
 ///                     )
 ///                 )
@@ -3744,159 +2665,149 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm ArraySeq IMeta
+///     (defm ArraySeq IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm ArraySeq IObj
+///     (defm ArraySeq IObj
 ///         (IObj_3_withMeta => ArraySeq_2_withMeta)
 ///     )
 
-///     (defm ArraySeq Sequential)
+///     (defm ArraySeq Sequential)
 
-///     (defm ArraySeq Seqable
+///     (defm ArraySeq Seqable
 ///         (Seqable_3_seq => ArraySeq_2_seq)
 ///     )
 
-///     (defm ArraySeq ISeq
+///     (defm ArraySeq ISeq
 ///         (ISeq_3_first => ArraySeq_2_first)
 ///         (ISeq_3_next => ArraySeq_2_next)
 ///     )
 
-///     (defm ArraySeq Counted
+///     (defm ArraySeq Counted
 ///         (Counted_3_count => ArraySeq_2_count)
 ///     )
 
-///     (defm ArraySeq IReduce
+///     (defm ArraySeq IReduce
 ///         (IReduce_3_reduce => ArraySeq_2_reduce)
 ///     )
 
-///     (defm ArraySeq Hashed
+///     (defm ArraySeq Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm ArraySeq IObject
+///     (defm ArraySeq IObject
 ///         (IObject_3_equals => ASeq_2_equals)
 ///     )
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"StringSeq"
-///     (declare StringSeq_2_seq StringSeq_2_first StringSeq_2_next)
-
-///     (defq StringSeq [#_"IPersistentMap" _meta, #_"CharSequence" s, #_"int" i] SeqForm
-///         clojure.lang.ISeq (seq [_] (StringSeq_2_seq _)) (first [_] (StringSeq_2_first _)) (next [_] (StringSeq_2_next _)) (more [_] (or (StringSeq_2_next _) ()))
-///     )
+///     (defq StringSeq [#_"IPersistentMap" _meta, #_"String" s, #_"int" i] SeqForm)
 
 ///     #_inherit
-///     (defm StringSeq ASeq)
+///     (defm StringSeq ASeq)
 
-///     (defn_ #_"StringSeq" StringSeq_1_new [#_"IPersistentMap" meta, #_"CharSequence" s, #_"int" i]
+///     (defn_ #_"StringSeq" StringSeq_1_new [#_"IPersistentMap" meta, #_"String" s, #_"int" i]
 ///         (new_8_ StringSeq_1_class (anew [meta, s, i]))
 ///     )
 
 ///     (defn_ #_"StringSeq" StringSeq_2_withMeta [#_"StringSeq" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (StringSeq_1_new meta, (_0_s this), (_0_i this))
 ///         )
 ///     )
 
-///     (defn #_"StringSeq" StringSeq_1_create [#_"CharSequence" s]
-///         (when (pos_9_ (CharSequence_3_length s))
+///     (defn #_"StringSeq" StringSeq_1_create [#_"String" s]
+///         (when (pos_9_ (String_2_length s))
 ///             (StringSeq_1_new nil, s, 0)
 ///         )
 ///     )
 
-///     (-/extend_protocol Seqable java.lang.CharSequence
-///         (#_"StringSeq" Seqable_3_seq [#_"CharSequence" s] (StringSeq_1_create s))
+///     (-/extend_protocol Seqable java.lang.String
+///         (#_"StringSeq" Seqable_3_seq [#_"String" s] (StringSeq_1_create s))
 ///     )
 
 ///     (defn_ #_"ISeq" StringSeq_2_seq [#_"StringSeq" this]
 ///         this
 ///     )
 
-///     (defn_ #_"Object" StringSeq_2_first [#_"StringSeq" this]
-///         (Character_1_valueOf (CharSequence_3_charAt (_0_s this), (_0_i this)))
+///     (defn_ #_"Object" StringSeq_2_first [#_"StringSeq" this]
+///         (Character_1_valueOf (String_2_charAt (_0_s this), (_0_i this)))
 ///     )
 
 ///     (defn_ #_"ISeq" StringSeq_2_next [#_"StringSeq" this]
-///         (when (< (inc (_0_i this)) (CharSequence_3_length (_0_s this)))
+///         (when (lt_9_ (inc (_0_i this)) (String_2_length (_0_s this)))
 ///             (StringSeq_1_new (_0__meta this), (_0_s this), (inc (_0_i this)))
 ///         )
 ///     )
 
 ///     (defn_ #_"int" StringSeq_2_count [#_"StringSeq" this]
-///         (- (CharSequence_3_length (_0_s this)) (_0_i this))
+///         (minus (String_2_length (_0_s this)) (_0_i this))
 ///     )
 
-///     (defn_ #_"Object" StringSeq_2_reduce
+///     (defn_ #_"Object" StringSeq_2_reduce
 ///         ([#_"StringSeq" this, #_"IFn" f]
-///             (let [#_"CharSequence" s (_0_s this) #_"int" i (_0_i this) #_"int" n (CharSequence_3_length s)]
-///                 (loop_when [#_"Object" r (CharSequence_3_charAt s, i) i (inc i)] (< i n) => r
-///                     (let [r (f r (CharSequence_3_charAt s, i))]
+///             (let [#_"String" s (_0_s this) #_"int" i (_0_i this) #_"int" n (String_2_length s)]
+///                 (loop_when [#_"Object" r (String_2_charAt s, i) i (inc i)] (lt_9_ i n) => r
+///                     (let [r (f r (String_2_charAt s, i))]
 ///                         (if (reduced_9_ r) (deref r) (recur r (inc i)))
 ///                     )
 ///                 )
 ///             )
 ///         )
-///         ([#_"StringSeq" this, #_"IFn" f, #_"Object" r]
-///             (let [#_"CharSequence" s (_0_s this) #_"int" i (_0_i this) #_"int" n (CharSequence_3_length s)]
-///                 (loop_when [r (f r (CharSequence_3_charAt s, i)) i (inc i)] (< i n) => (if (reduced_9_ r) (deref r) r)
-///                     (if (reduced_9_ r) (deref r) (recur (f r (CharSequence_3_charAt s, i)) (inc i)))
+///         ([#_"StringSeq" this, #_"IFn" f, #_"Object" r]
+///             (let [#_"String" s (_0_s this) #_"int" i (_0_i this) #_"int" n (String_2_length s)]
+///                 (loop_when [r (f r (String_2_charAt s, i)) i (inc i)] (lt_9_ i n) => (if (reduced_9_ r) (deref r) r)
+///                     (if (reduced_9_ r) (deref r) (recur (f r (String_2_charAt s, i)) (inc i)))
 ///                 )
 ///             )
 ///         )
 ///     )
 
-///     (defm StringSeq IMeta
+///     (defm StringSeq IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm StringSeq IObj
+///     (defm StringSeq IObj
 ///         (IObj_3_withMeta => StringSeq_2_withMeta)
 ///     )
 
-///     (defm StringSeq Sequential)
+///     (defm StringSeq Sequential)
 
-///     (defm StringSeq Seqable
+///     (defm StringSeq Seqable
 ///         (Seqable_3_seq => StringSeq_2_seq)
 ///     )
 
-///     (defm StringSeq ISeq
+///     (defm StringSeq ISeq
 ///         (ISeq_3_first => StringSeq_2_first)
 ///         (ISeq_3_next => StringSeq_2_next)
 ///     )
 
-///     (defm StringSeq Counted
+///     (defm StringSeq Counted
 ///         (Counted_3_count => StringSeq_2_count)
 ///     )
 
-///     (defm StringSeq IReduce
+///     (defm StringSeq IReduce
 ///         (IReduce_3_reduce => StringSeq_2_reduce)
 ///     )
 
-///     (defm StringSeq Hashed
+///     (defm StringSeq Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm StringSeq IObject
+///     (defm StringSeq IObject
 ///         (IObject_3_equals => ASeq_2_equals)
 ///     )
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"LazySeq"
-///     (declare LazySeq_2_conj LazySeq_2_seq LazySeq_2_first LazySeq_2_next)
-
-///     (defq LazySeq [#_"IPersistentMap" _meta, #_"fn'" f, #_"Object'" o, #_"seq'" s] SeqForm
-///         clojure.lang.IPersistentCollection (cons [_, o] (LazySeq_2_conj _, o))
-///         clojure.lang.ISeq (seq [_] (LazySeq_2_seq _)) (first [_] (LazySeq_2_first _)) (next [_] (LazySeq_2_next _)) (more [_] (or (LazySeq_2_next _) ()))
-///         clojure.lang.Sequential
-///     )
+///     (defq LazySeq [#_"IPersistentMap" _meta, #_"fn'" f, #_"Object'" o, #_"seq'" s] SeqForm)
 
 ///     (defn_ #_"LazySeq" LazySeq_1_init [#_"IPersistentMap" meta, #_"IFn" f, #_"ISeq" s]
 ///         (new_8_ LazySeq_1_class (anew [meta, (atom f), (atom nil), (atom s)]))
@@ -3908,12 +2819,12 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"LazySeq" LazySeq_2_withMeta [#_"LazySeq" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (LazySeq_1_new meta, (seq this))
 ///         )
 ///     )
 
-///     (defn_ #_"cons" LazySeq_2_conj [#_"LazySeq" this, #_"Object" o]
+///     (defn_ #_"cons" LazySeq_2_conj [#_"LazySeq" this, #_"Object" o]
 ///         (cons o this)
 ///     )
 
@@ -3931,7 +2842,7 @@ namespace arbace {
 ///                         (or (deref (_0_o this)) (deref (_0_s this)))
 ///                     )]
 ///                 (step_ this)
-///                 (when_some [#_"Object" o (deref (_0_o this))]
+///                 (when_some [#_"Object" o (deref (_0_o this))]
 ///                     (reset_4_ (_0_o this) nil)
 ///                     (reset_4_ (_0_s this) (loop_when_recur o (satisfies_9_ LazySeq o) (step_ o) => (seq o)))
 ///                 )
@@ -3940,7 +2851,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"Object" LazySeq_2_first [#_"LazySeq" this]
+///     (defn_ #_"Object" LazySeq_2_first [#_"LazySeq" this]
 ///         (when_some [#_"ISeq" s (seq this)]
 ///             (first s)
 ///         )
@@ -3952,9 +2863,9 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"bool" LazySeq_2_equals [#_"LazySeq" this, #_"Object" that]
+///     (defn_ #_"bool" LazySeq_2_equals [#_"LazySeq" this, #_"Object" that]
 ///         (if_some [#_"ISeq" s (seq this)]
-///             (= s that)
+///             (_eq_9_ s that)
 ///             (and (sequential_9_ that) (nil_9_ (seq that)))
 ///         )
 ///     )
@@ -3965,39 +2876,39 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm LazySeq IMeta
+///     (defm LazySeq IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm LazySeq IObj
+///     (defm LazySeq IObj
 ///         (IObj_3_withMeta => LazySeq_2_withMeta)
 ///     )
 
-///     (defm LazySeq IPersistentCollection
+///     (defm LazySeq IPersistentCollection
 ///         (IPersistentCollection_3_conj => LazySeq_2_conj)
 ///         (IPersistentCollection_3_empty => LazySeq_2_empty)
 ///     )
 
-///     (defm LazySeq Sequential)
+///     (defm LazySeq Sequential)
 
-///     (defm LazySeq Seqable
+///     (defm LazySeq Seqable
 ///         (Seqable_3_seq => LazySeq_2_seq)
 ///     )
 
-///     (defm LazySeq ISeq
+///     (defm LazySeq ISeq
 ///         (ISeq_3_first => LazySeq_2_first)
 ///         (ISeq_3_next => LazySeq_2_next)
 ///     )
 
-///     (defm LazySeq IObject
+///     (defm LazySeq IObject
 ///         (IObject_3_equals => LazySeq_2_equals)
 ///     )
 
-///     (defm LazySeq Hashed
+///     (defm LazySeq Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm LazySeq IPending
+///     (defm LazySeq IPending
 ///         (IPending_3_isRealized => LazySeq_2_isRealized)
 ///     )
 // )
@@ -4172,7 +3083,7 @@ namespace arbace {
 
 /// (defn index_of [s x]
 ///     (loop_when [i 0 s (seq s)] (some_9_ s) => -1
-///         (when_not (= (first s) x) => i
+///         (when_not (_eq_9_ (first s) x) => i
 ///             (recur (inc i) (next s))
 ///         )
 ///     )
@@ -4529,7 +3440,7 @@ namespace arbace {
 ///     ([n step s]
 ///         (lazy_seq
 ///             (when_some [s (seq s)]
-///                 (let_when [p (take n s)] (= (count p) n)
+///                 (let_when [p (take n s)] (_eq_9_ (count p) n)
 ///                     (cons p (partition n step (nthnext s step)))
 ///                 )
 ///             )
@@ -4538,7 +3449,7 @@ namespace arbace {
 ///     ([n step pad s]
 ///         (lazy_seq
 ///             (when_some [s (seq s)]
-///                 (let_when [p (take n s)] (= (count p) n) => (list (take n (concat p pad)))
+///                 (let_when [p (take n s)] (_eq_9_ (count p) n) => (list (take n (concat p pad)))
 ///                     (cons p (partition n step pad (nthnext s step)))
 ///                 )
 ///             )
@@ -4563,7 +3474,7 @@ namespace arbace {
 ///                     )
 ///                     ([x y]
 ///                         (swap_4_ v_1_ conj y)
-///                         (when (= (count (deref v_1_)) n) => x
+///                         (when (_eq_9_ (count (deref v_1_)) n) => x
 ///                             (let [v (deref v_1_) _ (swap_4_ v_1_ empty)]
 ///                                 (g x v)
 ///                             )
@@ -4602,7 +3513,7 @@ namespace arbace {
 ///                     )
 ///                     ([s x]
 ///                         (let [p (deref p_1_) y (f x) _ (reset_4_ p_1_ y)]
-///                             (if (or (identical_9_ p _0_0_none) (= y p))
+///                             (if (or (identical_9_ p _0_0_none) (_eq_9_ y p))
 ///                                 (do
 ///                                     (swap_4_ l_1_ conj x)
 ///                                     s
@@ -4624,7 +3535,7 @@ namespace arbace {
 ///         (lazy_seq
 ///             (when_some [s (seq s)]
 ///                 (let [x (first s) fx (f x)
-///                       s_1_ (cons x (take_while #(= (f %) fx) (next s)))]
+///                       s_1_ (cons x (take_while #(_eq_9_ (f %) fx) (next s)))]
 ///                     (cons s_1_ (partition_by f (drop (count s_1_) s)))
 ///                 )
 ///             )
@@ -4636,9 +3547,6 @@ namespace arbace {
 ///     ([f] (lazy_seq (cons (f) (repeatedly f))))
 ///     ([n f] (take n (repeatedly f)))
 /// )
-
-/// (declare hash_set)
-/// (declare contains_9_)
 
 /// (defn distinct
 ///     ([]
@@ -4677,10 +3585,10 @@ namespace arbace {
 
 /// (defn distinct_9_
 ///     ([x] true)
-///     ([x y] (not (= x y)))
+///     ([x y] (not (_eq_9_ x y)))
 ///     ([x y & z]
 ///         (and (distinct_9_ x y)
-///             (loop_when [s_8_ #{x y} z z] z => true
+///             (loop_when [s_8_ (hash_set x y) z z] z => true
 ///                 (and (not (contains_9_ s_8_ (first z)))
 ///                     (recur (conj s_8_ (first z)) (next z))
 ///                 )
@@ -4690,15 +3598,15 @@ namespace arbace {
 /// )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"APersistentMap"
-///     (defn #_"IPersistentCollection" APersistentMap_2_conj [#_"APersistentMap" this, #_"Object" o]
+///     (defn #_"IPersistentCollection" APersistentMap_2_conj [#_"APersistentMap" this, #_"Object" o]
 ///         (condp satisfies_9_ o
 ///             IMapEntry
 ///                 (assoc this (key o) (val o))
 ///             IPersistentVector
-///                 (when (= (count o) 2) => (throw "vector arg to map conj must be a pair")
+///                 (when (_eq_9_ (count o) 2) => (throw "vector arg to map conj must be a pair")
 ///                     (assoc this (nth o 0) (nth o 1))
 ///                 )
 ///             #_else
@@ -4710,12 +3618,12 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"bool" APersistentMap_2_equals [#_"APersistentMap" this, #_"Object" that]
+///     (defn #_"bool" APersistentMap_2_equals [#_"APersistentMap" this, #_"Object" that]
 ///         (or (identical_9_ this that)
-///             (and (map_9_ that) (= (count that) (count this))
+///             (and (map_9_ that) (_eq_9_ (count that) (count this))
 ///                 (loop_when [#_"ISeq" s (seq this)] (some_9_ s) => true
-///                     (let [#_"pair" e (first s) #_"Object" k (key e)]
-///                         (and (contains_9_ that k) (= (val e) (get that k))
+///                     (let [#_"pair" e (first s) #_"Object" k (key e)]
+///                         (and (contains_9_ that k) (_eq_9_ (val e) (get that k))
 ///                             (recur (next s))
 ///                         )
 ///                     )
@@ -4724,19 +3632,19 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"Object" APersistentMap_2_invoke
-///         ([#_"APersistentMap" this, #_"Object" key] (get this key))
-///         ([#_"APersistentMap" this, #_"Object" key, #_"Object" not_found] (get this key not_found))
+///     (defn #_"Object" APersistentMap_2_invoke
+///         ([#_"APersistentMap" this, #_"Object" key] (get this key))
+///         ([#_"APersistentMap" this, #_"Object" key, #_"Object" not_found] (get this key not_found))
 ///     )
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"APersistentSet"
-///     (defn #_"bool" APersistentSet_2_equals [#_"APersistentSet" this, #_"Object" that]
+///     (defn #_"bool" APersistentSet_2_equals [#_"APersistentSet" this, #_"Object" that]
 ///         (or (identical_9_ this that)
-///             (and (set_9_ that) (= (count this) (count that))
+///             (and (set_9_ that) (_eq_9_ (count this) (count that))
 ///                 (loop_when [#_"ISeq" s (seq that)] (some_9_ s) => true
 ///                     (and (contains_9_ this (first s)) (recur (next s)))
 ///                 )
@@ -4744,25 +3652,20 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"Object" APersistentSet_2_invoke
-///         ([#_"APersistentSet" this, #_"Object" key] (get this key))
-///         ([#_"APersistentSet" this, #_"Object" key, #_"Object" not_found] (get this key not_found))
+///     (defn #_"Object" APersistentSet_2_invoke
+///         ([#_"APersistentSet" this, #_"Object" key] (get this key))
+///         ([#_"APersistentSet" this, #_"Object" key, #_"Object" not_found] (get this key not_found))
 ///     )
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"VSeq"
-///     (declare VSeq_2_seq VSeq_2_first VSeq_2_next)
-
-///     (defq VSeq [#_"IPersistentMap" _meta, #_"vector" v, #_"int" i] SeqForm
-///         clojure.lang.ISeq (seq [_] (VSeq_2_seq _)) (first [_] (VSeq_2_first _)) (next [_] (VSeq_2_next _)) (more [_] (or (VSeq_2_next _) ()))
-///         clojure.lang.Sequential
-///     )
+///     (defq VSeq [#_"IPersistentMap" _meta, #_"vector" v, #_"int" i] SeqForm)
 
 ///     #_inherit
-///     (defm VSeq ASeq)
+///     (defm VSeq ASeq)
 
 ///     (defn #_"VSeq" VSeq_1_new
 ///         ([#_"vector" v, #_"int" i] (VSeq_1_new nil, v, i))
@@ -4772,7 +3675,7 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"VSeq" VSeq_2_withMeta [#_"VSeq" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (VSeq_1_new meta, (_0_v this), (_0_i this))
 ///         )
 ///     )
@@ -4781,33 +3684,33 @@ namespace arbace {
 ///         this
 ///     )
 
-///     (defn_ #_"Object" VSeq_2_first [#_"VSeq" this]
+///     (defn_ #_"Object" VSeq_2_first [#_"VSeq" this]
 ///         (nth (_0_v this) (_0_i this))
 ///     )
 
 ///     (defn_ #_"ISeq" VSeq_2_next [#_"VSeq" this]
-///         (when (< (inc (_0_i this)) (count (_0_v this)))
+///         (when (lt_9_ (inc (_0_i this)) (count (_0_v this)))
 ///             (VSeq_1_new (_0_v this), (inc (_0_i this)))
 ///         )
 ///     )
 
 ///     (defn_ #_"int" VSeq_2_count [#_"VSeq" this]
-///         (- (count (_0_v this)) (_0_i this))
+///         (minus (count (_0_v this)) (_0_i this))
 ///     )
 
-///     (defn_ #_"Object" VSeq_2_reduce
+///     (defn_ #_"Object" VSeq_2_reduce
 ///         ([#_"VSeq" this, #_"IFn" f]
 ///             (let [#_"vector" v (_0_v this) #_"int" i (_0_i this) #_"int" n (count v)]
-///                 (loop_when [#_"Object" r (nth v i) i (inc i)] (< i n) => r
+///                 (loop_when [#_"Object" r (nth v i) i (inc i)] (lt_9_ i n) => r
 ///                     (let_when [r (f r (nth v i))] (reduced_9_ r) => (recur r (inc i))
 ///                         (deref r)
 ///                     )
 ///                 )
 ///             )
 ///         )
-///         ([#_"VSeq" this, #_"IFn" f, #_"Object" r]
+///         ([#_"VSeq" this, #_"IFn" f, #_"Object" r]
 ///             (let [#_"vector" v (_0_v this) #_"int" i (_0_i this) #_"int" n (count v)]
-///                 (loop_when [r (f r (nth v i)) i (inc i)] (< i n) => (if (reduced_9_ r) (deref r) r)
+///                 (loop_when [r (f r (nth v i)) i (inc i)] (lt_9_ i n) => (if (reduced_9_ r) (deref r) r)
 ///                     (when (reduced_9_ r) => (recur (f r (nth v i)) (inc i))
 ///                         (deref r)
 ///                     )
@@ -4816,51 +3719,47 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm VSeq IMeta
+///     (defm VSeq IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm VSeq IObj
+///     (defm VSeq IObj
 ///         (IObj_3_withMeta => VSeq_2_withMeta)
 ///     )
 
-///     (defm VSeq Sequential)
+///     (defm VSeq Sequential)
 
-///     (defm VSeq Seqable
+///     (defm VSeq Seqable
 ///         (Seqable_3_seq => VSeq_2_seq)
 ///     )
 
-///     (defm VSeq ISeq
+///     (defm VSeq ISeq
 ///         (ISeq_3_first => VSeq_2_first)
 ///         (ISeq_3_next => VSeq_2_next)
 ///     )
 
-///     (defm VSeq Counted
+///     (defm VSeq Counted
 ///         (Counted_3_count => VSeq_2_count)
 ///     )
 
-///     (defm VSeq IReduce
+///     (defm VSeq IReduce
 ///         (IReduce_3_reduce => VSeq_2_reduce)
 ///     )
 
-///     (defm VSeq Hashed
+///     (defm VSeq Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm VSeq IObject
+///     (defm VSeq IObject
 ///         (IObject_3_equals => ASeq_2_equals)
 ///     )
 // )
 
 // (about #_"RSeq"
-///     (declare RSeq_2_seq RSeq_2_first RSeq_2_next)
-
-///     (defq RSeq [#_"IPersistentMap" _meta, #_"vector" v, #_"int" i] SeqForm
-///         clojure.lang.ISeq (seq [_] (RSeq_2_seq _)) (first [_] (RSeq_2_first _)) (next [_] (RSeq_2_next _)) (more [_] (or (RSeq_2_next _) ()))
-///     )
+///     (defq RSeq [#_"IPersistentMap" _meta, #_"vector" v, #_"int" i] SeqForm)
 
 ///     #_inherit
-///     (defm RSeq ASeq)
+///     (defm RSeq ASeq)
 
 ///     (defn #_"RSeq" RSeq_1_new
 ///         ([#_"vector" v, #_"int" i] (RSeq_1_new nil, v, i))
@@ -4870,7 +3769,7 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"RSeq" RSeq_2_withMeta [#_"RSeq" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (RSeq_1_new meta, (_0_v this), (_0_i this))
 ///         )
 ///     )
@@ -4879,7 +3778,7 @@ namespace arbace {
 ///         this
 ///     )
 
-///     (defn_ #_"Object" RSeq_2_first [#_"RSeq" this]
+///     (defn_ #_"Object" RSeq_2_first [#_"RSeq" this]
 ///         (nth (_0_v this) (_0_i this))
 ///     )
 
@@ -4893,47 +3792,47 @@ namespace arbace {
 ///         (inc (_0_i this))
 ///     )
 
-///     (defm RSeq IMeta
+///     (defm RSeq IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm RSeq IObj
+///     (defm RSeq IObj
 ///         (IObj_3_withMeta => RSeq_2_withMeta)
 ///     )
 
-///     (defm RSeq Sequential)
+///     (defm RSeq Sequential)
 
-///     (defm RSeq Seqable
+///     (defm RSeq Seqable
 ///         (Seqable_3_seq => RSeq_2_seq)
 ///     )
 
-///     (defm RSeq ISeq
+///     (defm RSeq ISeq
 ///         (ISeq_3_first => RSeq_2_first)
 ///         (ISeq_3_next => RSeq_2_next)
 ///     )
 
-///     (defm RSeq Counted
+///     (defm RSeq Counted
 ///         (Counted_3_count => RSeq_2_count)
 ///     )
 
-///     (defm RSeq Hashed
+///     (defm RSeq Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm RSeq IObject
+///     (defm RSeq IObject
 ///         (IObject_3_equals => ASeq_2_equals)
 ///     )
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"AMapEntry"
-///     (defn #_"Object" AMapEntry_2_nth
+///     (defn #_"Object" AMapEntry_2_nth
 ///         ([#_"AMapEntry" this, #_"int" i]
 ///             (case_4_ i 0 (IMapEntry_3_key this) 1 (IMapEntry_3_val this) (throw "index is out of bounds"))
 ///         )
-///         ([#_"AMapEntry" this, #_"int" i, #_"Object" not_found]
+///         ([#_"AMapEntry" this, #_"int" i, #_"Object" not_found]
 ///             (case_4_ i 0 (IMapEntry_3_key this) 1 (IMapEntry_3_val this) not_found)
 ///         )
 ///     )
@@ -4950,14 +3849,14 @@ namespace arbace {
 ///         (RSeq_1_new this, 1)
 ///     )
 
-///     (defn #_"bool" AMapEntry_2_equals [#_"AMapEntry" this, #_"Object" that]
+///     (defn #_"bool" AMapEntry_2_equals [#_"AMapEntry" this, #_"Object" that]
 ///         (or (identical_9_ this that)
 ///             (cond
 ///                 (vector_9_ that)
-///                     (and (= (count that) 2) (= (nth that 0) (IMapEntry_3_key this)) (= (nth that 1) (IMapEntry_3_val this)))
+///                     (and (_eq_9_ (count that) 2) (_eq_9_ (nth that 0) (IMapEntry_3_key this)) (_eq_9_ (nth that 1) (IMapEntry_3_val this)))
 ///                 (sequential_9_ that)
-///                     (loop_when [#_"int" i 0 #_"ISeq" s (seq that)] (< i 2) => (nil_9_ s)
-///                         (recur_when (and (some_9_ s) (= (Indexed_3_nth this, i) (first s))) [(inc i) (next s)] => false)
+///                     (loop_when [#_"int" i 0 #_"ISeq" s (seq that)] (lt_9_ i 2) => (nil_9_ s)
+///                         (recur_when (and (some_9_ s) (_eq_9_ (Indexed_3_nth this, i) (first s))) [(inc i) (next s)] => false)
 ///                     )
 ///                 _0_else
 ///                     false
@@ -4966,17 +3865,17 @@ namespace arbace {
 ///     )
 
 ///     (defn #_"int" AMapEntry_2_hash [#_"AMapEntry" this]
-///         (loop_when [#_"int" hash (int 1) #_"int" i (int 0)] (< i 2) => (Murmur3_1_mixCollHash hash, i)
-///             (recur (+ (* (int 31) hash) (f_1_hash (Indexed_3_nth this, i))) (inc i))
+///         (loop_when [#_"int" hash (int 1) #_"int" i (int 0)] (lt_9_ i 2) => (Murmur3_1_mixCollHash hash, i)
+///             (recur (plus (mult (int 31) hash) (f_1_hash (Indexed_3_nth this, i))) (inc i))
 ///         )
 ///     )
 
 ///     (defn #_"int" AMapEntry_2_compareTo [#_"AMapEntry" this, #_"IPersistentVector" that]
 ///         (when_not (identical_9_ this that) => 0
 ///             (let [#_"int" m (count that)]
-///                 (cond (< 2 m) -1 (< m 2) 1
+///                 (cond (lt_9_ 2 m) -1 (lt_9_ m 2) 1
 ///                     _0_else
-///                         (loop_when [#_"int" i 0] (< i 2) => 0
+///                         (loop_when [#_"int" i 0] (lt_9_ i 2) => 0
 ///                             (let [#_"int" cmp (compare (Indexed_3_nth this, i) (Indexed_3_nth that, i))]
 ///                                 (recur_when (zero_9_ cmp) [(inc i)] => cmp)
 ///                             )
@@ -4988,73 +3887,71 @@ namespace arbace {
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"MapEntry"
-///     (defq MapEntry [#_"Object" k, #_"Object" v] VecForm
-///         java.util.Map$Entry (getKey [_] (_0_k _)) (getValue [_] (_0_v _))
-///     )
+///     (defq MapEntry [#_"Object" k, #_"Object" v] VecForm)
 
 ///     #_inherit
-///     (defm MapEntry AMapEntry APersistentVector AFn)
+///     (defm MapEntry AMapEntry APersistentVector AFn)
 
-///     (defn_ #_"MapEntry" MapEntry_1_new [#_"Object" k, #_"Object" v]
+///     (defn_ #_"MapEntry" MapEntry_1_new [#_"Object" k, #_"Object" v]
 ///         (new_8_ MapEntry_1_class (anew [k, v]))
 ///     )
 
-///     (defm MapEntry IMapEntry
+///     (defm MapEntry IMapEntry
 ///         (IMapEntry_3_key => _0_k)
 ///         (IMapEntry_3_val => _0_v)
 ///     )
 
-///     (defm MapEntry Sequential)
+///     (defm MapEntry Sequential)
 
-///     (defm MapEntry Indexed
+///     (defm MapEntry Indexed
 ///         (Indexed_3_nth => AMapEntry_2_nth)
 ///     )
 
-///     (defm MapEntry Counted
+///     (defm MapEntry Counted
 ///         (Counted_3_count => AMapEntry_2_count)
 ///     )
 
-///     (defm MapEntry Seqable
+///     (defm MapEntry Seqable
 ///         (Seqable_3_seq => AMapEntry_2_seq)
 ///     )
 
-///     (defm MapEntry Reversible
+///     (defm MapEntry Reversible
 ///         (Reversible_3_rseq => AMapEntry_2_rseq)
 ///     )
 
-///     (defm MapEntry IObject
+///     (defm MapEntry IObject
 ///         (IObject_3_equals => AMapEntry_2_equals)
 ///     )
 
-///     (defm MapEntry Hashed
+///     (defm MapEntry Hashed
 ///         (Hashed_3_hash => AMapEntry_2_hash)
 ///     )
 
-///     (defm MapEntry Comparable
+///     (defm MapEntry Comparable
 ///         (Comparable_3_compareTo => AMapEntry_2_compareTo)
 ///     )
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"ATransientMap"
-///     (defn #_"Object" ATransientMap_2_invoke
-///         ([#_"ATransientMap" this, #_"Object" key] (get this key))
-///         ([#_"ATransientMap" this, #_"Object" key, #_"Object" not_found] (get this key not_found))
+///     (defn #_"Object" ATransientMap_2_invoke
+///         ([#_"ATransientMap" this, #_"Object" key] (get this key))
+///         ([#_"ATransientMap" this, #_"Object" key, #_"Object" not_found] (get this key not_found))
 ///     )
 
-///     (def_ #_"Object" ATransientMap_1_NOT_FOUND (anew 0))
+///     (def_ #_"Object" ATransientMap_1_NOT_FOUND (anew 0))
 
-///     (defn #_"bool" ATransientMap_2_containsKey [#_"ATransientMap" this, #_"Object" key]
+///     (defn #_"bool" ATransientMap_2_containsKey [#_"ATransientMap" this, #_"Object" key]
 ///         (not (identical_9_ (get this key ATransientMap_1_NOT_FOUND) ATransientMap_1_NOT_FOUND))
 ///     )
 
-///     (defn #_"IMapEntry" ATransientMap_2_entryAt [#_"ATransientMap" this, #_"Object" key]
-///         (let [#_"Object" v (get this key ATransientMap_1_NOT_FOUND)]
+///     (defn #_"IMapEntry" ATransientMap_2_entryAt [#_"ATransientMap" this, #_"Object" key]
+///         (let [#_"Object" v (get this key ATransientMap_1_NOT_FOUND)]
 ///             (when_not (identical_9_ v ATransientMap_1_NOT_FOUND)
 ///                 (MapEntry_1_new key, v)
 ///             )
@@ -5063,32 +3960,27 @@ namespace arbace {
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"ATransientSet"
-///     (defn #_"Object" ATransientSet_2_invoke
-///         ([#_"ATransientSet" this, #_"Object" key] (get this key))
-///         ([#_"ATransientSet" this, #_"Object" key, #_"Object" not_found] (get this key not_found))
+///     (defn #_"Object" ATransientSet_2_invoke
+///         ([#_"ATransientSet" this, #_"Object" key] (get this key))
+///         ([#_"ATransientSet" this, #_"Object" key, #_"Object" not_found] (get this key not_found))
 ///     )
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"EmptyList"
-///     (declare EmptyList_2_seq EmptyList_2_first EmptyList_2_next EmptyList_2_conj EmptyList_2_empty EmptyList_2_equals)
-
-///     (defq EmptyList [#_"IPersistentMap" _meta] SeqForm
-///         clojure.lang.ISeq (seq [_] (EmptyList_2_seq _)) (first [_] (EmptyList_2_first _)) (next [_] (EmptyList_2_next _)) (more [_] (or (EmptyList_2_next _) ()))
-///         clojure.lang.IPersistentCollection (cons [_, o] (EmptyList_2_conj _, o)) (empty [_] (EmptyList_2_empty _)) (equiv [_, o] (EmptyList_2_equals _, o))
-///     )
+///     (defq EmptyList [#_"IPersistentMap" _meta] SeqForm)
 
 ///     (defn #_"EmptyList" EmptyList_1_new [#_"IPersistentMap" meta]
 ///         (new_8_ EmptyList_1_class (anew [meta]))
 ///     )
 
 ///     (defn_ #_"EmptyList" EmptyList_2_withMeta [#_"EmptyList" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (EmptyList_1_new meta)
 ///         )
 ///     )
@@ -5099,7 +3991,7 @@ namespace arbace {
 ///         EmptyList_1_HASH
 ///     )
 
-///     (defn_ #_"bool" EmptyList_2_equals [#_"EmptyList" this, #_"Object" that]
+///     (defn_ #_"bool" EmptyList_2_equals [#_"EmptyList" this, #_"Object" that]
 ///         (and (sequential_9_ that) (nil_9_ (seq that)))
 ///     )
 
@@ -5107,7 +3999,7 @@ namespace arbace {
 ///         nil
 ///     )
 
-///     (defn_ #_"Object" EmptyList_2_first [#_"EmptyList" this]
+///     (defn_ #_"Object" EmptyList_2_first [#_"EmptyList" this]
 ///         nil
 ///     )
 
@@ -5119,9 +4011,7 @@ namespace arbace {
 ///         0
 ///     )
 
-///     (declare PersistentList_1_new)
-
-///     (defn_ #_"PersistentList" EmptyList_2_conj [#_"EmptyList" this, #_"Object" o]
+///     (defn_ #_"PersistentList" EmptyList_2_conj [#_"EmptyList" this, #_"Object" o]
 ///         (PersistentList_1_new (_0__meta this), o, nil, 1)
 ///     )
 
@@ -5129,7 +4019,7 @@ namespace arbace {
 ///         this
 ///     )
 
-///     (defn_ #_"Object" EmptyList_2_peek [#_"EmptyList" this]
+///     (defn_ #_"Object" EmptyList_2_peek [#_"EmptyList" this]
 ///         nil
 ///     )
 
@@ -5137,76 +4027,69 @@ namespace arbace {
 ///         (throw "can't pop the empty list")
 ///     )
 
-///     (defm EmptyList IPersistentList Sequential)
+///     (defm EmptyList IPersistentList Sequential)
 
-///     (defm EmptyList IMeta
+///     (defm EmptyList IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm EmptyList IObj
+///     (defm EmptyList IObj
 ///         (IObj_3_withMeta => EmptyList_2_withMeta)
 ///     )
 
-///     (defm EmptyList Hashed
+///     (defm EmptyList Hashed
 ///         (Hashed_3_hash => EmptyList_2_hash)
 ///     )
 
-///     (defm EmptyList IObject
+///     (defm EmptyList IObject
 ///         (IObject_3_equals => EmptyList_2_equals)
 ///     )
 
-///     (defm EmptyList Seqable
+///     (defm EmptyList Seqable
 ///         (Seqable_3_seq => EmptyList_2_seq)
 ///     )
 
-///     (defm EmptyList ISeq
+///     (defm EmptyList ISeq
 ///         (ISeq_3_first => EmptyList_2_first)
 ///         (ISeq_3_next => EmptyList_2_next)
 ///     )
 
-///     (defm EmptyList Counted
+///     (defm EmptyList Counted
 ///         (Counted_3_count => EmptyList_2_count)
 ///     )
 
-///     (defm EmptyList IPersistentCollection
+///     (defm EmptyList IPersistentCollection
 ///         (IPersistentCollection_3_conj => EmptyList_2_conj)
 ///         (IPersistentCollection_3_empty => EmptyList_2_empty)
 ///     )
 
-///     (defm EmptyList IPersistentStack
+///     (defm EmptyList IPersistentStack
 ///         (IPersistentStack_3_peek => EmptyList_2_peek)
 ///         (IPersistentStack_3_pop => EmptyList_2_pop)
 ///     )
 // )
 
 // (about #_"PersistentList"
-///     (declare PersistentList_2_seq PersistentList_2_conj PersistentList_2_empty)
-
-///     (defq PersistentList [#_"IPersistentMap" _meta, #_"Object" car, #_"IPersistentList" cdr, #_"int" cnt] SeqForm
-///         clojure.lang.ISeq (seq [_] (PersistentList_2_seq _)) (first [_] (_0_car _)) (next [_] (_0_cdr _)) (more [_] (or (_0_cdr _) ()))
-///         clojure.lang.IPersistentCollection (cons [_, o] (PersistentList_2_conj _, o)) (empty [_] (PersistentList_2_empty _)) (equiv [_, o] (ASeq_2_equals _, o)) (count [_] (_0_cnt _))
-///     )
+///     (defq PersistentList [#_"IPersistentMap" _meta, #_"Object" car, #_"IPersistentList" cdr, #_"int" cnt] SeqForm)
 
 ///     #_inherit
-///     (defm PersistentList ASeq)
+///     (defm PersistentList ASeq)
 
 ///     (defn #_"PersistentList" PersistentList_1_new
-///         ([#_"Object" car] (PersistentList_1_new nil, car, nil, 1))
-///         ([#_"IPersistentMap" meta, #_"Object" car, #_"IPersistentList" cdr, #_"int" cnt]
+///         ([#_"Object" car] (PersistentList_1_new nil, car, nil, 1))
+///         ([#_"IPersistentMap" meta, #_"Object" car, #_"IPersistentList" cdr, #_"int" cnt]
 ///             (new_8_ PersistentList_1_class (anew [meta, car, cdr, cnt]))
 ///         )
 ///     )
 
 ///     (def #_"EmptyList" PersistentList_1_EMPTY (EmptyList_1_new nil))
 
-///     (declare reverse)
-
 ///     (defn #_"PersistentList" PersistentList_1_create [#_"Reversible" init]
 ///         (into PersistentList_1_EMPTY (if (satisfies_9_ Reversible init) (rseq init) (reverse init)))
 ///     )
 
 ///     (defn_ #_"PersistentList" PersistentList_2_withMeta [#_"PersistentList" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (PersistentList_1_new meta, (_0_car this), (_0_cdr this), (_0_cnt this))
 ///         )
 ///     )
@@ -5215,7 +4098,7 @@ namespace arbace {
 ///         this
 ///     )
 
-///     (defn_ #_"PersistentList" PersistentList_2_conj [#_"PersistentList" this, #_"Object" o]
+///     (defn_ #_"PersistentList" PersistentList_2_conj [#_"PersistentList" this, #_"Object" o]
 ///         (PersistentList_1_new (_0__meta this), o, this, (inc (_0_cnt this)))
 ///     )
 
@@ -5227,63 +4110,63 @@ namespace arbace {
 ///         (or (_0_cdr this) (with_meta PersistentList_1_EMPTY (_0__meta this)))
 ///     )
 
-///     (defn_ #_"Object" PersistentList_2_reduce
+///     (defn_ #_"Object" PersistentList_2_reduce
 ///         ([#_"PersistentList" this, #_"IFn" f]
-///             (loop_when [#_"Object" r (_0_car this) #_"IPersistentList" l (_0_cdr this)] (some_9_ l) => r
+///             (loop_when [#_"Object" r (_0_car this) #_"IPersistentList" l (_0_cdr this)] (some_9_ l) => r
 ///                 (let [r (f r (_0_car l))]
 ///                     (if (reduced_9_ r) (deref r) (recur r (_0_cdr l)))
 ///                 )
 ///             )
 ///         )
-///         ([#_"PersistentList" this, #_"IFn" f, #_"Object" r]
+///         ([#_"PersistentList" this, #_"IFn" f, #_"Object" r]
 ///             (loop_when [r (f r (_0_car this)) #_"IPersistentList" l (_0_cdr this)] (some_9_ l) => (if (reduced_9_ r) (deref r) r)
 ///                 (if (reduced_9_ r) (deref r) (recur (f r (_0_car l)) (_0_cdr l)))
 ///             )
 ///         )
 ///     )
 
-///     (defm PersistentList IPersistentList Sequential)
+///     (defm PersistentList IPersistentList Sequential)
 
-///     (defm PersistentList IMeta
+///     (defm PersistentList IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm PersistentList IObj
+///     (defm PersistentList IObj
 ///         (IObj_3_withMeta => PersistentList_2_withMeta)
 ///     )
 
-///     (defm PersistentList Seqable
+///     (defm PersistentList Seqable
 ///         (Seqable_3_seq => PersistentList_2_seq)
 ///     )
 
-///     (defm PersistentList ISeq
+///     (defm PersistentList ISeq
 ///         (ISeq_3_first => _0_car)
 ///         (ISeq_3_next => _0_cdr)
 ///     )
 
-///     (defm PersistentList Counted
+///     (defm PersistentList Counted
 ///         (Counted_3_count => _0_cnt)
 ///     )
 
-///     (defm PersistentList IPersistentCollection
+///     (defm PersistentList IPersistentCollection
 ///         (IPersistentCollection_3_conj => PersistentList_2_conj)
 ///         (IPersistentCollection_3_empty => PersistentList_2_empty)
 ///     )
 
-///     (defm PersistentList IPersistentStack
+///     (defm PersistentList IPersistentStack
 ///         (IPersistentStack_3_peek => _0_car)
 ///         (IPersistentStack_3_pop => PersistentList_2_pop)
 ///     )
 
-///     (defm PersistentList IReduce
+///     (defm PersistentList IReduce
 ///         (IReduce_3_reduce => PersistentList_2_reduce)
 ///     )
 
-///     (defm PersistentList Hashed
+///     (defm PersistentList Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm PersistentList IObject
+///     (defm PersistentList IObject
 ///         (IObject_3_equals => ASeq_2_equals)
 ///     )
 // )
@@ -5296,17 +4179,13 @@ namespace arbace {
 /// (defn reverse [s] (into (list) s))
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"MSeq"
-///     (declare MSeq_2_seq MSeq_2_first MSeq_2_next)
-
-///     (defq MSeq [#_"IPersistentMap" _meta, #_"array" a, #_"int" i] SeqForm
-///         clojure.lang.ISeq (seq [_] (MSeq_2_seq _)) (first [_] (MSeq_2_first _)) (next [_] (MSeq_2_next _)) (more [_] (or (MSeq_2_next _) ()))
-///     )
+///     (defq MSeq [#_"IPersistentMap" _meta, #_"array" a, #_"int" i] SeqForm)
 
 ///     #_inherit
-///     (defm MSeq ASeq)
+///     (defm MSeq ASeq)
 
 ///     (defn #_"MSeq" MSeq_1_new
 ///         ([#_"array" a, #_"int" i] (MSeq_1_new nil, a, i))
@@ -5316,7 +4195,7 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"MSeq" MSeq_2_withMeta [#_"MSeq" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (MSeq_1_new meta, (_0_a this), (_0_i this))
 ///         )
 ///     )
@@ -5330,54 +4209,52 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"ISeq" MSeq_2_next [#_"MSeq" this]
-///         (when (< (+ (_0_i this) 2) (alength (_0_a this)))
-///             (MSeq_1_new (_0_a this), (+ (_0_i this) 2))
+///         (when (lt_9_ (plus (_0_i this) 2) (alength (_0_a this)))
+///             (MSeq_1_new (_0_a this), (plus (_0_i this) 2))
 ///         )
 ///     )
 
 ///     (defn_ #_"int" MSeq_2_count [#_"MSeq" this]
-///         (quot (- (alength (_0_a this)) (_0_i this)) 2)
+///         (quot (minus (alength (_0_a this)) (_0_i this)) 2)
 ///     )
 
-///     (defm MSeq IMeta
+///     (defm MSeq IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm MSeq IObj
+///     (defm MSeq IObj
 ///         (IObj_3_withMeta => MSeq_2_withMeta)
 ///     )
 
-///     (defm MSeq Sequential)
+///     (defm MSeq Sequential)
 
-///     (defm MSeq Seqable
+///     (defm MSeq Seqable
 ///         (Seqable_3_seq => MSeq_2_seq)
 ///     )
 
-///     (defm MSeq ISeq
+///     (defm MSeq ISeq
 ///         (ISeq_3_first => MSeq_2_first)
 ///         (ISeq_3_next => MSeq_2_next)
 ///     )
 
-///     (defm MSeq Counted
+///     (defm MSeq Counted
 ///         (Counted_3_count => MSeq_2_count)
 ///     )
 
-///     (defm MSeq Hashed
+///     (defm MSeq Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm MSeq IObject
+///     (defm MSeq IObject
 ///         (IObject_3_equals => ASeq_2_equals)
 ///     )
 // )
 
 // (about #_"TransientArrayMap"
-///     (defq TransientArrayMap [#_"thread'" edit, #_"array" array, #_"int" cnt] #_"MapForm")
+///     (defq TransientArrayMap [#_"thread'" edit, #_"array" array, #_"int" cnt] #_"MapForm")
 
 ///     #_inherit
-///     (defm TransientArrayMap ATransientMap AFn)
-
-///     (declare PersistentArrayMap_1_HASHTABLE_THRESHOLD)
+///     (defm TransientArrayMap ATransientMap AFn)
 
 ///     (defn #_"TransientArrayMap" TransientArrayMap_1_new [#_"array" a]
 ///         (let [#_"int" n (alength a) #_"int" m (max PersistentArrayMap_1_HASHTABLE_THRESHOLD n)]
@@ -5395,42 +4272,40 @@ namespace arbace {
 ///         (quot (_0_cnt this) 2)
 ///     )
 
-///     (defn_ #_"int" TransientArrayMap_1_index_of [#_"array" a, #_"int" n, #_"Object" key]
-///         (loop_when [#_"int" i 0] (< i n) => -1
-///             (if (= (aget a i) key) i (recur (+ i 2)))
+///     (defn_ #_"int" TransientArrayMap_1_index_of [#_"array" a, #_"int" n, #_"Object" key]
+///         (loop_when [#_"int" i 0] (lt_9_ i n) => -1
+///             (if (_eq_9_ (aget a i) key) i (recur (plus i 2)))
 ///         )
 ///     )
 
-///     (defn_ #_"Object" TransientArrayMap_2_valAt
-///         ([#_"TransientArrayMap" this, #_"Object" key] (TransientArrayMap_2_valAt this, key, nil))
-///         ([#_"TransientArrayMap" this, #_"Object" key, #_"Object" not_found]
+///     (defn_ #_"Object" TransientArrayMap_2_valAt
+///         ([#_"TransientArrayMap" this, #_"Object" key] (TransientArrayMap_2_valAt this, key, nil))
+///         ([#_"TransientArrayMap" this, #_"Object" key, #_"Object" not_found]
 ///             (TransientArrayMap_2_assert_editable this)
 ///             (let [
 ///                 #_"array" a (_0_array this) #_"int" n (_0_cnt this) #_"int" i (TransientArrayMap_1_index_of a, n, key)
 ///             ]
-///                 (if (< -1 i) (aget a (inc i)) not_found)
+///                 (if (lt_9_ -1 i) (aget a (inc i)) not_found)
 ///             )
 ///         )
 ///     )
 
-///     (declare PersistentHashMap_1_create_1a)
-
-///     (defn_ #_"ITransientMap" TransientArrayMap_2_assoc_4_ [#_"TransientArrayMap" this, #_"Object" key, #_"Object" val]
+///     (defn_ #_"ITransientMap" TransientArrayMap_2_assoc_4_ [#_"TransientArrayMap" this, #_"Object" key, #_"Object" val]
 ///         (TransientArrayMap_2_assert_editable this)
 ///         (let [
 ///             #_"array" a (_0_array this) #_"int" n (_0_cnt this) #_"int" i (TransientArrayMap_1_index_of a, n, key)
 ///         ]
 ///             (cond
-///                 (< -1 i)
+///                 (lt_9_ -1 i)
 ///                     (do
 ///                         (aset_4_ a (inc i) val)
 ///                         this
 ///                     )
-///                 (< n (alength a))
+///                 (lt_9_ n (alength a))
 ///                     (do
 ///                         (aset_4_ a      n  key)
 ///                         (aset_4_ a (inc n) val)
-///                         (qset_4_ this _0_cnt (+ n 2))
+///                         (qset_4_ this _0_cnt (plus n 2))
 ///                     )
 ///                 _0_else
 ///                     (-> (PersistentHashMap_1_create_1a a) (transient) (assoc_4_ key val))
@@ -5438,16 +4313,16 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"ITransientMap" TransientArrayMap_2_dissoc_4_ [#_"TransientArrayMap" this, #_"Object" key]
+///     (defn_ #_"ITransientMap" TransientArrayMap_2_dissoc_4_ [#_"TransientArrayMap" this, #_"Object" key]
 ///         (TransientArrayMap_2_assert_editable this)
 ///         (let [
 ///             #_"array" a (_0_array this) #_"int" n (_0_cnt this) #_"int" i (TransientArrayMap_1_index_of a, n, key)
 ///         ]
-///             (when (< -1 i) => this
+///             (when (lt_9_ -1 i) => this
 ///                 (let [
-///                     n (- n 2)
+///                     n (minus n 2)
 ///                 ]
-///                     (when (< -1 n)
+///                     (when (lt_9_ -1 n)
 ///                         (aset_4_ a      i  (aget a      n))
 ///                         (aset_4_ a (inc i) (aget a (inc n)))
 ///                     )
@@ -5463,7 +4338,7 @@ namespace arbace {
 ///             IMapEntry
 ///                 (assoc_4_ this (key o) (val o))
 ///             IPersistentVector
-///                 (when (= (count o) 2) => (throw "vector arg to map conj must be a pair")
+///                 (when (_eq_9_ (count o) 2) => (throw "vector arg to map conj must be a pair")
 ///                     (assoc_4_ this (nth o 0) (nth o 1))
 ///                 )
 ///             #_else
@@ -5485,45 +4360,40 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm TransientArrayMap Counted
+///     (defm TransientArrayMap Counted
 ///         (Counted_3_count => TransientArrayMap_2_count)
 ///     )
 
-///     (defm TransientArrayMap ILookup
+///     (defm TransientArrayMap ILookup
 ///         (ILookup_3_valAt => TransientArrayMap_2_valAt)
 ///     )
 
-///     (defm TransientArrayMap IFn
+///     (defm TransientArrayMap IFn
 ///         (IFn_3_invoke => ATransientMap_2_invoke)
 ///         (IFn_3_applyTo => AFn_1_applyTo)
 ///     )
 
-///     (defm TransientArrayMap ITransientAssociative
+///     (defm TransientArrayMap ITransientAssociative
 ///         (ITransientAssociative_3_assoc_4_ => TransientArrayMap_2_assoc_4_)
 ///         (ITransientAssociative_3_containsKey => ATransientMap_2_containsKey)
 ///         (ITransientAssociative_3_entryAt => ATransientMap_2_entryAt)
 ///     )
 
-///     (defm TransientArrayMap ITransientMap
+///     (defm TransientArrayMap ITransientMap
 ///         (ITransientMap_3_dissoc_4_ => TransientArrayMap_2_dissoc_4_)
 ///     )
 
-///     (defm TransientArrayMap ITransientCollection
+///     (defm TransientArrayMap ITransientCollection
 ///         (ITransientCollection_3_conj_4_ => TransientArrayMap_2_conj_4_)
 ///         (ITransientCollection_3_persistent_4_ => TransientArrayMap_2_persistent_4_)
 ///     )
 // )
 
 // (about #_"PersistentArrayMap"
-///     (declare PersistentArrayMap_2_seq PersistentArrayMap_2_assoc PersistentArrayMap_2_containsKey)
-
-///     (defq PersistentArrayMap [#_"IPersistentMap" _meta, #_"array" array] MapForm
-///         clojure.lang.Seqable (seq [_] (PersistentArrayMap_2_seq _))
-///         clojure.lang.Associative (assoc [_, key, val] (PersistentArrayMap_2_assoc _, key, val)) (containsKey [_, key] (PersistentArrayMap_2_containsKey _, key))
-///     )
+///     (defq PersistentArrayMap [#_"IPersistentMap" _meta, #_"array" array] MapForm)
 
 ///     #_inherit
-///     (defm PersistentArrayMap APersistentMap AFn)
+///     (defm PersistentArrayMap APersistentMap AFn)
 
 ///     (defn #_"PersistentArrayMap" PersistentArrayMap_1_new
 ///         ([#_"array" a] (PersistentArrayMap_1_new nil, a))
@@ -5539,9 +4409,9 @@ namespace arbace {
 ///     )
 
 ///     (defn #_"PersistentArrayMap" PersistentArrayMap_1_createWithCheck [#_"array" init]
-///         (loop_when_recur [#_"int" i 0] (< i (alength init)) [(+ i 2)]
-///             (loop_when_recur [#_"int" j (+ i 2)] (< j (alength init)) [(+ j 2)]
-///                 (when (= (aget init i) (aget init j))
+///         (loop_when_recur [#_"int" i 0] (lt_9_ i (alength init)) [(plus i 2)]
+///             (loop_when_recur [#_"int" j (plus i 2)] (lt_9_ j (alength init)) [(plus j 2)]
+///                 (when (_eq_9_ (aget init i) (aget init j))
 ///                     (throw (str "duplicate key: " (aget init i)))
 ///                 )
 ///             )
@@ -5554,44 +4424,44 @@ namespace arbace {
 ///             (throw (str "no value supplied for key: " (aget init (dec (alength init)))))
 ///         )
 ///         (let [#_"int" n
-///                 (loop_when [n 0 #_"int" i 0] (< i (alength init)) => n
+///                 (loop_when [n 0 #_"int" i 0] (lt_9_ i (alength init)) => n
 ///                     (let [#_"bool" dup_9_
-///                             (loop_when [dup_9_ false #_"int" j 0] (< j i) => dup_9_
-///                                 (or (= (aget init i) (aget init j))
-///                                     (recur dup_9_ (+ j 2))
+///                             (loop_when [dup_9_ false #_"int" j 0] (lt_9_ j i) => dup_9_
+///                                 (or (_eq_9_ (aget init i) (aget init j))
+///                                     (recur dup_9_ (plus j 2))
 ///                                 )
 ///                             )]
-///                         (recur (if dup_9_ n (+ n 2)) (+ i 2))
+///                         (recur (if dup_9_ n (plus n 2)) (plus i 2))
 ///                     )
 ///                 )
 ///               init
-///                 (when (< n (alength init)) => init
+///                 (when (lt_9_ n (alength init)) => init
 ///                     (let [#_"array" nodups (anew n)
 ///                           #_"int" m
-///                             (loop_when [m 0 #_"int" i 0] (< i (alength init)) => m
+///                             (loop_when [m 0 #_"int" i 0] (lt_9_ i (alength init)) => m
 ///                                 (let [#_"bool" dup_9_
-///                                         (loop_when [dup_9_ false #_"int" j 0] (< j m) => dup_9_
-///                                             (or (= (aget init i) (aget nodups j))
-///                                                 (recur dup_9_ (+ j 2))
+///                                         (loop_when [dup_9_ false #_"int" j 0] (lt_9_ j m) => dup_9_
+///                                             (or (_eq_9_ (aget init i) (aget nodups j))
+///                                                 (recur dup_9_ (plus j 2))
 ///                                             )
 ///                                         )
 ///                                       m (when_not dup_9_ => m
 ///                                             (let [#_"int" j
-///                                                     (loop_when [j (- (alength init) 2)] (<= i j) => j
-///                                                         (if (= (aget init i) (aget init j))
+///                                                     (loop_when [j (minus (alength init) 2)] (lte_9_ i j) => j
+///                                                         (if (_eq_9_ (aget init i) (aget init j))
 ///                                                             j
-///                                                             (recur (- j 2))
+///                                                             (recur (minus j 2))
 ///                                                         )
 ///                                                     )]
 ///                                                 (aset_4_ nodups m (aget init i))
 ///                                                 (aset_4_ nodups (inc m) (aget init (inc j)))
-///                                                 (+ m 2)
+///                                                 (plus m 2)
 ///                                             )
 ///                                         )]
-///                                     (recur m (+ i 2))
+///                                     (recur m (plus i 2))
 ///                                 )
 ///                             )]
-///                         (when (= m n) => (throw (str "internal error: m=" m))
+///                         (when (_eq_9_ m n) => (throw (str "internal error: m=" m))
 ///                             nodups
 ///                         )
 ///                     )
@@ -5601,7 +4471,7 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"PersistentArrayMap" PersistentArrayMap_2_withMeta [#_"PersistentArrayMap" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (PersistentArrayMap_1_new meta, (_0_array this))
 ///         )
 ///     )
@@ -5610,39 +4480,39 @@ namespace arbace {
 ///         (quot (alength (_0_array this)) 2)
 ///     )
 
-///     (defn_ #_"int" PersistentArrayMap_1_index_of [#_"array" a, #_"Object" key]
-///         (loop_when [#_"int" i 0] (< i (alength a)) => -1
-///             (if (= (aget a i) key) i (recur (+ i 2)))
+///     (defn_ #_"int" PersistentArrayMap_1_index_of [#_"array" a, #_"Object" key]
+///         (loop_when [#_"int" i 0] (lt_9_ i (alength a)) => -1
+///             (if (_eq_9_ (aget a i) key) i (recur (plus i 2)))
 ///         )
 ///     )
 
-///     (defn_ #_"Object" PersistentArrayMap_2_valAt
-///         ([#_"PersistentArrayMap" this, #_"Object" key] (PersistentArrayMap_2_valAt this, key, nil))
-///         ([#_"PersistentArrayMap" this, #_"Object" key, #_"Object" not_found]
+///     (defn_ #_"Object" PersistentArrayMap_2_valAt
+///         ([#_"PersistentArrayMap" this, #_"Object" key] (PersistentArrayMap_2_valAt this, key, nil))
+///         ([#_"PersistentArrayMap" this, #_"Object" key, #_"Object" not_found]
 ///             (let [
 ///                 #_"array" a (_0_array this) #_"int" i (PersistentArrayMap_1_index_of a, key)
 ///             ]
-///                 (if (< -1 i) (aget a (inc i)) not_found)
+///                 (if (lt_9_ -1 i) (aget a (inc i)) not_found)
 ///             )
 ///         )
 ///     )
 
 ///     (def #_"int" PersistentArrayMap_1_HASHTABLE_THRESHOLD 16)
 
-///     (defn_ #_"IPersistentMap" PersistentArrayMap_2_assoc [#_"PersistentArrayMap" this, #_"Object" key, #_"Object" val]
+///     (defn_ #_"IPersistentMap" PersistentArrayMap_2_assoc [#_"PersistentArrayMap" this, #_"Object" key, #_"Object" val]
 ///         (let [
 ///             #_"array" a (_0_array this) #_"int" i (PersistentArrayMap_1_index_of a, key)
 ///         ]
-///             (if (< -1 i)
-///                 (if (= (aget a (inc i)) val)
+///             (if (lt_9_ -1 i)
+///                 (if (_eq_9_ (aget a (inc i)) val)
 ///                     this
 ///                     (PersistentArrayMap_2_create this, (-> (aclone a) (aset_4_ (inc i) val)))
 ///                 )
-///                 (if (< PersistentArrayMap_1_HASHTABLE_THRESHOLD (alength a))
+///                 (if (lt_9_ PersistentArrayMap_1_HASHTABLE_THRESHOLD (alength a))
 ///                     (-> (PersistentHashMap_1_create_1a a) (assoc key val) (with_meta (_0__meta this)))
 ///                     (let [
 ///                         #_"int" n (alength a)
-///                         #_"array" a_1_ (anew (+ n 2))
+///                         #_"array" a_1_ (anew (plus n 2))
 ///                         a_1_ (if (pos_9_ n) (acopy_4_ a_1_ 0 a 0 n) a_1_)
 ///                     ]
 ///                         (PersistentArrayMap_2_create this, (-> a_1_ (aset_4_ n key) (aset_4_ (inc n) val)))
@@ -5652,28 +4522,28 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"bool" PersistentArrayMap_2_containsKey [#_"PersistentArrayMap" this, #_"Object" key]
-///         (< -1 (PersistentArrayMap_1_index_of (_0_array this), key))
+///     (defn_ #_"bool" PersistentArrayMap_2_containsKey [#_"PersistentArrayMap" this, #_"Object" key]
+///         (lt_9_ -1 (PersistentArrayMap_1_index_of (_0_array this), key))
 ///     )
 
-///     (defn_ #_"pair" PersistentArrayMap_2_entryAt [#_"PersistentArrayMap" this, #_"Object" key]
+///     (defn_ #_"pair" PersistentArrayMap_2_entryAt [#_"PersistentArrayMap" this, #_"Object" key]
 ///         (let [
 ///             #_"array" a (_0_array this) #_"int" i (PersistentArrayMap_1_index_of a, key)
 ///         ]
-///             (when (< -1 i)
+///             (when (lt_9_ -1 i)
 ///                 (MapEntry_1_new (aget a i), (aget a (inc i)))
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"IPersistentMap" PersistentArrayMap_2_dissoc [#_"PersistentArrayMap" this, #_"Object" key]
+///     (defn_ #_"IPersistentMap" PersistentArrayMap_2_dissoc [#_"PersistentArrayMap" this, #_"Object" key]
 ///         (let [
 ///             #_"array" a (_0_array this) #_"int" i (PersistentArrayMap_1_index_of a, key)
 ///         ]
-///             (when (< -1 i) => this
-///                 (let_when [#_"int" n (- (alength a) 2)] (pos_9_ n) => (with_meta PersistentArrayMap_1_EMPTY (_0__meta this))
+///             (when (lt_9_ -1 i) => this
+///                 (let_when [#_"int" n (minus (alength a) 2)] (pos_9_ n) => (with_meta PersistentArrayMap_1_EMPTY (_0__meta this))
 ///                     (let [
-///                         #_"array" a_1_ (-> (anew n) (acopy_4_ 0 a 0 i) (acopy_4_ i a (+ i 2) (- n i)))
+///                         #_"array" a_1_ (-> (anew n) (acopy_4_ 0 a 0 i) (acopy_4_ i a (plus i 2) (minus n i)))
 ///                     ]
 ///                         (PersistentArrayMap_2_create this, a_1_)
 ///                     )
@@ -5692,12 +4562,12 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"Object" PersistentArrayMap_2_kvreduce [#_"PersistentArrayMap" this, #_"IFn" f, #_"Object" r]
+///     (defn_ #_"Object" PersistentArrayMap_2_kvreduce [#_"PersistentArrayMap" this, #_"IFn" f, #_"Object" r]
 ///         (let [#_"array" a (_0_array this) #_"int" n (alength a)]
-///             (loop_when [r r #_"int" i 0] (< i n) => r
+///             (loop_when [r r #_"int" i 0] (lt_9_ i n) => r
 ///                 (let [r (f r (aget a i), (aget a (inc i)))]
 ///                     (when_not (reduced_9_ r) => (deref r)
-///                         (recur r (+ i 2))
+///                         (recur r (plus i 2))
 ///                     )
 ///                 )
 ///             )
@@ -5708,59 +4578,59 @@ namespace arbace {
 ///         (TransientArrayMap_1_new (_0_array this))
 ///     )
 
-///     (defm PersistentArrayMap IMeta
+///     (defm PersistentArrayMap IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm PersistentArrayMap IObj
+///     (defm PersistentArrayMap IObj
 ///         (IObj_3_withMeta => PersistentArrayMap_2_withMeta)
 ///     )
 
-///     (defm PersistentArrayMap Counted
+///     (defm PersistentArrayMap Counted
 ///         (Counted_3_count => PersistentArrayMap_2_count)
 ///     )
 
-///     (defm PersistentArrayMap ILookup
+///     (defm PersistentArrayMap ILookup
 ///         (ILookup_3_valAt => PersistentArrayMap_2_valAt)
 ///     )
 
-///     (defm PersistentArrayMap IFn
+///     (defm PersistentArrayMap IFn
 ///         (IFn_3_invoke => APersistentMap_2_invoke)
 ///         (IFn_3_applyTo => AFn_1_applyTo)
 ///     )
 
-///     (defm PersistentArrayMap Associative
+///     (defm PersistentArrayMap Associative
 ///         (Associative_3_assoc => PersistentArrayMap_2_assoc)
 ///         (Associative_3_containsKey => PersistentArrayMap_2_containsKey)
 ///         (Associative_3_entryAt => PersistentArrayMap_2_entryAt)
 ///     )
 
-///     (defm PersistentArrayMap IPersistentMap
+///     (defm PersistentArrayMap IPersistentMap
 ///         (IPersistentMap_3_dissoc => PersistentArrayMap_2_dissoc)
 ///     )
 
-///     (defm PersistentArrayMap IPersistentCollection
+///     (defm PersistentArrayMap IPersistentCollection
 ///         (IPersistentCollection_3_conj => APersistentMap_2_conj)
 ///         (IPersistentCollection_3_empty => PersistentArrayMap_2_empty)
 ///     )
 
-///     (defm PersistentArrayMap Seqable
+///     (defm PersistentArrayMap Seqable
 ///         (Seqable_3_seq => PersistentArrayMap_2_seq)
 ///     )
 
-///     (defm PersistentArrayMap IKVReduce
+///     (defm PersistentArrayMap IKVReduce
 ///         (IKVReduce_3_kvreduce => PersistentArrayMap_2_kvreduce)
 ///     )
 
-///     (defm PersistentArrayMap IEditableCollection
+///     (defm PersistentArrayMap IEditableCollection
 ///         (IEditableCollection_3_asTransient => PersistentArrayMap_2_asTransient)
 ///     )
 
-///     (defm PersistentArrayMap IObject
+///     (defm PersistentArrayMap IObject
 ///         (IObject_3_equals => APersistentMap_2_equals)
 ///     )
 
-///     (defm PersistentArrayMap Hashed
+///     (defm PersistentArrayMap Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashUnordered)
 ///     )
 // )
@@ -5771,31 +4641,27 @@ namespace arbace {
 /// )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"HSeq"
-///     (declare HSeq_2_seq HSeq_2_first HSeq_2_next)
-
-///     (defq HSeq [#_"IPersistentMap" _meta, #_"node[]" nodes, #_"int" i, #_"ISeq" s] SeqForm
-///         clojure.lang.ISeq (seq [_] (HSeq_2_seq _)) (first [_] (HSeq_2_first _)) (next [_] (HSeq_2_next _)) (more [_] (or (HSeq_2_next _) ()))
-///     )
+///     (defq HSeq [#_"IPersistentMap" _meta, #_"node[]" nodes, #_"int" i, #_"ISeq" s] SeqForm)
 
 ///     #_inherit
-///     (defm HSeq ASeq)
+///     (defm HSeq ASeq)
 
 ///     (defn_ #_"HSeq" HSeq_1_new [#_"IPersistentMap" meta, #_"node[]" nodes, #_"int" i, #_"ISeq" s]
 ///         (new_8_ HSeq_1_class (anew [meta, nodes, i, s]))
 ///     )
 
 ///     (defn_ #_"HSeq" HSeq_2_withMeta [#_"HSeq" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (HSeq_1_new meta, (_0_nodes this), (_0_i this), (_0_s this))
 ///         )
 ///     )
 
 ///     (defn_ #_"ISeq" HSeq_1_create_4 [#_"IPersistentMap" meta, #_"node[]" nodes, #_"int" i, #_"ISeq" s]
 ///         (when (nil_9_ s) => (HSeq_1_new meta, nodes, i, s)
-///             (loop_when i (< i (alength nodes))
+///             (loop_when i (lt_9_ i (alength nodes))
 ///                 (when_some [#_"node" node (aget nodes i)] => (recur (inc i))
 ///                     (when_some [s (INode_3_nodeSeq node)] => (recur (inc i))
 ///                         (HSeq_1_new meta, nodes, (inc i), s)
@@ -5821,43 +4687,39 @@ namespace arbace {
 ///         (HSeq_1_create_4 nil, (_0_nodes this), (_0_i this), (next (_0_s this)))
 ///     )
 
-///     (defm HSeq IMeta
+///     (defm HSeq IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm HSeq IObj
+///     (defm HSeq IObj
 ///         (IObj_3_withMeta => HSeq_2_withMeta)
 ///     )
 
-///     (defm HSeq Sequential)
+///     (defm HSeq Sequential)
 
-///     (defm HSeq Seqable
+///     (defm HSeq Seqable
 ///         (Seqable_3_seq => HSeq_2_seq)
 ///     )
 
-///     (defm HSeq ISeq
+///     (defm HSeq ISeq
 ///         (ISeq_3_first => HSeq_2_first)
 ///         (ISeq_3_next => HSeq_2_next)
 ///     )
 
-///     (defm HSeq Hashed
+///     (defm HSeq Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm HSeq IObject
+///     (defm HSeq IObject
 ///         (IObject_3_equals => ASeq_2_equals)
 ///     )
 // )
 
 // (about #_"NSeq"
-///     (declare NSeq_2_seq NSeq_2_first NSeq_2_next)
-
-///     (defq NSeq [#_"IPersistentMap" _meta, #_"array" a, #_"int" i, #_"ISeq" s] SeqForm
-///         clojure.lang.ISeq (seq [_] (NSeq_2_seq _)) (first [_] (NSeq_2_first _)) (next [_] (NSeq_2_next _)) (more [_] (or (NSeq_2_next _) ()))
-///     )
+///     (defq NSeq [#_"IPersistentMap" _meta, #_"array" a, #_"int" i, #_"ISeq" s] SeqForm)
 
 ///     #_inherit
-///     (defm NSeq ASeq)
+///     (defm NSeq ASeq)
 
 ///     (defn #_"NSeq" NSeq_1_new
 ///         ([#_"array" a, #_"int" i] (NSeq_1_new nil, a, i, nil))
@@ -5867,22 +4729,22 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"NSeq" NSeq_2_withMeta [#_"NSeq" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (NSeq_1_new meta, (_0_a this), (_0_i this), (_0_s this))
 ///         )
 ///     )
 
 ///     (defn_ #_"ISeq" NSeq_1_create_3 [#_"array" a, #_"int" i, #_"ISeq" s]
 ///         (when (nil_9_ s) => (NSeq_1_new nil, a, i, s)
-///             (loop_when i (< i (alength a))
+///             (loop_when i (lt_9_ i (alength a))
 ///                 (when (nil_9_ (aget a i)) => (NSeq_1_new nil, a, i, nil)
 ///                     (or
 ///                         (when_some [#_"node" node (aget a (inc i))]
 ///                             (when_some [s (INode_3_nodeSeq node)]
-///                                 (NSeq_1_new nil, a, (+ i 2), s)
+///                                 (NSeq_1_new nil, a, (plus i 2), s)
 ///                             )
 ///                         )
-///                         (recur (+ i 2))
+///                         (recur (plus i 2))
 ///                     )
 ///                 )
 ///             )
@@ -5907,76 +4769,76 @@ namespace arbace {
 ///     (defn_ #_"ISeq" NSeq_2_next [#_"NSeq" this]
 ///         (if (some_9_ (_0_s this))
 ///             (NSeq_1_create_3 (_0_a this), (_0_i this), (next (_0_s this)))
-///             (NSeq_1_create_3 (_0_a this), (+ (_0_i this) 2), nil)
+///             (NSeq_1_create_3 (_0_a this), (plus (_0_i this) 2), nil)
 ///         )
 ///     )
 
-///     (defn #_"Object" NSeq_1_kvreduce [#_"array" a, #_"IFn" f, #_"Object" r]
-///         (loop_when [r r #_"int" i 0] (< i (alength a)) => r
-///             (let [#_"Object" k (aget a i) #_"value|node" v (aget a (inc i))
+///     (defn #_"Object" NSeq_1_kvreduce [#_"array" a, #_"IFn" f, #_"Object" r]
+///         (loop_when [r r #_"int" i 0] (lt_9_ i (alength a)) => r
+///             (let [#_"Object" k (aget a i) #_"value|node" v (aget a (inc i))
 ///                   r (cond
 ///                         (some_9_ k) (f r k v)
 ///                         (some_9_ v) (INode_3_kvreduce v, f, r)
 ///                         _0_else     r
 ///                     )]
 ///                 (when_not (reduced_9_ r) => r
-///                     (recur r (+ i 2))
+///                     (recur r (plus i 2))
 ///                 )
 ///             )
 ///         )
 ///     )
 
-///     (defm NSeq IMeta
+///     (defm NSeq IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm NSeq IObj
+///     (defm NSeq IObj
 ///         (IObj_3_withMeta => NSeq_2_withMeta)
 ///     )
 
-///     (defm NSeq Sequential)
+///     (defm NSeq Sequential)
 
-///     (defm NSeq Seqable
+///     (defm NSeq Seqable
 ///         (Seqable_3_seq => NSeq_2_seq)
 ///     )
 
-///     (defm NSeq ISeq
+///     (defm NSeq ISeq
 ///         (ISeq_3_first => NSeq_2_first)
 ///         (ISeq_3_next => NSeq_2_next)
 ///     )
 
-///     (defm NSeq Hashed
+///     (defm NSeq Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm NSeq IObject
+///     (defm NSeq IObject
 ///         (IObject_3_equals => ASeq_2_equals)
 ///     )
 // )
 
 // (about #_"PersistentHashMap"
 ///     (defn_ #_"int" PersistentHashMap_1_mask [#_"int" hash, #_"int" shift]
-///         (bit_and (>>> hash shift) 0x1f)
+///         (bit_and (unsigned_bit_shift_right hash shift) 0x1f)
 ///     )
 
 ///     (defn_ #_"int" PersistentHashMap_1_bitpos [#_"int" hash, #_"int" shift]
-///         (int_4_ (<< 1 (PersistentHashMap_1_mask hash, shift)))
+///         (int (bit_shift_left 1 (PersistentHashMap_1_mask hash, shift)))
 ///     )
 
 ///     (defn_ #_"array" PersistentHashMap_1_cloneAndSet
-///         ([#_"array" a, #_"int" i, #_"Object" x]                          (-> (aclone a) (aset_4_ i x)))
-///         ([#_"array" a, #_"int" i, #_"Object" x, #_"int" j, #_"Object" y] (-> (aclone a) (aset_4_ i x) (aset_4_ j y)))
+///         ([#_"array" a, #_"int" i, #_"Object" x]                          (-> (aclone a) (aset_4_ i x)))
+///         ([#_"array" a, #_"int" i, #_"Object" x, #_"int" j, #_"Object" y] (-> (aclone a) (aset_4_ i x) (aset_4_ j y)))
 ///     )
 
 ///     (defn_ #_"array" PersistentHashMap_1_removePair [#_"array" a, #_"int" i]
-///         (let [#_"int" n (- (alength a) 2) #_"int" m (* 2 i)]
-///             (-> (anew n) (acopy_4_ 0 a 0 m) (acopy_4_ m a (+ m 2) (- n m)))
+///         (let [#_"int" n (minus (alength a) 2) #_"int" m (mult 2 i)]
+///             (-> (anew n) (acopy_4_ 0 a 0 m) (acopy_4_ m a (plus m 2) (minus n m)))
 ///         )
 ///     )
 // )
 
 // (about #_"ANode"
-///     (defq ANode [#_"thread'" edit, #_"int" n, #_"node[]" a])
+///     (defq ANode [#_"thread'" edit, #_"int" n, #_"node[]" a])
 
 ///     (defn #_"ANode" ANode_1_new [#_"thread'" edit, #_"int" n, #_"node[]" a]
 ///         (new_8_ ANode_1_class (anew [edit, n, a]))
@@ -5995,26 +4857,24 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (declare BNode_1_new)
-
 ///     (defn_ #_"node" ANode_2_pack [#_"ANode" this, #_"thread'" edit, #_"int" idx]
-///         (let [#_"array" a_1_ (anew (* 2 (dec (_0_n this))))
+///         (let [#_"array" a_1_ (anew (mult 2 (dec (_0_n this))))
 ///               [#_"int" bitmap #_"int" j]
-///                 (loop_when [bitmap 0 j 1 #_"int" i 0] (< i idx) => [bitmap j]
+///                 (loop_when [bitmap 0 j 1 #_"int" i 0] (lt_9_ i idx) => [bitmap j]
 ///                     (let [[bitmap j]
 ///                             (when_some [#_"node" ai (aget (_0_a this) i)] => [bitmap j]
 ///                                 (aset_4_ a_1_ j ai)
-///                                 [(bit_or bitmap (<< 1 i)) (+ j 2)]
+///                                 [(bit_or bitmap (bit_shift_left 1 i)) (plus j 2)]
 ///                             )]
 ///                         (recur bitmap j (inc i))
 ///                     )
 ///                 )
 ///               bitmap
-///                 (loop_when [bitmap bitmap j j #_"int" i (inc idx)] (< i (alength (_0_a this))) => bitmap
+///                 (loop_when [bitmap bitmap j j #_"int" i (inc idx)] (lt_9_ i (alength (_0_a this))) => bitmap
 ///                     (let [[bitmap j]
 ///                             (when_some [#_"node" ai (aget (_0_a this) i)] => [bitmap j]
 ///                                 (aset_4_ a_1_ j ai)
-///                                 [(bit_or bitmap (<< 1 i)) (+ j 2)]
+///                                 [(bit_or bitmap (bit_shift_left 1 i)) (plus j 2)]
 ///                             )]
 ///                         (recur bitmap j (inc i))
 ///                     )
@@ -6023,29 +4883,27 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (declare BNode_1_EMPTY)
-
-///     (defn_ #_"node" ANode_2_assoc [#_"ANode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"bool'" addedLeaf]
+///     (defn_ #_"node" ANode_2_assoc [#_"ANode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"bool'" addedLeaf]
 ///         (let [#_"int" i (PersistentHashMap_1_mask hash, shift) #_"node" ai (aget (_0_a this) i)]
 ///             (if (some_9_ ai)
-///                 (let [#_"node" node (INode_3_assoc ai, (+ shift 5), hash, key, val, addedLeaf)]
-///                     (when_not (= node ai) => this
+///                 (let [#_"node" node (INode_3_assoc ai, (plus shift 5), hash, key, val, addedLeaf)]
+///                     (when_not (_eq_9_ node ai) => this
 ///                         (ANode_1_new nil, (_0_n this), (PersistentHashMap_1_cloneAndSet (_0_a this), i, node))
 ///                     )
 ///                 )
-///                 (let [#_"node" node (INode_3_assoc BNode_1_EMPTY, (+ shift 5), hash, key, val, addedLeaf)]
+///                 (let [#_"node" node (INode_3_assoc BNode_1_EMPTY, (plus shift 5), hash, key, val, addedLeaf)]
 ///                     (ANode_1_new nil, (inc (_0_n this)), (PersistentHashMap_1_cloneAndSet (_0_a this), i, node))
 ///                 )
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"node" ANode_2_dissoc [#_"ANode" this, #_"int" shift, #_"int" hash, #_"Object" key]
+///     (defn_ #_"node" ANode_2_dissoc [#_"ANode" this, #_"int" shift, #_"int" hash, #_"Object" key]
 ///         (let_when [#_"int" i (PersistentHashMap_1_mask hash, shift) #_"node" ai (aget (_0_a this) i)] (some_9_ ai) => this
-///             (let_when_not [#_"node" node (INode_3_dissoc ai, (+ shift 5), hash, key)] (= node ai) => this
+///             (let_when_not [#_"node" node (INode_3_dissoc ai, (plus shift 5), hash, key)] (_eq_9_ node ai) => this
 ///                 (cond
 ///                     (some_9_ node)     (ANode_1_new nil, (_0_n this), (PersistentHashMap_1_cloneAndSet (_0_a this), i, node))
-///                     (<= (_0_n this) 8) (ANode_2_pack this, nil, i)
+///                     (lte_9_ (_0_n this) 8) (ANode_2_pack this, nil, i)
 ///                     _0_else            (ANode_1_new nil, (dec (_0_n this)), (PersistentHashMap_1_cloneAndSet (_0_a this), i, node))
 ///                 )
 ///             )
@@ -6053,17 +4911,17 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"IMapEntry|value" ANode_2_find
-///         ([#_"ANode" this, #_"int" shift, #_"int" hash, #_"Object" key]
+///         ([#_"ANode" this, #_"int" shift, #_"int" hash, #_"Object" key]
 ///             (let [#_"int" i (PersistentHashMap_1_mask hash, shift) #_"node" node (aget (_0_a this) i)]
 ///                 (when (some_9_ node)
-///                     (INode_3_find node, (+ shift 5), hash, key)
+///                     (INode_3_find node, (plus shift 5), hash, key)
 ///                 )
 ///             )
 ///         )
-///         ([#_"ANode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" not_found]
+///         ([#_"ANode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" not_found]
 ///             (let [#_"int" i (PersistentHashMap_1_mask hash, shift) #_"node" node (aget (_0_a this) i)]
 ///                 (when (some_9_ node) => not_found
-///                     (INode_3_find node, (+ shift 5), hash, key, not_found)
+///                     (INode_3_find node, (plus shift 5), hash, key, not_found)
 ///                 )
 ///             )
 ///         )
@@ -6073,35 +4931,35 @@ namespace arbace {
 ///         (HSeq_1_create_1 (_0_a this))
 ///     )
 
-///     (defn_ #_"node" ANode_2_assocT [#_"ANode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"bool'" addedLeaf]
+///     (defn_ #_"node" ANode_2_assocT [#_"ANode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"bool'" addedLeaf]
 ///         (let [#_"int" i (PersistentHashMap_1_mask hash, shift) #_"node" ai (aget (_0_a this) i)]
 ///             (if (some_9_ ai)
-///                 (let [#_"node" node (INode_3_assocT ai, edit, (+ shift 5), hash, key, val, addedLeaf)]
-///                     (when_not (= node ai) => this
+///                 (let [#_"node" node (INode_3_assocT ai, edit, (plus shift 5), hash, key, val, addedLeaf)]
+///                     (when_not (_eq_9_ node ai) => this
 ///                         (ANode_2_editAndSet this, edit, i, node)
 ///                     )
 ///                 )
-///                 (let [#_"node" node (INode_3_assocT BNode_1_EMPTY, edit, (+ shift 5), hash, key, val, addedLeaf)]
+///                 (let [#_"node" node (INode_3_assocT BNode_1_EMPTY, edit, (plus shift 5), hash, key, val, addedLeaf)]
 ///                     (-> (ANode_2_editAndSet this, edit, i, node) (qswap_4_ _0_n inc))
 ///                 )
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"node" ANode_2_dissocT [#_"ANode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"bool'" removedLeaf]
+///     (defn_ #_"node" ANode_2_dissocT [#_"ANode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"bool'" removedLeaf]
 ///         (let_when [#_"int" i (PersistentHashMap_1_mask hash, shift) #_"node" ai (aget (_0_a this) i)] (some_9_ ai) => this
-///             (let_when_not [#_"node" node (INode_3_dissocT ai, edit, (+ shift 5), hash, key, removedLeaf)] (= node ai) => this
+///             (let_when_not [#_"node" node (INode_3_dissocT ai, edit, (plus shift 5), hash, key, removedLeaf)] (_eq_9_ node ai) => this
 ///                 (cond
 ///                     (some_9_ node)     (ANode_2_editAndSet this, edit, i, node)
-///                     (<= (_0_n this) 8) (ANode_2_pack this, edit, i)
+///                     (lte_9_ (_0_n this) 8) (ANode_2_pack this, edit, i)
 ///                     _0_else            (-> (ANode_2_editAndSet this, edit, i, node) (qswap_4_ _0_n dec))
 ///                 )
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"Object" ANode_2_kvreduce [#_"ANode" this, #_"IFn" f, #_"Object" r]
-///         (loop_when [r r #_"int" i 0] (< i (alength (_0_a this))) => r
+///     (defn_ #_"Object" ANode_2_kvreduce [#_"ANode" this, #_"IFn" f, #_"Object" r]
+///         (loop_when [r r #_"int" i 0] (lt_9_ i (alength (_0_a this))) => r
 ///             (when_some [#_"node" node (aget (_0_a this) i)] => (recur r (inc i))
 ///                 (let [r (INode_3_kvreduce node, f, r)]
 ///                     (when_not (reduced_9_ r) => r
@@ -6112,7 +4970,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm ANode INode
+///     (defm ANode INode
 ///         (INode_3_assoc => ANode_2_assoc)
 ///         (INode_3_dissoc => ANode_2_dissoc)
 ///         (INode_3_find => ANode_2_find)
@@ -6124,7 +4982,7 @@ namespace arbace {
 // )
 
 // (about #_"BNode"
-///     (defq BNode [#_"thread'" edit, #_"int" bitmap, #_"array" a])
+///     (defq BNode [#_"thread'" edit, #_"int" bitmap, #_"array" a])
 
 ///     (defn #_"BNode" BNode_1_new [#_"thread'" edit, #_"int" bitmap, #_"array" a]
 ///         (new_8_ BNode_1_class (anew [edit, bitmap, a]))
@@ -6133,14 +4991,12 @@ namespace arbace {
 ///     (def #_"BNode" BNode_1_EMPTY (BNode_1_new nil, 0, (anew 0)))
 
 ///     (defn_ #_"int" BNode_1_index [#_"int" bitmap, #_"int" bit]
-///         (Integer_1_bitCount (bit_and bitmap (dec bit)))
+///         (Number_1_bitCount (bit_and bitmap (dec bit)))
 ///     )
 
-///     (declare CNode_1_new)
-
-///     (defn_ #_"node" BNode_1_create [#_"int" shift, #_"Object" key1, #_"Object" val1, #_"int" hash2, #_"Object" key2, #_"Object" val2]
+///     (defn_ #_"node" BNode_1_create [#_"int" shift, #_"Object" key1, #_"Object" val1, #_"int" hash2, #_"Object" key2, #_"Object" val2]
 ///         (let [#_"int" hash1 (f_1_hash key1)]
-///             (when_not (= hash1 hash2) => (CNode_1_new nil, hash1, 2, (anew [ key1, val1, key2, val2 ]))
+///             (when_not (_eq_9_ hash1 hash2) => (CNode_1_new nil, hash1, 2, (anew [ key1, val1, key2, val2 ]))
 ///                 (let [#_"bool'" addedLeaf (atom false) #_"thread'" edit (atom nil)]
 ///                     (-> BNode_1_EMPTY
 ///                         (INode_3_assocT edit, shift, hash1, key1, val1, addedLeaf)
@@ -6153,20 +5009,20 @@ namespace arbace {
 
 ///     (defn_ #_"BNode" BNode_2_ensureEditable [#_"BNode" this, #_"thread'" edit]
 ///         (when_not (identical_9_ (_0_edit this) edit) => this
-///             (let [#_"int" b (_0_bitmap this) #_"int" n (Integer_1_bitCount b) #_"int" m (inc n)]
-///                 (BNode_1_new edit, b, (-> (anew (* 2 m)) (acopy_4_ 0 (_0_a this) 0 (* 2 n))))
+///             (let [#_"int" b (_0_bitmap this) #_"int" n (Number_1_bitCount b) #_"int" m (inc n)]
+///                 (BNode_1_new edit, b, (-> (anew (mult 2 m)) (acopy_4_ 0 (_0_a this) 0 (mult 2 n))))
 ///             )
 ///         )
 ///     )
 
 ///     (defn_ #_"BNode" BNode_2_editAndSet
-///         ([#_"BNode" this, #_"thread'" edit, #_"int" i, #_"Object" x]
+///         ([#_"BNode" this, #_"thread'" edit, #_"int" i, #_"Object" x]
 ///             (let [#_"BNode" e (BNode_2_ensureEditable this, edit)]
 ///                 (aset_4_ (_0_a e) i x)
 ///                 e
 ///             )
 ///         )
-///         ([#_"BNode" this, #_"thread'" edit, #_"int" i, #_"Object" x, #_"int" j, #_"Object" y]
+///         ([#_"BNode" this, #_"thread'" edit, #_"int" i, #_"Object" x, #_"int" j, #_"Object" y]
 ///             (let [#_"BNode" e (BNode_2_ensureEditable this, edit)]
 ///                 (aset_4_ (_0_a e) i x)
 ///                 (aset_4_ (_0_a e) j y)
@@ -6176,22 +5032,22 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"BNode" BNode_2_editAndRemovePair [#_"BNode" this, #_"thread'" edit, #_"int" bit, #_"int" i]
-///         (when_not (= (_0_bitmap this) bit)
+///         (when_not (_eq_9_ (_0_bitmap this) bit)
 ///             (let [
 ///                 #_"BNode" e (-> (BNode_2_ensureEditable this, edit) (qswap_4_ _0_bitmap bit_xor bit))
-///                 #_"array" a (_0_a e) #_"int" n (alength a) #_"int" m (* 2 (inc i))
+///                 #_"array" a (_0_a e) #_"int" n (alength a) #_"int" m (mult 2 (inc i))
 ///             ]
-///                 (acopy_4_ a (* 2 i) a m (- n m))
-///                 (aset_4_ a (- n 2) nil)
-///                 (aset_4_ a (- n 1) nil)
+///                 (acopy_4_ a (mult 2 i) a m (minus n m))
+///                 (aset_4_ a (minus n 2) nil)
+///                 (aset_4_ a (minus n 1) nil)
 ///                 e
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"node" BNode_1_createT [#_"thread'" edit, #_"int" shift, #_"Object" key1, #_"Object" val1, #_"int" hash2, #_"Object" key2, #_"Object" val2]
+///     (defn_ #_"node" BNode_1_createT [#_"thread'" edit, #_"int" shift, #_"Object" key1, #_"Object" val1, #_"int" hash2, #_"Object" key2, #_"Object" val2]
 ///         (let [#_"int" hash1 (f_1_hash key1)]
-///             (when_not (= hash1 hash2) => (CNode_1_new nil, hash1, 2, (anew [ key1, val1, key2, val2 ]))
+///             (when_not (_eq_9_ hash1 hash2) => (CNode_1_new nil, hash1, 2, (anew [ key1, val1, key2, val2 ]))
 ///                 (let [#_"bool'" addedLeaf (atom false)]
 ///                     (-> BNode_1_EMPTY
 ///                         (INode_3_assocT edit, shift, hash1, key1, val1, addedLeaf)
@@ -6202,26 +5058,26 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"node" BNode_2_assoc [#_"BNode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"bool'" addedLeaf]
+///     (defn_ #_"node" BNode_2_assoc [#_"BNode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"bool'" addedLeaf]
 ///         (let [#_"int" bit (PersistentHashMap_1_bitpos hash, shift) #_"int" x (BNode_1_index (_0_bitmap this), bit)]
 ///             (if_not (zero_9_ (bit_and (_0_bitmap this) bit))
 ///                 (let [
-///                     #_"key|nil" k (aget (_0_a this) (* 2 x)) #_"value|node" v (aget (_0_a this) (inc (* 2 x)))
+///                     #_"key|nil" k (aget (_0_a this) (mult 2 x)) #_"value|node" v (aget (_0_a this) (inc (mult 2 x)))
 ///                     #_"array" a_1_
 ///                         (cond
 ///                             (nil_9_ k)
-///                                 (let [#_"node" node (INode_3_assoc #_"node" v, (+ shift 5), hash, key, val, addedLeaf)]
-///                                     (when_not (= node v)
-///                                         (PersistentHashMap_1_cloneAndSet (_0_a this), (inc (* 2 x)), node)
+///                                 (let [#_"node" node (INode_3_assoc #_"node" v, (plus shift 5), hash, key, val, addedLeaf)]
+///                                     (when_not (_eq_9_ node v)
+///                                         (PersistentHashMap_1_cloneAndSet (_0_a this), (inc (mult 2 x)), node)
 ///                                     )
 ///                                 )
-///                             (= key k)
-///                                 (when_not (= val v)
-///                                     (PersistentHashMap_1_cloneAndSet (_0_a this), (inc (* 2 x)), val)
+///                             (_eq_9_ key k)
+///                                 (when_not (_eq_9_ val v)
+///                                     (PersistentHashMap_1_cloneAndSet (_0_a this), (inc (mult 2 x)), val)
 ///                                 )
 ///                             _0_else
-///                                 (let [#_"node" node (BNode_1_create (+ shift 5), k, v, hash, key, val) _ (reset_4_ addedLeaf true)]
-///                                     (PersistentHashMap_1_cloneAndSet (_0_a this), (* 2 x), nil, (inc (* 2 x)), node)
+///                                 (let [#_"node" node (BNode_1_create (plus shift 5), k, v, hash, key, val) _ (reset_4_ addedLeaf true)]
+///                                     (PersistentHashMap_1_cloneAndSet (_0_a this), (mult 2 x), nil, (inc (mult 2 x)), node)
 ///                                 )
 ///                         )
 ///                 ]
@@ -6229,20 +5085,20 @@ namespace arbace {
 ///                         (BNode_1_new nil, (_0_bitmap this), a_1_)
 ///                     )
 ///                 )
-///                 (let [#_"int" n (Integer_1_bitCount (_0_bitmap this))]
-///                     (if (<= 16 n)
+///                 (let [#_"int" n (Number_1_bitCount (_0_bitmap this))]
+///                     (if (lte_9_ 16 n)
 ///                         (let [
 ///                             #_"node[]" nodes (anew #_"node" 32) #_"int" m (PersistentHashMap_1_mask hash, shift)
-///                             _ (aset_4_ nodes m (INode_3_assoc BNode_1_EMPTY, (+ shift 5), hash, key, val, addedLeaf))
+///                             _ (aset_4_ nodes m (INode_3_assoc BNode_1_EMPTY, (plus shift 5), hash, key, val, addedLeaf))
 ///                             _
-///                                 (loop_when [#_"int" j 0 #_"int" i 0] (< i 32)
-///                                     (when (odd_9_ (>>> (_0_bitmap this) i)) => (recur j (inc i))
+///                                 (loop_when [#_"int" j 0 #_"int" i 0] (lt_9_ i 32)
+///                                     (when (odd_9_ (unsigned_bit_shift_right (_0_bitmap this) i)) => (recur j (inc i))
 ///                                         (let [#_"key|nil" k (aget (_0_a this) j) #_"value|node" v (aget (_0_a this) (inc j))]
 ///                                             (if (some_9_ k)
-///                                                 (aset_4_ nodes i (INode_3_assoc BNode_1_EMPTY, (+ shift 5), (f_1_hash k), k, v, addedLeaf))
+///                                                 (aset_4_ nodes i (INode_3_assoc BNode_1_EMPTY, (plus shift 5), (f_1_hash k), k, v, addedLeaf))
 ///                                                 (aset_4_ nodes i #_"node" v)
 ///                                             )
-///                                             (recur (+ j 2) (inc i))
+///                                             (recur (plus j 2) (inc i))
 ///                                         )
 ///                                     )
 ///                                 )
@@ -6250,12 +5106,12 @@ namespace arbace {
 ///                             (ANode_1_new nil, (inc n), nodes)
 ///                         )
 ///                         (let [
-///                             #_"array" a_1_ (anew (* 2 (inc n)))
-///                             _ (acopy_4_ a_1_ 0 (_0_a this) 0 (* 2 x))
-///                             _ (aset_4_ a_1_ (* 2 x) key)
+///                             #_"array" a_1_ (anew (mult 2 (inc n)))
+///                             _ (acopy_4_ a_1_ 0 (_0_a this) 0 (mult 2 x))
+///                             _ (aset_4_ a_1_ (mult 2 x) key)
 ///                             _ (reset_4_ addedLeaf true)
-///                             _ (aset_4_ a_1_ (inc (* 2 x)) val)
-///                             _ (acopy_4_ a_1_ (* 2 (inc x)) (_0_a this) (* 2 x) (* 2 (- n x)))
+///                             _ (aset_4_ a_1_ (inc (mult 2 x)) val)
+///                             _ (acopy_4_ a_1_ (mult 2 (inc x)) (_0_a this) (mult 2 x) (mult 2 (minus n x)))
 ///                         ]
 ///                             (BNode_1_new nil, (bit_or (_0_bitmap this) bit), a_1_)
 ///                         )
@@ -6265,23 +5121,23 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"node" BNode_2_dissoc [#_"BNode" this, #_"int" shift, #_"int" hash, #_"Object" key]
+///     (defn_ #_"node" BNode_2_dissoc [#_"BNode" this, #_"int" shift, #_"int" hash, #_"Object" key]
 ///         (let_when_not [#_"int" bit (PersistentHashMap_1_bitpos hash, shift)] (zero_9_ (bit_and (_0_bitmap this) bit)) => this
 ///             (let [
 ///                 #_"int" x (BNode_1_index (_0_bitmap this), bit)
-///                 #_"key|nil" k (aget (_0_a this) (* 2 x)) #_"value|node" v (aget (_0_a this) (inc (* 2 x)))
+///                 #_"key|nil" k (aget (_0_a this) (mult 2 x)) #_"value|node" v (aget (_0_a this) (inc (mult 2 x)))
 ///             ]
 ///                 (if (some_9_ k)
-///                     (when (= key k) => this
+///                     (when (_eq_9_ key k) => this
 ///                         (BNode_1_new nil, (bit_xor (_0_bitmap this) bit), (PersistentHashMap_1_removePair (_0_a this), x))
 ///                     )
-///                     (let [#_"node" node (INode_3_dissoc #_"node" v, (+ shift 5), hash, key)]
+///                     (let [#_"node" node (INode_3_dissoc #_"node" v, (plus shift 5), hash, key)]
 ///                         (cond
-///                             (= node v)
+///                             (_eq_9_ node v)
 ///                                 this
 ///                             (some_9_ node)
-///                                 (BNode_1_new nil, (_0_bitmap this), (PersistentHashMap_1_cloneAndSet (_0_a this), (inc (* 2 x)), node))
-///                             (= (_0_bitmap this) bit)
+///                                 (BNode_1_new nil, (_0_bitmap this), (PersistentHashMap_1_cloneAndSet (_0_a this), (inc (mult 2 x)), node))
+///                             (_eq_9_ (_0_bitmap this) bit)
 ///                                 nil
 ///                             _0_else
 ///                                 (BNode_1_new nil, (bit_xor (_0_bitmap this) bit), (PersistentHashMap_1_removePair (_0_a this), x))
@@ -6293,28 +5149,28 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"IMapEntry|value" BNode_2_find
-///         ([#_"BNode" this, #_"int" shift, #_"int" hash, #_"Object" key]
+///         ([#_"BNode" this, #_"int" shift, #_"int" hash, #_"Object" key]
 ///             (let_when_not [#_"int" bit (PersistentHashMap_1_bitpos hash, shift)] (zero_9_ (bit_and (_0_bitmap this) bit))
 ///                 (let [
 ///                     #_"int" x (BNode_1_index (_0_bitmap this), bit)
-///                     #_"key|nil" k (aget (_0_a this) (* 2 x)) #_"value|node" v (aget (_0_a this) (inc (* 2 x)))
+///                     #_"key|nil" k (aget (_0_a this) (mult 2 x)) #_"value|node" v (aget (_0_a this) (inc (mult 2 x)))
 ///                 ]
 ///                     (cond
-///                         (nil_9_ k)  (INode_3_find #_"node" v, (+ shift 5), hash, key)
-///                         (= key k) (MapEntry_1_new k, v)
+///                         (nil_9_ k)  (INode_3_find #_"node" v, (plus shift 5), hash, key)
+///                         (_eq_9_ key k) (MapEntry_1_new k, v)
 ///                     )
 ///                 )
 ///             )
 ///         )
-///         ([#_"BNode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" not_found]
+///         ([#_"BNode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" not_found]
 ///             (let_when_not [#_"int" bit (PersistentHashMap_1_bitpos hash, shift)] (zero_9_ (bit_and (_0_bitmap this) bit)) => not_found
 ///                 (let [
 ///                     #_"int" x (BNode_1_index (_0_bitmap this), bit)
-///                     #_"key|nil" k (aget (_0_a this) (* 2 x)) #_"value|node" v (aget (_0_a this) (inc (* 2 x)))
+///                     #_"key|nil" k (aget (_0_a this) (mult 2 x)) #_"value|node" v (aget (_0_a this) (inc (mult 2 x)))
 ///                 ]
 ///                     (cond
-///                         (nil_9_ k)  (INode_3_find #_"node" v, (+ shift 5), hash, key, not_found)
-///                         (= key k) v
+///                         (nil_9_ k)  (INode_3_find #_"node" v, (plus shift 5), hash, key, not_found)
+///                         (_eq_9_ key k) v
 ///                         _0_else     not_found
 ///                     )
 ///                 )
@@ -6326,53 +5182,53 @@ namespace arbace {
 ///         (NSeq_1_create_1 (_0_a this))
 ///     )
 
-///     (defn_ #_"node" BNode_2_assocT [#_"BNode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"bool'" addedLeaf]
+///     (defn_ #_"node" BNode_2_assocT [#_"BNode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"bool'" addedLeaf]
 ///         (let [#_"int" bit (PersistentHashMap_1_bitpos hash, shift) #_"int" x (BNode_1_index (_0_bitmap this), bit)]
 ///             (if_not (zero_9_ (bit_and (_0_bitmap this) bit))
 ///                 (let [
-///                     #_"key|nil" k (aget (_0_a this) (* 2 x)) #_"value|node" v (aget (_0_a this) (inc (* 2 x)))
+///                     #_"key|nil" k (aget (_0_a this) (mult 2 x)) #_"value|node" v (aget (_0_a this) (inc (mult 2 x)))
 ///                 ]
 ///                     (cond
 ///                         (nil_9_ k)
-///                             (let [#_"node" node (INode_3_assocT #_"node" v, edit, (+ shift 5), hash, key, val, addedLeaf)]
-///                                 (when_not (= node v) => this
-///                                     (BNode_2_editAndSet this, edit, (inc (* 2 x)), node)
+///                             (let [#_"node" node (INode_3_assocT #_"node" v, edit, (plus shift 5), hash, key, val, addedLeaf)]
+///                                 (when_not (_eq_9_ node v) => this
+///                                     (BNode_2_editAndSet this, edit, (inc (mult 2 x)), node)
 ///                                 )
 ///                             )
-///                         (= key k)
-///                             (when_not (= val v) => this
-///                                 (BNode_2_editAndSet this, edit, (inc (* 2 x)), val)
+///                         (_eq_9_ key k)
+///                             (when_not (_eq_9_ val v) => this
+///                                 (BNode_2_editAndSet this, edit, (inc (mult 2 x)), val)
 ///                             )
 ///                         _0_else
-///                             (let [#_"node" node (BNode_1_createT edit, (+ shift 5), k, v, hash, key, val) _ (reset_4_ addedLeaf true)]
-///                                 (BNode_2_editAndSet this, edit, (* 2 x), nil, (inc (* 2 x)), node)
+///                             (let [#_"node" node (BNode_1_createT edit, (plus shift 5), k, v, hash, key, val) _ (reset_4_ addedLeaf true)]
+///                                 (BNode_2_editAndSet this, edit, (mult 2 x), nil, (inc (mult 2 x)), node)
 ///                             )
 ///                     )
 ///                 )
-///                 (let [#_"int" n (Integer_1_bitCount (_0_bitmap this))]
+///                 (let [#_"int" n (Number_1_bitCount (_0_bitmap this))]
 ///                     (cond
-///                         (< (* n 2) (alength (_0_a this)))
+///                         (lt_9_ (mult n 2) (alength (_0_a this)))
 ///                             (let [
 ///                                 #_"BNode" e (-> (BNode_2_ensureEditable this, edit) (qswap_4_ _0_bitmap bit_or bit)) _ (reset_4_ addedLeaf true)
-///                                 _ (acopy_4_ (_0_a e) (* 2 (inc x)) (_0_a e) (* 2 x) (* 2 (- n x)))
-///                                 _ (aset_4_ (_0_a e) (* 2 x) key)
-///                                 _ (aset_4_ (_0_a e) (inc (* 2 x)) val)
+///                                 _ (acopy_4_ (_0_a e) (mult 2 (inc x)) (_0_a e) (mult 2 x) (mult 2 (minus n x)))
+///                                 _ (aset_4_ (_0_a e) (mult 2 x) key)
+///                                 _ (aset_4_ (_0_a e) (inc (mult 2 x)) val)
 ///                             ]
 ///                                 e
 ///                             )
-///                         (<= 16 n)
+///                         (lte_9_ 16 n)
 ///                             (let [
 ///                                 #_"node[]" nodes (anew #_"node" 32) #_"int" m (PersistentHashMap_1_mask hash, shift)
-///                                 _ (aset_4_ nodes m (INode_3_assocT BNode_1_EMPTY, edit, (+ shift 5), hash, key, val, addedLeaf))
+///                                 _ (aset_4_ nodes m (INode_3_assocT BNode_1_EMPTY, edit, (plus shift 5), hash, key, val, addedLeaf))
 ///                                 _
-///                                     (loop_when [#_"int" j 0 #_"int" i 0] (< i 32)
-///                                         (when (odd_9_ (>>> (_0_bitmap this) i)) => (recur j (inc i))
+///                                     (loop_when [#_"int" j 0 #_"int" i 0] (lt_9_ i 32)
+///                                         (when (odd_9_ (unsigned_bit_shift_right (_0_bitmap this) i)) => (recur j (inc i))
 ///                                             (let [#_"key|nil" k (aget (_0_a this) j) #_"value|node" v (aget (_0_a this) (inc j))]
 ///                                                 (if (some_9_ k)
-///                                                     (aset_4_ nodes i (INode_3_assocT BNode_1_EMPTY, edit, (+ shift 5), (f_1_hash k), k, v, addedLeaf))
+///                                                     (aset_4_ nodes i (INode_3_assocT BNode_1_EMPTY, edit, (plus shift 5), (f_1_hash k), k, v, addedLeaf))
 ///                                                     (aset_4_ nodes i #_"node" v)
 ///                                                 )
-///                                                 (recur (+ j 2) (inc i))
+///                                                 (recur (plus j 2) (inc i))
 ///                                             )
 ///                                         )
 ///                                     )
@@ -6381,12 +5237,12 @@ namespace arbace {
 ///                             )
 ///                         _0_else
 ///                             (let [
-///                                 #_"array" a_1_ (anew (* 2 (+ n 4)))
-///                                 _ (acopy_4_ a_1_ 0 (_0_a this) 0 (* 2 x))
-///                                 _ (aset_4_ a_1_ (* 2 x) key)
+///                                 #_"array" a_1_ (anew (mult 2 (plus n 4)))
+///                                 _ (acopy_4_ a_1_ 0 (_0_a this) 0 (mult 2 x))
+///                                 _ (aset_4_ a_1_ (mult 2 x) key)
 ///                                 _ (reset_4_ addedLeaf true)
-///                                 _ (aset_4_ a_1_ (inc (* 2 x)) val)
-///                                 _ (acopy_4_ a_1_ (* 2 (inc x)) (_0_a this) (* 2 x) (* 2 (- n x)))
+///                                 _ (aset_4_ a_1_ (inc (mult 2 x)) val)
+///                                 _ (acopy_4_ a_1_ (mult 2 (inc x)) (_0_a this) (mult 2 x) (mult 2 (minus n x)))
 ///                             ]
 ///                                 (-> (BNode_2_ensureEditable this, edit)
 ///                                     (qset_4_ _0_a a_1_)
@@ -6399,24 +5255,24 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"node" BNode_2_dissocT [#_"BNode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"bool'" removedLeaf]
+///     (defn_ #_"node" BNode_2_dissocT [#_"BNode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"bool'" removedLeaf]
 ///         (let_when_not [#_"int" bit (PersistentHashMap_1_bitpos hash, shift)] (zero_9_ (bit_and (_0_bitmap this) bit)) => this
 ///             (let [
 ///                 #_"int" x (BNode_1_index (_0_bitmap this), bit)
-///                 #_"key|nil" k (aget (_0_a this) (* 2 x)) #_"value|node" v (aget (_0_a this) (inc (* 2 x)))
+///                 #_"key|nil" k (aget (_0_a this) (mult 2 x)) #_"value|node" v (aget (_0_a this) (inc (mult 2 x)))
 ///             ]
 ///                 (if (some_9_ k)
-///                     (when (= key k) => this
+///                     (when (_eq_9_ key k) => this
 ///                         (reset_4_ removedLeaf true)
 ///                         (BNode_2_editAndRemovePair this, edit, bit, x)
 ///                     )
-///                     (let [#_"node" node (INode_3_dissocT #_"node" v, edit, (+ shift 5), hash, key, removedLeaf)]
+///                     (let [#_"node" node (INode_3_dissocT #_"node" v, edit, (plus shift 5), hash, key, removedLeaf)]
 ///                         (cond
-///                             (= node v)
+///                             (_eq_9_ node v)
 ///                                 this
 ///                             (some_9_ node)
-///                                 (BNode_2_editAndSet this, edit, (inc (* 2 x)), node)
-///                             (= (_0_bitmap this) bit)
+///                                 (BNode_2_editAndSet this, edit, (inc (mult 2 x)), node)
+///                             (_eq_9_ (_0_bitmap this) bit)
 ///                                 nil
 ///                             _0_else
 ///                                 (BNode_2_editAndRemovePair this, edit, bit, x)
@@ -6427,11 +5283,11 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"Object" BNode_2_kvreduce [#_"BNode" this, #_"IFn" f, #_"Object" r]
+///     (defn_ #_"Object" BNode_2_kvreduce [#_"BNode" this, #_"IFn" f, #_"Object" r]
 ///         (NSeq_1_kvreduce (_0_a this), f, r)
 ///     )
 
-///     (defm BNode INode
+///     (defm BNode INode
 ///         (INode_3_assoc => BNode_2_assoc)
 ///         (INode_3_dissoc => BNode_2_dissoc)
 ///         (INode_3_find => BNode_2_find)
@@ -6443,16 +5299,16 @@ namespace arbace {
 // )
 
 // (about #_"CNode"
-///     (defq CNode [#_"thread'" edit, #_"int" hash, #_"int" n, #_"array" a])
+///     (defq CNode [#_"thread'" edit, #_"int" hash, #_"int" n, #_"array" a])
 
 ///     (defn #_"CNode" CNode_1_new [#_"thread'" edit, #_"int" hash, #_"int" n, #_"array" a]
 ///         (new_8_ CNode_1_class (anew [edit, hash, n, a]))
 ///     )
 
-///     (defn_ #_"int" CNode_2_findIndex [#_"CNode" this, #_"Object" key]
-///         (let [#_"array" a (_0_a this) #_"int" m (* 2 (_0_n this))]
-///             (loop_when [#_"int" i 0] (< i m) => -1
-///                 (if (= (aget a i) key) i (recur (+ i 2)))
+///     (defn_ #_"int" CNode_2_findIndex [#_"CNode" this, #_"Object" key]
+///         (let [#_"array" a (_0_a this) #_"int" m (mult 2 (_0_n this))]
+///             (loop_when [#_"int" i 0] (lt_9_ i m) => -1
+///                 (if (_eq_9_ (aget a i) key) i (recur (plus i 2)))
 ///             )
 ///         )
 ///     )
@@ -6462,7 +5318,7 @@ namespace arbace {
 ///             (when_not (identical_9_ (_0_edit this) edit) => this
 ///                 (let [
 ///                     #_"int" n (_0_n this) #_"int" m (inc n)
-///                     #_"array" a_1_ (-> (anew (* 2 m)) (acopy_4_ 0 (_0_a this) 0 (* 2 n)))
+///                     #_"array" a_1_ (-> (anew (mult 2 m)) (acopy_4_ 0 (_0_a this) 0 (mult 2 n)))
 ///                 ]
 ///                     (CNode_1_new edit, (_0_hash this), n, a_1_)
 ///                 )
@@ -6476,13 +5332,13 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"CNode" CNode_2_editAndSet
-///         ([#_"CNode" this, #_"thread'" edit, #_"int" i, #_"Object" x]
+///         ([#_"CNode" this, #_"thread'" edit, #_"int" i, #_"Object" x]
 ///             (let [#_"CNode" e (CNode_2_ensureEditable this, edit)]
 ///                 (aset_4_ (_0_a e) i x)
 ///                 e
 ///             )
 ///         )
-///         ([#_"CNode" this, #_"thread'" edit, #_"int" i, #_"Object" x, #_"int" j, #_"Object" y]
+///         ([#_"CNode" this, #_"thread'" edit, #_"int" i, #_"Object" x, #_"int" j, #_"Object" y]
 ///             (let [#_"CNode" e (CNode_2_ensureEditable this, edit)]
 ///                 (aset_4_ (_0_a e) i x)
 ///                 (aset_4_ (_0_a e) j y)
@@ -6491,15 +5347,15 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"node" CNode_2_assoc [#_"CNode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"bool'" addedLeaf]
-///         (if (= (_0_hash this) hash)
+///     (defn_ #_"node" CNode_2_assoc [#_"CNode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"bool'" addedLeaf]
+///         (if (_eq_9_ (_0_hash this) hash)
 ///             (let [#_"array" a (_0_a this) #_"int" i (CNode_2_findIndex this, key) #_"int" n (_0_n this)]
-///                 (if (< -1 i)
-///                     (when_not (= (aget a (inc i)) val) => this
+///                 (if (lt_9_ -1 i)
+///                     (when_not (_eq_9_ (aget a (inc i)) val) => this
 ///                         (CNode_1_new nil, hash, n, (PersistentHashMap_1_cloneAndSet a, (inc i), val))
 ///                     )
 ///                     (let [
-///                         #_"array" a_1_ (-> (anew (* 2 (inc n))) (acopy_4_ 0 a 0 (* 2 n)) (aset_4_ (* 2 n) key) (aset_4_ (inc (* 2 n)) val))
+///                         #_"array" a_1_ (-> (anew (mult 2 (inc n))) (acopy_4_ 0 a 0 (mult 2 n)) (aset_4_ (mult 2 n) key) (aset_4_ (inc (mult 2 n)) val))
 ///                         _ (reset_4_ addedLeaf true)
 ///                     ]
 ///                         (CNode_1_new (_0_edit this), hash, (inc n), a_1_)
@@ -6512,25 +5368,25 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"node" CNode_2_dissoc [#_"CNode" this, #_"int" shift, #_"int" hash, #_"Object" key]
-///         (let_when [#_"int" i (CNode_2_findIndex this, key)] (< -1 i) => this
-///             (let_when [#_"int" n (_0_n this)] (< 1 n)
+///     (defn_ #_"node" CNode_2_dissoc [#_"CNode" this, #_"int" shift, #_"int" hash, #_"Object" key]
+///         (let_when [#_"int" i (CNode_2_findIndex this, key)] (lt_9_ -1 i) => this
+///             (let_when [#_"int" n (_0_n this)] (lt_9_ 1 n)
 ///                 (CNode_1_new nil, hash, (dec n), (PersistentHashMap_1_removePair (_0_a this), (quot i 2)))
 ///             )
 ///         )
 ///     )
 
 ///     (defn_ #_"IMapEntry|value" CNode_2_find
-///         ([#_"CNode" this, #_"int" shift, #_"int" hash, #_"Object" key]
-///             (let_when [#_"int" i (CNode_2_findIndex this, key)] (< -1 i)
-///                 (let_when [#_"Object" ai (aget (_0_a this) i)] (= ai key)
+///         ([#_"CNode" this, #_"int" shift, #_"int" hash, #_"Object" key]
+///             (let_when [#_"int" i (CNode_2_findIndex this, key)] (lt_9_ -1 i)
+///                 (let_when [#_"Object" ai (aget (_0_a this) i)] (_eq_9_ ai key)
 ///                     (MapEntry_1_new ai, (aget (_0_a this) (inc i)))
 ///                 )
 ///             )
 ///         )
-///         ([#_"CNode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" not_found]
-///             (let_when [#_"int" i (CNode_2_findIndex this, key)] (< -1 i) => not_found
-///                 (when (= (aget (_0_a this) i) key) => not_found
+///         ([#_"CNode" this, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" not_found]
+///             (let_when [#_"int" i (CNode_2_findIndex this, key)] (lt_9_ -1 i) => not_found
+///                 (when (_eq_9_ (aget (_0_a this) i) key) => not_found
 ///                     (aget (_0_a this) (inc i))
 ///                 )
 ///             )
@@ -6541,22 +5397,22 @@ namespace arbace {
 ///         (NSeq_1_create_1 (_0_a this))
 ///     )
 
-///     (defn_ #_"node" CNode_2_assocT [#_"CNode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"bool'" addedLeaf]
-///         (if (= (_0_hash this) hash)
+///     (defn_ #_"node" CNode_2_assocT [#_"CNode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"Object" val, #_"bool'" addedLeaf]
+///         (if (_eq_9_ (_0_hash this) hash)
 ///             (let [#_"array" a (_0_a this) #_"int" i (CNode_2_findIndex this, key)]
-///                 (if (< -1 i)
-///                     (when_not (= (aget a (inc i)) val) => this
+///                 (if (lt_9_ -1 i)
+///                     (when_not (_eq_9_ (aget a (inc i)) val) => this
 ///                         (CNode_2_editAndSet this, edit, (inc i), val)
 ///                     )
 ///                     (let [#_"int" n (_0_n this) #_"int" m (alength a)]
-///                         (if (< (* 2 n) m)
+///                         (if (lt_9_ (mult 2 n) m)
 ///                             (let [_ (reset_4_ addedLeaf true)]
-///                                 (-> (CNode_2_editAndSet this, edit, (* 2 n), key, (inc (* 2 n)), val)
+///                                 (-> (CNode_2_editAndSet this, edit, (mult 2 n), key, (inc (mult 2 n)), val)
 ///                                     (qswap_4_ _0_n inc)
 ///                                 )
 ///                             )
 ///                             (let [
-///                                 #_"array" a_1_ (-> (anew (+ m 2)) (acopy_4_ 0 a 0 m) (aset_4_ m key) (aset_4_ (inc m) val))
+///                                 #_"array" a_1_ (-> (anew (plus m 2)) (acopy_4_ 0 a 0 m) (aset_4_ m key) (aset_4_ (inc m) val))
 ///                                 _ (reset_4_ addedLeaf true)
 ///                             ]
 ///                                 (CNode_2_ensureEditable this, edit, (inc n), a_1_)
@@ -6571,17 +5427,17 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"node" CNode_2_dissocT [#_"CNode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"bool'" removedLeaf]
-///         (let_when [#_"int" i (CNode_2_findIndex this, key)] (< -1 i) => this
+///     (defn_ #_"node" CNode_2_dissocT [#_"CNode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"Object" key, #_"bool'" removedLeaf]
+///         (let_when [#_"int" i (CNode_2_findIndex this, key)] (lt_9_ -1 i) => this
 ///             (reset_4_ removedLeaf true)
-///             (let_when [#_"int" n (_0_n this)] (< 1 n)
+///             (let_when [#_"int" n (_0_n this)] (lt_9_ 1 n)
 ///                 (let [
 ///                     #_"CNode" e (-> (CNode_2_ensureEditable this, edit) (qswap_4_ _0_n dec))
-///                     #_"int" m (* 2 n)
-///                     _ (aset_4_ (_0_a e) i (aget (_0_a e) (- m 2)))
-///                     _ (aset_4_ (_0_a e) (inc i) (aget (_0_a e) (- m 1)))
-///                     _ (aset_4_ (_0_a e) (- m 2) nil)
-///                     _ (aset_4_ (_0_a e) (- m 1) nil)
+///                     #_"int" m (mult 2 n)
+///                     _ (aset_4_ (_0_a e) i (aget (_0_a e) (minus m 2)))
+///                     _ (aset_4_ (_0_a e) (inc i) (aget (_0_a e) (minus m 1)))
+///                     _ (aset_4_ (_0_a e) (minus m 2) nil)
+///                     _ (aset_4_ (_0_a e) (minus m 1) nil)
 ///                 ]
 ///                     e
 ///                 )
@@ -6589,11 +5445,11 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"Object" CNode_2_kvreduce [#_"CNode" this, #_"IFn" f, #_"Object" r]
+///     (defn_ #_"Object" CNode_2_kvreduce [#_"CNode" this, #_"IFn" f, #_"Object" r]
 ///         (NSeq_1_kvreduce (_0_a this), f, r)
 ///     )
 
-///     (defm CNode INode
+///     (defm CNode INode
 ///         (INode_3_assoc => CNode_2_assoc)
 ///         (INode_3_dissoc => CNode_2_dissoc)
 ///         (INode_3_find => CNode_2_find)
@@ -6605,16 +5461,16 @@ namespace arbace {
 // )
 
 // (about #_"TransientHashMap"
-///     (defq TransientHashMap [#_"thread'" edit, #_"node" root, #_"int" cnt, #_"bool" has_nil_9_, #_"Object" nil_value] #_"MapForm")
+///     (defq TransientHashMap [#_"thread'" edit, #_"node" root, #_"int" cnt, #_"bool" has_nil_9_, #_"Object" nil_value] #_"MapForm")
 
 ///     #_inherit
-///     (defm TransientHashMap ATransientMap AFn)
+///     (defm TransientHashMap ATransientMap AFn)
 
 ///     (defn #_"TransientHashMap" TransientHashMap_1_new
 ///         ([#_"PersistentHashMap" m]
 ///             (TransientHashMap_1_new (atom (thread)), (_0_root m), (_0_cnt m), (_0_has_nil_9_ m), (_0_nil_value m))
 ///         )
-///         ([#_"thread'" edit, #_"node" root, #_"int" cnt, #_"bool" has_nil_9_, #_"Object" nil_value]
+///         ([#_"thread'" edit, #_"node" root, #_"int" cnt, #_"bool" has_nil_9_, #_"Object" nil_value]
 ///             (new_8_ TransientHashMap_1_class (anew [edit, root, cnt, has_nil_9_, nil_value]))
 ///         )
 ///     )
@@ -6629,9 +5485,9 @@ namespace arbace {
 ///         (_0_cnt this)
 ///     )
 
-///     (defn_ #_"Object" TransientHashMap_2_valAt
-///         ([#_"TransientHashMap" this, #_"Object" key] (TransientHashMap_2_valAt this, key, nil))
-///         ([#_"TransientHashMap" this, #_"Object" key, #_"Object" not_found]
+///     (defn_ #_"Object" TransientHashMap_2_valAt
+///         ([#_"TransientHashMap" this, #_"Object" key] (TransientHashMap_2_valAt this, key, nil))
+///         ([#_"TransientHashMap" this, #_"Object" key, #_"Object" not_found]
 ///             (TransientHashMap_2_assert_editable this)
 ///             (if (nil_9_ key)
 ///                 (when (_0_has_nil_9_ this) => not_found
@@ -6644,11 +5500,11 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"ITransientMap" TransientHashMap_2_assoc_4_ [#_"TransientHashMap" this, #_"Object" key, #_"Object" val]
+///     (defn_ #_"ITransientMap" TransientHashMap_2_assoc_4_ [#_"TransientHashMap" this, #_"Object" key, #_"Object" val]
 ///         (TransientHashMap_2_assert_editable this)
 ///         (if (nil_9_ key)
 ///             (let [
-///                 this (if (= (_0_nil_value this) val) this (qset_4_ this _0_nil_value val))
+///                 this (if (_eq_9_ (_0_nil_value this) val) this (qset_4_ this _0_nil_value val))
 ///             ]
 ///                 (when_not (_0_has_nil_9_ this) => this
 ///                     (-> this (qswap_4_ _0_cnt inc) (qset_4_ _0_has_nil_9_ true))
@@ -6657,7 +5513,7 @@ namespace arbace {
 ///             (let [
 ///                 #_"bool'" addedLeaf (atom false)
 ///                 #_"node" node (INode_3_assocT (or (_0_root this) BNode_1_EMPTY), (_0_edit this), 0, (f_1_hash key), key, val, addedLeaf)
-///                 this (if (= (_0_root this) node) this (qset_4_ this _0_root node))
+///                 this (if (_eq_9_ (_0_root this) node) this (qset_4_ this _0_root node))
 ///             ]
 ///                 (when (deref addedLeaf) => this
 ///                     (-> this (qswap_4_ _0_cnt inc))
@@ -6666,7 +5522,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"ITransientMap" TransientHashMap_2_dissoc_4_ [#_"TransientHashMap" this, #_"Object" key]
+///     (defn_ #_"ITransientMap" TransientHashMap_2_dissoc_4_ [#_"TransientHashMap" this, #_"Object" key]
 ///         (TransientHashMap_2_assert_editable this)
 ///         (if (nil_9_ key)
 ///             (when (_0_has_nil_9_ this) => this
@@ -6676,7 +5532,7 @@ namespace arbace {
 ///                 (let [
 ///                     #_"bool'" removedLeaf (atom false)
 ///                     #_"node" node (INode_3_dissocT (_0_root this), (_0_edit this), 0, (f_1_hash key), key, removedLeaf)
-///                     this (if (= (_0_root this) node) this (qset_4_ this _0_root node))
+///                     this (if (_eq_9_ (_0_root this) node) this (qset_4_ this _0_root node))
 ///                 ]
 ///                     (when (deref removedLeaf) => this
 ///                         (-> this (qswap_4_ _0_cnt dec))
@@ -6692,7 +5548,7 @@ namespace arbace {
 ///             IMapEntry
 ///                 (assoc_4_ this (key o) (val o))
 ///             IPersistentVector
-///                 (when (= (count o) 2) => (throw "vector arg to map conj must be a pair")
+///                 (when (_eq_9_ (count o) 2) => (throw "vector arg to map conj must be a pair")
 ///                     (assoc_4_ this (nth o 0) (nth o 1))
 ///                 )
 ///             #_else
@@ -6704,56 +5560,50 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (declare PersistentHashMap_1_new)
-
 ///     (defn_ #_"IPersistentMap" TransientHashMap_2_persistent_4_ [#_"TransientHashMap" this]
 ///         (TransientHashMap_2_assert_editable this)
 ///         (reset_4_ (_0_edit this) nil)
 ///         (PersistentHashMap_1_new (_0_cnt this), (_0_root this), (_0_has_nil_9_ this), (_0_nil_value this))
 ///     )
 
-///     (defm TransientHashMap Counted
+///     (defm TransientHashMap Counted
 ///         (Counted_3_count => TransientHashMap_2_count)
 ///     )
 
-///     (defm TransientHashMap ILookup
+///     (defm TransientHashMap ILookup
 ///         (ILookup_3_valAt => TransientHashMap_2_valAt)
 ///     )
 
-///     (defm TransientHashMap IFn
+///     (defm TransientHashMap IFn
 ///         (IFn_3_invoke => ATransientMap_2_invoke)
 ///         (IFn_3_applyTo => AFn_1_applyTo)
 ///     )
 
-///     (defm TransientHashMap ITransientAssociative
+///     (defm TransientHashMap ITransientAssociative
 ///         (ITransientAssociative_3_assoc_4_ => TransientHashMap_2_assoc_4_)
 ///         (ITransientAssociative_3_containsKey => ATransientMap_2_containsKey)
 ///         (ITransientAssociative_3_entryAt => ATransientMap_2_entryAt)
 ///     )
 
-///     (defm TransientHashMap ITransientMap
+///     (defm TransientHashMap ITransientMap
 ///         (ITransientMap_3_dissoc_4_ => TransientHashMap_2_dissoc_4_)
 ///     )
 
-///     (defm TransientHashMap ITransientCollection
+///     (defm TransientHashMap ITransientCollection
 ///         (ITransientCollection_3_conj_4_ => TransientHashMap_2_conj_4_)
 ///         (ITransientCollection_3_persistent_4_ => TransientHashMap_2_persistent_4_)
 ///     )
 // )
 
 // (about #_"PersistentHashMap"
-///     (declare PersistentHashMap_2_seq)
-
-///     (defq PersistentHashMap [#_"IPersistentMap" _meta, #_"int" cnt, #_"node" root, #_"bool" has_nil_9_, #_"Object" nil_value] MapForm
-///         clojure.lang.Seqable (seq [_] (PersistentHashMap_2_seq _))
-///     )
+///     (defq PersistentHashMap [#_"IPersistentMap" _meta, #_"int" cnt, #_"node" root, #_"bool" has_nil_9_, #_"Object" nil_value] MapForm)
 
 ///     #_inherit
-///     (defm PersistentHashMap APersistentMap AFn)
+///     (defm PersistentHashMap APersistentMap AFn)
 
 ///     (defn #_"PersistentHashMap" PersistentHashMap_1_new
-///         ([#_"int" cnt, #_"node" root, #_"bool" has_nil_9_, #_"Object" nil_value] (PersistentHashMap_1_new nil, cnt, root, has_nil_9_, nil_value))
-///         ([#_"IPersistentMap" meta, #_"int" cnt, #_"node" root, #_"bool" has_nil_9_, #_"Object" nil_value]
+///         ([#_"int" cnt, #_"node" root, #_"bool" has_nil_9_, #_"Object" nil_value] (PersistentHashMap_1_new nil, cnt, root, has_nil_9_, nil_value))
+///         ([#_"IPersistentMap" meta, #_"int" cnt, #_"node" root, #_"bool" has_nil_9_, #_"Object" nil_value]
 ///             (new_8_ PersistentHashMap_1_class (anew [meta, cnt, root, has_nil_9_, nil_value]))
 ///         )
 ///     )
@@ -6762,8 +5612,8 @@ namespace arbace {
 
 ///     (defn #_"PersistentHashMap" PersistentHashMap_1_create_1a [#_"array" init]
 ///         (loop_when_recur [#_"ITransientMap" m (transient PersistentHashMap_1_EMPTY) #_"int" i 0]
-///                          (< i (alength init))
-///                          [(assoc_4_ m (aget init i) (aget init (inc i))) (+ i 2)]
+///                          (lt_9_ i (alength init))
+///                          [(assoc_4_ m (aget init i) (aget init (inc i))) (plus i 2)]
 ///                       => (persistent_4_ m)
 ///         )
 ///     )
@@ -6780,10 +5630,10 @@ namespace arbace {
 
 ///     (defn #_"PersistentHashMap" PersistentHashMap_1_createWithCheck_1a [#_"array" init]
 ///         (let [#_"ITransientMap" m (transient PersistentHashMap_1_EMPTY)]
-///             (loop_when [m m #_"int" i 0] (< i (alength init)) => (persistent_4_ m)
+///             (loop_when [m m #_"int" i 0] (lt_9_ i (alength init)) => (persistent_4_ m)
 ///                 (let [m (assoc_4_ m (aget init i) (aget init (inc i)))]
-///                     (when (= (count m) (inc (quot i 2))) => (throw (str "duplicate key: " (aget init i)))
-///                         (recur m (+ i 2))
+///                     (when (_eq_9_ (count m) (inc (quot i 2))) => (throw (str "duplicate key: " (aget init i)))
+///                         (recur m (plus i 2))
 ///                     )
 ///                 )
 ///             )
@@ -6795,7 +5645,7 @@ namespace arbace {
 ///             (loop_when [m m #_"ISeq" s (seq init) #_"int" n 0] (some_9_ s) => (persistent_4_ m)
 ///                 (when (some_9_ (next s)) => (throw (str "no value supplied for key: " (first s)))
 ///                     (let [m (assoc_4_ m (first s) (second s))]
-///                         (when (= (count m) (inc n)) => (throw (str "duplicate key: " (first s)))
+///                         (when (_eq_9_ (count m) (inc n)) => (throw (str "duplicate key: " (first s)))
 ///                             (recur m (next (next s)) (inc n))
 ///                         )
 ///                     )
@@ -6805,14 +5655,14 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"PersistentHashMap" PersistentHashMap_2_withMeta [#_"PersistentHashMap" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (PersistentHashMap_1_new meta, (_0_cnt this), (_0_root this), (_0_has_nil_9_ this), (_0_nil_value this))
 ///         )
 ///     )
 
-///     (defn_ #_"Object" PersistentHashMap_2_valAt
-///         ([#_"PersistentHashMap" this, #_"Object" key] (PersistentHashMap_2_valAt this, key, nil))
-///         ([#_"PersistentHashMap" this, #_"Object" key, #_"Object" not_found]
+///     (defn_ #_"Object" PersistentHashMap_2_valAt
+///         ([#_"PersistentHashMap" this, #_"Object" key] (PersistentHashMap_2_valAt this, key, nil))
+///         ([#_"PersistentHashMap" this, #_"Object" key, #_"Object" not_found]
 ///             (if (nil_9_ key)
 ///                 (when (_0_has_nil_9_ this) => not_found
 ///                     (_0_nil_value this)
@@ -6824,25 +5674,25 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (def_ #_"Object" PersistentHashMap_1_NOT_FOUND (anew 0))
+///     (def_ #_"Object" PersistentHashMap_1_NOT_FOUND (anew 0))
 
-///     (defn_ #_"IPersistentMap" PersistentHashMap_2_assoc [#_"PersistentHashMap" this, #_"Object" key, #_"Object" val]
+///     (defn_ #_"IPersistentMap" PersistentHashMap_2_assoc [#_"PersistentHashMap" this, #_"Object" key, #_"Object" val]
 ///         (if (nil_9_ key)
-///             (when_not (and (_0_has_nil_9_ this) (= (_0_nil_value this) val)) => this
-///                 (PersistentHashMap_1_new (_0__meta this), (+ (_0_cnt this) (if (_0_has_nil_9_ this) 0 1)), (_0_root this), true, val)
+///             (when_not (and (_0_has_nil_9_ this) (_eq_9_ (_0_nil_value this) val)) => this
+///                 (PersistentHashMap_1_new (_0__meta this), (plus (_0_cnt this) (if (_0_has_nil_9_ this) 0 1)), (_0_root this), true, val)
 ///             )
 ///             (let [
 ///                 #_"bool'" addedLeaf (atom false)
 ///                 #_"node" root (INode_3_assoc (or (_0_root this) BNode_1_EMPTY), 0, (f_1_hash key), key, val, addedLeaf)
 ///             ]
-///                 (when_not (= root (_0_root this)) => this
-///                     (PersistentHashMap_1_new (_0__meta this), (+ (_0_cnt this) (if (deref addedLeaf) 1 0)), root, (_0_has_nil_9_ this), (_0_nil_value this))
+///                 (when_not (_eq_9_ root (_0_root this)) => this
+///                     (PersistentHashMap_1_new (_0__meta this), (plus (_0_cnt this) (if (deref addedLeaf) 1 0)), root, (_0_has_nil_9_ this), (_0_nil_value this))
 ///                 )
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"bool" PersistentHashMap_2_containsKey [#_"PersistentHashMap" this, #_"Object" key]
+///     (defn_ #_"bool" PersistentHashMap_2_containsKey [#_"PersistentHashMap" this, #_"Object" key]
 ///         (if (nil_9_ key)
 ///             (_0_has_nil_9_ this)
 ///             (and (some_9_ (_0_root this))
@@ -6851,7 +5701,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"pair" PersistentHashMap_2_entryAt [#_"PersistentHashMap" this, #_"Object" key]
+///     (defn_ #_"pair" PersistentHashMap_2_entryAt [#_"PersistentHashMap" this, #_"Object" key]
 ///         (if (nil_9_ key)
 ///             (when (_0_has_nil_9_ this)
 ///                 (MapEntry_1_new nil, (_0_nil_value this))
@@ -6862,7 +5712,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"IPersistentMap" PersistentHashMap_2_dissoc [#_"PersistentHashMap" this, #_"Object" key]
+///     (defn_ #_"IPersistentMap" PersistentHashMap_2_dissoc [#_"PersistentHashMap" this, #_"Object" key]
 ///         (cond
 ///             (nil_9_ key)
 ///                 (when (_0_has_nil_9_ this) => this
@@ -6872,7 +5722,7 @@ namespace arbace {
 ///                 this
 ///             _0_else
 ///                 (let [#_"node" root (INode_3_dissoc (_0_root this), 0, (f_1_hash key), key)]
-///                     (when_not (= root (_0_root this)) => this
+///                     (when_not (_eq_9_ root (_0_root this)) => this
 ///                         (PersistentHashMap_1_new (_0__meta this), (dec (_0_cnt this)), root, (_0_has_nil_9_ this), (_0_nil_value this))
 ///                     )
 ///                 )
@@ -6891,7 +5741,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"Object" PersistentHashMap_2_kvreduce [#_"PersistentHashMap" this, #_"IFn" f, #_"Object" r]
+///     (defn_ #_"Object" PersistentHashMap_2_kvreduce [#_"PersistentHashMap" this, #_"IFn" f, #_"Object" r]
 ///         (let [r (if (_0_has_nil_9_ this) (f r nil (_0_nil_value this)) r)]
 ///             (when_not (reduced_9_ r) => (deref r)
 ///                 (when (some_9_ (_0_root this)) => r
@@ -6905,59 +5755,59 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm PersistentHashMap IMeta
+///     (defm PersistentHashMap IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm PersistentHashMap IObj
+///     (defm PersistentHashMap IObj
 ///         (IObj_3_withMeta => PersistentHashMap_2_withMeta)
 ///     )
 
-///     (defm PersistentHashMap Counted
+///     (defm PersistentHashMap Counted
 ///         (Counted_3_count => _0_cnt)
 ///     )
 
-///     (defm PersistentHashMap ILookup
+///     (defm PersistentHashMap ILookup
 ///         (ILookup_3_valAt => PersistentHashMap_2_valAt)
 ///     )
 
-///     (defm PersistentHashMap IFn
+///     (defm PersistentHashMap IFn
 ///         (IFn_3_invoke => APersistentMap_2_invoke)
 ///         (IFn_3_applyTo => AFn_1_applyTo)
 ///     )
 
-///     (defm PersistentHashMap Associative
+///     (defm PersistentHashMap Associative
 ///         (Associative_3_assoc => PersistentHashMap_2_assoc)
 ///         (Associative_3_containsKey => PersistentHashMap_2_containsKey)
 ///         (Associative_3_entryAt => PersistentHashMap_2_entryAt)
 ///     )
 
-///     (defm PersistentHashMap IPersistentMap
+///     (defm PersistentHashMap IPersistentMap
 ///         (IPersistentMap_3_dissoc => PersistentHashMap_2_dissoc)
 ///     )
 
-///     (defm PersistentHashMap IPersistentCollection
+///     (defm PersistentHashMap IPersistentCollection
 ///         (IPersistentCollection_3_conj => APersistentMap_2_conj)
 ///         (IPersistentCollection_3_empty => PersistentHashMap_2_empty)
 ///     )
 
-///     (defm PersistentHashMap Seqable
+///     (defm PersistentHashMap Seqable
 ///         (Seqable_3_seq => PersistentHashMap_2_seq)
 ///     )
 
-///     (defm PersistentHashMap IKVReduce
+///     (defm PersistentHashMap IKVReduce
 ///         (IKVReduce_3_kvreduce => PersistentHashMap_2_kvreduce)
 ///     )
 
-///     (defm PersistentHashMap IEditableCollection
+///     (defm PersistentHashMap IEditableCollection
 ///         (IEditableCollection_3_asTransient => TransientHashMap_1_new)
 ///     )
 
-///     (defm PersistentHashMap IObject
+///     (defm PersistentHashMap IObject
 ///         (IObject_3_equals => APersistentMap_2_equals)
 ///     )
 
-///     (defm PersistentHashMap Hashed
+///     (defm PersistentHashMap Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashUnordered)
 ///     )
 // )
@@ -6994,13 +5844,13 @@ namespace arbace {
 /// )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"TransientHashSet"
-///     (defq TransientHashSet [#_"ITransientMap" impl] #_"SetForm")
+///     (defq TransientHashSet [#_"ITransientMap" impl] #_"SetForm")
 
 ///     #_inherit
-///     (defm TransientHashSet ATransientSet AFn)
+///     (defm TransientHashSet ATransientSet AFn)
 
 ///     (defn #_"TransientHashSet" TransientHashSet_1_new [#_"ITransientMap" impl]
 ///         (new_8_ TransientHashSet_1_class (anew [impl]))
@@ -7010,64 +5860,60 @@ namespace arbace {
 ///         (count (_0_impl this))
 ///     )
 
-///     (defn_ #_"ITransientSet" TransientHashSet_2_conj_4_ [#_"TransientHashSet" this, #_"Object" val]
+///     (defn_ #_"ITransientSet" TransientHashSet_2_conj_4_ [#_"TransientHashSet" this, #_"Object" val]
 ///         (let [#_"ITransientMap" m (assoc_4_ (_0_impl this) val val)]
-///             (when_not (= m (_0_impl this)) => this
+///             (when_not (_eq_9_ m (_0_impl this)) => this
 ///                 (qset_4_ this _0_impl m)
 ///             )
 ///         )
 ///     )
-
-///     (declare PersistentHashSet_1_new)
 
 ///     (defn_ #_"PersistentHashSet" TransientHashSet_2_persistent_4_ [#_"TransientHashSet" this]
 ///         (PersistentHashSet_1_new nil, (persistent_4_ (_0_impl this)))
 ///     )
 
-///     (defn_ #_"ITransientSet" TransientHashSet_2_disj_4_ [#_"TransientHashSet" this, #_"Object" key]
+///     (defn_ #_"ITransientSet" TransientHashSet_2_disj_4_ [#_"TransientHashSet" this, #_"Object" key]
 ///         (let [#_"ITransientMap" m (dissoc_4_ (_0_impl this) key)]
-///             (when_not (= m (_0_impl this)) => this
+///             (when_not (_eq_9_ m (_0_impl this)) => this
 ///                 (qset_4_ this _0_impl m)
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"bool" TransientHashSet_2_contains_9_ [#_"TransientHashSet" this, #_"Object" key]
+///     (defn_ #_"bool" TransientHashSet_2_contains_9_ [#_"TransientHashSet" this, #_"Object" key]
 ///         (not (identical_9_ (get (_0_impl this) key this) this))
 ///     )
 
-///     (defn_ #_"Object" TransientHashSet_2_get [#_"TransientHashSet" this, #_"Object" key]
+///     (defn_ #_"Object" TransientHashSet_2_get [#_"TransientHashSet" this, #_"Object" key]
 ///         (get (_0_impl this) key)
 ///     )
 
-///     (defm TransientHashSet Counted
+///     (defm TransientHashSet Counted
 ///         (Counted_3_count => TransientHashSet_2_count)
 ///     )
 
-///     (defm TransientHashSet ITransientCollection
+///     (defm TransientHashSet ITransientCollection
 ///         (ITransientCollection_3_conj_4_ => TransientHashSet_2_conj_4_)
 ///         (ITransientCollection_3_persistent_4_ => TransientHashSet_2_persistent_4_)
 ///     )
 
-///     (defm TransientHashSet ITransientSet
+///     (defm TransientHashSet ITransientSet
 ///         (ITransientSet_3_disj_4_ => TransientHashSet_2_disj_4_)
 ///         (ITransientSet_3_contains_9_ => TransientHashSet_2_contains_9_)
 ///         (ITransientSet_3_get => TransientHashSet_2_get)
 ///     )
 
-///     (defm TransientHashSet IFn
+///     (defm TransientHashSet IFn
 ///         (IFn_3_invoke => ATransientSet_2_invoke)
 ///         (IFn_3_applyTo => AFn_1_applyTo)
 ///     )
 // )
 
 // (about #_"PersistentHashSet"
-///     (defq PersistentHashSet [#_"IPersistentMap" _meta, #_"IPersistentMap" impl] SetForm
-///         clojure.lang.IFn (invoke [_, a] (APersistentSet_2_invoke _, a))
-///     )
+///     (defq PersistentHashSet [#_"IPersistentMap" _meta, #_"IPersistentMap" impl] SetForm)
 
 ///     #_inherit
-///     (defm PersistentHashSet APersistentSet AFn)
+///     (defm PersistentHashSet APersistentSet AFn)
 
 ///     (defn #_"PersistentHashSet" PersistentHashSet_1_new [#_"IPersistentMap" meta, #_"IPersistentMap" impl]
 ///         (new_8_ PersistentHashSet_1_class (anew [meta, impl]))
@@ -7083,7 +5929,7 @@ namespace arbace {
 ///         (let [#_"ITransientSet" s (transient PersistentHashSet_1_EMPTY)]
 ///             (loop_when [s s #_"ISeq" q (seq init) #_"int" n 0] (some_9_ q) => (persistent_4_ s)
 ///                 (let [s (conj_4_ s (first q))]
-///                     (when (= (count s) (inc n)) => (throw (str "duplicate key: " (first q)))
+///                     (when (_eq_9_ (count s) (inc n)) => (throw (str "duplicate key: " (first q)))
 ///                         (recur s (next q) (inc n))
 ///                     )
 ///                 )
@@ -7092,7 +5938,7 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"PersistentHashSet" PersistentHashSet_2_withMeta [#_"PersistentHashSet" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (PersistentHashSet_1_new meta, (_0_impl this))
 ///         )
 ///     )
@@ -7101,7 +5947,7 @@ namespace arbace {
 ///         (count (_0_impl this))
 ///     )
 
-///     (defn_ #_"PersistentHashSet" PersistentHashSet_2_conj [#_"PersistentHashSet" this, #_"Object" val]
+///     (defn_ #_"PersistentHashSet" PersistentHashSet_2_conj [#_"PersistentHashSet" this, #_"Object" val]
 ///         (if (contains_9_ (_0_impl this) val)
 ///             this
 ///             (PersistentHashSet_1_new (_0__meta this), (assoc (_0_impl this) val val))
@@ -7112,18 +5958,18 @@ namespace arbace {
 ///         (with_meta PersistentHashSet_1_EMPTY (_0__meta this))
 ///     )
 
-///     (defn_ #_"IPersistentSet" PersistentHashSet_2_disj [#_"PersistentHashSet" this, #_"Object" key]
+///     (defn_ #_"IPersistentSet" PersistentHashSet_2_disj [#_"PersistentHashSet" this, #_"Object" key]
 ///         (if (contains_9_ (_0_impl this) key)
 ///             (PersistentHashSet_1_new (_0__meta this), (dissoc (_0_impl this) key))
 ///             this
 ///         )
 ///     )
 
-///     (defn_ #_"bool" PersistentHashSet_2_contains_9_ [#_"PersistentHashSet" this, #_"Object" key]
+///     (defn_ #_"bool" PersistentHashSet_2_contains_9_ [#_"PersistentHashSet" this, #_"Object" key]
 ///         (contains_9_ (_0_impl this) key)
 ///     )
 
-///     (defn_ #_"Object" PersistentHashSet_2_get [#_"PersistentHashSet" this, #_"Object" key]
+///     (defn_ #_"Object" PersistentHashSet_2_get [#_"PersistentHashSet" this, #_"Object" key]
 ///         (get (_0_impl this) key)
 ///     )
 
@@ -7135,47 +5981,47 @@ namespace arbace {
 ///         (TransientHashSet_1_new (transient (_0_impl this)))
 ///     )
 
-///     (defm PersistentHashSet IMeta
+///     (defm PersistentHashSet IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm PersistentHashSet IObj
+///     (defm PersistentHashSet IObj
 ///         (IObj_3_withMeta => PersistentHashSet_2_withMeta)
 ///     )
 
-///     (defm PersistentHashSet Counted
+///     (defm PersistentHashSet Counted
 ///         (Counted_3_count => PersistentHashSet_2_count)
 ///     )
 
-///     (defm PersistentHashSet IPersistentCollection
+///     (defm PersistentHashSet IPersistentCollection
 ///         (IPersistentCollection_3_conj => PersistentHashSet_2_conj)
 ///         (IPersistentCollection_3_empty => PersistentHashSet_2_empty)
 ///     )
 
-///     (defm PersistentHashSet IPersistentSet
+///     (defm PersistentHashSet IPersistentSet
 ///         (IPersistentSet_3_disj => PersistentHashSet_2_disj)
 ///         (IPersistentSet_3_contains_9_ => PersistentHashSet_2_contains_9_)
 ///         (IPersistentSet_3_get => PersistentHashSet_2_get)
 ///     )
 
-///     (defm PersistentHashSet Seqable
+///     (defm PersistentHashSet Seqable
 ///         (Seqable_3_seq => PersistentHashSet_2_seq)
 ///     )
 
-///     (defm PersistentHashSet IEditableCollection
+///     (defm PersistentHashSet IEditableCollection
 ///         (IEditableCollection_3_asTransient => PersistentHashSet_2_asTransient)
 ///     )
 
-///     (defm PersistentHashSet IFn
+///     (defm PersistentHashSet IFn
 ///         (IFn_3_invoke => APersistentSet_2_invoke)
 ///         (IFn_3_applyTo => AFn_1_applyTo)
 ///     )
 
-///     (defm PersistentHashSet IObject
+///     (defm PersistentHashSet IObject
 ///         (IObject_3_equals => APersistentSet_2_equals)
 ///     )
 
-///     (defm PersistentHashSet Hashed
+///     (defm PersistentHashSet Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashUnordered)
 ///     )
 // )
@@ -7188,10 +6034,10 @@ namespace arbace {
 /// (defn set [s] (if (set_9_ s) (with_meta s nil) (into (hash_set) s)))
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"TNode"
-///     (defn #_"Object" TNode_2_kvreduce [#_"node" this, #_"IFn" f, #_"Object" r]
+///     (defn #_"Object" TNode_2_kvreduce [#_"node" this, #_"IFn" f, #_"Object" r]
 ///         (or
 ///             (when (some_9_ (_0_left this))
 ///                 (let [r (INode_3_kvreduce (_0_left this), f, r)]
@@ -7212,12 +6058,12 @@ namespace arbace {
 // )
 
 // (about #_"Black"
-///     (defq Black [#_"Object" key])
+///     (defq Black [#_"Object" key])
 
 ///     #_inherit
-///     (defm Black TNode AMapEntry APersistentVector AFn)
+///     (defm Black TNode AMapEntry APersistentVector AFn)
 
-///     (defn #_"Black" Black_1_new [#_"Object" key]
+///     (defn #_"Black" Black_1_new [#_"Object" key]
 ///         (new_8_ Black_1_class (anew [key]))
 ///     )
 
@@ -7229,13 +6075,9 @@ namespace arbace {
 ///         (ITNode_3_balanceRight ins, this)
 ///     )
 
-///     (declare PersistentTreeMap_1_balanceLeftDel)
-
 ///     (defn_ #_"node" Black_2_removeLeft [#_"Black" this, #_"node" del]
 ///         (PersistentTreeMap_1_balanceLeftDel (_0_key this), (_0_val this), del, (_0_right this))
 ///     )
-
-///     (declare PersistentTreeMap_1_balanceRightDel)
 
 ///     (defn_ #_"node" Black_2_removeRight [#_"Black" this, #_"node" del]
 ///         (PersistentTreeMap_1_balanceRightDel (_0_key this), (_0_val this), (_0_left this), del)
@@ -7245,13 +6087,9 @@ namespace arbace {
 ///         this
 ///     )
 
-///     (declare Red_1_new)
-
 ///     (defn_ #_"node" Black_2_redden [#_"Black" this]
 ///         (Red_1_new (_0_key this))
 ///     )
-
-///     (declare PersistentTreeMap_1_black)
 
 ///     (defn_ #_"node" Black_2_balanceLeft [#_"Black" this, #_"node" parent]
 ///         (PersistentTreeMap_1_black (_0_key parent), (_0_val parent), this, (_0_right parent))
@@ -7261,16 +6099,16 @@ namespace arbace {
 ///         (PersistentTreeMap_1_black (_0_key parent), (_0_val parent), (_0_left parent), this)
 ///     )
 
-///     (defn_ #_"node" Black_2_replace [#_"Black" this, #_"Object" key, #_"Object" val, #_"node" left, #_"node" right]
+///     (defn_ #_"node" Black_2_replace [#_"Black" this, #_"Object" key, #_"Object" val, #_"node" left, #_"node" right]
 ///         (PersistentTreeMap_1_black key, val, left, right)
 ///     )
 
-///     (defm Black IMapEntry
+///     (defm Black IMapEntry
 ///         (IMapEntry_3_key => _0_key)
 ///         (IMapEntry_3_val => _0_val)
 ///     )
 
-///     (defm Black ITNode
+///     (defm Black ITNode
 ///         (ITNode_3_addLeft => Black_2_addLeft)
 ///         (ITNode_3_addRight => Black_2_addRight)
 ///         (ITNode_3_removeLeft => Black_2_removeLeft)
@@ -7282,65 +6120,61 @@ namespace arbace {
 ///         (ITNode_3_replace => Black_2_replace)
 ///     )
 
-///     (defm Black Sequential)
+///     (defm Black Sequential)
 
-///     (defm Black Indexed
+///     (defm Black Indexed
 ///         (Indexed_3_nth => AMapEntry_2_nth)
 ///     )
 
-///     (defm Black Counted
+///     (defm Black Counted
 ///         (Counted_3_count => AMapEntry_2_count)
 ///     )
 
-///     (defm Black Seqable
+///     (defm Black Seqable
 ///         (Seqable_3_seq => AMapEntry_2_seq)
 ///     )
 
-///     (defm Black Reversible
+///     (defm Black Reversible
 ///         (Reversible_3_rseq => AMapEntry_2_rseq)
 ///     )
 
-///     (defm Black IObject
+///     (defm Black IObject
 ///         (IObject_3_equals => AMapEntry_2_equals)
 ///     )
 
-///     (defm Black Hashed
+///     (defm Black Hashed
 ///         (Hashed_3_hash => AMapEntry_2_hash)
 ///     )
 
-///     (defm Black IKVReduce
+///     (defm Black IKVReduce
 ///         (IKVReduce_3_kvreduce => TNode_2_kvreduce)
 ///     )
 
-///     (defm Black Comparable
+///     (defm Black Comparable
 ///         (Comparable_3_compareTo => AMapEntry_2_compareTo)
 ///     )
 // )
 
 // (about #_"BlackVal"
-///     (defq BlackVal [#_"Object" key, #_"Object" val]
-///         java.util.Map$Entry (getKey [_] (_0_key _)) (getValue [_] (_0_val _))
-///     )
+///     (defq BlackVal [#_"Object" key, #_"Object" val])
 
 ///     #_inherit
-///     (defm BlackVal Black TNode AMapEntry APersistentVector AFn)
+///     (defm BlackVal Black TNode AMapEntry APersistentVector AFn)
 
-///     (defn #_"BlackVal" BlackVal_1_new [#_"Object" key, #_"Object" val]
+///     (defn #_"BlackVal" BlackVal_1_new [#_"Object" key, #_"Object" val]
 ///         (new_8_ BlackVal_1_class (anew [key, val]))
 ///     )
-
-///     (declare RedVal_1_new)
 
 ///     (defn_ #_"node" BlackVal_2_redden [#_"BlackVal" this]
 ///         (RedVal_1_new (_0_key this), (_0_val this))
 ///     )
 
-///     (defm BlackVal IMapEntry
+///     (defm BlackVal IMapEntry
 ///         (IMapEntry_3_key => _0_key)
 ///         (IMapEntry_3_val => _0_val)
 ///     )
 
-///     (defm BlackVal ITNode
+///     (defm BlackVal ITNode
 ///         (ITNode_3_addLeft => Black_2_addLeft)
 ///         (ITNode_3_addRight => Black_2_addRight)
 ///         (ITNode_3_removeLeft => Black_2_removeLeft)
@@ -7352,63 +6186,61 @@ namespace arbace {
 ///         (ITNode_3_replace => Black_2_replace)
 ///     )
 
-///     (defm BlackVal Sequential)
+///     (defm BlackVal Sequential)
 
-///     (defm BlackVal Indexed
+///     (defm BlackVal Indexed
 ///         (Indexed_3_nth => AMapEntry_2_nth)
 ///     )
 
-///     (defm BlackVal Counted
+///     (defm BlackVal Counted
 ///         (Counted_3_count => AMapEntry_2_count)
 ///     )
 
-///     (defm BlackVal Seqable
+///     (defm BlackVal Seqable
 ///         (Seqable_3_seq => AMapEntry_2_seq)
 ///     )
 
-///     (defm BlackVal Reversible
+///     (defm BlackVal Reversible
 ///         (Reversible_3_rseq => AMapEntry_2_rseq)
 ///     )
 
-///     (defm BlackVal IObject
+///     (defm BlackVal IObject
 ///         (IObject_3_equals => AMapEntry_2_equals)
 ///     )
 
-///     (defm BlackVal Hashed
+///     (defm BlackVal Hashed
 ///         (Hashed_3_hash => AMapEntry_2_hash)
 ///     )
 
-///     (defm BlackVal IKVReduce
+///     (defm BlackVal IKVReduce
 ///         (IKVReduce_3_kvreduce => TNode_2_kvreduce)
 ///     )
 
-///     (defm BlackVal Comparable
+///     (defm BlackVal Comparable
 ///         (Comparable_3_compareTo => AMapEntry_2_compareTo)
 ///     )
 // )
 
 // (about #_"BlackBranch"
-///     (defq BlackBranch [#_"Object" key, #_"node" left, #_"node" right])
+///     (defq BlackBranch [#_"Object" key, #_"node" left, #_"node" right])
 
 ///     #_inherit
-///     (defm BlackBranch Black TNode AMapEntry APersistentVector AFn)
+///     (defm BlackBranch Black TNode AMapEntry APersistentVector AFn)
 
-///     (defn #_"BlackBranch" BlackBranch_1_new [#_"Object" key, #_"node" left, #_"node" right]
+///     (defn #_"BlackBranch" BlackBranch_1_new [#_"Object" key, #_"node" left, #_"node" right]
 ///         (new_8_ BlackBranch_1_class (anew [key, left, right]))
 ///     )
-
-///     (declare RedBranch_1_new)
 
 ///     (defn_ #_"node" BlackBranch_2_redden [#_"BlackBranch" this]
 ///         (RedBranch_1_new (_0_key this), (_0_left this), (_0_right this))
 ///     )
 
-///     (defm BlackBranch IMapEntry
+///     (defm BlackBranch IMapEntry
 ///         (IMapEntry_3_key => _0_key)
 ///         (IMapEntry_3_val => _0_val)
 ///     )
 
-///     (defm BlackBranch ITNode
+///     (defm BlackBranch ITNode
 ///         (ITNode_3_addLeft => Black_2_addLeft)
 ///         (ITNode_3_addRight => Black_2_addRight)
 ///         (ITNode_3_removeLeft => Black_2_removeLeft)
@@ -7420,65 +6252,61 @@ namespace arbace {
 ///         (ITNode_3_replace => Black_2_replace)
 ///     )
 
-///     (defm BlackBranch Sequential)
+///     (defm BlackBranch Sequential)
 
-///     (defm BlackBranch Indexed
+///     (defm BlackBranch Indexed
 ///         (Indexed_3_nth => AMapEntry_2_nth)
 ///     )
 
-///     (defm BlackBranch Counted
+///     (defm BlackBranch Counted
 ///         (Counted_3_count => AMapEntry_2_count)
 ///     )
 
-///     (defm BlackBranch Seqable
+///     (defm BlackBranch Seqable
 ///         (Seqable_3_seq => AMapEntry_2_seq)
 ///     )
 
-///     (defm BlackBranch Reversible
+///     (defm BlackBranch Reversible
 ///         (Reversible_3_rseq => AMapEntry_2_rseq)
 ///     )
 
-///     (defm BlackBranch IObject
+///     (defm BlackBranch IObject
 ///         (IObject_3_equals => AMapEntry_2_equals)
 ///     )
 
-///     (defm BlackBranch Hashed
+///     (defm BlackBranch Hashed
 ///         (Hashed_3_hash => AMapEntry_2_hash)
 ///     )
 
-///     (defm BlackBranch IKVReduce
+///     (defm BlackBranch IKVReduce
 ///         (IKVReduce_3_kvreduce => TNode_2_kvreduce)
 ///     )
 
-///     (defm BlackBranch Comparable
+///     (defm BlackBranch Comparable
 ///         (Comparable_3_compareTo => AMapEntry_2_compareTo)
 ///     )
 // )
 
 // (about #_"BlackBranchVal"
-///     (defq BlackBranchVal [#_"Object" key, #_"Object" val, #_"node" left, #_"node" right]
-///         java.util.Map$Entry (getKey [_] (_0_key _)) (getValue [_] (_0_val _))
-///     )
+///     (defq BlackBranchVal [#_"Object" key, #_"Object" val, #_"node" left, #_"node" right])
 
 ///     #_inherit
-///     (defm BlackBranchVal BlackBranch Black TNode AMapEntry APersistentVector AFn)
+///     (defm BlackBranchVal BlackBranch Black TNode AMapEntry APersistentVector AFn)
 
-///     (defn #_"BlackBranchVal" BlackBranchVal_1_new [#_"Object" key, #_"Object" val, #_"node" left, #_"node" right]
+///     (defn #_"BlackBranchVal" BlackBranchVal_1_new [#_"Object" key, #_"Object" val, #_"node" left, #_"node" right]
 ///         (new_8_ BlackBranchVal_1_class (anew [key, val, left, right]))
 ///     )
-
-///     (declare RedBranchVal_1_new)
 
 ///     (defn_ #_"node" BlackBranchVal_2_redden [#_"BlackBranchVal" this]
 ///         (RedBranchVal_1_new (_0_key this), (_0_val this), (_0_left this), (_0_right this))
 ///     )
 
-///     (defm BlackBranchVal IMapEntry
+///     (defm BlackBranchVal IMapEntry
 ///         (IMapEntry_3_key => _0_key)
 ///         (IMapEntry_3_val => _0_val)
 ///     )
 
-///     (defm BlackBranchVal ITNode
+///     (defm BlackBranchVal ITNode
 ///         (ITNode_3_addLeft => Black_2_addLeft)
 ///         (ITNode_3_addRight => Black_2_addRight)
 ///         (ITNode_3_removeLeft => Black_2_removeLeft)
@@ -7490,52 +6318,50 @@ namespace arbace {
 ///         (ITNode_3_replace => Black_2_replace)
 ///     )
 
-///     (defm BlackBranchVal Sequential)
+///     (defm BlackBranchVal Sequential)
 
-///     (defm BlackBranchVal Indexed
+///     (defm BlackBranchVal Indexed
 ///         (Indexed_3_nth => AMapEntry_2_nth)
 ///     )
 
-///     (defm BlackBranchVal Counted
+///     (defm BlackBranchVal Counted
 ///         (Counted_3_count => AMapEntry_2_count)
 ///     )
 
-///     (defm BlackBranchVal Seqable
+///     (defm BlackBranchVal Seqable
 ///         (Seqable_3_seq => AMapEntry_2_seq)
 ///     )
 
-///     (defm BlackBranchVal Reversible
+///     (defm BlackBranchVal Reversible
 ///         (Reversible_3_rseq => AMapEntry_2_rseq)
 ///     )
 
-///     (defm BlackBranchVal IObject
+///     (defm BlackBranchVal IObject
 ///         (IObject_3_equals => AMapEntry_2_equals)
 ///     )
 
-///     (defm BlackBranchVal Hashed
+///     (defm BlackBranchVal Hashed
 ///         (Hashed_3_hash => AMapEntry_2_hash)
 ///     )
 
-///     (defm BlackBranchVal IKVReduce
+///     (defm BlackBranchVal IKVReduce
 ///         (IKVReduce_3_kvreduce => TNode_2_kvreduce)
 ///     )
 
-///     (defm BlackBranchVal Comparable
+///     (defm BlackBranchVal Comparable
 ///         (Comparable_3_compareTo => AMapEntry_2_compareTo)
 ///     )
 // )
 
 // (about #_"Red"
-///     (defq Red [#_"Object" key])
+///     (defq Red [#_"Object" key])
 
 ///     #_inherit
-///     (defm Red TNode AMapEntry APersistentVector AFn)
+///     (defm Red TNode AMapEntry APersistentVector AFn)
 
-///     (defn #_"Red" Red_1_new [#_"Object" key]
+///     (defn #_"Red" Red_1_new [#_"Object" key]
 ///         (new_8_ Red_1_class (anew [key]))
 ///     )
-
-///     (declare PersistentTreeMap_1_red)
 
 ///     (defn_ #_"node" Red_2_addLeft [#_"Red" this, #_"node" ins]
 ///         (PersistentTreeMap_1_red (_0_key this), (_0_val this), ins, (_0_right this))
@@ -7569,16 +6395,16 @@ namespace arbace {
 ///         (PersistentTreeMap_1_black (_0_key parent), (_0_val parent), (_0_left parent), this)
 ///     )
 
-///     (defn_ #_"node" Red_2_replace [#_"Red" this, #_"Object" key, #_"Object" val, #_"node" left, #_"node" right]
+///     (defn_ #_"node" Red_2_replace [#_"Red" this, #_"Object" key, #_"Object" val, #_"node" left, #_"node" right]
 ///         (PersistentTreeMap_1_red key, val, left, right)
 ///     )
 
-///     (defm Red IMapEntry
+///     (defm Red IMapEntry
 ///         (IMapEntry_3_key => _0_key)
 ///         (IMapEntry_3_val => _0_val)
 ///     )
 
-///     (defm Red ITNode
+///     (defm Red ITNode
 ///         (ITNode_3_addLeft => Red_2_addLeft)
 ///         (ITNode_3_addRight => Red_2_addRight)
 ///         (ITNode_3_removeLeft => Red_2_removeLeft)
@@ -7590,50 +6416,48 @@ namespace arbace {
 ///         (ITNode_3_replace => Red_2_replace)
 ///     )
 
-///     (defm Red Sequential)
+///     (defm Red Sequential)
 
-///     (defm Red Indexed
+///     (defm Red Indexed
 ///         (Indexed_3_nth => AMapEntry_2_nth)
 ///     )
 
-///     (defm Red Counted
+///     (defm Red Counted
 ///         (Counted_3_count => AMapEntry_2_count)
 ///     )
 
-///     (defm Red Seqable
+///     (defm Red Seqable
 ///         (Seqable_3_seq => AMapEntry_2_seq)
 ///     )
 
-///     (defm Red Reversible
+///     (defm Red Reversible
 ///         (Reversible_3_rseq => AMapEntry_2_rseq)
 ///     )
 
-///     (defm Red IObject
+///     (defm Red IObject
 ///         (IObject_3_equals => AMapEntry_2_equals)
 ///     )
 
-///     (defm Red Hashed
+///     (defm Red Hashed
 ///         (Hashed_3_hash => AMapEntry_2_hash)
 ///     )
 
-///     (defm Red IKVReduce
+///     (defm Red IKVReduce
 ///         (IKVReduce_3_kvreduce => TNode_2_kvreduce)
 ///     )
 
-///     (defm Red Comparable
+///     (defm Red Comparable
 ///         (Comparable_3_compareTo => AMapEntry_2_compareTo)
 ///     )
 // )
 
 // (about #_"RedVal"
-///     (defq RedVal [#_"Object" key, #_"Object" val]
-///         java.util.Map$Entry (getKey [_] (_0_key _)) (getValue [_] (_0_val _))
-///     )
+///     (defq RedVal [#_"Object" key, #_"Object" val])
 
 ///     #_inherit
-///     (defm RedVal Red TNode AMapEntry APersistentVector AFn)
+///     (defm RedVal Red TNode AMapEntry APersistentVector AFn)
 
-///     (defn #_"RedVal" RedVal_1_new [#_"Object" key, #_"Object" val]
+///     (defn #_"RedVal" RedVal_1_new [#_"Object" key, #_"Object" val]
 ///         (new_8_ RedVal_1_class (anew [key, val]))
 ///     )
 
@@ -7641,12 +6465,12 @@ namespace arbace {
 ///         (BlackVal_1_new (_0_key this), (_0_val this))
 ///     )
 
-///     (defm RedVal IMapEntry
+///     (defm RedVal IMapEntry
 ///         (IMapEntry_3_key => _0_key)
 ///         (IMapEntry_3_val => _0_val)
 ///     )
 
-///     (defm RedVal ITNode
+///     (defm RedVal ITNode
 ///         (ITNode_3_addLeft => Red_2_addLeft)
 ///         (ITNode_3_addRight => Red_2_addRight)
 ///         (ITNode_3_removeLeft => Red_2_removeLeft)
@@ -7658,48 +6482,48 @@ namespace arbace {
 ///         (ITNode_3_replace => Red_2_replace)
 ///     )
 
-///     (defm RedVal Sequential)
+///     (defm RedVal Sequential)
 
-///     (defm RedVal Indexed
+///     (defm RedVal Indexed
 ///         (Indexed_3_nth => AMapEntry_2_nth)
 ///     )
 
-///     (defm RedVal Counted
+///     (defm RedVal Counted
 ///         (Counted_3_count => AMapEntry_2_count)
 ///     )
 
-///     (defm RedVal Seqable
+///     (defm RedVal Seqable
 ///         (Seqable_3_seq => AMapEntry_2_seq)
 ///     )
 
-///     (defm RedVal Reversible
+///     (defm RedVal Reversible
 ///         (Reversible_3_rseq => AMapEntry_2_rseq)
 ///     )
 
-///     (defm RedVal IObject
+///     (defm RedVal IObject
 ///         (IObject_3_equals => AMapEntry_2_equals)
 ///     )
 
-///     (defm RedVal Hashed
+///     (defm RedVal Hashed
 ///         (Hashed_3_hash => AMapEntry_2_hash)
 ///     )
 
-///     (defm RedVal IKVReduce
+///     (defm RedVal IKVReduce
 ///         (IKVReduce_3_kvreduce => TNode_2_kvreduce)
 ///     )
 
-///     (defm RedVal Comparable
+///     (defm RedVal Comparable
 ///         (Comparable_3_compareTo => AMapEntry_2_compareTo)
 ///     )
 // )
 
 // (about #_"RedBranch"
-///     (defq RedBranch [#_"Object" key, #_"node" left, #_"node" right])
+///     (defq RedBranch [#_"Object" key, #_"node" left, #_"node" right])
 
 ///     #_inherit
-///     (defm RedBranch Red TNode AMapEntry APersistentVector AFn)
+///     (defm RedBranch Red TNode AMapEntry APersistentVector AFn)
 
-///     (defn #_"RedBranch" RedBranch_1_new [#_"Object" key, #_"node" left, #_"node" right]
+///     (defn #_"RedBranch" RedBranch_1_new [#_"Object" key, #_"node" left, #_"node" right]
 ///         (new_8_ RedBranch_1_class (anew [key, left, right]))
 ///     )
 
@@ -7739,12 +6563,12 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm RedBranch IMapEntry
+///     (defm RedBranch IMapEntry
 ///         (IMapEntry_3_key => _0_key)
 ///         (IMapEntry_3_val => _0_val)
 ///     )
 
-///     (defm RedBranch ITNode
+///     (defm RedBranch ITNode
 ///         (ITNode_3_addLeft => Red_2_addLeft)
 ///         (ITNode_3_addRight => Red_2_addRight)
 ///         (ITNode_3_removeLeft => Red_2_removeLeft)
@@ -7756,50 +6580,48 @@ namespace arbace {
 ///         (ITNode_3_replace => Red_2_replace)
 ///     )
 
-///     (defm RedBranch Sequential)
+///     (defm RedBranch Sequential)
 
-///     (defm RedBranch Indexed
+///     (defm RedBranch Indexed
 ///         (Indexed_3_nth => AMapEntry_2_nth)
 ///     )
 
-///     (defm RedBranch Counted
+///     (defm RedBranch Counted
 ///         (Counted_3_count => AMapEntry_2_count)
 ///     )
 
-///     (defm RedBranch Seqable
+///     (defm RedBranch Seqable
 ///         (Seqable_3_seq => AMapEntry_2_seq)
 ///     )
 
-///     (defm RedBranch Reversible
+///     (defm RedBranch Reversible
 ///         (Reversible_3_rseq => AMapEntry_2_rseq)
 ///     )
 
-///     (defm RedBranch IObject
+///     (defm RedBranch IObject
 ///         (IObject_3_equals => AMapEntry_2_equals)
 ///     )
 
-///     (defm RedBranch Hashed
+///     (defm RedBranch Hashed
 ///         (Hashed_3_hash => AMapEntry_2_hash)
 ///     )
 
-///     (defm RedBranch IKVReduce
+///     (defm RedBranch IKVReduce
 ///         (IKVReduce_3_kvreduce => TNode_2_kvreduce)
 ///     )
 
-///     (defm RedBranch Comparable
+///     (defm RedBranch Comparable
 ///         (Comparable_3_compareTo => AMapEntry_2_compareTo)
 ///     )
 // )
 
 // (about #_"RedBranchVal"
-///     (defq RedBranchVal [#_"Object" key, #_"Object" val, #_"node" left, #_"node" right]
-///         java.util.Map$Entry (getKey [_] (_0_key _)) (getValue [_] (_0_val _))
-///     )
+///     (defq RedBranchVal [#_"Object" key, #_"Object" val, #_"node" left, #_"node" right])
 
 ///     #_inherit
-///     (defm RedBranchVal RedBranch Red TNode AMapEntry APersistentVector AFn)
+///     (defm RedBranchVal RedBranch Red TNode AMapEntry APersistentVector AFn)
 
-///     (defn #_"RedBranchVal" RedBranchVal_1_new [#_"Object" key, #_"Object" val, #_"node" left, #_"node" right]
+///     (defn #_"RedBranchVal" RedBranchVal_1_new [#_"Object" key, #_"Object" val, #_"node" left, #_"node" right]
 ///         (new_8_ RedBranchVal_1_class (anew [key, val, left, right]))
 ///     )
 
@@ -7807,12 +6629,12 @@ namespace arbace {
 ///         (BlackBranchVal_1_new (_0_key this), (_0_val this), (_0_left this), (_0_right this))
 ///     )
 
-///     (defm RedBranchVal IMapEntry
+///     (defm RedBranchVal IMapEntry
 ///         (IMapEntry_3_key => _0_key)
 ///         (IMapEntry_3_val => _0_val)
 ///     )
 
-///     (defm RedBranchVal ITNode
+///     (defm RedBranchVal ITNode
 ///         (ITNode_3_addLeft => Red_2_addLeft)
 ///         (ITNode_3_addRight => Red_2_addRight)
 ///         (ITNode_3_removeLeft => Red_2_removeLeft)
@@ -7824,50 +6646,46 @@ namespace arbace {
 ///         (ITNode_3_replace => Red_2_replace)
 ///     )
 
-///     (defm RedBranchVal Sequential)
+///     (defm RedBranchVal Sequential)
 
-///     (defm RedBranchVal Indexed
+///     (defm RedBranchVal Indexed
 ///         (Indexed_3_nth => AMapEntry_2_nth)
 ///     )
 
-///     (defm RedBranchVal Counted
+///     (defm RedBranchVal Counted
 ///         (Counted_3_count => AMapEntry_2_count)
 ///     )
 
-///     (defm RedBranchVal Seqable
+///     (defm RedBranchVal Seqable
 ///         (Seqable_3_seq => AMapEntry_2_seq)
 ///     )
 
-///     (defm RedBranchVal Reversible
+///     (defm RedBranchVal Reversible
 ///         (Reversible_3_rseq => AMapEntry_2_rseq)
 ///     )
 
-///     (defm RedBranchVal IObject
+///     (defm RedBranchVal IObject
 ///         (IObject_3_equals => AMapEntry_2_equals)
 ///     )
 
-///     (defm RedBranchVal Hashed
+///     (defm RedBranchVal Hashed
 ///         (Hashed_3_hash => AMapEntry_2_hash)
 ///     )
 
-///     (defm RedBranchVal IKVReduce
+///     (defm RedBranchVal IKVReduce
 ///         (IKVReduce_3_kvreduce => TNode_2_kvreduce)
 ///     )
 
-///     (defm RedBranchVal Comparable
+///     (defm RedBranchVal Comparable
 ///         (Comparable_3_compareTo => AMapEntry_2_compareTo)
 ///     )
 // )
 
 // (about #_"TSeq"
-///     (declare TSeq_2_seq TSeq_2_first TSeq_2_next)
-
-///     (defq TSeq [#_"IPersistentMap" _meta, #_"ISeq" stack, #_"bool" asc_9_, #_"int" cnt] SeqForm
-///         clojure.lang.ISeq (seq [_] (TSeq_2_seq _)) (first [_] (TSeq_2_first _)) (next [_] (TSeq_2_next _)) (more [_] (or (TSeq_2_next _) ()))
-///     )
+///     (defq TSeq [#_"IPersistentMap" _meta, #_"ISeq" stack, #_"bool" asc_9_, #_"int" cnt] SeqForm)
 
 ///     #_inherit
-///     (defm TSeq ASeq)
+///     (defm TSeq ASeq)
 
 ///     (defn #_"TSeq" TSeq_1_new
 ///         ([#_"ISeq" stack, #_"bool" asc_9_] (TSeq_1_new stack, asc_9_, -1))
@@ -7878,7 +6696,7 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"TSeq" TSeq_2_withMeta [#_"TSeq" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (TSeq_1_new meta, (_0_stack this), (_0_asc_9_ this), (_0_cnt this))
 ///         )
 ///     )
@@ -7897,7 +6715,7 @@ namespace arbace {
 ///         this
 ///     )
 
-///     (defn_ #_"Object" TSeq_2_first [#_"TSeq" this]
+///     (defn_ #_"Object" TSeq_2_first [#_"TSeq" this]
 ///         (first (_0_stack this))
 ///     )
 
@@ -7915,48 +6733,43 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm TSeq IMeta
+///     (defm TSeq IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm TSeq IObj
+///     (defm TSeq IObj
 ///         (IObj_3_withMeta => TSeq_2_withMeta)
 ///     )
 
-///     (defm TSeq Sequential)
+///     (defm TSeq Sequential)
 
-///     (defm TSeq Seqable
+///     (defm TSeq Seqable
 ///         (Seqable_3_seq => TSeq_2_seq)
 ///     )
 
-///     (defm TSeq ISeq
+///     (defm TSeq ISeq
 ///         (ISeq_3_first => TSeq_2_first)
 ///         (ISeq_3_next => TSeq_2_next)
 ///     )
 
-///     (defm TSeq Counted
+///     (defm TSeq Counted
 ///         (Counted_3_count => TSeq_2_count)
 ///     )
 
-///     (defm TSeq Hashed
+///     (defm TSeq Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm TSeq IObject
+///     (defm TSeq IObject
 ///         (IObject_3_equals => ASeq_2_equals)
 ///     )
 // )
 
 // (about #_"PersistentTreeMap"
-///     (declare PersistentTreeMap_2_seq)
-
-///     (defq PersistentTreeMap [#_"IPersistentMap" _meta, #_"Comparator" cmp, #_"node" tree, #_"int" cnt] MapForm
-///         clojure.lang.Seqable (seq [_] (PersistentTreeMap_2_seq _))
-///         java.util.Map (entrySet [_] (-/into #{} _))
-///     )
+///     (defq PersistentTreeMap [#_"IPersistentMap" _meta, #_"Comparator" cmp, #_"node" tree, #_"int" cnt] MapForm)
 
 ///     #_inherit
-///     (defm PersistentTreeMap APersistentMap AFn)
+///     (defm PersistentTreeMap APersistentMap AFn)
 
 ///     (defn #_"PersistentTreeMap" PersistentTreeMap_1_new
 ///         ([] (PersistentTreeMap_1_new compare))
@@ -7987,16 +6800,16 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"PersistentTreeMap" PersistentTreeMap_2_withMeta [#_"PersistentTreeMap" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (PersistentTreeMap_1_new meta, (_0_cmp this), (_0_tree this), (_0_cnt this))
 ///         )
 ///     )
 
-///     (defn_ #_"int" PersistentTreeMap_2_doCompare [#_"PersistentTreeMap" this, #_"Object" a, #_"Object" b]
+///     (defn_ #_"int" PersistentTreeMap_2_doCompare [#_"PersistentTreeMap" this, #_"Object" a, #_"Object" b]
 ///         (Comparator_3_compare (_0_cmp this), a, b)
 ///     )
 
-///     (defn_ #_"Object" PersistentTreeMap_2_entryKey [#_"PersistentTreeMap" this, #_"pair" entry]
+///     (defn_ #_"Object" PersistentTreeMap_2_entryKey [#_"PersistentTreeMap" this, #_"pair" entry]
 ///         (key entry)
 ///     )
 
@@ -8009,7 +6822,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"ISeq" PersistentTreeMap_2_seqFrom [#_"PersistentTreeMap" this, #_"Object" key, #_"bool" ascending_9_]
+///     (defn_ #_"ISeq" PersistentTreeMap_2_seqFrom [#_"PersistentTreeMap" this, #_"Object" key, #_"bool" ascending_9_]
 ///         (when (pos_9_ (_0_cnt this))
 ///             (loop_when [#_"ISeq" s nil #_"node" t (_0_tree this)] (some_9_ t) => (when (some_9_ s) (TSeq_1_new s, ascending_9_))
 ///                 (let [#_"int" cmp (PersistentTreeMap_2_doCompare this, key, (_0_key t))]
@@ -8027,7 +6840,7 @@ namespace arbace {
 ///         (PersistentTreeMap_2_seq this, false)
 ///     )
 
-///     (defn_ #_"node" PersistentTreeMap_2_entryAt [#_"PersistentTreeMap" this, #_"Object" key]
+///     (defn_ #_"node" PersistentTreeMap_2_entryAt [#_"PersistentTreeMap" this, #_"Object" key]
 ///         (loop_when [#_"node" t (_0_tree this)] (some_9_ t) => t
 ///             (let [#_"int" cmp (PersistentTreeMap_2_doCompare this, key, (_0_key t))]
 ///                 (cond
@@ -8039,20 +6852,20 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"Object" PersistentTreeMap_2_valAt
-///         ([#_"PersistentTreeMap" this, #_"Object" key] (PersistentTreeMap_2_valAt this, key, nil))
-///         ([#_"PersistentTreeMap" this, #_"Object" key, #_"Object" not_found]
+///     (defn_ #_"Object" PersistentTreeMap_2_valAt
+///         ([#_"PersistentTreeMap" this, #_"Object" key] (PersistentTreeMap_2_valAt this, key, nil))
+///         ([#_"PersistentTreeMap" this, #_"Object" key, #_"Object" not_found]
 ///             (when_some [#_"node" node (PersistentTreeMap_2_entryAt this, key)] => not_found
 ///                 (IMapEntry_3_val node)
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"bool" PersistentTreeMap_2_containsKey [#_"PersistentTreeMap" this, #_"Object" key]
+///     (defn_ #_"bool" PersistentTreeMap_2_containsKey [#_"PersistentTreeMap" this, #_"Object" key]
 ///         (some_9_ (PersistentTreeMap_2_entryAt this, key))
 ///     )
 
-///     (defn_ #_"Object" PersistentTreeMap_2_kvreduce [#_"PersistentTreeMap" this, #_"IFn" f, #_"Object" r]
+///     (defn_ #_"Object" PersistentTreeMap_2_kvreduce [#_"PersistentTreeMap" this, #_"IFn" f, #_"Object" r]
 ///         (let [r (if (some_9_ (_0_tree this)) (INode_3_kvreduce (_0_tree this), f, r) r)]
 ///             (if (reduced_9_ r) (deref r) r)
 ///         )
@@ -8070,13 +6883,13 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"Object" PersistentTreeMap_2_minKey [#_"PersistentTreeMap" this]
+///     (defn #_"Object" PersistentTreeMap_2_minKey [#_"PersistentTreeMap" this]
 ///         (let [#_"node" t (PersistentTreeMap_2_min this)]
 ///             (when (some_9_ t) (_0_key t))
 ///         )
 ///     )
 
-///     (defn #_"Object" PersistentTreeMap_2_maxKey [#_"PersistentTreeMap" this]
+///     (defn #_"Object" PersistentTreeMap_2_maxKey [#_"PersistentTreeMap" this]
 ///         (let [#_"node" t (PersistentTreeMap_2_max this)]
 ///             (when (some_9_ t) (_0_key t))
 ///         )
@@ -8091,7 +6904,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"Red" PersistentTreeMap_1_red [#_"Object" key, #_"Object" val, #_"node" left, #_"node" right]
+///     (defn #_"Red" PersistentTreeMap_1_red [#_"Object" key, #_"Object" val, #_"node" left, #_"node" right]
 ///         (if (and (nil_9_ left) (nil_9_ right))
 ///             (if (nil_9_ val)
 ///                 (Red_1_new key)
@@ -8104,7 +6917,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"Black" PersistentTreeMap_1_black [#_"Object" key, #_"Object" val, #_"node" left, #_"node" right]
+///     (defn #_"Black" PersistentTreeMap_1_black [#_"Object" key, #_"Object" val, #_"node" left, #_"node" right]
 ///         (if (and (nil_9_ left) (nil_9_ right))
 ///             (if (nil_9_ val)
 ///                 (Black_1_new key)
@@ -8117,7 +6930,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"node" PersistentTreeMap_1_rightBalance [#_"Object" key, #_"Object" val, #_"node" left, #_"node" ins]
+///     (defn_ #_"node" PersistentTreeMap_1_rightBalance [#_"Object" key, #_"Object" val, #_"node" left, #_"node" ins]
 ///         (cond
 ///             (and (satisfies_9_ Red ins) (satisfies_9_ Red (_0_right ins)))
 ///                 (PersistentTreeMap_1_red (_0_key ins), (_0_val ins), (PersistentTreeMap_1_black key, val, left, (_0_left ins)), (ITNode_3_blacken (_0_right ins)))
@@ -8128,7 +6941,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"node" PersistentTreeMap_1_balanceLeftDel [#_"Object" key, #_"Object" val, #_"node" del, #_"node" right]
+///     (defn_ #_"node" PersistentTreeMap_1_balanceLeftDel [#_"Object" key, #_"Object" val, #_"node" del, #_"node" right]
 ///         (cond
 ///             (satisfies_9_ Red del)
 ///                 (PersistentTreeMap_1_red key, val, (ITNode_3_blacken del), right)
@@ -8141,7 +6954,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"node" PersistentTreeMap_1_leftBalance [#_"Object" key, #_"Object" val, #_"node" ins, #_"node" right]
+///     (defn_ #_"node" PersistentTreeMap_1_leftBalance [#_"Object" key, #_"Object" val, #_"node" ins, #_"node" right]
 ///         (cond
 ///             (and (satisfies_9_ Red ins) (satisfies_9_ Red (_0_left ins)))
 ///                 (PersistentTreeMap_1_red (_0_key ins), (_0_val ins), (ITNode_3_blacken (_0_left ins)), (PersistentTreeMap_1_black key, val, (_0_right ins), right))
@@ -8152,7 +6965,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"node" PersistentTreeMap_1_balanceRightDel [#_"Object" key, #_"Object" val, #_"node" left, #_"node" del]
+///     (defn_ #_"node" PersistentTreeMap_1_balanceRightDel [#_"Object" key, #_"Object" val, #_"node" left, #_"node" del]
 ///         (cond
 ///             (satisfies_9_ Red del)
 ///                 (PersistentTreeMap_1_red key, val, left, (ITNode_3_blacken del))
@@ -8165,7 +6978,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"node" PersistentTreeMap_2_add [#_"PersistentTreeMap" this, #_"node" t, #_"Object" key, #_"Object" val, #_"node'" found]
+///     (defn_ #_"node" PersistentTreeMap_2_add [#_"PersistentTreeMap" this, #_"node" t, #_"Object" key, #_"Object" val, #_"node'" found]
 ///         (if (nil_9_ t)
 ///             (if (nil_9_ val)
 ///                 (Red_1_new key)
@@ -8215,7 +7028,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"node" PersistentTreeMap_2_remove [#_"PersistentTreeMap" this, #_"node" t, #_"Object" key, #_"node'" found]
+///     (defn_ #_"node" PersistentTreeMap_2_remove [#_"PersistentTreeMap" this, #_"node" t, #_"Object" key, #_"node'" found]
 ///         (when (some_9_ t) => nil
 ///             (let [#_"int" cmp (PersistentTreeMap_2_doCompare this, key, (_0_key t))]
 ///                 (if (zero_9_ cmp)
@@ -8242,7 +7055,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"node" PersistentTreeMap_2_replace [#_"PersistentTreeMap" this, #_"node" t, #_"Object" key, #_"Object" val]
+///     (defn_ #_"node" PersistentTreeMap_2_replace [#_"PersistentTreeMap" this, #_"node" t, #_"Object" key, #_"Object" val]
 ///         (let [
 ///             #_"int" cmp (PersistentTreeMap_2_doCompare this, key, (_0_key t))
 ///             #_"node" left  (if (neg_9_ cmp) (PersistentTreeMap_2_replace this, (_0_left  t), key, val) (_0_left  t))
@@ -8252,10 +7065,10 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"PersistentTreeMap" PersistentTreeMap_2_assoc [#_"PersistentTreeMap" this, #_"Object" key, #_"Object" val]
+///     (defn_ #_"PersistentTreeMap" PersistentTreeMap_2_assoc [#_"PersistentTreeMap" this, #_"Object" key, #_"Object" val]
 ///         (let [#_"node'" found (atom nil) #_"node" t (PersistentTreeMap_2_add this, (_0_tree this), key, val, found)]
 ///             (if (nil_9_ t)
-///                 (if (= (_0_val #_"node" (deref found)) val)
+///                 (if (_eq_9_ (_0_val #_"node" (deref found)) val)
 ///                     this
 ///                     (PersistentTreeMap_1_new (_0__meta this), (_0_cmp this), (PersistentTreeMap_2_replace this, (_0_tree this), key, val), (_0_cnt this))
 ///                 )
@@ -8264,7 +7077,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"PersistentTreeMap" PersistentTreeMap_2_dissoc [#_"PersistentTreeMap" this, #_"Object" key]
+///     (defn_ #_"PersistentTreeMap" PersistentTreeMap_2_dissoc [#_"PersistentTreeMap" this, #_"Object" key]
 ///         (let [#_"node'" found (atom nil) #_"node" t (PersistentTreeMap_2_remove this, (_0_tree this), key, found)]
 ///             (if (nil_9_ t)
 ///                 (if (nil_9_ (deref found))
@@ -8276,66 +7089,66 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm PersistentTreeMap IMeta
+///     (defm PersistentTreeMap IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm PersistentTreeMap IObj
+///     (defm PersistentTreeMap IObj
 ///         (IObj_3_withMeta => PersistentTreeMap_2_withMeta)
 ///     )
 
-///     (defm PersistentTreeMap Counted
+///     (defm PersistentTreeMap Counted
 ///         (Counted_3_count => _0_cnt)
 ///     )
 
-///     (defm PersistentTreeMap ILookup
+///     (defm PersistentTreeMap ILookup
 ///         (ILookup_3_valAt => PersistentTreeMap_2_valAt)
 ///     )
 
-///     (defm PersistentTreeMap IFn
+///     (defm PersistentTreeMap IFn
 ///         (IFn_3_invoke => APersistentMap_2_invoke)
 ///         (IFn_3_applyTo => AFn_1_applyTo)
 ///     )
 
-///     (defm PersistentTreeMap Seqable
+///     (defm PersistentTreeMap Seqable
 ///         (Seqable_3_seq => PersistentTreeMap_2_seq)
 ///     )
 
-///     (defm PersistentTreeMap Reversible
+///     (defm PersistentTreeMap Reversible
 ///         (Reversible_3_rseq => PersistentTreeMap_2_rseq)
 ///     )
 
-///     (defm PersistentTreeMap IPersistentCollection
+///     (defm PersistentTreeMap IPersistentCollection
 ///         (IPersistentCollection_3_conj => APersistentMap_2_conj)
 ///         (IPersistentCollection_3_empty => PersistentTreeMap_2_empty)
 ///     )
 
-///     (defm PersistentTreeMap Sorted
+///     (defm PersistentTreeMap Sorted
 ///         (Sorted_3_comparator => _0_cmp)
 ///         (Sorted_3_entryKey => PersistentTreeMap_2_entryKey)
 ///         (Sorted_3_seq => PersistentTreeMap_2_seq)
 ///         (Sorted_3_seqFrom => PersistentTreeMap_2_seqFrom)
 ///     )
 
-///     (defm PersistentTreeMap IKVReduce
+///     (defm PersistentTreeMap IKVReduce
 ///         (IKVReduce_3_kvreduce => PersistentTreeMap_2_kvreduce)
 ///     )
 
-///     (defm PersistentTreeMap Associative
+///     (defm PersistentTreeMap Associative
 ///         (Associative_3_assoc => PersistentTreeMap_2_assoc)
 ///         (Associative_3_containsKey => PersistentTreeMap_2_containsKey)
 ///         (Associative_3_entryAt => PersistentTreeMap_2_entryAt)
 ///     )
 
-///     (defm PersistentTreeMap IPersistentMap
+///     (defm PersistentTreeMap IPersistentMap
 ///         (IPersistentMap_3_dissoc => PersistentTreeMap_2_dissoc)
 ///     )
 
-///     (defm PersistentTreeMap IObject
+///     (defm PersistentTreeMap IObject
 ///         (IObject_3_equals => APersistentMap_2_equals)
 ///     )
 
-///     (defm PersistentTreeMap Hashed
+///     (defm PersistentTreeMap Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashUnordered)
 ///     )
 // )
@@ -8345,13 +7158,13 @@ namespace arbace {
 /// (defn sorted_map_by [cmp & keyvals] (PersistentTreeMap_1_create cmp keyvals))
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"PersistentTreeSet"
-///     (defq PersistentTreeSet [#_"IPersistentMap" _meta, #_"IPersistentMap" impl] SetForm)
+///     (defq PersistentTreeSet [#_"IPersistentMap" _meta, #_"IPersistentMap" impl] SetForm)
 
 ///     #_inherit
-///     (defm PersistentTreeSet APersistentSet AFn)
+///     (defm PersistentTreeSet APersistentSet AFn)
 
 ///     (defn #_"PersistentTreeSet" PersistentTreeSet_1_new [#_"IPersistentMap" meta, #_"IPersistentMap" impl]
 ///         (new_8_ PersistentTreeSet_1_class (anew [meta, impl]))
@@ -8365,7 +7178,7 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"PersistentTreeSet" PersistentTreeSet_2_withMeta [#_"PersistentTreeSet" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (PersistentTreeSet_1_new meta, (_0_impl this))
 ///         )
 ///     )
@@ -8374,7 +7187,7 @@ namespace arbace {
 ///         (count (_0_impl this))
 ///     )
 
-///     (defn_ #_"PersistentTreeSet" PersistentTreeSet_2_conj [#_"PersistentTreeSet" this, #_"Object" val]
+///     (defn_ #_"PersistentTreeSet" PersistentTreeSet_2_conj [#_"PersistentTreeSet" this, #_"Object" val]
 ///         (if (contains_9_ (_0_impl this) val)
 ///             this
 ///             (PersistentTreeSet_1_new (_0__meta this), (assoc (_0_impl this) val val))
@@ -8385,18 +7198,18 @@ namespace arbace {
 ///         (PersistentTreeSet_1_new (_0__meta this), (empty (_0_impl this)))
 ///     )
 
-///     (defn_ #_"IPersistentSet" PersistentTreeSet_2_disj [#_"PersistentTreeSet" this, #_"Object" key]
+///     (defn_ #_"IPersistentSet" PersistentTreeSet_2_disj [#_"PersistentTreeSet" this, #_"Object" key]
 ///         (if (contains_9_ (_0_impl this) key)
 ///             (PersistentTreeSet_1_new (_0__meta this), (dissoc (_0_impl this) key))
 ///             this
 ///         )
 ///     )
 
-///     (defn_ #_"bool" PersistentTreeSet_2_contains_9_ [#_"PersistentTreeSet" this, #_"Object" key]
+///     (defn_ #_"bool" PersistentTreeSet_2_contains_9_ [#_"PersistentTreeSet" this, #_"Object" key]
 ///         (contains_9_ (_0_impl this) key)
 ///     )
 
-///     (defn_ #_"Object" PersistentTreeSet_2_get [#_"PersistentTreeSet" this, #_"Object" key]
+///     (defn_ #_"Object" PersistentTreeSet_2_get [#_"PersistentTreeSet" this, #_"Object" key]
 ///         (get (_0_impl this) key)
 ///     )
 
@@ -8404,7 +7217,7 @@ namespace arbace {
 ///         (Sorted_3_comparator (_0_impl this))
 ///     )
 
-///     (defn_ #_"Object" PersistentTreeSet_2_entryKey [#_"PersistentTreeSet" this, #_"Object" entry]
+///     (defn_ #_"Object" PersistentTreeSet_2_entryKey [#_"PersistentTreeSet" this, #_"Object" entry]
 ///         entry
 ///     )
 
@@ -8417,7 +7230,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"ISeq" PersistentTreeSet_2_seqFrom [#_"PersistentTreeSet" this, #_"Object" key, #_"bool" ascending_9_]
+///     (defn_ #_"ISeq" PersistentTreeSet_2_seqFrom [#_"PersistentTreeSet" this, #_"Object" key, #_"bool" ascending_9_]
 ///         (keys (Sorted_3_seqFrom (_0_impl this), key, ascending_9_))
 ///     )
 
@@ -8425,54 +7238,54 @@ namespace arbace {
 ///         (map key (rseq (_0_impl this)))
 ///     )
 
-///     (defm PersistentTreeSet IMeta
+///     (defm PersistentTreeSet IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm PersistentTreeSet IObj
+///     (defm PersistentTreeSet IObj
 ///         (IObj_3_withMeta => PersistentTreeSet_2_withMeta)
 ///     )
 
-///     (defm PersistentTreeSet Counted
+///     (defm PersistentTreeSet Counted
 ///         (Counted_3_count => PersistentTreeSet_2_count)
 ///     )
 
-///     (defm PersistentTreeSet IPersistentCollection
+///     (defm PersistentTreeSet IPersistentCollection
 ///         (IPersistentCollection_3_conj => PersistentTreeSet_2_conj)
 ///         (IPersistentCollection_3_empty => PersistentTreeSet_2_empty)
 ///     )
 
-///     (defm PersistentTreeSet IPersistentSet
+///     (defm PersistentTreeSet IPersistentSet
 ///         (IPersistentSet_3_disj => PersistentTreeSet_2_disj)
 ///         (IPersistentSet_3_contains_9_ => PersistentTreeSet_2_contains_9_)
 ///         (IPersistentSet_3_get => PersistentTreeSet_2_get)
 ///     )
 
-///     (defm PersistentTreeSet Sorted
+///     (defm PersistentTreeSet Sorted
 ///         (Sorted_3_comparator => PersistentTreeSet_2_comparator)
 ///         (Sorted_3_entryKey => PersistentTreeSet_2_entryKey)
 ///         (Sorted_3_seq => PersistentTreeSet_2_seq)
 ///         (Sorted_3_seqFrom => PersistentTreeSet_2_seqFrom)
 ///     )
 
-///     (defm PersistentTreeSet Seqable
+///     (defm PersistentTreeSet Seqable
 ///         (Seqable_3_seq => PersistentTreeSet_2_seq)
 ///     )
 
-///     (defm PersistentTreeSet Reversible
+///     (defm PersistentTreeSet Reversible
 ///         (Reversible_3_rseq => PersistentTreeSet_2_rseq)
 ///     )
 
-///     (defm PersistentTreeSet IFn
+///     (defm PersistentTreeSet IFn
 ///         (IFn_3_invoke => APersistentSet_2_invoke)
 ///         (IFn_3_applyTo => AFn_1_applyTo)
 ///     )
 
-///     (defm PersistentTreeSet IObject
+///     (defm PersistentTreeSet IObject
 ///         (IObject_3_equals => APersistentSet_2_equals)
 ///     )
 
-///     (defm PersistentTreeSet Hashed
+///     (defm PersistentTreeSet Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashUnordered)
 ///     )
 // )
@@ -8482,10 +7295,10 @@ namespace arbace {
 /// (defn sorted_set_by [cmp & keys] (PersistentTreeSet_1_create cmp keys))
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"VNode"
-///     (defq VNode [#_"thread'" edit, #_"array" array, #_"index" index])
+///     (defq VNode [#_"thread'" edit, #_"array" array, #_"index" index])
 
 ///     (defn #_"node" VNode_1_new [#_"thread'" edit, #_"array" array, #_"index" index]
 ///         (new_8_ VNode_1_class (anew [edit, (or array (anew 32)), index]))
@@ -8526,22 +7339,22 @@ namespace arbace {
 ///     (defn #_"values" VNode_2_array_for
 ///         ([#_"node" this, #_"int" i, #_"int" shift, #_"int" cnt] (VNode_2_array_for this, i, shift, cnt, cnt, nil))
 ///         ([#_"node" this, #_"int" i, #_"int" shift, #_"int" cnt, #_"int" tail_off, #_"values" tail]
-///             (when (< -1 i cnt) => (throw "index is out of bounds")
-///                 (when (< i tail_off) => tail
+///             (when (lt_9_ -1 i cnt) => (throw "index is out of bounds")
+///                 (when (lt_9_ i tail_off) => tail
 ///                     (loop_when [i i #_"node" node this shift shift] (pos_9_ shift) => (_0_array node)
 ///                         (let [
 ///                             #_"index" x (_0_index node)
-///                             #_"int" m (bit_and (>>> i shift) 0x1f)
+///                             #_"int" m (bit_and (unsigned_bit_shift_right i shift) 0x1f)
 ///                             [m i]
 ///                                 (when (some_9_ x) => [m i]
 ///                                     (let [
-///                                         m (loop_when_recur m (<= (aget x m) i) (inc m) => m)
+///                                         m (loop_when_recur m (lte_9_ (aget x m) i) (inc m) => m)
 ///                                     ]
-///                                         [m (if (pos_9_ m) (- i (aget x (dec m))) i)]
+///                                         [m (if (pos_9_ m) (minus i (aget x (dec m))) i)]
 ///                                     )
 ///                                 )
 ///                         ]
-///                             (recur i (aget (_0_array node) m) (- shift 5))
+///                             (recur i (aget (_0_array node) m) (minus shift 5))
 ///                         )
 ///                     )
 ///                 )
@@ -8549,23 +7362,23 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"Object" VNode_2_value_for [#_"node" this, #_"int" i, #_"int" shift, #_"int" cnt, #_"int" tail_off, #_"values" tail]
-///         (when (< -1 i cnt) => (throw "index is out of bounds")
-///             (when (< i tail_off) => (aget tail (- i tail_off))
-///                 (loop_when [i i #_"node" node this shift shift] (pos_9_ shift) => (aget (_0_array node) (bit_and (>>> i shift) 0x1f))
+///     (defn #_"Object" VNode_2_value_for [#_"node" this, #_"int" i, #_"int" shift, #_"int" cnt, #_"int" tail_off, #_"values" tail]
+///         (when (lt_9_ -1 i cnt) => (throw "index is out of bounds")
+///             (when (lt_9_ i tail_off) => (aget tail (minus i tail_off))
+///                 (loop_when [i i #_"node" node this shift shift] (pos_9_ shift) => (aget (_0_array node) (bit_and (unsigned_bit_shift_right i shift) 0x1f))
 ///                     (let [
 ///                         #_"index" x (_0_index node)
-///                         #_"int" m (bit_and (>>> i shift) 0x1f)
+///                         #_"int" m (bit_and (unsigned_bit_shift_right i shift) 0x1f)
 ///                         [m i]
 ///                             (when (some_9_ x) => [m i]
 ///                                 (let [
-///                                     m (loop_when_recur m (<= (aget x m) i) (inc m) => m)
+///                                     m (loop_when_recur m (lte_9_ (aget x m) i) (inc m) => m)
 ///                                 ]
-///                                     [m (if (pos_9_ m) (- i (aget x (dec m))) i)]
+///                                     [m (if (pos_9_ m) (minus i (aget x (dec m))) i)]
 ///                                 )
 ///                             )
 ///                     ]
-///                         (recur i (aget (_0_array node) m) (- shift 5))
+///                         (recur i (aget (_0_array node) m) (minus shift 5))
 ///                     )
 ///                 )
 ///             )
@@ -8574,7 +7387,7 @@ namespace arbace {
 
 ///     (defn #_"node" VNode_2_new_path [#_"node" this, #_"thread'" edit, #_"int" shift]
 ///         (when (pos_9_ shift) => this
-///             (VNode_1_new edit, (-> (anew 32) (aset_4_ 0 (VNode_2_new_path this, edit, (- shift 5)))), nil)
+///             (VNode_1_new edit, (-> (anew 32) (aset_4_ 0 (VNode_2_new_path this, edit, (minus shift 5)))), nil)
 ///         )
 ///     )
 
@@ -8586,13 +7399,13 @@ namespace arbace {
 ///         (let [
 ///             #_"index" x (_0_index this)
 ///         ]
-///             (when (some_9_ x) => (< (<< 1 shift) (>>> (inc cnt) 5))
-///                 (and (= (aget x 32) 32)
-///                     (or (= shift 5)
+///             (when (some_9_ x) => (lt_9_ (bit_shift_left 1 shift) (unsigned_bit_shift_right (inc cnt) 5))
+///                 (and (_eq_9_ (aget x 32) 32)
+///                     (or (_eq_9_ shift 5)
 ///                         (recur
 ///                             (aget (_0_array this) 31)
-///                             (- shift 5)
-///                             (+ (- (aget x 31) (aget x 30)) 32)
+///                             (minus shift 5)
+///                             (plus (minus (aget x 31) (aget x 30)) 32)
 ///                         )
 ///                     )
 ///                 )
@@ -8608,22 +7421,22 @@ namespace arbace {
 ///                 (let [
 ///                     #_"int" e (dec (aget x 32))
 ///                     #_"node" child
-///                         (when (< 5 shift)
+///                         (when (lt_9_ 5 shift)
 ///                             (let [
-///                                 #_"int" n (if (pos_9_ e) (- (aget x e) (aget x (dec e))) (aget x 0))
+///                                 #_"int" n (if (pos_9_ e) (minus (aget x e) (aget x (dec e))) (aget x 0))
 ///                             ]
-///                                 (when (< n (<< 1 shift))
-///                                     (VNode_2_push_tail (aget a e), edit, (- shift 5), (inc n), tail_node)
+///                                 (when (lt_9_ n (bit_shift_left 1 shift))
+///                                     (VNode_2_push_tail (aget a e), edit, (minus shift 5), (inc n), tail_node)
 ///                                 )
 ///                             )
 ///                         )
 ///                     a (if cow_9_ (aclone a) a) x (if cow_9_ (aclone x) x)
 ///                     [a x]
 ///                         (if (some_9_ child)
-///                             [(aset_4_ a e child) (aswap_4_ x e + 32)]
+///                             [(aset_4_ a e child) (aswap_4_ x e plus 32)]
 ///                             (let [
-///                                 a (aset_4_ a (inc e) (VNode_2_new_path tail_node, edit, (- shift 5)))
-///                                 x (aset_4_ x (inc e) (+ (aget x e) 32))
+///                                 a (aset_4_ a (inc e) (VNode_2_new_path tail_node, edit, (minus shift 5)))
+///                                 x (aset_4_ x (inc e) (plus (aget x e) 32))
 ///                             ]
 ///                                 [a (aswap_4_ x 32 inc)]
 ///                             )
@@ -8632,12 +7445,12 @@ namespace arbace {
 ///                     (if cow_9_ (VNode_1_new edit, a, x) this)
 ///                 )
 ///                 (let [
-///                     #_"int" e (bit_and (>>> (dec cnt) shift) 0x1f)
+///                     #_"int" e (bit_and (unsigned_bit_shift_right (dec cnt) shift) 0x1f)
 ///                     #_"node" child
-///                         (when (< 5 shift) => tail_node
+///                         (when (lt_9_ 5 shift) => tail_node
 ///                             (if_some [child (aget a e)]
-///                                 (VNode_2_push_tail child, edit, (- shift 5), cnt, tail_node)
-///                                 (VNode_2_new_path tail_node, edit, (- shift 5))
+///                                 (VNode_2_push_tail child, edit, (minus shift 5), cnt, tail_node)
+///                                 (VNode_2_new_path tail_node, edit, (minus shift 5))
 ///                             )
 ///                         )
 ///                     a (if cow_9_ (aclone a) a)
@@ -8652,17 +7465,17 @@ namespace arbace {
 ///     (defn #_"node" VNode_2_pop_tail [#_"node" this, #_"thread'" edit, #_"int" shift, #_"int" tail_off]
 ///         (let [
 ///             #_"bool" cow_9_ (VNode_2_cow_9_ this, edit) #_"array" a (_0_array this) #_"index" x (_0_index this)
-///             #_"int" e (bit_and (>>> (dec tail_off) shift) 0x1f)
+///             #_"int" e (bit_and (unsigned_bit_shift_right (dec tail_off) shift) 0x1f)
 ///         ]
 ///             (if (some_9_ x)
 ///                 (let [
-///                     e (loop_when_recur e (and (< e 31) (some_9_ (aget x (inc e)))) (inc e) => e)
+///                     e (loop_when_recur e (and (lt_9_ e 31) (some_9_ (aget x (inc e)))) (inc e) => e)
 ///                 ]
 ///                     (cond
-///                         (< 5 shift)
+///                         (lt_9_ 5 shift)
 ///                             (let [
 ///                                 #_"node" child (aget a e)
-///                                 #_"node" child_1_ (VNode_2_pop_tail child, edit, (- shift 5), (if (pos_9_ e) (- (aget x e) (aget x (dec e))) (aget x 0)))
+///                                 #_"node" child_1_ (VNode_2_pop_tail child, edit, (minus shift 5), (if (pos_9_ e) (minus (aget x e) (aget x (dec e))) (aget x 0)))
 ///                             ]
 ///                                 (when (or (some_9_ child_1_) (pos_9_ e))
 ///                                     (let [
@@ -8674,10 +7487,10 @@ namespace arbace {
 ///                                                 (let [
 ///                                                     #_"int" delta
 ///                                                         (when (some_9_ (_0_index child)) => 32
-///                                                             (- (VNode_1_last_range (_0_index child)) (VNode_1_last_range (_0_index child_1_)))
+///                                                             (minus (VNode_1_last_range (_0_index child)) (VNode_1_last_range (_0_index child_1_)))
 ///                                                         )
 ///                                                 ]
-///                                                     (-> x (aswap_4_ e - delta))
+///                                                     (-> x (aswap_4_ e minus delta))
 ///                                                 )
 ///                                                 (-> x (aset_4_ e nil) (aswap_4_ 32 dec))
 ///                                             )
@@ -8696,9 +7509,9 @@ namespace arbace {
 ///                     )
 ///                 )
 ///                 (cond
-///                     (< 5 shift)
+///                     (lt_9_ 5 shift)
 ///                         (let [
-///                             #_"node" child (VNode_2_pop_tail (aget a e), edit, (- shift 5), tail_off)
+///                             #_"node" child (VNode_2_pop_tail (aget a e), edit, (minus shift 5), tail_off)
 ///                         ]
 ///                             (when (or (some_9_ child) (pos_9_ e))
 ///                                 (let [
@@ -8721,24 +7534,24 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"node" VNode_2_do_assoc [#_"node" this, #_"thread'" edit, #_"int" shift, #_"int" i, #_"Object" val]
+///     (defn #_"node" VNode_2_do_assoc [#_"node" this, #_"thread'" edit, #_"int" shift, #_"int" i, #_"Object" val]
 ///         (let [
 ///             #_"bool" cow_9_ (VNode_2_cow_9_ this, edit) #_"array" a (_0_array this) #_"index" x (_0_index this)
 ///             a (if cow_9_ (aclone a) a)
-///             #_"int" m (bit_and (>>> i shift) 0x1f)
+///             #_"int" m (bit_and (unsigned_bit_shift_right i shift) 0x1f)
 ///             a
 ///                 (when (pos_9_ shift) => (aset_4_ a m val)
 ///                     (let [
 ///                         [m i]
 ///                             (when (some_9_ x) => [m i]
 ///                                 (let [
-///                                     m (loop_when_recur m (<= (aget x m) i) (inc m) => m)
+///                                     m (loop_when_recur m (lte_9_ (aget x m) i) (inc m) => m)
 ///                                 ]
-///                                     [m (if (pos_9_ m) (- i (aget x (dec m))) i)]
+///                                     [m (if (pos_9_ m) (minus i (aget x (dec m))) i)]
 ///                                 )
 ///                             )
 ///                     ]
-///                         (aswap_4_ a m VNode_2_do_assoc edit, (- shift 5), i, val)
+///                         (aswap_4_ a m VNode_2_do_assoc edit, (minus shift 5), i, val)
 ///                     )
 ///                 )
 ///         ]
@@ -8748,24 +7561,24 @@ namespace arbace {
 
 ///     (defn_ #_"index" VNode_1_n_index [#_"int" shift, #_"int" n]
 ///         (let [
-///             #_"int" k (<< 1 shift)
+///             #_"int" k (bit_shift_left 1 shift)
 ///         ]
-///             (loop_when_recur [#_"index" x (anew 33) #_"int" j 0 #_"int" i k] (< i n) [(aset_4_ x j i) (inc j) (+ i k)] => (-> x (aset_4_ j n) (aset_4_ 32 (inc j))))
+///             (loop_when_recur [#_"index" x (anew 33) #_"int" j 0 #_"int" i k] (lt_9_ i n) [(aset_4_ x j i) (inc j) (plus i k)] => (-> x (aset_4_ j n) (aset_4_ 32 (inc j))))
 ///         )
 ///     )
 
 ///     (defn_ #_"index" VNode_1_m_n_index [#_"int" shift, #_"int" m, #_"int" n]
 ///         (let [
-///             #_"int" k (<< 1 shift)
+///             #_"int" k (bit_shift_left 1 shift)
 ///         ]
-///             (loop_when_recur [#_"index" x (anew 33) #_"int" j 0 #_"int" i k] (< j m) [(aset_4_ x j i) (inc j) (+ i k)] => (-> x (aset_4_ j n) (aset_4_ 32 (inc j))))
+///             (loop_when_recur [#_"index" x (anew 33) #_"int" j 0 #_"int" i k] (lt_9_ j m) [(aset_4_ x j i) (inc j) (plus i k)] => (-> x (aset_4_ j n) (aset_4_ 32 (inc j))))
 ///         )
 ///     )
 
 ///     (defn_ #_"int" VNode_1_index_of_nil [#_"array" a]
-///         (loop_when [#_"int" l 0 #_"int" h 31] (< l (dec h)) => (cond (nil_9_ (aget a l)) l (nil_9_ (aget a h)) h _0_else 32)
+///         (loop_when [#_"int" l 0 #_"int" h 31] (lt_9_ l (dec h)) => (cond (nil_9_ (aget a l)) l (nil_9_ (aget a h)) h _0_else 32)
 ///             (let [
-///                 #_"int" m (+ l (>>> (- h l) 1))
+///                 #_"int" m (plus l (unsigned_bit_shift_right (minus h l) 1))
 ///             ]
 ///                 (if (nil_9_ (aget a m))
 ///                     (recur l m)
@@ -8800,7 +7613,7 @@ namespace arbace {
 ///                                 #_"int" k (aget x 0)
 ///                                 #_"int" e (dec (aget x 32))
 ///                             ]
-///                                 (loop_when_recur [x_1_ (anew 33) #_"int" j 0] (< j e) [(aset_4_ x_1_ j (- (aget x (inc j)) k)) (inc j)] => (aset_4_ x_1_ 32 e))
+///                                 (loop_when_recur [x_1_ (anew 33) #_"int" j 0] (lt_9_ j e) [(aset_4_ x_1_ j (minus (aget x (inc j)) k)) (inc j)] => (aset_4_ x_1_ 32 e))
 ///                             )
 ///                         )
 ///                 ]
@@ -8819,21 +7632,21 @@ namespace arbace {
 ///                         #_"int" n (aget x 32)
 ///                         x_1_
 ///                             (loop_when_recur [x_1_ (anew 33) #_"int" j 0]
-///                                              (< j n)
-///                                              [(aset_4_ x_1_ j (- (aget x j) delta)) (inc j)]
+///                                              (lt_9_ j n)
+///                                              [(aset_4_ x_1_ j (minus (aget x j) delta)) (inc j)]
 ///                                           => (aset_4_ x_1_ 32 n)
 ///                             )
 ///                     ]
 ///                         [(-> (aclone a) (aset_4_ 0 node)) x_1_]
 ///                     )
 ///                     (let [
-///                         #_"int" k (<< 1 shift)
-///                         #_"int" n (bit_and (>>> (dec cnt) shift) 0x1f)
+///                         #_"int" k (bit_shift_left 1 shift)
+///                         #_"int" n (bit_and (unsigned_bit_shift_right (dec cnt) shift) 0x1f)
 ///                         x_1_
-///                             (loop_when_recur [x_1_ (-> (anew 33) (aset_4_ 0 (- k delta))) #_"int" j 0]
-///                                              (< j n)
-///                                              [(aset_4_ x_1_ (inc j) (+ (aget x_1_ j) k)) (inc j)]
-///                                           => (-> x_1_ (aset_4_ n (- cnt delta)) (aset_4_ 32 (inc n)))
+///                             (loop_when_recur [x_1_ (-> (anew 33) (aset_4_ 0 (minus k delta))) #_"int" j 0]
+///                                              (lt_9_ j n)
+///                                              [(aset_4_ x_1_ (inc j) (plus (aget x_1_ j) k)) (inc j)]
+///                                           => (-> x_1_ (aset_4_ n (minus cnt delta)) (aset_4_ 32 (inc n)))
 ///                             )
 ///                     ]
 ///                         [(-> (anew 32) (aset_4_ 0 node) (acopy_4_ 1 a 1 n)) x_1_]
@@ -8852,7 +7665,7 @@ namespace arbace {
 ///                 (let [
 ///                     #_"int" e (dec (aget x 32))
 ///                 ]
-///                     (VNode_1_new nil, (-> (aclone a) (aset_4_ e node)), (-> (aclone x) (aset_4_ e (+ (aget x e) delta))))
+///                     (VNode_1_new nil, (-> (aclone a) (aset_4_ e node)), (-> (aclone x) (aset_4_ e (plus (aget x e) delta))))
 ///                 )
 ///                 (let [
 ///                     #_"int" m (dec (VNode_1_index_of_nil a))
@@ -8871,37 +7684,37 @@ namespace arbace {
 ///             #_"array" a (_0_array this) #_"index" x (_0_index this)
 ///             #_"int" m (VNode_1_index_of_nil a)
 ///             #_"node" tail_node
-///                 (when (< 5 shift) => (VNode_1_new nil, tail, nil)
+///                 (when (lt_9_ 5 shift) => (VNode_1_new nil, tail, nil)
 ///                     (let [
 ///                         #_"int" n
-///                             (when (some_9_ x) => (rem tail_off (<< 1 shift))
+///                             (when (some_9_ x) => (rem tail_off (bit_shift_left 1 shift))
 ///                                 (let [
 ///                                     #_"int" e (dec (aget x 32))
 ///                                 ]
-///                                     (if (pos_9_ e) (- (aget x e) (aget x (dec e))) (aget x 0))
+///                                     (if (pos_9_ e) (minus (aget x e) (aget x (dec e))) (aget x 0))
 ///                                 )
 ///                             )
 ///                     ]
-///                         (VNode_2_fold_tail (aget a (dec m)), (- shift 5), n, tail)
+///                         (VNode_2_fold_tail (aget a (dec m)), (minus shift 5), n, tail)
 ///                     )
 ///                 )
 ///         ]
-///             (when (or (< m 32) (and (some_9_ tail_node) (< 5 shift)))
+///             (when (or (lt_9_ m 32) (and (some_9_ tail_node) (lt_9_ 5 shift)))
 ///                 (let [
 ///                     #_"int" n (alength tail)
 ///                     #_"index" x_1_
-///                         (when (or (some_9_ x) (< n 32))
+///                         (when (or (some_9_ x) (lt_9_ n 32))
 ///                             (let [
 ///                                 x_1_ (or (aclone x) (VNode_1_n_index shift, tail_off))
 ///                             ]
-///                                 (if (and (some_9_ tail_node) (< 5 shift))
+///                                 (if (and (some_9_ tail_node) (lt_9_ 5 shift))
 ///                                     (let [
-///                                         x_1_ (if (pos_9_ m) (aswap_4_ x_1_ (dec m) + n) x_1_)
+///                                         x_1_ (if (pos_9_ m) (aswap_4_ x_1_ (dec m) plus n) x_1_)
 ///                                     ]
 ///                                         (-> x_1_ (aset_4_ 32 m))
 ///                                     )
 ///                                     (let [
-///                                         x_1_ (aset_4_ x_1_ m (+ (if (pos_9_ m) (aget x_1_ (dec m)) 0) n))
+///                                         x_1_ (aset_4_ x_1_ m (plus (if (pos_9_ m) (aget x_1_ (dec m)) 0) n))
 ///                                     ]
 ///                                         (-> x_1_ (aset_4_ 32 (inc m)))
 ///                                     )
@@ -8911,8 +7724,8 @@ namespace arbace {
 ///                     #_"array" a_1_ (-> (anew 32) (acopy_4_ 0 a 0 m))
 ///                     a_1_
 ///                         (if (some_9_ tail_node)
-///                             (aset_4_ a_1_ (if (< 5 shift) (dec m) m) tail_node)
-///                             (aset_4_ a_1_ m (VNode_2_new_path (VNode_1_new nil, tail, nil), nil, (- shift 5)))
+///                             (aset_4_ a_1_ (if (lt_9_ 5 shift) (dec m) m) tail_node)
+///                             (aset_4_ a_1_ m (VNode_2_new_path (VNode_1_new nil, tail, nil), nil, (minus shift 5)))
 ///                         )
 ///                 ]
 ///                     (VNode_1_new nil, a_1_, x_1_)
@@ -8928,32 +7741,32 @@ namespace arbace {
 ///         (when (pos_9_ shift) => (VNode_1_new nil, (-> (anew end) (acopy_4_ 0 (_0_array this) 0 end)), nil)
 ///             (let [
 ///                 #_"array" a (_0_array this) #_"index" x (_0_index this)
-///                 #_"int" m (bit_and (>>> (dec end) shift) 0x1f)
+///                 #_"int" m (bit_and (unsigned_bit_shift_right (dec end) shift) 0x1f)
 ///                 m
 ///                     (when (some_9_ x) => m
-///                         (loop_when_recur m (< (aget x m) end) (inc m) => m)
+///                         (loop_when_recur m (lt_9_ (aget x m) end) (inc m) => m)
 ///                     )
-///                 #_"int" k (<< 1 shift)
+///                 #_"int" k (bit_shift_left 1 shift)
 ///                 #_"int" child_end
 ///                     (cond
 ///                         (nil_9_ x) (let [#_"int" e (rem end k)] (if (zero_9_ e) k e))
-///                         (pos_9_ m) (- end (aget x (dec m)))
+///                         (pos_9_ m) (minus end (aget x (dec m)))
 ///                         _0_else    end
 ///                     )
-///                 #_"node" child (VNode_2_slice_right (aget a m), (- shift 5), child_end)
+///                 #_"node" child (VNode_2_slice_right (aget a m), (minus shift 5), child_end)
 ///                 #_"index" y (_0_index child)
 ///                 #_"array" a_1_ (-> (anew 32) (acopy_4_ 0 a 0 m) (aset_4_ m child))
 ///                 #_"index" x_1_
 ///                     (when (or (some_9_ x) (some_9_ y))
 ///                         (let [
-///                             x_1_ (loop_when_recur [x_1_ (anew 33) #_"int" j 0] (< j m) [(aset_4_ x_1_ j (if (some_9_ x) (aget x j) (* (inc j) k))) (inc j)] => x_1_)
+///                             x_1_ (loop_when_recur [x_1_ (anew 33) #_"int" j 0] (lt_9_ j m) [(aset_4_ x_1_ j (if (some_9_ x) (aget x j) (mult (inc j) k))) (inc j)] => x_1_)
 ///                             #_"int" delta
 ///                                 (cond
 ///                                     (nil_9_ y)    (let [#_"int" e (rem child_end k) ] (if (zero_9_ e) k e))
-///                                     (< 5 shift) (VNode_1_last_range y)
+///                                     (lt_9_ 5 shift) (VNode_1_last_range y)
 ///                                     _0_else       (alength (_0_array child))
 ///                                 )
-///                             x_1_ (aset_4_ x_1_ m (+ (if (pos_9_ m) (aget x_1_ (dec m)) 0) delta))
+///                             x_1_ (aset_4_ x_1_ m (plus (if (pos_9_ m) (aget x_1_ (dec m)) 0) delta))
 ///                         ]
 ///                             (-> x_1_ (aset_4_ 32 (inc m)))
 ///                         )
@@ -8968,29 +7781,29 @@ namespace arbace {
 ///         (if (zero_9_ shift)
 ///             (let [
 ///                 #_"array" a (_0_array this)
-///                 #_"int" n (- (alength a) start)
+///                 #_"int" n (minus (alength a) start)
 ///             ]
 ///                 (VNode_1_new nil, (-> (anew n) (acopy_4_ 0 a start n)), nil)
 ///             )
 ///             (let [
 ///                 #_"array" a (_0_array this) #_"index" x (_0_index this)
-///                 #_"int" m (bit_and (>>> start shift) 0x1f)
+///                 #_"int" m (bit_and (unsigned_bit_shift_right start shift) 0x1f)
 ///                 m
 ///                     (when (some_9_ x) => m
-///                         (loop_when_recur m (<= (aget x m) start) (inc m) => m)
+///                         (loop_when_recur m (lte_9_ (aget x m) start) (inc m) => m)
 ///                     )
 ///                 #_"int" n
 ///                     (when (nil_9_ x) => (aget x 32)
-///                         (loop_when_recur [n m] (and (< n 32) (some_9_ (aget a n))) [(inc n)] => n)
+///                         (loop_when_recur [n m] (and (lt_9_ n 32) (some_9_ (aget a n))) [(inc n)] => n)
 ///                     )
-///                 #_"int" k (<< 1 shift)
+///                 #_"int" k (bit_shift_left 1 shift)
 ///                 #_"node" child
 ///                     (let [
-///                         #_"int" i (if (some_9_ x) (aget x (dec m)) (* m k))
+///                         #_"int" i (if (some_9_ x) (aget x (dec m)) (mult m k))
 ///                     ]
-///                         (VNode_2_slice_left (aget a m), (- shift 5), (if (pos_9_ m) (- start i) start), (min k (if (pos_9_ m) (- end i) end)))
+///                         (VNode_2_slice_left (aget a m), (minus shift 5), (if (pos_9_ m) (minus start i) start), (min k (if (pos_9_ m) (minus end i) end)))
 ///                     )
-///                 n (- n m)
+///                 n (minus n m)
 ///                 n (if (some_9_ child) n (dec n))
 ///             ]
 ///                 (when (pos_9_ n)
@@ -8998,21 +7811,21 @@ namespace arbace {
 ///                         #_"index" x_1_
 ///                             (if (some_9_ x)
 ///                                 (loop_when_recur [x_1_ (anew 33) #_"int" j 0 #_"int" i m]
-///                                                  (< j n)
-///                                                  [(aset_4_ x_1_ j (- (aget x i) start)) (inc j) (inc i)]
+///                                                  (lt_9_ j n)
+///                                                  [(aset_4_ x_1_ j (minus (aget x i) start)) (inc j) (inc i)]
 ///                                               => (aset_4_ x_1_ 32 n)
 ///                                 )
 ///                                 (let [
 ///                                     #_"int" i
-///                                         (if (and (some_9_ child) (some_9_ (_0_index child)) (< 5 shift))
+///                                         (if (and (some_9_ child) (some_9_ (_0_index child)) (lt_9_ 5 shift))
 ///                                             (VNode_1_last_range (_0_index child))
-///                                             (- k (bit_and (>>> start (- shift 5)) 0x1f))
+///                                             (minus k (bit_and (unsigned_bit_shift_right start (minus shift 5)) 0x1f))
 ///                                         )
 ///                                 ]
 ///                                     (loop_when_recur [x_1_ (anew 33) #_"int" j 0 i i]
-///                                                      (< j n)
-///                                                      [(aset_4_ x_1_ j i) (inc j) (+ i k)]
-///                                                   => (-> (if (< 1 n) (aset_4_ x_1_ (dec n) (- end start)) x_1_) (aset_4_ 32 n))
+///                                                      (lt_9_ j n)
+///                                                      [(aset_4_ x_1_ j i) (inc j) (plus i k)]
+///                                                   => (-> (if (lt_9_ 1 n) (aset_4_ x_1_ (dec n) (minus end start)) x_1_) (aset_4_ 32 n))
 ///                                     )
 ///                                 )
 ///                             )
@@ -9030,14 +7843,14 @@ namespace arbace {
 ///     )
 
 ///     (defn #_"node" VNode_2_shift_from_to [#_"node" this, #_"int" from, #_"int" to]
-///         (when_not (= from to) => this
+///         (when_not (_eq_9_ from to) => this
 ///             (let [
 ///                 #_"index" x_1_
 ///                     (when (some_9_ (_0_index this))
 ///                         (-> (anew 33) (aset_4_ 0 (VNode_1_last_range (_0_index this))) (aset_4_ 32 1))
 ///                     )
 ///             ]
-///                 (recur (VNode_1_new nil, (-> (anew 32) (aset_4_ 0 this)), x_1_) (+ 5 from) to)
+///                 (recur (VNode_1_new nil, (-> (anew 32) (aset_4_ 0 this)), x_1_) (plus 5 from) to)
 ///             )
 ///         )
 ///     )
@@ -9059,8 +7872,8 @@ namespace arbace {
 ///             #_"array" a (_0_array this) #_"index" x (_0_index this)
 ///         ]
 ///             (loop_when_recur [#_"int" i 0 #_"int" n 0]
-///                              (if (some_9_ x) (< i (aget x 32)) (and (< i 32) (some_9_ (aget a i))))
-///                              [(inc i) (+ n (VNode_2_leaf_count (aget a i), (- shift 5)))]
+///                              (if (some_9_ x) (lt_9_ i (aget x 32)) (and (lt_9_ i 32) (some_9_ (aget a i))))
+///                              [(inc i) (plus n (VNode_2_leaf_count (aget a i), (minus shift 5)))]
 ///                           => n
 ///             )
 ///         )
@@ -9076,22 +7889,22 @@ namespace arbace {
 
 ///     (defn_ #_"[node node int]" VNode_1_rebalance_leaves [#_"node" node1, #_"node" node2, #_"int" delta]
 ///         (let [
-///             #_"int" n1 (VNode_2_tree_count node1, 5) #_"int" n2 (VNode_2_tree_count node2, 5) #_"int" n (+ n1 n2)
+///             #_"int" n1 (VNode_2_tree_count node1, 5) #_"int" n2 (VNode_2_tree_count node2, 5) #_"int" n (plus n1 n2)
 ///         ]
-///             (when (< VNode_1_max_extra_search_steps (- (+ (VNode_2_leaf_count node1, 5) (VNode_2_leaf_count node2, 5)) (inc (quot (dec n) 32)))) => [node1 node2 delta]
+///             (when (lt_9_ VNode_1_max_extra_search_steps (minus (plus (VNode_2_leaf_count node1, 5) (VNode_2_leaf_count node2, 5)) (inc (quot (dec n) 32)))) => [node1 node2 delta]
 ///                 (let [
 ///                     #_"ISeq" s (map #(VNode_1_new nil, (anew %), nil) (partition_all 32 (concat (VNode_2_leaf_seq node1) (VNode_2_leaf_seq node2))))
 ///                 ]
-///                     (if (<= n (* 32 32))
+///                     (if (lte_9_ n (mult 32 32))
 ///                         (let [
 ///                             #_"index" x_1_ (when_not (zero_9_ (rem n 32)) (VNode_1_n_index 5, n))
 ///                         ]
 ///                             [(VNode_1_new nil, (anew s), x_1_) nil n2]
 ///                         )
 ///                         (let [
-///                             #_"index" x_1_ (when_not (zero_9_ (rem n 32)) (VNode_1_n_index 5, (- n (* 32 32))))
+///                             #_"index" x_1_ (when_not (zero_9_ (rem n 32)) (VNode_1_n_index 5, (minus n (mult 32 32))))
 ///                         ]
-///                             [(VNode_1_new nil, (anew (take 32 s)), nil) (VNode_1_new nil, (anew (drop 32 s)), x_1_) (- (* 32 32) n1)]
+///                             [(VNode_1_new nil, (anew (take 32 s)), nil) (VNode_1_new nil, (anew (drop 32 s)), x_1_) (minus (mult 32 32) n1)]
 ///                         )
 ///                     )
 ///                 )
@@ -9104,43 +7917,43 @@ namespace arbace {
 ///             f_1_cseq
 ///                 (fn [#_"node" this #_"int" cnt]
 ///                     (let [
-///                         #_"index" x (or (_0_index this) (VNode_1_n_index (- shift 5), cnt))
+///                         #_"index" x (or (_0_index this) (VNode_1_n_index (minus shift 5), cnt))
 ///                         #_"int" n (aget x 32)
 ///                     ]
-///                         (take n (map list (_0_array this) (map - x (cons 0 x))))
+///                         (take n (map list (_0_array this) (map minus x (cons 0 x))))
 ///                     )
 ///                 )
 ///             #_"index" x (or (_0_index this) (VNode_1_n_index shift, cnt))
 ///             #_"int" n (aget x 32)
 ///         ]
-///             (mapcat f_1_cseq (take n (_0_array this)) (take n (map - x (cons 0 x))))
+///             (mapcat f_1_cseq (take n (_0_array this)) (take n (map minus x (cons 0 x))))
 ///         )
 ///     )
 
 ///     (defn_ #_"[node node int]" VNode_1_rebalance [#_"int" shift, #_"node" node1, #_"int" cnt1, #_"node" node2, #_"int" cnt2, #_"int" delta]
 ///         (when (some_9_ node2) => [node1 nil delta]
 ///             (let [
-///                 #_"int" n1 (VNode_2_tree_count node1, shift) #_"int" n2 (VNode_2_tree_count node2, shift) #_"int" n (+ n1 n2)
+///                 #_"int" n1 (VNode_2_tree_count node1, shift) #_"int" n2 (VNode_2_tree_count node2, shift) #_"int" n (plus n1 n2)
 ///             ]
-///                 (when (< VNode_1_max_extra_search_steps (- (+ (VNode_2_leaf_count node1, shift) (VNode_2_leaf_count node2, shift)) (inc (quot (dec n) 32)))) => [node1 node2 delta]
+///                 (when (lt_9_ VNode_1_max_extra_search_steps (minus (plus (VNode_2_leaf_count node1, shift) (VNode_2_leaf_count node2, shift)) (inc (quot (dec n) 32)))) => [node1 node2 delta]
 ///                     (let [
 ///                         f_1_cnode
 ///                             (fn [#_"ISeq" s]
 ///                                 (loop [#_"array" a (anew 32) #_"index" x (anew 33) #_"int" j 0 #_"int" k 0 s s]
 ///                                     (when_first [[#_"node" c #_"int" r] s] => (VNode_1_new nil, a, (aset_4_ x 32 j))
-///                                         (recur (aset_4_ a j c) (aset_4_ x j (+ k r)) (inc j) (+ k r) (next s))
+///                                         (recur (aset_4_ a j c) (aset_4_ x j (plus k r)) (inc j) (plus k r) (next s))
 ///                                     )
 ///                                 )
 ///                             )
 ///                         #_"ISeq" s (partition_all 32 (concat (VNode_2_child_seq node1, shift, cnt1) (VNode_2_child_seq node2, shift, cnt2)))
 ///                     ]
-///                         (if (<= n (* 32 32))
+///                         (if (lte_9_ n (mult 32 32))
 ///                             (loop [#_"array" a (anew 32) #_"index" x (-> (anew 33) (aset_4_ 32 0)) #_"int" i 0 s s]
 ///                                 (when_first [#_"ISeq" block s] => [(VNode_1_new nil, a, x) nil cnt2]
 ///                                     (let [
 ///                                         #_"node" c (f_1_cnode block)
 ///                                         a (aset_4_ a i c)
-///                                         x (aset_4_ x i (+ (VNode_1_last_range (_0_index c)) (if (pos_9_ i) (aget x (dec i)) 0)))
+///                                         x (aset_4_ x i (plus (VNode_1_last_range (_0_index c)) (if (pos_9_ i) (aget x (dec i)) 0)))
 ///                                         x (aset_4_ x 32 (inc i))
 ///                                     ]
 ///                                         (recur a x (inc i) (next s))
@@ -9156,20 +7969,20 @@ namespace arbace {
 ///                                         (let [
 ///                                             #_"node" c (f_1_cnode block) #_"index" y (_0_index c)
 ///                                             delta
-///                                                 (when (and (< i 32) (< n1 (+ (* i 32) (aget y 32)))) => delta
+///                                                 (when (and (lt_9_ i 32) (lt_9_ n1 (plus (mult i 32) (aget y 32)))) => delta
 ///                                                     (let [
-///                                                         #_"int" k (- (+ (* i 32) (aget y 32)) n1)
+///                                                         #_"int" k (minus (plus (mult i 32) (aget y 32)) n1)
 ///                                                         #_"int" e (dec (aget y 32))
 ///                                                     ]
-///                                                         (+ delta (if (< k 32) (- (aget y e) (aget y (- e k))) (aget y e)))
+///                                                         (plus delta (if (lt_9_ k 32) (minus (aget y e) (aget y (minus e k))) (aget y e)))
 ///                                                     )
 ///                                                 )
 ///                                             [a1 x1 a2 x2]
-///                                                 (if (< i 32)
+///                                                 (if (lt_9_ i 32)
 ///                                                     (let [
 ///                                                         #_"int" m (rem i 32)
 ///                                                         a1 (aset_4_ a1 m c)
-///                                                         x1 (aset_4_ x1 m (+ (VNode_1_last_range y) (if (pos_9_ m) (aget x1 (dec m)) 0)))
+///                                                         x1 (aset_4_ x1 m (plus (VNode_1_last_range y) (if (pos_9_ m) (aget x1 (dec m)) 0)))
 ///                                                         x1 (aset_4_ x1 32 (inc m))
 ///                                                     ]
 ///                                                         [a1 x1 a2 x2]
@@ -9177,7 +7990,7 @@ namespace arbace {
 ///                                                     (let [
 ///                                                         #_"int" m (rem i 32)
 ///                                                         a2 (aset_4_ a2 m c)
-///                                                         x2 (aset_4_ x2 m (+ (VNode_1_last_range y) (if (pos_9_ m) (aget x2 (dec m)) 0)))
+///                                                         x2 (aset_4_ x2 m (plus (VNode_1_last_range y) (if (pos_9_ m) (aget x2 (dec m)) 0)))
 ///                                                         x2 (aset_4_ x2 32 (inc m))
 ///                                                     ]
 ///                                                         [a1 x1 a2 x2]
@@ -9197,19 +8010,19 @@ namespace arbace {
 ///     )
 
 ///     (defn #_"[node node int]" VNode_1_zip_path [#_"int" shift, #_"node" node1, #_"int" cnt1, #_"node" node2, #_"int" cnt2, #_"int" delta]
-///         (if (= shift 5)
+///         (if (_eq_9_ shift 5)
 ///             (VNode_1_rebalance_leaves node1, node2, delta)
 ///             (let [
 ///                 #_"node" c1 (VNode_2_last_child node1)
 ///                 #_"node" c2 (VNode_2_first_child node2)
-///                 #_"int" k (<< 1 shift)
+///                 #_"int" k (bit_shift_left 1 shift)
 ///                 #_"int" m1
 ///                     (let [
 ///                         #_"index" x1 (_0_index node1)
 ///                     ]
 ///                         (when (some_9_ x1) => (let [#_"int" m (rem cnt1 k)] (if (zero_9_ m) k m))
 ///                             (let [#_"int" e (dec (aget x1 32))]
-///                                 (if (pos_9_ e) (- (aget x1 e) (aget x1 (dec e))) (aget x1 0))
+///                                 (if (pos_9_ e) (minus (aget x1 e) (aget x1 (dec e))) (aget x1 0))
 ///                             )
 ///                         )
 ///                     )
@@ -9221,14 +8034,14 @@ namespace arbace {
 ///                             (aget x2 0)
 ///                         )
 ///                     )
-///                 [#_"node" c1' #_"node" c2' #_"int" d_1_] (VNode_1_zip_path (- shift 5), c1, m1, c2, m2, 0)
+///                 [#_"node" c1_1_ #_"node" c2_1_ #_"int" d_1_] (VNode_1_zip_path (minus shift 5), c1, m1, c2, m2, 0)
 ///             ]
 ///                 (VNode_1_rebalance shift,
-///                     (if (identical_9_ c1 c1') node1 (VNode_2_replace_rightmost_child node1, shift, c1', d_1_)),
-///                     (+ cnt1 d_1_),
-///                     (if c2' (if (identical_9_ c2 c2') node2 (VNode_2_replace_leftmost_child node2, shift, cnt2, c2', d_1_)) (VNode_2_remove_leftmost_child node2)),
-///                     (- cnt2 d_1_),
-///                     (+ delta d_1_)
+///                     (if (identical_9_ c1 c1_1_) node1 (VNode_2_replace_rightmost_child node1, shift, c1_1_, d_1_)),
+///                     (plus cnt1 d_1_),
+///                     (if c2_1_ (if (identical_9_ c2 c2_1_) node2 (VNode_2_replace_leftmost_child node2, shift, cnt2, c2_1_, d_1_)) (VNode_2_remove_leftmost_child node2)),
+///                     (minus cnt2 d_1_),
+///                     (plus delta d_1_)
 ///                 )
 ///             )
 ///         )
@@ -9240,11 +8053,11 @@ namespace arbace {
 ///             #_"array" a2 (_0_array node2) #_"int" n2 (VNode_1_index_of_nil a2)
 ///             #_"ISeq" slots (concat (take n1 a1) (take n2 a2))
 ///         ]
-///             (when (<= (count slots) 32) => [node1 node2]
+///             (when (lte_9_ (count slots) 32) => [node1 node2]
 ///                 (let [
 ///                     #_"ISeq" s1 (take n1 (or (_0_index node1) (VNode_1_n_index shift, cnt1)))
 ///                     #_"ISeq" s2 (take n2 (or (_0_index node2) (VNode_1_n_index shift, cnt2)))
-///                     #_"ISeq" index (concat s1 (let [#_"int" d (last s1)] (map #(+ % d) s2)))
+///                     #_"ISeq" index (concat s1 (let [#_"int" d (last s1)] (map #(plus % d) s2)))
 ///                     #_"array" a (loop_when_recur [a (anew 32) #_"int" i 0 #_"ISeq" s (seq slots)] (some_9_ s) [(aset_4_ a i (first s)) (inc i) (next s)] => a)
 ///                     #_"index" x (loop_when_recur [x (anew 33) #_"int" i 0 #_"ISeq" s (seq index)] (some_9_ s) [(aset_4_ x i (first s)) (inc i) (next s)] => (aset_4_ x 32 i))
 ///                 ]
@@ -9256,10 +8069,10 @@ namespace arbace {
 // )
 
 // (about #_"TransientVector"
-///     (defq TransientVector [#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail, #_"int" tlen] #_"VecForm")
+///     (defq TransientVector [#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail, #_"int" tlen] #_"VecForm")
 
 ///     #_inherit
-///     (defm TransientVector AFn)
+///     (defm TransientVector AFn)
 
 ///     (defn #_"TransientVector" TransientVector_1_new
 ///         ([#_"PersistentVector" w]
@@ -9276,57 +8089,57 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"int" TransientVector_2_tail_off [#_"TransientVector" this]
-///         (- (_0_cnt this) (_0_tlen this))
+///         (minus (_0_cnt this) (_0_tlen this))
 ///     )
 
 ///     (defn_ #_"values" TransientVector_2_array_for [#_"TransientVector" this, #_"int" i]
 ///         (VNode_2_array_for (_0_root this), i, (_0_shift this), (_0_cnt this), (TransientVector_2_tail_off this), (_0_tail this))
 ///     )
 
-///     (defn_ #_"Object" TransientVector_2_value_for [#_"TransientVector" this, #_"int" i]
+///     (defn_ #_"Object" TransientVector_2_value_for [#_"TransientVector" this, #_"int" i]
 ///         (VNode_2_value_for (_0_root this), i, (_0_shift this), (_0_cnt this), (TransientVector_2_tail_off this), (_0_tail this))
 ///     )
 
-///     (defn_ #_"Object" TransientVector_2_nth
+///     (defn_ #_"Object" TransientVector_2_nth
 ///         ([#_"TransientVector" this, #_"int" i]
 ///             (VNode_2_assert_editable (_0_root this))
 ///             (TransientVector_2_value_for this, i)
 ///         )
-///         ([#_"TransientVector" this, #_"int" i, #_"Object" not_found]
+///         ([#_"TransientVector" this, #_"int" i, #_"Object" not_found]
 ///             (VNode_2_assert_editable (_0_root this))
-///             (when (< -1 i (_0_cnt this)) => not_found
+///             (when (lt_9_ -1 i (_0_cnt this)) => not_found
 ///                 (TransientVector_2_value_for this, i)
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"Object" TransientVector_2_valAt
-///         ([#_"TransientVector" this, #_"Object" key] (TransientVector_2_valAt this, key, nil))
-///         ([#_"TransientVector" this, #_"Object" key, #_"Object" not_found]
+///     (defn_ #_"Object" TransientVector_2_valAt
+///         ([#_"TransientVector" this, #_"Object" key] (TransientVector_2_valAt this, key, nil))
+///         ([#_"TransientVector" this, #_"Object" key, #_"Object" not_found]
 ///             (VNode_2_assert_editable (_0_root this))
 ///             (when (integer_9_ key) => not_found
-///                 (let_when [#_"int" i (int_4_ key)] (< -1 i (_0_cnt this)) => not_found
+///                 (let_when [#_"int" i (int key)] (lt_9_ -1 i (_0_cnt this)) => not_found
 ///                     (TransientVector_2_value_for this, i)
 ///                 )
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"Object" TransientVector_2_invoke [#_"TransientVector" this, #_"Object" arg]
+///     (defn_ #_"Object" TransientVector_2_invoke [#_"TransientVector" this, #_"Object" arg]
 ///         (when (integer_9_ arg) => (throw "arg must be integer")
-///             (Indexed_3_nth this, (int_4_ arg))
+///             (Indexed_3_nth this, (int arg))
 ///         )
 ///     )
 
-///     (defn_ #_"Object" TransientVector_2_applyTo [#_"TransientVector" this, #_"ISeq" args]
+///     (defn_ #_"Object" TransientVector_2_applyTo [#_"TransientVector" this, #_"ISeq" args]
 ///         (case_4_ (count args 1)
 ///             1 (IFn_3_invoke this, (first args))
 ///         )
 ///     )
 
-///     (defn_ #_"TransientVector" TransientVector_2_conj_4_ [#_"TransientVector" this, #_"Object" val]
+///     (defn_ #_"TransientVector" TransientVector_2_conj_4_ [#_"TransientVector" this, #_"Object" val]
 ///         (VNode_2_assert_editable (_0_root this))
-///         (if (< (_0_tlen this) 32)
+///         (if (lt_9_ (_0_tlen this) 32)
 ///             (let [
 ///                 _ (aset_4_ (_0_tail this) (_0_tlen this) val)
 ///             ]
@@ -9348,12 +8161,12 @@ namespace arbace {
 ///                                 (let [
 ///                                     #_"int" n (aget (_0_index (_0_root this)) 31)
 ///                                 ]
-///                                     (-> (anew 33) (aset_4_ 0 n) (aset_4_ 1 (+ n 32)) (aset_4_ 32 2))
+///                                     (-> (anew 33) (aset_4_ 0 n) (aset_4_ 1 (plus n 32)) (aset_4_ 32 2))
 ///                                 )
 ///                             )
 ///                         #_"node" root (VNode_1_new (_0_edit (_0_root this)), a, x)
 ///                     ]
-///                         (-> this (qset_4_ _0_root root) (qswap_4_ _0_shift + 5) (qswap_4_ _0_cnt inc))
+///                         (-> this (qset_4_ _0_root root) (qswap_4_ _0_shift plus 5) (qswap_4_ _0_cnt inc))
 ///                     )
 ///                     (let [
 ///                         #_"node" root (VNode_2_push_tail (_0_root this), (_0_edit (_0_root this)), (_0_shift this), (_0_cnt this), tail_node)
@@ -9365,8 +8178,6 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (declare PersistentVector_1_new)
-
 ///     (defn_ #_"PersistentVector" TransientVector_2_persistent_4_ [#_"TransientVector" this]
 ///         (VNode_2_assert_editable (_0_root this))
 ///         (reset_4_ (_0_edit (_0_root this)) nil)
@@ -9377,15 +8188,15 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"TransientVector" TransientVector_2_assocN_4_ [#_"TransientVector" this, #_"int" i, #_"Object" val]
+///     (defn_ #_"TransientVector" TransientVector_2_assocN_4_ [#_"TransientVector" this, #_"int" i, #_"Object" val]
 ///         (VNode_2_assert_editable (_0_root this))
-///         (if (< -1 i (_0_cnt this))
+///         (if (lt_9_ -1 i (_0_cnt this))
 ///             (let [
 ///                 #_"int" tail_off (TransientVector_2_tail_off this)
 ///             ]
-///                 (if (<= tail_off i)
+///                 (if (lte_9_ tail_off i)
 ///                     (do
-///                         (aset_4_ (_0_tail this) (- i tail_off) val)
+///                         (aset_4_ (_0_tail this) (minus i tail_off) val)
 ///                         this
 ///                     )
 ///                     (do
@@ -9393,7 +8204,7 @@ namespace arbace {
 ///                     )
 ///                 )
 ///             )
-///             (when (= i (_0_cnt this)) => (throw "index is out of bounds")
+///             (when (_eq_9_ i (_0_cnt this)) => (throw "index is out of bounds")
 ///                 (ITransientCollection_3_conj_4_ this, val)
 ///             )
 ///         )
@@ -9404,7 +8215,7 @@ namespace arbace {
 ///         (cond
 ///             (zero_9_ (_0_cnt this))
 ///                 (throw "can't pop the empty vector")
-///             (= (_0_cnt this) 1)
+///             (_eq_9_ (_0_cnt this) 1)
 ///                 (let [
 ///                     this (qset_4_ this _0_cnt 0)
 ///                     this (qset_4_ this _0_tlen 0)
@@ -9412,7 +8223,7 @@ namespace arbace {
 ///                 ]
 ///                     this
 ///                 )
-///             (< 1 (_0_tlen this))
+///             (lt_9_ 1 (_0_tlen this))
 ///                 (let [
 ///                     this (qswap_4_ this _0_cnt dec)
 ///                     this (qswap_4_ this _0_tlen dec)
@@ -9422,7 +8233,7 @@ namespace arbace {
 ///                 )
 ///             _0_else
 ///                 (let [
-///                     #_"values" tail (aclone (TransientVector_2_array_for this, (- (_0_cnt this) 2)))
+///                     #_"values" tail (aclone (TransientVector_2_array_for this, (minus (_0_cnt this) 2)))
 ///                     #_"node" root (VNode_2_pop_tail (_0_root this), (_0_edit (_0_root this)), (_0_shift this), (TransientVector_2_tail_off this))
 ///                     this
 ///                         (cond
@@ -9430,9 +8241,9 @@ namespace arbace {
 ///                                 (-> this
 ///                                     (qset_4_ _0_root (VNode_1_new (_0_edit (_0_root this)), nil, nil))
 ///                                 )
-///                             (and (< 5 (_0_shift this)) (nil_9_ (aget (_0_array root) 1)))
+///                             (and (lt_9_ 5 (_0_shift this)) (nil_9_ (aget (_0_array root) 1)))
 ///                                 (-> this
-///                                     (qswap_4_ _0_shift - 5)
+///                                     (qswap_4_ _0_shift minus 5)
 ///                                     (qset_4_ _0_root (aget (_0_array root) 0))
 ///                                 )
 ///                             _0_else
@@ -9450,52 +8261,52 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"TransientVector" TransientVector_2_assoc_4_ [#_"TransientVector" this, #_"Object" key, #_"Object" val]
+///     (defn_ #_"TransientVector" TransientVector_2_assoc_4_ [#_"TransientVector" this, #_"Object" key, #_"Object" val]
 ///         (when (integer_9_ key) => (throw "key must be integer")
-///             (ITransientVector_3_assocN_4_ this, (int_4_ key), val)
+///             (ITransientVector_3_assocN_4_ this, (int key), val)
 ///         )
 ///     )
 
-///     (defn_ #_"bool" TransientVector_2_containsKey [#_"TransientVector" this, #_"Object" key]
-///         (and (integer_9_ key) (< -1 (int_4_ key) (_0_cnt this)))
+///     (defn_ #_"bool" TransientVector_2_containsKey [#_"TransientVector" this, #_"Object" key]
+///         (and (integer_9_ key) (lt_9_ -1 (int key) (_0_cnt this)))
 ///     )
 
-///     (defn_ #_"pair" TransientVector_2_entryAt [#_"TransientVector" this, #_"Object" key]
+///     (defn_ #_"pair" TransientVector_2_entryAt [#_"TransientVector" this, #_"Object" key]
 ///         (when (integer_9_ key)
-///             (let_when [#_"int" i (int_4_ key)] (< -1 i (_0_cnt this))
+///             (let_when [#_"int" i (int key)] (lt_9_ -1 i (_0_cnt this))
 ///                 (MapEntry_1_new key, (Indexed_3_nth this, i))
 ///             )
 ///         )
 ///     )
 
-///     (defm TransientVector Counted
+///     (defm TransientVector Counted
 ///         (Counted_3_count => TransientVector_2_count)
 ///     )
 
-///     (defm TransientVector Indexed
+///     (defm TransientVector Indexed
 ///         (Indexed_3_nth => TransientVector_2_nth)
 ///     )
 
-///     (defm TransientVector ILookup
+///     (defm TransientVector ILookup
 ///         (ILookup_3_valAt => TransientVector_2_valAt)
 ///     )
 
-///     (defm TransientVector IFn
+///     (defm TransientVector IFn
 ///         (IFn_3_invoke => TransientVector_2_invoke)
 ///         (IFn_3_applyTo => TransientVector_2_applyTo)
 ///     )
 
-///     (defm TransientVector ITransientCollection
+///     (defm TransientVector ITransientCollection
 ///         (ITransientCollection_3_conj_4_ => TransientVector_2_conj_4_)
 ///         (ITransientCollection_3_persistent_4_ => TransientVector_2_persistent_4_)
 ///     )
 
-///     (defm TransientVector ITransientVector
+///     (defm TransientVector ITransientVector
 ///         (ITransientVector_3_assocN_4_ => TransientVector_2_assocN_4_)
 ///         (ITransientVector_3_pop_4_ => TransientVector_2_pop_4_)
 ///     )
 
-///     (defm TransientVector ITransientAssociative
+///     (defm TransientVector ITransientAssociative
 ///         (ITransientAssociative_3_assoc_4_ => TransientVector_2_assoc_4_)
 ///         (ITransientAssociative_3_containsKey => TransientVector_2_containsKey)
 ///         (ITransientAssociative_3_entryAt => TransientVector_2_entryAt)
@@ -9503,20 +8314,10 @@ namespace arbace {
 // )
 
 // (about #_"PersistentVector"
-///     (declare PersistentVector_2_seq PersistentVector_2_rseq PersistentVector_2_conj PersistentVector_2_empty PersistentVector_2_equals PersistentVector_2_nth PersistentVector_2_invoke PersistentVector_2_applyTo)
-
-///     (defq PersistentVector [#_"IPersistentMap" _meta, #_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] VecForm
-///         clojure.lang.Seqable (seq [_] (PersistentVector_2_seq _))
-///         clojure.lang.Reversible (rseq [_] (PersistentVector_2_rseq _))
-///         clojure.lang.IPersistentCollection (cons [_, o] (PersistentVector_2_conj _, o)) (empty [_] (PersistentVector_2_empty _)) (equiv [_, o] (PersistentVector_2_equals _, o))
-///         clojure.lang.IPersistentVector
-///         clojure.lang.Counted (count [_] (_0_cnt _))
-///         clojure.lang.Indexed (nth [_, i] (PersistentVector_2_nth _, i)) (nth [_, i, not_found] (PersistentVector_2_nth _, i, not_found))
-///         clojure.lang.IFn (invoke [_, a] (PersistentVector_2_invoke _, a)) (applyTo [_, args] (PersistentVector_2_applyTo _, args))
-///     )
+///     (defq PersistentVector [#_"IPersistentMap" _meta, #_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] VecForm)
 
 ///     #_inherit
-///     (defm PersistentVector APersistentVector AFn)
+///     (defm PersistentVector APersistentVector AFn)
 
 ///     (defn #_"PersistentVector" PersistentVector_1_new
 ///         ([#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] (PersistentVector_1_new nil, cnt, shift, root, tail))
@@ -9541,23 +8342,23 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"PersistentVector" PersistentVector_2_withMeta [#_"PersistentVector" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (PersistentVector_1_new meta, (_0_cnt this), (_0_shift this), (_0_root this), (_0_tail this))
 ///         )
 ///     )
 
-///     (defn_ #_"bool" PersistentVector_2_equals [#_"PersistentVector" this, #_"Object" that]
+///     (defn_ #_"bool" PersistentVector_2_equals [#_"PersistentVector" this, #_"Object" that]
 ///         (or (identical_9_ this that)
 ///             (cond
 ///                 (vector_9_ that)
-///                     (when (= (_0_cnt this) (_0_cnt that)) => false
-///                         (loop_when [#_"int" i 0] (< i (_0_cnt this)) => true
-///                             (recur_when (= (Indexed_3_nth this, i) (Indexed_3_nth that, i)) [(inc i)] => false)
+///                     (when (_eq_9_ (_0_cnt this) (_0_cnt that)) => false
+///                         (loop_when [#_"int" i 0] (lt_9_ i (_0_cnt this)) => true
+///                             (recur_when (_eq_9_ (Indexed_3_nth this, i) (Indexed_3_nth that, i)) [(inc i)] => false)
 ///                         )
 ///                     )
 ///                 (sequential_9_ that)
-///                     (loop_when [#_"int" i 0 #_"ISeq" s (seq that)] (< i (_0_cnt this)) => (nil_9_ s)
-///                         (recur_when (and (some_9_ s) (= (Indexed_3_nth this, i) (first s))) [(inc i) (next s)] => false)
+///                     (loop_when [#_"int" i 0 #_"ISeq" s (seq that)] (lt_9_ i (_0_cnt this)) => (nil_9_ s)
+///                         (recur_when (and (some_9_ s) (_eq_9_ (Indexed_3_nth this, i) (first s))) [(inc i) (next s)] => false)
 ///                     )
 ///                 _0_else
 ///                     false
@@ -9566,39 +8367,39 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"int" PersistentVector_2_hash [#_"PersistentVector" this]
-///         (loop_when [#_"int" hash (int 1) #_"int" i (int 0)] (< i (_0_cnt this)) => (Murmur3_1_mixCollHash hash, i)
-///             (recur (+ (* (int 31) hash) (f_1_hash (Indexed_3_nth this, i))) (inc i))
+///         (loop_when [#_"int" hash (int 1) #_"int" i (int 0)] (lt_9_ i (_0_cnt this)) => (Murmur3_1_mixCollHash hash, i)
+///             (recur (plus (mult (int 31) hash) (f_1_hash (Indexed_3_nth this, i))) (inc i))
 ///         )
 ///     )
 
 ///     (defn_ #_"int" PersistentVector_2_tail_off [#_"PersistentVector" this]
-///         (- (_0_cnt this) (alength (_0_tail this)))
+///         (minus (_0_cnt this) (alength (_0_tail this)))
 ///     )
 
 ///     (defn_ #_"values" PersistentVector_2_array_for [#_"PersistentVector" this, #_"int" i]
 ///         (VNode_2_array_for (_0_root this), i, (_0_shift this), (_0_cnt this), (PersistentVector_2_tail_off this), (_0_tail this))
 ///     )
 
-///     (defn_ #_"Object" PersistentVector_2_value_for [#_"PersistentVector" this, #_"int" i]
+///     (defn_ #_"Object" PersistentVector_2_value_for [#_"PersistentVector" this, #_"int" i]
 ///         (VNode_2_value_for (_0_root this), i, (_0_shift this), (_0_cnt this), (PersistentVector_2_tail_off this), (_0_tail this))
 ///     )
 
-///     (defn_ #_"Object" PersistentVector_2_nth
+///     (defn_ #_"Object" PersistentVector_2_nth
 ///         ([#_"PersistentVector" this, #_"int" i]
 ///             (PersistentVector_2_value_for this, i)
 ///         )
-///         ([#_"PersistentVector" this, #_"int" i, #_"Object" not_found]
-///             (when (< -1 i (_0_cnt this)) => not_found
+///         ([#_"PersistentVector" this, #_"int" i, #_"Object" not_found]
+///             (when (lt_9_ -1 i (_0_cnt this)) => not_found
 ///                 (PersistentVector_2_value_for this, i)
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"PersistentVector" PersistentVector_2_conj [#_"PersistentVector" this, #_"Object" val]
+///     (defn_ #_"PersistentVector" PersistentVector_2_conj [#_"PersistentVector" this, #_"Object" val]
 ///         (let [
 ///             #_"int" tail_len (alength (_0_tail this))
 ///         ]
-///             (if (< tail_len 32)
+///             (if (lt_9_ tail_len 32)
 ///                 (let [
 ///                     #_"values" tail (-> (anew (inc tail_len)) (acopy_4_ 0 (_0_tail this) 0 tail_len) (aset_4_ tail_len val))
 ///                 ]
@@ -9620,11 +8421,11 @@ namespace arbace {
 ///                                         (let [
 ///                                             #_"int" n (aget (_0_index (_0_root this)) 31)
 ///                                         ]
-///                                             (-> (anew 33) (aset_4_ 0 n) (aset_4_ 1 (+ n 32)) (aset_4_ 32 2))
+///                                             (-> (anew 33) (aset_4_ 0 n) (aset_4_ 1 (plus n 32)) (aset_4_ 32 2))
 ///                                         )
 ///                                     )
 ///                             ]
-///                                 [(VNode_1_new (_0_edit (_0_root this)), a, x) (+ shift 5)]
+///                                 [(VNode_1_new (_0_edit (_0_root this)), a, x) (plus shift 5)]
 ///                             )
 ///                             [(VNode_2_push_tail (_0_root this), (_0_edit (_0_root this)), shift, (_0_cnt this), tail_node) shift]
 ///                         )
@@ -9639,28 +8440,28 @@ namespace arbace {
 ///         (IObj_3_withMeta PersistentVector_1_EMPTY, (_0__meta this))
 ///     )
 
-///     (defn_ #_"PersistentVector" PersistentVector_2_assocN [#_"PersistentVector" this, #_"int" i, #_"Object" val]
-///         (if (< -1 i (_0_cnt this))
+///     (defn_ #_"PersistentVector" PersistentVector_2_assocN [#_"PersistentVector" this, #_"int" i, #_"Object" val]
+///         (if (lt_9_ -1 i (_0_cnt this))
 ///             (let [
 ///                 #_"int" tail_off (PersistentVector_2_tail_off this)
 ///             ]
-///                 (if (<= tail_off i)
+///                 (if (lte_9_ tail_off i)
 ///                     (let [
 ///                         #_"int" n (alength (_0_tail this))
-///                         #_"values" tail (-> (anew n) (acopy_4_ 0 (_0_tail this) 0 n) (aset_4_ (- i tail_off) val))
+///                         #_"values" tail (-> (anew n) (acopy_4_ 0 (_0_tail this) 0 n) (aset_4_ (minus i tail_off) val))
 ///                     ]
 ///                         (PersistentVector_1_new (_0__meta this), (_0_cnt this), (_0_shift this), (_0_root this), tail)
 ///                     )
 ///                     (PersistentVector_1_new (_0__meta this), (_0_cnt this), (_0_shift this), (VNode_2_do_assoc (_0_root this), (_0_edit (_0_root this)), (_0_shift this), i, val), (_0_tail this))
 ///                 )
 ///             )
-///             (when (= i (_0_cnt this)) => (throw "index is out of bounds")
+///             (when (_eq_9_ i (_0_cnt this)) => (throw "index is out of bounds")
 ///                 (IPersistentCollection_3_conj this, val)
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"Object" PersistentVector_2_peek [#_"PersistentVector" this]
+///     (defn_ #_"Object" PersistentVector_2_peek [#_"PersistentVector" this]
 ///         (when (pos_9_ (_0_cnt this))
 ///             (Indexed_3_nth this, (dec (_0_cnt this)))
 ///         )
@@ -9673,20 +8474,20 @@ namespace arbace {
 ///             (let [
 ///                 #_"int" tail_len (alength (_0_tail this))
 ///             ]
-///                 (if (< 1 tail_len)
+///                 (if (lt_9_ 1 tail_len)
 ///                     (let [
 ///                         #_"values" tail (-> (anew (dec tail_len)) (acopy_4_ 0 (_0_tail this) 0 (dec tail_len)))
 ///                     ]
 ///                         (PersistentVector_1_new (_0__meta this), (dec (_0_cnt this)), (_0_shift this), (_0_root this), tail)
 ///                     )
 ///                     (let [
-///                         #_"values" tail (PersistentVector_2_array_for this, (- (_0_cnt this) 2))
+///                         #_"values" tail (PersistentVector_2_array_for this, (minus (_0_cnt this) 2))
 ///                         #_"int" shift (_0_shift this)
 ///                         #_"node" root (VNode_2_pop_tail (_0_root this), (_0_edit (_0_root this)), shift, (PersistentVector_2_tail_off this))
 ///                         [shift root]
 ///                             (cond
 ///                                 (nil_9_ root)                                     [shift VNode_1_EMPTY]
-///                                 (and (< 5 shift) (nil_9_ (aget (_0_array root) 1))) [(- shift 5) (aget (_0_array root) 0)]
+///                                 (and (lt_9_ 5 shift) (nil_9_ (aget (_0_array root) 1))) [(minus shift 5) (aget (_0_array root) 0)]
 ///                                 _0_else                                           [shift root]
 ///                             )
 ///                     ]
@@ -9697,24 +8498,24 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"Object" PersistentVector_2_invoke [#_"PersistentVector" this, #_"Object" arg]
+///     (defn_ #_"Object" PersistentVector_2_invoke [#_"PersistentVector" this, #_"Object" arg]
 ///         (when (integer_9_ arg) => (throw "arg must be integer")
-///             (Indexed_3_nth this, (int_4_ arg))
+///             (Indexed_3_nth this, (int arg))
 ///         )
 ///     )
 
-///     (defn_ #_"Object" PersistentVector_2_applyTo [#_"PersistentVector" this, #_"ISeq" args]
+///     (defn_ #_"Object" PersistentVector_2_applyTo [#_"PersistentVector" this, #_"ISeq" args]
 ///         (case_4_ (count args 1)
 ///             1 (IFn_3_invoke this, (first args))
 ///         )
 ///     )
 
-///     (defn_ #_"Object" PersistentVector_2_reduce
+///     (defn_ #_"Object" PersistentVector_2_reduce
 ///         ([#_"PersistentVector" this, #_"IFn" f]
 ///             (when (pos_9_ (_0_cnt this)) => (f)
-///                 (loop_when [#_"Object" r (aget (PersistentVector_2_array_for this, 0) 0) #_"int" i 0] (< i (_0_cnt this)) => r
+///                 (loop_when [#_"Object" r (aget (PersistentVector_2_array_for this, 0) 0) #_"int" i 0] (lt_9_ i (_0_cnt this)) => r
 ///                     (let [#_"values" a (PersistentVector_2_array_for this, i)
-///                           r (loop_when [r r #_"int" j (if (zero_9_ i) 1 0)] (< j (alength a)) => r
+///                           r (loop_when [r r #_"int" j (if (zero_9_ i) 1 0)] (lt_9_ j (alength a)) => r
 ///                                 (let [r (f r (aget a j))]
 ///                                     (when_not (reduced_9_ r) => r
 ///                                         (recur r (inc j))
@@ -9722,16 +8523,16 @@ namespace arbace {
 ///                                 )
 ///                             )]
 ///                         (when_not (reduced_9_ r) => (deref r)
-///                             (recur r (+ i (alength a)))
+///                             (recur r (plus i (alength a)))
 ///                         )
 ///                     )
 ///                 )
 ///             )
 ///         )
-///         ([#_"PersistentVector" this, #_"IFn" f, #_"Object" r]
-///             (loop_when [r r #_"int" i 0] (< i (_0_cnt this)) => r
+///         ([#_"PersistentVector" this, #_"IFn" f, #_"Object" r]
+///             (loop_when [r r #_"int" i 0] (lt_9_ i (_0_cnt this)) => r
 ///                 (let [#_"values" a (PersistentVector_2_array_for this, i)
-///                       r (loop_when [r r #_"int" j 0] (< j (alength a)) => r
+///                       r (loop_when [r r #_"int" j 0] (lt_9_ j (alength a)) => r
 ///                             (let [r (f r (aget a j))]
 ///                                 (when_not (reduced_9_ r) => r
 ///                                     (recur r (inc j))
@@ -9739,21 +8540,21 @@ namespace arbace {
 ///                             )
 ///                         )]
 ///                     (when_not (reduced_9_ r) => (deref r)
-///                         (recur r (+ i (alength a)))
+///                         (recur r (plus i (alength a)))
 ///                     )
 ///                 )
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"Object" PersistentVector_2_kvreduce [#_"PersistentVector" this, #_"IFn" f, #_"Object" r]
-///         (loop_when [r r #_"int" i 0] (< i (_0_cnt this)) => r
+///     (defn_ #_"Object" PersistentVector_2_kvreduce [#_"PersistentVector" this, #_"IFn" f, #_"Object" r]
+///         (loop_when [r r #_"int" i 0] (lt_9_ i (_0_cnt this)) => r
 ///             (let [
 ///                 #_"values" a (PersistentVector_2_array_for this, i)
 ///                 r
-///                     (loop_when [r r #_"int" j 0] (< j (alength a)) => r
+///                     (loop_when [r r #_"int" j 0] (lt_9_ j (alength a)) => r
 ///                         (let [
-///                             r (f r (+ i j) (aget a j))
+///                             r (f r (plus i j) (aget a j))
 ///                         ]
 ///                             (when_not (reduced_9_ r) => r
 ///                                 (recur r (inc j))
@@ -9762,35 +8563,35 @@ namespace arbace {
 ///                     )
 ///             ]
 ///                 (when_not (reduced_9_ r) => (deref r)
-///                     (recur r (+ i (alength a)))
+///                     (recur r (plus i (alength a)))
 ///                 )
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"IPersistentVector" PersistentVector_2_assoc [#_"PersistentVector" this, #_"Object" key, #_"Object" val]
+///     (defn_ #_"IPersistentVector" PersistentVector_2_assoc [#_"PersistentVector" this, #_"Object" key, #_"Object" val]
 ///         (when (integer_9_ key) => (throw "key must be integer")
-///             (IPersistentVector_3_assocN this, (int_4_ key), val)
+///             (IPersistentVector_3_assocN this, (int key), val)
 ///         )
 ///     )
 
-///     (defn_ #_"bool" PersistentVector_2_containsKey [#_"PersistentVector" this, #_"Object" key]
-///         (and (integer_9_ key) (< -1 (int_4_ key) (_0_cnt this)))
+///     (defn_ #_"bool" PersistentVector_2_containsKey [#_"PersistentVector" this, #_"Object" key]
+///         (and (integer_9_ key) (lt_9_ -1 (int key) (_0_cnt this)))
 ///     )
 
-///     (defn_ #_"pair" PersistentVector_2_entryAt [#_"PersistentVector" this, #_"Object" key]
+///     (defn_ #_"pair" PersistentVector_2_entryAt [#_"PersistentVector" this, #_"Object" key]
 ///         (when (integer_9_ key)
-///             (let_when [#_"int" i (int_4_ key)] (< -1 i (_0_cnt this))
+///             (let_when [#_"int" i (int key)] (lt_9_ -1 i (_0_cnt this))
 ///                 (MapEntry_1_new key, (Indexed_3_nth this, i))
 ///             )
 ///         )
 ///     )
 
-///     (defn_ #_"Object" PersistentVector_2_valAt
-///         ([#_"PersistentVector" this, #_"Object" key] (PersistentVector_2_valAt this, key, nil))
-///         ([#_"PersistentVector" this, #_"Object" key, #_"Object" not_found]
+///     (defn_ #_"Object" PersistentVector_2_valAt
+///         ([#_"PersistentVector" this, #_"Object" key] (PersistentVector_2_valAt this, key, nil))
+///         ([#_"PersistentVector" this, #_"Object" key, #_"Object" not_found]
 ///             (when (integer_9_ key) => not_found
-///                 (let_when [#_"int" i (int_4_ key)] (< -1 i (_0_cnt this)) => not_found
+///                 (let_when [#_"int" i (int key)] (lt_9_ -1 i (_0_cnt this)) => not_found
 ///                     (PersistentVector_2_value_for this, i)
 ///                 )
 ///             )
@@ -9799,29 +8600,29 @@ namespace arbace {
 
 ///     (defn_ #_"PersistentVector" PersistentVector_2_slicev [#_"PersistentVector" this, #_"int" start, #_"int" end]
 ///         (cond
-///             (or (neg_9_ start) (< (_0_cnt this) end)) (throw "index is out of bounds")
-///             (= start end)                         (IPersistentCollection_3_empty this)
-///             (< end start)                         (throw "start index greater than end index")
+///             (or (neg_9_ start) (lt_9_ (_0_cnt this) end)) (throw "index is out of bounds")
+///             (_eq_9_ start end)                         (IPersistentCollection_3_empty this)
+///             (lt_9_ end start)                         (throw "start index greater than end index")
 ///             _0_else
 ///                 (let [
-///                     #_"int" new_cnt (- end start)
+///                     #_"int" new_cnt (minus end start)
 ///                     #_"int" tail_off (PersistentVector_2_tail_off this)
 ///                 ]
-///                     (if (<= tail_off start)
+///                     (if (lte_9_ tail_off start)
 ///                         (let [
-///                             #_"values" tail (-> (anew new_cnt) (acopy_4_ 0 (_0_tail this) (- start tail_off) new_cnt))
+///                             #_"values" tail (-> (anew new_cnt) (acopy_4_ 0 (_0_tail this) (minus start tail_off) new_cnt))
 ///                         ]
 ///                             (PersistentVector_1_new (_0__meta this), new_cnt, 5, VNode_1_EMPTY, tail)
 ///                         )
 ///                         (let [
-///                             #_"bool" tail_cut_9_ (< tail_off end)
+///                             #_"bool" tail_cut_9_ (lt_9_ tail_off end)
 ///                             #_"node" root (_0_root this)
 ///                             root (if tail_cut_9_ root (VNode_2_slice_right root, (_0_shift this), end))
 ///                             root (if (zero_9_ start) root (VNode_2_slice_left root, (_0_shift this), start, (min end tail_off)))
 ///                             #_"values" tail
 ///                                 (when tail_cut_9_ => (VNode_2_array_for root, (dec new_cnt), (_0_shift this), new_cnt)
 ///                                     (let [
-///                                         #_"int" n (- end tail_off)
+///                                         #_"int" n (minus end tail_off)
 ///                                     ]
 ///                                         (-> (anew n) (acopy_4_ 0 (_0_tail this) 0 n))
 ///                                     )
@@ -9833,8 +8634,8 @@ namespace arbace {
 ///                         ]
 ///                             (when (some_9_ root) => (PersistentVector_1_new (_0__meta this), new_cnt, 5, VNode_1_EMPTY, tail)
 ///                                 (loop_when_recur [#_"node" node root #_"int" shift (_0_shift this)]
-///                                                  (and (< 5 shift) (nil_9_ (aget (_0_array node) 1)))
-///                                                  [(aget (_0_array node) 0) (- shift 5)]
+///                                                  (and (lt_9_ 5 shift) (nil_9_ (aget (_0_array node) 1)))
+///                                                  [(aget (_0_array node) 0) (minus shift 5)]
 ///                                               => (PersistentVector_1_new (_0__meta this), new_cnt, shift, node, tail)
 ///                                 )
 ///                             )
@@ -9850,11 +8651,11 @@ namespace arbace {
 ///         ]
 ///             (cond
 ///                 (zero_9_ c1) that
-///                 (< c2 VNode_1_rrbt_concat_threshold) (into this that)
+///                 (lt_9_ c2 VNode_1_rrbt_concat_threshold) (into this that)
 ///                 _0_else
 ///                     (let [
 ///                         #_"node" r1 (_0_root this) #_"int" s1 (_0_shift this) #_"array" t1 (_0_tail this) #_"int" o1 (PersistentVector_2_tail_off this)
-///                         #_"bool" overflow_9_ (VNode_2_overflow_9_ r1, s1, (+ o1 32))
+///                         #_"bool" overflow_9_ (VNode_2_overflow_9_ r1, s1, (plus o1 32))
 ///                         r1
 ///                             (when overflow_9_ => (VNode_2_fold_tail r1, s1, o1, t1)
 ///                                 (let [
@@ -9864,34 +8665,34 @@ namespace arbace {
 ///                                             (aset_4_ 1 (VNode_2_new_path (VNode_1_new nil, t1, nil), nil, s1))
 ///                                         )
 ///                                     #_"index" x_1_
-///                                         (when (or (some_9_ (_0_index r1)) (< (alength t1) 32))
+///                                         (when (or (some_9_ (_0_index r1)) (lt_9_ (alength t1) 32))
 ///                                             (-> (anew 33) (aset_4_ 0 o1) (aset_4_ 1 c1) (aset_4_ 32 2))
 ///                                         )
 ///                                 ]
 ///                                     (VNode_1_new nil, a_1_, x_1_)
 ///                                 )
 ///                             )
-///                         s1 (if overflow_9_ (+ s1 5) s1)
+///                         s1 (if overflow_9_ (plus s1 5) s1)
 ///                         #_"node" r2 (_0_root that) #_"int" s2 (_0_shift that) #_"array" t2 (_0_tail that) #_"int" o2 (PersistentVector_2_tail_off that)
 ///                         #_"int" shift (max s1 s2)
 ///                         r1 (VNode_2_shift_from_to r1, s1, shift)
 ///                         r2 (VNode_2_shift_from_to r2, s2, shift)
 ///                         [#_"node" n1 #_"node" n2 #_"int" delta] (VNode_1_zip_path shift, r1, c1, r2, o2, 0)
-///                         #_"int" c1' (+ c1 delta)
-///                         #_"int" c2' (- o2 delta)
-///                         [n1 n2] (if (identical_9_ n2 r2) (VNode_1_squash_nodes shift, n1, c1', n2, c2') [n1 n2])
+///                         #_"int" c1_1_ (plus c1 delta)
+///                         #_"int" c2_1_ (minus o2 delta)
+///                         [n1 n2] (if (identical_9_ n2 r2) (VNode_1_squash_nodes shift, n1, c1_1_, n2, c2_1_) [n1 n2])
 ///                     ]
 ///                         (if (some_9_ n2)
 ///                             (let [
 ///                                 #_"array" a_1_ (-> (anew 32) (aset_4_ 0 n1) (aset_4_ 1 n2))
-///                                 #_"index" x_1_ (-> (anew 33) (aset_4_ 0 c1') (aset_4_ 1 (+ c1' c2')) (aset_4_ 32 2))
+///                                 #_"index" x_1_ (-> (anew 33) (aset_4_ 0 c1_1_) (aset_4_ 1 (plus c1_1_ c2_1_)) (aset_4_ 32 2))
 ///                             ]
-///                                 (PersistentVector_1_new nil, (+ c1 c2), (+ shift 5), (VNode_1_new nil, a_1_, x_1_), t2)
+///                                 (PersistentVector_1_new nil, (plus c1 c2), (plus shift 5), (VNode_1_new nil, a_1_, x_1_), t2)
 ///                             )
 ///                             (loop_when_recur [#_"node" node n1 shift shift]
-///                                              (and (< 5 shift) (nil_9_ (aget (_0_array node) 1)))
-///                                              [(aget (_0_array node) 0) (- shift 5)]
-///                                           => (PersistentVector_1_new nil, (+ c1 c2), shift, node, t2)
+///                                              (and (lt_9_ 5 shift) (nil_9_ (aget (_0_array node) 1)))
+///                                              [(aget (_0_array node) 0) (minus shift 5)]
+///                                           => (PersistentVector_1_new nil, (plus c1 c2), shift, node, t2)
 ///                             )
 ///                         )
 ///                     )
@@ -9914,9 +8715,9 @@ namespace arbace {
 ///     (defn_ #_"int" PersistentVector_2_compareTo [#_"PersistentVector" this, #_"IPersistentVector" that]
 ///         (when_not (identical_9_ this that) => 0
 ///             (let [#_"int" n (_0_cnt this) #_"int" m (count that)]
-///                 (cond (< n m) -1 (< m n) 1
+///                 (cond (lt_9_ n m) -1 (lt_9_ m n) 1
 ///                     _0_else
-///                         (loop_when [#_"int" i 0] (< i n) => 0
+///                         (loop_when [#_"int" i 0] (lt_9_ i n) => 0
 ///                             (let [#_"int" cmp (compare (Indexed_3_nth this, i) (Indexed_3_nth that, i))]
 ///                                 (recur_when (zero_9_ cmp) [(inc i)] => cmp)
 ///                             )
@@ -9926,84 +8727,84 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm PersistentVector IMeta
+///     (defm PersistentVector IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm PersistentVector IObj
+///     (defm PersistentVector IObj
 ///         (IObj_3_withMeta => PersistentVector_2_withMeta)
 ///     )
 
-///     (defm PersistentVector IObject
+///     (defm PersistentVector IObject
 ///         (IObject_3_equals => PersistentVector_2_equals)
 ///     )
 
-///     (defm PersistentVector Hashed
+///     (defm PersistentVector Hashed
 ///         (Hashed_3_hash => PersistentVector_2_hash)
 ///     )
 
-///     (defm PersistentVector IEditableCollection
+///     (defm PersistentVector IEditableCollection
 ///         (IEditableCollection_3_asTransient => TransientVector_1_new)
 ///     )
 
-///     (defm PersistentVector Counted
+///     (defm PersistentVector Counted
 ///         (Counted_3_count => _0_cnt)
 ///     )
 
-///     (defm PersistentVector Indexed
+///     (defm PersistentVector Indexed
 ///         (Indexed_3_nth => PersistentVector_2_nth)
 ///     )
 
-///     (defm PersistentVector IPersistentCollection
+///     (defm PersistentVector IPersistentCollection
 ///         (IPersistentCollection_3_conj => PersistentVector_2_conj)
 ///         (IPersistentCollection_3_empty => PersistentVector_2_empty)
 ///     )
 
-///     (defm PersistentVector IPersistentVector
+///     (defm PersistentVector IPersistentVector
 ///         (IPersistentVector_3_assocN => PersistentVector_2_assocN)
 ///         (IPersistentVector_3_slicev => PersistentVector_2_slicev)
 ///         (IPersistentVector_3_splicev => PersistentVector_2_splicev)
 ///     )
 
-///     (defm PersistentVector IPersistentStack
+///     (defm PersistentVector IPersistentStack
 ///         (IPersistentStack_3_peek => PersistentVector_2_peek)
 ///         (IPersistentStack_3_pop => PersistentVector_2_pop)
 ///     )
 
-///     (defm PersistentVector IFn
+///     (defm PersistentVector IFn
 ///         (IFn_3_invoke => PersistentVector_2_invoke)
 ///         (IFn_3_applyTo => PersistentVector_2_applyTo)
 ///     )
 
-///     (defm PersistentVector IReduce
+///     (defm PersistentVector IReduce
 ///         (IReduce_3_reduce => PersistentVector_2_reduce)
 ///     )
 
-///     (defm PersistentVector IKVReduce
+///     (defm PersistentVector IKVReduce
 ///         (IKVReduce_3_kvreduce => PersistentVector_2_kvreduce)
 ///     )
 
-///     (defm PersistentVector Associative
+///     (defm PersistentVector Associative
 ///         (Associative_3_assoc => PersistentVector_2_assoc)
 ///         (Associative_3_containsKey => PersistentVector_2_containsKey)
 ///         (Associative_3_entryAt => PersistentVector_2_entryAt)
 ///     )
 
-///     (defm PersistentVector ILookup
+///     (defm PersistentVector ILookup
 ///         (ILookup_3_valAt => PersistentVector_2_valAt)
 ///     )
 
-///     (defm PersistentVector Sequential)
+///     (defm PersistentVector Sequential)
 
-///     (defm PersistentVector Seqable
+///     (defm PersistentVector Seqable
 ///         (Seqable_3_seq => PersistentVector_2_seq)
 ///     )
 
-///     (defm PersistentVector Reversible
+///     (defm PersistentVector Reversible
 ///         (Reversible_3_rseq => PersistentVector_2_rseq)
 ///     )
 
-///     (defm PersistentVector Comparable
+///     (defm PersistentVector Comparable
 ///         (Comparable_3_compareTo => PersistentVector_2_compareTo)
 ///     )
 // )
@@ -10045,17 +8846,13 @@ namespace arbace {
 /// (defn dissoc_1_ [v i] (let [v (vec v)] (catvec (subvec v 0 i) (subvec v (inc i)))))
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"QSeq"
-///     (declare QSeq_2_seq QSeq_2_first QSeq_2_next)
-
-///     (defq QSeq [#_"IPersistentMap" _meta, #_"ISeq" f, #_"ISeq" rseq] SeqForm
-///         clojure.lang.ISeq (seq [_] (QSeq_2_seq _)) (first [_] (QSeq_2_first _)) (next [_] (QSeq_2_next _)) (more [_] (or (QSeq_2_next _) ()))
-///     )
+///     (defq QSeq [#_"IPersistentMap" _meta, #_"ISeq" f, #_"ISeq" rseq] SeqForm)
 
 ///     #_inherit
-///     (defm QSeq ASeq)
+///     (defm QSeq ASeq)
 
 ///     (defn #_"QSeq" QSeq_1_new
 ///         ([#_"ISeq" f, #_"ISeq" rseq] (QSeq_1_new nil, f, rseq))
@@ -10065,7 +8862,7 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"QSeq" QSeq_2_withMeta [#_"QSeq" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (QSeq_1_new meta, (_0_f this), (_0_rseq this))
 ///         )
 ///     )
@@ -10074,7 +8871,7 @@ namespace arbace {
 ///         this
 ///     )
 
-///     (defn_ #_"Object" QSeq_2_first [#_"QSeq" this]
+///     (defn_ #_"Object" QSeq_2_first [#_"QSeq" this]
 ///         (first (_0_f this))
 ///     )
 
@@ -10088,61 +8885,61 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"int" QSeq_2_count [#_"QSeq" this]
-///         (+ (count (_0_f this)) (count (_0_rseq this)))
+///         (plus (count (_0_f this)) (count (_0_rseq this)))
 ///     )
 
-///     (defm QSeq IMeta
+///     (defm QSeq IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm QSeq IObj
+///     (defm QSeq IObj
 ///         (IObj_3_withMeta => QSeq_2_withMeta)
 ///     )
 
-///     (defm QSeq Sequential)
+///     (defm QSeq Sequential)
 
-///     (defm QSeq Seqable
+///     (defm QSeq Seqable
 ///         (Seqable_3_seq => QSeq_2_seq)
 ///     )
 
-///     (defm QSeq ISeq
+///     (defm QSeq ISeq
 ///         (ISeq_3_first => QSeq_2_first)
 ///         (ISeq_3_next => QSeq_2_next)
 ///     )
 
-///     (defm QSeq Counted
+///     (defm QSeq Counted
 ///         (Counted_3_count => QSeq_2_count)
 ///     )
 
-///     (defm QSeq Hashed
+///     (defm QSeq Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm QSeq IObject
+///     (defm QSeq IObject
 ///         (IObject_3_equals => ASeq_2_equals)
 ///     )
 // )
 
 // (about #_"PersistentQueue"
-///     (defq PersistentQueue [#_"IPersistentMap" _meta, #_"int" cnt, #_"ISeq" f, #_"vector" r] VecForm)
+///     (defq PersistentQueue [#_"IPersistentMap" _meta, #_"int" cnt, #_"ISeq" f, #_"vector" r] VecForm)
 
 ///     (defn #_"PersistentQueue" PersistentQueue_1_new [#_"IPersistentMap" meta, #_"int" cnt, #_"ISeq" f, #_"vector" r]
 ///         (new_8_ PersistentQueue_1_class (anew [meta, cnt, f, r]))
 ///     )
 
 ///     (defn_ #_"PersistentQueue" PersistentQueue_2_withMeta [#_"PersistentQueue" this, #_"IPersistentMap" meta]
-///         (when_not (= meta (_0__meta this)) => this
+///         (when_not (_eq_9_ meta (_0__meta this)) => this
 ///             (PersistentQueue_1_new meta, (_0_cnt this), (_0_f this), (_0_r this))
 ///         )
 ///     )
 
 ///     (def #_"PersistentQueue" PersistentQueue_1_EMPTY (PersistentQueue_1_new nil, 0, nil, nil))
 
-///     (defn_ #_"bool" PersistentQueue_2_equals [#_"PersistentQueue" this, #_"Object" that]
+///     (defn_ #_"bool" PersistentQueue_2_equals [#_"PersistentQueue" this, #_"Object" that]
 ///         (or (identical_9_ this that)
 ///             (and (sequential_9_ that)
 ///                 (loop_when [#_"ISeq" s (seq this) #_"ISeq" z (seq that)] (some_9_ s) => (nil_9_ z)
-///                     (and (some_9_ z) (= (first s) (first z))
+///                     (and (some_9_ z) (_eq_9_ (first s) (first z))
 ///                         (recur (next s) (next z))
 ///                     )
 ///                 )
@@ -10150,7 +8947,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"Object" PersistentQueue_2_peek [#_"PersistentQueue" this]
+///     (defn_ #_"Object" PersistentQueue_2_peek [#_"PersistentQueue" this]
 ///         (first (_0_f this))
 ///     )
 
@@ -10172,7 +8969,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"PersistentQueue" PersistentQueue_2_conj [#_"PersistentQueue" this, #_"Object" o]
+///     (defn_ #_"PersistentQueue" PersistentQueue_2_conj [#_"PersistentQueue" this, #_"Object" o]
 ///         (let [[#_"ISeq" f #_"vector" r]
 ///                 (if (nil_9_ (_0_f this))
 ///                     [(list o) nil]
@@ -10186,49 +8983,49 @@ namespace arbace {
 ///         (with_meta PersistentQueue_1_EMPTY (_0__meta this))
 ///     )
 
-///     (defm PersistentQueue IPersistentList Sequential)
+///     (defm PersistentQueue IPersistentList Sequential)
 
-///     (defm PersistentQueue IMeta
+///     (defm PersistentQueue IMeta
 ///         (IMeta_3_meta => _0__meta)
 ///     )
 
-///     (defm PersistentQueue IObj
+///     (defm PersistentQueue IObj
 ///         (IObj_3_withMeta => PersistentQueue_2_withMeta)
 ///     )
 
-///     (defm PersistentQueue IObject
+///     (defm PersistentQueue IObject
 ///         (IObject_3_equals => PersistentQueue_2_equals)
 ///     )
 
-///     (defm PersistentQueue Hashed
+///     (defm PersistentQueue Hashed
 ///         (Hashed_3_hash => Murmur3_1_hashOrdered)
 ///     )
 
-///     (defm PersistentQueue IPersistentStack
+///     (defm PersistentQueue IPersistentStack
 ///         (IPersistentStack_3_peek => PersistentQueue_2_peek)
 ///         (IPersistentStack_3_pop => PersistentQueue_2_pop)
 ///     )
 
-///     (defm PersistentQueue Counted
+///     (defm PersistentQueue Counted
 ///         (Counted_3_count => _0_cnt)
 ///     )
 
-///     (defm PersistentQueue Seqable
+///     (defm PersistentQueue Seqable
 ///         (Seqable_3_seq => PersistentQueue_2_seq)
 ///     )
 
-///     (defm PersistentQueue IPersistentCollection
+///     (defm PersistentQueue IPersistentCollection
 ///         (IPersistentCollection_3_conj => PersistentQueue_2_conj)
 ///         (IPersistentCollection_3_empty => PersistentQueue_2_empty)
 ///     )
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"RT"
-///     (defn #_"Object" RT_1_get
-///         ([#_"Object" coll, #_"Object" key]
+///     (defn #_"Object" RT_1_get
+///         ([#_"Object" coll, #_"Object" key]
 ///             (cond
 ///                 (satisfies_9_ ILookup coll)
 ///                     (ILookup_3_valAt coll, key)
@@ -10236,15 +9033,15 @@ namespace arbace {
 ///                     nil
 ///                 (set_9_ coll)
 ///                     (IPersistentSet_3_get coll, key)
-///                 (and (number_9_ key) (or (string_9_ coll) (array_9_ coll)))
-///                     (let_when [#_"int" n (int_4_ key)] (< -1 n (count coll))
+///                 (and (number_9_ key) (or (string_9_ coll) (array_9_ coll)))
+///                     (let_when [#_"int" n (int key)] (lt_9_ -1 n (count coll))
 ///                         (nth coll n)
 ///                     )
 ///                 (satisfies_9_ ITransientSet coll)
 ///                     (ITransientSet_3_get coll, key)
 ///             )
 ///         )
-///         ([#_"Object" coll, #_"Object" key, #_"Object" not_found]
+///         ([#_"Object" coll, #_"Object" key, #_"Object" not_found]
 ///             (cond
 ///                 (satisfies_9_ ILookup coll)
 ///                     (ILookup_3_valAt coll, key, not_found)
@@ -10252,9 +9049,9 @@ namespace arbace {
 ///                     not_found
 ///                 (set_9_ coll)
 ///                     (if (contains_9_ coll key) (IPersistentSet_3_get coll, key) not_found)
-///                 (and (number_9_ key) (or (string_9_ coll) (array_9_ coll)))
-///                     (let [#_"int" n (int_4_ key)]
-///                         (if (< -1 n (count coll)) (nth coll n) not_found)
+///                 (and (number_9_ key) (or (string_9_ coll) (array_9_ coll)))
+///                     (let [#_"int" n (int key)]
+///                         (if (lt_9_ -1 n (count coll)) (nth coll n) not_found)
 ///                     )
 ///                 (satisfies_9_ ITransientSet coll)
 ///                     (if (contains_9_ coll key) (ITransientSet_3_get coll, key) not_found)
@@ -10280,7 +9077,7 @@ namespace arbace {
 ///     )
 /// )
 
-///     (defn #_"Object" RT_1_contains [#_"Object" coll, #_"Object" key]
+///     (defn #_"Object" RT_1_contains [#_"Object" coll, #_"Object" key]
 ///         (cond
 ///             (nil_9_ coll)
 ///                 false
@@ -10288,9 +9085,9 @@ namespace arbace {
 ///                 (if (Associative_3_containsKey coll, key) true false)
 ///             (set_9_ coll)
 ///                 (if (IPersistentSet_3_contains_9_ coll, key) true false)
-///             (and (number_9_ key) (or (string_9_ coll) (array_9_ coll)))
-///                 (let [#_"int" n (int_4_ key)]
-///                     (if (< -1 n (count coll)) true false)
+///             (and (number_9_ key) (or (string_9_ coll) (array_9_ coll)))
+///                 (let [#_"int" n (int key)]
+///                     (if (lt_9_ -1 n (count coll)) true false)
 ///                 )
 ///             (satisfies_9_ ITransientSet coll)
 ///                 (if (ITransientSet_3_contains_9_ coll, key) true false)
@@ -10303,7 +9100,7 @@ namespace arbace {
 
 /// (defn contains_9_ [coll key] (RT_1_contains coll key))
 
-///     (defn #_"Object" RT_1_find [#_"Object" coll, #_"Object" key]
+///     (defn #_"Object" RT_1_find [#_"Object" coll, #_"Object" key]
 ///         (cond
 ///             (nil_9_ coll)
 ///                 nil
@@ -10321,23 +9118,23 @@ namespace arbace {
 ///     (defn #_"ISeq" RT_1_findKey [#_"Keyword" key, #_"ISeq" keyvals]
 ///         (loop_when keyvals (some_9_ keyvals)
 ///             (when_some [#_"ISeq" s (next keyvals)] => (throw "malformed keyword argslist")
-///                 (when_not (= (first keyvals) key) => s
+///                 (when_not (_eq_9_ (first keyvals) key) => s
 ///                     (recur (next s))
 ///                 )
 ///             )
 ///         )
 ///     )
 
-///     (defn #_"Object" RT_1_nth
-///         ([#_"Object" coll, #_"int" n]
+///     (defn #_"Object" RT_1_nth
+///         ([#_"Object" coll, #_"int" n]
 ///             (cond
 ///                 (indexed_9_ coll)
 ///                     (Indexed_3_nth coll, n)
 ///                 (nil_9_ coll)
 ///                     nil
-///                 (char_sequence_9_ coll)
-///                     (Character_1_valueOf (CharSequence_3_charAt coll, n))
-///                 (array_9_ coll)
+///                 (string_9_ coll)
+///                     (Character_1_valueOf (String_2_charAt coll, n))
+///                 (array_9_ coll)
 ///                     (Array_1_get coll, n)
 ///                 (matcher_9_ coll)
 ///                     (Matcher_2_group coll, n)
@@ -10346,14 +9143,14 @@ namespace arbace {
 ///                         (case_4_ n 0 (key e) 1 (val e) (throw "index is out of bounds"))
 ///                     )
 ///                 (sequential_9_ coll)
-///                     (loop_when [#_"int" i 0 #_"ISeq" s (seq coll)] (and (<= i n) (some_9_ s)) => (throw "index is out of bounds")
-///                         (recur_when (< i n) [(inc i) (next s)] => (first s))
+///                     (loop_when [#_"int" i 0 #_"ISeq" s (seq coll)] (and (lte_9_ i n) (some_9_ s)) => (throw "index is out of bounds")
+///                         (recur_when (lt_9_ i n) [(inc i) (next s)] => (first s))
 ///                     )
 ///                 _0_else
 ///                     (throw (str "nth not supported on " coll))
 ///             )
 ///         )
-///         ([#_"Object" coll, #_"int" n, #_"Object" not_found]
+///         ([#_"Object" coll, #_"int" n, #_"Object" not_found]
 ///             (cond
 ///                 (indexed_9_ coll)
 ///                     (Indexed_3_nth coll, n, not_found)
@@ -10361,16 +9158,16 @@ namespace arbace {
 ///                     not_found
 ///                 (neg_9_ n)
 ///                     not_found
-///                 (char_sequence_9_ coll)
-///                     (let_when [#_"CharSequence" s coll] (< n (CharSequence_3_length s)) => not_found
-///                         (Character_1_valueOf (CharSequence_3_charAt s, n))
+///                 (string_9_ coll)
+///                     (let_when [#_"String" s coll] (lt_9_ n (String_2_length s)) => not_found
+///                         (Character_1_valueOf (String_2_charAt s, n))
 ///                     )
-///                 (array_9_ coll)
-///                     (when (< n (Array_1_getLength coll)) => not_found
+///                 (array_9_ coll)
+///                     (when (lt_9_ n (Array_1_getLength coll)) => not_found
 ///                         (Array_1_get coll, n)
 ///                     )
 ///                 (matcher_9_ coll)
-///                     (let_when [#_"Matcher" m coll] (< n (Matcher_2_groupCount m)) => not_found
+///                     (let_when [#_"Matcher" m coll] (lt_9_ n (Matcher_2_groupCount m)) => not_found
 ///                         (Matcher_2_group m, n)
 ///                     )
 ///                 (map_entry_9_ coll)
@@ -10378,8 +9175,8 @@ namespace arbace {
 ///                         (case_4_ n 0 (key e) 1 (val e) not_found)
 ///                     )
 ///                 (sequential_9_ coll)
-///                     (loop_when [#_"int" i 0 #_"ISeq" s (seq coll)] (and (<= i n) (some_9_ s)) => not_found
-///                         (recur_when (< i n) [(inc i) (next s)] => (first s))
+///                     (loop_when [#_"int" i 0 #_"ISeq" s (seq coll)] (and (lte_9_ i n) (some_9_ s)) => not_found
+///                         (recur_when (lt_9_ i n) [(inc i) (next s)] => (first s))
 ///                     )
 ///                 _0_else
 ///                     (throw (str "nth not supported on " coll))
@@ -10396,7 +9193,7 @@ namespace arbace {
 ///         (cond
 ///             (empty_9_ init)
 ///                 PersistentArrayMap_1_EMPTY
-///             (<= (count init) PersistentArrayMap_1_HASHTABLE_THRESHOLD)
+///             (lte_9_ (count init) PersistentArrayMap_1_HASHTABLE_THRESHOLD)
 ///                 (PersistentArrayMap_1_createWithCheck (anew init))
 ///             _0_else
 ///                 (PersistentHashMap_1_createWithCheck_1s init)
@@ -10407,7 +9204,7 @@ namespace arbace {
 ///         (cond
 ///             (empty_9_ init)
 ///                 PersistentArrayMap_1_EMPTY
-///             (<= (count init) PersistentArrayMap_1_HASHTABLE_THRESHOLD)
+///             (lte_9_ (count init) PersistentArrayMap_1_HASHTABLE_THRESHOLD)
 ///                 (PersistentArrayMap_1_new (anew init))
 ///             _0_else
 ///                 (PersistentHashMap_1_create_1s init)
@@ -10416,7 +9213,7 @@ namespace arbace {
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Var"
 ///     (defn_ #_"Appendable" Var_1_append [#_"Appendable" a, #_"Namespace" ns, #_"Symbol" sym]
@@ -10428,10 +9225,10 @@ namespace arbace {
 // )
 
 // (about #_"Unbound"
-///     (defq Unbound [#_"Namespace" ns, #_"Symbol" sym])
+///     (defq Unbound [#_"Namespace" ns, #_"Symbol" sym])
 
 ///     #_inherit
-///     (defm Unbound AFn)
+///     (defm Unbound AFn)
 
 ///     (defn #_"Unbound" Unbound_1_new [#_"Namespace" ns, #_"Symbol" sym]
 ///         (new_8_ Unbound_1_class (anew [ns, sym]))
@@ -10441,25 +9238,21 @@ namespace arbace {
 ///         (-> a (Appendable_3_append "#_unbound ") (Var_1_append (_0_ns this), (_0_sym this)))
 ///     )
 
-///     (defm Unbound IObject
+///     (defm Unbound IObject
 ///         (IObject_3_equals => identical_9_)
 ///     )
 
-///     (defm Unbound IAppend
+///     (defm Unbound IAppend
 ///         (IAppend_3_append => Unbound_2_append)
 ///     )
 // )
 
 // (about #_"Var"
-///     (declare Var_2_get)
-
-///     (defq Var [#_"Namespace" ns, #_"Symbol" sym, #_"Object'" root]
-///         java.util.concurrent.Future (get [_] (Var_2_get _))
-///     )
+///     (defq Var [#_"Namespace" ns, #_"Symbol" sym, #_"Object'" root])
 
 ///     (defn #_"Var" Var_1_new
 ///         ([#_"Namespace" ns, #_"Symbol" sym] (Var_1_new ns, sym, (Unbound_1_new ns, sym)))
-///         ([#_"Namespace" ns, #_"Symbol" sym, #_"Object" root]
+///         ([#_"Namespace" ns, #_"Symbol" sym, #_"Object" root]
 ///             (new_8_ Var_1_class (anew [ns, sym, (atom root)]))
 ///         )
 ///     )
@@ -10488,7 +9281,7 @@ namespace arbace {
 ///         (Var_2_hasRoot this)
 ///     )
 
-///     (defn_ #_"Object" Var_2_get [#_"Var" this]
+///     (defn_ #_"Object" Var_2_get [#_"Var" this]
 ///          (_0_root this)
 ///     )
 
@@ -10507,31 +9300,27 @@ namespace arbace {
 ///         (not (_0_private (meta this)))
 ///     )
 
-///     (defn #_"void" Var_2_bindRoot [#_"Var" this, #_"Object" root]
+///     (defn #_"void" Var_2_bindRoot [#_"Var" this, #_"Object" root]
 ///         (alter_meta_4_ this dissoc _0_macro)
 ///         (reset_4_ (_0_root this) root)
 ///         nil
 ///     )
 
-///     (defn #_"Object" Var_2_alterRoot [#_"Var" this, #_"IFn" f, #_"ISeq" args]
+///     (defn #_"Object" Var_2_alterRoot [#_"Var" this, #_"IFn" f, #_"ISeq" args]
 ///         (apply swap_4_ (_0_root this) f args)
 ///     )
-
-///     (declare Namespace_2_intern)
 
 ///     (defn_ #_"Var" Var_1_intern
 ///         ([#_"Namespace" ns, #_"Symbol" sym]
 ///             (Namespace_2_intern ns, sym)
 ///         )
-///         ([#_"Namespace" ns, #_"Symbol" sym, #_"Object" root]
+///         ([#_"Namespace" ns, #_"Symbol" sym, #_"Object" root]
 ///             (let [#_"Var" v (Namespace_2_intern ns, sym)]
 ///                 (Var_2_bindRoot v, root)
 ///                 v
 ///             )
 ///         )
 ///     )
-
-/// (declare the_ns)
 
 /// (defn intern
 ///     ([ns name]
@@ -10552,7 +9341,7 @@ namespace arbace {
 ///     )
 /// )
 
-///     (defn_ #_"Object" Var_2_invoke
+///     (defn_ #_"Object" Var_2_invoke
 ///         ([#_"Var" this]                                                   (IFn_3_invoke (deref this)))
 ///         ([#_"Var" this, a1]                                               (IFn_3_invoke (deref this), a1))
 ///         ([#_"Var" this, a1, a2]                                           (IFn_3_invoke (deref this), a1, a2))
@@ -10566,32 +9355,32 @@ namespace arbace {
 ///         ([#_"Var" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"ISeq" args] (IFn_3_invoke (deref this), a1, a2, a3, a4, a5, a6, a7, a8, a9, args))
 ///     )
 
-///     (defn_ #_"Object" Var_2_applyTo [#_"Var" this, #_"ISeq" args]
+///     (defn_ #_"Object" Var_2_applyTo [#_"Var" this, #_"ISeq" args]
 ///         (IFn_3_applyTo (deref this), args)
 ///     )
 
-///     (defm Var IMeta
+///     (defm Var IMeta
 ///         (IMeta_3_meta => Var_2_meta)
 ///     )
 
-///     (defm Var IReference
+///     (defm Var IReference
 ///         (IReference_3_alterMeta => Var_2_alterMeta)
 ///         (IReference_3_resetMeta => Var_2_resetMeta)
 ///     )
 
-///     (defm Var IObject
+///     (defm Var IObject
 ///         (IObject_3_equals => identical_9_)
 ///     )
 
-///     (defm Var IAppend
+///     (defm Var IAppend
 ///         (IAppend_3_append => Var_2_append)
 ///     )
 
-///     (defm Var IDeref
+///     (defm Var IDeref
 ///         (IDeref_3_deref => Var_2_get)
 ///     )
 
-///     (defm Var IFn
+///     (defm Var IFn
 ///         (IFn_3_invoke => Var_2_invoke)
 ///         (IFn_3_applyTo => Var_2_applyTo)
 ///     )
@@ -10608,10 +9397,10 @@ namespace arbace {
 /// )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Namespace"
-///     (defq Namespace [#_"Symbol" name, #_"{Symbol Var}'" mappings, #_"{Symbol Namespace}'" aliases])
+///     (defq Namespace [#_"Symbol" name, #_"{Symbol Var}'" mappings, #_"{Symbol Namespace}'" aliases])
 
 ///     (def #_"{Symbol Namespace}'" Namespace_1_namespaces (atom (hash_map)))
 
@@ -10650,7 +9439,7 @@ namespace arbace {
 /// (defn create_ns [sym] (Namespace_1_findOrCreate sym))
 
 ///     (defn #_"Namespace" Namespace_1_remove [#_"Symbol" name]
-///         (when_not (= name _1_arbace.core) => (throw "cannot remove core namespace")
+///         (when_not (_eq_9_ name _1_arbace.core) => (throw "cannot remove core namespace")
 ///             (get (first (swap_vals_4_ Namespace_1_namespaces dissoc name)) name)
 ///         )
 ///     )
@@ -10669,7 +9458,7 @@ namespace arbace {
 
 /// (defn ns_map [ns] (Namespace_2_getMappings (the_ns ns)))
 
-///     (defn #_"Object" Namespace_2_getMapping [#_"Namespace" this, #_"Symbol" name]
+///     (defn #_"Object" Namespace_2_getMapping [#_"Namespace" this, #_"Symbol" name]
 ///         (get (deref (_0_mappings this)) name)
 ///     )
 
@@ -10683,26 +9472,26 @@ namespace arbace {
 
 /// (defn ns_interns [ns]
 ///     (let [ns (the_ns ns)]
-///         (filter_key val (fn [#_"var" v] (and (var_9_ v) (= ns (_0_ns v)))) (ns_map ns))
+///         (filter_key val (fn [#_"var" v] (and (var_9_ v) (_eq_9_ ns (_0_ns v)))) (ns_map ns))
 ///     )
 /// )
 
 /// (defn ns_publics [ns]
 ///     (let [ns (the_ns ns)]
-///         (filter_key val (fn [#_"var" v] (and (var_9_ v) (= ns (_0_ns v)) (Var_2_isPublic v))) (ns_map ns))
+///         (filter_key val (fn [#_"var" v] (and (var_9_ v) (_eq_9_ ns (_0_ns v)) (Var_2_isPublic v))) (ns_map ns))
 ///     )
 /// )
 
 /// (defn ns_refers [ns]
 ///     (let [ns (the_ns ns)]
-///         (filter_key val (fn [#_"var" v] (and (var_9_ v) (not= ns (_0_ns v)))) (ns_map ns))
+///         (filter_key val (fn [#_"var" v] (and (var_9_ v) (not_eq_9_ ns (_0_ns v)))) (ns_map ns))
 ///     )
 /// )
 
-///     (defn_ #_"void" Namespace_2_warnOrFailOnReplace [#_"Namespace" this, #_"Symbol" sym, #_"Object" o, #_"var" var]
+///     (defn_ #_"void" Namespace_2_warnOrFailOnReplace [#_"Namespace" this, #_"Symbol" sym, #_"Object" o, #_"var" var]
 ///         (or
 ///             (when (var_9_ o)
-///                 (when (= (_0_ns o) this) => (throw (str sym " already refers to: " o " in namespace: " (_0_name this)))
+///                 (when (_eq_9_ (_0_ns o) this) => (throw (str sym " already refers to: " o " in namespace: " (_0_name this)))
 ///                     _0_ok
 ///                 )
 ///             )
@@ -10713,14 +9502,14 @@ namespace arbace {
 
 ///     (defn #_"var" Namespace_2_intern [#_"Namespace" this, #_"Symbol" sym]
 ///         (when (nil_9_ (_0_ns sym)) => (throw "can't intern namespace_qualified symbol")
-///             (let [#_"Object" o
+///             (let [#_"Object" o
 ///                     (or (get (deref (_0_mappings this)) sym)
 ///                         (let [#_"var" v (Var_1_new this, sym)]
 ///                             (swap_4_ (_0_mappings this) assoc sym v)
 ///                             v
 ///                         )
 ///                     )]
-///                 (when_not (and (var_9_ o) (= (_0_ns o) this)) => o
+///                 (when_not (and (var_9_ o) (_eq_9_ (_0_ns o) this)) => o
 ///                     (let [#_"var" v (Var_1_new this, sym)]
 ///                         (Namespace_2_warnOrFailOnReplace this, sym, o, v)
 ///                         (swap_4_ (_0_mappings this) assoc sym v)
@@ -10733,14 +9522,14 @@ namespace arbace {
 
 ///     (defn #_"var" Namespace_2_refer [#_"Namespace" this, #_"Symbol" sym, #_"var" var]
 ///         (when (nil_9_ (_0_ns sym)) => (throw "can't intern namespace_qualified symbol")
-///             (let [#_"Object" o
+///             (let [#_"Object" o
 ///                     (or (get (deref (_0_mappings this)) sym)
 ///                         (do
 ///                             (swap_4_ (_0_mappings this) assoc sym var)
 ///                             var
 ///                         )
 ///                     )]
-///                 (when_not (= o var)
+///                 (when_not (_eq_9_ o var)
 ///                     (Namespace_2_warnOrFailOnReplace this, sym, o, var)
 ///                     (swap_4_ (_0_mappings this) assoc sym var)
 ///                 )
@@ -10749,11 +9538,9 @@ namespace arbace {
 ///         )
 ///     )
 
-/// (declare ^_0_dynamic _8_ns_8_)
-
 /// (defn refer [ns_sym & filters]
 ///     (let [ns (the_ns ns_sym) ps_8_ (ns_publics ns) fs_8_ (apply hash_map filters)
-///           r (_0_refer fs_8_) s (if (= r _0_all) (keys ps_8_) (or r (_0_only fs_8_) (keys ps_8_)))]
+///           r (_0_refer fs_8_) s (if (_eq_9_ r _0_all) (keys ps_8_) (or r (_0_only fs_8_) (keys ps_8_)))]
 ///         (when (sequential_9_ s) => (throw "the value of :only/:refer must be a sequential collection of symbols")
 ///             (let [es_8_ (set (_0_exclude fs_8_)) rs_8_ (or (_0_rename fs_8_) (hash_map))]
 ///                 (doseq [x (remove es_8_ s)]
@@ -10776,8 +9563,8 @@ namespace arbace {
 /// (defn ns_unmap [ns sym] (Namespace_2_unmap (the_ns ns) sym))
 
 ///     (defn #_"var" Namespace_2_findInternedVar [#_"Namespace" this, #_"Symbol" name]
-///         (let [#_"Object" o (get (deref (_0_mappings this)) name)]
-///             (when (and (var_9_ o) (= (_0_ns o) this))
+///         (let [#_"Object" o (get (deref (_0_mappings this)) name)]
+///             (when (and (var_9_ o) (_eq_9_ (_0_ns o) this))
 ///                 o
 ///             )
 ///         )
@@ -10807,14 +9594,14 @@ namespace arbace {
 
 ///     (defn #_"void" Namespace_2_addAlias [#_"Namespace" this, #_"Symbol" alias, #_"Namespace" ns]
 ///         (when (and (some_9_ alias) (some_9_ ns)) => (throw "expecting Symbol + Namespace")
-///             (let [#_"Object" o
+///             (let [#_"Object" o
 ///                     (or (get (deref (_0_aliases this)) alias)
 ///                         (do
 ///                             (swap_4_ (_0_aliases this) assoc alias ns)
 ///                             ns
 ///                         )
 ///                     )]
-///                 (when_not (= o ns)
+///                 (when_not (_eq_9_ o ns)
 ///                     (throw (str "alias " alias " already exists in namespace " (_0_name this) ", aliasing " o))
 ///                 )
 ///             )
@@ -10835,23 +9622,21 @@ namespace arbace {
 ///     (Namespace_2_removeAlias (the_ns ns) sym)
 /// )
 
-///     (defm Namespace IObject
+///     (defm Namespace IObject
 ///         (IObject_3_equals => identical_9_)
 ///     )
 
-///     (defm Namespace IAppend
+///     (defm Namespace IAppend
 ///         (IAppend_3_append => Namespace_2_append)
 ///     )
 // )
 }
 
-namespace cloiure {
-
-// redefine let and loop with destructuring
+namespace arb {
 
 /// (defn destructure [bindings]
 ///     (letfn [(vec_ [v x y]
-///                 (let [v_1_ (gensym "v__") s_1_ (gensym "s__") f_1_ (gensym "f__") amp (some #{'&} x)]
+///                 (let [v_1_ (gensym "v__") s_1_ (gensym "s__") f_1_ (gensym "f__") amp (some (hash_set '&) x)]
 ///                     (loop_when [v (let [v (conj v v_1_ y)] (if amp (conj v s_1_ `(seq ~v_1_)) v)) n 0 s (seq x) amp_9_ false] s => v
 ///                         (case_4_ (first s)
 ///                             '&  (recur (destructure_ v (second s) s_1_) n (next (next s)) true)
@@ -10943,8 +9728,6 @@ namespace cloiure {
 ///     )
 /// )
 
-// redefine fn with destructuring
-
 /// #_oops!
 /// (defmacro fn [& s]
 ///     (let [name (when (symbol_9_ (first s)) (first s)) s (if name (next s) s)
@@ -10984,7 +9767,7 @@ namespace cloiure {
 ///         (vector_9_ bindings) "a vector for its binding"
 ///         (even_9_ (count bindings)) "an even number of forms in binding vector"
 ///     )
-///     (if (= (destructure bindings) bindings)
+///     (if (_eq_9_ (destructure bindings) bindings)
 ///         `(loop_8_ ~bindings ~@body)
 ///         (let [s (take_nth 2 bindings) s_1_ (map #(if (symbol_9_ %) % (gensym)) s)
 ///               v (reduce
@@ -11034,7 +9817,7 @@ namespace cloiure {
 ///                   s (if (vector_9_ (first s)) (list s)   s)
 ///                   _ (assert_valid_fdecl s)
 ///                   m (let [inline (_0_inline m) ifn (first inline) iname (second inline)]
-///                         (when (and (= _1_fn ifn) (not (symbol_9_ iname))) => m
+///                         (when (and (_eq_9_ _1_fn ifn) (not (symbol_9_ iname))) => m
 ///                             (assoc m _0_inline (cons ifn (cons (symbol (str (_0_name fname) "__inliner")) (next inline))))
 ///                         )
 ///                     )
@@ -11196,12 +9979,12 @@ namespace cloiure {
 
 /// (defn max_key
 ///     ([k x] x)
-///     ([k x y] (if (> (k x) (k y)) x y))
+///     ([k x y] (if (gt_9_ (k x) (k y)) x y))
 ///     ([k x y & s]
-///         (let [kx (k x) ky (k y) [v kv] (if (> kx ky) [x kx] [y ky])]
+///         (let [kx (k x) ky (k y) [v kv] (if (gt_9_ kx ky) [x kx] [y ky])]
 ///             (loop_when [v v kv kv s s] s => v
 ///                 (let [w (first s) kw (k w)]
-///                     (if (>= kw kv)
+///                     (if (gte_9_ kw kv)
 ///                         (recur w kw (next s))
 ///                         (recur v kv (next s))
 ///                     )
@@ -11213,12 +9996,12 @@ namespace cloiure {
 
 /// (defn min_key
 ///     ([k x] x)
-///     ([k x y] (if (< (k x) (k y)) x y))
+///     ([k x y] (if (lt_9_ (k x) (k y)) x y))
 ///     ([k x y & s]
-///         (let [kx (k x) ky (k y) [v kv] (if (< kx ky) [x kx] [y ky])]
+///         (let [kx (k x) ky (k y) [v kv] (if (lt_9_ kx ky) [x kx] [y ky])]
 ///             (loop_when [v v kv kv s s] s => v
 ///                 (let [w (first s) kw (k w)]
-///                     (if (<= kw kv)
+///                     (if (lte_9_ kw kv)
 ///                         (recur w kw (next s))
 ///                         (recur v kv (next s))
 ///                     )
@@ -11252,7 +10035,7 @@ namespace cloiure {
 /// (defn subseq
 ///     ([#_"Sorted" sc f_1_test key]
 ///         (let [keep_9_ (mk_bound_fn sc f_1_test key)]
-///             (if (#{> >=} f_1_test)
+///             (if ((hash_set gt_9_ gte_9_) f_1_test)
 ///                 (when_some [[e _0_as s] (Sorted_3_seqFrom sc, key, true)]
 ///                     (if (keep_9_ e) s (next s))
 ///                 )
@@ -11270,7 +10053,7 @@ namespace cloiure {
 /// (defn rsubseq
 ///     ([#_"Sorted" sc f_1_test key]
 ///         (let [keep_9_ (mk_bound_fn sc f_1_test key)]
-///             (if (#{< <=} f_1_test)
+///             (if ((hash_set lt_9_ lte_9_) f_1_test)
 ///                 (when_some [[e _0_as s] (Sorted_3_seqFrom sc, key, false)]
 ///                     (if (keep_9_ e) s (next s))
 ///                 )
@@ -11310,15 +10093,15 @@ namespace cloiure {
 
 // (about #_"case"
 
-/// (defn_ shift_mask [shift mask x] (-> x (>> shift) (bit_and mask)))
+/// (defn_ shift_mask [shift mask x] (-> x (bit_shift_right shift) (bit_and mask)))
 
 /// (def_ max_mask_bits 13)
-/// (def_ max_switch_table_size (<< 1 max_mask_bits))
+/// (def_ max_switch_table_size (bit_shift_left 1 max_mask_bits))
 
 /// (defn_ maybe_min_hash [hashes]
 ///     (first
-///         (#_"-/" filter (fn [[s m]] (apply distinct_9_ (map #(shift_mask s m %) hashes)))
-///             (#_"-/" for [mask (map #(dec (<< 1 %)) (range 1 (inc max_mask_bits))) shift (range 0 31)]
+///         (filter (fn [[s m]] (apply distinct_9_ (map #(shift_mask s m %) hashes)))
+///             (for [mask (map #(dec (bit_shift_left 1 %)) (range 1 (inc max_mask_bits))) shift (range 0 31)]
 ///                 [shift mask]
 ///             )
 ///         )
@@ -11335,7 +10118,7 @@ namespace cloiure {
 /// )
 
 /// (defn_ fits_table_9_ [ints]
-///     (< (-'- (apply max (seq ints)) (apply min (seq ints))) max_switch_table_size)
+///     (lt_9_ (minus (apply max (seq ints)) (apply min (seq ints))) max_switch_table_size)
 /// )
 
 /// (defn_ prep_ints [tests thens]
@@ -11358,11 +10141,11 @@ namespace cloiure {
 ///                           => m
 ///             )
 ///           assoc_multi
-///             (fn [m h bucket] (assoc m h `(condp = ~expr_sym ~@(apply concat bucket) ~default)))
+///             (fn [m h bucket] (assoc m h `(condp _eq_9_ ~expr_sym ~@(apply concat bucket) ~default)))
 ///           hmap
 ///             (reduce
 ///                 (fn [m [h bucket]]
-///                     (if (= (count bucket) 1)
+///                     (if (_eq_9_ (count bucket) 1)
 ///                         (assoc m (first (first bucket)) (second (first bucket)))
 ///                         (assoc_multi m h bucket)
 ///                     )
@@ -11371,7 +10154,7 @@ namespace cloiure {
 ///             )
 ///           skip_check
 ///             (->> buckets
-///                 (filter #(< 1 (count (second %))))
+///                 (filter #(lt_9_ 1 (count (second %))))
 ///                 (map first)
 ///                 (into (hash_set))
 ///             )]
@@ -11381,7 +10164,7 @@ namespace cloiure {
 
 /// (defn_ prep_hashes [expr_sym default tests thens]
 ///     (let [hashes (into (hash_set) (map f_1_hashcode tests))]
-///         (if (= (count tests) (count hashes))
+///         (if (_eq_9_ (count tests) (count hashes))
 ///             (if (fits_table_9_ hashes)
 ///                 [0 0 (case_map f_1_hashcode identity tests thens) _0_compact]
 ///                 (let [[shift mask] (or (maybe_min_hash hashes) [0 0])]
@@ -11410,7 +10193,7 @@ namespace cloiure {
 ///             (when (odd_9_ (count clauses)) => `(throw (str "no matching clause: " ~e_1_))
 ///                 (last clauses)
 ///             )]
-///         (when (<= 2 (count clauses)) => `(let [~e_1_ ~e] ~default)
+///         (when (lte_9_ 2 (count clauses)) => `(let [~e_1_ ~e] ~default)
 ///             (let [pairs (partition 2 clauses)
 ///                   assoc_test
 ///                     (fn [m test expr]
@@ -11432,11 +10215,11 @@ namespace cloiure {
 ///                   thens (vals pairs)
 ///                   mode
 ///                     (cond
-///                         (every_9_ #(and (integer_9_ %) (<= Integer::MIN_VALUE % Integer::MAX_VALUE)) tests) _0_ints
+///                         (every_9_ #(and (integer_9_ %) (lte_9_ Number::MIN_VALUE % Number::MAX_VALUE)) tests) _0_ints
 ///                         (every_9_ keyword_9_ tests) _0_identity
 ///                         _0_else _0_hashes
 ///                     )]
-///                 (condp = mode
+///                 (condp _eq_9_ mode
 ///                     _0_ints
 ///                         (let [[shift mask imap switch_type] (prep_ints tests thens)]
 ///                             `(let [~e_1_ ~e] (case_8_ ~e_1_ ~shift ~mask ~default ~imap ~switch_type _0_int))
@@ -11456,8 +10239,6 @@ namespace cloiure {
 /// )
 // )
 
-// redefine reduce with IReduce
-
 /// (defn_ seq_reduce
 ///     ([s f] (if_some [s (seq s)] (seq_reduce (next s) f (first s)) (f)))
 ///     ([s f r]
@@ -11469,7 +10250,7 @@ namespace cloiure {
 ///     )
 /// )
 
-/// (defn reduce
+/// (defn reduce
 ///     ([f s]
 ///         (if (satisfies_9_ IReduce s)
 ///             (IReduce_3_reduce s, f)
@@ -11484,7 +10265,7 @@ namespace cloiure {
 ///     )
 /// )
 
-/// (defn reduce_kv [f r m]
+/// (defn reduce_kv [f r m]
 ///     (when (some_9_ m) => r
 ///         (condp satisfies_9_ m
 ///             IKVReduce      (IKVReduce_3_kvreduce m, f, r)
@@ -11509,7 +10290,7 @@ namespace cloiure {
 ///     ([xform f r s] (let [f (xform f)] (f (reduce f r s))))
 /// )
 
-/// (defn into
+/// (defn into
 ///     ([] (vector))
 ///     ([to] to)
 ///     ([to from]
@@ -11696,7 +10477,7 @@ namespace cloiure {
 ///                 )
 ///                 ([s x]
 ///                     (when (f_9_ x) => (g s x)
-///                         (reduced {_0_0_halt (if (some_9_ h) (h (g s) x) x)})
+///                         (reduced (hash_map _0_0_halt (if (some_9_ h) (h (g s) x) x)))
 ///                     )
 ///                 )
 ///             )
@@ -11710,7 +10491,7 @@ namespace cloiure {
 /// )
 }
 
-namespace arbace {
+namespace arb {
     /* oops! enum */class Context;
 
     class Expr {
@@ -11745,7 +10526,7 @@ namespace arbace {
     class ThrowExpr { };
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Cache"
 ///     (defn #_"<K, V> void" Cache_1_purge [#_"ReferenceQueue" queue, #_"{K Reference<V>}'" cache]
@@ -11762,10 +10543,10 @@ namespace arbace {
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Machine"
-///     (defn #_"Object" Machine_1_compute [#_"code" code, #_"array" vars]
+///     (defn #_"Object" Machine_1_compute [#_"code" code, #_"array" vars]
 ///         (loop [#_"stack" s nil #_"int" i 0]
 ///             (let [[x y] (nth code i)]
 ///                 (case_4_ x
@@ -11777,8 +10558,8 @@ namespace arbace {
 ///                     _0_dup               (let [[    a]     s]                             (recur (cons a s)                  (inc i)))
 ///                     _0_get               (let [[    a & s] s]                             (recur (cons (get (deref (_0__env a)) y) s) (inc i)))
 ///                     _0_goto                                                               (recur s                        (deref y))
-///                     _0_if_eq_9_            (let [[  b a & s] s]                             (recur s        (if     (= a b) (deref y) (inc i))))
-///                     _0_if_ne_9_            (let [[  b a & s] s]                             (recur s        (if_not (= a b) (deref y) (inc i))))
+///                     _0_if_eq_9_            (let [[  b a & s] s]                             (recur s        (if     (_eq_9_ a b) (deref y) (inc i))))
+///                     _0_if_ne_9_            (let [[  b a & s] s]                             (recur s        (if_not (_eq_9_ a b) (deref y) (inc i))))
 ///                     _0_if_nil_9_           (let [[    a & s] s]                             (recur s        (if  (nil_9_ a)   (deref y) (inc i))))
 ///                     _0_if_not            (let [[    a & s] s]                             (recur s        (if_not    a    (deref y) (inc i))))
 ///                     _0_invoke_1          (let [[    a & s] s]                             (recur (cons (y a) s)              (inc i)))
@@ -11791,7 +10572,7 @@ namespace arbace {
 ///                     _0_push                                                               (recur (cons y s)                  (inc i))
 ///                     _0_put               (let [[  b a & s] s] (swap_4_ (_0__env a) assoc y b) (recur s                           (inc i)))
 ///                     _0_return                                 (first s)
-///                     _0_shr               (let [[  b a & s] s]                             (recur (cons (>> a b) s)           (inc i)))
+///                     _0_shr               (let [[  b a & s] s]                             (recur (cons (bit_shift_right a b) s)           (inc i)))
 ///                     _0_store             (let [[    a & s] s] (aset_4_ vars y a)            (recur s                           (inc i)))
 ///                     _0_swap              (let [[  b a & s] s]                             (recur (list_8_ a b s)               (inc i)))
 ///                     _0_throw                                  (throw (first s))
@@ -11802,7 +10583,7 @@ namespace arbace {
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"asm"
 ///     (defn_ #_"IPersistentVector" Gen_1_new [] (vector))
@@ -11826,13 +10607,13 @@ namespace arbace {
 ///     (defn_ #_"IPersistentVector" Gen_2_if_ne_9_        [#_"IPersistentVector" gen, #_"label" label]         (conj gen [_0_if_ne_9_ label]))
 ///     (defn_ #_"IPersistentVector" Gen_2_if_nil_9_       [#_"IPersistentVector" gen, #_"label" label]         (conj gen [_0_if_nil_9_ label]))
 ///     (defn_ #_"IPersistentVector" Gen_2_if_not        [#_"IPersistentVector" gen, #_"label" label]         (conj gen [_0_if_not label]))
-///     (defn_ #_"IPersistentVector" Gen_2_invoke        [#_"IPersistentVector" gen, #_"IFn" f, #_"int" arity] (conj gen [(-/keyword (str "invoke" \- arity)) f]))
+///     (defn_ #_"IPersistentVector" Gen_2_invoke        [#_"IPersistentVector" gen, #_"IFn" f, #_"int" arity] (conj gen [(keyword (str "invoke" \- arity)) f]))
 ///     (defn_ #_"IPersistentVector" Gen_2_load          [#_"IPersistentVector" gen, #_"int" index]           (conj gen [_0_load index]))
 ///     (defn_ #_"IPersistentVector" Gen_2_monitor_enter [#_"IPersistentVector" gen]                          (conj gen [_0_monitor_enter]))
 ///     (defn_ #_"IPersistentVector" Gen_2_monitor_exit  [#_"IPersistentVector" gen]                          (conj gen [_0_monitor_exit]))
 ///     (defn_ #_"IPersistentVector" Gen_2_number_9_       [#_"IPersistentVector" gen]                          (conj gen [_0_number_9_]))
 ///     (defn_ #_"IPersistentVector" Gen_2_pop           [#_"IPersistentVector" gen]                          (conj gen [_0_pop]))
-///     (defn_ #_"IPersistentVector" Gen_2_push          [#_"IPersistentVector" gen, #_"Object" value]         (conj gen [_0_push value]))
+///     (defn_ #_"IPersistentVector" Gen_2_push          [#_"IPersistentVector" gen, #_"Object" value]         (conj gen [_0_push value]))
 ///     (defn_ #_"IPersistentVector" Gen_2_put           [#_"IPersistentVector" gen, #_"Symbol" name]         (conj gen [_0_put name]))
 ///     (defn_ #_"IPersistentVector" Gen_2_return        [#_"IPersistentVector" gen]                          (conj gen [_0_return]))
 ///     (defn_ #_"IPersistentVector" Gen_2_shr           [#_"IPersistentVector" gen]                          (conj gen [_0_shr]))
@@ -11862,7 +10643,7 @@ namespace arbace {
 /// )
 
 // (about #_"Compiler"
-///     (def #_"int" Compiler_1_MAX_POSITIONAL_ARITY #_9 (+ 9 2))
+///     (def #_"int" Compiler_1_MAX_POSITIONAL_ARITY #_9 (plus 9 2))
 
 ///     (defn #_"Namespace" Compiler_1_namespaceFor
 ///         ([#_"Symbol" sym] (Compiler_1_namespaceFor _8_ns_8_, sym))
@@ -11879,13 +10660,13 @@ namespace arbace {
 ///                 sym
 ///             (some_9_ (_0_ns sym))
 ///                 (let [#_"Namespace" ns (Compiler_1_namespaceFor sym)]
-///                     (if (and (some_9_ ns) (not (and (some_9_ (_0_name (_0_name ns))) (= (_0_name (_0_name ns)) (_0_ns sym)))))
+///                     (if (and (some_9_ ns) (not (and (some_9_ (_0_name (_0_name ns))) (_eq_9_ (_0_name (_0_name ns)) (_0_ns sym)))))
 ///                         (symbol (_0_name (_0_name ns)) (_0_name sym))
 ///                         sym
 ///                     )
 ///                 )
 ///             _0_else
-///                 (let [#_"Object" o (Namespace_2_getMapping _8_ns_8_, sym)]
+///                 (let [#_"Object" o (Namespace_2_getMapping _8_ns_8_, sym)]
 ///                     (cond
 ///                         (nil_9_ o) (symbol (_0_name (_0_name _8_ns_8_)) (_0_name sym))
 ///                         (var_9_ o) (symbol (_0_name (_0_name (_0_ns o))) (_0_name (_0_sym o)))
@@ -11899,14 +10680,14 @@ namespace arbace {
 ///             (some_9_ (_0_ns sym))
 ///                 (when_some [#_"Namespace" ns (Compiler_1_namespaceFor sym)]
 ///                     (let [#_"Symbol" name (symbol (_0_name sym))]
-///                         (if (and intern_9_ (= ns _8_ns_8_))
+///                         (if (and intern_9_ (_eq_9_ ns _8_ns_8_))
 ///                             (Namespace_2_intern ns, name)
 ///                             (Namespace_2_findInternedVar ns, name)
 ///                         )
 ///                     )
 ///                 )
 ///             _0_else
-///                 (let [#_"Object" o (Namespace_2_getMapping _8_ns_8_, sym)]
+///                 (let [#_"Object" o (Namespace_2_getMapping _8_ns_8_, sym)]
 ///                     (cond
 ///                         (nil_9_ o)
 ///                             (when intern_9_
@@ -11921,12 +10702,12 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"Var" Compiler_1_maybeMacro [#_"Object" op, #_"IPersistentMap" scope]
+///     (defn #_"Var" Compiler_1_maybeMacro [#_"Object" op, #_"IPersistentMap" scope]
 ///         (when_not (and (symbol_9_ op) (some_9_ (get (deref (get scope _0_1_local_env)) op)))
 ///             (when (or (symbol_9_ op) (var_9_ op))
 ///                 (let [#_"Var" v (if (var_9_ op) op (Compiler_1_lookupVar op, false))]
 ///                     (when (and (some_9_ v) (get (meta v) _0_macro))
-///                         (when (or (= (_0_ns v) _8_ns_8_) (not (get (meta v) _0_private))) => (throw (str "var: " v " is private"))
+///                         (when (or (_eq_9_ (_0_ns v) _8_ns_8_) (not (get (meta v) _0_private))) => (throw (str "var: " v " is private"))
 ///                             v
 ///                         )
 ///                     )
@@ -11935,11 +10716,11 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"IFn" Compiler_1_maybeInline [#_"Object" op, #_"int" arity, #_"IPersistentMap" scope]
+///     (defn #_"IFn" Compiler_1_maybeInline [#_"Object" op, #_"int" arity, #_"IPersistentMap" scope]
 ///         (when_not (and (symbol_9_ op) (some_9_ (get (deref (get scope _0_1_local_env)) op)))
 ///             (when (or (symbol_9_ op) (var_9_ op))
 ///                 (when_some [#_"Var" v (if (var_9_ op) op (Compiler_1_lookupVar op, false))]
-///                     (when (or (= (_0_ns v) _8_ns_8_) (not (get (meta v) _0_private))) => (throw (str "var: " v " is private"))
+///                     (when (or (_eq_9_ (_0_ns v) _8_ns_8_) (not (get (meta v) _0_private))) => (throw (str "var: " v " is private"))
 ///                         (when_some [#_"IFn" f (get (meta v) _0_inline)]
 ///                             (let [#_"IFn" arityPred (get (meta v) _0_inline_arities)]
 ///                                 (when (or (nil_9_ arityPred) (IFn_3_invoke arityPred, arity))
@@ -11953,12 +10734,12 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"Object" Compiler_1_resolveIn [#_"Namespace" n, #_"Symbol" sym, #_"bool" allowPrivate]
+///     (defn #_"Object" Compiler_1_resolveIn [#_"Namespace" n, #_"Symbol" sym, #_"bool" allowPrivate]
 ///         (cond
 ///             (some_9_ (_0_ns sym))
 ///                 (when_some [#_"Namespace" ns (Compiler_1_namespaceFor n, sym)]                     => (throw (str "no such namespace: " (_0_ns sym)))
 ///                     (when_some [#_"Var" v (Namespace_2_findInternedVar ns, (symbol (_0_name sym)))] => (throw (str "no such var: " sym))
-///                         (when (or (= (_0_ns v) _8_ns_8_) (not (get (meta v) _0_private)) allowPrivate)   => (throw (str "var: " sym " is private"))
+///                         (when (or (_eq_9_ (_0_ns v) _8_ns_8_) (not (get (meta v) _0_private)) allowPrivate)   => (throw (str "var: " sym " is private"))
 ///                             v
 ///                         )
 ///                     )
@@ -11968,12 +10749,12 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"Object" Compiler_1_resolve
+///     (defn #_"Object" Compiler_1_resolve
 ///         ([#_"Symbol" sym                          ] (Compiler_1_resolveIn _8_ns_8_, sym, false       ))
 ///         ([#_"Symbol" sym, #_"bool" allowPrivate] (Compiler_1_resolveIn _8_ns_8_, sym, allowPrivate))
 ///     )
 
-///     (defn #_"Object" Compiler_1_maybeResolveIn [#_"Namespace" n, #_"Symbol" sym]
+///     (defn #_"Object" Compiler_1_maybeResolveIn [#_"Namespace" n, #_"Symbol" sym]
 ///         (cond
 ///             (some_9_ (_0_ns sym))
 ///                 (when_some [#_"Namespace" ns (Compiler_1_namespaceFor n, sym)]
@@ -11991,7 +10772,7 @@ namespace arbace {
 ///             gen (Gen_2_push gen, (count args))
 ///             gen (Gen_2_anew gen)
 ///         ]
-///             (loop_when [gen gen #_"int" i 0] (< i (count args)) => gen
+///             (loop_when [gen gen #_"int" i 0] (lt_9_ i (count args)) => gen
 ///                 (let [
 ///                     gen (Gen_2_dup gen)
 ///                     gen (Gen_2_push gen, i)
@@ -12004,11 +10785,9 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (declare FnMethod_2_emitLocal)
-
 ///     (defn #_"IPersistentVector" Compiler_1_emitLocals [#_"IPersistentMap" scope, #_"IPersistentVector" gen, #_"IPersistentMap" locals]
 ///         (let [
-///             gen (Gen_2_push gen, (<< (count locals) 1))
+///             gen (Gen_2_push gen, (bit_shift_left (count locals) 1))
 ///             gen (Gen_2_anew gen)
 ///         ]
 ///             (loop_when [gen gen #_"int" i 0 #_"ISeq" s (vals locals)] (some_9_ s) => gen
@@ -12033,12 +10812,12 @@ namespace arbace {
 // )
 
 // (about #_"LiteralExpr"
-///     (defr LiteralExpr)
+///     (defr LiteralExpr)
 
-///     (defn #_"LiteralExpr" LiteralExpr_1_new [#_"Object" value]
+///     (defn #_"LiteralExpr" LiteralExpr_1_new [#_"Object" value]
 ///         (new_8_ LiteralExpr_1_class
 ///             (hash_map
-///                 #_"Object" _0_value value
+///                 #_"Object" _0_value value
 ///             )
 ///         )
 ///     )
@@ -12049,8 +10828,8 @@ namespace arbace {
 
 ///     (defn #_"Expr" LiteralExpr_1_parse [#_"ISeq" form, #_"Context" context, #_"IPersistentMap" scope]
 ///         (let [#_"int" n (dec (count form))]
-///             (when (= n 1) => (throw (str "wrong number of arguments passed to quote: " n))
-///                 (let [#_"Object" value (second form)]
+///             (when (_eq_9_ n 1) => (throw (str "wrong number of arguments passed to quote: " n))
+///                 (let [#_"Object" value (second form)]
 ///                     (case_4_ value
 ///                         nil                 LiteralExpr_1_NIL
 ///                         true                LiteralExpr_1_TRUE
@@ -12066,18 +10845,18 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"IPersistentVector" LiteralExpr_2_emit [#_"LiteralExpr" this, #_"Context" context, #_"IPersistentMap" scope, #_"IPersistentVector" gen]
-///         (when_not (= context _0_Context_1_STATEMENT) => gen
+///         (when_not (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///             (Gen_2_push gen, (_0_value this))
 ///         )
 ///     )
 
-///     (defm LiteralExpr Expr
+///     (defm LiteralExpr Expr
 ///         (Expr_3_emit => LiteralExpr_2_emit)
 ///     )
 // )
 
 // (about #_"UnresolvedVarExpr"
-///     (defr UnresolvedVarExpr)
+///     (defr UnresolvedVarExpr)
 
 ///     (defn #_"UnresolvedVarExpr" UnresolvedVarExpr_1_new [#_"Symbol" symbol]
 ///         (new_8_ UnresolvedVarExpr_1_class
@@ -12091,13 +10870,13 @@ namespace arbace {
 ///         gen
 ///     )
 
-///     (defm UnresolvedVarExpr Expr
+///     (defm UnresolvedVarExpr Expr
 ///         (Expr_3_emit => UnresolvedVarExpr_2_emit)
 ///     )
 // )
 
 // (about #_"VarExpr"
-///     (defr VarExpr)
+///     (defr VarExpr)
 
 ///     (defn #_"VarExpr" VarExpr_1_new [#_"Var" var]
 ///         (new_8_ VarExpr_1_class
@@ -12112,19 +10891,19 @@ namespace arbace {
 ///             gen (Gen_2_push gen, (_0_var this))
 ///             gen (Gen_2_invoke gen, var_get, 1)
 ///         ]
-///             (when (= context _0_Context_1_STATEMENT) => gen
+///             (when (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///                 (Gen_2_pop gen)
 ///             )
 ///         )
 ///     )
 
-///     (defm VarExpr Expr
+///     (defm VarExpr Expr
 ///         (Expr_3_emit => VarExpr_2_emit)
 ///     )
 // )
 
 // (about #_"TheVarExpr"
-///     (defr TheVarExpr)
+///     (defr TheVarExpr)
 
 ///     (defn #_"TheVarExpr" TheVarExpr_1_new [#_"Var" var]
 ///         (new_8_ TheVarExpr_1_class
@@ -12143,18 +10922,18 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"IPersistentVector" TheVarExpr_2_emit [#_"TheVarExpr" this, #_"Context" context, #_"IPersistentMap" scope, #_"IPersistentVector" gen]
-///         (when_not (= context _0_Context_1_STATEMENT) => gen
+///         (when_not (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///             (Gen_2_push gen, (_0_var this))
 ///         )
 ///     )
 
-///     (defm TheVarExpr Expr
+///     (defm TheVarExpr Expr
 ///         (Expr_3_emit => TheVarExpr_2_emit)
 ///     )
 // )
 
 // (about #_"BodyExpr"
-///     (defr BodyExpr)
+///     (defr BodyExpr)
 
 ///     (defn #_"BodyExpr" BodyExpr_1_new [#_"vector" exprs]
 ///         (new_8_ BodyExpr_1_class
@@ -12164,13 +10943,11 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (declare Compiler_1_analyze)
-
 ///     (defn #_"Expr" BodyExpr_1_parse [#_"ISeq" form, #_"Context" context, #_"IPersistentMap" scope]
-///         (let [#_"ISeq" s form s (if (= (first s) _1_do) (next s) s)
+///         (let [#_"ISeq" s form s (if (_eq_9_ (first s) _1_do) (next s) s)
 ///               #_"vector" v
 ///                 (loop_when [v (vector) s s] (some_9_ s) => v
-///                     (let [#_"Context" c (if (or (= context _0_Context_1_STATEMENT) (some_9_ (next s))) _0_Context_1_STATEMENT context)]
+///                     (let [#_"Context" c (if (or (_eq_9_ context _0_Context_1_STATEMENT) (some_9_ (next s))) _0_Context_1_STATEMENT context)]
 ///                         (recur (conj v (Compiler_1_analyze (first s), c, scope)) (next s))
 ///                     )
 ///                 )]
@@ -12186,13 +10963,13 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm BodyExpr Expr
+///     (defm BodyExpr Expr
 ///         (Expr_3_emit => BodyExpr_2_emit)
 ///     )
 // )
 
 // (about #_"MetaExpr"
-///     (defr MetaExpr)
+///     (defr MetaExpr)
 
 ///     (defn #_"MetaExpr" MetaExpr_1_new [#_"Expr" expr, #_"Expr" meta]
 ///         (new_8_ MetaExpr_1_class
@@ -12209,19 +10986,19 @@ namespace arbace {
 ///             gen (Expr_3_emit (_0_meta this), _0_Context_1_EXPRESSION, scope, gen)
 ///             gen (Gen_2_invoke gen, with_meta, 2)
 ///         ]
-///             (when (= context _0_Context_1_STATEMENT) => gen
+///             (when (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///                 (Gen_2_pop gen)
 ///             )
 ///         )
 ///     )
 
-///     (defm MetaExpr Expr
+///     (defm MetaExpr Expr
 ///         (Expr_3_emit => MetaExpr_2_emit)
 ///     )
 // )
 
 // (about #_"IfExpr"
-///     (defr IfExpr)
+///     (defr IfExpr)
 
 ///     (defn #_"IfExpr" IfExpr_1_new [#_"Expr" test, #_"Expr" then, #_"Expr" else]
 ///         (new_8_ IfExpr_1_class
@@ -12235,8 +11012,8 @@ namespace arbace {
 
 ///     (defn #_"Expr" IfExpr_1_parse [#_"ISeq" form, #_"Context" context, #_"IPersistentMap" scope]
 ///         (cond
-///             (< 4 (count form)) (throw "too many arguments to if")
-///             (< (count form) 3) (throw "too few arguments to if")
+///             (lt_9_ 4 (count form)) (throw "too many arguments to if")
+///             (lt_9_ (count form) 3) (throw "too few arguments to if")
 ///         )
 ///         (let [#_"Expr" test (Compiler_1_analyze (second form), scope)
 ///               #_"Expr" then (Compiler_1_analyze (third form), context, scope)
@@ -12265,13 +11042,13 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm IfExpr Expr
+///     (defm IfExpr Expr
 ///         (Expr_3_emit => IfExpr_2_emit)
 ///     )
 // )
 
 // (about #_"MapExpr"
-///     (defr MapExpr)
+///     (defr MapExpr)
 
 ///     (defn #_"MapExpr" MapExpr_1_new [#_"vector" args]
 ///         (new_8_ MapExpr_1_class
@@ -12308,7 +11085,7 @@ namespace arbace {
 ///         (let [
 ///             #_"int" n (count (_0_args this))
 ///             [#_"bool" literal_9_ #_"bool" unique_9_]
-///                 (loop_when [literal_9_ true, unique_9_ true, #_"set" keys (hash_set), #_"int" i 0] (< i n) => [literal_9_ unique_9_]
+///                 (loop_when [literal_9_ true, unique_9_ true, #_"set" keys (hash_set), #_"int" i 0] (lt_9_ i n) => [literal_9_ unique_9_]
 ///                     (let [#_"Expr" k (nth (_0_args this) i)
 ///                           [literal_9_ unique_9_ keys]
 ///                             (when (satisfies_9_ LiteralExpr k) => [false unique_9_ keys]
@@ -12316,25 +11093,25 @@ namespace arbace {
 ///                                     [literal_9_ unique_9_ (conj keys (_0_value k))]
 ///                                 )
 ///                             )]
-///                         (recur literal_9_ unique_9_ keys (+ i 2))
+///                         (recur literal_9_ unique_9_ keys (plus i 2))
 ///                     )
 ///                 )
 ///             gen (Compiler_1_emitArgs scope, gen, (_0_args this))
-///             gen (Gen_2_invoke gen, (if (or (and literal_9_ unique_9_) (<= n 2)) RT_1_mapUniqueKeys RT_1_map), 1)
+///             gen (Gen_2_invoke gen, (if (or (and literal_9_ unique_9_) (lte_9_ n 2)) RT_1_mapUniqueKeys RT_1_map), 1)
 ///         ]
-///             (when (= context _0_Context_1_STATEMENT) => gen
+///             (when (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///                 (Gen_2_pop gen)
 ///             )
 ///         )
 ///     )
 
-///     (defm MapExpr Expr
+///     (defm MapExpr Expr
 ///         (Expr_3_emit => MapExpr_2_emit)
 ///     )
 // )
 
 // (about #_"SetExpr"
-///     (defr SetExpr)
+///     (defr SetExpr)
 
 ///     (defn #_"SetExpr" SetExpr_1_new [#_"vector" args]
 ///         (new_8_ SetExpr_1_class
@@ -12370,19 +11147,19 @@ namespace arbace {
 ///                     )
 ///                 )
 ///         ]
-///             (when (= context _0_Context_1_STATEMENT) => gen
+///             (when (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///                 (Gen_2_pop gen)
 ///             )
 ///         )
 ///     )
 
-///     (defm SetExpr Expr
+///     (defm SetExpr Expr
 ///         (Expr_3_emit => SetExpr_2_emit)
 ///     )
 // )
 
 // (about #_"VectorExpr"
-///     (defr VectorExpr)
+///     (defr VectorExpr)
 
 ///     (defn #_"VectorExpr" VectorExpr_1_new [#_"vector" args]
 ///         (new_8_ VectorExpr_1_class
@@ -12418,19 +11195,19 @@ namespace arbace {
 ///                     )
 ///                 )
 ///         ]
-///             (when (= context _0_Context_1_STATEMENT) => gen
+///             (when (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///                 (Gen_2_pop gen)
 ///             )
 ///         )
 ///     )
 
-///     (defm VectorExpr Expr
+///     (defm VectorExpr Expr
 ///         (Expr_3_emit => VectorExpr_2_emit)
 ///     )
 // )
 
 // (about #_"InvokeExpr"
-///     (defr InvokeExpr)
+///     (defr InvokeExpr)
 
 ///     (defn #_"InvokeExpr" InvokeExpr_1_new [#_"Expr" fexpr, #_"vector" args]
 ///         (new_8_ InvokeExpr_1_class
@@ -12454,19 +11231,19 @@ namespace arbace {
 ///             gen (Compiler_1_emitArgs scope, gen, (_0_args this))
 ///             gen (Gen_2_apply gen)
 ///         ]
-///             (when (= context _0_Context_1_STATEMENT) => gen
+///             (when (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///                 (Gen_2_pop gen)
 ///             )
 ///         )
 ///     )
 
-///     (defm InvokeExpr Expr
+///     (defm InvokeExpr Expr
 ///         (Expr_3_emit => InvokeExpr_2_emit)
 ///     )
 // )
 
 // (about #_"LocalBinding"
-///     (defr LocalBinding)
+///     (defr LocalBinding)
 
 ///     (defn #_"LocalBinding" LocalBinding_1_new [#_"Symbol" sym, #_"Expr" init, #_"int" idx]
 ///         (new_8_ LocalBinding_1_class
@@ -12481,7 +11258,7 @@ namespace arbace {
 // )
 
 // (about #_"LocalBindingExpr"
-///     (defr LocalBindingExpr)
+///     (defr LocalBindingExpr)
 
 ///     (defn #_"LocalBindingExpr" LocalBindingExpr_1_new [#_"LocalBinding" lb]
 ///         (new_8_ LocalBindingExpr_1_class
@@ -12492,26 +11269,26 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"IPersistentVector" LocalBindingExpr_2_emit [#_"LocalBindingExpr" this, #_"Context" context, #_"IPersistentMap" scope, #_"IPersistentVector" gen]
-///         (when_not (= context _0_Context_1_STATEMENT) => gen
+///         (when_not (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///             (FnMethod_2_emitLocal (get scope _0_fm), gen, (_0_lb this))
 ///         )
 ///     )
 
-///     (defm LocalBindingExpr Expr
+///     (defm LocalBindingExpr Expr
 ///         (Expr_3_emit => LocalBindingExpr_2_emit)
 ///     )
 // )
 
 // (about #_"FnMethod"
-///     (defr FnMethod)
+///     (defr FnMethod)
 
 ///     (defn #_"FnMethod" FnMethod_1_new [#_"FnExpr" fun, #_"FnMethod" parent]
 ///         (new_8_ FnMethod_1_class
 ///             (hash_map
-///                 #_"FnExpr" _0_fun fun
-///                 #_"FnMethod" _0_parent parent
+///                 #_"FnExpr" _0_fun fun
+///                 #_"FnMethod" _0_parent parent
 ///                 #_"{int LocalBinding}'" _0_1_locals (atom (hash_map))
-///                 #_"Integer" _0_arity nil
+///                 #_"Number" _0_arity nil
 ///                 #_"Expr" _0_body nil
 ///             )
 ///         )
@@ -12538,15 +11315,15 @@ namespace arbace {
 ///                         (when (symbol_9_ sym)        => (throw "function parameters must be symbols")
 ///                             (when (nil_9_ (_0_ns sym)) => (throw (str "can't use qualified name as parameter: " sym))
 ///                                 (cond
-///                                     (= sym '&)
+///                                     (_eq_9_ sym '&)
 ///                                         (when_not variadic_9_ => (throw "overkill variadic parameter list")
 ///                                             (recur lbs arity true (next s))
 ///                                         )
 ///                                     (neg_9_ arity)
 ///                                         (throw (str "excess variadic parameter: " sym))
-///                                     ((if variadic_9_ <= <) arity Compiler_1_MAX_POSITIONAL_ARITY)
+///                                     ((if variadic_9_ lte_9_ lt_9_) arity Compiler_1_MAX_POSITIONAL_ARITY)
 ///                                         (let [
-///                                             arity (if_not variadic_9_ (inc arity) (- (inc arity)))
+///                                             arity (if_not variadic_9_ (inc arity) (minus (inc arity)))
 ///                                             #_"LocalBinding" lb (LocalBinding_1_new sym, nil, (swap_4_ (get scope _0_1_local_num) inc))
 ///                                         ]
 ///                                             (swap_4_ (get scope _0_1_local_env) assoc (_0_sym lb) lb)
@@ -12593,11 +11370,11 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (def compile_and_memoize (-/memoize FnMethod_2_compile))
+///     (def compile_and_memoize (memoize FnMethod_2_compile))
 // )
 
 // (about #_"FnExpr"
-///     (defr FnExpr)
+///     (defr FnExpr)
 
 ///     (defn #_"FnExpr" FnExpr_1_new []
 ///         (new_8_ FnExpr_1_class
@@ -12638,7 +11415,7 @@ namespace arbace {
 ///                         )
 ///                 ]
 ///                     (when (some_9_ variadic)
-///                         (loop_when_recur [#_"int" n (- (_0_arity variadic))] (<= n Compiler_1_MAX_POSITIONAL_ARITY) [(inc n)]
+///                         (loop_when_recur [#_"int" n (minus (_0_arity variadic))] (lte_9_ n Compiler_1_MAX_POSITIONAL_ARITY) [(inc n)]
 ///                             (when (some_9_ (get regulars n))
 ///                                 (throw "can't have fixed arity function with more params than variadic function")
 ///                             )
@@ -12647,12 +11424,12 @@ namespace arbace {
 ///                     (assoc fun _0_regulars regulars, _0_variadic variadic)
 ///                 )
 ///         ]
-///             (MetaExpr_1_new fun, (MapExpr_1_parse (meta form), scope)) fun
+///             (MetaExpr_1_new fun, (MapExpr_1_parse (meta form), scope)) fun
 ///         )
 ///     )
 
 ///     (defn_ #_"IPersistentVector" FnExpr_2_emit [#_"FnExpr" this, #_"Context" context, #_"IPersistentMap" scope, #_"IPersistentVector" gen]
-///         (when_not (= context _0_Context_1_STATEMENT) => gen
+///         (when_not (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///             (let [
 ///                 gen (Compiler_1_emitLocals scope, gen, (deref (_0_1_closes this)))
 ///                 gen (Gen_2_invoke gen, RT_1_mapUniqueKeys, 1)
@@ -12662,13 +11439,13 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm FnExpr Expr
+///     (defm FnExpr Expr
 ///         (Expr_3_emit => FnExpr_2_emit)
 ///     )
 // )
 
 // (about #_"DefExpr"
-///     (defr DefExpr)
+///     (defr DefExpr)
 
 ///     (defn #_"DefExpr" DefExpr_1_new [#_"Var" var, #_"Expr" init, #_"Expr" meta, #_"bool" initProvided]
 ///         (new_8_ DefExpr_1_class
@@ -12684,17 +11461,17 @@ namespace arbace {
 ///     (defn #_"Expr" DefExpr_1_parse [#_"ISeq" form, #_"Context" context, #_"IPersistentMap" scope]
 ///         (let [#_"int" n (count form)]
 ///             (cond
-///                 (< 3 n) (throw "too many arguments to def")
-///                 (< n 2) (throw "too few arguments to def")
+///                 (lt_9_ 3 n) (throw "too many arguments to def")
+///                 (lt_9_ n 2) (throw "too few arguments to def")
 ///                 _0_else
 ///                     (let_when [#_"symbol?" s (second form)] (symbol_9_ s)     => (throw "first argument to def must be a symbol")
 ///                         (when_some [#_"Var" v (Compiler_1_lookupVar s, true)] => (throw "can't refer to qualified var that doesn't exist")
-///                             (let [v (when_not (= (_0_ns v) _8_ns_8_) => v
+///                             (let [v (when_not (_eq_9_ (_0_ns v) _8_ns_8_) => v
 ///                                         (when (nil_9_ (_0_ns s))                => (throw "can't create defs outside of current ns")
 ///                                             (Namespace_2_intern _8_ns_8_, s)
 ///                                         )
 ///                                     )]
-///                                 (DefExpr_1_new v, (Compiler_1_analyze (third form), scope), (Compiler_1_analyze (meta s), scope), (= n 3))
+///                                 (DefExpr_1_new v, (Compiler_1_analyze (third form), scope), (Compiler_1_analyze (meta s), scope), (_eq_9_ n 3))
 ///                             )
 ///                         )
 ///                     )
@@ -12703,8 +11480,8 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"bool" DefExpr_2_includesExplicitMetadata [#_"DefExpr" this, #_"MapExpr" expr]
-///         (loop_when [#_"int" i 0] (< i (count (_0_keyvals expr))) => false
-///             (recur_when (= (_0_k (nth (_0_keyvals expr) i)) _0_declared) [(+ i 2)] => true)
+///         (loop_when [#_"int" i 0] (lt_9_ i (count (_0_keyvals expr))) => false
+///             (recur_when (_eq_9_ (_0_k (nth (_0_keyvals expr) i)) _0_declared) [(plus i 2)] => true)
 ///         )
 ///     )
 
@@ -12732,19 +11509,19 @@ namespace arbace {
 ///                     )
 ///                 )
 ///         ]
-///             (when (= context _0_Context_1_STATEMENT) => gen
+///             (when (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///                 (Gen_2_pop gen)
 ///             )
 ///         )
 ///     )
 
-///     (defm DefExpr Expr
+///     (defm DefExpr Expr
 ///         (Expr_3_emit => DefExpr_2_emit)
 ///     )
 // )
 
 // (about #_"LetFnExpr"
-///     (defr LetFnExpr)
+///     (defr LetFnExpr)
 
 ///     (defn #_"LetFnExpr" LetFnExpr_1_new [#_"[LocalBinding]" bindings, #_"Expr" body]
 ///         (new_8_ LetFnExpr_1_class
@@ -12779,7 +11556,7 @@ namespace arbace {
 ///                                 )
 ///                             )
 ///                         _
-///                             (loop_when_recur [#_"int" i 0] (< i (count bindings)) [(+ i 2)]
+///                             (loop_when_recur [#_"int" i 0] (lt_9_ i (count bindings)) [(plus i 2)]
 ///                                 (reset_4_ (_0_1_init (nth lbs (quot i 2))) (Compiler_1_analyze (nth bindings (inc i)), scope))
 ///                             )
 ///                     ]
@@ -12844,13 +11621,13 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm LetFnExpr Expr
+///     (defm LetFnExpr Expr
 ///         (Expr_3_emit => LetFnExpr_2_emit)
 ///     )
 // )
 
 // (about #_"LetExpr"
-///     (defr LetExpr)
+///     (defr LetExpr)
 
 ///     (defn #_"LetExpr" LetExpr_1_new [#_"[LocalBinding]" bindings, #_"Expr" body, #_"bool" loop_9_]
 ///         (new_8_ LetExpr_1_class
@@ -12869,7 +11646,7 @@ namespace arbace {
 ///                     (let [
 ///                         scope (update scope _0_1_local_env (comp atom deref))
 ///                         scope (update scope _0_1_local_num (comp atom deref))
-///                         #_"bool" loop_9_ (= (first form) _1_loop_8_)
+///                         #_"bool" loop_9_ (_eq_9_ (first form) _1_loop_8_)
 ///                         scope
 ///                             (when loop_9_ => scope
 ///                                 (dissoc scope _0_loop_locals)
@@ -12925,13 +11702,13 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm LetExpr Expr
+///     (defm LetExpr Expr
 ///         (Expr_3_emit => LetExpr_2_emit)
 ///     )
 // )
 
 // (about #_"RecurExpr"
-///     (defr RecurExpr)
+///     (defr RecurExpr)
 
 ///     (defn #_"RecurExpr" RecurExpr_1_new [#_"vector" loopLocals, #_"vector" args]
 ///         (new_8_ RecurExpr_1_class
@@ -12943,9 +11720,9 @@ namespace arbace {
 ///     )
 
 ///     (defn #_"Expr" RecurExpr_1_parse [#_"ISeq" form, #_"Context" context, #_"IPersistentMap" scope]
-///         (when (and (= context _0_Context_1_RETURN) (some_9_ (get scope _0_loop_locals))) => (throw "can only recur from tail position")
+///         (when (and (_eq_9_ context _0_Context_1_RETURN) (some_9_ (get scope _0_loop_locals))) => (throw "can only recur from tail position")
 ///             (let [#_"vector" args (mapv #(Compiler_1_analyze %, scope) (next form)) #_"int" n (count args) #_"int" m (count (get scope _0_loop_locals))]
-///                 (when (= n m) => (throw (str "mismatched argument count to recur, expected: " m " args, got: " n))
+///                 (when (_eq_9_ n m) => (throw (str "mismatched argument count to recur, expected: " m " args, got: " n))
 ///                     (RecurExpr_1_new (get scope _0_loop_locals), args)
 ///                 )
 ///             )
@@ -12973,19 +11750,19 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm RecurExpr Expr
+///     (defm RecurExpr Expr
 ///         (Expr_3_emit => RecurExpr_2_emit)
 ///     )
 // )
 
 // (about #_"CaseExpr"
-///     (defr CaseExpr)
+///     (defr CaseExpr)
 
-///     (defn #_"CaseExpr" CaseExpr_1_new [#_"LocalBindingExpr" expr, #_"int" shift, #_"int" mask, #_"int" low, #_"int" high, #_"Expr" defaultExpr, #_"sorted {Integer Expr}" tests, #_"{Integer Expr}" thens, #_"Keyword" switchType, #_"Keyword" testType, #_"{Integer}" skipCheck]
-///         (when_not (any = switchType _0_compact _0_sparse)
+///     (defn #_"CaseExpr" CaseExpr_1_new [#_"LocalBindingExpr" expr, #_"int" shift, #_"int" mask, #_"int" low, #_"int" high, #_"Expr" defaultExpr, #_"sorted {Number Expr}" tests, #_"{Number Expr}" thens, #_"Keyword" switchType, #_"Keyword" testType, #_"{Number}" skipCheck]
+///         (when_not (any _eq_9_ switchType _0_compact _0_sparse)
 ///             (throw (str "unexpected switch type: " switchType))
 ///         )
-///         (when_not (any = testType _0_int _0_hash_equiv _0_hash_identity)
+///         (when_not (any _eq_9_ testType _0_int _0_hash_equiv _0_hash_identity)
 ///             (throw (str "unexpected test type: " testType))
 ///         )
 ///         (new_8_ CaseExpr_1_class
@@ -12996,33 +11773,33 @@ namespace arbace {
 ///                 #_"int" _0_low low
 ///                 #_"int" _0_high high
 ///                 #_"Expr" _0_defaultExpr defaultExpr
-///                 #_"sorted {Integer Expr}" _0_tests tests
-///                 #_"{Integer Expr}" _0_thens thens
+///                 #_"sorted {Number Expr}" _0_tests tests
+///                 #_"{Number Expr}" _0_thens thens
 ///                 #_"Keyword" _0_switchType switchType
 ///                 #_"Keyword" _0_testType testType
-///                 #_"{Integer}" _0_skipCheck skipCheck
+///                 #_"{Number}" _0_skipCheck skipCheck
 ///             )
 ///         )
 ///     )
 
 ///     (defn #_"Expr" CaseExpr_1_parse [#_"ISeq" form, #_"Context" context, #_"IPersistentMap" scope]
 ///         (let [#_"vector" args (vec (next form))
-///               #_"Object" exprForm (nth args 0)
-///               #_"int" shift (int_4_ (nth args 1))
-///               #_"int" mask (int_4_ (nth args 2))
-///               #_"Object" defaultForm (nth args 3)
+///               #_"Object" exprForm (nth args 0)
+///               #_"int" shift (int (nth args 1))
+///               #_"int" mask (int (nth args 2))
+///               #_"Object" defaultForm (nth args 3)
 ///               #_"IPersistentMap" caseMap (nth args 4)
 ///               #_"Keyword" switchType (nth args 5)
 ///               #_"Keyword" testType (nth args 6)
-///               #_"IPersistentSet" skipCheck (when (< 7 (count args)) (nth args 7))
+///               #_"IPersistentSet" skipCheck (when (lt_9_ 7 (count args)) (nth args 7))
 ///               #_"ISeq" keys (keys caseMap)
-///               #_"int" low (int_4_ (first keys))
-///               #_"int" high (int_4_ (nth keys (dec (count keys))))
+///               #_"int" low (int (first keys))
+///               #_"int" high (int (nth keys (dec (count keys))))
 ///               #_"LocalBindingExpr" testExpr (Compiler_1_analyze exprForm, scope)
-///               [#_"sorted {Integer Expr}" tests #_"{Integer Expr}" thens]
+///               [#_"sorted {Number Expr}" tests #_"{Number Expr}" thens]
 ///                 (loop_when [tests (sorted_map) thens (hash_map) #_"ISeq" s (seq caseMap)] (some_9_ s) => [tests thens]
 ///                     (let [#_"pair" e (first s)
-///                           #_"Integer" minhash (int_4_ (key e)) #_"Object" pair (val e)
+///                           #_"Number" minhash (int (key e)) #_"Object" pair (val e)
 ///                           #_"Expr" test (LiteralExpr_1_new (first pair))
 ///                           #_"Expr" then (Compiler_1_analyze (second pair), context, scope)]
 ///                         (recur (assoc tests minhash test) (assoc thens minhash then) (next s))
@@ -13050,13 +11827,13 @@ namespace arbace {
 ///         (let [
 ///             gen (Expr_3_emit (_0_expr this), _0_Context_1_EXPRESSION, scope, gen)
 ///             gen
-///                 (when (= (_0_testType this) _0_int) => (Gen_2_invoke gen, f_1_hashcode, 1)
+///                 (when (_eq_9_ (_0_testType this) _0_int) => (Gen_2_invoke gen, f_1_hashcode, 1)
 ///                     (let [
 ///                         gen (Gen_2_number_9_ gen)
 ///                         gen (Gen_2_if_not gen, l_1_default)
 ///                         gen (Expr_3_emit (_0_expr this), _0_Context_1_EXPRESSION, scope, gen)
 ///                     ]
-///                         (Gen_2_invoke gen, int_4_, 1)
+///                         (Gen_2_invoke gen, int, 1)
 ///                     )
 ///                 )
 ///         ]
@@ -13078,9 +11855,9 @@ namespace arbace {
 ///         (let [
 ///             #_"label" l_1_default (Gen_2_label gen)
 ///             gen (CaseExpr_2_emitExpr this, scope, gen, l_1_default)
-///             #_"sorted {Integer Label}" labels (reduce #__4_ #(assoc #__4_ %1 %2 (Gen_2_label gen)) (sorted_map) (keys (_0_tests this)))
+///             #_"sorted {Number Label}" labels (reduce #__4_ #(assoc #__4_ %1 %2 (Gen_2_label gen)) (sorted_map) (keys (_0_tests this)))
 ///             gen
-///                 (if (= (_0_switchType this) _0_sparse)
+///                 (if (_eq_9_ (_0_switchType this) _0_sparse)
 ///                     (Gen_2_lookup_switch gen, (keys (_0_tests this)), (vals labels), l_1_default)
 ///                     (let [
 ///                         #_"labels" ls
@@ -13095,11 +11872,11 @@ namespace arbace {
 ///             gen
 ///                 (loop_when [gen gen #_"ISeq" s (keys labels)] (some_9_ s) => gen
 ///                     (let [
-///                         #_"Integer" i (first s)
+///                         #_"Number" i (first s)
 ///                         gen (Gen_2_mark gen, (get labels i))
 ///                         gen
 ///                             (cond
-///                                 (= (_0_testType this) _0_int)
+///                                 (_eq_9_ (_0_testType this) _0_int)
 ///                                     (CaseExpr_2_emitThen this, scope, gen, (get (_0_tests this) i), (get (_0_thens this) i), l_1_default)
 ///                                 (contains_9_ (_0_skipCheck this) i)
 ///                                     (Expr_3_emit (get (_0_thens this) i), _0_Context_1_EXPRESSION, scope, gen)
@@ -13115,19 +11892,19 @@ namespace arbace {
 ///             gen (Expr_3_emit (_0_defaultExpr this), _0_Context_1_EXPRESSION, scope, gen)
 ///             gen (Gen_2_mark gen, l_1_end)
 ///         ]
-///             (when (= context _0_Context_1_STATEMENT) => gen
+///             (when (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///                 (Gen_2_pop gen)
 ///             )
 ///         )
 ///     )
 
-///     (defm CaseExpr Expr
+///     (defm CaseExpr Expr
 ///         (Expr_3_emit => CaseExpr_2_emit)
 ///     )
 // )
 
 // (about #_"MonitorExpr"
-///     (defr MonitorExpr)
+///     (defr MonitorExpr)
 
 ///     (defn #_"MonitorExpr" MonitorExpr_1_new [#_"Expr" target, #_"bool" enter_9_]
 ///         (new_8_ MonitorExpr_1_class
@@ -13139,7 +11916,7 @@ namespace arbace {
 ///     )
 
 ///     (defn #_"Expr" MonitorExpr_1_parse [#_"ISeq" form, #_"Context" context, #_"IPersistentMap" scope]
-///         (MonitorExpr_1_new (Compiler_1_analyze (second form), scope), (= (first form) _1_monitor_enter))
+///         (MonitorExpr_1_new (Compiler_1_analyze (second form), scope), (_eq_9_ (first form) _1_monitor_enter))
 ///     )
 
 ///     (defn_ #_"IPersistentVector" MonitorExpr_2_emit [#_"MonitorExpr" this, #_"Context" context, #_"IPersistentMap" scope, #_"IPersistentVector" gen]
@@ -13152,13 +11929,13 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm MonitorExpr Expr
+///     (defm MonitorExpr Expr
 ///         (Expr_3_emit => MonitorExpr_2_emit)
 ///     )
 // )
 
 // (about #_"CatchClause"
-///     (defr CatchClause)
+///     (defr CatchClause)
 
 ///     (defn #_"CatchClause" CatchClause_1_new [#_"LocalBinding" lb, #_"Expr" handler]
 ///         (new_8_ CatchClause_1_class
@@ -13171,7 +11948,7 @@ namespace arbace {
 // )
 
 // (about #_"TryExpr"
-///     (defr TryExpr)
+///     (defr TryExpr)
 
 ///     (defn #_"TryExpr" TryExpr_1_new [#_"Expr" tryExpr, #_"[CatchClause]" catches, #_"Expr" finallyExpr, #_"IPersistentMap" scope]
 ///         (new_8_ TryExpr_1_class
@@ -13191,10 +11968,10 @@ namespace arbace {
 ///             scope (dissoc scope _0_loop_locals)
 ///             [#_"Expr" bodyExpr #_"[CatchClause]" catches #_"Expr" finallyExpr #_"vector" body]
 ///                 (loop_when [bodyExpr nil catches (vector) finallyExpr nil body (vector) #_"bool" caught_9_ false #_"ISeq" fs (next form)] (some_9_ fs) => [bodyExpr catches finallyExpr body]
-///                     (let [#_"Object" f (first fs) #_"Object" op (when (seq_9_ f) (first f))]
-///                         (if (any = op _1_catch _1_finally)
+///                     (let [#_"Object" f (first fs) #_"Object" op (when (seq_9_ f) (first f))]
+///                         (if (any _eq_9_ op _1_catch _1_finally)
 ///                             (let [bodyExpr (or bodyExpr (BodyExpr_1_parse (seq body), context, scope))]
-///                                 (if (= op _1_catch)
+///                                 (if (_eq_9_ op _1_catch)
 ///                                     (let [#_"symbol?" sym (third f)]
 ///                                         (when (symbol_9_ sym)        => (throw (str "bad binding form, expected symbol, got: " sym))
 ///                                             (when (nil_9_ (_0_ns sym)) => (throw (str "can't bind qualified name: " sym))
@@ -13237,7 +12014,7 @@ namespace arbace {
 ///             #_"label" l_1_start (Gen_2_mark gen)
 ///             gen (Expr_3_emit (_0_tryExpr this), context, scope, gen)
 ///             gen
-///                 (when_not (= context _0_Context_1_STATEMENT) => gen
+///                 (when_not (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///                     (Gen_2_store gen, (_0_retLocal this))
 ///                 )
 ///             #_"label" l_1_end (Gen_2_mark gen)
@@ -13249,14 +12026,14 @@ namespace arbace {
 ///             gen (Gen_2_goto gen, l_1_return)
 ///             #_"int" n (count (_0_catches this)) #_"labels" l_1_starts (mapv Gen_2_label (repeat n gen)) #_"labels" l_1_ends (mapv Gen_2_label (repeat n gen))
 ///             gen
-///                 (loop_when [gen gen #_"int" i 0] (< i n) => gen
+///                 (loop_when [gen gen #_"int" i 0] (lt_9_ i n) => gen
 ///                     (let [
 ///                         #_"CatchClause" clause (nth (_0_catches this) i)
 ///                         gen (Gen_2_mark gen, (nth l_1_starts i))
 ///                         gen (Gen_2_store gen, (_0_idx (_0_lb clause)))
 ///                         gen (Expr_3_emit (_0_handler clause), context, scope, gen)
 ///                         gen
-///                             (when_not (= context _0_Context_1_STATEMENT) => gen
+///                             (when_not (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///                                 (Gen_2_store gen, (_0_retLocal this))
 ///                             )
 ///                         gen (Gen_2_mark gen, (nth l_1_ends i))
@@ -13284,28 +12061,28 @@ namespace arbace {
 ///                 )
 ///             gen (Gen_2_mark gen, l_1_return)
 ///             gen
-///                 (when_not (= context _0_Context_1_STATEMENT) => gen
+///                 (when_not (_eq_9_ context _0_Context_1_STATEMENT) => gen
 ///                     (Gen_2_load gen, (_0_retLocal this))
 ///                 )
-///             gen (loop_when_recur [gen gen #_"int" i 0] (< i n) [(Gen_2_try_catch_finally gen, l_1_start, l_1_end, (nth l_1_starts i)) (inc i)] => gen)
+///             gen (loop_when_recur [gen gen #_"int" i 0] (lt_9_ i n) [(Gen_2_try_catch_finally gen, l_1_start, l_1_end, (nth l_1_starts i)) (inc i)] => gen)
 ///         ]
 ///             (when (some_9_ (_0_finallyExpr this)) => gen
 ///                 (let [
 ///                     gen (Gen_2_try_catch_finally gen, l_1_start, l_1_end, l_1_finally)
 ///                 ]
-///                     (loop_when_recur [gen gen #_"int" i 0] (< i n) [(Gen_2_try_catch_finally gen, (nth l_1_starts i), (nth l_1_ends i), l_1_finally) (inc i)] => gen)
+///                     (loop_when_recur [gen gen #_"int" i 0] (lt_9_ i n) [(Gen_2_try_catch_finally gen, (nth l_1_starts i), (nth l_1_ends i), l_1_finally) (inc i)] => gen)
 ///                 )
 ///             )
 ///         )
 ///     )
 
-///     (defm TryExpr Expr
+///     (defm TryExpr Expr
 ///         (Expr_3_emit => TryExpr_2_emit)
 ///     )
 // )
 
 // (about #_"ThrowExpr"
-///     (defr ThrowExpr)
+///     (defr ThrowExpr)
 
 ///     (defn #_"ThrowExpr" ThrowExpr_1_new [#_"Expr" throwable]
 ///         (new_8_ ThrowExpr_1_class
@@ -13317,8 +12094,8 @@ namespace arbace {
 
 ///     (defn #_"Expr" ThrowExpr_1_parse [#_"ISeq" form, #_"Context" context, #_"IPersistentMap" scope]
 ///         (cond
-///             (= (count form) 1) (throw "too few arguments to throw: single Throwable expected")
-///             (< 2 (count form)) (throw "too many arguments to throw: single Throwable expected")
+///             (_eq_9_ (count form) 1) (throw "too few arguments to throw: single Throwable expected")
+///             (lt_9_ 2 (count form)) (throw "too many arguments to throw: single Throwable expected")
 ///             _0_else              (ThrowExpr_1_new (Compiler_1_analyze (second form), scope))
 ///         )
 ///     )
@@ -13332,7 +12109,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defm ThrowExpr Expr
+///     (defm ThrowExpr Expr
 ///         (Expr_3_emit => ThrowExpr_2_emit)
 ///     )
 // )
@@ -13361,7 +12138,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"bool" Compiler_1_isSpecial [#_"Object" sym]
+///     (defn #_"bool" Compiler_1_isSpecial [#_"Object" sym]
 ///         (contains_9_ Compiler_1_specials sym)
 ///     )
 
@@ -13371,7 +12148,7 @@ namespace arbace {
 ///         ([#_"edn" form] (Compiler_1_macroexpand1 form, nil))
 ///         ([#_"edn" form, #_"IPersistentMap" scope]
 ///             (when (seq_9_ form) => form
-///                 (let_when [#_"Object" op (first form)] (not (Compiler_1_isSpecial op)) => form
+///                 (let_when [#_"Object" op (first form)] (not (Compiler_1_isSpecial op)) => form
 ///                     (let_when [#_"Var" v (Compiler_1_maybeMacro op, scope)] (some_9_ v) => form
 ///                         (apply v form (deref (get scope _0_1_local_env)) (next form))
 ///                     )
@@ -13402,7 +12179,7 @@ namespace arbace {
 ///                     (LocalBindingExpr_1_new lb)
 ///                 )
 ///             )
-///             (let [#_"Object" o (Compiler_1_resolve sym)]
+///             (let [#_"Object" o (Compiler_1_resolve sym)]
 ///                 (cond
 ///                     (var_9_ o)
 ///                         (when (nil_9_ (Compiler_1_maybeMacro o, scope)) => (throw (str "can't take value of a macro: " o))
@@ -13418,8 +12195,8 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"Expr" Compiler_1_analyzeSeq [#_"ISeq" form, #_"Context" context, #_"IPersistentMap" scope]
-///         (let_when [#_"Object" me (Compiler_1_macroexpand1 form, scope)] (= me form) => (Compiler_1_analyze me, context, scope)
-///             (when_some [#_"Object" op (first form)] => (throw (str "can't call nil, form: " form))
+///         (let_when [#_"Object" me (Compiler_1_macroexpand1 form, scope)] (_eq_9_ me form) => (Compiler_1_analyze me, context, scope)
+///             (when_some [#_"Object" op (first form)] => (throw (str "can't call nil, form: " form))
 ///                 (let [#_"IFn" inline (Compiler_1_maybeInline op, (count (next form)), scope)]
 ///                     (if (some_9_ inline)
 ///                         (Compiler_1_analyze (IFn_3_applyTo inline, (next form)), context, scope)
@@ -13473,11 +12250,11 @@ namespace arbace {
 // )
 }
 
-namespace arbace {
+namespace arb {
 
 // (about #_"LispReader"
 ///     (defn #_"Symbol" LispReader_1_garg [#_"int" n]
-///         (symbol (str (if (= n -1) "args" (str "arg" n)) "__" (next_id_4_) "#"))
+///         (symbol (str (if (_eq_9_ n -1) "args" (str "arg" n)) "__" (next_id_4_) "#"))
 ///     )
 
 ///     (defn #_"Symbol" LispReader_1_registerArg [#_"IPersistentMap" scope, #_"int" n]
@@ -13502,33 +12279,31 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (declare LispReader_1_macros)
-
 ///     (defn_ #_"bool" LispReader_1_isMacro [#_"char" ch]
 ///         (contains_9_ LispReader_1_macros ch)
 ///     )
 
 ///     (defn_ #_"bool" LispReader_1_isTerminatingMacro [#_"char" ch]
-///         (and (LispReader_1_isMacro ch) (not (any = ch \# \' \%)))
+///         (and (LispReader_1_isMacro ch) (not (any _eq_9_ ch \# \' \%)))
 ///     )
 
 ///     (defn #_"bool" LispReader_1_isDigit [#_"char" ch, #_"int" base]
-///         (not= (Character_1_digit ch, base) -1)
+///         (not_eq_9_ (Character_1_digit ch, base) -1)
 ///     )
 
 ///     (defn #_"bool" LispReader_1_isWhitespace [#_"char" ch]
-///         (or (Character_1_isWhitespace ch) (= ch \,))
+///         (or (Character_1_isWhitespace ch) (_eq_9_ ch \,))
 ///     )
 
-///     (defn #_"Character" LispReader_1_read1 [#_"Reader" r]
+///     (defn #_"Character" LispReader_1_read1 [#_"Reader" r]
 ///         (let [#_"int" c (Reader_2_read r)]
-///             (when_not (= c -1)
+///             (when_not (_eq_9_ c -1)
 ///                 (char c)
 ///             )
 ///         )
 ///     )
 
-///     (defn #_"void" LispReader_1_unread [#_"PushbackReader" r, #_"Character" ch]
+///     (defn #_"void" LispReader_1_unread [#_"PushbackReader" r, #_"Character" ch]
 ///         (when (some_9_ ch)
 ///             (PushbackReader_2_unread r, (int ch))
 ///         )
@@ -13543,21 +12318,21 @@ namespace arbace {
 ///     (def_ #_"Pattern" LispReader_1_rxInteger #"([-+]?)(?:(0)|([1-9][0-9]*)|0[xX]([0-9A-Fa-f]+)|0([0-7]+)|([1-9][0-9]?)[rR]([0-9A-Za-z]+)|0[0-9]+)")
 ///     (def_ #_"Pattern" LispReader_1_rxRatio   #"([-+]?[0-9]+)/([0-9]+)")
 
-///     (defn_ #_"Object" LispReader_1_matchNumber [#_"String" s]
+///     (defn_ #_"Object" LispReader_1_matchNumber [#_"String" s]
 ///         (let [_ (or
 ///                     (let_when [#_"Matcher" m (Pattern_2_matcher LispReader_1_rxInteger, s)] (Matcher_2_matches m)
-///                         (when (nil_9_ (Matcher_2_group m, 2)) => (Long_1_valueOf 0)
+///                         (when (nil_9_ (Matcher_2_group m, 2)) => (Long_1_valueOf 0)
 ///                             (let [[#_"String" n #_"int" radix]
 ///                                     (cond_some
 ///                                         [n (Matcher_2_group m, 3)] [n 10]
 ///                                         [n (Matcher_2_group m, 4)] [n 16]
 ///                                         [n (Matcher_2_group m, 5)] [n 8]
-///                                         [n (Matcher_2_group m, 7)] [n (Integer_1_parseInt (Matcher_2_group m, 6))]
+///                                         [n (Matcher_2_group m, 7)] [n (Number_1_parseInt (Matcher_2_group m, 6))]
 ///                                     )]
 ///                                 (when (some_9_ n) => _0_nil
-///                                     (let [#_"BigInteger" bn (BigInteger_1_new n, radix) bn (if (= (Matcher_2_group m, 1) "-") (BigInteger_2_negate bn) bn)]
-///                                         (when (< (BigInteger_2_bitLength bn) 64) => bn
-///                                             (Long_1_valueOf (BigInteger_2_longValue bn))
+///                                     (let [#_"BigInteger" bn (BigInteger_1_new n, radix) bn (if (_eq_9_ (Matcher_2_group m, 1) "-") (BigInteger_2_negate bn) bn)]
+///                                         (when (lt_9_ (BigInteger_2_bitLength bn) 64) => bn
+///                                             (Long_1_valueOf (BigInteger_2_longValue bn))
 ///                                         )
 ///                                     )
 ///                                 )
@@ -13566,26 +12341,26 @@ namespace arbace {
 ///                     )
 ///                     (let_when [#_"Matcher" m (Pattern_2_matcher LispReader_1_rxRatio, s)] (Matcher_2_matches m)
 ///                         (let [#_"String" n (Matcher_2_group m, 1) n (if (String_2_startsWith n, "+") (String_2_substring n, 1) n)]
-///                             (Numbers_1_divide (BigInteger_1_new n), (BigInteger_1_new (Matcher_2_group m, 2)))
+///                             (Numbers_1_divide (BigInteger_1_new n), (BigInteger_1_new (Matcher_2_group m, 2)))
 ///                         )
 ///                     )
 ///                 )]
-///             (when_not (= _ _0_nil) _)
+///             (when_not (_eq_9_ _ _0_nil) _)
 ///         )
 ///     )
 
-///     (defn_ #_"Object" LispReader_1_readNumber [#_"PushbackReader" r, #_"char" ch]
+///     (defn_ #_"Object" LispReader_1_readNumber [#_"PushbackReader" r, #_"char" ch]
 ///         (let [#_"String" s
-///                 (let [#_"StringBuilder" sb (StringBuilder_1_new) _ (StringBuilder_2_append sb, ch)]
+///                 (let [#_"StringBuilder" sb (StringBuilder_1_new) _ (StringBuilder_2_append sb, ch)]
 ///                     (loop []
 ///                         (let [ch (LispReader_1_read1 r)]
 ///                             (if (or (nil_9_ ch) (LispReader_1_isWhitespace ch) (LispReader_1_isMacro ch))
 ///                                 (do
 ///                                     (LispReader_1_unread r, ch)
-///                                     (StringBuilder_2_toString sb)
+///                                     (StringBuilder_2_toString sb)
 ///                                 )
 ///                                 (do
-///                                     (StringBuilder_2_append sb, ch)
+///                                     (StringBuilder_2_append sb, ch)
 ///                                     (recur)
 ///                                 )
 ///                             )
@@ -13597,16 +12372,16 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"String" LispReader_1_readToken [#_"PushbackReader" r, #_"char" ch]
-///         (let [#_"StringBuilder" sb (StringBuilder_1_new) _ (StringBuilder_2_append sb, ch)]
+///         (let [#_"StringBuilder" sb (StringBuilder_1_new) _ (StringBuilder_2_append sb, ch)]
 ///             (loop []
 ///                 (let [ch (LispReader_1_read1 r)]
 ///                     (if (or (nil_9_ ch) (LispReader_1_isWhitespace ch) (LispReader_1_isTerminatingMacro ch))
 ///                         (do
 ///                             (LispReader_1_unread r, ch)
-///                             (StringBuilder_2_toString sb)
+///                             (StringBuilder_2_toString sb)
 ///                         )
 ///                         (do
-///                             (StringBuilder_2_append sb, ch)
+///                             (StringBuilder_2_append sb, ch)
 ///                             (recur)
 ///                         )
 ///                     )
@@ -13617,11 +12392,11 @@ namespace arbace {
 
 ///     (def_ #_"Pattern" LispReader_1_rxSymbol #"[:]?([\D&&[^/]].*/)?(/|[\D&&[^/]][^/]*)")
 
-///     (defn_ #_"Object" LispReader_1_matchSymbol [#_"String" s]
+///     (defn_ #_"Object" LispReader_1_matchSymbol [#_"String" s]
 ///         (let_when [#_"Matcher" m (Pattern_2_matcher LispReader_1_rxSymbol, s)] (Matcher_2_matches m)
 ///             (let [#_"String" ns (Matcher_2_group m, 1) #_"String" n (Matcher_2_group m, 2)]
 ///                 (cond
-///                     (or (and (some_9_ ns) (String_2_endsWith ns, ":/")) (String_2_endsWith n, ":") (not= (String_2_indexOf s, "::", 1) -1))
+///                     (or (and (some_9_ ns) (String_2_endsWith ns, ":/")) (String_2_endsWith n, ":") (not_eq_9_ (String_2_indexOf s, "::", 1) -1))
 ///                         nil
 ///                     (String_2_startsWith s, "::")
 ///                         (let [#_"Symbol" ks (symbol (String_2_substring s, 2))
@@ -13631,7 +12406,7 @@ namespace arbace {
 ///                             )
 ///                         )
 ///                     _0_else
-///                         (let [#_"bool" kw_9_ (= (String_2_charAt s, 0) \:) #_"Symbol" sym (symbol (String_2_substring s, (if kw_9_ 1 0)))]
+///                         (let [#_"bool" kw_9_ (_eq_9_ (String_2_charAt s, 0) \:) #_"Symbol" sym (symbol (String_2_substring s, (if kw_9_ 1 0)))]
 ///                             (if kw_9_ (keyword sym) sym)
 ///                         )
 ///                 )
@@ -13639,33 +12414,33 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn_ #_"Object" LispReader_1_interpretToken [#_"String" s]
+///     (defn_ #_"Object" LispReader_1_interpretToken [#_"String" s]
 ///         (case_4_ s "nil" nil "true" true "false" false
 ///             (or (LispReader_1_matchSymbol s) (throw (str "invalid token: " s)))
 ///         )
 ///     )
 
-///     (defn #_"Object" LispReader_1_read
+///     (defn #_"Object" LispReader_1_read
 ///         ([#_"PushbackReader" r, #_"IPersistentMap" scope] (LispReader_1_read r, scope, true, nil))
-///         ([#_"PushbackReader" r, #_"IPersistentMap" scope, #_"bool" eofIsError, #_"Object" eofValue] (LispReader_1_read r, scope, eofIsError, eofValue, nil, nil))
-///         ([#_"PushbackReader" r, #_"IPersistentMap" scope, #_"bool" eofIsError, #_"Object" eofValue, #_"Character" returnOn, #_"Object" returnOnValue]
+///         ([#_"PushbackReader" r, #_"IPersistentMap" scope, #_"bool" eofIsError, #_"Object" eofValue] (LispReader_1_read r, scope, eofIsError, eofValue, nil, nil))
+///         ([#_"PushbackReader" r, #_"IPersistentMap" scope, #_"bool" eofIsError, #_"Object" eofValue, #_"Character" returnOn, #_"Object" returnOnValue]
 ///             (loop []
 ///                 (let [#_"char" ch (loop_when_recur [ch (LispReader_1_read1 r)] (and (some_9_ ch) (LispReader_1_isWhitespace ch)) [(LispReader_1_read1 r)] => ch)]
 ///                     (cond
 ///                         (nil_9_ ch)
 ///                             (if eofIsError (throw "EOF while reading") eofValue)
-///                         (and (some_9_ returnOn) (= returnOn ch))
+///                         (and (some_9_ returnOn) (_eq_9_ returnOn ch))
 ///                             returnOnValue
 ///                         (LispReader_1_isDigit ch, 10)
 ///                             (LispReader_1_readNumber r, ch)
 ///                         _0_else
 ///                             (let [#_"IFn" f_1_macro (get LispReader_1_macros ch)]
 ///                                 (if (some_9_ f_1_macro)
-///                                     (let [#_"Object" o (f_1_macro r scope ch)]
+///                                     (let [#_"Object" o (f_1_macro r scope ch)]
 ///                                         (recur_when (identical_9_ o r) [] => o)
 ///                                     )
 ///                                     (or
-///                                         (when (any = ch \+ \-)
+///                                         (when (any _eq_9_ ch \+ \-)
 ///                                             (let [#_"char" ch_1_ (LispReader_1_read1 r) _ (LispReader_1_unread r, ch_1_)]
 ///                                                 (when (and (some_9_ ch_1_) (LispReader_1_isDigit ch_1_, 10))
 ///                                                     (LispReader_1_readNumber r, ch)
@@ -13683,11 +12458,11 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"int" LispReader_1_scanDigits [#_"String" token, #_"int" offset, #_"int" n, #_"int" base]
-///         (when (= (+ offset n) (String_2_length token)) => (throw (str "invalid unicode character: \\" token))
-///             (loop_when [#_"int" c 0 #_"int" i 0] (< i n) => c
-///                 (let [#_"char" ch (String_2_charAt token, (+ offset i)) #_"int" d (Character_1_digit ch, base)]
-///                     (when_not (= d -1) => (throw (str "invalid digit: " ch))
-///                         (recur (+ (* c base) d) (inc i))
+///         (when (_eq_9_ (plus offset n) (String_2_length token)) => (throw (str "invalid unicode character: \\" token))
+///             (loop_when [#_"int" c 0 #_"int" i 0] (lt_9_ i n) => c
+///                 (let [#_"char" ch (String_2_charAt token, (plus offset i)) #_"int" d (Character_1_digit ch, base)]
+///                     (when_not (_eq_9_ d -1) => (throw (str "invalid digit: " ch))
+///                         (recur (plus (mult c base) d) (inc i))
 ///                     )
 ///                 )
 ///             )
@@ -13695,36 +12470,36 @@ namespace arbace {
 ///     )
 
 ///     (defn_ #_"int" LispReader_1_readDigits [#_"PushbackReader" r, #_"char" ch, #_"int" base, #_"int" n, #_"bool" exact_9_]
-///         (let_when_not [#_"int" c (Character_1_digit ch, base)] (= c -1) => (throw (str "invalid digit: " ch))
+///         (let_when_not [#_"int" c (Character_1_digit ch, base)] (_eq_9_ c -1) => (throw (str "invalid digit: " ch))
 ///             (let [[c #_"int" i]
-///                     (loop_when [c c i 1] (< i n) => [c i]
+///                     (loop_when [c c i 1] (lt_9_ i n) => [c i]
 ///                         (let [ch (LispReader_1_read1 r)]
 ///                             (if (or (nil_9_ ch) (LispReader_1_isWhitespace ch) (LispReader_1_isMacro ch))
 ///                                 (do
 ///                                     (LispReader_1_unread r, ch)
 ///                                     [c i]
 ///                                 )
-///                                 (let [#_"int" d (Character_1_digit ch, base)]
-///                                     (when_not (= d -1) => (throw (str "invalid digit: " ch))
-///                                         (recur (+ (* c base) d) (inc i))
+///                                 (let [#_"int" d (Character_1_digit ch, base)]
+///                                     (when_not (_eq_9_ d -1) => (throw (str "invalid digit: " ch))
+///                                         (recur (plus (mult c base) d) (inc i))
 ///                                     )
 ///                                 )
 ///                             )
 ///                         )
 ///                     )]
-///                 (when (or (= i n) (not exact_9_)) => (throw (str "invalid character length: " i ", should be: " n))
+///                 (when (or (_eq_9_ i n) (not exact_9_)) => (throw (str "invalid character length: " i ", should be: " n))
 ///                     c
 ///                 )
 ///             )
 ///         )
 ///     )
 
-///     (def_ #_"Object" LispReader_1_READ_EOF (anew 0))
-///     (def_ #_"Object" LispReader_1_READ_FINISHED (anew 0))
+///     (def_ #_"Object" LispReader_1_READ_EOF (anew 0))
+///     (def_ #_"Object" LispReader_1_READ_FINISHED (anew 0))
 
 ///     (defn #_"vector" LispReader_1_readDelimitedForms [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" delim]
 ///         (loop [#_"vector" v (vector)]
-///             (let [#_"Object" form (LispReader_1_read r, scope, false, LispReader_1_READ_EOF, delim, LispReader_1_READ_FINISHED)]
+///             (let [#_"Object" form (LispReader_1_read r, scope, false, LispReader_1_READ_EOF, delim, LispReader_1_READ_FINISHED)]
 ///                 (condp identical_9_ form
 ///                     LispReader_1_READ_EOF
 ///                         (throw "EOF while reading")
@@ -13739,21 +12514,21 @@ namespace arbace {
 
 // (about #_"RegexReader"
 ///     (defn #_"Pattern" regex_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
-///         (let [#_"StringBuilder" sb (StringBuilder_1_new)]
+///         (let [#_"StringBuilder" sb (StringBuilder_1_new)]
 ///             (loop []
 ///                 (when_some [#_"char" ch (LispReader_1_read1 r)] => (throw "EOF while reading regex")
-///                     (when_not (= ch \")
-///                         (StringBuilder_2_append sb, ch)
-///                         (when (= ch \\)
+///                     (when_not (_eq_9_ ch \")
+///                         (StringBuilder_2_append sb, ch)
+///                         (when (_eq_9_ ch \\)
 ///                             (when_some [ch (LispReader_1_read1 r)] => (throw "EOF while reading regex")
-///                                 (StringBuilder_2_append sb, ch)
+///                                 (StringBuilder_2_append sb, ch)
 ///                             )
 ///                         )
 ///                         (recur)
 ///                     )
 ///                 )
 ///             )
-///             (Pattern_1_compile (StringBuilder_2_toString sb))
+///             (Pattern_1_compile (StringBuilder_2_toString sb))
 ///         )
 ///     )
 // )
@@ -13776,7 +12551,7 @@ namespace arbace {
 ///                     )
 ///                 (when (LispReader_1_isDigit ch, #_8 4) => (throw (str "unsupported escape character: \\" ch))
 ///                     (let [#_"int" c (LispReader_1_readDigits r, ch, 8, 3, false)]
-///                       #_(when (< 0377 c)
+///                       #_(when (lt_9_ 0377 c)
 ///                             (throw "octal escape sequence must be in range [0, 377]")
 ///                         )
 ///                         (char c)
@@ -13786,57 +12561,55 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"Object" string_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
-///         (let [#_"StringBuilder" sb (StringBuilder_1_new)]
+///     (defn #_"Object" string_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///         (let [#_"StringBuilder" sb (StringBuilder_1_new)]
 ///             (loop []
 ///                 (when_some [#_"char" ch (LispReader_1_read1 r)] => (throw "EOF while reading string")
-///                     (when_not (= ch \")
-///                         (StringBuilder_2_append sb, (if (= ch \\) (StringReader_1_escape r) ch))
+///                     (when_not (_eq_9_ ch \")
+///                         (StringBuilder_2_append sb, (if (_eq_9_ ch \\) (StringReader_1_escape r) ch))
 ///                         (recur)
 ///                     )
 ///                 )
 ///             )
-///             (StringBuilder_2_toString sb)
+///             (StringBuilder_2_toString sb)
 ///         )
 ///     )
 // )
 
 // (about #_"CommentReader"
-///     (defn #_"Object" comment_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
-///         (while (not (any = (LispReader_1_read1 r) nil \newline \return)))
+///     (defn #_"Object" comment_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///         (while (not (any _eq_9_ (LispReader_1_read1 r) nil \newline \return)))
 ///         r
 ///     )
 // )
 
 // (about #_"DiscardReader"
-///     (defn #_"Object" discard_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///     (defn #_"Object" discard_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
 ///         (LispReader_1_read r, scope)
 ///         r
 ///     )
 // )
 
 // (about #_"QuoteReader"
-///     (defn #_"Object" quote_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///     (defn #_"Object" quote_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
 ///         (list _1_quote (LispReader_1_read r, scope))
 ///     )
 // )
 
 // (about #_"DerefReader"
-///     (defn #_"Object" deref_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///     (defn #_"Object" deref_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
 ///         (list _7_deref (LispReader_1_read r, scope))
 ///     )
 // )
 
 // (about #_"VarReader"
-///     (defn #_"Object" var_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///     (defn #_"Object" var_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
 ///         (list _1_var (LispReader_1_read r, scope))
 ///     )
 // )
 
 // (about #_"DispatchReader"
-///     (declare LispReader_1_dispatchMacros)
-
-///     (defn #_"Object" dispatch_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///     (defn #_"Object" dispatch_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
 ///         (when_some [#_"char" ch (LispReader_1_read1 r)] => (throw "EOF while reading character")
 ///             (let_when [#_"IFn" f_1_macro (get LispReader_1_dispatchMacros ch)] (nil_9_ f_1_macro) => (f_1_macro r scope ch)
 ///                 (LispReader_1_unread r, ch)
@@ -13847,24 +12620,24 @@ namespace arbace {
 // )
 
 // (about #_"FnReader"
-///     (defn #_"Object" fn_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///     (defn #_"Object" fn_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
 ///         (when_not (contains_9_ scope _0_1_arg_env) => (throw "nested #()s are not allowed")
 ///             (let [scope (assoc scope _0_1_arg_env (atom (sorted_map)))]
 ///                 (LispReader_1_unread r, \()
 ///                 (let [
-///                     #_"Object" form (LispReader_1_read r, scope)
+///                     #_"Object" form (LispReader_1_read r, scope)
 ///                     #_"vector" args (vector)
 ///                     args
 ///                         (when_some [#_"ISeq" rs (rseq (deref (get scope _0_1_arg_env)))] => args
 ///                             (let [args
 ///                                     (let_when [#_"int" n (key (first rs))] (pos_9_ n) => args
 ///                                         (loop_when_recur [args args #_"int" i 1]
-///                                                          (<= i n)
+///                                                          (lte_9_ i n)
 ///                                                          [(conj args (or (get (deref (get scope _0_1_arg_env)) i) (LispReader_1_garg i))) (inc i)]
 ///                                                       => args
 ///                                         )
 ///                                     )]
-///                                 (when_some [#_"Object" rest (get (deref (get scope _0_1_arg_env)) -1)] => args
+///                                 (when_some [#_"Object" rest (get (deref (get scope _0_1_arg_env)) -1)] => args
 ///                                     (conj args '& rest)
 ///                                 )
 ///                             )
@@ -13878,15 +12651,15 @@ namespace arbace {
 // )
 
 // (about #_"ArgReader"
-///     (defn #_"Object" arg_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///     (defn #_"Object" arg_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
 ///         (when (contains_9_ scope _0_1_arg_env) => (LispReader_1_interpretToken (LispReader_1_readToken r, \%))
 ///             (let [#_"char" ch (LispReader_1_read1 r) _ (LispReader_1_unread r, ch)]
 ///                 (if (or (nil_9_ ch) (LispReader_1_isWhitespace ch) (LispReader_1_isTerminatingMacro ch))
 ///                     (LispReader_1_registerArg scope, 1)
-///                     (let [#_"Object" n (LispReader_1_read r, scope)]
+///                     (let [#_"Object" n (LispReader_1_read r, scope)]
 ///                         (cond
-///                             (= n '&)    (LispReader_1_registerArg scope, -1)
-///                             (number_9_ n) (LispReader_1_registerArg scope, (int_4_ n))
+///                             (_eq_9_ n '&)    (LispReader_1_registerArg scope, -1)
+///                             (number_9_ n) (LispReader_1_registerArg scope, (int n))
 ///                             _0_else       (throw "arg literal must be %, %& or %integer")
 ///                         )
 ///                     )
@@ -13897,15 +12670,15 @@ namespace arbace {
 // )
 
 // (about #_"MetaReader"
-///     (defn #_"Object" meta_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
-///         (let [#_"Object" _meta (LispReader_1_read r, scope)
+///     (defn #_"Object" meta_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///         (let [#_"Object" _meta (LispReader_1_read r, scope)
 ///               _meta
 ///                 (cond
-///                     (keyword_9_ _meta) {_meta true}
+///                     (keyword_9_ _meta) (hash_map _meta true)
 ///                     (map_9_ _meta)      _meta
 ///                     _0_else (throw "metadata must be Keyword or Map")
 ///                 )
-///               #_"Object" o (LispReader_1_read r, scope)]
+///               #_"Object" o (LispReader_1_read r, scope)]
 ///             (when (satisfies_9_ IMeta o) => (throw "metadata can only be applied to IMetas")
 ///                 (if (satisfies_9_ IReference o)
 ///                     (do
@@ -13929,21 +12702,19 @@ namespace arbace {
 // (about #_"SyntaxQuoteReader"
 /// (def unquote)
 
-///     (defn #_"bool" SyntaxQuoteReader_1_isUnquote [#_"Object" form]
-///         (and (seq_9_ form) (= (first form) _7_unquote))
+///     (defn #_"bool" SyntaxQuoteReader_1_isUnquote [#_"Object" form]
+///         (and (seq_9_ form) (_eq_9_ (first form) _7_unquote))
 ///     )
 
 /// (def unquote_splicing)
 
-///     (defn #_"bool" SyntaxQuoteReader_1_isUnquoteSplicing [#_"Object" form]
-///         (and (seq_9_ form) (= (first form) _7_unquote_splicing))
+///     (defn #_"bool" SyntaxQuoteReader_1_isUnquoteSplicing [#_"Object" form]
+///         (and (seq_9_ form) (_eq_9_ (first form) _7_unquote_splicing))
 ///     )
-
-///     (declare SyntaxQuoteReader_1_syntaxQuote)
 
 ///     (defn_ #_"ISeq" SyntaxQuoteReader_1_sqExpandList [#_"IPersistentMap" scope, #_"ISeq" s]
 ///         (loop_when [#_"vector" v (vector) s s] (some_9_ s) => (seq v)
-///             (let [#_"Object" item (first s)
+///             (let [#_"Object" item (first s)
 ///                   v (cond
 ///                         (SyntaxQuoteReader_1_isUnquote item)         (conj v (list _7_list (second item)))
 ///                         (SyntaxQuoteReader_1_isUnquoteSplicing item) (conj v (second item))
@@ -13954,8 +12725,8 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"Object" SyntaxQuoteReader_1_syntaxQuote [#_"IPersistentMap" scope, #_"Object" form]
-///         (let [#_"Object" q
+///     (defn #_"Object" SyntaxQuoteReader_1_syntaxQuote [#_"IPersistentMap" scope, #_"Object" form]
+///         (let [#_"Object" q
 ///                 (cond
 ///                     (Compiler_1_isSpecial form)
 ///                         (list _1_quote form)
@@ -14004,7 +12775,7 @@ namespace arbace {
 ///         )
 ///     )
 
-///     (defn #_"Object" syntax_quote_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///     (defn #_"Object" syntax_quote_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
 ///         (let [scope (assoc scope _0_1_gensym_env (atom (hash_map)))]
 ///             (SyntaxQuoteReader_1_syntaxQuote scope, (LispReader_1_read r, scope))
 ///         )
@@ -14012,9 +12783,9 @@ namespace arbace {
 // )
 
 // (about #_"UnquoteReader"
-///     (defn #_"Object" unquote_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///     (defn #_"Object" unquote_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
 ///         (when_some [#_"char" ch (LispReader_1_read1 r)] => (throw "EOF while reading character")
-///             (if (= ch \@)
+///             (if (_eq_9_ ch \@)
 ///                 (list _7_unquote_splicing (LispReader_1_read r, scope))
 ///                 (do
 ///                     (LispReader_1_unread r, ch)
@@ -14026,10 +12797,10 @@ namespace arbace {
 // )
 
 // (about #_"CharacterReader"
-///     (defn #_"Object" character_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///     (defn #_"Object" character_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
 ///         (when_some [#_"char" ch (LispReader_1_read1 r)] => (throw "EOF while reading character")
 ///             (let [#_"String" token (LispReader_1_readToken r, ch)]
-///                 (when_not (= (String_2_length token) 1) => (Character_1_valueOf (String_2_charAt token, 0))
+///                 (when_not (_eq_9_ (String_2_length token) 1) => (Character_1_valueOf (String_2_charAt token, 0))
 ///                     (case_4_ token
 ///                         "newline"   \newline
 ///                         "space"     \space
@@ -14039,17 +12810,17 @@ namespace arbace {
 ///                         "return"    \return
 ///                         (case_4_ (String_2_charAt token, 0)
 ///                             \u  (let [#_"int" c (LispReader_1_scanDigits token, 1, 4, 16)]
-///                                     (when (<= 0xd800 c 0xdfff)
-///                                         (throw (str "invalid character constant: \\u" (Integer_1_toString c, 16)))
+///                                     (when (lte_9_ 0xd800 c 0xdfff)
+///                                         (throw (str "invalid character constant: \\u" (Number_1_toString c, 16)))
 ///                                     )
 ///                                     (char c)
 ///                                 )
 ///                             \o  (let [#_"int" n (dec (String_2_length token))]
-///                                     (when (< 3 n)
+///                                     (when (lt_9_ 3 n)
 ///                                         (throw (str "invalid octal escape sequence length: " n))
 ///                                     )
 ///                                     (let [#_"int" c (LispReader_1_scanDigits token, 1, n, 8)]
-///                                         (when (< 0377 c)
+///                                         (when (lt_9_ 0377 c)
 ///                                             (throw "octal escape sequence must be in range [0, 377]")
 ///                                         )
 ///                                         (char c)
@@ -14065,19 +12836,19 @@ namespace arbace {
 // )
 
 // (about #_"ListReader"
-///     (defn #_"Object" list_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///     (defn #_"Object" list_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
 ///         (apply list (LispReader_1_readDelimitedForms r, scope, \)))
 ///     )
 // )
 
 // (about #_"VectorReader"
-///     (defn #_"Object" vector_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///     (defn #_"Object" vector_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
 ///         (vec (LispReader_1_readDelimitedForms r, scope, \]))
 ///     )
 // )
 
 // (about #_"MapReader"
-///     (defn #_"Object" map_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///     (defn #_"Object" map_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
 ///         (let [#_"vector" v (LispReader_1_readDelimitedForms r, scope, \})]
 ///             (when (even_9_ (count v)) => (throw "map literal must contain an even number of forms")
 ///                 (RT_1_map v)
@@ -14087,13 +12858,13 @@ namespace arbace {
 // )
 
 // (about #_"SetReader"
-///     (defn #_"Object" set_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
+///     (defn #_"Object" set_reader [#_"PushbackReader" r, #_"IPersistentMap" scope, #_"char" _delim]
 ///         (PersistentHashSet_1_createWithCheck (LispReader_1_readDelimitedForms r, scope, \}))
 ///     )
 // )
 
 // (about #_"UnmatchedDelimiterReader"
-///     (defn #_"Object" unmatched_delimiter_reader [#_"PushbackReader" _r, #_"IPersistentMap" scope, #_"char" delim]
+///     (defn #_"Object" unmatched_delimiter_reader [#_"PushbackReader" _r, #_"IPersistentMap" scope, #_"char" delim]
 ///         (throw (str "unmatched delimiter: " delim))
 ///     )
 // )
@@ -14137,15 +12908,15 @@ namespace arbace {
 ///     ([s eof_error_9_ eof_value] (LispReader_1_read s, nil, (boolean eof_error_9_), eof_value))
 /// )
 
-namespace arbace {
+namespace arb {
 
 // (about #_"Compiler"
-///     (defn #_"Object" Compiler_1_load [#_"Reader" reader]
+///     (defn #_"Object" Compiler_1_load [#_"Reader" reader]
 ///         (let [
-///             #_"PushbackReader" r (if (pushback_reader_9_ reader) reader (PushbackReader_1_new reader)) #_"Object" EOF (anew 0)
+///             #_"PushbackReader" r (if (pushback_reader_9_ reader) reader (PushbackReader_1_new reader)) #_"Object" EOF (anew 0)
 ///             #_"IPersistentMap" scope (hash_map _0_1_local_env (atom (hash_map)))
 ///         ]
-///             (loop [#_"Object" value nil]
+///             (loop [#_"Object" value nil]
 ///                 (LispReader_1_consumeWhitespaces r)
 ///                 (let_when [#_"edn" form (LispReader_1_read r, nil, false, EOF)] (identical_9_ form EOF) => (recur (Compiler_1_eval form, scope))
 ///                     value
