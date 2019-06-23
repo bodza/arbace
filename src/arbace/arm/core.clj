@@ -3,7 +3,7 @@
 )
 
 (import!
-    [java.lang Appendable Character CharSequence Class Comparable Integer Number Object String StringBuilder System Thread]
+    [java.lang Appendable Character Class Comparable Integer Number Object String StringBuilder System Thread]
     [java.lang.reflect Array Constructor]
     [java.io Flushable PrintWriter PushbackReader Reader]
     [java.util Arrays Comparator]
@@ -41,7 +41,7 @@
 (about #_"java.lang"
 
 (about #_"Appendable"
-    (defn #_"Appendable" Appendable''append [#_"Appendable" this, #_"char|CharSequence" x] (.append this, x))
+    (defn #_"Appendable" Appendable''append [#_"Appendable" this, #_"char|String" x] (.append this, x))
 )
 
 (about #_"Character"
@@ -50,21 +50,11 @@
     (defn #_"Character" Character'valueOf      [#_"char" ch]                (Character/valueOf ch))
 )
 
-(about #_"CharSequence"
-    (defn char-sequence? [x] (-/instance? CharSequence x))
-
-    (defn #_"char" CharSequence''charAt [#_"CharSequence" this, #_"int" i] (.charAt this, i))
-    (defn #_"int"  CharSequence''length [#_"CharSequence" this]            (.length this))
-)
-
 (about #_"Comparable"
     (defn #_"int" Comparable''compareTo [#_"Comparable" this, #_"any" that] (.compareTo this, that))
 )
 
 (about #_"Integer"
-    (def #_"int" Integer'MAX_VALUE Integer/MAX_VALUE)
-    (def #_"int" Integer'MIN_VALUE Integer/MIN_VALUE)
-
     (defn #_"int"    Integer'bitCount   [#_"int" i]                (Integer/bitCount i))
     (defn #_"int"    Integer'parseInt   [#_"String" s]             (Integer/parseInt s))
     (defn #_"int"    Integer'rotateLeft [#_"int" x, #_"int" y]     (Integer/rotateLeft x, y))
@@ -162,9 +152,9 @@
 (about #_"Pattern"
     (defn pattern? [x] (-/instance? Pattern x))
 
-    (defn #_"Pattern" Pattern'compile  [#_"String" s]                      (Pattern/compile s))
-    (defn #_"Matcher" Pattern''matcher [#_"Pattern" this, #_"CharSequence" s] (.matcher this, s))
-    (defn #_"String"  Pattern''pattern [#_"Pattern" this]                     (.pattern this))
+    (defn #_"Pattern" Pattern'compile  [#_"String" s]                   (Pattern/compile s))
+    (defn #_"Matcher" Pattern''matcher [#_"Pattern" this, #_"String" s] (.matcher this, s))
+    (defn #_"String"  Pattern''pattern [#_"Pattern" this]               (.pattern this))
 )
 
 (about #_"Matcher"
@@ -278,12 +268,6 @@
     )
 )
 
-(defmacro cond-let [bind then & else]
-    (let [bind (if (vector? bind) bind [`_# bind])]
-        `(if-let ~bind ~then ~(when else `(cond-let ~@else)))
-    )
-)
-
 (defmacro if-some
     ([bind then] `(if-some ~bind ~then nil))
     ([bind then else & _]
@@ -394,17 +378,6 @@
     )
 )
 
-(defmacro ->> [x & s]
-    (when s => x
-        (recur &form &env
-            (let-when [f (first s)] (seq? f) => (list f x)
-                (with-meta `(~(first f) ~@(next f) ~x) (meta f))
-            )
-            (next s)
-        )
-    )
-)
-
 (defmacro locking [x & body]
     `(let [lockee# ~x]
         (try
@@ -466,7 +439,7 @@
 )
 
 (about #_"arbace.arm.Mutable"
-    (defonce Mutable (-/hash-map)) #_alt #_(refer* 'Mutable)
+    (defonce Mutable (-/hash-map))
     (DynamicClassLoader''defineClass (var-get Compiler'LOADER), "arbace.arm.core.Mutable", (second (#'-/generate-interface (-/hash-map (-/keyword (-/name :name)) 'arbace.arm.core.Mutable, (-/keyword (-/name :methods)) '[[mutate [java.lang.Object java.lang.Object] java.lang.Object nil]]))), nil)
     (alter-var-root #'Mutable merge (-/hash-map :var #'Mutable, :on 'arbace.arm.core.Mutable, :on-interface (-/resolve (-/symbol "arbace.arm.core.Mutable"))))
 
@@ -474,7 +447,7 @@
 )
 
 (about #_"arbace.arm.Typed"
-    (defonce Typed (-/hash-map)) #_alt #_(refer* 'Typed)
+    (defonce Typed (-/hash-map))
     (DynamicClassLoader''defineClass (var-get Compiler'LOADER), "arbace.arm.core.Typed", (second (#'-/generate-interface (-/hash-map (-/keyword (-/name :name)) 'arbace.arm.core.Typed, (-/keyword (-/name :methods)) '[[type [] java.lang.Object nil]]))), nil)
     (alter-var-root #'Typed merge (-/hash-map :var #'Typed, :on 'arbace.arm.core.Typed, :on-interface (-/resolve (-/symbol "arbace.arm.core.Typed"))))
 
@@ -523,7 +496,7 @@
     )
 )
 
-(defmacro defarray [name fields & opts+specs] #_alt #_`(refer* '~name)
+(defmacro defarray [name fields & opts+specs]
     (let [[interfaces methods opts] (parse-opts+specs opts+specs)]
         `(do
             ~(emit-defarray* name name (vec fields) (vec interfaces) methods opts)
@@ -608,7 +581,7 @@
     )
 )
 
-(defmacro defassoc [name & opts+specs] #_alt #_`(refer* '~name)
+(defmacro defassoc [name & opts+specs]
     (let [[interfaces methods opts] (parse-opts+specs opts+specs)]
         `(do
             ~(emit-defassoc* name name (vec interfaces) methods opts)
@@ -723,7 +696,7 @@
     )
 
     (-/extend-protocol Counted
-        java.lang.CharSequence (Counted'''count [s] (.length s))
+        java.lang.String (Counted'''count [s] (.length s))
     )
 
     (-/extend-protocol Counted
@@ -1351,37 +1324,6 @@
     (defp PersistentList)
 )
 
-(about #_"arbace.arm.PersistentTreeMap"
-    (defp ITNode
-        (#_"ITNode" ITNode'''addLeft [#_"ITNode" this, #_"ITNode" ins])
-        (#_"ITNode" ITNode'''addRight [#_"ITNode" this, #_"ITNode" ins])
-        (#_"ITNode" ITNode'''removeLeft [#_"ITNode" this, #_"ITNode" del])
-        (#_"ITNode" ITNode'''removeRight [#_"ITNode" this, #_"ITNode" del])
-        (#_"ITNode" ITNode'''blacken [#_"ITNode" this])
-        (#_"ITNode" ITNode'''redden [#_"ITNode" this])
-        (#_"ITNode" ITNode'''balanceLeft [#_"ITNode" this, #_"ITNode" parent])
-        (#_"ITNode" ITNode'''balanceRight [#_"ITNode" this, #_"ITNode" parent])
-        (#_"ITNode" ITNode'''replace [#_"ITNode" this, #_"key" key, #_"value" val, #_"ITNode" left, #_"ITNode" right])
-    )
-
-    #_abstract
-    (defp TNode)
-    (defp Black)
-    (defp BlackVal)
-    (defp BlackBranch)
-    (defp BlackBranchVal)
-    (defp Red)
-    (defp RedVal)
-    (defp RedBranch)
-    (defp RedBranchVal)
-    (defp TSeq)
-    (defp PersistentTreeMap)
-)
-
-(about #_"arbace.arm.PersistentTreeSet"
-    (defp PersistentTreeSet)
-)
-
 (about #_"arbace.arm.PersistentVector"
     (defp VNode)
     (defp TransientVector)
@@ -1555,7 +1497,7 @@
     )
 
     (defn #_"Appendable" append! [#_"Appendable" a, #_"any" x]
-        (if (or (char-sequence? x) (char? x)) (Appendable''append a, x) (append a x))
+        (if (or (string? x) (char? x)) (Appendable''append a, x) (append a x))
     )
 
     (defn #_"String" str
@@ -1643,20 +1585,20 @@
         )
     )
 
-    (defn #_"int" Murmur3'hashUnencodedChars [#_"CharSequence" s]
+    (defn #_"int" Murmur3'hashUnencodedChars [#_"String" s]
         (let [#_"int" h1
-                (loop-when [h1 Murmur3'seed #_"int" i 1] (< i (CharSequence''length s)) => h1
-                    (let [#_"int" k1 (bit-or (int (CharSequence''charAt s, (dec i))) (<< (int (CharSequence''charAt s, i)) 16))]
+                (loop-when [h1 Murmur3'seed #_"int" i 1] (< i (String''length s)) => h1
+                    (let [#_"int" k1 (bit-or (int (String''charAt s, (dec i))) (<< (int (String''charAt s, i)) 16))]
                         (recur (Murmur3'mixH1 h1, (Murmur3'mixK1 k1)) (+ i 2))
                     )
                 )
               h1
-                (when (odd? (CharSequence''length s)) => h1
-                    (let [#_"int" k1 (int (CharSequence''charAt s, (dec (CharSequence''length s))))]
+                (when (odd? (String''length s)) => h1
+                    (let [#_"int" k1 (int (String''charAt s, (dec (String''length s))))]
                         (bit-xor h1 (Murmur3'mixK1 k1))
                     )
                 )]
-            (Murmur3'fmix h1, (<< (CharSequence''length s) 1))
+            (Murmur3'fmix h1, (<< (String''length s) 1))
         )
     )
 
@@ -2967,12 +2909,12 @@
 (about #_"arbace.arm.StringSeq"
 
 (about #_"StringSeq"
-    (defq StringSeq [#_"meta" _meta, #_"CharSequence" s, #_"int" i] SeqForm)
+    (defq StringSeq [#_"meta" _meta, #_"String" s, #_"int" i] SeqForm)
 
     #_inherit
     (defm StringSeq ASeq)
 
-    (defn #_"StringSeq" StringSeq'new [#_"meta" meta, #_"CharSequence" s, #_"int" i]
+    (defn #_"StringSeq" StringSeq'new [#_"meta" meta, #_"String" s, #_"int" i]
         (new* StringSeq'class (anew [meta, s, i]))
     )
 
@@ -2982,14 +2924,14 @@
         )
     )
 
-    (defn #_"StringSeq" StringSeq'create [#_"CharSequence" s]
-        (when (pos? (CharSequence''length s))
+    (defn #_"StringSeq" StringSeq'create [#_"String" s]
+        (when (pos? (String''length s))
             (StringSeq'new nil, s, 0)
         )
     )
 
-    (-/extend-protocol Seqable java.lang.CharSequence
-        (#_"StringSeq" Seqable'''seq [#_"CharSequence" s] (StringSeq'create s))
+    (-/extend-protocol Seqable java.lang.String
+        (#_"StringSeq" Seqable'''seq [#_"String" s] (StringSeq'create s))
     )
 
     (defn #_"seq" StringSeq''seq [#_"StringSeq" this]
@@ -2997,33 +2939,33 @@
     )
 
     (defn #_"Object" StringSeq''first [#_"StringSeq" this]
-        (Character'valueOf (CharSequence''charAt (:s this), (:i this)))
+        (Character'valueOf (String''charAt (:s this), (:i this)))
     )
 
     (defn #_"seq" StringSeq''next [#_"StringSeq" this]
-        (when (< (inc (:i this)) (CharSequence''length (:s this)))
+        (when (< (inc (:i this)) (String''length (:s this)))
             (StringSeq'new (:_meta this), (:s this), (inc (:i this)))
         )
     )
 
     (defn #_"int" StringSeq''count [#_"StringSeq" this]
-        (- (CharSequence''length (:s this)) (:i this))
+        (- (String''length (:s this)) (:i this))
     )
 
     (defn #_"Object" StringSeq''reduce
         ([#_"StringSeq" this, #_"fn" f]
-            (let [#_"CharSequence" s (:s this) #_"int" i (:i this) #_"int" n (CharSequence''length s)]
-                (loop-when [#_"Object" r (CharSequence''charAt s, i) i (inc i)] (< i n) => r
-                    (let [r (f r (CharSequence''charAt s, i))]
+            (let [#_"String" s (:s this) #_"int" i (:i this) #_"int" n (String''length s)]
+                (loop-when [#_"Object" r (String''charAt s, i) i (inc i)] (< i n) => r
+                    (let [r (f r (String''charAt s, i))]
                         (if (reduced? r) (deref r) (recur r (inc i)))
                     )
                 )
             )
         )
         ([#_"StringSeq" this, #_"fn" f, #_"Object" r]
-            (let [#_"CharSequence" s (:s this) #_"int" i (:i this) #_"int" n (CharSequence''length s)]
-                (loop-when [r (f r (CharSequence''charAt s, i)) i (inc i)] (< i n) => (if (reduced? r) (deref r) r)
-                    (if (reduced? r) (deref r) (recur (f r (CharSequence''charAt s, i)) (inc i)))
+            (let [#_"String" s (:s this) #_"int" i (:i this) #_"int" n (String''length s)]
+                (loop-when [r (f r (String''charAt s, i)) i (inc i)] (< i n) => (if (reduced? r) (deref r) r)
+                    (if (reduced? r) (deref r) (recur (f r (String''charAt s, i)) (inc i)))
                 )
             )
         )
@@ -5756,18 +5698,6 @@
     )
 )
 
-(defn merge-with [f & maps]
-    (when (some identity maps)
-        (letfn [(merge- [m e]
-                    (let [k (key e) v (val e)]
-                        (assoc m k (if (contains? m k) (f (get m k) v) v))
-                    )
-                )]
-            (reduce #(reduce merge- (or %1 (hash-map)) %2) maps)
-        )
-    )
-)
-
 (defn zipmap [keys vals]
     (loop-when-recur [m (transient (hash-map)) ks (seq keys) vs (seq vals)]
                      (and ks vs)
@@ -5965,1204 +5895,6 @@
 )
 
 (defn set [s] (if (set? s) (with-meta s nil) (into (hash-set) s)))
-)
-
-(about #_"arbace.arm.PersistentTreeMap"
-
-(about #_"Black"
-    (defq Black [#_"key" key])
-
-    #_inherit
-    (defm Black TNode AMapEntry APersistentVector AFn)
-
-    (defn #_"Black" Black'new [#_"key" key]
-        (new* Black'class (anew [key]))
-    )
-
-    (defn #_"node" Black''addLeft [#_"Black" this, #_"node" ins]
-        (ITNode'''balanceLeft ins, this)
-    )
-
-    (defn #_"node" Black''addRight [#_"Black" this, #_"node" ins]
-        (ITNode'''balanceRight ins, this)
-    )
-
-    (defn #_"node" Black''removeLeft [#_"Black" this, #_"node" del]
-        (PersistentTreeMap'balanceLeftDel (:key this), (:val this), del, (:right this))
-    )
-
-    (defn #_"node" Black''removeRight [#_"Black" this, #_"node" del]
-        (PersistentTreeMap'balanceRightDel (:key this), (:val this), (:left this), del)
-    )
-
-    (defn #_"node" Black''blacken [#_"Black" this]
-        this
-    )
-
-    (defn #_"node" Black''redden [#_"Black" this]
-        (Red'new (:key this))
-    )
-
-    (defn #_"node" Black''balanceLeft [#_"Black" this, #_"node" parent]
-        (PersistentTreeMap'black (:key parent), (:val parent), this, (:right parent))
-    )
-
-    (defn #_"node" Black''balanceRight [#_"Black" this, #_"node" parent]
-        (PersistentTreeMap'black (:key parent), (:val parent), (:left parent), this)
-    )
-
-    (defn #_"node" Black''replace [#_"Black" this, #_"key" key, #_"value" val, #_"node" left, #_"node" right]
-        (PersistentTreeMap'black key, val, left, right)
-    )
-
-    (defm Black IMapEntry
-        (IMapEntry'''key => :key)
-        (IMapEntry'''val => :val)
-    )
-
-    (defm Black ITNode
-        (ITNode'''addLeft => Black''addLeft)
-        (ITNode'''addRight => Black''addRight)
-        (ITNode'''removeLeft => Black''removeLeft)
-        (ITNode'''removeRight => Black''removeRight)
-        (ITNode'''blacken => Black''blacken)
-        (ITNode'''redden => Black''redden)
-        (ITNode'''balanceLeft => Black''balanceLeft)
-        (ITNode'''balanceRight => Black''balanceRight)
-        (ITNode'''replace => Black''replace)
-    )
-
-    (defm Black Sequential)
-
-    (defm Black Indexed
-        (Indexed'''nth => AMapEntry''nth)
-    )
-
-    (defm Black Counted
-        (Counted'''count => AMapEntry''count)
-    )
-
-    (defm Black Seqable
-        (Seqable'''seq => AMapEntry''seq)
-    )
-
-    (defm Black Reversible
-        (Reversible'''rseq => AMapEntry''rseq)
-    )
-
-    (defm Black IObject
-        (IObject'''equals => AMapEntry''equals)
-    )
-
-    (defm Black Hashed
-        (Hashed'''hash => AMapEntry''hash)
-    )
-
-    (defm Black Comparable
-        (Comparable'''compareTo => AMapEntry''compareTo)
-    )
-)
-
-(about #_"BlackVal"
-    (defq BlackVal [#_"key" key, #_"value" val])
-
-    #_inherit
-    (defm BlackVal Black TNode AMapEntry APersistentVector AFn)
-
-    (defn #_"BlackVal" BlackVal'new [#_"key" key, #_"value" val]
-        (new* BlackVal'class (anew [key, val]))
-    )
-
-    (defn #_"node" BlackVal''redden [#_"BlackVal" this]
-        (RedVal'new (:key this), (:val this))
-    )
-
-    (defm BlackVal IMapEntry
-        (IMapEntry'''key => :key)
-        (IMapEntry'''val => :val)
-    )
-
-    (defm BlackVal ITNode
-        (ITNode'''addLeft => Black''addLeft)
-        (ITNode'''addRight => Black''addRight)
-        (ITNode'''removeLeft => Black''removeLeft)
-        (ITNode'''removeRight => Black''removeRight)
-        (ITNode'''blacken => Black''blacken)
-        (ITNode'''redden => BlackVal''redden)
-        (ITNode'''balanceLeft => Black''balanceLeft)
-        (ITNode'''balanceRight => Black''balanceRight)
-        (ITNode'''replace => Black''replace)
-    )
-
-    (defm BlackVal Sequential)
-
-    (defm BlackVal Indexed
-        (Indexed'''nth => AMapEntry''nth)
-    )
-
-    (defm BlackVal Counted
-        (Counted'''count => AMapEntry''count)
-    )
-
-    (defm BlackVal Seqable
-        (Seqable'''seq => AMapEntry''seq)
-    )
-
-    (defm BlackVal Reversible
-        (Reversible'''rseq => AMapEntry''rseq)
-    )
-
-    (defm BlackVal IObject
-        (IObject'''equals => AMapEntry''equals)
-    )
-
-    (defm BlackVal Hashed
-        (Hashed'''hash => AMapEntry''hash)
-    )
-
-    (defm BlackVal Comparable
-        (Comparable'''compareTo => AMapEntry''compareTo)
-    )
-)
-
-(about #_"BlackBranch"
-    (defq BlackBranch [#_"key" key, #_"node" left, #_"node" right])
-
-    #_inherit
-    (defm BlackBranch Black TNode AMapEntry APersistentVector AFn)
-
-    (defn #_"BlackBranch" BlackBranch'new [#_"key" key, #_"node" left, #_"node" right]
-        (new* BlackBranch'class (anew [key, left, right]))
-    )
-
-    (defn #_"node" BlackBranch''redden [#_"BlackBranch" this]
-        (RedBranch'new (:key this), (:left this), (:right this))
-    )
-
-    (defm BlackBranch IMapEntry
-        (IMapEntry'''key => :key)
-        (IMapEntry'''val => :val)
-    )
-
-    (defm BlackBranch ITNode
-        (ITNode'''addLeft => Black''addLeft)
-        (ITNode'''addRight => Black''addRight)
-        (ITNode'''removeLeft => Black''removeLeft)
-        (ITNode'''removeRight => Black''removeRight)
-        (ITNode'''blacken => Black''blacken)
-        (ITNode'''redden => BlackBranch''redden)
-        (ITNode'''balanceLeft => Black''balanceLeft)
-        (ITNode'''balanceRight => Black''balanceRight)
-        (ITNode'''replace => Black''replace)
-    )
-
-    (defm BlackBranch Sequential)
-
-    (defm BlackBranch Indexed
-        (Indexed'''nth => AMapEntry''nth)
-    )
-
-    (defm BlackBranch Counted
-        (Counted'''count => AMapEntry''count)
-    )
-
-    (defm BlackBranch Seqable
-        (Seqable'''seq => AMapEntry''seq)
-    )
-
-    (defm BlackBranch Reversible
-        (Reversible'''rseq => AMapEntry''rseq)
-    )
-
-    (defm BlackBranch IObject
-        (IObject'''equals => AMapEntry''equals)
-    )
-
-    (defm BlackBranch Hashed
-        (Hashed'''hash => AMapEntry''hash)
-    )
-
-    (defm BlackBranch Comparable
-        (Comparable'''compareTo => AMapEntry''compareTo)
-    )
-)
-
-(about #_"BlackBranchVal"
-    (defq BlackBranchVal [#_"key" key, #_"value" val, #_"node" left, #_"node" right])
-
-    #_inherit
-    (defm BlackBranchVal BlackBranch Black TNode AMapEntry APersistentVector AFn)
-
-    (defn #_"BlackBranchVal" BlackBranchVal'new [#_"key" key, #_"value" val, #_"node" left, #_"node" right]
-        (new* BlackBranchVal'class (anew [key, val, left, right]))
-    )
-
-    (defn #_"node" BlackBranchVal''redden [#_"BlackBranchVal" this]
-        (RedBranchVal'new (:key this), (:val this), (:left this), (:right this))
-    )
-
-    (defm BlackBranchVal IMapEntry
-        (IMapEntry'''key => :key)
-        (IMapEntry'''val => :val)
-    )
-
-    (defm BlackBranchVal ITNode
-        (ITNode'''addLeft => Black''addLeft)
-        (ITNode'''addRight => Black''addRight)
-        (ITNode'''removeLeft => Black''removeLeft)
-        (ITNode'''removeRight => Black''removeRight)
-        (ITNode'''blacken => Black''blacken)
-        (ITNode'''redden => BlackBranchVal''redden)
-        (ITNode'''balanceLeft => Black''balanceLeft)
-        (ITNode'''balanceRight => Black''balanceRight)
-        (ITNode'''replace => Black''replace)
-    )
-
-    (defm BlackBranchVal Sequential)
-
-    (defm BlackBranchVal Indexed
-        (Indexed'''nth => AMapEntry''nth)
-    )
-
-    (defm BlackBranchVal Counted
-        (Counted'''count => AMapEntry''count)
-    )
-
-    (defm BlackBranchVal Seqable
-        (Seqable'''seq => AMapEntry''seq)
-    )
-
-    (defm BlackBranchVal Reversible
-        (Reversible'''rseq => AMapEntry''rseq)
-    )
-
-    (defm BlackBranchVal IObject
-        (IObject'''equals => AMapEntry''equals)
-    )
-
-    (defm BlackBranchVal Hashed
-        (Hashed'''hash => AMapEntry''hash)
-    )
-
-    (defm BlackBranchVal Comparable
-        (Comparable'''compareTo => AMapEntry''compareTo)
-    )
-)
-
-(about #_"Red"
-    (defq Red [#_"key" key])
-
-    #_inherit
-    (defm Red TNode AMapEntry APersistentVector AFn)
-
-    (defn #_"Red" Red'new [#_"key" key]
-        (new* Red'class (anew [key]))
-    )
-
-    (defn #_"node" Red''addLeft [#_"Red" this, #_"node" ins]
-        (PersistentTreeMap'red (:key this), (:val this), ins, (:right this))
-    )
-
-    (defn #_"node" Red''addRight [#_"Red" this, #_"node" ins]
-        (PersistentTreeMap'red (:key this), (:val this), (:left this), ins)
-    )
-
-    (defn #_"node" Red''removeLeft [#_"Red" this, #_"node" del]
-        (PersistentTreeMap'red (:key this), (:val this), del, (:right this))
-    )
-
-    (defn #_"node" Red''removeRight [#_"Red" this, #_"node" del]
-        (PersistentTreeMap'red (:key this), (:val this), (:left this), del)
-    )
-
-    (defn #_"node" Red''blacken [#_"Red" this]
-        (Black'new (:key this))
-    )
-
-    (defn #_"node" Red''redden [#_"Red" this]
-        (throw! "invariant violation")
-    )
-
-    (defn #_"node" Red''balanceLeft [#_"Red" this, #_"node" parent]
-        (PersistentTreeMap'black (:key parent), (:val parent), this, (:right parent))
-    )
-
-    (defn #_"node" Red''balanceRight [#_"Red" this, #_"node" parent]
-        (PersistentTreeMap'black (:key parent), (:val parent), (:left parent), this)
-    )
-
-    (defn #_"node" Red''replace [#_"Red" this, #_"key" key, #_"value" val, #_"node" left, #_"node" right]
-        (PersistentTreeMap'red key, val, left, right)
-    )
-
-    (defm Red IMapEntry
-        (IMapEntry'''key => :key)
-        (IMapEntry'''val => :val)
-    )
-
-    (defm Red ITNode
-        (ITNode'''addLeft => Red''addLeft)
-        (ITNode'''addRight => Red''addRight)
-        (ITNode'''removeLeft => Red''removeLeft)
-        (ITNode'''removeRight => Red''removeRight)
-        (ITNode'''blacken => Red''blacken)
-        (ITNode'''redden => Red''redden)
-        (ITNode'''balanceLeft => Red''balanceLeft)
-        (ITNode'''balanceRight => Red''balanceRight)
-        (ITNode'''replace => Red''replace)
-    )
-
-    (defm Red Sequential)
-
-    (defm Red Indexed
-        (Indexed'''nth => AMapEntry''nth)
-    )
-
-    (defm Red Counted
-        (Counted'''count => AMapEntry''count)
-    )
-
-    (defm Red Seqable
-        (Seqable'''seq => AMapEntry''seq)
-    )
-
-    (defm Red Reversible
-        (Reversible'''rseq => AMapEntry''rseq)
-    )
-
-    (defm Red IObject
-        (IObject'''equals => AMapEntry''equals)
-    )
-
-    (defm Red Hashed
-        (Hashed'''hash => AMapEntry''hash)
-    )
-
-    (defm Red Comparable
-        (Comparable'''compareTo => AMapEntry''compareTo)
-    )
-)
-
-(about #_"RedVal"
-    (defq RedVal [#_"key" key, #_"value" val])
-
-    #_inherit
-    (defm RedVal Red TNode AMapEntry APersistentVector AFn)
-
-    (defn #_"RedVal" RedVal'new [#_"key" key, #_"value" val]
-        (new* RedVal'class (anew [key, val]))
-    )
-
-    (defn #_"node" RedVal''blacken [#_"RedVal" this]
-        (BlackVal'new (:key this), (:val this))
-    )
-
-    (defm RedVal IMapEntry
-        (IMapEntry'''key => :key)
-        (IMapEntry'''val => :val)
-    )
-
-    (defm RedVal ITNode
-        (ITNode'''addLeft => Red''addLeft)
-        (ITNode'''addRight => Red''addRight)
-        (ITNode'''removeLeft => Red''removeLeft)
-        (ITNode'''removeRight => Red''removeRight)
-        (ITNode'''blacken => RedVal''blacken)
-        (ITNode'''redden => Red''redden)
-        (ITNode'''balanceLeft => Red''balanceLeft)
-        (ITNode'''balanceRight => Red''balanceRight)
-        (ITNode'''replace => Red''replace)
-    )
-
-    (defm RedVal Sequential)
-
-    (defm RedVal Indexed
-        (Indexed'''nth => AMapEntry''nth)
-    )
-
-    (defm RedVal Counted
-        (Counted'''count => AMapEntry''count)
-    )
-
-    (defm RedVal Seqable
-        (Seqable'''seq => AMapEntry''seq)
-    )
-
-    (defm RedVal Reversible
-        (Reversible'''rseq => AMapEntry''rseq)
-    )
-
-    (defm RedVal IObject
-        (IObject'''equals => AMapEntry''equals)
-    )
-
-    (defm RedVal Hashed
-        (Hashed'''hash => AMapEntry''hash)
-    )
-
-    (defm RedVal Comparable
-        (Comparable'''compareTo => AMapEntry''compareTo)
-    )
-)
-
-(about #_"RedBranch"
-    (defq RedBranch [#_"key" key, #_"node" left, #_"node" right])
-
-    #_inherit
-    (defm RedBranch Red TNode AMapEntry APersistentVector AFn)
-
-    (defn #_"RedBranch" RedBranch'new [#_"key" key, #_"node" left, #_"node" right]
-        (new* RedBranch'class (anew [key, left, right]))
-    )
-
-    (defn #_"node" RedBranch''blacken [#_"RedBranch" this]
-        (BlackBranch'new (:key this), (:left this), (:right this))
-    )
-
-    (defn #_"node" RedBranch''balanceLeft [#_"RedBranch" this, #_"node" parent]
-        (cond (satisfies? Red (:left this))
-            (do
-                (PersistentTreeMap'red (:key this), (:val this), (ITNode'''blacken (:left this)), (PersistentTreeMap'black (:key parent), (:val parent), (:right this), (:right parent)))
-            )
-            (satisfies? Red (:right this))
-            (do
-                (PersistentTreeMap'red (:key (:right this)), (:val (:right this)), (PersistentTreeMap'black (:key this), (:val this), (:left this), (:left (:right this))), (PersistentTreeMap'black (:key parent), (:val parent), (:right (:right this)), (:right parent)))
-            )
-            :else
-            (do
-                (PersistentTreeMap'black (:key parent), (:val parent), this, (:right parent))
-            )
-        )
-    )
-
-    (defn #_"node" RedBranch''balanceRight [#_"RedBranch" this, #_"node" parent]
-        (cond (satisfies? Red (:right this))
-            (do
-                (PersistentTreeMap'red (:key this), (:val this), (PersistentTreeMap'black (:key parent), (:val parent), (:left parent), (:left this)), (ITNode'''blacken (:right this)))
-            )
-            (satisfies? Red (:left this))
-            (do
-                (PersistentTreeMap'red (:key (:left this)), (:val (:left this)), (PersistentTreeMap'black (:key parent), (:val parent), (:left parent), (:left (:left this))), (PersistentTreeMap'black (:key this), (:val this), (:right (:left this)), (:right this)))
-            )
-            :else
-            (do
-                (PersistentTreeMap'black (:key parent), (:val parent), (:left parent), this)
-            )
-        )
-    )
-
-    (defm RedBranch IMapEntry
-        (IMapEntry'''key => :key)
-        (IMapEntry'''val => :val)
-    )
-
-    (defm RedBranch ITNode
-        (ITNode'''addLeft => Red''addLeft)
-        (ITNode'''addRight => Red''addRight)
-        (ITNode'''removeLeft => Red''removeLeft)
-        (ITNode'''removeRight => Red''removeRight)
-        (ITNode'''blacken => RedBranch''blacken)
-        (ITNode'''redden => Red''redden)
-        (ITNode'''balanceLeft => RedBranch''balanceLeft)
-        (ITNode'''balanceRight => RedBranch''balanceRight)
-        (ITNode'''replace => Red''replace)
-    )
-
-    (defm RedBranch Sequential)
-
-    (defm RedBranch Indexed
-        (Indexed'''nth => AMapEntry''nth)
-    )
-
-    (defm RedBranch Counted
-        (Counted'''count => AMapEntry''count)
-    )
-
-    (defm RedBranch Seqable
-        (Seqable'''seq => AMapEntry''seq)
-    )
-
-    (defm RedBranch Reversible
-        (Reversible'''rseq => AMapEntry''rseq)
-    )
-
-    (defm RedBranch IObject
-        (IObject'''equals => AMapEntry''equals)
-    )
-
-    (defm RedBranch Hashed
-        (Hashed'''hash => AMapEntry''hash)
-    )
-
-    (defm RedBranch Comparable
-        (Comparable'''compareTo => AMapEntry''compareTo)
-    )
-)
-
-(about #_"RedBranchVal"
-    (defq RedBranchVal [#_"key" key, #_"value" val, #_"node" left, #_"node" right])
-
-    #_inherit
-    (defm RedBranchVal RedBranch Red TNode AMapEntry APersistentVector AFn)
-
-    (defn #_"RedBranchVal" RedBranchVal'new [#_"key" key, #_"value" val, #_"node" left, #_"node" right]
-        (new* RedBranchVal'class (anew [key, val, left, right]))
-    )
-
-    (defn #_"node" RedBranchVal''blacken [#_"RedBranchVal" this]
-        (BlackBranchVal'new (:key this), (:val this), (:left this), (:right this))
-    )
-
-    (defm RedBranchVal IMapEntry
-        (IMapEntry'''key => :key)
-        (IMapEntry'''val => :val)
-    )
-
-    (defm RedBranchVal ITNode
-        (ITNode'''addLeft => Red''addLeft)
-        (ITNode'''addRight => Red''addRight)
-        (ITNode'''removeLeft => Red''removeLeft)
-        (ITNode'''removeRight => Red''removeRight)
-        (ITNode'''blacken => RedBranchVal''blacken)
-        (ITNode'''redden => Red''redden)
-        (ITNode'''balanceLeft => RedBranch''balanceLeft)
-        (ITNode'''balanceRight => RedBranch''balanceRight)
-        (ITNode'''replace => Red''replace)
-    )
-
-    (defm RedBranchVal Sequential)
-
-    (defm RedBranchVal Indexed
-        (Indexed'''nth => AMapEntry''nth)
-    )
-
-    (defm RedBranchVal Counted
-        (Counted'''count => AMapEntry''count)
-    )
-
-    (defm RedBranchVal Seqable
-        (Seqable'''seq => AMapEntry''seq)
-    )
-
-    (defm RedBranchVal Reversible
-        (Reversible'''rseq => AMapEntry''rseq)
-    )
-
-    (defm RedBranchVal IObject
-        (IObject'''equals => AMapEntry''equals)
-    )
-
-    (defm RedBranchVal Hashed
-        (Hashed'''hash => AMapEntry''hash)
-    )
-
-    (defm RedBranchVal Comparable
-        (Comparable'''compareTo => AMapEntry''compareTo)
-    )
-)
-
-(about #_"TSeq"
-    (defq TSeq [#_"meta" _meta, #_"seq" stack, #_"boolean" asc?, #_"int" cnt] SeqForm)
-
-    #_inherit
-    (defm TSeq ASeq)
-
-    (defn #_"TSeq" TSeq'new
-        ([#_"seq" stack, #_"boolean" asc?] (TSeq'new stack, asc?, -1))
-        ([#_"seq" stack, #_"boolean" asc?, #_"int" cnt] (TSeq'new nil, stack, asc?, cnt))
-        ([#_"meta" meta, #_"seq" stack, #_"boolean" asc?, #_"int" cnt]
-            (new* TSeq'class (anew [meta, stack, asc?, cnt]))
-        )
-    )
-
-    (defn #_"TSeq" TSeq''withMeta [#_"TSeq" this, #_"meta" meta]
-        (when-not (= meta (:_meta this)) => this
-            (TSeq'new meta, (:stack this), (:asc? this), (:cnt this))
-        )
-    )
-
-    (defn #_"seq" TSeq'push [#_"node" t, #_"seq" stack, #_"boolean" asc?]
-        (loop-when [stack stack t t] (some? t) => stack
-            (recur (cons t stack) (if asc? (:left t) (:right t)))
-        )
-    )
-
-    (defn #_"TSeq" TSeq'create [#_"node" t, #_"boolean" asc?, #_"int" cnt]
-        (TSeq'new (TSeq'push t, nil, asc?), asc?, cnt)
-    )
-
-    (defn #_"seq" TSeq''seq [#_"TSeq" this]
-        this
-    )
-
-    (defn #_"Object" TSeq''first [#_"TSeq" this]
-        (first (:stack this))
-    )
-
-    (defn #_"seq" TSeq''next [#_"TSeq" this]
-        (let [#_"node" t #_"node" (first (:stack this)) #_"boolean" asc? (:asc? this)]
-            (when-some [#_"seq" stack (TSeq'push (if asc? (:right t) (:left t)), (next (:stack this)), asc?)]
-                (TSeq'new stack, asc?, (dec (:cnt this)))
-            )
-        )
-    )
-
-    (defn #_"int" TSeq''count [#_"TSeq" this]
-        (when (neg? (:cnt this)) => (:cnt this)
-            (count (:stack this))
-        )
-    )
-
-    (defm TSeq IMeta
-        (IMeta'''meta => :_meta)
-    )
-
-    (defm TSeq IObj
-        (IObj'''withMeta => TSeq''withMeta)
-    )
-
-    (defm TSeq Sequential)
-
-    (defm TSeq Seqable
-        (Seqable'''seq => TSeq''seq)
-    )
-
-    (defm TSeq ISeq
-        (ISeq'''first => TSeq''first)
-        (ISeq'''next => TSeq''next)
-    )
-
-    (defm TSeq Counted
-        (Counted'''count => TSeq''count)
-    )
-
-    (defm TSeq Hashed
-        (Hashed'''hash => Murmur3'hashOrdered)
-    )
-
-    (defm TSeq IObject
-        (IObject'''equals => ASeq''equals)
-    )
-)
-
-(about #_"PersistentTreeMap"
-    (defq PersistentTreeMap [#_"meta" _meta, #_"Comparator" cmp, #_"node" tree, #_"int" cnt] MapForm)
-
-    #_inherit
-    (defm PersistentTreeMap APersistentMap AFn)
-
-    (defn #_"PersistentTreeMap" PersistentTreeMap'new
-        ([] (PersistentTreeMap'new compare))
-        ([#_"Comparator" cmp] (PersistentTreeMap'new nil, cmp))
-        ([#_"meta" meta, #_"Comparator" cmp] (PersistentTreeMap'new meta, cmp, nil, 0))
-        ([#_"meta" meta, #_"Comparator" cmp, #_"node" tree, #_"int" cnt]
-            (new* PersistentTreeMap'class (anew [meta, cmp, tree, cnt]))
-        )
-    )
-
-    (def #_"PersistentTreeMap" PersistentTreeMap'EMPTY (PersistentTreeMap'new))
-
-    (defn #_"PersistentTreeMap" PersistentTreeMap'create
-        ([#_"Seqable" keyvals] (PersistentTreeMap'create nil, keyvals))
-        ([#_"Comparator" cmp, #_"Seqable" keyvals]
-            (let [#_"PersistentTreeMap" m (if (some? cmp) (PersistentTreeMap'new cmp) PersistentTreeMap'EMPTY)]
-                (loop-when [m m #_"seq" s (seq keyvals)] (some? s) => m
-                    (when (some? (next s)) => (throw! (str "no value supplied for key: " (first s)))
-                        (recur (assoc m (first s) (second s)) (next (next s)))
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"IPersistentCollection" PersistentTreeMap''empty [#_"PersistentTreeMap" this]
-        (PersistentTreeMap'new (:_meta this), (:cmp this))
-    )
-
-    (defn #_"PersistentTreeMap" PersistentTreeMap''withMeta [#_"PersistentTreeMap" this, #_"meta" meta]
-        (when-not (= meta (:_meta this)) => this
-            (PersistentTreeMap'new meta, (:cmp this), (:tree this), (:cnt this))
-        )
-    )
-
-    (defn #_"int" PersistentTreeMap''doCompare [#_"PersistentTreeMap" this, #_"key" a, #_"key" b]
-        (Comparator''compare (:cmp this), a, b)
-    )
-
-    (defn #_"key" PersistentTreeMap''entryKey [#_"PersistentTreeMap" this, #_"pair" entry]
-        (key entry)
-    )
-
-    (defn #_"seq" PersistentTreeMap''seq
-        ([#_"PersistentTreeMap" this] (PersistentTreeMap''seq this, true))
-        ([#_"PersistentTreeMap" this, #_"boolean" ascending?]
-            (when (pos? (:cnt this))
-                (TSeq'create (:tree this), ascending?, (:cnt this))
-            )
-        )
-    )
-
-    (defn #_"seq" PersistentTreeMap''seqFrom [#_"PersistentTreeMap" this, #_"key" key, #_"boolean" ascending?]
-        (when (pos? (:cnt this))
-            (loop-when [#_"seq" s nil #_"node" t (:tree this)] (some? t) => (when (some? s) (TSeq'new s, ascending?))
-                (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
-                    (cond
-                        (zero? cmp) (TSeq'new (cons t s), ascending?)
-                        ascending?  (if (neg? cmp) (recur (cons t s) (:left t)) (recur s (:right t)))
-                        :else       (if (pos? cmp) (recur (cons t s) (:right t)) (recur s (:left t)))
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"seq" PersistentTreeMap''rseq [#_"PersistentTreeMap" this]
-        (PersistentTreeMap''seq this, false)
-    )
-
-    (defn #_"node" PersistentTreeMap''entryAt [#_"PersistentTreeMap" this, #_"key" key]
-        (loop-when [#_"node" t (:tree this)] (some? t) => t
-            (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
-                (cond
-                    (neg? cmp) (recur (:left t))
-                    (pos? cmp) (recur (:right t))
-                    :else      t
-                )
-            )
-        )
-    )
-
-    (defn #_"value" PersistentTreeMap''valAt
-        ([#_"PersistentTreeMap" this, #_"key" key] (PersistentTreeMap''valAt this, key, nil))
-        ([#_"PersistentTreeMap" this, #_"key" key, #_"value" not-found]
-            (when-some [#_"node" node (PersistentTreeMap''entryAt this, key)] => not-found
-                (IMapEntry'''val node)
-            )
-        )
-    )
-
-    (defn #_"boolean" PersistentTreeMap''containsKey [#_"PersistentTreeMap" this, #_"key" key]
-        (some? (PersistentTreeMap''entryAt this, key))
-    )
-
-    (defn #_"node" PersistentTreeMap''min [#_"PersistentTreeMap" this]
-        (when-some [#_"node" t (:tree this)]
-            (loop-when-recur t (some? (:left t)) (:left t) => t)
-        )
-    )
-
-    (defn #_"node" PersistentTreeMap''max [#_"PersistentTreeMap" this]
-        (when-some [#_"node" t (:tree this)]
-            (loop-when-recur t (some? (:right t)) (:right t) => t)
-        )
-    )
-
-    (defn #_"key" PersistentTreeMap''minKey [#_"PersistentTreeMap" this]
-        (let [#_"node" t (PersistentTreeMap''min this)]
-            (when (some? t) (:key t))
-        )
-    )
-
-    (defn #_"key" PersistentTreeMap''maxKey [#_"PersistentTreeMap" this]
-        (let [#_"node" t (PersistentTreeMap''max this)]
-            (when (some? t) (:key t))
-        )
-    )
-
-    (defn #_"int" PersistentTreeMap''depth
-        ([#_"PersistentTreeMap" this] (PersistentTreeMap''depth this, (:tree this)))
-        ([#_"PersistentTreeMap" this, #_"node" t]
-            (when (some? t) => 0
-                (inc (max (PersistentTreeMap''depth this, (:left t)) (PersistentTreeMap''depth this, (:right t))))
-            )
-        )
-    )
-
-    (defn #_"Red" PersistentTreeMap'red [#_"key" key, #_"value" val, #_"node" left, #_"node" right]
-        (if (and (nil? left) (nil? right))
-            (if (nil? val)
-                (Red'new key)
-                (RedVal'new key, val)
-            )
-            (if (nil? val)
-                (RedBranch'new key, left, right)
-                (RedBranchVal'new key, val, left, right)
-            )
-        )
-    )
-
-    (defn #_"Black" PersistentTreeMap'black [#_"key" key, #_"value" val, #_"node" left, #_"node" right]
-        (if (and (nil? left) (nil? right))
-            (if (nil? val)
-                (Black'new key)
-                (BlackVal'new key, val)
-            )
-            (if (nil? val)
-                (BlackBranch'new key, left, right)
-                (BlackBranchVal'new key, val, left, right)
-            )
-        )
-    )
-
-    (defn #_"node" PersistentTreeMap'rightBalance [#_"key" key, #_"value" val, #_"node" left, #_"node" ins]
-        (cond
-            (and (satisfies? Red ins) (satisfies? Red (:right ins)))
-                (PersistentTreeMap'red (:key ins), (:val ins), (PersistentTreeMap'black key, val, left, (:left ins)), (ITNode'''blacken (:right ins)))
-            (and (satisfies? Red ins) (satisfies? Red (:left ins)))
-                (PersistentTreeMap'red (:key (:left ins)), (:val (:left ins)), (PersistentTreeMap'black key, val, left, (:left (:left ins))), (PersistentTreeMap'black (:key ins), (:val ins), (:right (:left ins)), (:right ins)))
-            :else
-                (PersistentTreeMap'black key, val, left, ins)
-        )
-    )
-
-    (defn #_"node" PersistentTreeMap'balanceLeftDel [#_"key" key, #_"value" val, #_"node" del, #_"node" right]
-        (cond
-            (satisfies? Red del)
-                (PersistentTreeMap'red key, val, (ITNode'''blacken del), right)
-            (satisfies? Black right)
-                (PersistentTreeMap'rightBalance key, val, del, (ITNode'''redden right))
-            (and (satisfies? Red right) (satisfies? Black (:left right)))
-                (PersistentTreeMap'red (:key (:left right)), (:val (:left right)), (PersistentTreeMap'black key, val, del, (:left (:left right))), (PersistentTreeMap'rightBalance (:key right), (:val right), (:right (:left right)), (ITNode'''redden (:right right))))
-            :else
-                (throw! "invariant violation")
-        )
-    )
-
-    (defn #_"node" PersistentTreeMap'leftBalance [#_"key" key, #_"value" val, #_"node" ins, #_"node" right]
-        (cond
-            (and (satisfies? Red ins) (satisfies? Red (:left ins)))
-                (PersistentTreeMap'red (:key ins), (:val ins), (ITNode'''blacken (:left ins)), (PersistentTreeMap'black key, val, (:right ins), right))
-            (and (satisfies? Red ins) (satisfies? Red (:right ins)))
-                (PersistentTreeMap'red (:key (:right ins)), (:val (:right ins)), (PersistentTreeMap'black (:key ins), (:val ins), (:left ins), (:left (:right ins))), (PersistentTreeMap'black key, val, (:right (:right ins)), right))
-            :else
-                (PersistentTreeMap'black key, val, ins, right)
-        )
-    )
-
-    (defn #_"node" PersistentTreeMap'balanceRightDel [#_"key" key, #_"value" val, #_"node" left, #_"node" del]
-        (cond
-            (satisfies? Red del)
-                (PersistentTreeMap'red key, val, left, (ITNode'''blacken del))
-            (satisfies? Black left)
-                (PersistentTreeMap'leftBalance key, val, (ITNode'''redden left), del)
-            (and (satisfies? Red left) (satisfies? Black (:right left)))
-                (PersistentTreeMap'red (:key (:right left)), (:val (:right left)), (PersistentTreeMap'leftBalance (:key left), (:val left), (ITNode'''redden (:left left)), (:left (:right left))), (PersistentTreeMap'black key, val, (:right (:right left)), del))
-            :else
-                (throw! "invariant violation")
-        )
-    )
-
-    (defn #_"node" PersistentTreeMap''add [#_"PersistentTreeMap" this, #_"node" t, #_"key" key, #_"value" val, #_"node'" found]
-        (if (nil? t)
-            (if (nil? val)
-                (Red'new key)
-                (RedVal'new key, val)
-            )
-            (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
-                (if (zero? cmp)
-                    (do
-                        (reset! found t)
-                        nil
-                    )
-                    (let [#_"node" ins (PersistentTreeMap''add this, (if (neg? cmp) (:left t) (:right t)), key, val, found)]
-                        (when (some? ins) => nil
-                            (if (neg? cmp) (ITNode'''addLeft t, ins) (ITNode'''addRight t, ins))
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"node" PersistentTreeMap'append [#_"node" left, #_"node" right]
-        (cond
-            (nil? left)
-                right
-            (nil? right)
-                left
-            (satisfies? Red left)
-                (if (satisfies? Red right)
-                    (let [#_"node" app (PersistentTreeMap'append (:right left), (:left right))]
-                        (if (satisfies? Red app)
-                            (PersistentTreeMap'red (:key app), (:val app), (PersistentTreeMap'red (:key left), (:val left), (:left left), (:left app)), (PersistentTreeMap'red (:key right), (:val right), (:right app), (:right right)))
-                            (PersistentTreeMap'red (:key left), (:val left), (:left left), (PersistentTreeMap'red (:key right), (:val right), app, (:right right)))
-                        )
-                    )
-                    (PersistentTreeMap'red (:key left), (:val left), (:left left), (PersistentTreeMap'append (:right left), right))
-                )
-            (satisfies? Red right)
-                (PersistentTreeMap'red (:key right), (:val right), (PersistentTreeMap'append left, (:left right)), (:right right))
-            :else
-                (let [#_"node" app (PersistentTreeMap'append (:right left), (:left right))]
-                    (if (satisfies? Red app)
-                        (PersistentTreeMap'red (:key app), (:val app), (PersistentTreeMap'black (:key left), (:val left), (:left left), (:left app)), (PersistentTreeMap'black (:key right), (:val right), (:right app), (:right right)))
-                        (PersistentTreeMap'balanceLeftDel (:key left), (:val left), (:left left), (PersistentTreeMap'black (:key right), (:val right), app, (:right right)))
-                    )
-                )
-        )
-    )
-
-    (defn #_"node" PersistentTreeMap''remove [#_"PersistentTreeMap" this, #_"node" t, #_"key" key, #_"node'" found]
-        (when (some? t) => nil
-            (let [#_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))]
-                (if (zero? cmp)
-                    (do
-                        (reset! found t)
-                        (PersistentTreeMap'append (:left t), (:right t))
-                    )
-                    (let [#_"node" del (PersistentTreeMap''remove this, (if (neg? cmp) (:left t) (:right t)), key, found)]
-                        (when (or (some? del) (some? (deref found))) => nil
-                            (if (neg? cmp)
-                                (if (satisfies? Black (:left t))
-                                    (PersistentTreeMap'balanceLeftDel (:key t), (:val t), del, (:right t))
-                                    (PersistentTreeMap'red (:key t), (:val t), del, (:right t))
-                                )
-                                (if (satisfies? Black (:right t))
-                                    (PersistentTreeMap'balanceRightDel (:key t), (:val t), (:left t), del)
-                                    (PersistentTreeMap'red (:key t), (:val t), (:left t), del)
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"node" PersistentTreeMap''replace [#_"PersistentTreeMap" this, #_"node" t, #_"key" key, #_"value" val]
-        (let [
-            #_"int" cmp (PersistentTreeMap''doCompare this, key, (:key t))
-            #_"node" left  (if (neg? cmp) (PersistentTreeMap''replace this, (:left  t), key, val) (:left  t))
-            #_"node" right (if (pos? cmp) (PersistentTreeMap''replace this, (:right t), key, val) (:right t))
-        ]
-            (ITNode'''replace t, (:key t), (if (zero? cmp) val (:val t)), left, right)
-        )
-    )
-
-    (defn #_"PersistentTreeMap" PersistentTreeMap''assoc [#_"PersistentTreeMap" this, #_"key" key, #_"value" val]
-        (let [#_"node'" found (atom nil) #_"node" t (PersistentTreeMap''add this, (:tree this), key, val, found)]
-            (if (nil? t)
-                (if (= (:val #_"node" (deref found)) val)
-                    this
-                    (PersistentTreeMap'new (:_meta this), (:cmp this), (PersistentTreeMap''replace this, (:tree this), key, val), (:cnt this))
-                )
-                (PersistentTreeMap'new (:_meta this), (:cmp this), (ITNode'''blacken t), (inc (:cnt this)))
-            )
-        )
-    )
-
-    (defn #_"PersistentTreeMap" PersistentTreeMap''dissoc [#_"PersistentTreeMap" this, #_"key" key]
-        (let [#_"node'" found (atom nil) #_"node" t (PersistentTreeMap''remove this, (:tree this), key, found)]
-            (if (nil? t)
-                (if (nil? (deref found))
-                    this
-                    (PersistentTreeMap'new (:_meta this), (:cmp this))
-                )
-                (PersistentTreeMap'new (:_meta this), (:cmp this), (ITNode'''blacken t), (dec (:cnt this)))
-            )
-        )
-    )
-
-    (defm PersistentTreeMap IMeta
-        (IMeta'''meta => :_meta)
-    )
-
-    (defm PersistentTreeMap IObj
-        (IObj'''withMeta => PersistentTreeMap''withMeta)
-    )
-
-    (defm PersistentTreeMap Counted
-        (Counted'''count => :cnt)
-    )
-
-    (defm PersistentTreeMap ILookup
-        (ILookup'''valAt => PersistentTreeMap''valAt)
-    )
-
-    (defm PersistentTreeMap IFn
-        (IFn'''invoke => APersistentMap''invoke)
-        (IFn'''applyTo => AFn'applyTo)
-    )
-
-    (defm PersistentTreeMap Seqable
-        (Seqable'''seq => PersistentTreeMap''seq)
-    )
-
-    (defm PersistentTreeMap Reversible
-        (Reversible'''rseq => PersistentTreeMap''rseq)
-    )
-
-    (defm PersistentTreeMap IPersistentCollection
-        (IPersistentCollection'''conj => APersistentMap''conj)
-        (IPersistentCollection'''empty => PersistentTreeMap''empty)
-    )
-
-    (defm PersistentTreeMap Sorted
-        (Sorted'''comparator => :cmp)
-        (Sorted'''entryKey => PersistentTreeMap''entryKey)
-        (Sorted'''seq => PersistentTreeMap''seq)
-        (Sorted'''seqFrom => PersistentTreeMap''seqFrom)
-    )
-
-    (defm PersistentTreeMap Associative
-        (Associative'''assoc => PersistentTreeMap''assoc)
-        (Associative'''containsKey => PersistentTreeMap''containsKey)
-        (Associative'''entryAt => PersistentTreeMap''entryAt)
-    )
-
-    (defm PersistentTreeMap IPersistentMap
-        (IPersistentMap'''dissoc => PersistentTreeMap''dissoc)
-    )
-
-    (defm PersistentTreeMap IObject
-        (IObject'''equals => APersistentMap''equals)
-    )
-
-    (defm PersistentTreeMap Hashed
-        (Hashed'''hash => Murmur3'hashUnordered)
-    )
-)
-
-(defn sorted-map [& keyvals] (PersistentTreeMap'create keyvals))
-
-(defn sorted-map-by [cmp & keyvals] (PersistentTreeMap'create cmp keyvals))
-)
-
-(about #_"arbace.arm.PersistentTreeSet"
-
-(about #_"PersistentTreeSet"
-    (defq PersistentTreeSet [#_"meta" _meta, #_"map" impl] SetForm)
-
-    #_inherit
-    (defm PersistentTreeSet APersistentSet AFn)
-
-    (defn #_"PersistentTreeSet" PersistentTreeSet'new [#_"meta" meta, #_"map" impl]
-        (new* PersistentTreeSet'class (anew [meta, impl]))
-    )
-
-    (def #_"PersistentTreeSet" PersistentTreeSet'EMPTY (PersistentTreeSet'new nil, PersistentTreeMap'EMPTY))
-
-    (defn #_"PersistentTreeSet" PersistentTreeSet'create
-        ([                    #_"Seqable" init] (into PersistentTreeSet'EMPTY                                       init))
-        ([#_"Comparator" cmp, #_"Seqable" init] (into (PersistentTreeSet'new nil, (PersistentTreeMap'new nil, cmp)) init))
-    )
-
-    (defn #_"PersistentTreeSet" PersistentTreeSet''withMeta [#_"PersistentTreeSet" this, #_"meta" meta]
-        (when-not (= meta (:_meta this)) => this
-            (PersistentTreeSet'new meta, (:impl this))
-        )
-    )
-
-    (defn #_"int" PersistentTreeSet''count [#_"PersistentTreeSet" this]
-        (count (:impl this))
-    )
-
-    (defn #_"PersistentTreeSet" PersistentTreeSet''conj [#_"PersistentTreeSet" this, #_"value" val]
-        (if (contains? (:impl this) val)
-            this
-            (PersistentTreeSet'new (:_meta this), (assoc (:impl this) val val))
-        )
-    )
-
-    (defn #_"PersistentTreeSet" PersistentTreeSet''empty [#_"PersistentTreeSet" this]
-        (PersistentTreeSet'new (:_meta this), (empty (:impl this)))
-    )
-
-    (defn #_"IPersistentSet" PersistentTreeSet''disj [#_"PersistentTreeSet" this, #_"key" key]
-        (if (contains? (:impl this) key)
-            (PersistentTreeSet'new (:_meta this), (dissoc (:impl this) key))
-            this
-        )
-    )
-
-    (defn #_"boolean" PersistentTreeSet''contains? [#_"PersistentTreeSet" this, #_"key" key]
-        (contains? (:impl this) key)
-    )
-
-    (defn #_"value" PersistentTreeSet''get [#_"PersistentTreeSet" this, #_"key" key]
-        (get (:impl this) key)
-    )
-
-    (defn #_"Comparator" PersistentTreeSet''comparator [#_"PersistentTreeSet" this]
-        (Sorted'''comparator (:impl this))
-    )
-
-    (defn #_"value" PersistentTreeSet''entryKey [#_"PersistentTreeSet" this, #_"value" entry]
-        entry
-    )
-
-    (defn #_"seq" PersistentTreeSet''seq
-        ([#_"PersistentTreeSet" this]
-            (keys (:impl this))
-        )
-        ([#_"PersistentTreeSet" this, #_"boolean" ascending?]
-            (keys (Sorted'''seq (:impl this), ascending?))
-        )
-    )
-
-    (defn #_"seq" PersistentTreeSet''seqFrom [#_"PersistentTreeSet" this, #_"key" key, #_"boolean" ascending?]
-        (keys (Sorted'''seqFrom (:impl this), key, ascending?))
-    )
-
-    (defn #_"seq" PersistentTreeSet''rseq [#_"PersistentTreeSet" this]
-        (map key (rseq (:impl this)))
-    )
-
-    (defm PersistentTreeSet IMeta
-        (IMeta'''meta => :_meta)
-    )
-
-    (defm PersistentTreeSet IObj
-        (IObj'''withMeta => PersistentTreeSet''withMeta)
-    )
-
-    (defm PersistentTreeSet Counted
-        (Counted'''count => PersistentTreeSet''count)
-    )
-
-    (defm PersistentTreeSet IPersistentCollection
-        (IPersistentCollection'''conj => PersistentTreeSet''conj)
-        (IPersistentCollection'''empty => PersistentTreeSet''empty)
-    )
-
-    (defm PersistentTreeSet IPersistentSet
-        (IPersistentSet'''disj => PersistentTreeSet''disj)
-        (IPersistentSet'''contains? => PersistentTreeSet''contains?)
-        (IPersistentSet'''get => PersistentTreeSet''get)
-    )
-
-    (defm PersistentTreeSet Sorted
-        (Sorted'''comparator => PersistentTreeSet''comparator)
-        (Sorted'''entryKey => PersistentTreeSet''entryKey)
-        (Sorted'''seq => PersistentTreeSet''seq)
-        (Sorted'''seqFrom => PersistentTreeSet''seqFrom)
-    )
-
-    (defm PersistentTreeSet Seqable
-        (Seqable'''seq => PersistentTreeSet''seq)
-    )
-
-    (defm PersistentTreeSet Reversible
-        (Reversible'''rseq => PersistentTreeSet''rseq)
-    )
-
-    (defm PersistentTreeSet IFn
-        (IFn'''invoke => APersistentSet''invoke)
-        (IFn'''applyTo => AFn'applyTo)
-    )
-
-    (defm PersistentTreeSet IObject
-        (IObject'''equals => APersistentSet''equals)
-    )
-
-    (defm PersistentTreeSet Hashed
-        (Hashed'''hash => Murmur3'hashUnordered)
-    )
-)
-
-(defn sorted-set [& keys] (PersistentTreeSet'create keys))
-
-(defn sorted-set-by [cmp & keys] (PersistentTreeSet'create cmp keys))
 )
 
 (about #_"arbace.arm.PersistentVector"
@@ -8775,16 +7507,6 @@
 
 (defn find [m k] (RT'find m k))
 
-    (defn #_"seq" RT'findKey [#_"Keyword" key, #_"seq" keyvals]
-        (loop-when keyvals (some? keyvals)
-            (when-some [#_"seq" s (next keyvals)] => (throw! "malformed keyword argslist")
-                (when-not (= (first keyvals) key) => s
-                    (recur (next s))
-                )
-            )
-        )
-    )
-
     (defn #_"Object" RT'nth
         ([#_"Object" coll, #_"int" n]
             (cond
@@ -8792,8 +7514,8 @@
                     (Indexed'''nth coll, n)
                 (nil? coll)
                     nil
-                (char-sequence? coll)
-                    (Character'valueOf (CharSequence''charAt coll, n))
+                (string? coll)
+                    (Character'valueOf (String''charAt coll, n))
                 (array? coll)
                     (Array'get coll, n)
                 (matcher? coll)
@@ -8818,9 +7540,9 @@
                     not-found
                 (neg? n)
                     not-found
-                (char-sequence? coll)
-                    (let-when [#_"CharSequence" s coll] (< n (CharSequence''length s)) => not-found
-                        (Character'valueOf (CharSequence''charAt s, n))
+                (string? coll)
+                    (let-when [#_"String" s coll] (< n (String''length s)) => not-found
+                        (Character'valueOf (String''charAt s, n))
                     )
                 (array? coll)
                     (when (< n (Array'getLength coll)) => not-found
@@ -8956,10 +7678,6 @@
         (boolean (:macro (meta this)))
     )
 
-    (defn #_"boolean" Var''isPublic [#_"Var" this]
-        (not (:private (meta this)))
-    )
-
     (defn #_"void" Var''bindRoot [#_"Var" this, #_"Object" root]
         (alter-meta! this dissoc :macro)
         (reset! (:root this) root)
@@ -9064,12 +7782,6 @@
 
     (def #_"{Symbol Namespace}'" Namespace'namespaces (atom (hash-map)))
 
-    (defn #_"seq" Namespace'all []
-        (vals (deref Namespace'namespaces))
-    )
-
-(defn all-ns [] (Namespace'all))
-
     (defn #_"Namespace" Namespace'find [#_"Symbol" name]
         (get (deref Namespace'namespaces) name)
     )
@@ -9098,55 +7810,15 @@
 
 (defn create-ns [sym] (Namespace'findOrCreate sym))
 
-    (defn #_"Namespace" Namespace'remove [#_"Symbol" name]
-        (when-not (= name 'arbace.arm.core) => (throw! "cannot remove core namespace")
-            (get (first (swap-vals! Namespace'namespaces dissoc name)) name)
-        )
-    )
-
-(defn remove-ns [sym] (Namespace'remove sym))
-
     (defn #_"Appendable" Namespace''append [#_"Namespace" this, #_"Appendable" a]
         (Appendable''append a, (:name (:name this)))
     )
 
 (defn ns-name [ns] (:name (the-ns ns)))
 
-    (defn #_"map" Namespace''getMappings [#_"Namespace" this]
-        (deref (:mappings this))
-    )
-
-(defn ns-map [ns] (Namespace''getMappings (the-ns ns)))
-
     (defn #_"Object" Namespace''getMapping [#_"Namespace" this, #_"Symbol" name]
         (get (deref (:mappings this)) name)
     )
-
-(defn filter-key [f f? m]
-    (loop-when-recur [s (seq m) m (transient (hash-map))]
-                     s
-                     [(next s) (let [e (first s)] (if (f? (f e)) (assoc m (key e) (val e)) m))]
-                  => (persistent! m)
-    )
-)
-
-(defn ns-interns [ns]
-    (let [ns (the-ns ns)]
-        (filter-key val (fn [#_"var" v] (and (var? v) (= ns (:ns v)))) (ns-map ns))
-    )
-)
-
-(defn ns-publics [ns]
-    (let [ns (the-ns ns)]
-        (filter-key val (fn [#_"var" v] (and (var? v) (= ns (:ns v)) (Var''isPublic v))) (ns-map ns))
-    )
-)
-
-(defn ns-refers [ns]
-    (let [ns (the-ns ns)]
-        (filter-key val (fn [#_"var" v] (and (var? v) (not= ns (:ns v)))) (ns-map ns))
-    )
-)
 
     (defn #_"void" Namespace''warnOrFailOnReplace [#_"Namespace" this, #_"Symbol" sym, #_"Object" o, #_"var" var]
         (or
@@ -9180,48 +7852,6 @@
         )
     )
 
-    (defn #_"var" Namespace''refer [#_"Namespace" this, #_"Symbol" sym, #_"var" var]
-        (when (nil? (:ns sym)) => (throw! "can't intern namespace-qualified symbol")
-            (let [#_"Object" o
-                    (or (get (deref (:mappings this)) sym)
-                        (do
-                            (swap! (:mappings this) assoc sym var)
-                            var
-                        )
-                    )]
-                (when-not (= o var)
-                    (Namespace''warnOrFailOnReplace this, sym, o, var)
-                    (swap! (:mappings this) assoc sym var)
-                )
-                var
-            )
-        )
-    )
-
-(defn refer [ns-sym & filters]
-    (let [ns (the-ns ns-sym) ps* (ns-publics ns) fs* (apply hash-map filters)
-          r (:refer fs*) s (if (= r :all) (keys ps*) (or r (:only fs*) (keys ps*)))]
-        (when (sequential? s) => (throw! "the value of :only/:refer must be a sequential collection of symbols")
-            (let [es* (set (:exclude fs*)) rs* (or (:rename fs*) (hash-map))]
-                (doseq [x (remove es* s)]
-                    (when-some [v (ps* x)] => (throw! (str x (if (get (ns-interns ns) x) " is not public" " does not exist")))
-                        (Namespace''refer *ns* (or (rs* x) x) v)
-                    )
-                )
-            )
-        )
-    )
-)
-
-    (defn #_"void" Namespace''unmap [#_"Namespace" this, #_"Symbol" sym]
-        (when (nil? (:ns sym)) => (throw! "can't unintern namespace-qualified symbol")
-            (swap! (:mappings this) dissoc sym)
-        )
-        nil
-    )
-
-(defn ns-unmap [ns sym] (Namespace''unmap (the-ns ns) sym))
-
     (defn #_"var" Namespace''findInternedVar [#_"Namespace" this, #_"Symbol" name]
         (let [#_"Object" o (get (deref (:mappings this)) name)]
             (when (and (var? o) (= (:ns o) this))
@@ -9230,57 +7860,9 @@
         )
     )
 
-(defn #_"Var" find-var [#_"Symbol" sym]
-    (when (some? (:ns sym)) => (throw! "symbol must be namespace-qualified")
-        (let [#_"Namespace" ns (Namespace'find (Symbol'intern (:ns sym)))]
-            (when (some? ns) => (throw! (str "no such namespace: " (:ns sym)))
-                (Namespace''findInternedVar ns, (Symbol'intern (:name sym)))
-            )
-        )
-    )
-)
-
-    (defn #_"map" Namespace''getAliases [#_"Namespace" this]
-        (deref (:aliases this))
-    )
-
-(defn ns-aliases [ns]
-    (Namespace''getAliases (the-ns ns))
-)
-
     (defn #_"Namespace" Namespace''getAlias [#_"Namespace" this, #_"Symbol" alias]
         (get (deref (:aliases this)) alias)
     )
-
-    (defn #_"void" Namespace''addAlias [#_"Namespace" this, #_"Symbol" alias, #_"Namespace" ns]
-        (when (and (some? alias) (some? ns)) => (throw! "expecting Symbol + Namespace")
-            (let [#_"Object" o
-                    (or (get (deref (:aliases this)) alias)
-                        (do
-                            (swap! (:aliases this) assoc alias ns)
-                            ns
-                        )
-                    )]
-                (when-not (= o ns)
-                    (throw! (str "alias " alias " already exists in namespace " (:name this) ", aliasing " o))
-                )
-            )
-        )
-        nil
-    )
-
-(defn alias [sym ns]
-    (Namespace''addAlias *ns* sym (the-ns ns))
-)
-
-    (defn #_"void" Namespace''removeAlias [#_"Namespace" this, #_"Symbol" alias]
-        (swap! (:aliases this) dissoc alias)
-        nil
-    )
-
-(defn ns-unalias [ns sym]
-    (Namespace''removeAlias (the-ns ns) sym)
-)
 
     (defm Namespace IObject
         (IObject'''equals => identical?)
@@ -9511,69 +8093,6 @@
     ([f #_"Comparator" cmp s] (sort #(Comparator''compare cmp, (f %1), (f %2)) s))
 )
 
-#_oops!
-(defmacro for [bindings body]
-    (letfn [(group- [bindings]
-                (reduce
-                    (fn [v [x y]]
-                        (if (keyword? x)
-                            (conj (pop v) (conj (peek v) [x y]))
-                            (conj v [x y])
-                        )
-                    )
-                    (vector) (partition 2 bindings)
-                )
-            )
-            (emit- [[[x _ & z] & [[_ e] :as more]]]
-                (let [f' (gensym "f__") s' (gensym "s__")]
-                    (letfn [(mod- [[[k v] & z]]
-                                (if (keyword? k)
-                                    (case! k
-                                        :let   `(let ~v ~(mod- z))
-                                        :while `(when ~v ~(mod- z))
-                                        :when  `(if ~v ~(mod- z) (recur (next ~s')))
-                                    )
-                                    (when more => `(cons ~body (~f' (next ~s')))
-                                        `(let [f# ~(emit- more) s# (seq (f# ~e))]
-                                            (if s#
-                                                (concat s# (~f' (next ~s')))
-                                                (recur (next ~s'))
-                                            )
-                                        )
-                                    )
-                                )
-                            )]
-                        (if more
-                            #_"not the inner-most loop"
-                            `(fn ~f' [~s']
-                                (lazy-seq
-                                    (loop [~s' ~s']
-                                        (when-first [~x ~s']
-                                            ~(mod- z)
-                                        )
-                                    )
-                                )
-                            )
-                            #_"inner-most loop"
-                            `(fn ~f' [~s']
-                                (lazy-seq
-                                    (loop [~s' ~s']
-                                        (when-some [~s' (seq ~s')]
-                                            (let [~x (first ~s')]
-                                                ~(mod- z)
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            )]
-        `(~(emit- (group- bindings)) ~(second bindings))
-    )
-)
-
 (defn memoize [f]
     (let [mem (atom (hash-map))]
         (fn [& args]
@@ -9586,111 +8105,6 @@
             )
         )
     )
-)
-
-(defn seq-reduce
-    ([s f] (if-some [s (seq s)] (seq-reduce (next s) f (first s)) (f)))
-    ([s f r]
-        (loop-when [r r s (seq s)] s => r
-            (let [r (f r (first s))]
-                (if (reduced? r) (deref r) (recur r (next s)))
-            )
-        )
-    )
-)
-
-(defn reduce
-    ([f s]
-        (if (satisfies? IReduce s)
-            (IReduce'''reduce s, f)
-            (seq-reduce s f)
-        )
-    )
-    ([f r s]
-        (if (satisfies? IReduce s)
-            (IReduce'''reduce s, f, r)
-            (seq-reduce s f r)
-        )
-    )
-)
-
-(defn into
-    ([] (vector))
-    ([to] to)
-    ([to from]
-        (if (editable? to)
-            (with-meta (reduce! conj! to from) (meta to))
-            (reduce conj to from)
-        )
-    )
-)
-
-(defmacro cond-> [e & s]
-    (let [e' (gensym)
-          s (map (fn [[? x]] `(if ~? (-> ~e' ~x) ~e')) (partition 2 s))]
-        `(let [~e' ~e ~@(interleave (repeat e') (butlast s))]
-            ~(if (seq s) (last s) e')
-        )
-    )
-)
-
-(defmacro cond->> [e & s]
-    (let [e' (gensym)
-          s (map (fn [[? x]] `(if ~? (->> ~e' ~x) ~e')) (partition 2 s))]
-        `(let [~e' ~e ~@(interleave (repeat e') (butlast s))]
-            ~(if (seq s) (last s) e')
-        )
-    )
-)
-
-(defmacro as-> [e e' & s]
-    `(let [~e' ~e ~@(interleave (repeat e') (butlast s))]
-        ~(if (seq s) (last s) e')
-    )
-)
-
-(defmacro some-> [e & s]
-    (let [e' (gensym)
-          s (map (fn [x] `(when (some? ~e') (-> ~e' ~x))) s)]
-        `(let [~e' ~e ~@(interleave (repeat e') (butlast s))]
-            ~(if (seq s) (last s) e')
-        )
-    )
-)
-
-(defmacro some->> [e & s]
-    (let [e' (gensym)
-          s (map (fn [x] `(when (some? ~e') (->> ~e' ~x))) s)]
-        `(let [~e' ~e ~@(interleave (repeat e') (butlast s))]
-            ~(if (seq s) (last s) e')
-        )
-    )
-)
-
-(defn halt-when
-    ([f?] (halt-when f? nil))
-    ([f? h]
-        (fn [g]
-            (fn
-                ([] (g))
-                ([s]
-                    (when (and (map? s) (contains? s ::halt)) => (g s)
-                        (::halt s)
-                    )
-                )
-                ([s x]
-                    (when (f? x) => (g s x)
-                        (reduced {::halt (if (some? h) (h (g s) x) x)})
-                    )
-                )
-            )
-        )
-    )
-)
-
-(defn run! [proc coll]
-    (reduce #(proc %2) nil coll)
-    nil
 )
 )
 
@@ -11656,7 +10070,7 @@
 (about #_"FnReader"
     (defn #_"Object" fn-reader [#_"PushbackReader" r, #_"map" scope, #_"char" _delim]
         (when-not (contains? scope :'arg-env) => (throw! "nested #()s are not allowed")
-            (let [scope (assoc scope :'arg-env (atom (sorted-map)))]
+            (let [scope (assoc scope :'arg-env (atom (sorted-map)))]
                 (LispReader'unread r, \()
                 (let [
                     #_"Object" form (LispReader'read r, scope)
