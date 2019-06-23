@@ -1,6 +1,0 @@
-#ifndef SHARE_VM_JVMCI_VMSTRUCTS_COMPILER_RUNTIME_HPP
-#define SHARE_VM_JVMCI_VMSTRUCTS_COMPILER_RUNTIME_HPP
-
-#define VM_ADDRESSES_COMPILER_RUNTIME(declare_address, declare_preprocessor_address, declare_function)
-
-#endif

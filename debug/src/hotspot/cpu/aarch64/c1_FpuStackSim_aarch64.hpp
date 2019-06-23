@@ -1,7 +1,0 @@
-#ifndef CPU_AARCH64_VM_C1_FPUSTACKSIM_HPP
-#define CPU_AARCH64_VM_C1_FPUSTACKSIM_HPP
-
-// No FPU stack on AARCH64
-class FpuStackSim;
-
-#endif
