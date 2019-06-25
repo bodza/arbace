@@ -124,24 +124,6 @@
     )
 )
 
-(about #_"defproto"
-
-(defn emit-defproto* [name sigs]
-    `(do
-        (defonce ~name (hash-map))
-        ~@(map (fn [[f & _]] `(defmacro ~f [x# & s#] (list* (list -/find-protocol-method '~name ~(keyword (str f)) x#) x# s#))) sigs)
-    )
-)
-)
-
-(about #_"arbace.arm.Mutable"
-    (defonce Mutable (hash-map))
-)
-
-(about #_"arbace.arm.Typed"
-    (defonce Typed (hash-map))
-)
-
 (about #_"defarray"
 
 (defn emit-defarray* [tname cname fields interfaces methods opts]
@@ -182,62 +164,56 @@
 (about #_"defassoc"
 
 (defn emit-defassoc* [tname cname interfaces methods opts]
-    (let [
-        type-hash  (IHashEq''hasheq classname)
-    ]
-        (let [a '__assoc]
-            (letfn [(eqhash [[i m]]
-                        [
-                            (conj i 'clojure.lang.IHashEq)
-                            (conj m
-                                `(hasheq [this#] (-/int (bit-xor ~type-hash (.hasheq (. this# ~a)))))
-                                `(hashCode [this#] (.hashCode (. this# ~a)))
-                                `(equals [this# that#] (and #_(some? that#) (-/instance? ~tname that#) (.equals (. this# ~a) (. that# ~a))))
-                            )
-                        ]
-                    )
-                    (ilookup [[i m]]
-                        [
-                            (conj i 'clojure.lang.ILookup)
-                            (conj m
-                                `(valAt [this# k#] (.valAt this# k# nil))
-                                `(valAt [this# k# else#] (.valAt (. this# ~a) k# else#))
-                            )
-                        ]
-                    )
-                    (imap [[i m]]
-                        [
-                            (conj i 'clojure.lang.IPersistentMap)
-                            (conj m
-                                `(count [this#] (.count (. this# ~a)))
-                                `(empty [this#] (new ~tname (.empty (. this# ~a))))
-                                `(cons [this# e#] (new ~tname (.cons (. this# ~a) e#)))
-                                `(equiv [this# that#]
-                                    (or (identical? this# that#)
-                                        (and (identical? (-/class this#) (-/class that#))
-                                            (= (. this# ~a) (. that# ~a))
-                                        )
+    (let [a '__assoc]
+        (letfn [(eqhash [[i m]]
+                    [
+                        (conj i 'clojure.lang.IHashEq)
+                        (conj m
+                            `(equals [this# that#] (and #_(some? that#) (-/instance? ~tname that#) (.equals (. this# ~a) (. that# ~a))))
+                        )
+                    ]
+                )
+                (ilookup [[i m]]
+                    [
+                        (conj i 'clojure.lang.ILookup)
+                        (conj m
+                            `(valAt [this# k#] (.valAt this# k# nil))
+                            `(valAt [this# k# else#] (.valAt (. this# ~a) k# else#))
+                        )
+                    ]
+                )
+                (imap [[i m]]
+                    [
+                        (conj i 'clojure.lang.IPersistentMap)
+                        (conj m
+                            `(count [this#] (.count (. this# ~a)))
+                            `(empty [this#] (new ~tname (.empty (. this# ~a))))
+                            `(cons [this# e#] (new ~tname (.cons (. this# ~a) e#)))
+                            `(equiv [this# that#]
+                                (or (identical? this# that#)
+                                    (and (identical? (-/class this#) (-/class that#))
+                                        (= (. this# ~a) (. that# ~a))
                                     )
                                 )
-                                `(containsKey [this# k#] (.containsKey (. this# ~a) k#))
-                                `(entryAt [this# k#] (.entryAt (. this# ~a) k#))
-                                `(seq [this#] (.seq (. this# ~a)))
-                                `(assoc [this# k# v#] (new ~tname (.assoc (. this# ~a) k# v#)))
-                                `(without [this# k#] (new ~tname (.without (. this# ~a) k#)))
                             )
-                        ]
-                    )
-                    (typed [[i m]]
-                        [
-                            (conj i 'arbace.arm.core.Typed)
-                            (conj m
-                                `(type [this#] '~classname)
-                            )
-                        ]
-                    )]
-                (let [[i m] (-> [interfaces methods] eqhash ilookup imap typed)]
-                    `(-/eval '~(-/read-string (str (list* 'deftype* (symbol (-/name (-/ns-name -/*ns*)) (-/name tname)) classname (vector a) :implements (vec i) m))))
+                            `(containsKey [this# k#] (.containsKey (. this# ~a) k#))
+                            `(entryAt [this# k#] (.entryAt (. this# ~a) k#))
+                            `(seq [this#] (.seq (. this# ~a)))
+                            `(assoc [this# k# v#] (new ~tname (.assoc (. this# ~a) k# v#)))
+                            `(without [this# k#] (new ~tname (.without (. this# ~a) k#)))
+                        )
+                    ]
                 )
+                (typed [[i m]]
+                    [
+                        (conj i 'arbace.arm.core.Typed)
+                        (conj m
+                            `(type [this#] '~classname)
+                        )
+                    ]
+                )]
+            (let [[i m] (-> [interfaces methods] eqhash ilookup imap typed)]
+                `(-/eval '~(-/read-string (str (list* 'deftype* (symbol (-/name (-/ns-name -/*ns*)) (-/name tname)) classname (vector a) :implements (vec i) m))))
             )
         )
     )
@@ -295,16 +271,12 @@
     (defp Comparable
         (#_"int" Comparable'''compareTo [#_"Comparable" this, #_"any" that])
     )
-
-    (defn comparable? [x] (satisfies? Comparable x))
 )
 
 (about #_"arbace.arm.Comparator"
     (defp Comparator
         (#_"int" Comparator'''compare [#_"Comparator" this, #_"any" x, #_"any" y])
     )
-
-    (defn comparator? [x] (satisfies? Comparator x))
 )
 
 (about #_"arbace.arm.Counted"
@@ -332,28 +304,6 @@
                     (throw! (str "count not supported on " x))
             )
         )
-    )
-)
-
-(about #_"arbace.arm.Hashed"
-    (defp Hashed
-        (#_"int" Hashed'''hash [#_"Hashed" this])
-    )
-
-    (-/extend-protocol Hashed
-        java.lang.Object (Hashed'''hash [o] (Object''hashCode o))
-        java.lang.String (Hashed'''hash [s] (Murmur3'hashInt (Object''hashCode s)))
-        java.lang.Number (Hashed'''hash [n] (Murmur3'hashInt (int n)))
-    )
-
-    (defn hashed? [x] (satisfies? Hashed x))
-
-    (defn f'hash [x] (if (some? x) (Hashed'''hash x) 0))
-
-    (defn f'hashcode [x] (if (some? x) (Object''hashCode x) 0))
-
-    (defn hash-combine [seed x]
-        (bit-xor seed (+ (f'hashcode x) 0x9e3779b9 (bit-shift-left seed 6) (bit-shift-right seed 2)))
     )
 )
 
@@ -714,29 +664,8 @@
     (defp PersistentArrayMap)
 )
 
-(about #_"arbace.arm.PersistentHashMap"
-    (defp INode
-        (#_"INode" INode'''assoc [#_"INode" this, #_"int" shift, #_"int" hash, #_"key" key, #_"value" val, #_"boolean'" addedLeaf])
-        (#_"INode" INode'''dissoc [#_"INode" this, #_"int" shift, #_"int" hash, #_"key" key])
-        (#_"IMapEntry|any" INode'''find
-            [#_"INode" this, #_"int" shift, #_"int" hash, #_"key" key]
-            [#_"INode" this, #_"int" shift, #_"int" hash, #_"key" key, #_"value" not-found]
-        )
-        (#_"seq" INode'''nodeSeq [#_"INode" this])
-        (#_"INode" INode'''assocT [#_"INode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"key" key, #_"value" val, #_"boolean'" addedLeaf])
-        (#_"INode" INode'''dissocT [#_"INode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"key" key, #_"boolean'" removedLeaf])
-    )
-
-    (defp HSeq)
-    (defp NSeq)
-    (defp ANode)
-    (defp BNode)
-    (defp CNode)
-    (defp PersistentHashMap)
-)
-
-(about #_"arbace.arm.PersistentHashSet"
-    (defp PersistentHashSet)
+(about #_"arbace.arm.PersistentArraySet"
+    (defp PersistentArraySet)
 )
 
 (about #_"arbace.arm.PersistentList"
@@ -797,7 +726,7 @@
     )
 
     (def #_"{char String}" char-escape-string
-        (hash-map
+        (array-map
             \" "\\\""
             \\ "\\\\"
         )
@@ -905,77 +834,6 @@
     (defn println [& s] (apply print s) (newline) (flush) nil)
 )
 
-(about #_"arbace.arm.Murmur3"
-
-(about #_"Murmur3"
-    (def #_"int" Murmur3'seed 0)
-    (def #_"int" Murmur3'C1 0xcc9e2d51)
-    (def #_"int" Murmur3'C2 0x1b873593)
-
-    (defn #_"int" Murmur3'mixK1 [#_"int" k1]
-        (-> k1 (* Murmur3'C1) (Number'rotateLeft 15) (* Murmur3'C2))
-    )
-
-    (defn #_"int" Murmur3'mixH1 [#_"int" h1, #_"int" k1]
-        (-> h1 (bit-xor k1) (Number'rotateLeft 13) (* 5) (+ 0xe6546b64))
-    )
-
-    (defn #_"int" Murmur3'fmix [#_"int" h1, #_"int" n]
-        (let [h1 (bit-xor h1 n)    h1 (bit-xor h1 (unsigned-bit-shift-right h1 16))
-              h1 (* (int h1) 0x85ebca6b) h1 (bit-xor h1 (unsigned-bit-shift-right h1 13))
-              h1 (* (int h1) 0xc2b2ae35) h1 (bit-xor h1 (unsigned-bit-shift-right h1 16))]
-            h1
-        )
-    )
-
-    (defn #_"int" Murmur3'hashInt [#_"int" input]
-        (when-not (zero? input) => 0
-            (let [#_"int" k1 (Murmur3'mixK1 input)
-                  #_"int" h1 (Murmur3'mixH1 Murmur3'seed, k1)]
-                (Murmur3'fmix h1, 4)
-            )
-        )
-    )
-
-    (defn #_"int" Murmur3'hashUnencodedChars [#_"String" s]
-        (let [#_"int" h1
-                (loop-when [h1 Murmur3'seed #_"int" i 1] (< i (String''length s)) => h1
-                    (let [#_"int" k1 (bit-or (int (String''charAt s, (dec i))) (bit-shift-left (int (String''charAt s, i)) 16))]
-                        (recur (Murmur3'mixH1 h1, (Murmur3'mixK1 k1)) (+ i 2))
-                    )
-                )
-              h1
-                (when (odd? (String''length s)) => h1
-                    (let [#_"int" k1 (int (String''charAt s, (dec (String''length s))))]
-                        (bit-xor h1 (Murmur3'mixK1 k1))
-                    )
-                )]
-            (Murmur3'fmix h1, (bit-shift-left (String''length s) 1))
-        )
-    )
-
-    (defn #_"int" Murmur3'mixCollHash [#_"int" hash, #_"int" n]
-        (Murmur3'fmix (Murmur3'mixH1 Murmur3'seed, (Murmur3'mixK1 hash)), n)
-    )
-
-    (defn #_"int" Murmur3'hashOrdered [#_"Seqable" items]
-        (loop-when-recur [#_"int" hash 1 #_"int" n 0 #_"seq" s (seq items)]
-                         (some? s)
-                         [(+ (* 31 hash) (f'hash (first s))) (inc n) (next s)]
-                      => (Murmur3'mixCollHash hash, n)
-        )
-    )
-
-    (defn #_"int" Murmur3'hashUnordered [#_"Seqable" items]
-        (loop-when-recur [#_"int" hash 0 #_"int" n 0 #_"seq" s (seq items)]
-                         (some? s)
-                         [(+ hash (f'hash (first s))) (inc n) (next s)]
-                      => (Murmur3'mixCollHash hash, n)
-        )
-    )
-)
-)
-
 (about #_"arbace.arm.Atom"
 
 (about #_"Atom"
@@ -1053,7 +911,6 @@
     )
 )
 
-#_oops!
 (defn =
     ([x] true)
     ([x y] (Util'equiv x y))
@@ -1263,10 +1120,6 @@
         (if (some? (:ns this)) (-> a (Appendable'''append (:ns this)) (Appendable'''append "/") (Appendable'''append (:name this))) (Appendable'''append a, (:name this)))
     )
 
-    (defn #_"int" Symbol''hash [#_"Symbol" this]
-        (hash-combine (Murmur3'hashUnencodedChars (:name this)) (:ns this))
-    )
-
     (defn #_"any" Symbol''invoke
         ([#_"Symbol" this, #_"any" obj] (get obj this))
         ([#_"Symbol" this, #_"any" obj, #_"value" not-found] (get obj this not-found))
@@ -1298,10 +1151,6 @@
         (IAppend'''append => Symbol''append)
     )
 
-    (defm Symbol Hashed
-        (Hashed'''hash => Symbol''hash)
-    )
-
     (defm Symbol IFn
         (IFn'''invoke => Symbol''invoke)
         (IFn'''applyTo => AFn'applyTo)
@@ -1321,13 +1170,13 @@
 (about #_"arbace.arm.Keyword"
 
 (about #_"Keyword"
-    (defq Keyword [#_"Symbol" sym, #_"int" _hash])
+    (defq Keyword [#_"Symbol" sym])
 
     #_inherit
     (defm Keyword AFn)
 
     (defn #_"Keyword" Keyword'new [#_"Symbol" sym]
-        (new* Keyword'class (anew [sym, (+ (f'hash sym) 0x9e3779b9)]))
+        (new* Keyword'class (anew [sym]))
     )
 
     (defn #_"Keyword" Keyword'intern [#_"Symbol" sym]
@@ -1364,10 +1213,6 @@
     (defm Keyword INamed
         (INamed'''getNamespace => Keyword''getNamespace)
         (INamed'''getName => Keyword''getName)
-    )
-
-    (defm Keyword Hashed
-        (Hashed'''hash => :_hash)
     )
 
     (defm Keyword IObject
@@ -1563,10 +1408,6 @@
         (Counted'''count => Cons''count)
     )
 
-    (defm Cons Hashed
-        (Hashed'''hash => Murmur3'hashOrdered)
-    )
-
     (defm Cons IObject
         (IObject'''equals => ASeq''equals)
     )
@@ -1652,10 +1493,6 @@
 
     (defm LazySeq IObject
         (IObject'''equals => LazySeq''equals)
-    )
-
-    (defm LazySeq Hashed
-        (Hashed'''hash => Murmur3'hashOrdered)
     )
 )
 
@@ -1956,10 +1793,6 @@
         (Counted'''count => VSeq''count)
     )
 
-    (defm VSeq Hashed
-        (Hashed'''hash => Murmur3'hashOrdered)
-    )
-
     (defm VSeq IObject
         (IObject'''equals => ASeq''equals)
     )
@@ -2008,10 +1841,6 @@
         (Counted'''count => RSeq''count)
     )
 
-    (defm RSeq Hashed
-        (Hashed'''hash => Murmur3'hashOrdered)
-    )
-
     (defm RSeq IObject
         (IObject'''equals => ASeq''equals)
     )
@@ -2054,12 +1883,6 @@
                 :else
                     false
             )
-        )
-    )
-
-    (defn #_"int" AMapEntry''hash [#_"AMapEntry" this]
-        (loop-when [#_"int" hash 1 #_"int" i 0] (< i 2) => (Murmur3'mixCollHash hash, i)
-            (recur (+ (* 31 hash) (f'hash (Indexed'''nth this, i))) (inc i))
         )
     )
 
@@ -2119,10 +1942,6 @@
         (IObject'''equals => AMapEntry''equals)
     )
 
-    (defm MapEntry Hashed
-        (Hashed'''hash => AMapEntry''hash)
-    )
-
     (defm MapEntry Comparable
         (Comparable'''compareTo => AMapEntry''compareTo)
     )
@@ -2136,12 +1955,6 @@
 
     (defn #_"EmptyList" EmptyList'new []
         (new* EmptyList'class (anew []))
-    )
-
-    (def #_"int" EmptyList'HASH (Murmur3'hashOrdered nil))
-
-    (defn #_"int" EmptyList''hash [#_"EmptyList" this]
-        EmptyList'HASH
     )
 
     (defn #_"boolean" EmptyList''equals [#_"EmptyList" this, #_"any" that]
@@ -2181,10 +1994,6 @@
     )
 
     (defm EmptyList IPersistentList Sequential)
-
-    (defm EmptyList Hashed
-        (Hashed'''hash => EmptyList''hash)
-    )
 
     (defm EmptyList IObject
         (IObject'''equals => EmptyList''equals)
@@ -2274,10 +2083,6 @@
         (IPersistentStack'''pop => PersistentList''pop)
     )
 
-    (defm PersistentList Hashed
-        (Hashed'''hash => Murmur3'hashOrdered)
-    )
-
     (defm PersistentList IObject
         (IObject'''equals => ASeq''equals)
     )
@@ -2334,10 +2139,6 @@
 
     (defm MSeq Counted
         (Counted'''count => MSeq''count)
-    )
-
-    (defm MSeq Hashed
-        (Hashed'''hash => Murmur3'hashOrdered)
     )
 
     (defm MSeq IObject
@@ -2433,8 +2234,6 @@
         )
     )
 
-    (def #_"int" PersistentArrayMap'HASHTABLE_THRESHOLD 16)
-
     (defn #_"IPersistentMap" PersistentArrayMap''assoc [#_"PersistentArrayMap" this, #_"key" key, #_"value" val]
         (let [
             #_"array" a (:array this) #_"int" i (PersistentArrayMap'index-of a, key)
@@ -2444,15 +2243,12 @@
                     this
                     (PersistentArrayMap''create this, (-> (aclone a) (aset! (inc i) val)))
                 )
-                (if (< PersistentArrayMap'HASHTABLE_THRESHOLD (alength a))
-                    (assoc (PersistentHashMap'create-1a a) key val)
-                    (let [
-                        #_"int" n (alength a)
-                        #_"array" a' (anew (+ n 2))
-                        a' (if (pos? n) (acopy! a' 0 a 0 n) a')
-                    ]
-                        (PersistentArrayMap''create this, (-> a' (aset! n key) (aset! (inc n) val)))
-                    )
+                (let [
+                    #_"int" n (alength a)
+                    #_"array" a' (anew (+ n 2))
+                    a' (if (pos? n) (acopy! a' 0 a 0 n) a')
+                ]
+                    (PersistentArrayMap''create this, (-> a' (aset! n key) (aset! (inc n) val)))
                 )
             )
         )
@@ -2533,10 +2329,6 @@
     (defm PersistentArrayMap IObject
         (IObject'''equals => APersistentMap''equals)
     )
-
-    (defm PersistentArrayMap Hashed
-        (Hashed'''hash => Murmur3'hashUnordered)
-    )
 )
 
 (defn array-map
@@ -2545,939 +2337,26 @@
 )
 )
 
-(about #_"arbace.arm.PersistentHashMap"
+(about #_"arbace.arm.PersistentArraySet"
 
-(about #_"HSeq"
-    (defq HSeq [#_"node[]" nodes, #_"int" i, #_"seq" s] SeqForm)
-
-    #_inherit
-    (defm HSeq ASeq)
-
-    (defn #_"HSeq" HSeq'new [#_"node[]" nodes, #_"int" i, #_"seq" s]
-        (new* HSeq'class (anew [nodes, i, s]))
-    )
-
-    (defn #_"seq" HSeq'create
-        ([#_"node[]" nodes] (HSeq'create nodes, 0, nil))
-        ([#_"node[]" nodes, #_"int" i, #_"seq" s]
-            (when (nil? s) => (HSeq'new nodes, i, s)
-                (loop-when i (< i (alength nodes))
-                    (when-some [#_"node" node (aget nodes i)] => (recur (inc i))
-                        (when-some [s (INode'''nodeSeq node)] => (recur (inc i))
-                            (HSeq'new nodes, (inc i), s)
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"seq" HSeq''seq [#_"HSeq" this]
-        this
-    )
-
-    (defn #_"pair" HSeq''first [#_"HSeq" this]
-        (first (:s this))
-    )
-
-    (defn #_"seq" HSeq''next [#_"HSeq" this]
-        (HSeq'create (:nodes this), (:i this), (next (:s this)))
-    )
-
-    (defm HSeq Sequential)
-
-    (defm HSeq Seqable
-        (Seqable'''seq => HSeq''seq)
-    )
-
-    (defm HSeq ISeq
-        (ISeq'''first => HSeq''first)
-        (ISeq'''next => HSeq''next)
-    )
-
-    (defm HSeq Hashed
-        (Hashed'''hash => Murmur3'hashOrdered)
-    )
-
-    (defm HSeq IObject
-        (IObject'''equals => ASeq''equals)
-    )
-)
-
-(about #_"NSeq"
-    (defq NSeq [#_"array" a, #_"int" i, #_"seq" s] SeqForm)
+(about #_"PersistentArraySet"
+    (defq PersistentArraySet [#_"map" impl] SetForm)
 
     #_inherit
-    (defm NSeq ASeq)
+    (defm PersistentArraySet APersistentSet AFn)
 
-    (defn #_"NSeq" NSeq'new
-        ([#_"array" a, #_"int" i] (NSeq'new a, i, nil))
-        ([#_"array" a, #_"int" i, #_"seq" s]
-            (new* NSeq'class (anew [a, i, s]))
-        )
+    (defn #_"PersistentArraySet" PersistentArraySet'new [#_"map" impl]
+        (new* PersistentArraySet'class (anew [impl]))
     )
 
-    (defn #_"seq" NSeq'create
-        ([#_"array" a] (NSeq'create a, 0, nil))
-        ([#_"array" a, #_"int" i, #_"seq" s]
-            (when (nil? s) => (NSeq'new a, i, s)
-                (loop-when i (< i (alength a))
-                    (when (nil? (aget a i)) => (NSeq'new a, i, nil)
-                        (or
-                            (when-some [#_"node" node (aget a (inc i))]
-                                (when-some [s (INode'''nodeSeq node)]
-                                    (NSeq'new a, (+ i 2), s)
-                                )
-                            )
-                            (recur (+ i 2))
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"seq" NSeq''seq [#_"NSeq" this]
-        this
-    )
-
-    (defn #_"pair" NSeq''first [#_"NSeq" this]
-        (if (some? (:s this))
-            (first (:s this))
-            (MapEntry'new (aget (:a this) (:i this)), (aget (:a this) (inc (:i this))))
-        )
-    )
-
-    (defn #_"seq" NSeq''next [#_"NSeq" this]
-        (if (some? (:s this))
-            (NSeq'create (:a this), (:i this), (next (:s this)))
-            (NSeq'create (:a this), (+ (:i this) 2), nil)
-        )
-    )
-
-    (defm NSeq Sequential)
-
-    (defm NSeq Seqable
-        (Seqable'''seq => NSeq''seq)
-    )
-
-    (defm NSeq ISeq
-        (ISeq'''first => NSeq''first)
-        (ISeq'''next => NSeq''next)
-    )
-
-    (defm NSeq Hashed
-        (Hashed'''hash => Murmur3'hashOrdered)
-    )
-
-    (defm NSeq IObject
-        (IObject'''equals => ASeq''equals)
-    )
-)
-
-(about #_"PersistentHashMap"
-    (defn #_"int" PersistentHashMap'mask [#_"int" hash, #_"int" shift]
-        (bit-and (unsigned-bit-shift-right hash shift) 0x1f)
-    )
-
-    (defn #_"int" PersistentHashMap'bitpos [#_"int" hash, #_"int" shift]
-        (bit-shift-left 1 (PersistentHashMap'mask hash, shift))
-    )
-
-    (defn #_"array" PersistentHashMap'cloneAndSet
-        ([#_"array" a, #_"int" i, #_"any" x]                          (-> (aclone a) (aset! i x)))
-        ([#_"array" a, #_"int" i, #_"any" x, #_"int" j, #_"any" y] (-> (aclone a) (aset! i x) (aset! j y)))
-    )
-
-    (defn #_"array" PersistentHashMap'removePair [#_"array" a, #_"int" i]
-        (let [#_"int" n (- (alength a) 2) #_"int" m (* 2 i)]
-            (-> (anew n) (acopy! 0 a 0 m) (acopy! m a (+ m 2) (- n m)))
-        )
-    )
-)
-
-(about #_"ANode"
-    (defq ANode [#_"thread'" edit, #_"int" n, #_"node[]" a])
-
-    (defn #_"ANode" ANode'new [#_"thread'" edit, #_"int" n, #_"node[]" a]
-        (new* ANode'class (anew [edit, n, a]))
-    )
-
-    (defn #_"ANode" ANode''ensureEditable [#_"ANode" this, #_"thread'" edit]
-        (when-not (identical? (:edit this) edit) => this
-            (ANode'new edit, (:n this), (aclone (:a this)))
-        )
-    )
-
-    (defn #_"ANode" ANode''editAndSet [#_"ANode" this, #_"thread'" edit, #_"int" i, #_"node" node]
-        (let [#_"ANode" e (ANode''ensureEditable this, edit)]
-            (aset! (:a e) i node)
-            e
-        )
-    )
-
-    (defn #_"node" ANode''pack [#_"ANode" this, #_"thread'" edit, #_"int" idx]
-        (let [#_"array" a' (anew (* 2 (dec (:n this))))
-              [#_"int" bitmap #_"int" j]
-                (loop-when [bitmap 0 j 1 #_"int" i 0] (< i idx) => [bitmap j]
-                    (let [[bitmap j]
-                            (when-some [#_"node" ai (aget (:a this) i)] => [bitmap j]
-                                (aset! a' j ai)
-                                [(bit-or bitmap (bit-shift-left 1 i)) (+ j 2)]
-                            )]
-                        (recur bitmap j (inc i))
-                    )
-                )
-              bitmap
-                (loop-when [bitmap bitmap j j #_"int" i (inc idx)] (< i (alength (:a this))) => bitmap
-                    (let [[bitmap j]
-                            (when-some [#_"node" ai (aget (:a this) i)] => [bitmap j]
-                                (aset! a' j ai)
-                                [(bit-or bitmap (bit-shift-left 1 i)) (+ j 2)]
-                            )]
-                        (recur bitmap j (inc i))
-                    )
-                )]
-            (BNode'new edit, bitmap, a')
-        )
-    )
-
-    (defn #_"node" ANode''assoc [#_"ANode" this, #_"int" shift, #_"int" hash, #_"key" key, #_"value" val, #_"boolean'" addedLeaf]
-        (let [#_"int" i (PersistentHashMap'mask hash, shift) #_"node" ai (aget (:a this) i)]
-            (if (some? ai)
-                (let [#_"node" node (INode'''assoc ai, (+ shift 5), hash, key, val, addedLeaf)]
-                    (when-not (= node ai) => this
-                        (ANode'new nil, (:n this), (PersistentHashMap'cloneAndSet (:a this), i, node))
-                    )
-                )
-                (let [#_"node" node (INode'''assoc BNode'EMPTY, (+ shift 5), hash, key, val, addedLeaf)]
-                    (ANode'new nil, (inc (:n this)), (PersistentHashMap'cloneAndSet (:a this), i, node))
-                )
-            )
-        )
-    )
-
-    (defn #_"node" ANode''dissoc [#_"ANode" this, #_"int" shift, #_"int" hash, #_"key" key]
-        (let-when [#_"int" i (PersistentHashMap'mask hash, shift) #_"node" ai (aget (:a this) i)] (some? ai) => this
-            (let-when-not [#_"node" node (INode'''dissoc ai, (+ shift 5), hash, key)] (= node ai) => this
-                (cond
-                    (some? node)     (ANode'new nil, (:n this), (PersistentHashMap'cloneAndSet (:a this), i, node))
-                    (<= (:n this) 8) (ANode''pack this, nil, i)
-                    :else            (ANode'new nil, (dec (:n this)), (PersistentHashMap'cloneAndSet (:a this), i, node))
-                )
-            )
-        )
-    )
-
-    (defn #_"IMapEntry|value" ANode''find
-        ([#_"ANode" this, #_"int" shift, #_"int" hash, #_"key" key]
-            (let [#_"int" i (PersistentHashMap'mask hash, shift) #_"node" node (aget (:a this) i)]
-                (when (some? node)
-                    (INode'''find node, (+ shift 5), hash, key)
-                )
-            )
-        )
-        ([#_"ANode" this, #_"int" shift, #_"int" hash, #_"key" key, #_"value" not-found]
-            (let [#_"int" i (PersistentHashMap'mask hash, shift) #_"node" node (aget (:a this) i)]
-                (when (some? node) => not-found
-                    (INode'''find node, (+ shift 5), hash, key, not-found)
-                )
-            )
-        )
-    )
-
-    (defn #_"seq" ANode''nodeSeq [#_"ANode" this]
-        (HSeq'create (:a this))
-    )
-
-    (defn #_"node" ANode''assocT [#_"ANode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"key" key, #_"value" val, #_"boolean'" addedLeaf]
-        (let [#_"int" i (PersistentHashMap'mask hash, shift) #_"node" ai (aget (:a this) i)]
-            (if (some? ai)
-                (let [#_"node" node (INode'''assocT ai, edit, (+ shift 5), hash, key, val, addedLeaf)]
-                    (when-not (= node ai) => this
-                        (ANode''editAndSet this, edit, i, node)
-                    )
-                )
-                (let [#_"node" node (INode'''assocT BNode'EMPTY, edit, (+ shift 5), hash, key, val, addedLeaf)]
-                    (-> (ANode''editAndSet this, edit, i, node) (qswap! :n inc))
-                )
-            )
-        )
-    )
-
-    (defn #_"node" ANode''dissocT [#_"ANode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"key" key, #_"boolean'" removedLeaf]
-        (let-when [#_"int" i (PersistentHashMap'mask hash, shift) #_"node" ai (aget (:a this) i)] (some? ai) => this
-            (let-when-not [#_"node" node (INode'''dissocT ai, edit, (+ shift 5), hash, key, removedLeaf)] (= node ai) => this
-                (cond
-                    (some? node)     (ANode''editAndSet this, edit, i, node)
-                    (<= (:n this) 8) (ANode''pack this, edit, i)
-                    :else            (-> (ANode''editAndSet this, edit, i, node) (qswap! :n dec))
-                )
-            )
-        )
-    )
-
-    (defm ANode INode
-        (INode'''assoc => ANode''assoc)
-        (INode'''dissoc => ANode''dissoc)
-        (INode'''find => ANode''find)
-        (INode'''nodeSeq => ANode''nodeSeq)
-        (INode'''assocT => ANode''assocT)
-        (INode'''dissocT => ANode''dissocT)
-    )
-)
-
-(about #_"BNode"
-    (defq BNode [#_"thread'" edit, #_"int" bitmap, #_"array" a])
-
-    (defn #_"BNode" BNode'new [#_"thread'" edit, #_"int" bitmap, #_"array" a]
-        (new* BNode'class (anew [edit, bitmap, a]))
-    )
-
-    (def #_"BNode" BNode'EMPTY (BNode'new nil, 0, (anew 0)))
-
-    (defn #_"int" BNode'index [#_"int" bitmap, #_"int" bit]
-        (Number'bitCount (bit-and bitmap (dec bit)))
-    )
-
-    (defn #_"node" BNode'create [#_"int" shift, #_"key" key1, #_"value" val1, #_"int" hash2, #_"key" key2, #_"value" val2]
-        (let [#_"int" hash1 (f'hash key1)]
-            (when-not (= hash1 hash2) => (CNode'new nil, hash1, 2, (anew [ key1, val1, key2, val2 ]))
-                (let [#_"boolean'" addedLeaf (atom false) #_"thread'" edit (atom nil)]
-                    (-> BNode'EMPTY
-                        (INode'''assocT edit, shift, hash1, key1, val1, addedLeaf)
-                        (INode'''assocT edit, shift, hash2, key2, val2, addedLeaf)
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"BNode" BNode''ensureEditable [#_"BNode" this, #_"thread'" edit]
-        (when-not (identical? (:edit this) edit) => this
-            (let [#_"int" b (:bitmap this) #_"int" n (Number'bitCount b) #_"int" m (inc n)]
-                (BNode'new edit, b, (-> (anew (* 2 m)) (acopy! 0 (:a this) 0 (* 2 n))))
-            )
-        )
-    )
-
-    (defn #_"BNode" BNode''editAndSet
-        ([#_"BNode" this, #_"thread'" edit, #_"int" i, #_"any" x]
-            (let [#_"BNode" e (BNode''ensureEditable this, edit)]
-                (aset! (:a e) i x)
-                e
-            )
-        )
-        ([#_"BNode" this, #_"thread'" edit, #_"int" i, #_"any" x, #_"int" j, #_"any" y]
-            (let [#_"BNode" e (BNode''ensureEditable this, edit)]
-                (aset! (:a e) i x)
-                (aset! (:a e) j y)
-                e
-            )
-        )
-    )
-
-    (defn #_"BNode" BNode''editAndRemovePair [#_"BNode" this, #_"thread'" edit, #_"int" bit, #_"int" i]
-        (when-not (= (:bitmap this) bit)
-            (let [
-                #_"BNode" e (-> (BNode''ensureEditable this, edit) (qswap! :bitmap bit-xor bit))
-                #_"array" a (:a e) #_"int" n (alength a) #_"int" m (* 2 (inc i))
-            ]
-                (acopy! a (* 2 i) a m (- n m))
-                (aset! a (- n 2) nil)
-                (aset! a (- n 1) nil)
-                e
-            )
-        )
-    )
-
-    (defn #_"node" BNode'createT [#_"thread'" edit, #_"int" shift, #_"key" key1, #_"value" val1, #_"int" hash2, #_"key" key2, #_"value" val2]
-        (let [#_"int" hash1 (f'hash key1)]
-            (when-not (= hash1 hash2) => (CNode'new nil, hash1, 2, (anew [ key1, val1, key2, val2 ]))
-                (let [#_"boolean'" addedLeaf (atom false)]
-                    (-> BNode'EMPTY
-                        (INode'''assocT edit, shift, hash1, key1, val1, addedLeaf)
-                        (INode'''assocT edit, shift, hash2, key2, val2, addedLeaf)
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"node" BNode''assoc [#_"BNode" this, #_"int" shift, #_"int" hash, #_"key" key, #_"value" val, #_"boolean'" addedLeaf]
-        (let [#_"int" bit (PersistentHashMap'bitpos hash, shift) #_"int" x (BNode'index (:bitmap this), bit)]
-            (if-not (zero? (bit-and (:bitmap this) bit))
-                (let [
-                    #_"key|nil" k (aget (:a this) (* 2 x)) #_"value|node" v (aget (:a this) (inc (* 2 x)))
-                    #_"array" a'
-                        (cond
-                            (nil? k)
-                                (let [#_"node" node (INode'''assoc #_"node" v, (+ shift 5), hash, key, val, addedLeaf)]
-                                    (when-not (= node v)
-                                        (PersistentHashMap'cloneAndSet (:a this), (inc (* 2 x)), node)
-                                    )
-                                )
-                            (= key k)
-                                (when-not (= val v)
-                                    (PersistentHashMap'cloneAndSet (:a this), (inc (* 2 x)), val)
-                                )
-                            :else
-                                (let [#_"node" node (BNode'create (+ shift 5), k, v, hash, key, val) _ (reset! addedLeaf true)]
-                                    (PersistentHashMap'cloneAndSet (:a this), (* 2 x), nil, (inc (* 2 x)), node)
-                                )
-                        )
-                ]
-                    (when (some? a') => this
-                        (BNode'new nil, (:bitmap this), a')
-                    )
-                )
-                (let [#_"int" n (Number'bitCount (:bitmap this))]
-                    (if (<= 16 n)
-                        (let [
-                            #_"node[]" nodes (anew #_"node" 32) #_"int" m (PersistentHashMap'mask hash, shift)
-                            _ (aset! nodes m (INode'''assoc BNode'EMPTY, (+ shift 5), hash, key, val, addedLeaf))
-                            _
-                                (loop-when [#_"int" j 0 #_"int" i 0] (< i 32)
-                                    (when (odd? (unsigned-bit-shift-right (:bitmap this) i)) => (recur j (inc i))
-                                        (let [#_"key|nil" k (aget (:a this) j) #_"value|node" v (aget (:a this) (inc j))]
-                                            (if (some? k)
-                                                (aset! nodes i (INode'''assoc BNode'EMPTY, (+ shift 5), (f'hash k), k, v, addedLeaf))
-                                                (aset! nodes i #_"node" v)
-                                            )
-                                            (recur (+ j 2) (inc i))
-                                        )
-                                    )
-                                )
-                        ]
-                            (ANode'new nil, (inc n), nodes)
-                        )
-                        (let [
-                            #_"array" a' (anew (* 2 (inc n)))
-                            _ (acopy! a' 0 (:a this) 0 (* 2 x))
-                            _ (aset! a' (* 2 x) key)
-                            _ (reset! addedLeaf true)
-                            _ (aset! a' (inc (* 2 x)) val)
-                            _ (acopy! a' (* 2 (inc x)) (:a this) (* 2 x) (* 2 (- n x)))
-                        ]
-                            (BNode'new nil, (bit-or (:bitmap this) bit), a')
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"node" BNode''dissoc [#_"BNode" this, #_"int" shift, #_"int" hash, #_"key" key]
-        (let-when-not [#_"int" bit (PersistentHashMap'bitpos hash, shift)] (zero? (bit-and (:bitmap this) bit)) => this
-            (let [
-                #_"int" x (BNode'index (:bitmap this), bit)
-                #_"key|nil" k (aget (:a this) (* 2 x)) #_"value|node" v (aget (:a this) (inc (* 2 x)))
-            ]
-                (if (some? k)
-                    (when (= key k) => this
-                        (BNode'new nil, (bit-xor (:bitmap this) bit), (PersistentHashMap'removePair (:a this), x))
-                    )
-                    (let [#_"node" node (INode'''dissoc #_"node" v, (+ shift 5), hash, key)]
-                        (cond
-                            (= node v)
-                                this
-                            (some? node)
-                                (BNode'new nil, (:bitmap this), (PersistentHashMap'cloneAndSet (:a this), (inc (* 2 x)), node))
-                            (= (:bitmap this) bit)
-                                nil
-                            :else
-                                (BNode'new nil, (bit-xor (:bitmap this) bit), (PersistentHashMap'removePair (:a this), x))
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"IMapEntry|value" BNode''find
-        ([#_"BNode" this, #_"int" shift, #_"int" hash, #_"key" key]
-            (let-when-not [#_"int" bit (PersistentHashMap'bitpos hash, shift)] (zero? (bit-and (:bitmap this) bit))
-                (let [
-                    #_"int" x (BNode'index (:bitmap this), bit)
-                    #_"key|nil" k (aget (:a this) (* 2 x)) #_"value|node" v (aget (:a this) (inc (* 2 x)))
-                ]
-                    (cond
-                        (nil? k)  (INode'''find #_"node" v, (+ shift 5), hash, key)
-                        (= key k) (MapEntry'new k, v)
-                    )
-                )
-            )
-        )
-        ([#_"BNode" this, #_"int" shift, #_"int" hash, #_"key" key, #_"value" not-found]
-            (let-when-not [#_"int" bit (PersistentHashMap'bitpos hash, shift)] (zero? (bit-and (:bitmap this) bit)) => not-found
-                (let [
-                    #_"int" x (BNode'index (:bitmap this), bit)
-                    #_"key|nil" k (aget (:a this) (* 2 x)) #_"value|node" v (aget (:a this) (inc (* 2 x)))
-                ]
-                    (cond
-                        (nil? k)  (INode'''find #_"node" v, (+ shift 5), hash, key, not-found)
-                        (= key k) v
-                        :else     not-found
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"seq" BNode''nodeSeq [#_"BNode" this]
-        (NSeq'create (:a this))
-    )
-
-    (defn #_"node" BNode''assocT [#_"BNode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"key" key, #_"value" val, #_"boolean'" addedLeaf]
-        (let [#_"int" bit (PersistentHashMap'bitpos hash, shift) #_"int" x (BNode'index (:bitmap this), bit)]
-            (if-not (zero? (bit-and (:bitmap this) bit))
-                (let [
-                    #_"key|nil" k (aget (:a this) (* 2 x)) #_"value|node" v (aget (:a this) (inc (* 2 x)))
-                ]
-                    (cond
-                        (nil? k)
-                            (let [#_"node" node (INode'''assocT #_"node" v, edit, (+ shift 5), hash, key, val, addedLeaf)]
-                                (when-not (= node v) => this
-                                    (BNode''editAndSet this, edit, (inc (* 2 x)), node)
-                                )
-                            )
-                        (= key k)
-                            (when-not (= val v) => this
-                                (BNode''editAndSet this, edit, (inc (* 2 x)), val)
-                            )
-                        :else
-                            (let [#_"node" node (BNode'createT edit, (+ shift 5), k, v, hash, key, val) _ (reset! addedLeaf true)]
-                                (BNode''editAndSet this, edit, (* 2 x), nil, (inc (* 2 x)), node)
-                            )
-                    )
-                )
-                (let [#_"int" n (Number'bitCount (:bitmap this))]
-                    (cond
-                        (< (* n 2) (alength (:a this)))
-                            (let [
-                                #_"BNode" e (-> (BNode''ensureEditable this, edit) (qswap! :bitmap bit-or bit)) _ (reset! addedLeaf true)
-                                _ (acopy! (:a e) (* 2 (inc x)) (:a e) (* 2 x) (* 2 (- n x)))
-                                _ (aset! (:a e) (* 2 x) key)
-                                _ (aset! (:a e) (inc (* 2 x)) val)
-                            ]
-                                e
-                            )
-                        (<= 16 n)
-                            (let [
-                                #_"node[]" nodes (anew #_"node" 32) #_"int" m (PersistentHashMap'mask hash, shift)
-                                _ (aset! nodes m (INode'''assocT BNode'EMPTY, edit, (+ shift 5), hash, key, val, addedLeaf))
-                                _
-                                    (loop-when [#_"int" j 0 #_"int" i 0] (< i 32)
-                                        (when (odd? (unsigned-bit-shift-right (:bitmap this) i)) => (recur j (inc i))
-                                            (let [#_"key|nil" k (aget (:a this) j) #_"value|node" v (aget (:a this) (inc j))]
-                                                (if (some? k)
-                                                    (aset! nodes i (INode'''assocT BNode'EMPTY, edit, (+ shift 5), (f'hash k), k, v, addedLeaf))
-                                                    (aset! nodes i #_"node" v)
-                                                )
-                                                (recur (+ j 2) (inc i))
-                                            )
-                                        )
-                                    )
-                            ]
-                                (ANode'new edit, (inc n), nodes)
-                            )
-                        :else
-                            (let [
-                                #_"array" a' (anew (* 2 (+ n 4)))
-                                _ (acopy! a' 0 (:a this) 0 (* 2 x))
-                                _ (aset! a' (* 2 x) key)
-                                _ (reset! addedLeaf true)
-                                _ (aset! a' (inc (* 2 x)) val)
-                                _ (acopy! a' (* 2 (inc x)) (:a this) (* 2 x) (* 2 (- n x)))
-                            ]
-                                (-> (BNode''ensureEditable this, edit)
-                                    (qset! :a a')
-                                    (qswap! :bitmap bit-or bit)
-                                )
-                            )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"node" BNode''dissocT [#_"BNode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"key" key, #_"boolean'" removedLeaf]
-        (let-when-not [#_"int" bit (PersistentHashMap'bitpos hash, shift)] (zero? (bit-and (:bitmap this) bit)) => this
-            (let [
-                #_"int" x (BNode'index (:bitmap this), bit)
-                #_"key|nil" k (aget (:a this) (* 2 x)) #_"value|node" v (aget (:a this) (inc (* 2 x)))
-            ]
-                (if (some? k)
-                    (when (= key k) => this
-                        (reset! removedLeaf true)
-                        (BNode''editAndRemovePair this, edit, bit, x)
-                    )
-                    (let [#_"node" node (INode'''dissocT #_"node" v, edit, (+ shift 5), hash, key, removedLeaf)]
-                        (cond
-                            (= node v)
-                                this
-                            (some? node)
-                                (BNode''editAndSet this, edit, (inc (* 2 x)), node)
-                            (= (:bitmap this) bit)
-                                nil
-                            :else
-                                (BNode''editAndRemovePair this, edit, bit, x)
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defm BNode INode
-        (INode'''assoc => BNode''assoc)
-        (INode'''dissoc => BNode''dissoc)
-        (INode'''find => BNode''find)
-        (INode'''nodeSeq => BNode''nodeSeq)
-        (INode'''assocT => BNode''assocT)
-        (INode'''dissocT => BNode''dissocT)
-    )
-)
-
-(about #_"CNode"
-    (defq CNode [#_"thread'" edit, #_"int" hash, #_"int" n, #_"array" a])
-
-    (defn #_"CNode" CNode'new [#_"thread'" edit, #_"int" hash, #_"int" n, #_"array" a]
-        (new* CNode'class (anew [edit, hash, n, a]))
-    )
-
-    (defn #_"int" CNode''findIndex [#_"CNode" this, #_"key" key]
-        (let [#_"array" a (:a this) #_"int" m (* 2 (:n this))]
-            (loop-when [#_"int" i 0] (< i m) => -1
-                (if (= (aget a i) key) i (recur (+ i 2)))
-            )
-        )
-    )
-
-    (defn #_"CNode" CNode''ensureEditable
-        ([#_"CNode" this, #_"thread'" edit]
-            (when-not (identical? (:edit this) edit) => this
-                (let [
-                    #_"int" n (:n this) #_"int" m (inc n)
-                    #_"array" a' (-> (anew (* 2 m)) (acopy! 0 (:a this) 0 (* 2 n)))
-                ]
-                    (CNode'new edit, (:hash this), n, a')
-                )
-            )
-        )
-        ([#_"CNode" this, #_"thread'" edit, #_"int" n, #_"array" a]
-            (when-not (identical? (:edit this) edit) => (qset! this :a a, :n n)
-                (CNode'new edit, (:hash this), n, a)
-            )
-        )
-    )
-
-    (defn #_"CNode" CNode''editAndSet
-        ([#_"CNode" this, #_"thread'" edit, #_"int" i, #_"any" x]
-            (let [#_"CNode" e (CNode''ensureEditable this, edit)]
-                (aset! (:a e) i x)
-                e
-            )
-        )
-        ([#_"CNode" this, #_"thread'" edit, #_"int" i, #_"any" x, #_"int" j, #_"any" y]
-            (let [#_"CNode" e (CNode''ensureEditable this, edit)]
-                (aset! (:a e) i x)
-                (aset! (:a e) j y)
-                e
-            )
-        )
-    )
-
-    (defn #_"node" CNode''assoc [#_"CNode" this, #_"int" shift, #_"int" hash, #_"key" key, #_"value" val, #_"boolean'" addedLeaf]
-        (if (= (:hash this) hash)
-            (let [#_"array" a (:a this) #_"int" i (CNode''findIndex this, key) #_"int" n (:n this)]
-                (if (< -1 i)
-                    (when-not (= (aget a (inc i)) val) => this
-                        (CNode'new nil, hash, n, (PersistentHashMap'cloneAndSet a, (inc i), val))
-                    )
-                    (let [
-                        #_"array" a' (-> (anew (* 2 (inc n))) (acopy! 0 a 0 (* 2 n)) (aset! (* 2 n) key) (aset! (inc (* 2 n)) val))
-                        _ (reset! addedLeaf true)
-                    ]
-                        (CNode'new (:edit this), hash, (inc n), a')
-                    )
-                )
-            )
-            (let [#_"BNode" node (BNode'new nil, (PersistentHashMap'bitpos (:hash this), shift), (anew [ nil, this ]))]
-                (INode'''assoc node, shift, hash, key, val, addedLeaf)
-            )
-        )
-    )
-
-    (defn #_"node" CNode''dissoc [#_"CNode" this, #_"int" shift, #_"int" hash, #_"key" key]
-        (let-when [#_"int" i (CNode''findIndex this, key)] (< -1 i) => this
-            (let-when [#_"int" n (:n this)] (< 1 n)
-                (CNode'new nil, hash, (dec n), (PersistentHashMap'removePair (:a this), (quot i 2)))
-            )
-        )
-    )
-
-    (defn #_"IMapEntry|value" CNode''find
-        ([#_"CNode" this, #_"int" shift, #_"int" hash, #_"key" key]
-            (let-when [#_"int" i (CNode''findIndex this, key)] (< -1 i)
-                (let-when [#_"key" ai (aget (:a this) i)] (= ai key)
-                    (MapEntry'new ai, (aget (:a this) (inc i)))
-                )
-            )
-        )
-        ([#_"CNode" this, #_"int" shift, #_"int" hash, #_"key" key, #_"value" not-found]
-            (let-when [#_"int" i (CNode''findIndex this, key)] (< -1 i) => not-found
-                (when (= (aget (:a this) i) key) => not-found
-                    (aget (:a this) (inc i))
-                )
-            )
-        )
-    )
-
-    (defn #_"seq" CNode''nodeSeq [#_"CNode" this]
-        (NSeq'create (:a this))
-    )
-
-    (defn #_"node" CNode''assocT [#_"CNode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"key" key, #_"value" val, #_"boolean'" addedLeaf]
-        (if (= (:hash this) hash)
-            (let [#_"array" a (:a this) #_"int" i (CNode''findIndex this, key)]
-                (if (< -1 i)
-                    (when-not (= (aget a (inc i)) val) => this
-                        (CNode''editAndSet this, edit, (inc i), val)
-                    )
-                    (let [#_"int" n (:n this) #_"int" m (alength a)]
-                        (if (< (* 2 n) m)
-                            (let [_ (reset! addedLeaf true)]
-                                (-> (CNode''editAndSet this, edit, (* 2 n), key, (inc (* 2 n)), val)
-                                    (qswap! :n inc)
-                                )
-                            )
-                            (let [
-                                #_"array" a' (-> (anew (+ m 2)) (acopy! 0 a 0 m) (aset! m key) (aset! (inc m) val))
-                                _ (reset! addedLeaf true)
-                            ]
-                                (CNode''ensureEditable this, edit, (inc n), a')
-                            )
-                        )
-                    )
-                )
-            )
-            (let [#_"BNode" node (BNode'new edit, (PersistentHashMap'bitpos (:hash this), shift), (anew [ nil, this, nil, nil ]))]
-                (INode'''assocT node, edit, shift, hash, key, val, addedLeaf)
-            )
-        )
-    )
-
-    (defn #_"node" CNode''dissocT [#_"CNode" this, #_"thread'" edit, #_"int" shift, #_"int" hash, #_"key" key, #_"boolean'" removedLeaf]
-        (let-when [#_"int" i (CNode''findIndex this, key)] (< -1 i) => this
-            (reset! removedLeaf true)
-            (let-when [#_"int" n (:n this)] (< 1 n)
-                (let [
-                    #_"CNode" e (-> (CNode''ensureEditable this, edit) (qswap! :n dec))
-                    #_"int" m (* 2 n)
-                    _ (aset! (:a e) i (aget (:a e) (- m 2)))
-                    _ (aset! (:a e) (inc i) (aget (:a e) (- m 1)))
-                    _ (aset! (:a e) (- m 2) nil)
-                    _ (aset! (:a e) (- m 1) nil)
-                ]
-                    e
-                )
-            )
-        )
-    )
-
-    (defm CNode INode
-        (INode'''assoc => CNode''assoc)
-        (INode'''dissoc => CNode''dissoc)
-        (INode'''find => CNode''find)
-        (INode'''nodeSeq => CNode''nodeSeq)
-        (INode'''assocT => CNode''assocT)
-        (INode'''dissocT => CNode''dissocT)
-    )
-)
-
-(about #_"PersistentHashMap"
-    (defq PersistentHashMap [#_"int" cnt, #_"node" root, #_"boolean" has-nil?, #_"value" nil-value] MapForm)
-
-    #_inherit
-    (defm PersistentHashMap APersistentMap AFn)
-
-    (defn #_"PersistentHashMap" PersistentHashMap'new [#_"int" cnt, #_"node" root, #_"boolean" has-nil?, #_"value" nil-value]
-        (new* PersistentHashMap'class (anew [cnt, root, has-nil?, nil-value]))
-    )
-
-    (def #_"PersistentHashMap" PersistentHashMap'EMPTY (PersistentHashMap'new 0, nil, false, nil))
-
-    (defn #_"PersistentHashMap" PersistentHashMap'create-1a [#_"array" init]
-        (loop-when-recur [#_"IPersistentMap" m PersistentHashMap'EMPTY #_"int" i 0]
-                         (< i (alength init))
-                         [(assoc m (aget init i) (aget init (inc i))) (+ i 2)]
-                      => m
-        )
-    )
-
-    (defn #_"PersistentHashMap" PersistentHashMap'create-1s [#_"Seqable" init]
-        (loop-when [#_"IPersistentMap" m PersistentHashMap'EMPTY #_"seq" s (seq init)] (some? s) => m
-            (when (some? (next s)) => (throw! (str "no value supplied for key: " (first s)))
-                (recur (assoc m (first s) (second s)) (next (next s)))
-            )
-        )
-    )
-
-    (defn #_"value" PersistentHashMap''valAt
-        ([#_"PersistentHashMap" this, #_"key" key] (PersistentHashMap''valAt this, key, nil))
-        ([#_"PersistentHashMap" this, #_"key" key, #_"value" not-found]
-            (if (nil? key)
-                (when (:has-nil? this) => not-found
-                    (:nil-value this)
-                )
-                (when (some? (:root this)) => not-found
-                    (INode'''find (:root this), 0, (f'hash key), key, not-found)
-                )
-            )
-        )
-    )
-
-    (def #_"value" PersistentHashMap'NOT_FOUND (anew 0))
-
-    (defn #_"IPersistentMap" PersistentHashMap''assoc [#_"PersistentHashMap" this, #_"key" key, #_"value" val]
-        (if (nil? key)
-            (when-not (and (:has-nil? this) (= (:nil-value this) val)) => this
-                (PersistentHashMap'new (+ (:cnt this) (if (:has-nil? this) 0 1)), (:root this), true, val)
-            )
-            (let [
-                #_"boolean'" addedLeaf (atom false)
-                #_"node" root (INode'''assoc (or (:root this) BNode'EMPTY), 0, (f'hash key), key, val, addedLeaf)
-            ]
-                (when-not (= root (:root this)) => this
-                    (PersistentHashMap'new (+ (:cnt this) (if (deref addedLeaf) 1 0)), root, (:has-nil? this), (:nil-value this))
-                )
-            )
-        )
-    )
-
-    (defn #_"boolean" PersistentHashMap''containsKey [#_"PersistentHashMap" this, #_"key" key]
-        (if (nil? key)
-            (:has-nil? this)
-            (and (some? (:root this))
-                (not (identical? (INode'''find (:root this), 0, (f'hash key), key, PersistentHashMap'NOT_FOUND) PersistentHashMap'NOT_FOUND))
-            )
-        )
-    )
-
-    (defn #_"pair" PersistentHashMap''entryAt [#_"PersistentHashMap" this, #_"key" key]
-        (if (nil? key)
-            (when (:has-nil? this)
-                (MapEntry'new nil, (:nil-value this))
-            )
-            (when (some? (:root this))
-                (INode'''find (:root this), 0, (f'hash key), key)
-            )
-        )
-    )
-
-    (defn #_"IPersistentMap" PersistentHashMap''dissoc [#_"PersistentHashMap" this, #_"key" key]
-        (cond
-            (nil? key)
-                (when (:has-nil? this) => this
-                    (PersistentHashMap'new (dec (:cnt this)), (:root this), false, nil)
-                )
-            (nil? (:root this))
-                this
-            :else
-                (let [#_"node" root (INode'''dissoc (:root this), 0, (f'hash key), key)]
-                    (when-not (= root (:root this)) => this
-                        (PersistentHashMap'new (dec (:cnt this)), root, (:has-nil? this), (:nil-value this))
-                    )
-                )
-        )
-    )
-
-    (defn #_"IPersistentCollection" PersistentHashMap''empty [#_"PersistentHashMap" this]
-        PersistentHashMap'EMPTY
-    )
-
-    (defn #_"seq" PersistentHashMap''seq [#_"PersistentHashMap" this]
-        (let [#_"seq" s (when (some? (:root this)) (INode'''nodeSeq (:root this)))]
-            (when (:has-nil? this) => s
-                (Cons'new (MapEntry'new nil, (:nil-value this)), s)
-            )
-        )
-    )
-
-    (defm PersistentHashMap Counted
-        (Counted'''count => :cnt)
-    )
-
-    (defm PersistentHashMap ILookup
-        (ILookup'''valAt => PersistentHashMap''valAt)
-    )
-
-    (defm PersistentHashMap IFn
-        (IFn'''invoke => APersistentMap''invoke)
-        (IFn'''applyTo => AFn'applyTo)
-    )
-
-    (defm PersistentHashMap Associative
-        (Associative'''assoc => PersistentHashMap''assoc)
-        (Associative'''containsKey => PersistentHashMap''containsKey)
-        (Associative'''entryAt => PersistentHashMap''entryAt)
-    )
-
-    (defm PersistentHashMap IPersistentMap
-        (IPersistentMap'''dissoc => PersistentHashMap''dissoc)
-    )
-
-    (defm PersistentHashMap IPersistentCollection
-        (IPersistentCollection'''conj => APersistentMap''conj)
-        (IPersistentCollection'''empty => PersistentHashMap''empty)
-    )
-
-    (defm PersistentHashMap Seqable
-        (Seqable'''seq => PersistentHashMap''seq)
-    )
-
-    (defm PersistentHashMap IObject
-        (IObject'''equals => APersistentMap''equals)
-    )
-
-    (defm PersistentHashMap Hashed
-        (Hashed'''hash => Murmur3'hashUnordered)
-    )
-)
-
-(defn hash-map
-    ([] PersistentHashMap'EMPTY)
-    ([& keyvals] (PersistentHashMap'create-1s keyvals))
-)
-
-(defn merge [& maps]
-    (when (some identity maps)
-        (reduce (fn [a1 a2] (conj (or a1 (hash-map)) a2)) maps)
-    )
-)
-)
-
-(about #_"arbace.arm.PersistentHashSet"
-
-(about #_"PersistentHashSet"
-    (defq PersistentHashSet [#_"map" impl] SetForm)
-
-    #_inherit
-    (defm PersistentHashSet APersistentSet AFn)
-
-    (defn #_"PersistentHashSet" PersistentHashSet'new [#_"map" impl]
-        (new* PersistentHashSet'class (anew [impl]))
-    )
-
-    (def #_"PersistentHashSet" PersistentHashSet'EMPTY (PersistentHashSet'new PersistentHashMap'EMPTY))
+    (def #_"PersistentArraySet" PersistentArraySet'EMPTY (PersistentArraySet'new PersistentArrayMap'EMPTY))
 
-    (defn #_"PersistentHashSet" PersistentHashSet'create [#_"Seqable" init]
-        (into PersistentHashSet'EMPTY init)
+    (defn #_"PersistentArraySet" PersistentArraySet'create [#_"Seqable" init]
+        (into PersistentArraySet'EMPTY init)
     )
 
-    (defn #_"PersistentHashSet" PersistentHashSet'createWithCheck [#_"Seqable" init]
-        (loop-when [#_"IPersistentSet" s PersistentHashSet'EMPTY #_"seq" q (seq init) #_"int" n 0] (some? q) => s
+    (defn #_"PersistentArraySet" PersistentArraySet'createWithCheck [#_"Seqable" init]
+        (loop-when [#_"IPersistentSet" s PersistentArraySet'EMPTY #_"seq" q (seq init) #_"int" n 0] (some? q) => s
             (let [s (conj s (first q))]
                 (when (= (count s) (inc n)) => (throw! (str "duplicate key: " (first q)))
                     (recur s (next q) (inc n))
@@ -3486,79 +2365,75 @@
         )
     )
 
-    (defn #_"int" PersistentHashSet''count [#_"PersistentHashSet" this]
+    (defn #_"int" PersistentArraySet''count [#_"PersistentArraySet" this]
         (count (:impl this))
     )
 
-    (defn #_"PersistentHashSet" PersistentHashSet''conj [#_"PersistentHashSet" this, #_"value" val]
+    (defn #_"PersistentArraySet" PersistentArraySet''conj [#_"PersistentArraySet" this, #_"value" val]
         (if (contains? (:impl this) val)
             this
-            (PersistentHashSet'new (assoc (:impl this) val val))
+            (PersistentArraySet'new (assoc (:impl this) val val))
         )
     )
 
-    (defn #_"PersistentHashSet" PersistentHashSet''empty [#_"PersistentHashSet" this]
-        PersistentHashSet'EMPTY
+    (defn #_"PersistentArraySet" PersistentArraySet''empty [#_"PersistentArraySet" this]
+        PersistentArraySet'EMPTY
     )
 
-    (defn #_"IPersistentSet" PersistentHashSet''disj [#_"PersistentHashSet" this, #_"key" key]
+    (defn #_"IPersistentSet" PersistentArraySet''disj [#_"PersistentArraySet" this, #_"key" key]
         (if (contains? (:impl this) key)
-            (PersistentHashSet'new (dissoc (:impl this) key))
+            (PersistentArraySet'new (dissoc (:impl this) key))
             this
         )
     )
 
-    (defn #_"boolean" PersistentHashSet''contains? [#_"PersistentHashSet" this, #_"key" key]
+    (defn #_"boolean" PersistentArraySet''contains? [#_"PersistentArraySet" this, #_"key" key]
         (contains? (:impl this) key)
     )
 
-    (defn #_"value" PersistentHashSet''get [#_"PersistentHashSet" this, #_"key" key]
+    (defn #_"value" PersistentArraySet''get [#_"PersistentArraySet" this, #_"key" key]
         (get (:impl this) key)
     )
 
-    (defn #_"seq" PersistentHashSet''seq [#_"PersistentHashSet" this]
+    (defn #_"seq" PersistentArraySet''seq [#_"PersistentArraySet" this]
         (keys (:impl this))
     )
 
-    (defm PersistentHashSet Counted
-        (Counted'''count => PersistentHashSet''count)
+    (defm PersistentArraySet Counted
+        (Counted'''count => PersistentArraySet''count)
     )
 
-    (defm PersistentHashSet IPersistentCollection
-        (IPersistentCollection'''conj => PersistentHashSet''conj)
-        (IPersistentCollection'''empty => PersistentHashSet''empty)
+    (defm PersistentArraySet IPersistentCollection
+        (IPersistentCollection'''conj => PersistentArraySet''conj)
+        (IPersistentCollection'''empty => PersistentArraySet''empty)
     )
 
-    (defm PersistentHashSet IPersistentSet
-        (IPersistentSet'''disj => PersistentHashSet''disj)
-        (IPersistentSet'''contains? => PersistentHashSet''contains?)
-        (IPersistentSet'''get => PersistentHashSet''get)
+    (defm PersistentArraySet IPersistentSet
+        (IPersistentSet'''disj => PersistentArraySet''disj)
+        (IPersistentSet'''contains? => PersistentArraySet''contains?)
+        (IPersistentSet'''get => PersistentArraySet''get)
     )
 
-    (defm PersistentHashSet Seqable
-        (Seqable'''seq => PersistentHashSet''seq)
+    (defm PersistentArraySet Seqable
+        (Seqable'''seq => PersistentArraySet''seq)
     )
 
-    (defm PersistentHashSet IFn
+    (defm PersistentArraySet IFn
         (IFn'''invoke => APersistentSet''invoke)
         (IFn'''applyTo => AFn'applyTo)
     )
 
-    (defm PersistentHashSet IObject
+    (defm PersistentArraySet IObject
         (IObject'''equals => APersistentSet''equals)
     )
-
-    (defm PersistentHashSet Hashed
-        (Hashed'''hash => Murmur3'hashUnordered)
-    )
 )
 
-(defn hash-set
-    ([] PersistentHashSet'EMPTY)
-    ([& keys] (PersistentHashSet'create keys))
+(defn array-set
+    ([] PersistentArraySet'EMPTY)
+    ([& keys] (PersistentArraySet'create keys))
 )
 
-(defn set [s] (if (set? s) s (into (hash-set) s)))
+(defn set [s] (if (set? s) s (into (array-set) s)))
 )
 
 (about #_"arbace.arm.PersistentVector"
@@ -3840,12 +2715,6 @@
         )
     )
 
-    (defn #_"int" PersistentVector''hash [#_"PersistentVector" this]
-        (loop-when [#_"int" hash 1 #_"int" i 0] (< i (:cnt this)) => (Murmur3'mixCollHash hash, i)
-            (recur (+ (* 31 hash) (f'hash (Indexed'''nth this, i))) (inc i))
-        )
-    )
-
     (defn #_"int" PersistentVector''tail-off [#_"PersistentVector" this]
         (- (:cnt this) (alength (:tail this)))
     )
@@ -4042,10 +2911,6 @@
 
     (defm PersistentVector IObject
         (IObject'''equals => PersistentVector''equals)
-    )
-
-    (defm PersistentVector Hashed
-        (Hashed'''hash => PersistentVector''hash)
     )
 
     (defm PersistentVector Counted
@@ -4257,14 +3122,7 @@
 )
 
     (defn #_"IPersistentMap" RT'mapUniqueKeys [#_"Seqable" init]
-        (cond
-            (empty? init)
-                PersistentArrayMap'EMPTY
-            (<= (count init) PersistentArrayMap'HASHTABLE_THRESHOLD)
-                (PersistentArrayMap'new (anew init))
-            :else
-                (PersistentHashMap'create-1s init)
-        )
+        (if (empty? init) PersistentArrayMap'EMPTY (PersistentArrayMap'new (anew init)))
     )
 )
 )
@@ -4384,12 +3242,6 @@
         (IFn'''applyTo => Var''applyTo)
     )
 )
-
-(defmacro defonce [name expr]
-    `(let-when [v# (def ~name)] (not (Var''hasRoot v#))
-        (def ~name ~expr)
-    )
-)
 )
 
 (about #_"arbace.arm.Namespace"
@@ -4397,7 +3249,7 @@
 (about #_"Namespace"
     (defq Namespace [#_"Symbol" name, #_"{Symbol Var}'" mappings])
 
-    (def #_"{Symbol Namespace}'" Namespace'namespaces (atom (hash-map)))
+    (def #_"{Symbol Namespace}'" Namespace'namespaces (atom (array-map)))
 
     (defn #_"Namespace" Namespace'find [#_"Symbol" name]
         (get (deref Namespace'namespaces) name)
@@ -4413,7 +3265,7 @@
 )
 
     (defn #_"Namespace" Namespace'new [#_"Symbol" name]
-        (new* Namespace'class (anew [name, (atom (hash-map))]))
+        (new* Namespace'class (anew [name, (atom (array-map))]))
     )
 
     (defn #_"Namespace" Namespace'findOrCreate [#_"Symbol" name]
@@ -4476,7 +3328,7 @@
 
 (defn destructure [bindings]
     (letfn [(vec- [v x y]
-                (let [v' (gensym "v__") s' (gensym "s__") f' (gensym "f__") amp (some (hash-set '&) x)]
+                (let [v' (gensym "v__") s' (gensym "s__") f' (gensym "f__") amp (some (array-set '&) x)]
                     (loop-when [v (let [v (conj v v' y)] (if amp (conj v s' `(seq ~v')) v)) n 0 s (seq x) amp? false] s => v
                         (condp = (first s)
                             '&  (recur (destructure- v (second s) s') n (next (next s)) true)
@@ -4494,45 +3346,10 @@
                     )
                 )
             )
-            (map- [v x y]
-                (let [m' (gensym "m__") as (:as x) or* (:or x)
-                      v (conj v m' y m' `(if (seq? ~m') (apply hash-map ~m') ~m')) v (if as (conj v as m') v)
-                      s (reduce
-                            (fn [m e] (reduce (fn [a1 a2] (assoc a1 a2 ((val e) a2))) (dissoc m (key e)) ((key e) m)))
-                            (dissoc x :as :or)
-                            (reduce
-                                (fn [m k]
-                                    (when (keyword? k) => m
-                                        (let [ns (namespace k)]
-                                            (condp = (name k)
-                                                "keys" (assoc m k (fn [z] (keyword (or ns (namespace z)) (name z))))
-                                                "syms" (assoc m k (fn [z] (list 'quote (symbol (or ns (namespace z)) (name z)))))
-                                                "strs" (assoc m k str)
-                                                       m
-                                            )
-                                        )
-                                    )
-                                )
-                                (hash-map) (keys x)
-                            )
-                        )]
-                    (loop-when [v v s (seq s)] s => v
-                        (let [x (key (first s)) k (val (first s))
-                              local (if (satisfies? INamed x) (symbol nil (name x)) x)
-                              y (if (contains? or* local)
-                                    `(get ~m' ~k ~(or* local))
-                                    `(get ~m' ~k)
-                                )]
-                            (recur (if (or (symbol? x) (keyword? x)) (conj v local y) (destructure- v x y)) (next s))
-                        )
-                    )
-                )
-            )
             (destructure- [v x y]
                 (cond
                     (symbol? x) (conj v x y)
                     (vector? x) (vec- v x y)
-                    (map? x)    (map- v x y)
                     :else       (throw! (str "unsupported binding form: " x))
                 )
             )]
@@ -4545,7 +3362,6 @@
     )
 )
 
-#_oops!
 (defmacro let [bindings & body]
     `(let* ~(destructure bindings) ~@body)
 )
@@ -4564,7 +3380,6 @@
     )
 )
 
-#_oops!
 (defmacro fn [& s]
     (let [name (when (symbol? (first s)) (first s)) s (if name (next s) s)
           s (if (vector? (first s))
@@ -4597,7 +3412,6 @@
     )
 )
 
-#_oops!
 (defmacro loop [bindings & body]
     (if (= (destructure bindings) bindings)
         `(loop* ~bindings ~@body)
@@ -4617,7 +3431,6 @@
     )
 )
 
-#_oops!
 (defmacro defn [name & s]
     (when (symbol? name) => (throw! "first argument to defn must be a symbol")
         (let [s (if (vector? (first s)) (list s) s)]
@@ -4627,7 +3440,7 @@
 )
 
 (defn memoize [f]
-    (let [mem (atom (hash-map))]
+    (let [mem (atom (array-map))]
         (fn [& args]
             (if-some [e (find (deref mem) args)]
                 (val e)
@@ -4730,7 +3543,7 @@
 )
 
 (def Context'enum-set
-    (hash-set
+    (array-set
         :Context'STATEMENT
         :Context'EXPRESSION
         :Context'RETURN
@@ -4862,7 +3675,7 @@
 
     (defn #_"LiteralExpr" LiteralExpr'new [#_"any" value]
         (new* LiteralExpr'class
-            (hash-map
+            (array-map
                 #_"any" :value value
             )
         )
@@ -4906,7 +3719,7 @@
 
     (defn #_"UnresolvedVarExpr" UnresolvedVarExpr'new [#_"Symbol" symbol]
         (new* UnresolvedVarExpr'class
-            (hash-map
+            (array-map
                 #_"Symbol" :symbol symbol
             )
         )
@@ -4926,7 +3739,7 @@
 
     (defn #_"VarExpr" VarExpr'new [#_"Var" var]
         (new* VarExpr'class
-            (hash-map
+            (array-map
                 #_"Var" :var var
             )
         )
@@ -4953,7 +3766,7 @@
 
     (defn #_"BodyExpr" BodyExpr'new [#_"vector" exprs]
         (new* BodyExpr'class
-            (hash-map
+            (array-map
                 #_"vector" :exprs exprs
             )
         )
@@ -4989,7 +3802,7 @@
 
     (defn #_"IfExpr" IfExpr'new [#_"Expr" test, #_"Expr" then, #_"Expr" else]
         (new* IfExpr'class
-            (hash-map
+            (array-map
                 #_"Expr" :test test
                 #_"Expr" :then then
                 #_"Expr" :else else
@@ -5039,7 +3852,7 @@
 
     (defn #_"VectorExpr" VectorExpr'new [#_"vector" args]
         (new* VectorExpr'class
-            (hash-map
+            (array-map
                 #_"vector" :args args
             )
         )
@@ -5084,7 +3897,7 @@
 
     (defn #_"InvokeExpr" InvokeExpr'new [#_"Expr" fexpr, #_"vector" args]
         (new* InvokeExpr'class
-            (hash-map
+            (array-map
                 #_"Expr" :fexpr fexpr
                 #_"vector" :args args
             )
@@ -5120,7 +3933,7 @@
 
     (defn #_"LocalBinding" LocalBinding'new [#_"Symbol" sym, #_"Expr" init, #_"int" idx]
         (new* LocalBinding'class
-            (hash-map
+            (array-map
                 #_"int" :uid (next-id!)
                 #_"Symbol" :sym sym
                 #_"Expr'" :'init (atom init)
@@ -5135,7 +3948,7 @@
 
     (defn #_"LocalBindingExpr" LocalBindingExpr'new [#_"LocalBinding" lb]
         (new* LocalBindingExpr'class
-            (hash-map
+            (array-map
                 #_"LocalBinding" :lb lb
             )
         )
@@ -5157,10 +3970,10 @@
 
     (defn #_"FnMethod" FnMethod'new [#_"FnExpr" fun, #_"FnMethod" parent]
         (new* FnMethod'class
-            (hash-map
+            (array-map
                 #_"FnExpr" :fun fun
                 #_"FnMethod" :parent parent
-                #_"{int LocalBinding}'" :'locals (atom (hash-map))
+                #_"{int LocalBinding}'" :'locals (atom (array-map))
                 #_"Number" :arity nil
                 #_"Expr" :body nil
             )
@@ -5234,7 +4047,7 @@
 
     (defn #_"gen" FnMethod''compile [#_"FnMethod" this]
         (let [
-            #_"map" scope (hash-map :fm this)
+            #_"map" scope (array-map :fm this)
             #_"gen" gen (Gen'new)
             scope (assoc scope :loop-label (Gen''mark gen))
             gen (Expr'''emit (:body this), :Context'RETURN, scope, gen)
@@ -5251,11 +4064,11 @@
 
     (defn #_"FnExpr" FnExpr'new []
         (new* FnExpr'class
-            (hash-map
+            (array-map
                 #_"Symbol" :fname nil
                 #_"{int FnMethod}" :regulars nil
                 #_"FnMethod" :variadic nil
-                #_"{int LocalBinding}'" :'closes (atom (hash-map))
+                #_"{int LocalBinding}'" :'closes (atom (array-map))
             )
         )
     )
@@ -5272,7 +4085,7 @@
                     (list 'fn* (next form))
                 )
             [#_"{int FnMethod}" regulars #_"FnMethod" variadic]
-                (loop-when [regulars (hash-map) variadic nil #_"seq" s (next form)] (some? s) => [regulars variadic]
+                (loop-when [regulars (array-map) variadic nil #_"seq" s (next form)] (some? s) => [regulars variadic]
                     (let [#_"FnMethod" fm (FnMethod'parse fun, (first s), scope) #_"int" n (:arity fm)]
                         (if (neg? n)
                             (when (nil? variadic) => (throw! "can't have more than 1 variadic overload")
@@ -5317,7 +4130,7 @@
 
     (defn #_"DefExpr" DefExpr'new [#_"Var" var, #_"Expr" init, #_"boolean" initProvided]
         (new* DefExpr'class
-            (hash-map
+            (array-map
                 #_"Var" :var var
                 #_"Expr" :init init
                 #_"boolean" :initProvided initProvided
@@ -5376,7 +4189,7 @@
 
     (defn #_"LetFnExpr" LetFnExpr'new [#_"[LocalBinding]" bindings, #_"Expr" body]
         (new* LetFnExpr'class
-            (hash-map
+            (array-map
                 #_"[LocalBinding]" :bindings bindings
                 #_"Expr" :body body
             )
@@ -5431,7 +4244,7 @@
                     )
                 )
             [#_"{int}" lbset gen]
-                (loop-when [lbset (hash-set) gen gen #_"seq" s (seq (:bindings this))] (some? s) => [lbset gen]
+                (loop-when [lbset (array-set) gen gen #_"seq" s (seq (:bindings this))] (some? s) => [lbset gen]
                     (let [
                         #_"LocalBinding" lb (first s)
                         gen (Expr'''emit (deref (:'init lb)), :Context'EXPRESSION, scope, gen)
@@ -5482,7 +4295,7 @@
 
     (defn #_"LetExpr" LetExpr'new [#_"[LocalBinding]" bindings, #_"Expr" body, #_"boolean" loop?]
         (new* LetExpr'class
-            (hash-map
+            (array-map
                 #_"[LocalBinding]" :bindings bindings
                 #_"Expr" :body body
                 #_"boolean" :loop? loop?
@@ -5563,7 +4376,7 @@
 
     (defn #_"RecurExpr" RecurExpr'new [#_"vector" loopLocals, #_"vector" args]
         (new* RecurExpr'class
-            (hash-map
+            (array-map
                 #_"vector" :loopLocals loopLocals
                 #_"vector" :args args
             )
@@ -5611,7 +4424,7 @@
 
     (defn #_"ThrowExpr" ThrowExpr'new [#_"Expr" throwable]
         (new* ThrowExpr'class
-            (hash-map
+            (array-map
                 #_"Expr" :throwable throwable
             )
         )
@@ -5641,7 +4454,7 @@
 
 (about #_"Compiler"
     (def #_"map" Compiler'specials
-        (hash-map
+        (array-map
             '&       nil
             'def     DefExpr'parse
             'do      BodyExpr'parse
@@ -6016,11 +4829,11 @@
             (coll? form)
                 (cond
                     (map? form)
-                        (list `apply `hash-map (list `seq (cons `concat (SyntaxQuoteReader'sqExpandList scope, (seq (mapcat identity form))))))
+                        (list `apply `array-map (list `seq (cons `concat (SyntaxQuoteReader'sqExpandList scope, (seq (mapcat identity form))))))
                     (vector? form)
                         (list `apply `vector (list `seq (cons `concat (SyntaxQuoteReader'sqExpandList scope, (seq form)))))
                     (set? form)
-                        (list `apply `hash-set (list `seq (cons `concat (SyntaxQuoteReader'sqExpandList scope, (seq form)))))
+                        (list `apply `array-set (list `seq (cons `concat (SyntaxQuoteReader'sqExpandList scope, (seq form)))))
                     (or (seq? form) (list? form))
                         (when-some [#_"seq" s (seq form)] => (cons `list nil)
                             (list `seq (cons `concat (SyntaxQuoteReader'sqExpandList scope, s)))
@@ -6036,7 +4849,7 @@
     )
 
     (defn #_"any" syntax-quote-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
-        (let [scope (assoc scope :'gensym-env (atom (hash-map)))]
+        (let [scope (assoc scope :'gensym-env (atom (array-map)))]
             (SyntaxQuoteReader'syntaxQuote scope, (LispReader'read r, scope))
         )
     )
@@ -6076,7 +4889,7 @@
 
 (about #_"LispReader"
     (def #_"{char fn}" LispReader'macros
-        (hash-map
+        (array-map
             (char! "\"")  string-reader
             (char! "'")  quote-reader
             (char! "`")  syntax-quote-reader
@@ -6088,7 +4901,7 @@
     )
 
     (def #_"{char fn}" LispReader'dispatchMacros
-        (hash-map
+        (array-map
             (char! "_")  discard-reader
         )
     )
