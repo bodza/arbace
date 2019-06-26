@@ -75,7 +75,6 @@
 
 (about #_"arbace.arm.Comparable"
     (defp Comparable
-        (#_"int" Comparable'''compareTo [#_"Comparable" this, #_"any" that])
     )
 )
 
@@ -201,14 +200,6 @@
     )
 
     (defn indexed? [x] (satisfies? Indexed x))
-
-    (defn nthnext [s n]
-        (loop* [s (seq s) n n]
-            (when (and s (pos? n)) => s
-                (recur (next s) (dec n))
-            )
-        )
-    )
 )
 
 (about #_"arbace.arm.ILookup"
@@ -346,27 +337,6 @@
     )
 )
 
-(about #_"arbace.arm.IPersistentStack"
-    (defp IPersistentStack
-        (#_"any" IPersistentStack'''peek [#_"IPersistentStack" this])
-        (#_"IPersistentStack" IPersistentStack'''pop [#_"IPersistentStack" this])
-    )
-
-    (defn stack? [x] (satisfies? IPersistentStack x))
-
-    (defn peek [s]
-        (when (some? s)
-            (IPersistentStack'''peek s)
-        )
-    )
-
-    (defn pop [s]
-        (when (some? s)
-            (IPersistentStack'''pop s)
-        )
-    )
-)
-
 (about #_"arbace.arm.IPersistentList"
     (defp IPersistentList)
 
@@ -385,11 +355,6 @@
     (defp Atom)
 )
 
-(about #_"arbace.arm.AFn"
-    #_abstract
-    (defp AFn)
-)
-
 (about #_"arbace.arm.Symbol"
     (defp Symbol)
 
@@ -406,35 +371,13 @@
     (defp Closure)
 )
 
-(about #_"arbace.arm.ASeq"
-    #_abstract
-    (defp ASeq)
-)
-
 (about #_"arbace.arm.LazySeq"
     (defp LazySeq)
-)
-
-(about #_"arbace.arm.APersistentMap"
-    #_abstract
-    (defp APersistentMap)
-)
-
-(about #_"arbace.arm.APersistentSet"
-    #_abstract
-    (defp APersistentSet)
 )
 
 (about #_"arbace.arm.APersistentVector"
     (defp VSeq)
     (defp RSeq)
-    #_abstract
-    (defp APersistentVector)
-)
-
-(about #_"arbace.arm.AMapEntry"
-    #_abstract
-    (defp AMapEntry)
 )
 
 (about #_"arbace.arm.Cons"
@@ -720,26 +663,6 @@
         )
     )
 )
-
-(defn not=
-    ([x] false)
-    ([x y] (not (= x y)))
-    ([x y & s] (not (apply = x y s)))
-)
-
-(about #_"Util"
-    (defn #_"int" Util'compare [#_"any" a, #_"any" b]
-        (cond
-            (= a b)     0
-            (nil? a)   -1
-            (nil? b)    1
-            (number? a) (cond (-/< a (int b)) -1 (-/> a (int b)) 1 :else 0)
-            :else       (Comparable''compareTo a, b)
-        )
-    )
-)
-
-(defn compare [x y] (Util'compare x, y))
 )
 
 (about #_"arbace.arm.Numbers"
@@ -874,7 +797,7 @@
 (defn bit-set   [x i] (-/bit-or (int x) (-/bit-shift-left 1 (int i))))
 (defn bit-flip  [x i] (-/bit-xor (int x) (-/bit-shift-left 1 (int i))))
 
-(defn bit-test  [x i] (-/not= (-/bit-and (int x) (-/bit-shift-left 1 (int i))) 0))
+(defn bit-test  [x i] (not (zero? (-/bit-and (int x) (-/bit-shift-left 1 (int i))))))
 
 (defn          bit-shift-left  [x n] (-/bit-shift-left           (int x) (int n)))
 (defn          bit-shift-right [x n] (-/bit-shift-right          (int x) (int n)))
@@ -919,9 +842,6 @@
 (about #_"Symbol"
     (defq Symbol [#_"String" name])
 
-    #_inherit
-    (defm Symbol AFn)
-
     (defn #_"Symbol" Symbol'new [#_"String" name]
         (new* Symbol'class (anew [name]))
     )
@@ -945,10 +865,6 @@
         ([#_"Symbol" this, #_"any" obj, #_"value" not-found] (get obj this not-found))
     )
 
-    (defn #_"int" Symbol''compareTo [#_"Symbol" this, #_"Symbol" that]
-        (if (= this that) 0 (compare (:name this) (:name that)))
-    )
-
     (defm Symbol IObject
         (IObject'''equals => Symbol''equals)
     )
@@ -963,7 +879,6 @@
     )
 
     (defm Symbol Comparable
-        (Comparable'''compareTo => Symbol''compareTo)
     )
 )
 
@@ -974,9 +889,6 @@
 
 (about #_"Keyword"
     (defq Keyword [#_"Symbol" sym])
-
-    #_inherit
-    (defm Keyword AFn)
 
     (defn #_"Keyword" Keyword'new [#_"Symbol" sym]
         (new* Keyword'class (anew [sym]))
@@ -1001,10 +913,6 @@
         ([#_"Keyword" this, #_"any" obj, #_"value" not-found] (get obj this not-found))
     )
 
-    (defn #_"int" Keyword''compareTo [#_"Keyword" this, #_"Keyword" that]
-        (compare (:sym this) (:sym that))
-    )
-
     (defm Keyword IObject
         (IObject'''equals => Keyword''equals)
     )
@@ -1019,7 +927,6 @@
     )
 
     (defm Keyword Comparable
-        (Comparable'''compareTo => Keyword''compareTo)
     )
 )
 
@@ -1036,9 +943,6 @@
 
 (about #_"Closure"
     (defq Closure [#_"FnExpr" fun, #_"map" env])
-
-    #_inherit
-    (defm Closure AFn)
 
     (defn #_"Closure" Closure'new [#_"FnExpr" fun, #_"map" env]
         (new* Closure'class (anew [fun, env]))
@@ -1127,9 +1031,6 @@
 
 (about #_"Cons"
     (defq Cons [#_"any" car, #_"seq" cdr] SeqForm)
-
-    #_inherit
-    (defm Cons ASeq)
 
     (defn #_"Cons" Cons'new [#_"any" car, #_"seq" cdr]
         (new* Cons'class (anew [car, cdr]))
@@ -1303,7 +1204,7 @@
 (defn index-of [s x]
     (loop* [i 0 s (seq s)]
         (when (some? s) => -1
-            (when (not= (first s) x) => i
+            (when (not (= (first s) x)) => i
                 (recur (inc i) (next s))
             )
         )
@@ -1445,9 +1346,6 @@
 (about #_"VSeq"
     (defq VSeq [#_"vector" v, #_"int" i] SeqForm)
 
-    #_inherit
-    (defm VSeq ASeq)
-
     (defn #_"VSeq" VSeq'new [#_"vector" v, #_"int" i]
         (new* VSeq'class (anew [v, i]))
     )
@@ -1492,9 +1390,6 @@
 
 (about #_"RSeq"
     (defq RSeq [#_"vector" v, #_"int" i] SeqForm)
-
-    #_inherit
-    (defm RSeq ASeq)
 
     (defn #_"RSeq" RSeq'new [#_"vector" v, #_"int" i]
         (new* RSeq'class (anew [v, i]))
@@ -1581,25 +1476,6 @@
             )
         )
     )
-
-    (defn #_"int" AMapEntry''compareTo [#_"AMapEntry" this, #_"IPersistentVector" that]
-        (when (not (identical? this that)) => 0
-            (let* [#_"int" m (count that)]
-                (cond (< 2 m) -1 (< m 2) 1
-                    :else
-                        (loop* [#_"int" i 0]
-                            (when (< i 2) => 0
-                                (let* [#_"int" cmp (compare (Indexed'''nth this, i) (Indexed'''nth that, i))]
-                                    (when (zero? cmp) => cmp
-                                        (recur (inc i))
-                                    )
-                                )
-                            )
-                        )
-                )
-            )
-        )
-    )
 )
 )
 
@@ -1607,9 +1483,6 @@
 
 (about #_"MapEntry"
     (defq MapEntry [#_"key" k, #_"value" v] VecForm)
-
-    #_inherit
-    (defm MapEntry AMapEntry APersistentVector AFn)
 
     (defn #_"MapEntry" MapEntry'new [#_"key" k, #_"value" v]
         (new* MapEntry'class (anew [k, v]))
@@ -1643,7 +1516,6 @@
     )
 
     (defm MapEntry Comparable
-        (Comparable'''compareTo => AMapEntry''compareTo)
     )
 )
 )
@@ -1685,14 +1557,6 @@
         this
     )
 
-    (defn #_"any" EmptyList''peek [#_"EmptyList" this]
-        nil
-    )
-
-    (defn #_"IPersistentList" EmptyList''pop [#_"EmptyList" this]
-        (throw! "can't pop the empty list")
-    )
-
     (defm EmptyList IPersistentList Sequential)
 
     (defm EmptyList IObject
@@ -1716,18 +1580,10 @@
         (IPersistentCollection'''conj => EmptyList''conj)
         (IPersistentCollection'''empty => EmptyList''empty)
     )
-
-    (defm EmptyList IPersistentStack
-        (IPersistentStack'''peek => EmptyList''peek)
-        (IPersistentStack'''pop => EmptyList''pop)
-    )
 )
 
 (about #_"PersistentList"
     (defq PersistentList [#_"any" car, #_"IPersistentList" cdr, #_"int" cnt] SeqForm)
-
-    #_inherit
-    (defm PersistentList ASeq)
 
     (defn #_"PersistentList" PersistentList'new
         ([#_"any" car] (PersistentList'new car, nil, 1))
@@ -1754,10 +1610,6 @@
         PersistentList'EMPTY
     )
 
-    (defn #_"IPersistentList" PersistentList''pop [#_"PersistentList" this]
-        (or (:cdr this) PersistentList'EMPTY)
-    )
-
     (defm PersistentList IPersistentList Sequential)
 
     (defm PersistentList Seqable
@@ -1778,11 +1630,6 @@
         (IPersistentCollection'''empty => PersistentList''empty)
     )
 
-    (defm PersistentList IPersistentStack
-        (IPersistentStack'''peek => :car)
-        (IPersistentStack'''pop => PersistentList''pop)
-    )
-
     (defm PersistentList IObject
         (IObject'''equals => ASeq''equals)
     )
@@ -1800,9 +1647,6 @@
 
 (about #_"MSeq"
     (defq MSeq [#_"array" a, #_"int" i] SeqForm)
-
-    #_inherit
-    (defm MSeq ASeq)
 
     (defn #_"MSeq" MSeq'new [#_"array" a, #_"int" i]
         (new* MSeq'class (anew [a, i]))
@@ -1848,9 +1692,6 @@
 
 (about #_"PersistentArrayMap"
     (defq PersistentArrayMap [#_"array" array] MapForm)
-
-    #_inherit
-    (defm PersistentArrayMap APersistentMap AFn)
 
     (defn #_"PersistentArrayMap" PersistentArrayMap'new [#_"array" a]
         (new* PersistentArrayMap'class (anew [(or a (anew 0))]))
@@ -2074,9 +1915,6 @@
 
 (about #_"PersistentArraySet"
     (defq PersistentArraySet [#_"map" impl] SetForm)
-
-    #_inherit
-    (defm PersistentArraySet APersistentSet AFn)
 
     (defn #_"PersistentArraySet" PersistentArraySet'new [#_"map" impl]
         (new* PersistentArraySet'class (anew [impl]))
@@ -2431,9 +2269,6 @@
 (about #_"PersistentVector"
     (defq PersistentVector [#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] VecForm)
 
-    #_inherit
-    (defm PersistentVector APersistentVector AFn)
-
     (defn #_"PersistentVector" PersistentVector'new [#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail]
         (new* PersistentVector'class (anew [cnt, shift, root, tail]))
     )
@@ -2573,43 +2408,6 @@
         )
     )
 
-    (defn #_"value" PersistentVector''peek [#_"PersistentVector" this]
-        (when (pos? (:cnt this))
-            (Indexed'''nth this, (dec (:cnt this)))
-        )
-    )
-
-    (defn #_"PersistentVector" PersistentVector''pop [#_"PersistentVector" this]
-        (condp = (:cnt this)
-            0   (throw! "can't pop the empty vector")
-            1   PersistentVector'EMPTY
-            (let* [
-                #_"int" tail-len (alength (:tail this))
-            ]
-                (if (< 1 tail-len)
-                    (let* [
-                        #_"values" tail (-> (anew (dec tail-len)) (acopy! 0 (:tail this) 0 (dec tail-len)))
-                    ]
-                        (PersistentVector'new (dec (:cnt this)), (:shift this), (:root this), tail)
-                    )
-                    (let* [
-                        #_"values" tail (PersistentVector''array-for this, (- (:cnt this) 2))
-                        #_"int" shift (:shift this)
-                        #_"node" root (VNode''pop-tail (:root this), shift, (PersistentVector''tail-off this))
-                        [shift root]
-                            (cond
-                                (nil? root)                                     [shift VNode'EMPTY]
-                                (and (< 5 shift) (nil? (aget (:array root) 1))) [(- shift 5) (aget (:array root) 0)]
-                                :else                                           [shift root]
-                            )
-                    ]
-                        (PersistentVector'new (dec (:cnt this)), shift, root, tail)
-                    )
-                )
-            )
-        )
-    )
-
     (defn #_"value" PersistentVector''invoke [#_"PersistentVector" this, #_"key" arg]
         (when (integer? arg) => (throw! "arg must be integer")
             (Indexed'''nth this, (int arg))
@@ -2667,25 +2465,6 @@
         )
     )
 
-    (defn #_"int" PersistentVector''compareTo [#_"PersistentVector" this, #_"IPersistentVector" that]
-        (when (not (identical? this that)) => 0
-            (let* [#_"int" n (:cnt this) #_"int" m (count that)]
-                (cond (< n m) -1 (< m n) 1
-                    :else
-                        (loop* [#_"int" i 0]
-                            (when (< i n) => 0
-                                (let* [#_"int" cmp (compare (Indexed'''nth this, i) (Indexed'''nth that, i))]
-                                    (when (zero? cmp) => cmp
-                                        (recur (inc i))
-                                    )
-                                )
-                            )
-                        )
-                )
-            )
-        )
-    )
-
     (defm PersistentVector IObject
         (IObject'''equals => PersistentVector''equals)
     )
@@ -2705,11 +2484,6 @@
 
     (defm PersistentVector IPersistentVector
         (IPersistentVector'''assocN => PersistentVector''assocN)
-    )
-
-    (defm PersistentVector IPersistentStack
-        (IPersistentStack'''peek => PersistentVector''peek)
-        (IPersistentStack'''pop => PersistentVector''pop)
     )
 
     (defm PersistentVector IFn
@@ -2738,7 +2512,6 @@
     )
 
     (defm PersistentVector Comparable
-        (Comparable'''compareTo => PersistentVector''compareTo)
     )
 )
 
@@ -3008,7 +2781,7 @@
 
     (defn #_"Character" LispReader'read1 [#_"Reader" r]
         (let* [#_"int" c (Reader''read r)]
-            (when (not= c -1)
+            (when (not (= c -1))
                 (char c)
             )
         )
@@ -3191,7 +2964,7 @@
             (loop* []
                 (let* [#_"char" ch (LispReader'read1 r)]
                     (when (some? ch) => (throw! "EOF while reading string")
-                        (when (not= ch (char! "\""))
+                        (when (not (= ch (char! "\"")))
                             (StringBuilder''append sb, (if (= ch (char! "\\")) (StringReader'escape r) ch))
                             (recur)
                         )
@@ -3383,7 +3156,7 @@
     )
 
     (defn #_"gen" LiteralExpr''emit [#_"LiteralExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
-        (when (not= context :Context'STATEMENT) => gen
+        (when (not (= context :Context'STATEMENT)) => gen
             (Gen''push gen, (:value this))
         )
     )
@@ -3619,7 +3392,7 @@
     )
 
     (defn #_"gen" LocalBindingExpr''emit [#_"LocalBindingExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
-        (when (not= context :Context'STATEMENT) => gen
+        (when (not (= context :Context'STATEMENT)) => gen
             (FnMethod''emitLocal (get scope :fm), gen, (:lb this))
         )
     )
@@ -3781,7 +3554,7 @@
     )
 
     (defn #_"gen" FnExpr''emit [#_"FnExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
-        (when (not= context :Context'STATEMENT) => gen
+        (when (not (= context :Context'STATEMENT)) => gen
             (let* [
                 gen (Compiler'emitLocals scope, gen, (deref (:'closes this)))
                 gen (Gen''invoke gen, RT'mapUniqueKeys, 1)
