@@ -2,80 +2,11 @@
     (:refer-clojure :only []) (:require [clojure.core :as -])
 )
 
-(defmacro about [& s] (cons 'do s))
-
-(defn throw! [#_"String" s] (throw (Error. s)))
-
-(let* [last-id' (atom 0)] (defn next-id! [] (swap! last-id' inc)))
-
-(defn gensym
-    ([] (gensym "G__"))
-    ([prefix] (symbol (str prefix (next-id!))))
-)
-
 (defn identity [x] x)
 
 (defn nil?  [x] (identical? x nil))
 (defn not   [x] (if x false true))
 (defn some? [x] (not (nil? x)))
-
-(defmacro and
-    ([] true)
-    ([x] x)
-    ([x & s] `(let* [and# ~x] (if and# (and ~@s) and#)))
-)
-
-(defmacro or
-    ([] nil)
-    ([x] x)
-    ([x & s] `(let* [or# ~x] (if or# or# (or ~@s))))
-)
-
-(defmacro letfn [fnspecs & body]
-    `(letfn* ~(vec (interleave (map first fnspecs) (map (fn [s] (cons `fn s)) fnspecs))) ~@body)
-)
-
-(letfn [(=> [s] (if (= '=> (first s)) (next s) (cons nil s)))]
-    (defmacro when [? & s] (let* [[e & s] (=> s)] `(if ~? (do ~@s) ~e)))
-)
-
-(defmacro cond [& s]
-    (when s
-        `(if ~(first s)
-            ~(when (next s) => (throw! "cond requires an even number of forms")
-                (second s)
-            )
-            (cond ~@(next (next s)))
-        )
-    )
-)
-
-(defmacro condp [p e & s]
-    (letfn [(emit- [p e s]
-                (let* [n (count s 2)]
-                    (cond
-                        (= n 0) `(throw! (str "no matching clause: " ~e))
-                        (= n 1) (first s)
-                        :else `(if (~p ~(first s) ~e) ~(second s) ~(emit- p e (next (next s))))
-                    )
-                )
-            )]
-        (emit- p e s)
-    )
-)
-
-(defmacro -> [x & s]
-    (when s => x
-        (recur &form &env
-            (let* [f (first s)]
-                (when (seq? f) => (list f x)
-                    `(~(first f) ~x ~@(next f))
-                )
-            )
-            (next s)
-        )
-    )
-)
 
 (about #_"arbace.arm.Seqable"
     (defp Seqable
@@ -227,19 +158,6 @@
         ([#_"fn" f a b c s] (IFn'''applyTo f, (list* a b c s)))
         ([#_"fn" f a b c d & s] (IFn'''applyTo f, (cons a (cons b (cons c (cons d (spread s)))))))
     )
-)
-
-(about #_"arbace.arm.INamed"
-    (defp INamed
-        (#_"String" INamed'''getNamespace [#_"INamed" this])
-        (#_"String" INamed'''getName [#_"INamed" this])
-    )
-
-    (defn named? [x] (satisfies? INamed x))
-
-    (defn #_"String" namespace [#_"INamed" x] (INamed'''getNamespace x))
-
-    (defn #_"String" name [x] (if (string? x) x (INamed'''getName #_"INamed" x)))
 )
 
 (about #_"arbace.arm.IDeref"
@@ -527,10 +445,6 @@
     (defp MapEntry)
 )
 
-(about #_"arbace.arm.Namespace"
-    (defp Namespace)
-)
-
 (about #_"arbace.arm.PersistentArrayMap"
     (defp MSeq)
     (defp PersistentArrayMap)
@@ -551,7 +465,6 @@
 )
 
 (about #_"arbace.arm.Var"
-    (defp Unbound)
     (defp Var)
 
     (defn var? [v] (satisfies? Var v))
@@ -595,7 +508,7 @@
     (defn #_"Appendable" append-str [#_"Appendable" a, #_"String" x]
         (let* [
             a (Appendable'''append a, "\"")
-            a (reduce (fn [a1 a2] (Appendable'''append a1, (get char-escape-string a2 a2))) a x)
+            a (reduce (fn* [a1 a2] (Appendable'''append a1, (get char-escape-string a2 a2))) a x)
             a (Appendable'''append a, "\"")
         ]
             a
@@ -624,7 +537,7 @@
 
     (defn #_"Appendable" append-seq [#_"Appendable" a, #_"seq" x]    (append* a "(" append " " ")" x))
     (defn #_"Appendable" append-vec [#_"Appendable" a, #_"vector" x] (append* a "[" append " " "]" x))
-    (defn #_"Appendable" append-map [#_"Appendable" a, #_"map" x]    (append* a "{" (fn [a e] (-> a (append (key e)) (Appendable'''append " ") (append (val e)))) ", " "}" x))
+    (defn #_"Appendable" append-map [#_"Appendable" a, #_"map" x]    (append* a "{" (fn* [a e] (-> a (append (key e)) (Appendable'''append " ") (append (val e)))) ", " "}" x))
     (defn #_"Appendable" append-set [#_"Appendable" a, #_"set" x]    (append* a "#{" append " " "}" x))
 
     (defn #_"Appendable" append [#_"Appendable" a, #_"any" x]
@@ -663,7 +576,7 @@
         ([] "")
         ([x] (if (some? x) (-> (StringBuilder'new) (append! x) (StringBuilder''toString)) ""))
         ([x & s]
-            ((fn [#_"StringBuilder" sb s]
+            ((fn* [#_"StringBuilder" sb s]
                 (when s => (StringBuilder''toString sb)
                     (recur (append! sb (first s)) (next s))
                 )
@@ -1004,37 +917,27 @@
 (about #_"arbace.arm.Symbol"
 
 (about #_"Symbol"
-    (defq Symbol [#_"String" ns, #_"String" name])
+    (defq Symbol [#_"String" name])
 
     #_inherit
     (defm Symbol AFn)
 
-    (defn #_"Symbol" Symbol'new [#_"String" ns, #_"String" name]
-        (new* Symbol'class (anew [ns, name]))
+    (defn #_"Symbol" Symbol'new [#_"String" name]
+        (new* Symbol'class (anew [name]))
     )
 
-    (defn #_"Symbol" Symbol'intern
-        ([#_"String" nsname]
-            (let* [#_"int" i (String''indexOf nsname, (int (char! "/")))]
-                (if (or (= i -1) (= nsname "/"))
-                    (Symbol'new nil, nsname)
-                    (Symbol'new (String''substring nsname, 0, i), (String''substring nsname, (inc i)))
-                )
-            )
-        )
-        ([#_"String" ns, #_"String" name]
-            (Symbol'new ns, name)
-        )
+    (defn #_"Symbol" Symbol'intern [#_"String" nsname]
+        (Symbol'new nil, nsname)
     )
 
     (defn #_"boolean" Symbol''equals [#_"Symbol" this, #_"any" that]
         (or (identical? this that)
-            (and (symbol? that) (= (:ns this) (:ns that)) (= (:name this) (:name that)))
+            (and (symbol? that) (= (:name this) (:name that)))
         )
     )
 
     (defn #_"Appendable" Symbol''append [#_"Symbol" this, #_"Appendable" a]
-        (if (some? (:ns this)) (-> a (Appendable'''append (:ns this)) (Appendable'''append "/") (Appendable'''append (:name this))) (Appendable'''append a, (:name this)))
+        (Appendable'''append a, (:name this))
     )
 
     (defn #_"any" Symbol''invoke
@@ -1043,23 +946,7 @@
     )
 
     (defn #_"int" Symbol''compareTo [#_"Symbol" this, #_"Symbol" that]
-        (cond
-            (= this that)                              0
-            (and (nil? (:ns this)) (some? (:ns that))) -1
-            (nil? (:ns this))                          (compare (:name this) (:name that))
-            (nil? (:ns that))                          1
-            :else
-                (let* [#_"int" cmp (compare (:ns this) (:ns that))]
-                    (when (zero? cmp) => cmp
-                        (compare (:name this) (:name that))
-                    )
-                )
-        )
-    )
-
-    (defm Symbol INamed
-        (INamed'''getNamespace => :ns)
-        (INamed'''getName => :name)
+        (if (= this that) 0 (compare (:name this) (:name that)))
     )
 
     (defm Symbol IObject
@@ -1080,10 +967,7 @@
     )
 )
 
-(defn symbol
-    ([name] (if (symbol? name) name (Symbol'intern name)))
-    ([ns name] (Symbol'intern ns, name))
-)
+(defn symbol [name] (if (symbol? name) name (Symbol'intern name)))
 )
 
 (about #_"arbace.arm.Keyword"
@@ -1100,14 +984,6 @@
 
     (defn #_"Keyword" Keyword'intern [#_"Symbol" sym]
         (Keyword'new sym)
-    )
-
-    (defn #_"String" Keyword''getNamespace [#_"Keyword" this]
-        (INamed'''getNamespace (:sym this))
-    )
-
-    (defn #_"String" Keyword''getName [#_"Keyword" this]
-        (INamed'''getName (:sym this))
     )
 
     (defn #_"boolean" Keyword''equals [#_"Keyword" this, #_"any" that]
@@ -1129,11 +1005,6 @@
         (compare (:sym this) (:sym that))
     )
 
-    (defm Keyword INamed
-        (INamed'''getNamespace => Keyword''getNamespace)
-        (INamed'''getName => Keyword''getName)
-    )
-
     (defm Keyword IObject
         (IObject'''equals => Keyword''equals)
     )
@@ -1152,28 +1023,25 @@
     )
 )
 
-(defn keyword
-    ([name]
-        (cond
-            (keyword? name) name
-            (symbol? name) (Keyword'intern #_"Symbol" name)
-            (string? name) (Keyword'intern (symbol #_"String" name))
-        )
+(defn keyword [name]
+    (cond
+        (keyword? name) name
+        (symbol? name) (Keyword'intern #_"Symbol" name)
+        (string? name) (Keyword'intern (symbol #_"String" name))
     )
-    ([ns name] (Keyword'intern (symbol ns name)))
 )
 )
 
 (about #_"arbace.arm.Closure"
 
 (about #_"Closure"
-    (defq Closure [#_"FnExpr" fun, #_"map'" _env])
+    (defq Closure [#_"FnExpr" fun, #_"map" env])
 
     #_inherit
     (defm Closure AFn)
 
     (defn #_"Closure" Closure'new [#_"FnExpr" fun, #_"map" env]
-        (new* Closure'class (anew [fun, (atom env)]))
+        (new* Closure'class (anew [fun, env]))
     )
 
     (defn #_"any" Closure''invoke
@@ -1325,7 +1193,7 @@
 
     (defn #_"seq" LazySeq''seq [#_"LazySeq" this]
         (locking this
-            (letfn [(step- [this]
+            (let* [step- (fn* [this]
                         (let* [#_"fn" f (deref (:f this))]
                             (when (some? f)
                                 (reset! (:f this) nil)
@@ -1415,7 +1283,7 @@
         )
     )
     ([x y & z]
-        (letfn [(cat- [s z]
+        (let* [cat- (fn* cat- [s z]
                     (lazy-seq!
                         (fn* []
                             (let* [s (seq s)]
@@ -1429,28 +1297,6 @@
                 )]
             (cat- (concat x y) z)
         )
-    )
-)
-
-(defn comp
-    ([] identity)
-    ([f] f)
-    ([f g]
-        (fn
-            ([] (f (g)))
-            ([x] (f (g x)))
-            ([x y] (f (g x y)))
-            ([x y & z] (f (apply g x y z)))
-        )
-    )
-    ([f g & fs] (reduce comp (list* f g fs)))
-)
-
-(defn every? [f? s]
-    (cond
-        (nil? (seq s)) true
-        (f? (first s)) (recur f? (next s))
-        :else false
     )
 )
 
@@ -1470,63 +1316,14 @@
     )
 )
 
-(defn map
-    ([f]
-        (fn [g]
-            (fn
-                ([] (g))
-                ([x] (g x))
-                ([x y] (g x (f y)))
-                ([x y & s] (g x (apply f y s)))
-            )
-        )
-    )
-    ([f s]
-        (lazy-seq!
-            (fn* []
-                (let* [s (seq s)]
-                    (when (some? s)
-                        (cons (f (first s)) (map f (next s)))
-                    )
+(defn map [f s]
+    (lazy-seq!
+        (fn* []
+            (let* [s (seq s)]
+                (when (some? s)
+                    (cons (f (first s)) (map f (next s)))
                 )
             )
-        )
-    )
-    ([f s1 s2]
-        (lazy-seq!
-            (fn* []
-                (let* [s1 (seq s1) s2 (seq s2)]
-                    (when (and s1 s2)
-                        (cons (f (first s1) (first s2)) (map f (next s1) (next s2)))
-                    )
-                )
-            )
-        )
-    )
-    ([f s1 s2 s3]
-        (lazy-seq!
-            (fn* []
-                (let* [s1 (seq s1) s2 (seq s2) s3 (seq s3)]
-                    (when (and s1 s2 s3)
-                        (cons (f (first s1) (first s2) (first s3)) (map f (next s1) (next s2) (next s3)))
-                    )
-                )
-            )
-        )
-    )
-    ([f s1 s2 s3 & z]
-        (letfn [(map- [s]
-                    (lazy-seq!
-                        (fn* []
-                            (let* [s (map seq s)]
-                                (when (every? identity s)
-                                    (cons (map first s) (map- (map next s)))
-                                )
-                            )
-                        )
-                    )
-                )]
-            (map (fn [s] (apply f s)) (map- (conj z s3 s2 s1)))
         )
     )
 )
@@ -1564,38 +1361,11 @@
 )
 
 (defn drop [n s]
-    (letfn [(drop- [n s]
-                (let* [s (seq s)]
-                    (when (and (pos? n) s) => s
-                        (recur (dec n) (next s))
-                    )
-                )
-            )]
-        (lazy-seq! (fn* [] (drop- n s)))
-    )
-)
-
-(defn interleave
-    ([] (list))
-    ([c1] (lazy-seq! (fn* [] c1)))
-    ([c1 c2]
-        (lazy-seq!
-            (fn* []
-                (let* [s1 (seq c1) s2 (seq c2)]
-                    (when (and s1 s2)
-                        (cons (first s1) (cons (first s2) (interleave (next s1) (next s2))))
-                    )
-                )
-            )
-        )
-    )
-    ([c1 c2 & cs]
-        (lazy-seq!
-            (fn* []
-                (let* [ss (map seq (conj cs c2 c1))]
-                    (when (every? identity ss)
-                        (concat (map first ss) (apply interleave (map next ss)))
-                    )
+    (lazy-seq!
+        (fn* []
+            (let* [s (seq s)]
+                (when (and (pos? n) s) => s
+                    (recur (dec n) (next s))
                 )
             )
         )
@@ -2281,6 +2051,22 @@
 (defn array-map
     ([] PersistentArrayMap'EMPTY)
     ([& keyvals] (PersistentArrayMap'createAsIfByAssoc (anew keyvals)))
+)
+
+(defn memoize [f]
+    (let* [mem (atom (array-map))]
+        (fn* [& args]
+            (let* [e (find (deref mem) args)]
+                (if (some? e)
+                    (val e)
+                    (let* [r (apply f args)]
+                        (swap! mem assoc args r)
+                        r
+                    )
+                )
+            )
+        )
+    )
 )
 )
 
@@ -3122,82 +2908,27 @@
 (about #_"arbace.arm.Var"
 
 (about #_"Var"
-    (defn #_"Appendable" Var'append [#_"Appendable" a, #_"Namespace" ns, #_"Symbol" sym]
-        (if (some? ns)
-            (-> a (Appendable'''append "#'") (append (:name ns)) (Appendable'''append "/") (append sym))
-            (-> a (Appendable'''append "#_var nil #_\"") (append sym) (Appendable'''append "\""))
-        )
-    )
-)
-
-(about #_"Unbound"
-    (defq Unbound [#_"Namespace" ns, #_"Symbol" sym])
-
-    #_inherit
-    (defm Unbound AFn)
-
-    (defn #_"Unbound" Unbound'new [#_"Namespace" ns, #_"Symbol" sym]
-        (new* Unbound'class (anew [ns, sym]))
-    )
-
-    (defn #_"Appendable" Unbound''append [#_"Unbound" this, #_"Appendable" a]
-        (-> a (Appendable'''append "#_unbound ") (Var'append (:ns this), (:sym this)))
-    )
-
-    (defm Unbound IObject
-        (IObject'''equals => identical?)
-    )
-
-    (defm Unbound IAppend
-        (IAppend'''append => Unbound''append)
-    )
-)
-
-(about #_"Var"
-    (defq Var [#_"Namespace" ns, #_"Symbol" sym, #_"any'" root])
+    (defq Var [#_"Symbol" sym, #_"any'" root])
 
     (defn #_"Var" Var'new
-        ([#_"Namespace" ns, #_"Symbol" sym] (Var'new ns, sym, (Unbound'new ns, sym)))
-        ([#_"Namespace" ns, #_"Symbol" sym, #_"any" root]
-            (new* Var'class (anew [ns, sym, (atom root)]))
+        ([#_"Symbol" sym] (Var'new sym, nil))
+        ([#_"Symbol" sym, #_"any" root]
+            (new* Var'class (anew [sym, (atom root)]))
         )
     )
 
     (defn #_"Appendable" Var''append [#_"Var" this, #_"Appendable" a]
-        (Var'append a, (:ns this), (:sym this))
-    )
-
-    (defn #_"boolean" Var''hasRoot [#_"Var" this]
-        (not (satisfies? Unbound (deref (:root this))))
+        (-> a (Appendable'''append "#'") (append (:sym this)))
     )
 
     (defn #_"any" Var''get [#_"Var" this]
         (deref (:root this))
     )
 
-(defn var-get [#_"var" x] (Var''get x))
-
     (defn #_"void" Var''bindRoot [#_"Var" this, #_"any" root]
         (reset! (:root this) root)
         nil
     )
-
-    (defn #_"Var" Var'intern
-        ([#_"Namespace" ns, #_"Symbol" sym]
-            (Namespace''intern ns, sym)
-        )
-        ([#_"Namespace" ns, #_"Symbol" sym, #_"any" root]
-            (let* [#_"Var" v (Namespace''intern ns, sym)]
-                (Var''bindRoot v, root)
-                v
-            )
-        )
-    )
-
-(defn intern
-    ([ns name]      (Var'intern (the-ns ns), name))
-    ([ns name root] (Var'intern (the-ns ns), name, root))
-)
 
     (defn #_"any" Var''invoke
         ([#_"Var" this]                                                   (IFn'''invoke (deref this)))
@@ -3239,157 +2970,293 @@
 (about #_"arbace.arm.Namespace"
 
 (about #_"Namespace"
-    (defq Namespace [#_"Symbol" name, #_"{Symbol Var}'" mappings])
+    (def #_"{Symbol Var}'" Namespace'mappings (atom (array-map)))
 
-    (def #_"{Symbol Namespace}'" Namespace'namespaces (atom (array-map)))
-
-    (defn #_"Namespace" Namespace'find [#_"Symbol" name]
-        (get (deref Namespace'namespaces) name)
+    (defn #_"Var" Namespace'getMapping [#_"Symbol" name]
+        (get (deref Namespace'mappings) name)
     )
 
-(defn find-ns [sym] (Namespace'find sym))
-
-(defn #_"Namespace" the-ns [x]
-    (if (satisfies? Namespace x)
-        x
-        (or (find-ns x) (throw! (str "no namespace: " x " found")))
-    )
-)
-
-    (defn #_"Namespace" Namespace'new [#_"Symbol" name]
-        (new* Namespace'class (anew [name, (atom (array-map))]))
-    )
-
-    (defn #_"Namespace" Namespace'findOrCreate [#_"Symbol" name]
-        (or (Namespace'find name)
-            (let* [#_"Namespace" ns (Namespace'new name)]
-                (swap! Namespace'namespaces assoc name ns)
-                ns
-            )
-        )
-    )
-
-(defn create-ns [sym] (Namespace'findOrCreate sym))
-
-    (defn #_"Appendable" Namespace''append [#_"Namespace" this, #_"Appendable" a]
-        (Appendable'''append a, (:name (:name this)))
-    )
-
-    (defn #_"any" Namespace''getMapping [#_"Namespace" this, #_"Symbol" name]
-        (get (deref (:mappings this)) name)
-    )
-
-    (defn #_"var" Namespace''intern [#_"Namespace" this, #_"Symbol" sym]
-        (when (nil? (:ns sym)) => (throw! "can't intern namespace-qualified symbol")
-            (let* [#_"any" o
-                    (or (get (deref (:mappings this)) sym)
-                        (let* [#_"var" v (Var'new this, sym)]
-                            (swap! (:mappings this) assoc sym v)
-                            v
-                        )
-                    )]
-                (when (not (and (var? o) (= (:ns o) this))) => o
-                    (let* [#_"var" v (Var'new this, sym)]
-                        (swap! (:mappings this) assoc sym v)
-                        v
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"var" Namespace''findInternedVar [#_"Namespace" this, #_"Symbol" name]
-        (let* [#_"any" o (get (deref (:mappings this)) name)]
-            (when (and (var? o) (= (:ns o) this))
-                o
-            )
-        )
-    )
-
-    (defm Namespace IObject
-        (IObject'''equals => identical?)
-    )
-
-    (defm Namespace IAppend
-        (IAppend'''append => Namespace''append)
-    )
-)
-)
-
-(about #_"cloiure.core"
-
-(defn maybe-destructured [pars body]
-    (if (every? symbol? pars)
-        (cons (vec pars) body)
-        (loop* [s (seq pars) pars (vector) lets (vector)]
-            (when s => `(~pars (let* ~lets ~@body))
-                (if (symbol? (first s))
-                    (recur (next s) (conj pars (first s)) lets)
-                    (let* [p' (gensym "p__")]
-                        (recur (next s) (conj pars p') (conj lets (first s) p'))
-                    )
-                )
+    (defn #_"Var" Namespace'intern [#_"Symbol" sym]
+        (or (get (deref Namespace'mappings) sym)
+            (let* [#_"Var" v (Var'new sym)]
+                (swap! Namespace'mappings assoc sym v)
+                v
             )
         )
     )
 )
+)
 
-(defmacro fn [& s]
-    (let* [name (when (symbol? (first s)) (first s)) s (if name (next s) s)
-          s (if (vector? (first s))
-                (list s)
-                (if (seq? (first s))
-                    s
-                    (throw!
-                        (if (seq s)
-                            (str "parameter declaration " (first s) " should be a vector")
-                            (str "parameter declaration missing")
-                        )
-                    )
-                )
+(about #_"arbace.arm.LispReader"
+
+(about #_"LispReader"
+    (defn #_"boolean" LispReader'isMacro [#_"char" ch]
+        (contains? LispReader'macros ch)
+    )
+
+    (defn #_"boolean" LispReader'isTerminatingMacro [#_"char" ch]
+        (and (LispReader'isMacro ch) (not (contains? (array-set (char! "#") (char! "'") (char! "%")) ch)))
+    )
+
+    (defn #_"boolean" LispReader'isDigit [#_"char" ch]
+        (Character'isDigit ch)
+    )
+
+    (defn #_"boolean" LispReader'isWhitespace [#_"char" ch]
+        (or (Character'isWhitespace ch) (= ch (char! ",")))
+    )
+
+    (defn #_"Character" LispReader'read1 [#_"Reader" r]
+        (let* [#_"int" c (Reader''read r)]
+            (when (not= c -1)
+                (char c)
             )
-          sig-
-            (fn* [sig]
-                (when (seq? sig) => (throw! (str "invalid signature " sig " should be a list"))
-                    (let* [pars (first sig) body (next sig)]
-                        (when (vector? pars) => (throw!
-                                                    (if (seq? (first s))
-                                                        (str "parameter declaration " pars " should be a vector")
-                                                        (str "invalid signature " sig " should be a list")
-                                                    )
+        )
+    )
+
+    (defn #_"void" LispReader'unread [#_"Reader" r, #_"Character" ch]
+        (when (some? ch)
+            (Reader''unread r, (int ch))
+        )
+        nil
+    )
+
+    (def #_"Pattern" LispReader'rxInteger #"([-+]?)(?:(0)|([1-9][0-9]*)|0[xX]([0-9A-Fa-f]+)|0([0-7]+))")
+
+    (defn #_"any" LispReader'matchNumber [#_"String" s]
+        (let* [#_"Matcher" m (Pattern''matcher LispReader'rxInteger, s)]
+            (when (Matcher''matches m)
+                (when (nil? (Matcher''group m, 2)) => 0
+                    (let* [[#_"String" n #_"int" radix]
+                            (let* [n (Matcher''group m, 3)]
+                                (if (some? n)
+                                    [n 10]
+                                    (let* [n (Matcher''group m, 4)]
+                                        (if (some? n)
+                                            [n 16]
+                                            (let* [n (Matcher''group m, 5)]
+                                                (when (some? n)
+                                                    [n 8]
                                                 )
-                            (maybe-destructured pars (or (and (map? (first body)) (next body)) body))
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                    ]
+                        (when (some? n)
+                            (let* [#_"BigInteger" bn (BigInteger'new n, radix) bn (if (= (Matcher''group m, 1) "-") (BigInteger''negate bn) bn)]
+                                (when (< (BigInteger''bitLength bn) 64) => bn
+                                    (int (BigInteger''longValue bn))
+                                )
+                            )
                         )
                     )
                 )
             )
-          s (map sig- s)]
-        (if name (list* 'fn* name s) (cons 'fn* s))
-    )
-)
-
-(defmacro defn [name & s]
-    (when (symbol? name) => (throw! "first argument to defn must be a symbol")
-        (let* [s (if (vector? (first s)) (list s) s)]
-            (list 'def name (cons `fn s))
         )
     )
-)
 
-(defn memoize [f]
-    (let* [mem (atom (array-map))]
-        (fn [& args]
-            (let* [e (find (deref mem) args)]
-                (if (some? e)
-                    (val e)
-                    (let* [r (apply f args)]
-                        (swap! mem assoc args r)
-                        r
+    (defn #_"any" LispReader'readNumber [#_"Reader" r, #_"char" ch]
+        (let* [#_"String" s
+                (let* [#_"StringBuilder" sb (StringBuilder'new) _ (StringBuilder''append sb, ch)]
+                    (loop* []
+                        (let* [ch (LispReader'read1 r)]
+                            (if (or (nil? ch) (LispReader'isWhitespace ch) (LispReader'isMacro ch))
+                                (do
+                                    (LispReader'unread r, ch)
+                                    (StringBuilder''toString sb)
+                                )
+                                (do
+                                    (StringBuilder''append sb, ch)
+                                    (recur)
+                                )
+                            )
+                        )
+                    )
+                )]
+            (or (LispReader'matchNumber s) (throw! (str "invalid number: " s)))
+        )
+    )
+
+    (defn #_"String" LispReader'readToken [#_"Reader" r, #_"char" ch]
+        (let* [#_"StringBuilder" sb (StringBuilder'new) _ (StringBuilder''append sb, ch)]
+            (loop* []
+                (let* [ch (LispReader'read1 r)]
+                    (if (or (nil? ch) (LispReader'isWhitespace ch) (LispReader'isTerminatingMacro ch))
+                        (do
+                            (LispReader'unread r, ch)
+                            (StringBuilder''toString sb)
+                        )
+                        (do
+                            (StringBuilder''append sb, ch)
+                            (recur)
+                        )
                     )
                 )
             )
         )
     )
+
+    (defn #_"any" LispReader'matchSymbol [#_"String" s]
+        (let* [#_"boolean" kw? (String''startsWith s, ":") s (if kw? (String''substring s, 1) s)]
+            (when (and (pos? (String''length s)) (not (LispReader'isDigit (String''charAt s, 0))))
+                (if kw? (keyword s) (symbol s))
+            )
+        )
+    )
+
+    (defn #_"any" LispReader'interpretToken [#_"String" s]
+        (condp = s "nil" nil "true" true "false" false
+            (or (LispReader'matchSymbol s) (throw! (str "invalid token: " s)))
+        )
+    )
+
+    (defn #_"any" LispReader'read
+        ([#_"Reader" r, #_"map" scope] (LispReader'read r, scope, true, nil))
+        ([#_"Reader" r, #_"map" scope, #_"boolean" eofIsError, #_"any" eofValue] (LispReader'read r, scope, eofIsError, eofValue, nil, nil))
+        ([#_"Reader" r, #_"map" scope, #_"boolean" eofIsError, #_"any" eofValue, #_"Character" returnOn, #_"any" returnOnValue]
+            (loop* []
+                (let* [#_"char" ch
+                        (loop* [ch (LispReader'read1 r)]
+                            (when (and (some? ch) (LispReader'isWhitespace ch)) => ch
+                                (recur (LispReader'read1 r))
+                            )
+                        )
+                ]
+                    (cond
+                        (nil? ch)
+                            (if eofIsError (throw! "EOF while reading") eofValue)
+                        (and (some? returnOn) (= returnOn ch))
+                            returnOnValue
+                        (LispReader'isDigit ch)
+                            (LispReader'readNumber r, ch)
+                        :else
+                            (let* [#_"fn" f'macro (get LispReader'macros ch)]
+                                (if (some? f'macro)
+                                    (let* [#_"any" o (f'macro r scope ch)]
+                                        (when (identical? o r) => o
+                                            (recur)
+                                        )
+                                    )
+                                    (or
+                                        (when (contains? (array-set (char! "+") (char! "-")) ch)
+                                            (let* [#_"char" ch' (LispReader'read1 r) _ (LispReader'unread r, ch')]
+                                                (when (and (some? ch') (LispReader'isDigit ch'))
+                                                    (LispReader'readNumber r, ch)
+                                                )
+                                            )
+                                        )
+                                        (LispReader'interpretToken (LispReader'readToken r, ch))
+                                    )
+                                )
+                            )
+                    )
+                )
+            )
+        )
+    )
+
+    (def #_"any" LispReader'READ_EOF (anew 0))
+    (def #_"any" LispReader'READ_FINISHED (anew 0))
+
+    (defn #_"vector" LispReader'readDelimitedForms [#_"Reader" r, #_"map" scope, #_"char" delim]
+        (loop* [#_"vector" v (vector)]
+            (let* [#_"any" form (LispReader'read r, scope, false, LispReader'READ_EOF, delim, LispReader'READ_FINISHED)]
+                (condp identical? form
+                    LispReader'READ_EOF
+                        (throw! "EOF while reading")
+                    LispReader'READ_FINISHED
+                        v
+                    (recur (conj v form))
+                )
+            )
+        )
+    )
+
+    (defn #_"char" StringReader'escape [#_"Reader" r]
+        (let* [#_"char" ch (LispReader'read1 r)]
+            (when (some? ch) => (throw! "EOF while reading string")
+                (condp = ch
+                    (char! "\\") ch
+                    (char! "\"") ch
+                    (throw! (str "unsupported escape character: \\" ch))
+                )
+            )
+        )
+    )
+
+    (defn #_"any" string-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
+        (let* [#_"StringBuilder" sb (StringBuilder'new)]
+            (loop* []
+                (let* [#_"char" ch (LispReader'read1 r)]
+                    (when (some? ch) => (throw! "EOF while reading string")
+                        (when (not= ch (char! "\""))
+                            (StringBuilder''append sb, (if (= ch (char! "\\")) (StringReader'escape r) ch))
+                            (recur)
+                        )
+                    )
+                )
+            )
+            (StringBuilder''toString sb)
+        )
+    )
+
+    (defn #_"any" discard-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
+        (LispReader'read r, scope)
+        r
+    )
+
+    (defn #_"any" quote-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
+        (list 'quote (LispReader'read r, scope))
+    )
+
+    (defn #_"any" dispatch-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
+        (let* [#_"char" ch (LispReader'read1 r)]
+            (when (some? ch) => (throw! "EOF while reading character")
+                (let* [#_"fn" f'macro (get LispReader'dispatchMacros ch)]
+                    (when (nil? f'macro) => (f'macro r scope ch)
+                        (LispReader'unread r, ch)
+                        (throw! (str "no dispatch macro for: " ch))
+                    )
+                )
+            )
+        )
+    )
+
+    (defn #_"any" list-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
+        (apply list (LispReader'readDelimitedForms r, scope, (char! ")")))
+    )
+
+    (defn #_"any" vector-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
+        (vec (LispReader'readDelimitedForms r, scope, (char! "]")))
+    )
+
+    (defn #_"any" unmatched-delimiter-reader [#_"Reader" _r, #_"map" scope, #_"char" delim]
+        (throw! (str "unmatched delimiter: " delim))
+    )
+
+    (def #_"{char fn}" LispReader'macros
+        (array-map
+            (char! "\"")  string-reader
+            (char! "'")  quote-reader
+            (char! "(")  list-reader,    (char! ")")  unmatched-delimiter-reader
+            (char! "[")  vector-reader,  (char! "]")  unmatched-delimiter-reader
+            (char! "#")  dispatch-reader
+        )
+    )
+
+    (def #_"{char fn}" LispReader'dispatchMacros
+        (array-map
+            (char! "_")  discard-reader
+        )
+    )
+)
+
+(defn read
+    ([] (read -/*in*))
+    ([s] (read s true nil))
+    ([s eof-error? eof-value] (LispReader'read s, nil, (boolean eof-error?), eof-value))
 )
 )
 
@@ -3401,7 +3268,6 @@
     (defp Recur)
 
     (defp LiteralExpr)
-    (defp UnresolvedVarExpr)
     (defp VarExpr)
     (defp BodyExpr)
     (defp IfExpr)
@@ -3412,74 +3278,9 @@
     (defp FnMethod)
     (defp FnExpr)
     (defp DefExpr)
-    (defp LetFnExpr)
     (defp LetExpr)
     (defp RecurExpr)
     (defp ThrowExpr)
-)
-
-(about #_"arbace.arm.Machine"
-
-(about #_"Machine"
-    (defn #_"any" Machine'compute [#_"code" code, #_"array" vars]
-        (loop* [#_"stack" s nil #_"int" i 0]
-            (let* [[x y] (nth code i)]
-                (condp = x
-                    :anew              (let* [[    a & s] s]                             (recur (cons (anew a) s)           (inc i)))
-                    :apply             (let* [[  b a & s] s]                             (recur (cons (apply a b) s)        (inc i)))
-                    :aset              (let* [[c b a & s] s] (aset! a b c)               (recur s                           (inc i)))
-                    :create            (let* [[    a & s] s]                             (recur (cons (Closure'new y, a) s) (inc i)))
-                    :dup               (let* [[    a]     s]                             (recur (cons a s)                  (inc i)))
-                    :get               (let* [[    a & s] s]                             (recur (cons (get (deref (:_env a)) y) s) (inc i)))
-                    :goto                                                               (recur s                        (deref y))
-                    :if-eq?            (let* [[  b a & s] s]                             (recur s        (if     (= a b) (deref y) (inc i))))
-                    :if-nil?           (let* [[    a & s] s]                             (recur s        (if  (nil? a)   (deref y) (inc i))))
-                    :invoke-1          (let* [[    a & s] s]                             (recur (cons (y a) s)              (inc i)))
-                    :invoke-2          (let* [[  b a & s] s]                             (recur (cons (y a b) s)            (inc i)))
-                    :load                                                               (recur (cons (aget vars y) s)      (inc i))
-                    :pop                                                                (recur (next s)                    (inc i))
-                    :push                                                               (recur (cons y s)                  (inc i))
-                    :put               (let* [[  b a & s] s] (swap! (:_env a) assoc y b) (recur s                           (inc i)))
-                    :return                                 (first s)
-                    :store             (let* [[    a & s] s] (aset! vars y a)            (recur s                           (inc i)))
-                    :throw                                  (throw (first s))
-                )
-            )
-        )
-    )
-)
-)
-
-(about #_"arbace.arm.Compiler"
-
-(about #_"asm"
-    (defn #_"gen" Gen'new [] (vector))
-
-    (defn #_"label" Gen''label [#_"gen" gen] (atom nil))
-
-    (defn Gen''mark
-        (#_"label" [#_"gen" gen] (atom (count gen)))
-        (#_"gen" [#_"gen" gen, #_"label" label] (reset! label (count gen)) gen)
-    )
-
-    (defn #_"gen" Gen''anew          [#_"gen" gen]                          (conj gen [:anew]))
-    (defn #_"gen" Gen''apply         [#_"gen" gen]                          (conj gen [:apply]))
-    (defn #_"gen" Gen''aset          [#_"gen" gen]                          (conj gen [:aset]))
-    (defn #_"gen" Gen''create        [#_"gen" gen, #_"FnExpr" fun]          (conj gen [:create fun]))
-    (defn #_"gen" Gen''dup           [#_"gen" gen]                          (conj gen [:dup]))
-    (defn #_"gen" Gen''get           [#_"gen" gen, #_"Symbol" name]         (conj gen [:get name]))
-    (defn #_"gen" Gen''goto          [#_"gen" gen, #_"label" label]         (conj gen [:goto label]))
-    (defn #_"gen" Gen''if-eq?        [#_"gen" gen, #_"label" label]         (conj gen [:if-eq? label]))
-    (defn #_"gen" Gen''if-nil?       [#_"gen" gen, #_"label" label]         (conj gen [:if-nil? label]))
-    (defn #_"gen" Gen''invoke        [#_"gen" gen, #_"fn" f, #_"int" arity] (conj gen [(keyword (str "invoke-" arity)) f]))
-    (defn #_"gen" Gen''load          [#_"gen" gen, #_"int" index]           (conj gen [:load index]))
-    (defn #_"gen" Gen''pop           [#_"gen" gen]                          (conj gen [:pop]))
-    (defn #_"gen" Gen''push          [#_"gen" gen, #_"value" value]         (conj gen [:push value]))
-    (defn #_"gen" Gen''put           [#_"gen" gen, #_"Symbol" name]         (conj gen [:put name]))
-    (defn #_"gen" Gen''return        [#_"gen" gen]                          (conj gen [:return]))
-    (defn #_"gen" Gen''store         [#_"gen" gen, #_"int" index]           (conj gen [:store index]))
-    (defn #_"gen" Gen''throw         [#_"gen" gen]                          (conj gen [:throw]))
-)
 
 (def Context'enum-set
     (array-set
@@ -3492,83 +3293,12 @@
 (about #_"Compiler"
     (def #_"int" Compiler'MAX_POSITIONAL_ARITY #_9 (+ 9 2))
 
-    (defn #_"Namespace" Compiler'namespaceFor
-        ([#_"Symbol" sym] (Compiler'namespaceFor *ns*, sym))
-        ([#_"Namespace" inns, #_"Symbol" sym]
-            (find-ns (symbol (:ns sym)))
-        )
+    (defn #_"Var" Compiler'lookupVar [#_"Symbol" sym]
+        (or (Namespace'getMapping sym) (Namespace'intern (symbol (:name sym))))
     )
 
-    (defn #_"Symbol" Compiler'resolveSymbol [#_"Symbol" sym]
-        (cond
-            (pos? (String''indexOf (:name sym), (int (char! "."))))
-                sym
-            (some? (:ns sym))
-                (let* [#_"Namespace" ns (Compiler'namespaceFor sym)]
-                    (if (and (some? ns) (not (and (some? (:name (:name ns))) (= (:name (:name ns)) (:ns sym)))))
-                        (symbol (:name (:name ns)) (:name sym))
-                        sym
-                    )
-                )
-            :else
-                (let* [#_"any" o (Namespace''getMapping *ns*, sym)]
-                    (cond
-                        (nil? o) (symbol (:name (:name *ns*)) (:name sym))
-                        (var? o) (symbol (:name (:name (:ns o))) (:name (:sym o)))
-                    )
-                )
-        )
-    )
-
-    (defn #_"Var" Compiler'lookupVar [#_"Symbol" sym, #_"boolean" intern?]
-        (cond
-            (some? (:ns sym))
-                (let* [#_"Namespace" ns (Compiler'namespaceFor sym)]
-                    (when (some? ns)
-                        (let* [#_"Symbol" name (symbol (:name sym))]
-                            (if (and intern? (= ns *ns*))
-                                (Namespace''intern ns, name)
-                                (Namespace''findInternedVar ns, name)
-                            )
-                        )
-                    )
-                )
-            :else
-                (let* [#_"any" o (Namespace''getMapping *ns*, sym)]
-                    (cond
-                        (nil? o)
-                            (when intern?
-                                (Namespace''intern *ns*, (symbol (:name sym)))
-                            )
-                        (var? o)
-                            o
-                        :else
-                            (throw! (str "expecting var, but " sym " is mapped to " o))
-                    )
-                )
-        )
-    )
-
-    (defn #_"any" Compiler'resolveIn [#_"Namespace" n, #_"Symbol" sym, #_"boolean" allowPrivate]
-        (cond
-            (some? (:ns sym))
-                (let* [#_"Namespace" ns (Compiler'namespaceFor n, sym)]
-                    (when (some? ns) => (throw! (str "no such namespace: " (:ns sym)))
-                        (let* [#_"Var" v (Namespace''findInternedVar ns, (symbol (:name sym)))]
-                            (when (some? v) => (throw! (str "no such var: " sym))
-                                v
-                            )
-                        )
-                    )
-                )
-            :else
-                (or (Namespace''getMapping n, sym) (throw! (str "unable to resolve symbol: " sym " in this context")))
-        )
-    )
-
-    (defn #_"any" Compiler'resolve
-        ([#_"Symbol" sym                          ] (Compiler'resolveIn *ns*, sym, false       ))
-        ([#_"Symbol" sym, #_"boolean" allowPrivate] (Compiler'resolveIn *ns*, sym, allowPrivate))
+    (defn #_"Var" Compiler'resolve [#_"Symbol" sym]
+        (or (Namespace'getMapping sym) (throw! (str "unable to resolve symbol: " sym " in this context")))
     )
 
     (defn #_"gen" Compiler'emitArgs [#_"map" scope, #_"gen" gen, #_"indexed" args]
@@ -3663,26 +3393,6 @@
     )
 )
 
-(about #_"UnresolvedVarExpr"
-    (defr UnresolvedVarExpr)
-
-    (defn #_"UnresolvedVarExpr" UnresolvedVarExpr'new [#_"Symbol" symbol]
-        (new* UnresolvedVarExpr'class
-            (array-map
-                #_"Symbol" :symbol symbol
-            )
-        )
-    )
-
-    (defn #_"gen" UnresolvedVarExpr''emit [#_"UnresolvedVarExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
-        gen
-    )
-
-    (defm UnresolvedVarExpr Expr
-        (Expr'''emit => UnresolvedVarExpr''emit)
-    )
-)
-
 (about #_"VarExpr"
     (defr VarExpr)
 
@@ -3697,7 +3407,7 @@
     (defn #_"gen" VarExpr''emit [#_"VarExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
         (let* [
             gen (Gen''push gen, (:var this))
-            gen (Gen''invoke gen, var-get, 1)
+            gen (Gen''invoke gen, Var''get, 1)
         ]
             (when (= context :Context'STATEMENT) => gen
                 (Gen''pop gen)
@@ -3860,7 +3570,7 @@
 
     (defn #_"Expr" InvokeExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (let* [#_"Expr" fexpr (Compiler'analyze (first form), scope)
-              #_"vector" args (vec (map (fn [a] (Compiler'analyze a, scope)) (next form)))]
+              #_"vector" args (vec (map (fn* [a] (Compiler'analyze a, scope)) (next form)))]
             (InvokeExpr'new fexpr, args)
         )
     )
@@ -3888,7 +3598,7 @@
     (defn #_"LocalBinding" LocalBinding'new [#_"Symbol" sym, #_"Expr" init, #_"int" idx]
         (new* LocalBinding'class
             (array-map
-                #_"int" :uid (next-id!)
+                #_"int" :uid (next-id!)
                 #_"Symbol" :sym sym
                 #_"Expr'" :'init (atom init)
                 #_"int" :idx idx
@@ -3938,8 +3648,8 @@
         (let* [
             scope
                 (-> scope
-                    (update :fm (fn [parent] (FnMethod'new fun, parent)))
-                    (update :'local-env (comp atom deref))
+                    (update :fm (fn* [x] (FnMethod'new fun, x)))
+                    (update :'local-env (fn* ([x] (atom (deref x)))))
                     (assoc :'local-num (atom 0))
                 )
             _
@@ -3956,26 +3666,24 @@
                     (when (some? s) => (if (and variadic? (not (neg? arity))) (throw! "missing variadic parameter") [lbs arity])
                         (let* [#_"symbol?" sym (first s)]
                             (when (symbol? sym)        => (throw! "function parameters must be symbols")
-                                (when (nil? (:ns sym)) => (throw! (str "can't use qualified name as parameter: " sym))
-                                    (cond
-                                        (= sym '&)
-                                            (when (not variadic?) => (throw! "overkill variadic parameter list")
-                                                (recur lbs arity true (next s))
-                                            )
-                                        (neg? arity)
-                                            (throw! (str "excess variadic parameter: " sym))
-                                        ((if variadic? <= <) arity Compiler'MAX_POSITIONAL_ARITY)
-                                            (let* [
-                                                arity (if (not variadic?) (inc arity) (- (inc arity)))
-                                                #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (get scope :'local-num) inc))
-                                            ]
-                                                (swap! (get scope :'local-env) assoc (:sym lb) lb)
-                                                (swap! (:'locals (get scope :fm)) assoc (:uid lb) lb)
-                                                (recur (conj lbs lb) arity variadic? (next s))
-                                            )
-                                        :else
-                                            (throw! (str "can't specify more than " Compiler'MAX_POSITIONAL_ARITY " positional parameters"))
-                                    )
+                                (cond
+                                    (= sym '&)
+                                        (when (not variadic?) => (throw! "overkill variadic parameter list")
+                                            (recur lbs arity true (next s))
+                                        )
+                                    (neg? arity)
+                                        (throw! (str "excess variadic parameter: " sym))
+                                    ((if variadic? <= <) arity Compiler'MAX_POSITIONAL_ARITY)
+                                        (let* [
+                                            arity (if (not variadic?) (inc arity) (- (inc arity)))
+                                            #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (get scope :'local-num) inc))
+                                        ]
+                                            (swap! (get scope :'local-env) assoc (:sym lb) lb)
+                                            (swap! (:'locals (get scope :fm)) assoc (:uid lb) lb)
+                                            (recur (conj lbs lb) arity variadic? (next s))
+                                        )
+                                    :else
+                                        (throw! (str "can't specify more than " Compiler'MAX_POSITIONAL_ARITY " positional parameters"))
                                 )
                             )
                         )
@@ -4109,17 +3817,7 @@
                 :else
                     (let* [#_"symbol?" s (second form)]
                         (when (symbol? s) => (throw! "first argument to def must be a symbol")
-                            (let* [#_"Var" v (Compiler'lookupVar s, true)]
-                                (when (some? v) => (throw! "can't refer to qualified var that doesn't exist")
-                                    (let* [v (when (not= (:ns v) *ns*) => v
-                                                (when (nil? (:ns s)) => (throw! "can't create defs outside of current ns")
-                                                    (Namespace''intern *ns*, s)
-                                                )
-                                            )]
-                                        (DefExpr'new v, (Compiler'analyze (third form), scope), (= n 3))
-                                    )
-                                )
-                            )
+                            (DefExpr'new (Compiler'lookupVar s), (Compiler'analyze (third form), scope), (= n 3))
                         )
                     )
             )
@@ -4151,127 +3849,6 @@
     )
 )
 
-(about #_"LetFnExpr"
-    (defr LetFnExpr)
-
-    (defn #_"LetFnExpr" LetFnExpr'new [#_"[LocalBinding]" bindings, #_"Expr" body]
-        (new* LetFnExpr'class
-            (array-map
-                #_"[LocalBinding]" :bindings bindings
-                #_"Expr" :body body
-            )
-        )
-    )
-
-    (defn #_"Expr" LetFnExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
-        (let* [#_"vector?" bindings (second form)]
-            (when (vector? bindings)           => (throw! "bad binding form, expected vector")
-                (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
-                    (let* [
-                        scope (update scope :'local-env (comp atom deref))
-                        scope (update scope :'local-num (comp atom deref))
-                        #_"[LocalBinding]" lbs
-                            (loop* [lbs (vector) #_"seq" s (seq bindings)]
-                                (when (some? s) => lbs
-                                    (let* [#_"symbol?" sym (first s)]
-                                        (when (symbol? sym)        => (throw! (str "bad binding form, expected symbol, got: " sym))
-                                            (when (nil? (:ns sym)) => (throw! (str "can't let qualified name: " sym))
-                                                (let* [
-                                                    #_"LocalBinding" lb (LocalBinding'new sym, nil, (swap! (get scope :'local-num) inc))
-                                                ]
-                                                    (swap! (get scope :'local-env) assoc (:sym lb) lb)
-                                                    (swap! (:'locals (get scope :fm)) assoc (:uid lb) lb)
-                                                    (recur (conj lbs lb) (next (next s)))
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                        _
-                            (loop* [#_"int" i 0]
-                                (when (< i (count bindings))
-                                    (reset! (:'init (nth lbs (quot i 2))) (Compiler'analyze (nth bindings (inc i)), scope))
-                                    (recur (+ i 2))
-                                )
-                            )
-                    ]
-                        (LetFnExpr'new lbs, (BodyExpr'parse (next (next form)), context, scope))
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"gen" LetFnExpr''emit [#_"LetFnExpr" this, #_"Context" context, #_"map" scope, #_"gen" gen]
-        (let* [
-            gen
-                (loop* [gen gen #_"seq" s (seq (:bindings this))]
-                    (when (some? s) => gen
-                        (let* [
-                            #_"LocalBinding" lb (first s)
-                            gen (Gen''push gen, nil)
-                            gen (Gen''store gen, (:idx lb))
-                        ]
-                            (recur gen (next s))
-                        )
-                    )
-                )
-            [#_"{int}" lbset gen]
-                (loop* [lbset (array-set) gen gen #_"seq" s (seq (:bindings this))]
-                    (when (some? s) => [lbset gen]
-                        (let* [
-                            #_"LocalBinding" lb (first s)
-                            gen (Expr'''emit (deref (:'init lb)), :Context'EXPRESSION, scope, gen)
-                            gen (Gen''store gen, (:idx lb))
-                        ]
-                            (recur (conj lbset (:uid lb)) gen (next s))
-                        )
-                    )
-                )
-            gen
-                (loop* [gen gen #_"seq" s (seq (:bindings this))]
-                    (when (some? s) => gen
-                        (let* [
-                            #_"LocalBinding" lb (first s)
-                            gen (Gen''load gen, (:idx lb))
-                            gen
-                                (loop* [gen gen #_"seq" s (vals (deref (:'closes (deref (:'init lb)))))]
-                                    (when (some? s) => gen
-                                        (let* [
-                                            gen
-                                                (let* [#_"LocalBinding" lb (first s)]
-                                                    (when (contains? lbset (:uid lb)) => gen
-                                                        (let* [
-                                                            gen (Gen''dup gen)
-                                                            gen (FnMethod''emitLocal (get scope :fm), gen, lb)
-                                                            gen (Gen''put gen, (:sym lb))
-                                                        ]
-                                                            gen
-                                                        )
-                                                    )
-                                                )
-                                        ]
-                                            (recur gen (next s))
-                                        )
-                                    )
-                                )
-                            gen (Gen''pop gen)
-                        ]
-                            (recur gen (next s))
-                        )
-                    )
-                )
-        ]
-            (Expr'''emit (:body this), context, scope, gen)
-        )
-    )
-
-    (defm LetFnExpr Expr
-        (Expr'''emit => LetFnExpr''emit)
-    )
-)
-
 (about #_"LetExpr"
     (defr LetExpr)
 
@@ -4290,8 +3867,8 @@
             (when (vector? bindings)           => (throw! "bad binding form, expected vector")
                 (when (even? (count bindings)) => (throw! "bad binding form, expected matched symbol expression pairs")
                     (let* [
-                        scope (update scope :'local-env (comp atom deref))
-                        scope (update scope :'local-num (comp atom deref))
+                        scope (update scope :'local-env (fn* ([x] (atom (deref x)))))
+                        scope (update scope :'local-num (fn* ([x] (atom (deref x)))))
                         #_"boolean" loop? (= (first form) 'loop*)
                         scope
                             (when loop? => scope
@@ -4301,16 +3878,14 @@
                             (loop* [lbs (vector) #_"seq" s (seq bindings)]
                                 (when (some? s) => lbs
                                     (let* [#_"symbol?" sym (first s)]
-                                        (when (symbol? sym)        => (throw! (str "bad binding form, expected symbol, got: " sym))
-                                            (when (nil? (:ns sym)) => (throw! (str "can't let qualified name: " sym))
-                                                (let* [
-                                                    #_"Expr" init (Compiler'analyze (second s), scope)
-                                                    #_"LocalBinding" lb (LocalBinding'new sym, init, (swap! (get scope :'local-num) inc))
-                                                ]
-                                                    (swap! (get scope :'local-env) assoc (:sym lb) lb)
-                                                    (swap! (:'locals (get scope :fm)) assoc (:uid lb) lb)
-                                                    (recur (conj lbs lb) (next (next s)))
-                                                )
+                                        (when (symbol? sym) => (throw! (str "bad binding form, expected symbol, got: " sym))
+                                            (let* [
+                                                #_"Expr" init (Compiler'analyze (second s), scope)
+                                                #_"LocalBinding" lb (LocalBinding'new sym, init, (swap! (get scope :'local-num) inc))
+                                            ]
+                                                (swap! (get scope :'local-env) assoc (:sym lb) lb)
+                                                (swap! (:'locals (get scope :fm)) assoc (:uid lb) lb)
+                                                (recur (conj lbs lb) (next (next s)))
                                             )
                                         )
                                     )
@@ -4371,7 +3946,7 @@
 
     (defn #_"Expr" RecurExpr'parse [#_"seq" form, #_"Context" context, #_"map" scope]
         (when (and (= context :Context'RETURN) (some? (get scope :loop-locals))) => (throw! "can only recur from tail position")
-            (let* [#_"vector" args (vec (map (fn [a] (Compiler'analyze a, scope)) (next form))) #_"int" n (count args) #_"int" m (count (get scope :loop-locals))]
+            (let* [#_"vector" args (vec (map (fn* [a] (Compiler'analyze a, scope)) (next form))) #_"int" n (count args) #_"int" m (count (get scope :loop-locals))]
                 (when (= n m) => (throw! (str "mismatched argument count to recur, expected: " m " args, got: " n))
                     (RecurExpr'new (get scope :loop-locals), args)
                 )
@@ -4443,17 +4018,16 @@
 (about #_"Compiler"
     (def #_"map" Compiler'specials
         (array-map
-            '&       nil
-            'def     DefExpr'parse
-            'do      BodyExpr'parse
-            'fn*     FnExpr'parse
-            'if      IfExpr'parse
-            'let*    LetExpr'parse
-            'letfn*  LetFnExpr'parse
-            'loop*   LetExpr'parse
-            'quote   LiteralExpr'parse
-            'recur   RecurExpr'parse
-            'throw   ThrowExpr'parse
+            '&     nil
+            'def   DefExpr'parse
+            'do    BodyExpr'parse
+            'fn*   FnExpr'parse
+            'if    IfExpr'parse
+            'let*  LetExpr'parse
+            'loop* LetExpr'parse
+            'quote LiteralExpr'parse
+            'recur RecurExpr'parse
+            'throw ThrowExpr'parse
         )
     )
 
@@ -4471,20 +4045,14 @@
 
     (defn #_"Expr" Compiler'analyzeSymbol [#_"Symbol" sym, #_"map" scope]
         (or
-            (when (nil? (:ns sym))
-                (let* [#_"LocalBinding" lb (get (deref (get scope :'local-env)) sym)]
-                    (when (some? lb)
-                        (Compiler'closeOver lb, (get scope :fm))
-                        (LocalBindingExpr'new lb)
-                    )
+            (let* [#_"LocalBinding" lb (get (deref (get scope :'local-env)) sym)]
+                (when (some? lb)
+                    (Compiler'closeOver lb, (get scope :fm))
+                    (LocalBindingExpr'new lb)
                 )
             )
-            (let* [#_"any" o (Compiler'resolve sym)]
-                (cond
-                    (var? o)    (VarExpr'new o)
-                    (symbol? o) (UnresolvedVarExpr'new o)
-                    :else       (throw! (str "unable to resolve symbol: " sym " in this context"))
-                )
+            (let* [#_"Var" v (Compiler'resolve sym)]
+                (VarExpr'new v)
             )
         )
     )
@@ -4530,414 +4098,65 @@
         )
     )
 )
-)
-
-(about #_"arbace.arm.LispReader"
-
-(about #_"LispReader"
-    (defn #_"Symbol" LispReader'registerGensym [#_"map" scope, #_"Symbol" sym]
-        (when (contains? scope :'gensym-env) => (throw! "gensym literal not in syntax-quote")
-            (or (get (deref (get scope :'gensym-env)) sym)
-                (let* [#_"Symbol" gsym (symbol (str (:name sym) "__" (next-id!) "__auto__"))]
-                    (swap! (get scope :'gensym-env) assoc sym gsym)
-                    gsym
-                )
-            )
-        )
-    )
-
-    (defn #_"boolean" LispReader'isMacro [#_"char" ch]
-        (contains? LispReader'macros ch)
-    )
-
-    (defn #_"boolean" LispReader'isTerminatingMacro [#_"char" ch]
-        (and (LispReader'isMacro ch) (not (contains? (array-set (char! "#") (char! "'") (char! "%")) ch)))
-    )
-
-    (defn #_"boolean" LispReader'isDigit [#_"char" ch, #_"int" base]
-        (not= (Character'digit ch, base) -1)
-    )
-
-    (defn #_"boolean" LispReader'isWhitespace [#_"char" ch]
-        (or (Character'isWhitespace ch) (= ch (char! ",")))
-    )
-
-    (defn #_"Character" LispReader'read1 [#_"Reader" r]
-        (let* [#_"int" c (Reader''read r)]
-            (when (not= c -1)
-                (char c)
-            )
-        )
-    )
-
-    (defn #_"void" LispReader'unread [#_"Reader" r, #_"Character" ch]
-        (when (some? ch)
-            (Reader''unread r, (int ch))
-        )
-        nil
-    )
-
-    (def #_"Pattern" LispReader'rxInteger #"([-+]?)(?:(0)|([1-9][0-9]*)|0[xX]([0-9A-Fa-f]+)|0([0-7]+))")
-
-    (defn #_"any" LispReader'matchNumber [#_"String" s]
-        (let* [#_"Matcher" m (Pattern''matcher LispReader'rxInteger, s)]
-            (when (Matcher''matches m)
-                (when (nil? (Matcher''group m, 2)) => 0
-                    (let* [[#_"String" n #_"int" radix]
-                            (let* [n (Matcher''group m, 3)]
-                                (if (some? n)
-                                    [n 10]
-                                    (let* [n (Matcher''group m, 4)]
-                                        (if (some? n)
-                                            [n 16]
-                                            (let* [n (Matcher''group m, 5)]
-                                                (when (some? n)
-                                                    [n 8]
-                                                )
-                                            )
-                                        )
-                                    )
-                                )
-                            )
-                    ]
-                        (when (some? n)
-                            (let* [#_"BigInteger" bn (BigInteger'new n, radix) bn (if (= (Matcher''group m, 1) "-") (BigInteger''negate bn) bn)]
-                                (when (< (BigInteger''bitLength bn) 64) => bn
-                                    (int (BigInteger''longValue bn))
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"any" LispReader'readNumber [#_"Reader" r, #_"char" ch]
-        (let* [#_"String" s
-                (let* [#_"StringBuilder" sb (StringBuilder'new) _ (StringBuilder''append sb, ch)]
-                    (loop* []
-                        (let* [ch (LispReader'read1 r)]
-                            (if (or (nil? ch) (LispReader'isWhitespace ch) (LispReader'isMacro ch))
-                                (do
-                                    (LispReader'unread r, ch)
-                                    (StringBuilder''toString sb)
-                                )
-                                (do
-                                    (StringBuilder''append sb, ch)
-                                    (recur)
-                                )
-                            )
-                        )
-                    )
-                )]
-            (or (LispReader'matchNumber s) (throw! (str "invalid number: " s)))
-        )
-    )
-
-    (defn #_"String" LispReader'readToken [#_"Reader" r, #_"char" ch]
-        (let* [#_"StringBuilder" sb (StringBuilder'new) _ (StringBuilder''append sb, ch)]
-            (loop* []
-                (let* [ch (LispReader'read1 r)]
-                    (if (or (nil? ch) (LispReader'isWhitespace ch) (LispReader'isTerminatingMacro ch))
-                        (do
-                            (LispReader'unread r, ch)
-                            (StringBuilder''toString sb)
-                        )
-                        (do
-                            (StringBuilder''append sb, ch)
-                            (recur)
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (def #_"Pattern" LispReader'rxSymbol #"[:]?([\D&&[^/]].*/)?(/|[\D&&[^/]][^/]*)")
-
-    (defn #_"any" LispReader'matchSymbol [#_"String" s]
-        (let* [#_"Matcher" m (Pattern''matcher LispReader'rxSymbol, s)]
-            (when (Matcher''matches m)
-                (let* [#_"String" ns (Matcher''group m, 1) #_"String" n (Matcher''group m, 2)]
-                    (when (not (or (and (some? ns) (String''endsWith ns, ":/")) (String''endsWith n, ":") (not= (String''indexOf s, "::") -1)))
-                        (let* [#_"boolean" kw? (= (String''charAt s, 0) (char! ":")) #_"Symbol" sym (symbol (String''substring s, (if kw? 1 0)))]
-                            (if kw? (keyword sym) sym)
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"any" LispReader'interpretToken [#_"String" s]
-        (condp = s "nil" nil "true" true "false" false
-            (or (LispReader'matchSymbol s) (throw! (str "invalid token: " s)))
-        )
-    )
-
-    (defn #_"any" LispReader'read
-        ([#_"Reader" r, #_"map" scope] (LispReader'read r, scope, true, nil))
-        ([#_"Reader" r, #_"map" scope, #_"boolean" eofIsError, #_"any" eofValue] (LispReader'read r, scope, eofIsError, eofValue, nil, nil))
-        ([#_"Reader" r, #_"map" scope, #_"boolean" eofIsError, #_"any" eofValue, #_"Character" returnOn, #_"any" returnOnValue]
-            (loop* []
-                (let* [#_"char" ch
-                        (loop* [ch (LispReader'read1 r)]
-                            (when (and (some? ch) (LispReader'isWhitespace ch)) => ch
-                                (recur (LispReader'read1 r))
-                            )
-                        )
-                ]
-                    (cond
-                        (nil? ch)
-                            (if eofIsError (throw! "EOF while reading") eofValue)
-                        (and (some? returnOn) (= returnOn ch))
-                            returnOnValue
-                        (LispReader'isDigit ch, 10)
-                            (LispReader'readNumber r, ch)
-                        :else
-                            (let* [#_"fn" f'macro (get LispReader'macros ch)]
-                                (if (some? f'macro)
-                                    (let* [#_"any" o (f'macro r scope ch)]
-                                        (when (identical? o r) => o
-                                            (recur)
-                                        )
-                                    )
-                                    (or
-                                        (when (contains? (array-set (char! "+") (char! "-")) ch)
-                                            (let* [#_"char" ch' (LispReader'read1 r) _ (LispReader'unread r, ch')]
-                                                (when (and (some? ch') (LispReader'isDigit ch', 10))
-                                                    (LispReader'readNumber r, ch)
-                                                )
-                                            )
-                                        )
-                                        (LispReader'interpretToken (LispReader'readToken r, ch))
-                                    )
-                                )
-                            )
-                    )
-                )
-            )
-        )
-    )
-
-    (def #_"any" LispReader'READ_EOF (anew 0))
-    (def #_"any" LispReader'READ_FINISHED (anew 0))
-
-    (defn #_"vector" LispReader'readDelimitedForms [#_"Reader" r, #_"map" scope, #_"char" delim]
-        (loop* [#_"vector" v (vector)]
-            (let* [#_"any" form (LispReader'read r, scope, false, LispReader'READ_EOF, delim, LispReader'READ_FINISHED)]
-                (condp identical? form
-                    LispReader'READ_EOF
-                        (throw! "EOF while reading")
-                    LispReader'READ_FINISHED
-                        v
-                    (recur (conj v form))
-                )
-            )
-        )
-    )
-)
-
-(about #_"StringReader"
-    (defn #_"char" StringReader'escape [#_"Reader" r]
-        (let* [#_"char" ch (LispReader'read1 r)]
-            (when (some? ch) => (throw! "EOF while reading string")
-                (condp = ch
-                    (char! "\\") ch
-                    (char! "\"") ch
-                    (throw! (str "unsupported escape character: \\" ch))
-                )
-            )
-        )
-    )
-
-    (defn #_"any" string-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
-        (let* [#_"StringBuilder" sb (StringBuilder'new)]
-            (loop* []
-                (let* [#_"char" ch (LispReader'read1 r)]
-                    (when (some? ch) => (throw! "EOF while reading string")
-                        (when (not= ch (char! "\""))
-                            (StringBuilder''append sb, (if (= ch (char! "\\")) (StringReader'escape r) ch))
-                            (recur)
-                        )
-                    )
-                )
-            )
-            (StringBuilder''toString sb)
-        )
-    )
-)
-
-(about #_"DiscardReader"
-    (defn #_"any" discard-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
-        (LispReader'read r, scope)
-        r
-    )
-)
-
-(about #_"QuoteReader"
-    (defn #_"any" quote-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
-        (list 'quote (LispReader'read r, scope))
-    )
-)
-
-(about #_"DispatchReader"
-    (defn #_"any" dispatch-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
-        (let* [#_"char" ch (LispReader'read1 r)]
-            (when (some? ch) => (throw! "EOF while reading character")
-                (let* [#_"fn" f'macro (get LispReader'dispatchMacros ch)]
-                    (when (nil? f'macro) => (f'macro r scope ch)
-                        (LispReader'unread r, ch)
-                        (throw! (str "no dispatch macro for: " ch))
-                    )
-                )
-            )
-        )
-    )
-)
-
-(about #_"SyntaxQuoteReader"
-(def unquote)
-
-    (defn #_"boolean" SyntaxQuoteReader'isUnquote [#_"any" form]
-        (and (seq? form) (= (first form) `unquote))
-    )
-
-(def unquote-splicing)
-
-    (defn #_"boolean" SyntaxQuoteReader'isUnquoteSplicing [#_"any" form]
-        (and (seq? form) (= (first form) `unquote-splicing))
-    )
-
-    (defn #_"seq" SyntaxQuoteReader'sqExpandList [#_"map" scope, #_"seq" s]
-        (loop* [#_"vector" v (vector) s s]
-            (when (some? s) => (seq v)
-                (let* [#_"any" item (first s)
-                    v (cond
-                            (SyntaxQuoteReader'isUnquote item)         (conj v (list `list (second item)))
-                            (SyntaxQuoteReader'isUnquoteSplicing item) (conj v (second item))
-                            :else                                      (conj v (list `list (SyntaxQuoteReader'syntaxQuote scope, item)))
-                        )]
-                    (recur v (next s))
-                )
-            )
-        )
-    )
-
-    (defn #_"any" SyntaxQuoteReader'syntaxQuote [#_"map" scope, #_"any" form]
-        (cond
-            (Compiler'isSpecial form)
-                (list 'quote form)
-            (symbol? form)
-                (let* [#_"String" ns (:ns form) #_"String" n (:name form)
-                        form
-                        (cond
-                            (and (nil? ns) (String''endsWith n, "#"))
-                                (LispReader'registerGensym scope, (symbol (String''substring n, 0, (dec (String''length n)))))
-                            (and (nil? ns) (String''endsWith n, "."))
-                                (symbol (str (:name (Compiler'resolveSymbol (symbol (String''substring n, 0, (dec (String''length n)))))) "."))
-                            (and (nil? ns) (String''startsWith n, "."))
-                                form
-                            :else
-                                (Compiler'resolveSymbol form)
-                        )]
-                    (list 'quote form)
-                )
-            (SyntaxQuoteReader'isUnquote form)
-                (second form)
-            (SyntaxQuoteReader'isUnquoteSplicing form)
-                (throw! "splice not in list")
-            (coll? form)
-                (cond
-                    (map? form)
-                        (list `apply `array-map (list `seq (cons `concat (SyntaxQuoteReader'sqExpandList scope, (seq (mapcat identity form))))))
-                    (vector? form)
-                        (list `apply `vector (list `seq (cons `concat (SyntaxQuoteReader'sqExpandList scope, (seq form)))))
-                    (set? form)
-                        (list `apply `array-set (list `seq (cons `concat (SyntaxQuoteReader'sqExpandList scope, (seq form)))))
-                    (or (seq? form) (list? form))
-                        (let* [#_"seq" s (seq form)]
-                            (when (some? s) => (cons `list nil)
-                                (list `seq (cons `concat (SyntaxQuoteReader'sqExpandList scope, s)))
-                            )
-                        )
-                    :else
-                        (throw! "unknown collection type")
-                )
-            (or (keyword? form) (number? form) (char? form) (string? form))
-                form
-            :else
-                (list 'quote form)
-        )
-    )
-
-    (defn #_"any" syntax-quote-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
-        (let* [scope (assoc scope :'gensym-env (atom (array-map)))]
-            (SyntaxQuoteReader'syntaxQuote scope, (LispReader'read r, scope))
-        )
-    )
-)
-
-(about #_"UnquoteReader"
-    (defn #_"any" unquote-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
-        (let* [#_"char" ch (LispReader'read1 r)]
-            (when (some? ch) => (throw! "EOF while reading character")
-                (if (= ch (char! "@"))
-                    (list `unquote-splicing (LispReader'read r, scope))
-                    (do
-                        (LispReader'unread r, ch)
-                        (list `unquote (LispReader'read r, scope))
-                    )
-                )
-            )
-        )
-    )
-)
-
-(about #_"ListReader"
-    (defn #_"any" list-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
-        (apply list (LispReader'readDelimitedForms r, scope, (char! ")")))
-    )
-)
-
-(about #_"VectorReader"
-    (defn #_"any" vector-reader [#_"Reader" r, #_"map" scope, #_"char" _delim]
-        (vec (LispReader'readDelimitedForms r, scope, (char! "]")))
-    )
-)
-
-(about #_"UnmatchedDelimiterReader"
-    (defn #_"any" unmatched-delimiter-reader [#_"Reader" _r, #_"map" scope, #_"char" delim]
-        (throw! (str "unmatched delimiter: " delim))
-    )
-)
-
-(about #_"LispReader"
-    (def #_"{char fn}" LispReader'macros
-        (array-map
-            (char! "\"")  string-reader
-            (char! "'")  quote-reader
-            (char! "`")  syntax-quote-reader
-            (char! "~")  unquote-reader
-            (char! "(")  list-reader,    (char! ")")  unmatched-delimiter-reader
-            (char! "[")  vector-reader,  (char! "]")  unmatched-delimiter-reader
-            (char! "#")  dispatch-reader
-        )
-    )
-
-    (def #_"{char fn}" LispReader'dispatchMacros
-        (array-map
-            (char! "_")  discard-reader
-        )
-    )
-)
-)
-
-(defn read
-    ([] (read -/*in*))
-    ([s] (read s true nil))
-    ([s eof-error? eof-value] (LispReader'read s, nil, (boolean eof-error?), eof-value))
-)
 
 (defn eval [form] (Compiler'eval form))
+)
+
+(about #_"arbace.arm.Machine"
+
+(about #_"asm"
+    (defn #_"gen" Gen'new [] (vector))
+
+    (defn #_"label" Gen''label [#_"gen" gen] (atom nil))
+
+    (defn Gen''mark
+        (#_"label" [#_"gen" gen] (atom (count gen)))
+        (#_"gen" [#_"gen" gen, #_"label" label] (reset! label (count gen)) gen)
+    )
+
+    (defn #_"gen" Gen''anew    [#_"gen" gen]                          (conj gen [:anew]))
+    (defn #_"gen" Gen''apply   [#_"gen" gen]                          (conj gen [:apply]))
+    (defn #_"gen" Gen''aset    [#_"gen" gen]                          (conj gen [:aset]))
+    (defn #_"gen" Gen''create  [#_"gen" gen, #_"FnExpr" fun]          (conj gen [:create fun]))
+    (defn #_"gen" Gen''dup     [#_"gen" gen]                          (conj gen [:dup]))
+    (defn #_"gen" Gen''get     [#_"gen" gen, #_"Symbol" name]         (conj gen [:get name]))
+    (defn #_"gen" Gen''goto    [#_"gen" gen, #_"label" label]         (conj gen [:goto label]))
+    (defn #_"gen" Gen''if-eq?  [#_"gen" gen, #_"label" label]         (conj gen [:if-eq? label]))
+    (defn #_"gen" Gen''if-nil? [#_"gen" gen, #_"label" label]         (conj gen [:if-nil? label]))
+    (defn #_"gen" Gen''invoke  [#_"gen" gen, #_"fn" f, #_"int" arity] (conj gen [(keyword (str "invoke-" arity)) f]))
+    (defn #_"gen" Gen''load    [#_"gen" gen, #_"int" index]           (conj gen [:load index]))
+    (defn #_"gen" Gen''pop     [#_"gen" gen]                          (conj gen [:pop]))
+    (defn #_"gen" Gen''push    [#_"gen" gen, #_"value" value]         (conj gen [:push value]))
+    (defn #_"gen" Gen''return  [#_"gen" gen]                          (conj gen [:return]))
+    (defn #_"gen" Gen''store   [#_"gen" gen, #_"int" index]           (conj gen [:store index]))
+    (defn #_"gen" Gen''throw   [#_"gen" gen]                          (conj gen [:throw]))
+)
+
+(about #_"Machine"
+    (defn #_"any" Machine'compute [#_"code" code, #_"array" vars]
+        (loop* [#_"stack" s nil #_"int" i 0]
+            (let* [[x y] (nth code i)]
+                (condp = x
+                    :anew     (let* [[    a & s] s]                  (recur (cons (anew a) s)           (inc i)))
+                    :apply    (let* [[  b a & s] s]                  (recur (cons (apply a b) s)        (inc i)))
+                    :aset     (let* [[c b a & s] s] (aset! a b c)    (recur s                           (inc i)))
+                    :create   (let* [[    a & s] s]                  (recur (cons (Closure'new y, a) s) (inc i)))
+                    :dup      (let* [[    a]     s]                  (recur (cons a s)                  (inc i)))
+                    :get      (let* [[    a & s] s]                  (recur (cons (get (:env a) y) s)   (inc i)))
+                    :goto                                           (recur s                        (deref y))
+                    :if-eq?   (let* [[  b a & s] s]                  (recur s        (if     (= a b) (deref y) (inc i))))
+                    :if-nil?  (let* [[    a & s] s]                  (recur s        (if  (nil? a)   (deref y) (inc i))))
+                    :invoke-1 (let* [[    a & s] s]                  (recur (cons (y a) s)              (inc i)))
+                    :invoke-2 (let* [[  b a & s] s]                  (recur (cons (y a b) s)            (inc i)))
+                    :load                                           (recur (cons (aget vars y) s)      (inc i))
+                    :pop                                            (recur (next s)                    (inc i))
+                    :push                                           (recur (cons y s)                  (inc i))
+                    :return                        (first s)
+                    :store    (let* [[    a & s] s] (aset! vars y a) (recur s                           (inc i)))
+                    :throw                         (throw (first s))
+                )
+            )
+        )
+    )
+)
+)
