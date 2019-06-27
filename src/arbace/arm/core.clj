@@ -73,17 +73,6 @@
     )
 )
 
-(about #_"arbace.arm.Comparable"
-    (defp Comparable
-    )
-)
-
-(about #_"arbace.arm.Comparator"
-    (defp Comparator
-        (#_"int" Comparator'''compare [#_"Comparator" this, #_"any" x, #_"any" y])
-    )
-)
-
 (about #_"arbace.arm.Counted"
     (defp Counted
         (#_"int" Counted'''count [#_"Counted" this])
@@ -313,30 +302,6 @@
     )
 )
 
-(about #_"arbace.arm.IPersistentSet"
-    (defp IPersistentSet
-        (#_"IPersistentSet" IPersistentSet'''disj [#_"IPersistentSet" this, #_"key" key])
-        (#_"boolean" IPersistentSet'''contains? [#_"IPersistentSet" this, #_"key" key])
-        (#_"any" IPersistentSet'''get [#_"IPersistentSet" this, #_"key" key])
-    )
-
-    (defn set? [x] (satisfies? IPersistentSet x))
-
-    (defn disj
-        ([s] s)
-        ([#_"IPersistentSet" s k] (when (some? s) (IPersistentSet'''disj s, k)))
-        ([s k & ks]
-            (let* [s (disj s k)]
-                (when (some? s)
-                    (when ks => s
-                        (recur s (first ks) (next ks))
-                    )
-                )
-            )
-        )
-    )
-)
-
 (about #_"arbace.arm.IPersistentList"
     (defp IPersistentList)
 
@@ -391,10 +356,6 @@
 (about #_"arbace.arm.PersistentArrayMap"
     (defp MSeq)
     (defp PersistentArrayMap)
-)
-
-(about #_"arbace.arm.PersistentArraySet"
-    (defp PersistentArraySet)
 )
 
 (about #_"arbace.arm.PersistentList"
@@ -461,7 +422,6 @@
     (defp SeqForm)
     (defp VecForm)
     (defp MapForm)
-    (defp SetForm)
 
     (defn #_"Appendable" append* [#_"Appendable" a, #_"String" b, #_"fn" f'append, #_"String" c, #_"String" d, #_"Seqable" q]
         (let* [a (Appendable'''append a, b) #_"seq" s (seq q)
@@ -481,7 +441,6 @@
     (defn #_"Appendable" append-seq [#_"Appendable" a, #_"seq" x]    (append* a "(" append " " ")" x))
     (defn #_"Appendable" append-vec [#_"Appendable" a, #_"vector" x] (append* a "[" append " " "]" x))
     (defn #_"Appendable" append-map [#_"Appendable" a, #_"map" x]    (append* a "{" (fn* [a e] (-> a (append (key e)) (Appendable'''append " ") (append (val e)))) ", " "}" x))
-    (defn #_"Appendable" append-set [#_"Appendable" a, #_"set" x]    (append* a "#{" append " " "}" x))
 
     (defn #_"Appendable" append [#_"Appendable" a, #_"any" x]
         (condp = x
@@ -497,12 +456,10 @@
                     SeqForm (append-seq a x)
                     VecForm (append-vec a x)
                     MapForm (append-map a x)
-                    SetForm (append-set a x)
                     (cond
                         (seq? x)     (append-seq a x)
                         (vector? x)  (append-vec a x)
                         (map? x)     (append-map a x)
-                        (set? x)     (append-set a x)
                         (char? x)    (append-chr a x)
                         :else        (Appendable'''append a, (Object''toString x))
                     )
@@ -744,8 +701,6 @@
     ([x y & s] (reduce - (- x y) s))
 )
 
-(defn abs [a] (if (neg? a) (- a) a))
-
 (defn inc [x] (-/unchecked-inc-int (int x)))
 (defn dec [x] (-/unchecked-dec-int (int x)))
 
@@ -759,20 +714,6 @@
 (defn quot [x y]
     (when (not (zero? y)) => (throw! "divide by zero")
         (-/unchecked-divide-int (int x) (int y))
-    )
-)
-
-(defn rem [x y]
-    (when (not (zero? y)) => (throw! "divide by zero")
-        (-/unchecked-remainder-int (int x) (int y))
-    )
-)
-
-(defn mod [x y]
-    (let* [m (rem x y)]
-        (when (or (zero? m) (= (pos? x) (pos? y))) => (+ m y)
-            m
-        )
     )
 )
 
@@ -792,12 +733,6 @@
     ([x y] (-/bit-xor (int x) (int y)))
     ([x y & s] (reduce bit-xor (bit-xor x y) s))
 )
-
-(defn bit-clear [x i] (-/bit-and (int x) (-/bit-not (-/bit-shift-left 1 (int i)))))
-(defn bit-set   [x i] (-/bit-or (int x) (-/bit-shift-left 1 (int i))))
-(defn bit-flip  [x i] (-/bit-xor (int x) (-/bit-shift-left 1 (int i))))
-
-(defn bit-test  [x i] (not (zero? (-/bit-and (int x) (-/bit-shift-left 1 (int i))))))
 
 (defn          bit-shift-left  [x n] (-/bit-shift-left           (int x) (int n)))
 (defn          bit-shift-right [x n] (-/bit-shift-right          (int x) (int n)))
@@ -846,10 +781,6 @@
         (new* Symbol'class (anew [name]))
     )
 
-    (defn #_"Symbol" Symbol'intern [#_"String" nsname]
-        (Symbol'new nil, nsname)
-    )
-
     (defn #_"boolean" Symbol''equals [#_"Symbol" this, #_"any" that]
         (or (identical? this that)
             (and (symbol? that) (= (:name this) (:name that)))
@@ -877,12 +808,9 @@
         (IFn'''invoke => Symbol''invoke)
         (IFn'''applyTo => AFn'applyTo)
     )
-
-    (defm Symbol Comparable
-    )
 )
 
-(defn symbol [name] (if (symbol? name) name (Symbol'intern name)))
+(defn symbol [name] (if (symbol? name) name (Symbol'new name)))
 )
 
 (about #_"arbace.arm.Keyword"
@@ -892,10 +820,6 @@
 
     (defn #_"Keyword" Keyword'new [#_"Symbol" sym]
         (new* Keyword'class (anew [sym]))
-    )
-
-    (defn #_"Keyword" Keyword'intern [#_"Symbol" sym]
-        (Keyword'new sym)
     )
 
     (defn #_"boolean" Keyword''equals [#_"Keyword" this, #_"any" that]
@@ -925,16 +849,13 @@
         (IFn'''invoke => Keyword''invoke)
         (IFn'''applyTo => AFn'applyTo)
     )
-
-    (defm Keyword Comparable
-    )
 )
 
 (defn keyword [name]
     (cond
         (keyword? name) name
-        (symbol? name) (Keyword'intern #_"Symbol" name)
-        (string? name) (Keyword'intern (symbol #_"String" name))
+        (symbol? name) (Keyword'new #_"Symbol" name)
+        (string? name) (Keyword'new (symbol #_"String" name))
     )
 )
 )
@@ -990,22 +911,9 @@
         )
     )
 
-    (defn #_"int" Closure''compare [#_"Closure" this, #_"any" o1, #_"any" o2]
-        (let* [#_"any" o (IFn'''invoke this, o1, o2)]
-            (if (boolean? o)
-                (cond (boolean o) -1 (boolean (IFn'''invoke this, o2, o1)) 1 :else 0)
-                (int o)
-            )
-        )
-    )
-
     (defm Closure IFn
         (IFn'''invoke => Closure''invoke)
         (IFn'''applyTo => Closure''applyTo)
-    )
-
-    (defm Closure Comparator
-        (Comparator'''compare => Closure''compare)
     )
 )
 )
@@ -1076,12 +984,8 @@
 (about #_"LazySeq"
     (defq LazySeq [#_"fn'" f, #_"any'" o, #_"seq'" s] SeqForm)
 
-    (defn #_"LazySeq" LazySeq'init [#_"fn" f, #_"seq" s]
-        (new* LazySeq'class (anew [(atom f), (atom nil), (atom s)]))
-    )
-
     (defn #_"LazySeq" LazySeq'new [#_"fn" f]
-        (LazySeq'init f, nil)
+        (new* LazySeq'class (anew [(atom f), (atom nil), (atom nil)]))
     )
 
     (defn #_"cons" LazySeq''conj [#_"LazySeq" this, #_"any" o]
@@ -1169,38 +1073,6 @@
 
 (defn lazy-seq! [f] (LazySeq'new f))
 
-(defn concat
-    ([] (lazy-seq! (fn* [] nil)))
-    ([x] (lazy-seq! (fn* [] x)))
-    ([x y]
-        (lazy-seq!
-            (fn* []
-                (let* [s (seq x)]
-                    (when s => y
-                        (cons (first s) (concat (next s) y))
-                    )
-                )
-            )
-        )
-    )
-    ([x y & z]
-        (let* [cat- (fn* cat- [s z]
-                    (lazy-seq!
-                        (fn* []
-                            (let* [s (seq s)]
-                                (cond
-                                    s (cons (first s) (cat- (next s) z))
-                                    z (cat- (first z) (next z))
-                                )
-                            )
-                        )
-                    )
-                )]
-            (cat- (concat x y) z)
-        )
-    )
-)
-
 (defn index-of [s x]
     (loop* [i 0 s (seq s)]
         (when (some? s) => -1
@@ -1211,36 +1083,12 @@
     )
 )
 
-(defn some [f? s]
-    (when (seq s)
-        (or (f? (first s)) (recur f? (next s)))
-    )
-)
-
 (defn map [f s]
     (lazy-seq!
         (fn* []
             (let* [s (seq s)]
                 (when (some? s)
                     (cons (f (first s)) (map f (next s)))
-                )
-            )
-        )
-    )
-)
-
-(defn mapcat [f & s] (apply concat (apply map f s)))
-
-(defn filter [f? s]
-    (lazy-seq!
-        (fn* []
-            (let* [s (seq s)]
-                (when (some? s)
-                    (let* [x (first s)]
-                        (when (f? x) => (filter f? (next s))
-                            (cons x (filter f? (next s)))
-                        )
-                    )
                 )
             )
         )
@@ -1270,73 +1118,6 @@
                 )
             )
         )
-    )
-)
-)
-
-(about #_"arbace.arm.APersistentMap"
-
-(about #_"APersistentMap"
-    (defn #_"IPersistentCollection" APersistentMap''conj [#_"APersistentMap" this, #_"any" o]
-        (condp satisfies? o
-            IMapEntry
-                (assoc this (key o) (val o))
-            IPersistentVector
-                (when (= (count o) 2) => (throw! "vector arg to map conj must be a pair")
-                    (assoc this (nth o 0) (nth o 1))
-                )
-            #_else
-                (loop* [this this #_"seq" s (seq o)]
-                    (when (some? s) => this
-                        (let* [#_"pair" e (first s)]
-                            (recur (assoc this (key e) (val e)) (next s))
-                        )
-                    )
-                )
-        )
-    )
-
-    (defn #_"boolean" APersistentMap''equals [#_"APersistentMap" this, #_"any" that]
-        (or (identical? this that)
-            (and (map? that) (= (count that) (count this))
-                (loop* [#_"seq" s (seq this)]
-                    (when (some? s) => true
-                        (let* [#_"pair" e (first s) #_"any" k (key e)]
-                            (and (contains? that k) (= (val e) (get that k))
-                                (recur (next s))
-                            )
-                        )
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"any" APersistentMap''invoke
-        ([#_"APersistentMap" this, #_"key" key] (get this key))
-        ([#_"APersistentMap" this, #_"key" key, #_"value" not-found] (get this key not-found))
-    )
-)
-)
-
-(about #_"arbace.arm.APersistentSet"
-
-(about #_"APersistentSet"
-    (defn #_"boolean" APersistentSet''equals [#_"APersistentSet" this, #_"any" that]
-        (or (identical? this that)
-            (and (set? that) (= (count this) (count that))
-                (loop* [#_"seq" s (seq that)]
-                    (when (some? s) => true
-                        (and (contains? this (first s)) (recur (next s)))
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"any" APersistentSet''invoke
-        ([#_"APersistentSet" this, #_"key" key] (get this key))
-        ([#_"APersistentSet" this, #_"key" key, #_"value" not-found] (get this key not-found))
     )
 )
 )
@@ -1434,31 +1215,37 @@
 )
 )
 
-(about #_"arbace.arm.AMapEntry"
+(about #_"arbace.arm.MapEntry"
 
-(about #_"AMapEntry"
-    (defn #_"any" AMapEntry''nth
-        ([#_"AMapEntry" this, #_"int" i]
+(about #_"MapEntry"
+    (defq MapEntry [#_"key" k, #_"value" v] VecForm)
+
+    (defn #_"MapEntry" MapEntry'new [#_"key" k, #_"value" v]
+        (new* MapEntry'class (anew [k, v]))
+    )
+
+    (defn #_"any" MapEntry''nth
+        ([#_"MapEntry" this, #_"int" i]
             (condp = i 0 (IMapEntry'''key this) 1 (IMapEntry'''val this) (throw! "index is out of bounds"))
         )
-        ([#_"AMapEntry" this, #_"int" i, #_"value" not-found]
+        ([#_"MapEntry" this, #_"int" i, #_"value" not-found]
             (condp = i 0 (IMapEntry'''key this) 1 (IMapEntry'''val this) not-found)
         )
     )
 
-    (defn #_"int" AMapEntry''count [#_"AMapEntry" this]
+    (defn #_"int" MapEntry''count [#_"MapEntry" this]
         2
     )
 
-    (defn #_"seq" AMapEntry''seq [#_"AMapEntry" this]
+    (defn #_"seq" MapEntry''seq [#_"MapEntry" this]
         (VSeq'new this, 0)
     )
 
-    (defn #_"seq" AMapEntry''rseq [#_"AMapEntry" this]
+    (defn #_"seq" MapEntry''rseq [#_"MapEntry" this]
         (RSeq'new this, 1)
     )
 
-    (defn #_"boolean" AMapEntry''equals [#_"AMapEntry" this, #_"any" that]
+    (defn #_"boolean" MapEntry''equals [#_"MapEntry" this, #_"any" that]
         (or (identical? this that)
             (cond
                 (vector? that)
@@ -1476,17 +1263,6 @@
             )
         )
     )
-)
-)
-
-(about #_"arbace.arm.MapEntry"
-
-(about #_"MapEntry"
-    (defq MapEntry [#_"key" k, #_"value" v] VecForm)
-
-    (defn #_"MapEntry" MapEntry'new [#_"key" k, #_"value" v]
-        (new* MapEntry'class (anew [k, v]))
-    )
 
     (defm MapEntry IMapEntry
         (IMapEntry'''key => :k)
@@ -1496,26 +1272,23 @@
     (defm MapEntry Sequential)
 
     (defm MapEntry Indexed
-        (Indexed'''nth => AMapEntry''nth)
+        (Indexed'''nth => MapEntry''nth)
     )
 
     (defm MapEntry Counted
-        (Counted'''count => AMapEntry''count)
+        (Counted'''count => MapEntry''count)
     )
 
     (defm MapEntry Seqable
-        (Seqable'''seq => AMapEntry''seq)
+        (Seqable'''seq => MapEntry''seq)
     )
 
     (defm MapEntry Reversible
-        (Reversible'''rseq => AMapEntry''rseq)
+        (Reversible'''rseq => MapEntry''rseq)
     )
 
     (defm MapEntry IObject
-        (IObject'''equals => AMapEntry''equals)
-    )
-
-    (defm MapEntry Comparable
+        (IObject'''equals => MapEntry''equals)
     )
 )
 )
@@ -1842,6 +1615,25 @@
         )
     )
 
+    (defn #_"IPersistentCollection" PersistentArrayMap''conj [#_"PersistentArrayMap" this, #_"any" o]
+        (condp satisfies? o
+            IMapEntry
+                (assoc this (key o) (val o))
+            IPersistentVector
+                (when (= (count o) 2) => (throw! "vector arg to map conj must be a pair")
+                    (assoc this (nth o 0) (nth o 1))
+                )
+            #_else
+                (loop* [this this #_"seq" s (seq o)]
+                    (when (some? s) => this
+                        (let* [#_"pair" e (first s)]
+                            (recur (assoc this (key e) (val e)) (next s))
+                        )
+                    )
+                )
+        )
+    )
+
     (defn #_"IPersistentMap" PersistentArrayMap''empty [#_"PersistentArrayMap" this]
         PersistentArrayMap'EMPTY
     )
@@ -1852,17 +1644,28 @@
         )
     )
 
+    (defn #_"boolean" PersistentArrayMap''equals [#_"PersistentArrayMap" this, #_"any" that]
+        (or (identical? this that)
+            (and (map? that) (= (count that) (count this))
+                (loop* [#_"seq" s (seq this)]
+                    (when (some? s) => true
+                        (let* [#_"pair" e (first s) #_"any" k (key e)]
+                            (and (contains? that k) (= (val e) (get that k))
+                                (recur (next s))
+                            )
+                        )
+                    )
+                )
+            )
+        )
+    )
+
     (defm PersistentArrayMap Counted
         (Counted'''count => PersistentArrayMap''count)
     )
 
     (defm PersistentArrayMap ILookup
         (ILookup'''valAt => PersistentArrayMap''valAt)
-    )
-
-    (defm PersistentArrayMap IFn
-        (IFn'''invoke => APersistentMap''invoke)
-        (IFn'''applyTo => AFn'applyTo)
     )
 
     (defm PersistentArrayMap Associative
@@ -1876,7 +1679,7 @@
     )
 
     (defm PersistentArrayMap IPersistentCollection
-        (IPersistentCollection'''conj => APersistentMap''conj)
+        (IPersistentCollection'''conj => PersistentArrayMap''conj)
         (IPersistentCollection'''empty => PersistentArrayMap''empty)
     )
 
@@ -1885,7 +1688,7 @@
     )
 
     (defm PersistentArrayMap IObject
-        (IObject'''equals => APersistentMap''equals)
+        (IObject'''equals => PersistentArrayMap''equals)
     )
 )
 
@@ -1911,104 +1714,6 @@
 )
 )
 
-(about #_"arbace.arm.PersistentArraySet"
-
-(about #_"PersistentArraySet"
-    (defq PersistentArraySet [#_"map" impl] SetForm)
-
-    (defn #_"PersistentArraySet" PersistentArraySet'new [#_"map" impl]
-        (new* PersistentArraySet'class (anew [impl]))
-    )
-
-    (def #_"PersistentArraySet" PersistentArraySet'EMPTY (PersistentArraySet'new PersistentArrayMap'EMPTY))
-
-    (defn #_"PersistentArraySet" PersistentArraySet'create [#_"Seqable" init]
-        (into PersistentArraySet'EMPTY init)
-    )
-
-    (defn #_"PersistentArraySet" PersistentArraySet'createWithCheck [#_"Seqable" init]
-        (loop* [#_"IPersistentSet" s PersistentArraySet'EMPTY #_"seq" q (seq init) #_"int" n 0]
-            (when (some? q) => s
-                (let* [s (conj s (first q))]
-                    (when (= (count s) (inc n)) => (throw! (str "duplicate key: " (first q)))
-                        (recur s (next q) (inc n))
-                    )
-                )
-            )
-        )
-    )
-
-    (defn #_"int" PersistentArraySet''count [#_"PersistentArraySet" this]
-        (count (:impl this))
-    )
-
-    (defn #_"PersistentArraySet" PersistentArraySet''conj [#_"PersistentArraySet" this, #_"value" val]
-        (if (contains? (:impl this) val)
-            this
-            (PersistentArraySet'new (assoc (:impl this) val val))
-        )
-    )
-
-    (defn #_"PersistentArraySet" PersistentArraySet''empty [#_"PersistentArraySet" this]
-        PersistentArraySet'EMPTY
-    )
-
-    (defn #_"IPersistentSet" PersistentArraySet''disj [#_"PersistentArraySet" this, #_"key" key]
-        (if (contains? (:impl this) key)
-            (PersistentArraySet'new (dissoc (:impl this) key))
-            this
-        )
-    )
-
-    (defn #_"boolean" PersistentArraySet''contains? [#_"PersistentArraySet" this, #_"key" key]
-        (contains? (:impl this) key)
-    )
-
-    (defn #_"value" PersistentArraySet''get [#_"PersistentArraySet" this, #_"key" key]
-        (get (:impl this) key)
-    )
-
-    (defn #_"seq" PersistentArraySet''seq [#_"PersistentArraySet" this]
-        (keys (:impl this))
-    )
-
-    (defm PersistentArraySet Counted
-        (Counted'''count => PersistentArraySet''count)
-    )
-
-    (defm PersistentArraySet IPersistentCollection
-        (IPersistentCollection'''conj => PersistentArraySet''conj)
-        (IPersistentCollection'''empty => PersistentArraySet''empty)
-    )
-
-    (defm PersistentArraySet IPersistentSet
-        (IPersistentSet'''disj => PersistentArraySet''disj)
-        (IPersistentSet'''contains? => PersistentArraySet''contains?)
-        (IPersistentSet'''get => PersistentArraySet''get)
-    )
-
-    (defm PersistentArraySet Seqable
-        (Seqable'''seq => PersistentArraySet''seq)
-    )
-
-    (defm PersistentArraySet IFn
-        (IFn'''invoke => APersistentSet''invoke)
-        (IFn'''applyTo => AFn'applyTo)
-    )
-
-    (defm PersistentArraySet IObject
-        (IObject'''equals => APersistentSet''equals)
-    )
-)
-
-(defn array-set
-    ([] PersistentArraySet'EMPTY)
-    ([& keys] (PersistentArraySet'create keys))
-)
-
-(defn set [s] (if (set? s) s (into (array-set) s)))
-)
-
 (about #_"arbace.arm.PersistentVector"
 
 (about #_"VNode"
@@ -2019,38 +1724,6 @@
     )
 
     (def #_"node" VNode'EMPTY (VNode'new nil, nil))
-
-    (defn #_"values" VNode''array-for
-        ([#_"node" this, #_"int" i, #_"int" shift, #_"int" cnt] (VNode''array-for this, i, shift, cnt, cnt, nil))
-        ([#_"node" this, #_"int" i, #_"int" shift, #_"int" cnt, #_"int" tail-off, #_"values" tail]
-            (when (< -1 i cnt) => (throw! "index is out of bounds")
-                (when (< i tail-off) => tail
-                    (loop* [i i #_"node" node this shift shift]
-                        (when (pos? shift) => (:array node)
-                            (let* [
-                                #_"index" x (:index node)
-                                #_"int" m (bit-and (unsigned-bit-shift-right i shift) 0x1f)
-                                [m i]
-                                    (when (some? x) => [m i]
-                                        (let* [m
-                                                (loop* (<= (aget x m) i)
-                                                    (when m => m
-                                                        (recur (inc m))
-                                                    )
-                                                )
-                                        ]
-                                            [m (if (pos? m) (- i (aget x (dec m))) i)]
-                                        )
-                                    )
-                            ]
-                                (recur i (aget (:array node) m) (- shift 5))
-                            )
-                        )
-                    )
-                )
-            )
-        )
-    )
 
     (defn #_"value" VNode''value-for [#_"node" this, #_"int" i, #_"int" shift, #_"int" cnt, #_"int" tail-off, #_"values" tail]
         (when (< -1 i cnt) => (throw! "index is out of bounds")
@@ -2323,10 +1996,6 @@
         (- (:cnt this) (alength (:tail this)))
     )
 
-    (defn #_"values" PersistentVector''array-for [#_"PersistentVector" this, #_"int" i]
-        (VNode''array-for (:root this), i, (:shift this), (:cnt this), (PersistentVector''tail-off this), (:tail this))
-    )
-
     (defn #_"value" PersistentVector''value-for [#_"PersistentVector" this, #_"int" i]
         (VNode''value-for (:root this), i, (:shift this), (:cnt this), (PersistentVector''tail-off this), (:tail this))
     )
@@ -2408,18 +2077,6 @@
         )
     )
 
-    (defn #_"value" PersistentVector''invoke [#_"PersistentVector" this, #_"key" arg]
-        (when (integer? arg) => (throw! "arg must be integer")
-            (Indexed'''nth this, (int arg))
-        )
-    )
-
-    (defn #_"value" PersistentVector''applyTo [#_"PersistentVector" this, #_"seq" args]
-        (condp = (count args 1)
-            1 (IFn'''invoke this, (first args))
-        )
-    )
-
     (defn #_"IPersistentVector" PersistentVector''assoc [#_"PersistentVector" this, #_"key" key, #_"value" val]
         (when (integer? key) => (throw! "key must be integer")
             (IPersistentVector'''assocN this, (int key), val)
@@ -2486,11 +2143,6 @@
         (IPersistentVector'''assocN => PersistentVector''assocN)
     )
 
-    (defm PersistentVector IFn
-        (IFn'''invoke => PersistentVector''invoke)
-        (IFn'''applyTo => PersistentVector''applyTo)
-    )
-
     (defm PersistentVector Associative
         (Associative'''assoc => PersistentVector''assoc)
         (Associative'''containsKey => PersistentVector''containsKey)
@@ -2510,9 +2162,6 @@
     (defm PersistentVector Reversible
         (Reversible'''rseq => PersistentVector''rseq)
     )
-
-    (defm PersistentVector Comparable
-    )
 )
 
 (defn vector
@@ -2531,16 +2180,12 @@
 
 (about #_"arbace.arm.RT"
 
-(about #_"RT"
-    (defn #_"any" RT'get
-        ([#_"any" coll, #_"key" key]
+(defn get
+    ([coll key]
+        (when (some? coll)
             (cond
                 (satisfies? ILookup coll)
                     (ILookup'''valAt coll, key)
-                (nil? coll)
-                    nil
-                (set? coll)
-                    (IPersistentSet'''get coll, key)
                 (and (number? key) (or (string? coll) (array? coll)))
                     (let* [#_"int" n (int key)]
                         (when (< -1 n (count coll))
@@ -2549,68 +2194,57 @@
                     )
             )
         )
-        ([#_"any" coll, #_"key" key, #_"value" not-found]
+    )
+    ([coll key not-found]
+        (when (some? coll) => not-found
             (cond
                 (satisfies? ILookup coll)
                     (ILookup'''valAt coll, key, not-found)
-                (nil? coll)
-                    not-found
-                (set? coll)
-                    (if (contains? coll key) (IPersistentSet'''get coll, key) not-found)
                 (and (number? key) (or (string? coll) (array? coll)))
                     (let* [#_"int" n (int key)]
-                        (if (< -1 n (count coll)) (nth coll n) not-found)
+                        (when (< -1 n (count coll)) => not-found
+                            (nth coll n)
+                        )
                     )
                 :else
                     not-found
             )
         )
     )
-
-(defn get
-    ([coll key          ] (RT'get coll key          ))
-    ([coll key not-found] (RT'get coll key not-found))
 )
 
-    (defn #_"any" RT'contains [#_"any" coll, #_"key" key]
+(defn contains? [coll key]
+    (when (some? coll) => false
         (cond
-            (nil? coll)
-                false
             (associative? coll)
-                (if (Associative'''containsKey coll, key) true false)
-            (set? coll)
-                (if (IPersistentSet'''contains? coll, key) true false)
+                (Associative'''containsKey coll, key)
             (and (number? key) (or (string? coll) (array? coll)))
                 (let* [#_"int" n (int key)]
-                    (if (< -1 n (count coll)) true false)
+                    (< -1 n (count coll))
                 )
             :else
                 (throw! (str "contains? not supported on " coll))
         )
     )
+)
 
-(defn contains? [coll key] (RT'contains coll key))
-
-    (defn #_"any" RT'find [#_"any" coll, #_"key" key]
+(defn find [coll key]
+    (when (some? coll)
         (cond
-            (nil? coll)
-                nil
             (associative? coll)
                 (Associative'''entryAt coll, key)
             :else
                 (throw! (str "find not supported on " coll))
         )
     )
+)
 
-(defn find [m k] (RT'find m k))
-
-    (defn #_"any" RT'nth
-        ([#_"any" coll, #_"int" n]
+(defn nth
+    ([coll n]
+        (when (some? coll)
             (cond
                 (indexed? coll)
                     (Indexed'''nth coll, n)
-                (nil? coll)
-                    nil
                 (string? coll)
                     (Character'valueOf (String''charAt coll, n))
                 (array? coll)
@@ -2631,12 +2265,12 @@
                     (throw! (str "nth not supported on " coll))
             )
         )
-        ([#_"any" coll, #_"int" n, #_"value" not-found]
+    )
+    ([coll n not-found]
+        (when (some? coll) => not-found
             (cond
                 (indexed? coll)
                     (Indexed'''nth coll, n, not-found)
-                (nil? coll)
-                    not-found
                 (neg? n)
                     not-found
                 (string? coll)
@@ -2666,16 +2300,11 @@
             )
         )
     )
-
-(defn nth
-    ([s i]           (RT'nth s i          ))
-    ([s i not-found] (RT'nth s i not-found))
 )
 
     (defn #_"IPersistentMap" RT'mapUniqueKeys [#_"Seqable" init]
         (if (empty? init) PersistentArrayMap'EMPTY (PersistentArrayMap'new (anew init)))
     )
-)
 )
 
 (about #_"arbace.arm.Var"
@@ -2768,7 +2397,7 @@
     )
 
     (defn #_"boolean" LispReader'isTerminatingMacro [#_"char" ch]
-        (and (LispReader'isMacro ch) (not (contains? (array-set (char! "#") (char! "'") (char! "%")) ch)))
+        (and (LispReader'isMacro ch) (not (or (= ch (char! "#")) (= ch (char! "'")) (= ch (char! "%")))))
     )
 
     (defn #_"boolean" LispReader'isDigit [#_"char" ch]
@@ -2818,10 +2447,8 @@
                             )
                     ]
                         (when (some? n)
-                            (let* [#_"BigInteger" bn (BigInteger'new n, radix) bn (if (= (Matcher''group m, 1) "-") (BigInteger''negate bn) bn)]
-                                (when (< (BigInteger''bitLength bn) 64) => bn
-                                    (int (BigInteger''longValue bn))
-                                )
+                            (let* [#_"BigInteger" bn (BigInteger'new n, radix)]
+                                (BigInteger''intValue (if (= (Matcher''group m, 1) "-") (BigInteger''negate bn) bn))
                             )
                         )
                     )
@@ -2913,7 +2540,7 @@
                                         )
                                     )
                                     (or
-                                        (when (contains? (array-set (char! "+") (char! "-")) ch)
+                                        (when (or (= ch (char! "+")) (= ch (char! "-")))
                                             (let* [#_"char" ch' (LispReader'read1 r) _ (LispReader'unread r, ch')]
                                                 (when (and (some? ch') (LispReader'isDigit ch'))
                                                     (LispReader'readNumber r, ch)
@@ -3038,8 +2665,6 @@
         (#_"gen" Expr'''emit [#_"Expr" this, #_"Context" context, #_"map" scope, #_"gen" gen])
     )
 
-    (defp Recur)
-
     (defp LiteralExpr)
     (defp VarExpr)
     (defp BodyExpr)
@@ -3054,14 +2679,6 @@
     (defp LetExpr)
     (defp RecurExpr)
     (defp ThrowExpr)
-
-(def Context'enum-set
-    (array-set
-        :Context'STATEMENT
-        :Context'EXPRESSION
-        :Context'RETURN
-    )
-)
 
 (about #_"Compiler"
     (def #_"int" Compiler'MAX_POSITIONAL_ARITY #_9 (+ 9 2))
@@ -3495,7 +3112,7 @@
         )
     )
 
-    (def compile-and-memoize (-/memoize FnMethod''compile))
+    (def compile-and-memoize (memoize FnMethod''compile))
 )
 
 (about #_"FnExpr"
@@ -3802,10 +3419,6 @@
             'recur RecurExpr'parse
             'throw ThrowExpr'parse
         )
-    )
-
-    (defn #_"boolean" Compiler'isSpecial [#_"any" sym]
-        (contains? Compiler'specials sym)
     )
 
     (defn #_"void" Compiler'closeOver [#_"LocalBinding" lb, #_"FnMethod" fm]
