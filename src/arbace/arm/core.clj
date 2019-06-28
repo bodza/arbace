@@ -97,19 +97,6 @@
 
 (about #_"arbace.arm.IFn"
     (defp IFn
-        (#_"any" IFn'''invoke
-            [#_"fn" this]
-            [#_"fn" this, a1]
-            [#_"fn" this, a1, a2]
-            [#_"fn" this, a1, a2, a3]
-            [#_"fn" this, a1, a2, a3, a4]
-            [#_"fn" this, a1, a2, a3, a4, a5]
-            [#_"fn" this, a1, a2, a3, a4, a5, a6]
-            [#_"fn" this, a1, a2, a3, a4, a5, a6, a7]
-            [#_"fn" this, a1, a2, a3, a4, a5, a6, a7, a8]
-            [#_"fn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9]
-            [#_"fn" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args]
-        )
         (#_"any" IFn'''applyTo [#_"fn" this, #_"seq" args])
     )
 
@@ -282,12 +269,6 @@
     (defn symbol? [x] (satisfies? Symbol x))
 )
 
-(about #_"arbace.arm.Keyword"
-    (defp Keyword)
-
-    (defn keyword? [x] (satisfies? Keyword x))
-)
-
 (about #_"arbace.arm.Closure"
     (defp Closure)
 )
@@ -386,9 +367,8 @@
         )
     )
 
-    (defn #_"Appendable" append-sym [#_"Appendable" a, #_"symbol" x]        (Appendable'''append a, (:name x)))
-    (defn #_"Appendable" append-key [#_"Appendable" a, #_"keyword" x] (-> a (Appendable'''append ":") (Appendable'''append (:name x))))
-    (defn #_"Appendable" append-var [#_"Appendable" a, #_"var" x]     (-> a (Appendable'''append "#'") (append (:sym x))))
+    (defn #_"Appendable" append-sym [#_"Appendable" a, #_"symbol" x] (Appendable'''append a, (:name x)))
+    (defn #_"Appendable" append-var [#_"Appendable" a, #_"var" x]    (-> a (Appendable'''append "#'") (append (:sym x))))
 
     (defn #_"Appendable" append-seq [#_"Appendable" a, #_"seq" x]    (append* a "(" append " " ")" x))
     (defn #_"Appendable" append-vec [#_"Appendable" a, #_"vector" x] (append* a "[" append " " "]" x))
@@ -400,16 +380,15 @@
             false (Appendable'''append a, "false")
             true  (Appendable'''append a, "true")
             (cond
-                (number? x)  (Appendable'''append a, (Number''toString x))
-                (string? x)  (append-str a x)
-                (symbol? x)  (append-sym a x)
-                (keyword? x) (append-key a x)
-                (var? x)     (append-var a x)
-                (seq? x)     (append-seq a x)
-                (vector? x)  (append-vec a x)
-                (map? x)     (append-map a x)
-                (char? x)    (append-chr a x)
-                :else        (Appendable'''append a, (Object''toString x))
+                (number? x) (Appendable'''append a, (Number''toString x))
+                (string? x) (append-str a x)
+                (symbol? x) (append-sym a x)
+                (var? x)    (append-var a x)
+                (seq? x)    (append-seq a x)
+                (vector? x) (append-vec a x)
+                (map? x)    (append-map a x)
+                (char? x)   (append-chr a x)
+                :else       (Appendable'''append a, (Object''toString x))
             )
         )
     )
@@ -693,31 +672,6 @@
 (defn odd? [n] (not (even? n)))
 )
 
-(about #_"arbace.arm.AFn"
-
-(about #_"AFn"
-    (defn #_"void" AFn'throwArity [#_"fn" f, #_"int" n]
-        (throw! (str "wrong number of args (" (if (neg? n) (str "more than " (dec (- n))) n) ") passed to " f))
-    )
-
-    (defn #_"any" AFn'applyTo [#_"fn" f, #_"seq" s]
-        (condp = (count s (inc 9))
-            0                                           (IFn'''invoke f)
-            1 (let* [[a1] s]                             (IFn'''invoke f, a1))
-            2 (let* [[a1 a2] s]                          (IFn'''invoke f, a1, a2))
-            3 (let* [[a1 a2 a3] s]                       (IFn'''invoke f, a1, a2, a3))
-            4 (let* [[a1 a2 a3 a4] s]                    (IFn'''invoke f, a1, a2, a3, a4))
-            5 (let* [[a1 a2 a3 a4 a5] s]                 (IFn'''invoke f, a1, a2, a3, a4, a5))
-            6 (let* [[a1 a2 a3 a4 a5 a6] s]              (IFn'''invoke f, a1, a2, a3, a4, a5, a6))
-            7 (let* [[a1 a2 a3 a4 a5 a6 a7] s]           (IFn'''invoke f, a1, a2, a3, a4, a5, a6, a7))
-            8 (let* [[a1 a2 a3 a4 a5 a6 a7 a8] s]        (IFn'''invoke f, a1, a2, a3, a4, a5, a6, a7, a8))
-            9 (let* [[a1 a2 a3 a4 a5 a6 a7 a8 a9] s]     (IFn'''invoke f, a1, a2, a3, a4, a5, a6, a7, a8, a9))
-              (let* [[a1 a2 a3 a4 a5 a6 a7 a8 a9 & s] s] (IFn'''invoke f, a1, a2, a3, a4, a5, a6, a7, a8, a9, s))
-        )
-    )
-)
-)
-
 (about #_"arbace.arm.Symbol"
 
 (about #_"Symbol"
@@ -733,9 +687,11 @@
         )
     )
 
-    (defn #_"any" Symbol''invoke
-        ([#_"symbol" this, #_"any" obj] (get obj this))
-        ([#_"symbol" this, #_"any" obj, #_"value" not-found] (get obj this not-found))
+    (defn #_"any" Symbol''applyTo [#_"symbol" this, #_"seq" s]
+        (condp = (count s 2)
+            1 (get (first s) this)
+            2 (get (first s) this (second s))
+        )
     )
 
     (defm Symbol IObject
@@ -743,45 +699,11 @@
     )
 
     (defm Symbol IFn
-        (IFn'''invoke => Symbol''invoke)
-        (IFn'''applyTo => AFn'applyTo)
+        (IFn'''applyTo => Symbol''applyTo)
     )
 )
 
 (defn symbol [name] (if (symbol? name) name (Symbol'new name)))
-)
-
-(about #_"arbace.arm.Keyword"
-
-(about #_"Keyword"
-    (defq Keyword [#_"String" name])
-
-    (defn #_"keyword" Keyword'new [#_"String" name]
-        (new* Keyword'class (anew [name]))
-    )
-
-    (defn #_"boolean" Keyword''equals [#_"keyword" this, #_"any" that]
-        (or (identical? this that)
-            (and (keyword? that) (= (:name this) (:name that)))
-        )
-    )
-
-    (defn #_"any" Keyword''invoke
-        ([#_"keyword" this, #_"any" obj] (get obj this))
-        ([#_"keyword" this, #_"any" obj, #_"value" not-found] (get obj this not-found))
-    )
-
-    (defm Keyword IObject
-        (IObject'''equals => Keyword''equals)
-    )
-
-    (defm Keyword IFn
-        (IFn'''invoke => Keyword''invoke)
-        (IFn'''applyTo => AFn'applyTo)
-    )
-)
-
-(defn keyword [name] (if (keyword? name) name (Keyword'new name)))
 )
 
 (about #_"arbace.arm.Closure"
@@ -793,18 +715,8 @@
         (new* Closure'class (anew [fun, env]))
     )
 
-    (defn #_"any" Closure''invoke
-        ([#_"Closure" this]                                                 (IFn'''applyTo this, nil))
-        ([#_"Closure" this, a1]                                             (IFn'''applyTo this, (list a1)))
-        ([#_"Closure" this, a1, a2]                                         (IFn'''applyTo this, (list a1 a2)))
-        ([#_"Closure" this, a1, a2, a3]                                     (IFn'''applyTo this, (list a1 a2 a3)))
-        ([#_"Closure" this, a1, a2, a3, a4]                                 (IFn'''applyTo this, (list a1 a2 a3 a4)))
-        ([#_"Closure" this, a1, a2, a3, a4, a5]                             (IFn'''applyTo this, (list a1 a2 a3 a4 a5)))
-        ([#_"Closure" this, a1, a2, a3, a4, a5, a6]                         (IFn'''applyTo this, (list a1 a2 a3 a4 a5 a6)))
-        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7]                     (IFn'''applyTo this, (list a1 a2 a3 a4 a5 a6 a7)))
-        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7, a8]                 (IFn'''applyTo this, (list a1 a2 a3 a4 a5 a6 a7 a8)))
-        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7, a8, a9]             (IFn'''applyTo this, (list a1 a2 a3 a4 a5 a6 a7 a8 a9)))
-        ([#_"Closure" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" a*] (IFn'''applyTo this, (list* a1 a2 a3 a4 a5 a6 a7 a8 a9 a*)))
+    (defn #_"void" Closure''throwArity [#_"Closure" this, #_"int" n]
+        (throw! (str "wrong number of args (" (if (neg? n) (str "more than " (dec (- n))) n) ") passed to " this))
     )
 
     (defn #_"any" Closure''applyTo [#_"Closure" this, #_"seq" args]
@@ -813,7 +725,7 @@
                 (let* [#_"int" m (inc Compiler'MAX_POSITIONAL_ARITY) #_"int" n (min (count args m) m)]
                     (or (get (:regulars (:fun this)) n)
                         (let* [fm (:variadic (:fun this))]
-                            (when (and (some? fm) (<= (dec (- (:arity fm))) n)) => (AFn'throwArity this, (if (< n m) n (- m)))
+                            (when (and (some? fm) (<= (dec (- (:arity fm))) n)) => (Closure''throwArity this, (if (< n m) n (- m)))
                                 fm
                             )
                         )
@@ -836,7 +748,6 @@
     )
 
     (defm Closure IFn
-        (IFn'''invoke => Closure''invoke)
         (IFn'''applyTo => Closure''applyTo)
     )
 )
@@ -1865,14 +1776,14 @@
                 )
             )
             (when (= i (:cnt this)) => (throw! "index is out of bounds")
-                (IPersistentCollection'''conj this, val)
+                (PersistentVector''conj this, val)
             )
         )
     )
 
     (defn #_"IPersistentVector" PersistentVector''assoc [#_"PersistentVector" this, #_"key" key, #_"value" val]
         (when (integer? key) => (throw! "key must be integer")
-            (IPersistentVector'''assocN this, (int key), val)
+            (PersistentVector''assocN this, (int key), val)
         )
     )
 
@@ -2080,20 +1991,6 @@
         nil
     )
 
-    (defn #_"any" Var''invoke
-        ([#_"var" this]                                                   (IFn'''invoke (deref this)))
-        ([#_"var" this, a1]                                               (IFn'''invoke (deref this), a1))
-        ([#_"var" this, a1, a2]                                           (IFn'''invoke (deref this), a1, a2))
-        ([#_"var" this, a1, a2, a3]                                       (IFn'''invoke (deref this), a1, a2, a3))
-        ([#_"var" this, a1, a2, a3, a4]                                   (IFn'''invoke (deref this), a1, a2, a3, a4))
-        ([#_"var" this, a1, a2, a3, a4, a5]                               (IFn'''invoke (deref this), a1, a2, a3, a4, a5))
-        ([#_"var" this, a1, a2, a3, a4, a5, a6]                           (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6))
-        ([#_"var" this, a1, a2, a3, a4, a5, a6, a7]                       (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6, a7))
-        ([#_"var" this, a1, a2, a3, a4, a5, a6, a7, a8]                   (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6, a7, a8))
-        ([#_"var" this, a1, a2, a3, a4, a5, a6, a7, a8, a9]               (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6, a7, a8, a9))
-        ([#_"var" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6, a7, a8, a9, args))
-    )
-
     (defn #_"any" Var''applyTo [#_"var" this, #_"seq" args]
         (IFn'''applyTo (deref this), args)
     )
@@ -2107,7 +2004,6 @@
     )
 
     (defm Var IFn
-        (IFn'''invoke => Var''invoke)
         (IFn'''applyTo => Var''applyTo)
     )
 )
@@ -2116,7 +2012,7 @@
 (about #_"arbace.arm.Namespace"
 
 (about #_"Namespace"
-    (def #_"{Symbol Var}'" Namespace'mappings (atom (array-map)))
+    (def #_"{symbol var}'" Namespace'mappings (atom (array-map)))
 
     (defn #_"var" Namespace'getMapping [#_"symbol" name]
         (get (deref Namespace'mappings) name)
@@ -2242,20 +2138,6 @@
         )
     )
 
-    (defn #_"any" LispReader'matchSymbol [#_"String" s]
-        (let* [#_"boolean" kw? (String''startsWith s, ":") s (if kw? (String''substring s, 1) s)]
-            (when (and (pos? (String''length s)) (not (LispReader'isDigit (String''charAt s, 0))))
-                (if kw? (keyword s) (symbol s))
-            )
-        )
-    )
-
-    (defn #_"any" LispReader'interpretToken [#_"String" s]
-        (condp = s "nil" nil "true" true "false" false
-            (or (LispReader'matchSymbol s) (throw! (str "invalid token: " s)))
-        )
-    )
-
     (defn #_"any" LispReader'read
         ([#_"Reader" r, #_"map" scope] (LispReader'read r, scope, true, nil))
         ([#_"Reader" r, #_"map" scope, #_"boolean" eofIsError, #_"any" eofValue] (LispReader'read r, scope, eofIsError, eofValue, nil, nil))
@@ -2291,7 +2173,9 @@
                                                 )
                                             )
                                         )
-                                        (LispReader'interpretToken (LispReader'readToken r, ch))
+                                        (let* [#_"String" s (LispReader'readToken r, ch)]
+                                            (condp = s "nil" nil "true" true "false" false (symbol s))
+                                        )
                                     )
                                 )
                             )
@@ -3222,7 +3106,7 @@
     (defn #_"edn" Compiler'eval
         ([#_"edn" form] (Compiler'eval form, nil))
         ([#_"edn" form, #_"map" scope]
-            (IFn'''invoke (Closure'new (Compiler'analyze (list 'fn* [] form), scope), nil))
+            (IFn'''applyTo (Closure'new (Compiler'analyze (list 'fn* [] form), scope), nil), nil)
         )
     )
 )
@@ -3251,7 +3135,7 @@
     (defn #_"gen" Gen''goto    [#_"gen" gen, #_"label" label]         (conj gen [:goto label]))
     (defn #_"gen" Gen''if-eq?  [#_"gen" gen, #_"label" label]         (conj gen [:if-eq? label]))
     (defn #_"gen" Gen''if-nil? [#_"gen" gen, #_"label" label]         (conj gen [:if-nil? label]))
-    (defn #_"gen" Gen''invoke  [#_"gen" gen, #_"fn" f, #_"int" arity] (conj gen [(keyword (str "invoke-" arity)) f]))
+    (defn #_"gen" Gen''invoke  [#_"gen" gen, #_"fn" f, #_"int" arity] (conj gen [(symbol (str ":invoke-" arity)) f]))
     (defn #_"gen" Gen''load    [#_"gen" gen, #_"int" index]           (conj gen [:load index]))
     (defn #_"gen" Gen''pop     [#_"gen" gen]                          (conj gen [:pop]))
     (defn #_"gen" Gen''push    [#_"gen" gen, #_"value" value]         (conj gen [:push value]))
