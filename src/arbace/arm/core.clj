@@ -16,8 +16,6 @@
     (defn seqable? [x] (satisfies? Seqable x))
 
     (defn #_"seq" seq [x] (when (some? x) (Seqable'''seq x)))
-
-    (defn empty? [x] (not (seq x)))
 )
 
 (about #_"arbace.arm.ISeq"
@@ -64,12 +62,6 @@
 (about #_"arbace.arm.Appendable"
     (defp Appendable
         (#_"Appendable" Appendable'''append [#_"Appendable" this, #_"char|String" x])
-    )
-)
-
-(about #_"arbace.arm.IAppend"
-    (defp IAppend
-        (#_"Appendable" IAppend'''append [#_"IAppend" this, #_"Appendable" a])
     )
 )
 
@@ -180,20 +172,9 @@
     (defn rseq [#_"Reversible" s] (Reversible'''rseq s))
 )
 
-(about #_"arbace.arm.Indexed"
-    (defp Indexed
-        (#_"any" Indexed'''nth
-            [#_"Indexed" this, #_"int" i]
-            [#_"Indexed" this, #_"int" i, #_"value" not-found]
-        )
-    )
-
-    (defn indexed? [x] (satisfies? Indexed x))
-)
-
 (about #_"arbace.arm.ILookup"
     (defp ILookup
-        (#_"any" ILookup'''valAt
+        (#_"any" ILookup'''get
             [#_"ILookup" this, #_"key" key]
             [#_"ILookup" this, #_"key" key, #_"value" not-found]
         )
@@ -203,7 +184,6 @@
 (about #_"arbace.arm.IPersistentCollection"
     (defp IPersistentCollection
         (#_"IPersistentCollection" IPersistentCollection'''conj [#_"IPersistentCollection" this, #_"any" o])
-        (#_"IPersistentCollection" IPersistentCollection'''empty [#_"IPersistentCollection" this])
     )
 
     (defn coll? [x] (satisfies? IPersistentCollection x))
@@ -220,36 +200,12 @@
             )
         )
     )
-
-    (defn empty [coll]
-        (when (coll? coll)
-            (IPersistentCollection'''empty #_"IPersistentCollection" coll)
-        )
-    )
-
-    (defn not-empty [coll] (when (seq coll) coll))
-)
-
-(about #_"arbace.arm.IMapEntry"
-    (defp IMapEntry
-        (#_"any" IMapEntry'''key [#_"IMapEntry" this])
-        (#_"any" IMapEntry'''val [#_"IMapEntry" this])
-    )
-
-    (defn map-entry? [x] (satisfies? IMapEntry x))
-
-    (defn key [#_"IMapEntry" e] (IMapEntry'''key e))
-    (defn val [#_"IMapEntry" e] (IMapEntry'''val e))
-
-    (defn keys [m] (not-empty (map key m)))
-    (defn vals [m] (not-empty (map val m)))
 )
 
 (about #_"arbace.arm.Associative"
     (defp Associative
         (#_"Associative" Associative'''assoc [#_"Associative" this, #_"key" key, #_"value" val])
-        (#_"boolean" Associative'''containsKey [#_"Associative" this, #_"key" key])
-        (#_"IMapEntry" Associative'''entryAt [#_"Associative" this, #_"key" key])
+        (#_"boolean" Associative'''contains? [#_"Associative" this, #_"key" key])
     )
 
     (defn associative? [x] (satisfies? Associative x))
@@ -258,7 +214,7 @@
         ([#_"Associative" a k v]
             (if (some? a)
                 (Associative'''assoc a, k, v)
-                (PersistentArrayMap'new (anew [ k, v ]))
+                (PersistentMap'new (anew [ k, v ]))
             )
         )
         ([a k v & kvs]
@@ -349,13 +305,9 @@
     (defp Cons)
 )
 
-(about #_"arbace.arm.MapEntry"
-    (defp MapEntry)
-)
-
-(about #_"arbace.arm.PersistentArrayMap"
+(about #_"arbace.arm.PersistentMap"
     (defp MSeq)
-    (defp PersistentArrayMap)
+    (defp PersistentMap)
 )
 
 (about #_"arbace.arm.PersistentList"
@@ -419,10 +371,6 @@
         )
     )
 
-    (defp SeqForm)
-    (defp VecForm)
-    (defp MapForm)
-
     (defn #_"Appendable" append* [#_"Appendable" a, #_"String" b, #_"fn" f'append, #_"String" c, #_"String" d, #_"Seqable" q]
         (let* [a (Appendable'''append a, b) #_"seq" s (seq q)
               a (when (some? s) => a
@@ -438,9 +386,13 @@
         )
     )
 
+    (defn #_"Appendable" append-sym [#_"Appendable" a, #_"symbol" x]        (Appendable'''append a, (:name x)))
+    (defn #_"Appendable" append-key [#_"Appendable" a, #_"keyword" x] (-> a (Appendable'''append ":") (Appendable'''append (:name x))))
+    (defn #_"Appendable" append-var [#_"Appendable" a, #_"var" x]     (-> a (Appendable'''append "#'") (append (:sym x))))
+
     (defn #_"Appendable" append-seq [#_"Appendable" a, #_"seq" x]    (append* a "(" append " " ")" x))
     (defn #_"Appendable" append-vec [#_"Appendable" a, #_"vector" x] (append* a "[" append " " "]" x))
-    (defn #_"Appendable" append-map [#_"Appendable" a, #_"map" x]    (append* a "{" (fn* [a e] (-> a (append (key e)) (Appendable'''append " ") (append (val e)))) ", " "}" x))
+    (defn #_"Appendable" append-map [#_"Appendable" a, #_"map" x]    (append* a "{" (fn* [a e] (-> a (append (key e)) (Appendable'''append " ") (append (val e)))) ", " "}" x))
 
     (defn #_"Appendable" append [#_"Appendable" a, #_"any" x]
         (condp = x
@@ -448,22 +400,16 @@
             false (Appendable'''append a, "false")
             true  (Appendable'''append a, "true")
             (cond
-                (number? x) (Appendable'''append a, (Number''toString x))
-                (string? x) (append-str a x)
-                :else
-                (condp satisfies? x
-                    IAppend (IAppend'''append x, a)
-                    SeqForm (append-seq a x)
-                    VecForm (append-vec a x)
-                    MapForm (append-map a x)
-                    (cond
-                        (seq? x)     (append-seq a x)
-                        (vector? x)  (append-vec a x)
-                        (map? x)     (append-map a x)
-                        (char? x)    (append-chr a x)
-                        :else        (Appendable'''append a, (Object''toString x))
-                    )
-                )
+                (number? x)  (Appendable'''append a, (Number''toString x))
+                (string? x)  (append-str a x)
+                (symbol? x)  (append-sym a x)
+                (keyword? x) (append-key a x)
+                (var? x)     (append-var a x)
+                (seq? x)     (append-seq a x)
+                (vector? x)  (append-vec a x)
+                (map? x)     (append-map a x)
+                (char? x)    (append-chr a x)
+                :else        (Appendable'''append a, (Object''toString x))
             )
         )
     )
@@ -777,31 +723,23 @@
 (about #_"Symbol"
     (defq Symbol [#_"String" name])
 
-    (defn #_"Symbol" Symbol'new [#_"String" name]
+    (defn #_"symbol" Symbol'new [#_"String" name]
         (new* Symbol'class (anew [name]))
     )
 
-    (defn #_"boolean" Symbol''equals [#_"Symbol" this, #_"any" that]
+    (defn #_"boolean" Symbol''equals [#_"symbol" this, #_"any" that]
         (or (identical? this that)
             (and (symbol? that) (= (:name this) (:name that)))
         )
     )
 
-    (defn #_"Appendable" Symbol''append [#_"Symbol" this, #_"Appendable" a]
-        (Appendable'''append a, (:name this))
-    )
-
     (defn #_"any" Symbol''invoke
-        ([#_"Symbol" this, #_"any" obj] (get obj this))
-        ([#_"Symbol" this, #_"any" obj, #_"value" not-found] (get obj this not-found))
+        ([#_"symbol" this, #_"any" obj] (get obj this))
+        ([#_"symbol" this, #_"any" obj, #_"value" not-found] (get obj this not-found))
     )
 
     (defm Symbol IObject
         (IObject'''equals => Symbol''equals)
-    )
-
-    (defm Symbol IAppend
-        (IAppend'''append => Symbol''append)
     )
 
     (defm Symbol IFn
@@ -816,33 +754,25 @@
 (about #_"arbace.arm.Keyword"
 
 (about #_"Keyword"
-    (defq Keyword [#_"Symbol" sym])
+    (defq Keyword [#_"String" name])
 
-    (defn #_"Keyword" Keyword'new [#_"Symbol" sym]
-        (new* Keyword'class (anew [sym]))
+    (defn #_"keyword" Keyword'new [#_"String" name]
+        (new* Keyword'class (anew [name]))
     )
 
-    (defn #_"boolean" Keyword''equals [#_"Keyword" this, #_"any" that]
+    (defn #_"boolean" Keyword''equals [#_"keyword" this, #_"any" that]
         (or (identical? this that)
-            (Symbol''equals (:sym this), (:sym that))
+            (and (keyword? that) (= (:name this) (:name that)))
         )
     )
 
-    (defn #_"Appendable" Keyword''append [#_"Keyword" this, #_"Appendable" a]
-        (-> a (Appendable'''append ":") (append (:sym this)))
-    )
-
     (defn #_"any" Keyword''invoke
-        ([#_"Keyword" this, #_"any" obj] (get obj this))
-        ([#_"Keyword" this, #_"any" obj, #_"value" not-found] (get obj this not-found))
+        ([#_"keyword" this, #_"any" obj] (get obj this))
+        ([#_"keyword" this, #_"any" obj, #_"value" not-found] (get obj this not-found))
     )
 
     (defm Keyword IObject
         (IObject'''equals => Keyword''equals)
-    )
-
-    (defm Keyword IAppend
-        (IAppend'''append => Keyword''append)
     )
 
     (defm Keyword IFn
@@ -851,13 +781,7 @@
     )
 )
 
-(defn keyword [name]
-    (cond
-        (keyword? name) name
-        (symbol? name) (Keyword'new #_"Symbol" name)
-        (string? name) (Keyword'new (symbol #_"String" name))
-    )
-)
+(defn keyword [name] (if (keyword? name) name (Keyword'new name)))
 )
 
 (about #_"arbace.arm.Closure"
@@ -897,7 +821,7 @@
                 )
             #_"array" vars
                 (let* [
-                    #_"int" m (inc (reduce max (inc -1) (map :idx (vals (deref (:'locals fm))))))
+                    #_"int" m (inc (reduce max (inc -1) (map :idx (vals (deref (:'locals fm))))))
                     #_"int" n (:arity fm) n (if (neg? n) (- n) (inc n))
                 ]
                     (loop* [vars (-> (anew m) (aset! 0 this)) #_"int" i 1 #_"seq" s (seq args)]
@@ -907,7 +831,7 @@
                     )
                 )
         ]
-            (Machine'compute (compile-and-memoize fm), vars)
+            (Machine'compute (FnMethod''compile fm), vars)
         )
     )
 
@@ -938,7 +862,7 @@
 (about #_"arbace.arm.Cons"
 
 (about #_"Cons"
-    (defq Cons [#_"any" car, #_"seq" cdr] SeqForm)
+    (defq Cons [#_"any" car, #_"seq" cdr])
 
     (defn #_"Cons" Cons'new [#_"any" car, #_"seq" cdr]
         (new* Cons'class (anew [car, cdr]))
@@ -982,7 +906,7 @@
 (about #_"arbace.arm.LazySeq"
 
 (about #_"LazySeq"
-    (defq LazySeq [#_"fn'" f, #_"any'" o, #_"seq'" s] SeqForm)
+    (defq LazySeq [#_"fn'" f, #_"any'" o, #_"seq'" s])
 
     (defn #_"LazySeq" LazySeq'new [#_"fn" f]
         (new* LazySeq'class (anew [(atom f), (atom nil), (atom nil)]))
@@ -990,10 +914,6 @@
 
     (defn #_"cons" LazySeq''conj [#_"LazySeq" this, #_"any" o]
         (cons o this)
-    )
-
-    (defn #_"IPersistentCollection" LazySeq''empty [#_"LazySeq" this]
-        (list)
     )
 
     (defn #_"seq" LazySeq''seq [#_"LazySeq" this]
@@ -1052,7 +972,6 @@
 
     (defm LazySeq IPersistentCollection
         (IPersistentCollection'''conj => LazySeq''conj)
-        (IPersistentCollection'''empty => LazySeq''empty)
     )
 
     (defm LazySeq Sequential)
@@ -1125,7 +1044,7 @@
 (about #_"arbace.arm.APersistentVector"
 
 (about #_"VSeq"
-    (defq VSeq [#_"vector" v, #_"int" i] SeqForm)
+    (defq VSeq [#_"vector" v, #_"int" i])
 
     (defn #_"VSeq" VSeq'new [#_"vector" v, #_"int" i]
         (new* VSeq'class (anew [v, i]))
@@ -1170,7 +1089,7 @@
 )
 
 (about #_"RSeq"
-    (defq RSeq [#_"vector" v, #_"int" i] SeqForm)
+    (defq RSeq [#_"vector" v, #_"int" i])
 
     (defn #_"RSeq" RSeq'new [#_"vector" v, #_"int" i]
         (new* RSeq'class (anew [v, i]))
@@ -1215,88 +1134,10 @@
 )
 )
 
-(about #_"arbace.arm.MapEntry"
-
-(about #_"MapEntry"
-    (defq MapEntry [#_"key" k, #_"value" v] VecForm)
-
-    (defn #_"MapEntry" MapEntry'new [#_"key" k, #_"value" v]
-        (new* MapEntry'class (anew [k, v]))
-    )
-
-    (defn #_"any" MapEntry''nth
-        ([#_"MapEntry" this, #_"int" i]
-            (condp = i 0 (IMapEntry'''key this) 1 (IMapEntry'''val this) (throw! "index is out of bounds"))
-        )
-        ([#_"MapEntry" this, #_"int" i, #_"value" not-found]
-            (condp = i 0 (IMapEntry'''key this) 1 (IMapEntry'''val this) not-found)
-        )
-    )
-
-    (defn #_"int" MapEntry''count [#_"MapEntry" this]
-        2
-    )
-
-    (defn #_"seq" MapEntry''seq [#_"MapEntry" this]
-        (VSeq'new this, 0)
-    )
-
-    (defn #_"seq" MapEntry''rseq [#_"MapEntry" this]
-        (RSeq'new this, 1)
-    )
-
-    (defn #_"boolean" MapEntry''equals [#_"MapEntry" this, #_"any" that]
-        (or (identical? this that)
-            (cond
-                (vector? that)
-                    (and (= (count that) 2) (= (nth that 0) (IMapEntry'''key this)) (= (nth that 1) (IMapEntry'''val this)))
-                (sequential? that)
-                    (loop* [#_"int" i 0 #_"seq" s (seq that)]
-                        (when (< i 2) => (nil? s)
-                            (when (and (some? s) (= (Indexed'''nth this, i) (first s))) => false
-                                (recur (inc i) (next s))
-                            )
-                        )
-                    )
-                :else
-                    false
-            )
-        )
-    )
-
-    (defm MapEntry IMapEntry
-        (IMapEntry'''key => :k)
-        (IMapEntry'''val => :v)
-    )
-
-    (defm MapEntry Sequential)
-
-    (defm MapEntry Indexed
-        (Indexed'''nth => MapEntry''nth)
-    )
-
-    (defm MapEntry Counted
-        (Counted'''count => MapEntry''count)
-    )
-
-    (defm MapEntry Seqable
-        (Seqable'''seq => MapEntry''seq)
-    )
-
-    (defm MapEntry Reversible
-        (Reversible'''rseq => MapEntry''rseq)
-    )
-
-    (defm MapEntry IObject
-        (IObject'''equals => MapEntry''equals)
-    )
-)
-)
-
 (about #_"arbace.arm.PersistentList"
 
 (about #_"EmptyList"
-    (defq EmptyList [] SeqForm)
+    (defq EmptyList [])
 
     (defn #_"EmptyList" EmptyList'new []
         (new* EmptyList'class (anew []))
@@ -1326,10 +1167,6 @@
         (PersistentList'new o, nil, 1)
     )
 
-    (defn #_"EmptyList" EmptyList''empty [#_"EmptyList" this]
-        this
-    )
-
     (defm EmptyList IPersistentList Sequential)
 
     (defm EmptyList IObject
@@ -1351,12 +1188,11 @@
 
     (defm EmptyList IPersistentCollection
         (IPersistentCollection'''conj => EmptyList''conj)
-        (IPersistentCollection'''empty => EmptyList''empty)
     )
 )
 
 (about #_"PersistentList"
-    (defq PersistentList [#_"any" car, #_"IPersistentList" cdr, #_"int" cnt] SeqForm)
+    (defq PersistentList [#_"any" car, #_"IPersistentList" cdr, #_"int" cnt])
 
     (defn #_"PersistentList" PersistentList'new
         ([#_"any" car] (PersistentList'new car, nil, 1))
@@ -1379,10 +1215,6 @@
         (PersistentList'new o, this, (inc (:cnt this)))
     )
 
-    (defn #_"PersistentList" PersistentList''empty [#_"PersistentList" this]
-        PersistentList'EMPTY
-    )
-
     (defm PersistentList IPersistentList Sequential)
 
     (defm PersistentList Seqable
@@ -1400,7 +1232,6 @@
 
     (defm PersistentList IPersistentCollection
         (IPersistentCollection'''conj => PersistentList''conj)
-        (IPersistentCollection'''empty => PersistentList''empty)
     )
 
     (defm PersistentList IObject
@@ -1416,10 +1247,10 @@
 (defn reverse [s] (into (list) s))
 )
 
-(about #_"arbace.arm.PersistentArrayMap"
+(about #_"arbace.arm.PersistentMap"
 
 (about #_"MSeq"
-    (defq MSeq [#_"array" a, #_"int" i] SeqForm)
+    (defq MSeq [#_"array" a, #_"int" i])
 
     (defn #_"MSeq" MSeq'new [#_"array" a, #_"int" i]
         (new* MSeq'class (anew [a, i]))
@@ -1430,7 +1261,7 @@
     )
 
     (defn #_"pair" MSeq''first [#_"MSeq" this]
-        (MapEntry'new (aget (:a this) (:i this)), (aget (:a this) (inc (:i this))))
+        (Pair'new (aget (:a this) (:i this)), (aget (:a this) (inc (:i this))))
     )
 
     (defn #_"seq" MSeq''next [#_"MSeq" this]
@@ -1463,20 +1294,20 @@
     )
 )
 
-(about #_"PersistentArrayMap"
-    (defq PersistentArrayMap [#_"array" array] MapForm)
+(about #_"PersistentMap"
+    (defq PersistentMap [#_"array" array])
 
-    (defn #_"PersistentArrayMap" PersistentArrayMap'new [#_"array" a]
-        (new* PersistentArrayMap'class (anew [(or a (anew 0))]))
+    (defn #_"PersistentMap" PersistentMap'new [#_"array" a]
+        (new* PersistentMap'class (anew [(or a (anew 0))]))
     )
 
-    (def #_"PersistentArrayMap" PersistentArrayMap'EMPTY (PersistentArrayMap'new nil))
+    (def #_"PersistentMap" PersistentMap'EMPTY (PersistentMap'new nil))
 
-    (defn #_"PersistentArrayMap" PersistentArrayMap''create [#_"PersistentArrayMap" this, #_"array" init]
-        (PersistentArrayMap'new init)
+    (defn #_"PersistentMap" PersistentMap''create [#_"PersistentMap" this, #_"array" init]
+        (PersistentMap'new init)
     )
 
-    (defn #_"PersistentArrayMap" PersistentArrayMap'createAsIfByAssoc [#_"array" init]
+    (defn #_"PersistentMap" PersistentMap'createAsIfByAssoc [#_"array" init]
         (when (odd? (alength init))
             (throw! (str "no value supplied for key: " (aget init (dec (alength init)))))
         )
@@ -1536,15 +1367,15 @@
                         )
                     )
                 )]
-            (PersistentArrayMap'new init)
+            (PersistentMap'new init)
         )
     )
 
-    (defn #_"int" PersistentArrayMap''count [#_"PersistentArrayMap" this]
+    (defn #_"int" PersistentMap''count [#_"PersistentMap" this]
         (quot (alength (:array this)) 2)
     )
 
-    (defn #_"int" PersistentArrayMap'index-of [#_"array" a, #_"key" key]
+    (defn #_"int" PersistentMap'index-of [#_"array" a, #_"key" key]
         (loop* [#_"int" i 0]
             (when (< i (alength a)) => -1
                 (if (= (aget a i) key) i (recur (+ i 2)))
@@ -1552,62 +1383,52 @@
         )
     )
 
-    (defn #_"value" PersistentArrayMap''valAt
-        ([#_"PersistentArrayMap" this, #_"key" key] (PersistentArrayMap''valAt this, key, nil))
-        ([#_"PersistentArrayMap" this, #_"key" key, #_"value" not-found]
+    (defn #_"value" PersistentMap''get
+        ([#_"PersistentMap" this, #_"key" key] (PersistentMap''get this, key, nil))
+        ([#_"PersistentMap" this, #_"key" key, #_"value" not-found]
             (let* [
-                #_"array" a (:array this) #_"int" i (PersistentArrayMap'index-of a, key)
+                #_"array" a (:array this) #_"int" i (PersistentMap'index-of a, key)
             ]
                 (if (< -1 i) (aget a (inc i)) not-found)
             )
         )
     )
 
-    (defn #_"IPersistentMap" PersistentArrayMap''assoc [#_"PersistentArrayMap" this, #_"key" key, #_"value" val]
+    (defn #_"IPersistentMap" PersistentMap''assoc [#_"PersistentMap" this, #_"key" key, #_"value" val]
         (let* [
-            #_"array" a (:array this) #_"int" i (PersistentArrayMap'index-of a, key)
+            #_"array" a (:array this) #_"int" i (PersistentMap'index-of a, key)
         ]
             (if (< -1 i)
                 (if (= (aget a (inc i)) val)
                     this
-                    (PersistentArrayMap''create this, (-> (aclone a) (aset! (inc i) val)))
+                    (PersistentMap''create this, (-> (aclone a) (aset! (inc i) val)))
                 )
                 (let* [
                     #_"int" n (alength a)
                     #_"array" a' (anew (+ n 2))
                     a' (if (pos? n) (acopy! a' 0 a 0 n) a')
                 ]
-                    (PersistentArrayMap''create this, (-> a' (aset! n key) (aset! (inc n) val)))
+                    (PersistentMap''create this, (-> a' (aset! n key) (aset! (inc n) val)))
                 )
             )
         )
     )
 
-    (defn #_"boolean" PersistentArrayMap''containsKey [#_"PersistentArrayMap" this, #_"key" key]
-        (< -1 (PersistentArrayMap'index-of (:array this), key))
+    (defn #_"boolean" PersistentMap''contains? [#_"PersistentMap" this, #_"key" key]
+        (< -1 (PersistentMap'index-of (:array this), key))
     )
 
-    (defn #_"pair" PersistentArrayMap''entryAt [#_"PersistentArrayMap" this, #_"key" key]
+    (defn #_"IPersistentMap" PersistentMap''dissoc [#_"PersistentMap" this, #_"key" key]
         (let* [
-            #_"array" a (:array this) #_"int" i (PersistentArrayMap'index-of a, key)
-        ]
-            (when (< -1 i)
-                (MapEntry'new (aget a i), (aget a (inc i)))
-            )
-        )
-    )
-
-    (defn #_"IPersistentMap" PersistentArrayMap''dissoc [#_"PersistentArrayMap" this, #_"key" key]
-        (let* [
-            #_"array" a (:array this) #_"int" i (PersistentArrayMap'index-of a, key)
+            #_"array" a (:array this) #_"int" i (PersistentMap'index-of a, key)
         ]
             (when (< -1 i) => this
                 (let* [#_"int" n (- (alength a) 2)]
-                    (when (pos? n) => PersistentArrayMap'EMPTY
+                    (when (pos? n) => PersistentMap'EMPTY
                         (let* [
                             #_"array" a' (-> (anew n) (acopy! 0 a 0 i) (acopy! i a (+ i 2) (- n i)))
                         ]
-                            (PersistentArrayMap''create this, a')
+                            (PersistentMap''create this, a')
                         )
                     )
                 )
@@ -1615,42 +1436,36 @@
         )
     )
 
-    (defn #_"IPersistentCollection" PersistentArrayMap''conj [#_"PersistentArrayMap" this, #_"any" o]
-        (condp satisfies? o
-            IMapEntry
-                (assoc this (key o) (val o))
-            IPersistentVector
+    (defn #_"IPersistentCollection" PersistentMap''conj [#_"PersistentMap" this, #_"any" o]
+        (cond
+            (vector? o)
                 (when (= (count o) 2) => (throw! "vector arg to map conj must be a pair")
                     (assoc this (nth o 0) (nth o 1))
                 )
-            #_else
+            :else
                 (loop* [this this #_"seq" s (seq o)]
                     (when (some? s) => this
                         (let* [#_"pair" e (first s)]
-                            (recur (assoc this (key e) (val e)) (next s))
+                            (recur (assoc this (key e) (val e)) (next s))
                         )
                     )
                 )
         )
     )
 
-    (defn #_"IPersistentMap" PersistentArrayMap''empty [#_"PersistentArrayMap" this]
-        PersistentArrayMap'EMPTY
-    )
-
-    (defn #_"seq" PersistentArrayMap''seq [#_"PersistentArrayMap" this]
+    (defn #_"seq" PersistentMap''seq [#_"PersistentMap" this]
         (when (pos? (alength (:array this)))
             (MSeq'new (:array this), 0)
         )
     )
 
-    (defn #_"boolean" PersistentArrayMap''equals [#_"PersistentArrayMap" this, #_"any" that]
+    (defn #_"boolean" PersistentMap''equals [#_"PersistentMap" this, #_"any" that]
         (or (identical? this that)
             (and (map? that) (= (count that) (count this))
                 (loop* [#_"seq" s (seq this)]
                     (when (some? s) => true
-                        (let* [#_"pair" e (first s) #_"any" k (key e)]
-                            (and (contains? that k) (= (val e) (get that k))
+                        (let* [#_"pair" e (first s) #_"any" k (key e)]
+                            (and (contains? that k) (= (val e) (get that k))
                                 (recur (next s))
                             )
                         )
@@ -1660,57 +1475,39 @@
         )
     )
 
-    (defm PersistentArrayMap Counted
-        (Counted'''count => PersistentArrayMap''count)
+    (defm PersistentMap Counted
+        (Counted'''count => PersistentMap''count)
     )
 
-    (defm PersistentArrayMap ILookup
-        (ILookup'''valAt => PersistentArrayMap''valAt)
+    (defm PersistentMap ILookup
+        (ILookup'''get => PersistentMap''get)
     )
 
-    (defm PersistentArrayMap Associative
-        (Associative'''assoc => PersistentArrayMap''assoc)
-        (Associative'''containsKey => PersistentArrayMap''containsKey)
-        (Associative'''entryAt => PersistentArrayMap''entryAt)
+    (defm PersistentMap Associative
+        (Associative'''assoc => PersistentMap''assoc)
+        (Associative'''contains? => PersistentMap''contains?)
     )
 
-    (defm PersistentArrayMap IPersistentMap
-        (IPersistentMap'''dissoc => PersistentArrayMap''dissoc)
+    (defm PersistentMap IPersistentMap
+        (IPersistentMap'''dissoc => PersistentMap''dissoc)
     )
 
-    (defm PersistentArrayMap IPersistentCollection
-        (IPersistentCollection'''conj => PersistentArrayMap''conj)
-        (IPersistentCollection'''empty => PersistentArrayMap''empty)
+    (defm PersistentMap IPersistentCollection
+        (IPersistentCollection'''conj => PersistentMap''conj)
     )
 
-    (defm PersistentArrayMap Seqable
-        (Seqable'''seq => PersistentArrayMap''seq)
+    (defm PersistentMap Seqable
+        (Seqable'''seq => PersistentMap''seq)
     )
 
-    (defm PersistentArrayMap IObject
-        (IObject'''equals => PersistentArrayMap''equals)
+    (defm PersistentMap IObject
+        (IObject'''equals => PersistentMap''equals)
     )
 )
 
 (defn array-map
-    ([] PersistentArrayMap'EMPTY)
-    ([& keyvals] (PersistentArrayMap'createAsIfByAssoc (anew keyvals)))
-)
-
-(defn memoize [f]
-    (let* [mem (atom (array-map))]
-        (fn* [& args]
-            (let* [e (find (deref mem) args)]
-                (if (some? e)
-                    (val e)
-                    (let* [r (apply f args)]
-                        (swap! mem assoc args r)
-                        r
-                    )
-                )
-            )
-        )
-    )
+    ([] PersistentMap'EMPTY)
+    ([& keyvals] (PersistentMap'createAsIfByAssoc (anew keyvals)))
 )
 )
 
@@ -1940,7 +1737,7 @@
 )
 
 (about #_"PersistentVector"
-    (defq PersistentVector [#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail] VecForm)
+    (defq PersistentVector [#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail])
 
     (defn #_"PersistentVector" PersistentVector'new [#_"int" cnt, #_"int" shift, #_"node" root, #_"values" tail]
         (new* PersistentVector'class (anew [cnt, shift, root, tail]))
@@ -1972,7 +1769,7 @@
                     (when (= (:cnt this) (:cnt that)) => false
                         (loop* [#_"int" i 0]
                             (when (< i (:cnt this)) => true
-                                (when (= (Indexed'''nth this, i) (Indexed'''nth that, i)) => false
+                                (when (= (nth this i) (nth that i)) => false
                                     (recur (inc i))
                                 )
                             )
@@ -1981,7 +1778,7 @@
                 (sequential? that)
                     (loop* [#_"int" i 0 #_"seq" s (seq that)]
                         (when (< i (:cnt this)) => (nil? s)
-                            (when (and (some? s) (= (Indexed'''nth this, i) (first s))) => false
+                            (when (and (some? s) (= (nth this i) (first s))) => false
                                 (recur (inc i) (next s))
                             )
                         )
@@ -2052,10 +1849,6 @@
         )
     )
 
-    (defn #_"PersistentVector" PersistentVector''empty [#_"PersistentVector" this]
-        PersistentVector'EMPTY
-    )
-
     (defn #_"PersistentVector" PersistentVector''assocN [#_"PersistentVector" this, #_"int" i, #_"value" val]
         (if (< -1 i (:cnt this))
             (let* [
@@ -2083,22 +1876,12 @@
         )
     )
 
-    (defn #_"boolean" PersistentVector''containsKey [#_"PersistentVector" this, #_"key" key]
+    (defn #_"boolean" PersistentVector''contains? [#_"PersistentVector" this, #_"key" key]
         (and (integer? key) (< -1 (int key) (:cnt this)))
     )
 
-    (defn #_"pair" PersistentVector''entryAt [#_"PersistentVector" this, #_"key" key]
-        (when (integer? key)
-            (let* [#_"int" i (int key)]
-                (when (< -1 i (:cnt this))
-                    (MapEntry'new key, (Indexed'''nth this, i))
-                )
-            )
-        )
-    )
-
-    (defn #_"value" PersistentVector''valAt
-        ([#_"PersistentVector" this, #_"key" key] (PersistentVector''valAt this, key, nil))
+    (defn #_"value" PersistentVector''get
+        ([#_"PersistentVector" this, #_"key" key] (PersistentVector''get this, key, nil))
         ([#_"PersistentVector" this, #_"key" key, #_"value" not-found]
             (when (integer? key) => not-found
                 (let* [#_"int" i (int key)]
@@ -2130,13 +1913,8 @@
         (Counted'''count => :cnt)
     )
 
-    (defm PersistentVector Indexed
-        (Indexed'''nth => PersistentVector''nth)
-    )
-
     (defm PersistentVector IPersistentCollection
         (IPersistentCollection'''conj => PersistentVector''conj)
-        (IPersistentCollection'''empty => PersistentVector''empty)
     )
 
     (defm PersistentVector IPersistentVector
@@ -2145,12 +1923,11 @@
 
     (defm PersistentVector Associative
         (Associative'''assoc => PersistentVector''assoc)
-        (Associative'''containsKey => PersistentVector''containsKey)
-        (Associative'''entryAt => PersistentVector''entryAt)
+        (Associative'''contains? => PersistentVector''contains?)
     )
 
     (defm PersistentVector ILookup
-        (ILookup'''valAt => PersistentVector''valAt)
+        (ILookup'''get => PersistentVector''get)
     )
 
     (defm PersistentVector Sequential)
@@ -2185,8 +1962,8 @@
         (when (some? coll)
             (cond
                 (satisfies? ILookup coll)
-                    (ILookup'''valAt coll, key)
-                (and (number? key) (or (string? coll) (array? coll)))
+                    (ILookup'''get coll, key)
+                (and (string? coll) (number? key))
                     (let* [#_"int" n (int key)]
                         (when (< -1 n (count coll))
                             (nth coll n)
@@ -2199,8 +1976,8 @@
         (when (some? coll) => not-found
             (cond
                 (satisfies? ILookup coll)
-                    (ILookup'''valAt coll, key, not-found)
-                (and (number? key) (or (string? coll) (array? coll)))
+                    (ILookup'''get coll, key, not-found)
+                (and (string? coll) (number? key))
                     (let* [#_"int" n (int key)]
                         (when (< -1 n (count coll)) => not-found
                             (nth coll n)
@@ -2217,8 +1994,8 @@
     (when (some? coll) => false
         (cond
             (associative? coll)
-                (Associative'''containsKey coll, key)
-            (and (number? key) (or (string? coll) (array? coll)))
+                (Associative'''contains? coll, key)
+            (and (string? coll) (number? key))
                 (let* [#_"int" n (int key)]
                     (< -1 n (count coll))
                 )
@@ -2228,31 +2005,14 @@
     )
 )
 
-(defn find [coll key]
-    (when (some? coll)
-        (cond
-            (associative? coll)
-                (Associative'''entryAt coll, key)
-            :else
-                (throw! (str "find not supported on " coll))
-        )
-    )
-)
-
 (defn nth
     ([coll n]
         (when (some? coll)
             (cond
-                (indexed? coll)
-                    (Indexed'''nth coll, n)
+                (vector? coll)
+                    (PersistentVector''nth coll, n)
                 (string? coll)
                     (Character'valueOf (String''charAt coll, n))
-                (array? coll)
-                    (Array'get coll, n)
-                (map-entry? coll)
-                    (let* [#_"pair" e coll]
-                        (condp = n 0 (key e) 1 (val e) (throw! "index is out of bounds"))
-                    )
                 (sequential? coll)
                     (loop* [#_"int" i 0 #_"seq" s (seq coll)]
                         (when (and (<= i n) (some? s)) => (throw! "index is out of bounds")
@@ -2269,8 +2029,8 @@
     ([coll n not-found]
         (when (some? coll) => not-found
             (cond
-                (indexed? coll)
-                    (Indexed'''nth coll, n, not-found)
+                (vector? coll)
+                    (PersistentVector''nth coll, n, not-found)
                 (neg? n)
                     not-found
                 (string? coll)
@@ -2278,14 +2038,6 @@
                         (when (< n (String''length s)) => not-found
                             (Character'valueOf (String''charAt s, n))
                         )
-                    )
-                (array? coll)
-                    (when (< n (Array'getLength coll)) => not-found
-                        (Array'get coll, n)
-                    )
-                (map-entry? coll)
-                    (let* [#_"pair" e coll]
-                        (condp = n 0 (key e) 1 (val e) not-found)
                     )
                 (sequential? coll)
                     (loop* [#_"int" i 0 #_"seq" s (seq coll)]
@@ -2303,59 +2055,51 @@
 )
 
     (defn #_"IPersistentMap" RT'mapUniqueKeys [#_"Seqable" init]
-        (if (empty? init) PersistentArrayMap'EMPTY (PersistentArrayMap'new (anew init)))
+        (if (seq init) (PersistentMap'new (anew init)) PersistentMap'EMPTY)
     )
 )
 
 (about #_"arbace.arm.Var"
 
 (about #_"Var"
-    (defq Var [#_"Symbol" sym, #_"any'" root])
+    (defq Var [#_"symbol" sym, #_"any'" root])
 
-    (defn #_"Var" Var'new
-        ([#_"Symbol" sym] (Var'new sym, nil))
-        ([#_"Symbol" sym, #_"any" root]
+    (defn #_"var" Var'new
+        ([#_"symbol" sym] (Var'new sym, nil))
+        ([#_"symbol" sym, #_"any" root]
             (new* Var'class (anew [sym, (atom root)]))
         )
     )
 
-    (defn #_"Appendable" Var''append [#_"Var" this, #_"Appendable" a]
-        (-> a (Appendable'''append "#'") (append (:sym this)))
-    )
-
-    (defn #_"any" Var''get [#_"Var" this]
+    (defn #_"any" Var''get [#_"var" this]
         (deref (:root this))
     )
 
-    (defn #_"void" Var''bindRoot [#_"Var" this, #_"any" root]
+    (defn #_"void" Var''bindRoot [#_"var" this, #_"any" root]
         (reset! (:root this) root)
         nil
     )
 
     (defn #_"any" Var''invoke
-        ([#_"Var" this]                                                   (IFn'''invoke (deref this)))
-        ([#_"Var" this, a1]                                               (IFn'''invoke (deref this), a1))
-        ([#_"Var" this, a1, a2]                                           (IFn'''invoke (deref this), a1, a2))
-        ([#_"Var" this, a1, a2, a3]                                       (IFn'''invoke (deref this), a1, a2, a3))
-        ([#_"Var" this, a1, a2, a3, a4]                                   (IFn'''invoke (deref this), a1, a2, a3, a4))
-        ([#_"Var" this, a1, a2, a3, a4, a5]                               (IFn'''invoke (deref this), a1, a2, a3, a4, a5))
-        ([#_"Var" this, a1, a2, a3, a4, a5, a6]                           (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6))
-        ([#_"Var" this, a1, a2, a3, a4, a5, a6, a7]                       (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6, a7))
-        ([#_"Var" this, a1, a2, a3, a4, a5, a6, a7, a8]                   (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6, a7, a8))
-        ([#_"Var" this, a1, a2, a3, a4, a5, a6, a7, a8, a9]               (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6, a7, a8, a9))
-        ([#_"Var" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6, a7, a8, a9, args))
+        ([#_"var" this]                                                   (IFn'''invoke (deref this)))
+        ([#_"var" this, a1]                                               (IFn'''invoke (deref this), a1))
+        ([#_"var" this, a1, a2]                                           (IFn'''invoke (deref this), a1, a2))
+        ([#_"var" this, a1, a2, a3]                                       (IFn'''invoke (deref this), a1, a2, a3))
+        ([#_"var" this, a1, a2, a3, a4]                                   (IFn'''invoke (deref this), a1, a2, a3, a4))
+        ([#_"var" this, a1, a2, a3, a4, a5]                               (IFn'''invoke (deref this), a1, a2, a3, a4, a5))
+        ([#_"var" this, a1, a2, a3, a4, a5, a6]                           (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6))
+        ([#_"var" this, a1, a2, a3, a4, a5, a6, a7]                       (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6, a7))
+        ([#_"var" this, a1, a2, a3, a4, a5, a6, a7, a8]                   (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6, a7, a8))
+        ([#_"var" this, a1, a2, a3, a4, a5, a6, a7, a8, a9]               (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6, a7, a8, a9))
+        ([#_"var" this, a1, a2, a3, a4, a5, a6, a7, a8, a9, #_"seq" args] (IFn'''invoke (deref this), a1, a2, a3, a4, a5, a6, a7, a8, a9, args))
     )
 
-    (defn #_"any" Var''applyTo [#_"Var" this, #_"seq" args]
+    (defn #_"any" Var''applyTo [#_"var" this, #_"seq" args]
         (IFn'''applyTo (deref this), args)
     )
 
     (defm Var IObject
         (IObject'''equals => identical?)
-    )
-
-    (defm Var IAppend
-        (IAppend'''append => Var''append)
     )
 
     (defm Var IDeref
@@ -2374,13 +2118,13 @@
 (about #_"Namespace"
     (def #_"{Symbol Var}'" Namespace'mappings (atom (array-map)))
 
-    (defn #_"Var" Namespace'getMapping [#_"Symbol" name]
+    (defn #_"var" Namespace'getMapping [#_"symbol" name]
         (get (deref Namespace'mappings) name)
     )
 
-    (defn #_"Var" Namespace'intern [#_"Symbol" sym]
+    (defn #_"var" Namespace'intern [#_"symbol" sym]
         (or (get (deref Namespace'mappings) sym)
-            (let* [#_"Var" v (Var'new sym)]
+            (let* [#_"var" v (Var'new sym)]
                 (swap! Namespace'mappings assoc sym v)
                 v
             )
@@ -2683,15 +2427,15 @@
 (about #_"Compiler"
     (def #_"int" Compiler'MAX_POSITIONAL_ARITY #_9 (+ 9 2))
 
-    (defn #_"Var" Compiler'lookupVar [#_"Symbol" sym]
+    (defn #_"var" Compiler'lookupVar [#_"symbol" sym]
         (or (Namespace'getMapping sym) (Namespace'intern (symbol (:name sym))))
     )
 
-    (defn #_"Var" Compiler'resolve [#_"Symbol" sym]
+    (defn #_"var" Compiler'resolve [#_"symbol" sym]
         (or (Namespace'getMapping sym) (throw! (str "unable to resolve symbol: " sym " in this context")))
     )
 
-    (defn #_"gen" Compiler'emitArgs [#_"map" scope, #_"gen" gen, #_"indexed" args]
+    (defn #_"gen" Compiler'emitArgs [#_"map" scope, #_"gen" gen, #_"vector" args]
         (let* [
             gen (Gen''push gen, (count args))
             gen (Gen''anew gen)
@@ -2716,7 +2460,7 @@
             gen (Gen''push gen, (bit-shift-left (count locals) 1))
             gen (Gen''anew gen)
         ]
-            (loop* [gen gen #_"int" i 0 #_"seq" s (vals locals)]
+            (loop* [gen gen #_"int" i 0 #_"seq" s (vals locals)]
                 (when (some? s) => gen
                     (let* [
                         #_"LocalBinding" lb (first s)
@@ -2786,10 +2530,10 @@
 (about #_"VarExpr"
     (defr VarExpr)
 
-    (defn #_"VarExpr" VarExpr'new [#_"Var" var]
+    (defn #_"VarExpr" VarExpr'new [#_"var" var]
         (new* VarExpr'class
             (array-map
-                #_"Var" :var var
+                #_"var" :var var
             )
         )
     )
@@ -2985,11 +2729,11 @@
 (about #_"LocalBinding"
     (defr LocalBinding)
 
-    (defn #_"LocalBinding" LocalBinding'new [#_"Symbol" sym, #_"Expr" init, #_"int" idx]
+    (defn #_"LocalBinding" LocalBinding'new [#_"symbol" sym, #_"Expr" init, #_"int" idx]
         (new* LocalBinding'class
             (array-map
                 #_"int" :uid (next-id!)
-                #_"Symbol" :sym sym
+                #_"symbol" :sym sym
                 #_"Expr'" :'init (atom init)
                 #_"int" :idx idx
             )
@@ -3043,7 +2787,7 @@
                     (assoc :'local-num (atom 0))
                 )
             _
-                (let* [#_"Symbol" f (:fname fun)]
+                (let* [#_"symbol" f (:fname fun)]
                     (when (some? f)
                         (let* [#_"LocalBinding" lb (LocalBinding'new f, nil, (deref (get scope :'local-num)))]
                             (swap! (get scope :'local-env) assoc (:sym lb) lb)
@@ -3111,8 +2855,6 @@
             (Gen''return gen)
         )
     )
-
-    (def compile-and-memoize (memoize FnMethod''compile))
 )
 
 (about #_"FnExpr"
@@ -3121,7 +2863,7 @@
     (defn #_"FnExpr" FnExpr'new []
         (new* FnExpr'class
             (array-map
-                #_"Symbol" :fname nil
+                #_"symbol" :fname nil
                 #_"{int FnMethod}" :regulars nil
                 #_"FnMethod" :variadic nil
                 #_"{int LocalBinding}'" :'closes (atom (array-map))
@@ -3189,10 +2931,10 @@
 (about #_"DefExpr"
     (defr DefExpr)
 
-    (defn #_"DefExpr" DefExpr'new [#_"Var" var, #_"Expr" init, #_"boolean" initProvided]
+    (defn #_"DefExpr" DefExpr'new [#_"var" var, #_"Expr" init, #_"boolean" initProvided]
         (new* DefExpr'class
             (array-map
-                #_"Var" :var var
+                #_"var" :var var
                 #_"Expr" :init init
                 #_"boolean" :initProvided initProvided
             )
@@ -3429,7 +3171,7 @@
         nil
     )
 
-    (defn #_"Expr" Compiler'analyzeSymbol [#_"Symbol" sym, #_"map" scope]
+    (defn #_"Expr" Compiler'analyzeSymbol [#_"symbol" sym, #_"map" scope]
         (or
             (let* [#_"LocalBinding" lb (get (deref (get scope :'local-env)) sym)]
                 (when (some? lb)
@@ -3437,7 +3179,7 @@
                     (LocalBindingExpr'new lb)
                 )
             )
-            (let* [#_"Var" v (Compiler'resolve sym)]
+            (let* [#_"var" v (Compiler'resolve sym)]
                 (VarExpr'new v)
             )
         )
@@ -3467,7 +3209,7 @@
                     (cond
                         (symbol? form)                   (Compiler'analyzeSymbol form, scope)
                         (string? form)                   (LiteralExpr'new (String''intern form))
-                        (and (coll? form) (empty? form)) (LiteralExpr'new form)
+                        (and (coll? form) (not (seq form))) (LiteralExpr'new form)
                         (seq? form)                      (Compiler'analyzeSeq form, context, scope)
                         (vector? form)                   (VectorExpr'parse form, scope)
                         :else                            (LiteralExpr'new form)
@@ -3505,7 +3247,7 @@
     (defn #_"gen" Gen''aset    [#_"gen" gen]                          (conj gen [:aset]))
     (defn #_"gen" Gen''create  [#_"gen" gen, #_"FnExpr" fun]          (conj gen [:create fun]))
     (defn #_"gen" Gen''dup     [#_"gen" gen]                          (conj gen [:dup]))
-    (defn #_"gen" Gen''get     [#_"gen" gen, #_"Symbol" name]         (conj gen [:get name]))
+    (defn #_"gen" Gen''get     [#_"gen" gen, #_"symbol" name]         (conj gen [:get name]))
     (defn #_"gen" Gen''goto    [#_"gen" gen, #_"label" label]         (conj gen [:goto label]))
     (defn #_"gen" Gen''if-eq?  [#_"gen" gen, #_"label" label]         (conj gen [:if-eq? label]))
     (defn #_"gen" Gen''if-nil? [#_"gen" gen, #_"label" label]         (conj gen [:if-nil? label]))
