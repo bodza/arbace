@@ -100,30 +100,9 @@
         (#_"any" IFn'''applyTo [#_"fn" this, #_"seq" args])
     )
 
-    (defn ifn? [x] (satisfies? IFn x))
-
-    (defn spread [s]
-        (cond
-            (nil? s) nil
-            (nil? (next s)) (seq (first s))
-            :else (cons (first s) (spread (next s)))
-        )
-    )
-
-    (defn list*
-        ([s] (seq s))
-        ([a s] (cons a s))
-        ([a b s] (cons a (cons b s)))
-        ([a b c s] (cons a (cons b (cons c s))))
-        ([a b c d & s] (cons a (cons b (cons c (cons d (spread s))))))
-    )
-
     (defn apply
         ([#_"fn" f s] (IFn'''applyTo f, (seq s)))
-        ([#_"fn" f a s] (IFn'''applyTo f, (list* a s)))
-        ([#_"fn" f a b s] (IFn'''applyTo f, (list* a b s)))
-        ([#_"fn" f a b c s] (IFn'''applyTo f, (list* a b c s)))
-        ([#_"fn" f a b c d & s] (IFn'''applyTo f, (cons a (cons b (cons c (cons d (spread s)))))))
+        ([#_"fn" f x & s] (IFn'''applyTo f, (cons x (cons* s))))
     )
 )
 
@@ -137,7 +116,6 @@
 
 (about #_"arbace.arm.IAtom"
     (defp IAtom
-        (#_"boolean" IAtom'''compareAndSet [#_"IAtom" this, #_"any" o, #_"any" o'])
         (#_"any" IAtom'''swap [#_"IAtom" this, #_"fn" f, #_"seq" args])
         (#_"any" IAtom'''reset [#_"IAtom" this, #_"any" o'])
     )
@@ -243,12 +221,6 @@
             )
         )
     )
-)
-
-(about #_"arbace.arm.IPersistentList"
-    (defp IPersistentList)
-
-    (defn list? [x] (satisfies? IPersistentList x))
 )
 
 (about #_"arbace.arm.IPersistentVector"
@@ -456,10 +428,6 @@
         (AtomicReference''get (:data this))
     )
 
-    (defn #_"boolean" Atom''compareAndSet [#_"Atom" this, #_"any" o, #_"any" o']
-        (AtomicReference''compareAndSet (:data this), o, o')
-    )
-
     (defn #_"any" Atom''swap [#_"Atom" this, #_"fn" f, #_"seq" args]
         (loop* []
             (let* [#_"any" o (AtomicReference''get (:data this)) #_"any" o' (apply f o args)]
@@ -480,15 +448,12 @@
     )
 
     (defm Atom IAtom
-        (IAtom'''compareAndSet => Atom''compareAndSet)
         (IAtom'''swap => Atom''swap)
         (IAtom'''reset => Atom''reset)
     )
 )
 
 (defn atom [x] (Atom'new x))
-
-(defn compare-and-set! [#_"IAtom" a x x'] (IAtom'''compareAndSet a, x, x'))
 
 (defn swap! [#_"IAtom" a f & args] (IAtom'''swap a, f, args))
 
@@ -613,9 +578,12 @@
 (defn pos?  [n] (-/> (int n) 0))
 (defn neg?  [n] (-/< (int n) 0))
 
+(defn even? [n] (zero? (bit-and (int n) 1)))
+(defn odd? [n] (not (even? n)))
+
 (defn +
     ([] 0)
-    ([x] #_"Number" x)
+    ([x] (int x))
     ([x y] (-/unchecked-add-int (int x) (int y)))
     ([x y & s] (reduce + (+ x y) s))
 )
@@ -631,15 +599,9 @@
 
 (defn *
     ([] 1)
-    ([x] #_"Number" x)
+    ([x] (int x))
     ([x y] (-/unchecked-multiply-int (int x) (int y)))
     ([x y & s] (reduce * (* x y) s))
-)
-
-(defn quot [x y]
-    (when (not (zero? y)) => (throw! "divide by zero")
-        (-/unchecked-divide-int (int x) (int y))
-    )
 )
 
 (defn bit-not [x] (-/bit-not (int x)))
@@ -662,14 +624,6 @@
 (defn          bit-shift-left  [x n] (-/bit-shift-left           (int x) (int n)))
 (defn          bit-shift-right [x n] (-/bit-shift-right          (int x) (int n)))
 (defn unsigned-bit-shift-right [x n] (-/unsigned-bit-shift-right (int x) (int n)))
-
-(defn even? [n]
-    (when (integer? n) => (throw! (str "argument must be an integer: " n))
-        (zero? (bit-and n 1))
-    )
-)
-
-(defn odd? [n] (not (even? n)))
 )
 
 (about #_"arbace.arm.Symbol"
@@ -783,10 +737,6 @@
         this
     )
 
-    (defn #_"seq" Cons''next [#_"Cons" this]
-        (seq (:cdr this))
-    )
-
     (defn #_"int" Cons''count [#_"Cons" this]
         (inc (count (:cdr this)))
     )
@@ -799,7 +749,7 @@
 
     (defm Cons ISeq
         (ISeq'''first => :car)
-        (ISeq'''next => Cons''next)
+        (ISeq'''next => :cdr)
     )
 
     (defm Cons Counted
@@ -812,6 +762,16 @@
 )
 
 (defn cons [x s] (Cons'new x, (seq s)))
+
+(defn cons* [s]
+    (when (some? s)
+        (let* [x (first s) s (next s)]
+            (when (some? s) => (seq x)
+                (cons x (cons* s))
+            )
+        )
+    )
+)
 )
 
 (about #_"arbace.arm.LazySeq"
@@ -1054,10 +1014,6 @@
         (new* EmptyList'class (anew []))
     )
 
-    (defn #_"boolean" EmptyList''equals [#_"EmptyList" this, #_"any" that]
-        (and (sequential? that) (nil? (seq that)))
-    )
-
     (defn #_"seq" EmptyList''seq [#_"EmptyList" this]
         nil
     )
@@ -1078,11 +1034,11 @@
         (PersistentList'new o, nil, 1)
     )
 
-    (defm EmptyList IPersistentList Sequential)
-
-    (defm EmptyList IObject
-        (IObject'''equals => EmptyList''equals)
+    (defn #_"boolean" EmptyList''equals [#_"EmptyList" this, #_"any" that]
+        (and (sequential? that) (nil? (seq that)))
     )
+
+    (defm EmptyList Sequential)
 
     (defm EmptyList Seqable
         (Seqable'''seq => EmptyList''seq)
@@ -1100,23 +1056,23 @@
     (defm EmptyList IPersistentCollection
         (IPersistentCollection'''conj => EmptyList''conj)
     )
+
+    (defm EmptyList IObject
+        (IObject'''equals => EmptyList''equals)
+    )
 )
 
 (about #_"PersistentList"
-    (defq PersistentList [#_"any" car, #_"IPersistentList" cdr, #_"int" cnt])
+    (defq PersistentList [#_"any" car, #_"seq" cdr, #_"int" cnt])
 
     (defn #_"PersistentList" PersistentList'new
         ([#_"any" car] (PersistentList'new car, nil, 1))
-        ([#_"any" car, #_"IPersistentList" cdr, #_"int" cnt]
+        ([#_"any" car, #_"seq" cdr, #_"int" cnt]
             (new* PersistentList'class (anew [car, cdr, cnt]))
         )
     )
 
     (def #_"EmptyList" PersistentList'EMPTY (EmptyList'new))
-
-    (defn #_"PersistentList" PersistentList'create [#_"Reversible" init]
-        (into PersistentList'EMPTY (if (satisfies? Reversible init) (rseq init) (reverse init)))
-    )
 
     (defn #_"seq" PersistentList''seq [#_"PersistentList" this]
         this
@@ -1126,7 +1082,7 @@
         (PersistentList'new o, this, (inc (:cnt this)))
     )
 
-    (defm PersistentList IPersistentList Sequential)
+    (defm PersistentList Sequential)
 
     (defm PersistentList Seqable
         (Seqable'''seq => PersistentList''seq)
@@ -1151,8 +1107,8 @@
 )
 
 (defn list
-    ([] PersistentList'EMPTY)
-    ([& s] (PersistentList'create s))
+    ([]          PersistentList'EMPTY)
+    ([& s] (into PersistentList'EMPTY (if (reversible? s) (rseq s) (reverse s))))
 )
 
 (defn reverse [s] (into (list) s))
@@ -1182,7 +1138,7 @@
     )
 
     (defn #_"int" MSeq''count [#_"MSeq" this]
-        (quot (- (alength (:a this)) (:i this)) 2)
+        (unsigned-bit-shift-right (- (alength (:a this)) (:i this)) 1)
     )
 
     (defm MSeq Sequential)
@@ -1214,76 +1170,86 @@
 
     (def #_"PersistentMap" PersistentMap'EMPTY (PersistentMap'new nil))
 
-    (defn #_"PersistentMap" PersistentMap''create [#_"PersistentMap" this, #_"array" init]
-        (PersistentMap'new init)
+    (defn #_"PersistentMap" PersistentMap'create [#_"array" init]
+        (let* [#_"int" l (alength init)]
+            (cond
+                (zero? l) PersistentMap'EMPTY
+                (even? l) (PersistentMap'new init)
+                :else (throw! (str "no value supplied for key: " (aget init (dec l))))
+            )
+        )
     )
 
     (defn #_"PersistentMap" PersistentMap'createAsIfByAssoc [#_"array" init]
-        (when (odd? (alength init))
-            (throw! (str "no value supplied for key: " (aget init (dec (alength init)))))
-        )
-        (let* [#_"int" n
-                (loop* [n 0 #_"int" i 0]
-                    (when (< i (alength init)) => n
-                        (let* [#_"boolean" dup?
-                                (loop* [dup? false #_"int" j 0]
-                                    (when (< j i) => dup?
-                                        (or (= (aget init i) (aget init j))
-                                            (recur dup? (+ j 2))
-                                        )
-                                    )
-                                )
-                        ]
-                            (recur (if dup? n (+ n 2)) (+ i 2))
-                        )
-                    )
-                )
-              init
-                (when (< n (alength init)) => init
-                    (let* [#_"array" nodups (anew n)
-                          #_"int" m
-                            (loop* [m 0 #_"int" i 0]
-                                (when (< i (alength init)) => m
+        (let* [#_"int" l (alength init)]
+            (cond
+                (zero? l) PersistentMap'EMPTY
+                (even? l)
+                    (let* [#_"int" n
+                            (loop* [n 0 #_"int" i 0]
+                                (when (< i l) => n
                                     (let* [#_"boolean" dup?
                                             (loop* [dup? false #_"int" j 0]
-                                                (when (< j m) => dup?
-                                                    (or (= (aget init i) (aget nodups j))
+                                                (when (< j i) => dup?
+                                                    (or (= (aget init i) (aget init j))
                                                         (recur dup? (+ j 2))
                                                     )
                                                 )
                                             )
-                                        m (when (not dup?) => m
-                                                (let* [#_"int" j
-                                                        (loop* [j (- (alength init) 2)]
-                                                            (when (<= i j) => j
-                                                                (if (= (aget init i) (aget init j))
-                                                                    j
-                                                                    (recur (- j 2))
-                                                                )
-                                                            )
-                                                        )
-                                                ]
-                                                    (aset! nodups m (aget init i))
-                                                    (aset! nodups (inc m) (aget init (inc j)))
-                                                    (+ m 2)
-                                                )
-                                            )]
-                                        (recur m (+ i 2))
+                                    ]
+                                        (recur (if dup? n (+ n 2)) (+ i 2))
                                     )
                                 )
                             )
-                    ]
-                        (when (= m n) => (throw! (str "internal error: m=" m))
-                            nodups
-                        )
+                        init
+                            (when (< n l) => init
+                                (let* [#_"array" nodups (anew n)
+                                    #_"int" m
+                                        (loop* [m 0 #_"int" i 0]
+                                            (when (< i l) => m
+                                                (let* [#_"boolean" dup?
+                                                        (loop* [dup? false #_"int" j 0]
+                                                            (when (< j m) => dup?
+                                                                (or (= (aget init i) (aget nodups j))
+                                                                    (recur dup? (+ j 2))
+                                                                )
+                                                            )
+                                                        )
+                                                    m (when (not dup?) => m
+                                                            (let* [#_"int" j
+                                                                    (loop* [j (- l 2)]
+                                                                        (when (<= i j) => j
+                                                                            (if (= (aget init i) (aget init j))
+                                                                                j
+                                                                                (recur (- j 2))
+                                                                            )
+                                                                        )
+                                                                    )
+                                                            ]
+                                                                (aset! nodups m (aget init i))
+                                                                (aset! nodups (inc m) (aget init (inc j)))
+                                                                (+ m 2)
+                                                            )
+                                                        )]
+                                                    (recur m (+ i 2))
+                                                )
+                                            )
+                                        )
+                                ]
+                                    (when (= m n) => (throw! (str "internal error: m=" m))
+                                        nodups
+                                    )
+                                )
+                            )]
+                        (PersistentMap'new init)
                     )
-                )]
-            (PersistentMap'new init)
+                :else (throw! (str "no value supplied for key: " (aget init (dec l))))
+            )
         )
     )
 
     (defn #_"int" PersistentMap''count [#_"PersistentMap" this]
-        (quot (alength (:array this)) 2)
+        (unsigned-bit-shift-right (alength (:array this)) 1)
     )
 
     (defn #_"int" PersistentMap'index-of [#_"array" a, #_"key" key]
@@ -1312,14 +1278,14 @@
             (if (< -1 i)
                 (if (= (aget a (inc i)) val)
                     this
-                    (PersistentMap''create this, (-> (aclone a) (aset! (inc i) val)))
+                    (PersistentMap'new (-> (aclone a) (aset! (inc i) val)))
                 )
                 (let* [
                     #_"int" n (alength a)
                     #_"array" a' (anew (+ n 2))
                     a' (if (pos? n) (acopy! a' 0 a 0 n) a')
                 ]
-                    (PersistentMap''create this, (-> a' (aset! n key) (aset! (inc n) val)))
+                    (PersistentMap'new (-> a' (aset! n key) (aset! (inc n) val)))
                 )
             )
         )
@@ -1339,7 +1305,7 @@
                         (let* [
                             #_"array" a' (-> (anew n) (acopy! 0 a 0 i) (acopy! i a (+ i 2) (- n i)))
                         ]
-                            (PersistentMap''create this, a')
+                            (PersistentMap'new a')
                         )
                     )
                 )
@@ -1964,10 +1930,6 @@
         )
     )
 )
-
-    (defn #_"IPersistentMap" RT'mapUniqueKeys [#_"Seqable" init]
-        (if (seq init) (PersistentMap'new (anew init)) PersistentMap'EMPTY)
-    )
 )
 
 (about #_"arbace.arm.Var"
@@ -2800,7 +2762,7 @@
         (when (not (= context :Context'STATEMENT)) => gen
             (let* [
                 gen (Compiler'emitLocals scope, gen, (deref (:'closes this)))
-                gen (Gen''invoke gen, RT'mapUniqueKeys, 1)
+                gen (Gen''invoke gen, PersistentMap'create, 1)
             ]
                 (Gen''create gen, this)
             )
