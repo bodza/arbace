@@ -1391,13 +1391,13 @@
 (about #_"arbace.arm.PersistentVector"
 
 (about #_"VNode"
-    (defq VNode [#_"array" array, #_"index" index])
+    (defq VNode [#_"array" array])
 
-    (defn #_"node" VNode'new [#_"array" array, #_"index" index]
-        (new* VNode'class (anew [(or array (anew 32)), index]))
+    (defn #_"node" VNode'new [#_"array" array]
+        (new* VNode'class (anew [(or array (anew 32))]))
     )
 
-    (def #_"node" VNode'EMPTY (VNode'new nil, nil))
+    (def #_"node" VNode'EMPTY (VNode'new nil))
 
     (defn #_"value" VNode''value-for [#_"node" this, #_"int" i, #_"int" shift, #_"int" cnt, #_"int" tail-off, #_"values" tail]
         (when (< -1 i cnt) => (throw! "index is out of bounds")
@@ -1405,20 +1405,7 @@
                 (loop* [i i #_"node" node this shift shift]
                     (when (pos? shift) => (aget (:array node) (bit-and (unsigned-bit-shift-right i shift) 0x1f))
                         (let* [
-                            #_"index" x (:index node)
                             #_"int" m (bit-and (unsigned-bit-shift-right i shift) 0x1f)
-                            [m i]
-                                (when (some? x) => [m i]
-                                    (let* [m
-                                            (loop* (<= (aget x m) i)
-                                                (when m => m
-                                                    (recur (inc m))
-                                                )
-                                            )
-                                    ]
-                                        [m (if (pos? m) (- i (aget x (dec m))) i)]
-                                    )
-                                )
                         ]
                             (recur i (aget (:array node) m) (- shift 5))
                         )
@@ -1430,185 +1417,75 @@
 
     (defn #_"node" VNode''new-path [#_"node" this, #_"int" shift]
         (when (pos? shift) => this
-            (VNode'new (-> (anew 32) (aset! 0 (VNode''new-path this, (- shift 5)))), nil)
+            (VNode'new (-> (anew 32) (aset! 0 (VNode''new-path this, (- shift 5)))))
         )
-    )
-
-    (defn #_"int" VNode'last-range [#_"index" x]
-        (aget x (dec (aget x 32)))
     )
 
     (defn #_"boolean" VNode''overflow? [#_"node" this, #_"int" shift, #_"int" cnt]
-        (let* [
-            #_"index" x (:index this)
-        ]
-            (when (some? x) => (< (bit-shift-left 1 shift) (unsigned-bit-shift-right (inc cnt) 5))
-                (and (= (aget x 32) 32)
-                    (or (= shift 5)
-                        (recur
-                            (aget (:array this) 31)
-                            (- shift 5)
-                            (+ (- (aget x 31) (aget x 30)) 32)
-                        )
-                    )
-                )
-            )
-        )
+        (< (bit-shift-left 1 shift) (unsigned-bit-shift-right (inc cnt) 5))
     )
 
     (defn #_"node" VNode''push-tail [#_"node" this, #_"int" shift, #_"int" cnt, #_"node" tail-node]
         (let* [
-            #_"array" a (:array this) #_"index" x (:index this)
-        ]
-            (if (some? x)
-                (let* [
-                    #_"int" e (dec (aget x 32))
-                    #_"node" child
-                        (when (< 5 shift)
-                            (let* [
-                                #_"int" n (if (pos? e) (- (aget x e) (aget x (dec e))) (aget x 0))
-                            ]
-                                (when (< n (bit-shift-left 1 shift))
-                                    (VNode''push-tail (aget a e), (- shift 5), (inc n), tail-node)
-                                )
-                            )
-                        )
-                    a (aclone a) x (aclone x)
-                    [a x]
+            #_"array" a (:array this)
+            #_"int" e (bit-and (unsigned-bit-shift-right (dec cnt) shift) 0x1f)
+            #_"node" child
+                (when (< 5 shift) => tail-node
+                    (let* [child (aget a e)]
                         (if (some? child)
-                            [(aset! a e child) (aswap! x e + 32)]
-                            (let* [
-                                a (aset! a (inc e) (VNode''new-path tail-node, (- shift 5)))
-                                x (aset! x (inc e) (+ (aget x e) 32))
-                            ]
-                                [a (aswap! x 32 inc)]
-                            )
+                            (VNode''push-tail child, (- shift 5), cnt, tail-node)
+                            (VNode''new-path tail-node, (- shift 5))
                         )
-                ]
-                    (VNode'new a, x)
+                    )
                 )
-                (let* [
-                    #_"int" e (bit-and (unsigned-bit-shift-right (dec cnt) shift) 0x1f)
-                    #_"node" child
-                        (when (< 5 shift) => tail-node
-                            (let* [child (aget a e)]
-                                (if (some? child)
-                                    (VNode''push-tail child, (- shift 5), cnt, tail-node)
-                                    (VNode''new-path tail-node, (- shift 5))
-                                )
-                            )
-                        )
-                    a (aclone a)
-                    a (aset! a e child)
-                ]
-                    (VNode'new a, nil)
-                )
-            )
+            a (aclone a)
+            a (aset! a e child)
+        ]
+            (VNode'new a)
         )
     )
 
     (defn #_"node" VNode''pop-tail [#_"node" this, #_"int" shift, #_"int" tail-off]
         (let* [
-            #_"array" a (:array this) #_"index" x (:index this)
+            #_"array" a (:array this)
             #_"int" e (bit-and (unsigned-bit-shift-right (dec tail-off) shift) 0x1f)
         ]
-            (if (some? x)
-                (let* [e
-                        (loop* (and (< e 31) (some? (aget x (inc e))))
-                            (when e => e
-                                (recur (inc e))
+            (cond
+                (< 5 shift)
+                    (let* [
+                        #_"node" child (VNode''pop-tail (aget a e), (- shift 5), tail-off)
+                    ]
+                        (when (or (some? child) (pos? e))
+                            (let* [
+                                a (aclone a)
+                                a (aset! a e child)
+                            ]
+                                (VNode'new a)
                             )
                         )
-                ]
-                    (cond
-                        (< 5 shift)
-                            (let* [
-                                #_"node" child (aget a e)
-                                #_"node" child' (VNode''pop-tail child, (- shift 5), (if (pos? e) (- (aget x e) (aget x (dec e))) (aget x 0)))
-                            ]
-                                (when (or (some? child') (pos? e))
-                                    (let* [
-                                        a (aclone a)
-                                        a (-> a (aset! e child'))
-                                        x (aclone x)
-                                        x
-                                            (if (some? child')
-                                                (let* [
-                                                    #_"int" delta
-                                                        (when (some? (:index child)) => 32
-                                                            (- (VNode'last-range (:index child)) (VNode'last-range (:index child')))
-                                                        )
-                                                ]
-                                                    (-> x (aswap! e - delta))
-                                                )
-                                                (-> x (aset! e nil) (aswap! 32 dec))
-                                            )
-                                    ]
-                                        (VNode'new a, x)
-                                    )
-                                )
-                            )
-                        (pos? e)
-                            (let* [
-                                a (-> (aclone a) (aset! e nil))
-                                x (-> (aclone x) (aset! e nil) (aswap! 32 dec))
-                            ]
-                                (VNode'new a, x)
-                            )
                     )
-                )
-                (cond
-                    (< 5 shift)
-                        (let* [
-                            #_"node" child (VNode''pop-tail (aget a e), (- shift 5), tail-off)
-                        ]
-                            (when (or (some? child) (pos? e))
-                                (let* [
-                                    a (aclone a)
-                                    a (aset! a e child)
-                                ]
-                                    (VNode'new a, nil)
-                                )
-                            )
-                        )
-                    (pos? e)
-                        (let* [
-                            a (aclone a)
-                            a (aset! a e nil)
-                        ]
-                            (VNode'new a, nil)
-                        )
-                )
+                (pos? e)
+                    (let* [
+                        a (aclone a)
+                        a (aset! a e nil)
+                    ]
+                        (VNode'new a)
+                    )
             )
         )
     )
 
     (defn #_"node" VNode''do-assoc [#_"node" this, #_"int" shift, #_"int" i, #_"value" val]
         (let* [
-            #_"array" a (:array this) #_"index" x (:index this)
+            #_"array" a (:array this)
             a (aclone a)
             #_"int" m (bit-and (unsigned-bit-shift-right i shift) 0x1f)
             a
                 (when (pos? shift) => (aset! a m val)
-                    (let* [
-                        [m i]
-                            (when (some? x) => [m i]
-                                (let* [m
-                                        (loop* (<= (aget x m) i)
-                                            (when m => m
-                                                (recur (inc m))
-                                            )
-                                        )
-                                ]
-                                    [m (if (pos? m) (- i (aget x (dec m))) i)]
-                                )
-                            )
-                    ]
-                        (aswap! a m VNode''do-assoc (- shift 5), i, val)
-                    )
+                    (aswap! a m VNode''do-assoc (- shift 5), i, val)
                 )
         ]
-            (VNode'new a, x)
+            (VNode'new a)
         )
     )
 )
@@ -1696,7 +1573,7 @@
                     (PersistentVector'new (inc (:cnt this)), (:shift this), (:root this), tail)
                 )
                 (let* [
-                    #_"node" tail-node (VNode'new (:tail this), nil)
+                    #_"node" tail-node (VNode'new (:tail this))
                     #_"int" shift (:shift this)
                     [#_"node" root shift]
                         (if (VNode''overflow? (:root this), shift, (:cnt this))
@@ -1706,16 +1583,8 @@
                                         (aset! 0 (:root this))
                                         (aset! 1 (VNode''new-path tail-node, shift))
                                     )
-                                #_"index" x
-                                    (when (some? (:index (:root this)))
-                                        (let* [
-                                            #_"int" n (aget (:index (:root this)) 31)
-                                        ]
-                                            (-> (anew 33) (aset! 0 n) (aset! 1 (+ n 32)) (aset! 32 2))
-                                        )
-                                    )
                             ]
-                                [(VNode'new a, x) (+ shift 5)]
+                                [(VNode'new a) (+ shift 5)]
                             )
                             [(VNode''push-tail (:root this), shift, (:cnt this), tail-node) shift]
                         )
